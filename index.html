@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>JS-XLSX Live Demo</title>
+<style>
+#drop{
+	border:2px dashed #bbb;
+	-moz-border-radius:5px;
+	-webkit-border-radius:5px;
+	border-radius:5px;
+	padding:25px;
+	text-align:center;
+	font:20pt bold,"Vollkorn";color:#bbb
+}
+#b64data{
+	width:100%;
+}
+</style>
+</head>
+<body>
+<b>JS-XLSX Live Demo</b><br />
+<a href="https://github.com/SheetJS/js-xlsx">Github Repo</a><br />
+<a href="https://github.com/SheetJS/js-xlsx/issues">Issues?  Something look weird?  Click here and report an issue</a><br />
+<input type="radio" name="format" value="csv" checked> CSV<br>
+<input type="radio" name="format" value="json"> JSON<br>
+<input type="radio" name="format" value="form"> FORMULAE<br>
+
+<div id="drop">Drop an XLSX file here to see sheet data.</div>
+<textarea id="b64data">... or paste a base64-encoding here</textarea>
+<input type="button" id="dotext" value="Click here to process the base64 text" onclick="b64it();"/>
+<pre id="out"></pre>
+<br />
+<script src="jszip.js"></script>
+<script src="xlsx.js"></script>
+<script src="shim.js"></script>
+<script>
+function xlsxworker(data, cb) {
+	var worker = new Worker('./xlsxworker.js');
+	worker.onmessage = function(e) {
+		switch(e.data.t) {
+			case 'ready': break;
+			case 'e': console.error(e.data.d);
+			case 'xlsx': cb(JSON.parse(e.data.d)); break;
+		}
+	};
+    var arr = btoa(String.fromCharCode.apply(null, new Uint8Array(data)));
+	worker.postMessage(arr);
+}
+
+function get_radio_value( radioName ) {
+	var radios = document.getElementsByName( radioName );
+	for( var i = 0; i < radios.length; i++ ) {
+		if( radios[i].checked ) {
+			return radios[i].value;
+		}
+	}
+}
+
+function to_json(workbook) {
+	var result = {};
+	workbook.SheetNames.forEach(function(sheetName) {
+		var roa = XLSX.utils.sheet_to_row_object_array(workbook.Sheets[sheetName]);
+		if(roa.length > 0){
+			result[sheetName] = roa;
+		}
+	});
+	return result;
+}
+
+function to_csv(workbook) {
+	var result = [];
+	workbook.SheetNames.forEach(function(sheetName) {
+		var csv = XLSX.utils.sheet_to_csv(workbook.Sheets[sheetName]);
+		if(csv.length > 0){
+			result.push("SHEET: " + sheetName);
+			result.push("");
+			result.push(csv);
+		}
+	});
+	return result.join("\n");
+}
+
+function to_formulae(workbook) {
+	var result = [];
+	workbook.SheetNames.forEach(function(sheetName) {
+		var formulae = XLSX.utils.get_formulae(workbook.Sheets[sheetName]);
+		if(formulae.length > 0){
+			result.push("SHEET: " + sheetName);
+			result.push("");
+			result.push(formulae.join("\n"));
+		}
+	});
+	return result.join("\n");
+}
+
+var tarea = document.getElementById('b64data');
+function b64it() {
+	var wb = XLSX.read(tarea.value, {type: 'base64'});
+	process_wb(wb);
+}
+
+function process_wb(wb) {
+	var output = "";
+	switch(get_radio_value("format")) {
+		case "json":
+		output = JSON.stringify(to_json(wb), 2, 2);
+			break;
+		case "form":
+			output = to_formulae(wb);
+			break; 
+		default:
+		output = to_csv(wb);
+	}
+	if(out.innerText === undefined) out.textContent = output;
+	else out.innerText = output;
+}
+
+var drop = document.getElementById('drop');
+function handleDrop(e) {
+	e.stopPropagation();
+	e.preventDefault();
+	var files = e.dataTransfer.files;
+	var i,f;
+	for (i = 0, f = files[i]; i != files.length; ++i) {
+		var reader = new FileReader();
+		var name = f.name;
+		reader.onload = function(e) {
+			var data = e.target.result;
+			if(typeof Worker !== 'undefined') {
+				xlsxworker(data, process_wb);
+			} else {
+			//var wb = XLSX.read(data, {type: 'binary'});
+			var arr = String.fromCharCode.apply(null, new Uint8Array(data));
+			var wb = XLSX.read(btoa(arr), {type: 'base64'});
+			process_wb(wb);
+			}
+		};
+		//reader.readAsBinaryString(f);
+		reader.readAsArrayBuffer(f);
+	}
+}
+
+function handleDragover(e) {
+	e.stopPropagation();
+	e.preventDefault();
+	e.dataTransfer.dropEffect = 'copy';
+}
+
+if(drop.addEventListener) {
+	drop.addEventListener('dragenter', handleDragover, false);
+	drop.addEventListener('dragover', handleDragover, false);
+	drop.addEventListener('drop', handleDrop, false);
+}
+</script>
+<script type="text/javascript">
+	var _gaq = _gaq || [];
+	_gaq.push(['_setAccount', 'UA-36810333-1']);
+	_gaq.push(['_trackPageview']);
+
+	(function() {
+		var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+		ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+		var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+	})();
+</script>
+</body>
+</html>
