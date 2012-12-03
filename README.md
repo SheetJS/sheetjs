@@ -6,11 +6,11 @@ This has been tested on some very basic XLSX files generated from Excel 2011.
 
 ## Installation
 
-in node:
+In node:
 
     npm install xlsx
 
-in the browser:
+In the browser:
 
     <script lang="javascript" src="/path/to/jszip.js"></script>
     <script lang="javascript" src="/path/to/xlsx.js"></script>
@@ -47,3 +47,4 @@ Please consult the attached LICENSE file for details.  All rights not explicitly
 ## References
 
 ISO/IEC 29500:2012(E) "Information technology — Document description and processing languages — Office Open XML File Formats"
+
