@@ -239,7 +239,8 @@ function parseZip(zip) {
 	var dir = parseCT((zip.files['[Content_Types].xml']||{}).data);
 	var wb = parseWB(zip.files[dir.workbooks[0].replace(/^\//,'')].data);
 	var props = parseProps(zip.files[dir.coreprops[0].replace(/^\//,'')].data + zip.files[dir.extprops[0].replace(/^\//,'')].data);
-	var deps = parseDeps(zip.files[dir.calcchain.replace(/^\//,'')].data);
+	var deps = {};
+	if(dir.calcchain) deps=parseDeps(zip.files[dir.calcchain.replace(/^\//,'')].data);
 	if(dir.strs[0]) strs=parseStrs(zip.files[dir.strs[0].replace(/^\//,'')].data);
 	var sheets = {};
 	for(var i = 0; i != props.Worksheets; ++i) {
