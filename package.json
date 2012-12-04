@@ -1,0 +1,23 @@
+{
+	"name": "xlsx",
+	"version": "0.0.3",
+	"author": "Niggler",
+	"description": "(one day) a full-featured XLSX parser and writer.  For now, primitive parser",
+	"keywords": [
+		"xlsx", "office", "excel", "spreadsheet"	
+	], 
+	"bin": {
+		"xlsx2csv": "./bin/xlsx2csv.njs"
+	},
+	"main": "./xlsx",
+	"repository": {
+		"type":"git",
+		"url": "git://github.com/Niggler/js-xlsx.git"
+	},
+	"bugs": {
+		"url": "https://github.com/Niggler/js-xlsx/issues"
+	},
+	"engines": {
+		"node": ">=0.8"
+	}
+}
