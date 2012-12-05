@@ -99,6 +99,7 @@ function parseSheet(data) { //TODO: use a real xml parser
 	//s.rows = {};
 	//s.cells = {};
 	var q = ["v","f"];
+	if(!data.match(/<sheetData *\/>/)) 
 	data.match(/<sheetData>(.*)<\/sheetData>/)[1].split("</row>").forEach(function(x) { if(x === "") return;
 		var row = parsexmltag(x.match(/<row[^>]*>/)[0]); //s.rows[row.r]=row.spans;
 		var cells = x.substr(x.indexOf('>')+1).split("</c>");
@@ -129,10 +130,12 @@ function matchtag(f,g) {return new RegExp('<' + f + '>(.*)</' + f + '>',g||"");}
 function parseStrs(data) { 
 	var s = [];
 	var sst = data.match(new RegExp("<sst ([^>]*)>(.*)<\/sst>"));
-	s = sst[2].replace(/<si>/g,"").split(/<\/si>/).map(function(x) { var z = {};
-		var y=x.match(/<(.*)>(.*)<\/.*/); if(x) z[y[1]]=unescapexml(y[2]); return z;});
+	if(sst) {
+		s = sst[2].replace(/<si>/g,"").split(/<\/si>/).map(function(x) { var z = {};
+			var y=x.match(/<(.*)>(.*)<\/.*/); if(x) z[y[1]]=unescapexml(y[2]); return z;});
 	
-	sst = parsexmltag(sst[1]); s.count = sst.count; s.uniqueCount = sst.uniqueCount;
+		sst = parsexmltag(sst[1]); s.count = sst.count; s.uniqueCount = sst.uniqueCount;
+	}
 	if(debug) s.rawdata = data;
 	return s;
 }
@@ -143,7 +146,7 @@ function parseProps(data) {
 	var bools = ["HyperlinksChanged","SharedDoc","LinksUpToDate","ScaleCrop"];
 	var xtra = ["HeadingPairs", "TitlesOfParts","dc:creator","cp:lastModifiedBy","dcterms:created", "dcterms:modified"];
 	
-	strings.forEach(function(f){p[f] = data.match(matchtag(f))[1];});
+	strings.forEach(function(f){p[f] = (data.match(matchtag(f))||[])[1];});
 	bools.forEach(function(f){p[f] = data.match(matchtag(f))[1] == "true";});
 	xtra.forEach(function(f){q[f] = data.match(new RegExp("<" + f + "[^>]*>(.*)<\/" + f + ">"))[1];});
 
