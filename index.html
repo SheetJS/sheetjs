@@ -10,21 +10,46 @@
 }
 </style>
 <b>JS-XLSX</b><br />
+<input type="radio" name="format" value="csv" checked> CSV<br>
+<input type="radio" name="format" value="json"> JSON<br>
+
 <div id="drop">Drop an XLSX file here to see the output in CSV.</div>
 <pre id="out"></pre>
 <br />
 <script src="http://raw.github.com/Niggler/js-xlsx/master/jszip.js"></script>
 <script src="http://raw.github.com/Niggler/js-xlsx/master/xlsx.js"></script>
 <script>
-function stringify(val) {
-	switch(val.t){
-		case 'n': return val.v;
-		case 's': case 'str': return JSON.stringify(val.v);
-		default: throw 'unrecognized type ' + val.t;
-	}
+function get_radio_value( radioName ) {
+    var radios = document.getElementsByName( radioName );
+    for( var i = 0; i < radios.length; i++ ) {
+        if( radios[i].checked ) {
+            return radios[i].value;
+        }
+    }
 }
 
-function do_something(sheet) {
+//Row object array form:
+//Each row is an object with column headers as keys
+function to_json(workbook) {
+    var result = {};
+    workbook.SheetNames.forEach(function(sheetName) {
+        var rObjArr = XLSX.utils.sheet_to_row_object_array(workbook.Sheets[sheetName]);
+        if(rObjArr.length > 0){
+            result[sheetName] = rObjArr;
+        }
+    });
+    return result;
+}
+
+
+function to_csv(sheet) {
+    function stringify(val) {
+        switch(val.t){
+    		case 'n': return val.v;
+    		case 's': case 'str': return JSON.stringify(val.v);
+    		default: throw 'unrecognized type ' + val.t;
+    	}
+    }
 	if(sheet["!ref"]) {
 		var r = XLSX.utils.decode_range(sheet["!ref"]);
 		for(var R = r.s.r; R <= r.e.r; ++R) {
@@ -50,8 +75,11 @@ function handleDrop(e) {
 		reader.onload = function(e) {
 			var data = e.target.result;
 			var xlsx = XLSX.read(data, {type: 'binary'});
-			var sheet = xlsx.Sheets[xlsx.SheetNames[0]];
-			do_something(sheet);
+            if(get_radio_value("format") === "json"){
+                out.innerText = JSON.stringify(to_json(xlsx), 2, 2);
+            } else {
+                to_csv(xlsx.Sheets[xlsx.SheetNames[0]]);
+            }
 		};
 		reader.readAsBinaryString(f);
 	}
