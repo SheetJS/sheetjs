@@ -1,0 +1,95 @@
+<style>
+#drop{
+	border:2px dashed #bbb;
+	-moz-border-radius:5px;
+	-webkit-border-radius:5px;
+	border-radius:5px;
+	padding:25px;
+	text-align:center;
+	font:20pt bold,"Vollkorn";color:#bbb
+}
+</style>
+<b>JS-XLSX</b><br />
+<input type="radio" name="format" value="csv" checked> CSV<br>
+<input type="radio" name="format" value="json"> JSON<br>
+
+<div id="drop">Drop an XLSX file here to see the output in CSV.</div>
+<pre id="out"></pre>
+<br />
+<script src="jszip.js"></script>
+<script src="xlsx.js"></script>
+<script>
+function get_radio_value( radioName ) {
+    var radios = document.getElementsByName( radioName );
+    for( var i = 0; i < radios.length; i++ ) {
+        if( radios[i].checked ) {
+            return radios[i].value;
+        }
+    }
+}
+
+//Row object array form:
+//Each row is an object with column headers as keys
+function to_json(workbook) {
+    var result = {};
+    workbook.SheetNames.forEach(function(sheetName) {
+        var rObjArr = XLSX.utils.sheet_to_row_object_array(workbook.Sheets[sheetName]);
+        if(rObjArr.length > 0){
+            result[sheetName] = rObjArr;
+        }
+    });
+    return result;
+}
+
+
+function to_csv(sheet) {
+    function stringify(val) {
+        switch(val.t){
+    		case 'n': return val.v;
+    		case 's': case 'str': return JSON.stringify(val.v);
+    		default: throw 'unrecognized type ' + val.t;
+    	}
+    }
+	if(sheet["!ref"]) {
+		var r = XLSX.utils.decode_range(sheet["!ref"]);
+		for(var R = r.s.r; R <= r.e.r; ++R) {
+			var row = [];
+			for(var C = r.s.c; C <= r.e.c; ++C) {
+				var val = sheet[XLSX.utils.encode_cell({c:C,r:R})];
+				row.push(val ? stringify(val) : "");
+			}
+			out.innerText += (row.join(",") + "\n");
+		}
+	}
+}
+
+var drop = document.getElementById('drop');
+function handleDrop(e) {
+	e.stopPropagation();
+	e.preventDefault();
+	var files = e.dataTransfer.files;
+	var i,f;
+	for (i = 0, f = files[i]; i != files.length; ++i) {
+		var reader = new FileReader();
+		var name = f.name;
+		reader.onload = function(e) {
+			var data = e.target.result;
+			var xlsx = XLSX.read(data, {type: 'binary'});
+            if(get_radio_value("format") === "json"){
+                out.innerText = JSON.stringify(to_json(xlsx), 2, 2);
+            } else {
+                to_csv(xlsx.Sheets[xlsx.SheetNames[0]]);
+            }
+		};
+		reader.readAsBinaryString(f);
+	}
+}
+
+function handleDragover(e) {
+	e.stopPropagation();
+	e.preventDefault();
+	e.dataTransfer.dropEffect = 'copy';
+}
+drop.addEventListener('dragover', handleDragover, false);
+drop.addEventListener('drop', handleDrop, false);
+</script>
