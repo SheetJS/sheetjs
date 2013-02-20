@@ -363,6 +363,29 @@ function sheet_to_row_object_array(sheet){
 	return outSheet;
 }
 
+function sheet_to_csv(sheet) {
+	var stringify = function stringify(val) {
+		switch(val.t){
+			case 'n': return val.v;
+			case 's': case 'str': return JSON.stringify(val.v);
+			default: throw 'unrecognized type ' + val.t;
+		}
+	}
+	var out = "";
+	if(sheet["!ref"]) {
+		var r = utils.decode_range(sheet["!ref"]);
+		for(var R = r.s.r; R <= r.e.r; ++R) { 
+			var row = [];
+			for(var C = r.s.c; C <= r.e.c; ++C) {
+				var val = sheet[utils.encode_cell({c:C,r:R})];
+				row.push(val ? stringify(val) : "");
+			}
+			out += row.join(",") + "\n";
+		}
+	}
+	return out;
+}
+
 var utils = {
 	encode_col: encode_col,
 	encode_row: encode_row,
@@ -372,6 +395,7 @@ var utils = {
 	split_cell: split_cell,
 	decode_cell: decode_cell,
 	decode_range: decode_range,
+	sheet_to_csv: sheet_to_csv,
 	sheet_to_row_object_array: sheet_to_row_object_array
 };
 
