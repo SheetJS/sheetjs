@@ -102,13 +102,15 @@ function parseSheet(data) { //TODO: use a real xml parser
 	if(!data.match(/<sheetData *\/>/)) 
 	data.match(/<sheetData>(.*)<\/sheetData>/)[1].split("</row>").forEach(function(x) { if(x === "") return;
 		var row = parsexmltag(x.match(/<row[^>]*>/)[0]); //s.rows[row.r]=row.spans;
-		var cells = x.substr(x.indexOf('>')+1).split("</c>");
+		var cells = x.substr(x.indexOf('>')+1).split(/<\/c>|\/>/);
 		cells.forEach(function(c) { if(c === "") return;
-			var cell = parsexmltag(c.match(/<c[^>]*>/)[0]); delete cell[0];
+			var cell = parsexmltag((c.match(/<c[^>]*>/)||[c])[0]); delete cell[0];
 			var d = c.substr(c.indexOf('>')+1);
 			var p = {};
 			q.forEach(function(f){var x=d.match(matchtag(f));if(x)p[f]=unescapexml(x[1]);});
-			p.t = (cell.t ? cell.t : "n"); // default is "n" in schema
+			/* SCHEMA IS ACTUALLY INCORRECT HERE.  IF A CELL HAS NO T, EMIT "" */
+			if(cell.t === undefined) { p.t = "str"; p.v = undefined; }
+			else p.t = (cell.t ? cell.t : "n"); // default is "n" in schema
 			switch(p.t) {
 				case 'n': p.v = parseFloat(p.v); break;
 				case 's': p.v = strs[parseInt(p.v, 10)].t; break;
@@ -125,14 +127,14 @@ function parseSheet(data) { //TODO: use a real xml parser
 }
 
 // matches <foo>...</foo> extracts content
-function matchtag(f,g) {return new RegExp('<' + f + '>(.*)</' + f + '>',g||"");}
+function matchtag(f,g) {return new RegExp('<' + f + '>([\\s\\S]*)</' + f + '>',g||"");}
 
 function parseStrs(data) { 
 	var s = [];
-	var sst = data.match(new RegExp("<sst ([^>]*)>(.*)<\/sst>"));
+	var sst = data.match(new RegExp("<sst ([^>]*)>([\\s\\S]*)<\/sst>","m"));
 	if(sst) {
 		s = sst[2].replace(/<si>/g,"").split(/<\/si>/).map(function(x) { var z = {};
-			var y=x.match(/<(.*)>(.*)<\/.*/); if(x) z[y[1]]=unescapexml(y[2]); return z;});
+			var y=x.match(/<(.*)>([\s\S]*)<\/.*/); if(y) z[y[1]]=unescapexml(y[2]); return z;});
 	
 		sst = parsexmltag(sst[1]); s.count = sst.count; s.uniqueCount = sst.uniqueCount;
 	}
@@ -147,7 +149,7 @@ function parseProps(data) {
 	var xtra = ["HeadingPairs", "TitlesOfParts","dc:creator","cp:lastModifiedBy","dcterms:created", "dcterms:modified"];
 	
 	strings.forEach(function(f){p[f] = (data.match(matchtag(f))||[])[1];});
-	bools.forEach(function(f){p[f] = data.match(matchtag(f))[1] == "true";});
+	bools.forEach(function(f){p[f] = (data.match(matchtag(f))||[])[1] == "true";});
 	xtra.forEach(function(f) {
 		var cur = data.match(new RegExp("<" + f + "[^>]*>(.*)<\/" + f + ">"));
 		if(cur && cur.length > 0) q[f] = cur[1];
@@ -215,6 +217,7 @@ function parseWB(data) {
 				if(y.appName != "xl") throw "Unexpected workbook.appName: "+y.appName;
 				delete y[0]; wb.AppVersion = y; break;
 			case '<workbookPr': delete y[0]; wb.WBProps = y; break;
+			case '<workbookPr/>': delete y[0]; wb.WBProps = y; break;
 			case '<bookViews>': case '</bookViews>': break; // aggregate workbookView
 			case '<workbookView': delete y[0]; wb.WBView.push(y); break;
 			case '<sheets>': case '</sheets>': break; // aggregate sheet
@@ -222,6 +225,7 @@ function parseWB(data) {
 			case '</ext>': case '</extLst>': case '</workbook>': break;
 			case '<extLst>': break; 
 			case '<calcPr': delete y[0]; wb.CalcPr = y; break;
+			case '<calcPr/>': delete y[0]; wb.CalcPr = y; break;
 			
 			case '<mx:ArchID': break;
 			case '<ext': break;//TODO: check with different versions of excel
@@ -244,7 +248,9 @@ function parseZip(zip) {
 	var keys = entries.filter(function(x){return x.substr(-1) != '/';}).sort();
 	var dir = parseCT((zip.files['[Content_Types].xml']||{}).data);
 	var wb = parseWB(zip.files[dir.workbooks[0].replace(/^\//,'')].data);
-	var props = parseProps(zip.files[dir.coreprops[0].replace(/^\//,'')].data + zip.files[dir.extprops[0].replace(/^\//,'')].data);
+	var propdata = dir.coreprops.length !== 0 ? zip.files[dir.coreprops[0].replace(/^\//,'')].data : "";
+	propdata += dir.extprops.length !== 0 ? zip.files[dir.extprops[0].replace(/^\//,'')].data : "";
+	var props = propdata !== "" ? parseProps(propdata) : {};
 	var deps = {};
 	if(dir.calcchain) deps=parseDeps(zip.files[dir.calcchain.replace(/^\//,'')].data);
 	if(dir.strs[0]) strs=parseStrs(zip.files[dir.strs[0].replace(/^\//,'')].data);
@@ -339,13 +345,14 @@ function sheet_to_row_object_array(sheet){
 					c: C,
 					r: R
 				})];
-				if(val){
-					if(val.t === "s"){
-						rowObject[columnHeaders[C]] = val.v;
-					} else {
-						throw 'unrecognized type ' + val.t;
-					}
-					emptyRow = false;
+				if(val !== undefined) switch(val.t){
+					case 's': case 'str':
+						if(val.v !== undefined) {
+							rowObject[columnHeaders[C]] = val.v;
+							emptyRow = false;
+						}
+						break;
+					default: throw 'unrecognized type ' + val.t;
 				}
 			}
 			if(!emptyRow) {
