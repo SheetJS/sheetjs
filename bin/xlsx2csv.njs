@@ -25,22 +25,5 @@ if(xlsx.SheetNames.indexOf(sheetname)===-1) {
 	process.exit(1);
 }
 
-function stringify(val) {
-	switch(val.t){
-		case 'n': return val.v;
-		case 's': case 'str': return JSON.stringify(val.v);
-		default: throw 'unrecognized type ' + val.t;
-	}
-}
 var sheet = xlsx.Sheets[sheetname];
-if(sheet["!ref"]) {
-	var r = utils.decode_range(sheet["!ref"]);
-	for(var R = r.s.r; R <= r.e.r; ++R) { 
-		var row = [];
-		for(var C = r.s.c; C <= r.e.c; ++C) {
-			var val = sheet[utils.encode_cell({c:C,r:R})];
-			row.push(val ? stringify(val) : "");
-		}
-		console.log(row.join(","));
-	}
-}
+console.log(XLSX.utils.sheet_to_csv(sheet));
