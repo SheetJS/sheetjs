@@ -95,15 +95,21 @@ var strs = {}; // shared strings
 
 function parseSheet(data) { //TODO: use a real xml parser
 	var s = {};
-	s["!ref"] = data.match(/<dimension ref="([^"]*)"\s*\/>/)[1];
+	var ref = data.match(/<dimension ref="([^"]*)"\s*\/>/);
+	if(ref) s["!ref"] = ref[1];
+	var refguess = {s: {r:1000000, c:1000000}, e: {r:0, c:0} };
 	//s.rows = {};
 	//s.cells = {};
 	var q = ["v","f"];
 	if(!data.match(/<sheetData *\/>/)) 
 	data.match(/<sheetData>(.*)<\/sheetData>/)[1].split("</row>").forEach(function(x) { if(x === "") return;
 		var row = parsexmltag(x.match(/<row[^>]*>/)[0]); //s.rows[row.r]=row.spans;
+		if(refguess.s.r > row.r - 1) refguess.s.r = row.r - 1; 
+		if(refguess.e.r < row.r - 1) refguess.e.r = row.r - 1;
 		var cells = x.substr(x.indexOf('>')+1).split(/<\/c>|\/>/);
-		cells.forEach(function(c) { if(c === "") return;
+		cells.forEach(function(c, idx) { if(c === "") return;
+			if(refguess.s.c > idx) refguess.s.c = idx; 
+			if(refguess.e.c < idx) refguess.e.c = idx;
 			var cell = parsexmltag((c.match(/<c[^>]*>/)||[c])[0]); delete cell[0];
 			var d = c.substr(c.indexOf('>')+1);
 			var p = {};
@@ -121,7 +127,8 @@ function parseSheet(data) { //TODO: use a real xml parser
 			s[cell.r] = p;
 		});
 	});
-	
+	if(!s["!ref"]) s["!ref"] = encode_range(refguess);
+
 	if(debug) s.rawdata = data;
 	return s;
 }
@@ -227,6 +234,7 @@ function parseWB(data) {
 			case '<calcPr': delete y[0]; wb.CalcPr = y; break;
 			case '<calcPr/>': delete y[0]; wb.CalcPr = y; break;
 			
+			case '<definedNames/>': break;
 			case '<mx:ArchID': break;
 			case '<ext': break;//TODO: check with different versions of excel
 			default: console.log(y);
@@ -255,10 +263,18 @@ function parseZip(zip) {
 	if(dir.calcchain) deps=parseDeps(zip.files[dir.calcchain.replace(/^\//,'')].data);
 	if(dir.strs[0]) strs=parseStrs(zip.files[dir.strs[0].replace(/^\//,'')].data);
 	var sheets = {};
+	if(!props.Worksheets) {
+		var wbsheets = wb.Sheets;
+		props.Worksheets = wbsheets.length;
+		props.SheetNames = [];
+		for(var j = 0; j != wbsheets.length; ++j) {
+			props.SheetNames[j] = wbsheets[j].name;
+		}
+	}
 	for(var i = 0; i != props.Worksheets; ++i) {
 		sheets[props.SheetNames[i]]=parseSheet(zip.files[dir.sheets[i].replace(/^\//,'')].data);
 	}
-	
+
 	return {
 		Directory: dir,
 		Workbook: wb,
@@ -312,7 +328,7 @@ function decode_row(rowstr) { return Number(rowstr) - 1; }
 function split_cell(cstr) { return cstr.replace(/(\$?[A-Z]*)(\$?[0-9]*)/,"$1,$2").split(","); }
 function decode_cell(cstr) { var splt = split_cell(cstr); return { c:decode_col(splt[0]), r:decode_row(splt[1]) }; }
 function decode_range(range) { var x =range.split(":").map(decode_cell); return {s:x[0],e:x[x.length-1]}; }
-
+function encode_range(range) { return encode_cell(range.s) + ":" + encode_cell(range.e); }
 /**
  * Convert a sheet into an array of objects where the column headers are keys.
  **/
@@ -370,7 +386,7 @@ function sheet_to_csv(sheet) {
 			case 's': case 'str': return JSON.stringify(val.v);
 			default: throw 'unrecognized type ' + val.t;
 		}
-	}
+	};
 	var out = "";
 	if(sheet["!ref"]) {
 		var r = utils.decode_range(sheet["!ref"]);
@@ -390,6 +406,7 @@ var utils = {
 	encode_col: encode_col,
 	encode_row: encode_row,
 	encode_cell: encode_cell,
+	encode_range: encode_range,
 	decode_col: decode_col,
 	decode_row: decode_row,
 	split_cell: split_cell,
