@@ -48,6 +48,10 @@ Simple usage:
 
 Please consult the attached LICENSE file for details.  All rights not explicitly granted by the MIT license are reserved by the Original Author.
 
+## XLS Support
+
+XLS is not supported in this module.  Due to Licensing issues [that are discussed in more detail elsewhere](https://github.com/Niggler/js-xls/issues/1#issuecomment-13852286), the implementation cannot be released in a GPL or MIT-style license.  If you need XLS support, consult [my js-xls project](https://github.com/Niggler/js-xls).
+
 ## References
 
 ISO/IEC 29500:2012(E) "Information technology — Document description and processing languages — Office Open XML File Formats"
