@@ -336,11 +336,11 @@ function sheet_to_row_object_array(sheet){
 	var val, rowObject, range, columnHeaders, emptyRow, C;
 	var outSheet = [];
 	if (sheet["!ref"]) {
-		range = XLSX.utils.decode_range(sheet["!ref"]);
+		range = decode_range(sheet["!ref"]);
 
 		columnHeaders = {};
 		for (C = range.s.c; C <= range.e.c; ++C) {
-			val = sheet[XLSX.utils.encode_cell({
+			val = sheet[encode_cell({
 				c: C,
 				r: range.s.r
 			})];
@@ -357,7 +357,7 @@ function sheet_to_row_object_array(sheet){
 			//so that it doesn't appear when stringified.
 			rowObject = Object.create({ __rowNum__ : R });
 			for (C = range.s.c; C <= range.e.c; ++C) {
-				val = sheet[XLSX.utils.encode_cell({
+				val = sheet[encode_cell({
 					c: C,
 					r: R
 				})];
