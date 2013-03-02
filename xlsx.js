@@ -162,8 +162,8 @@ function parseProps(data) {
 		if(cur && cur.length > 0) q[f] = cur[1];
 	});
 
-	p["Worksheets"] = parseInt(q["HeadingPairs"].match(new RegExp("<vt:i4>(.*)<\/vt:i4>"))[1], 10); 
-	p["SheetNames"] = q["TitlesOfParts"].match(new RegExp("<vt:lpstr>([^<]*)<\/vt:lpstr>","g")).map(function(x){return x.match(new RegExp("<vt:lpstr>([^<]*)<\/vt:lpstr>"))[1];});
+	if(q["HeadingPairs"]) p["Worksheets"] = parseInt(q["HeadingPairs"].match(new RegExp("<vt:i4>(.*)<\/vt:i4>"))[1], 10); 
+	if(q["TitlesOfParts"]) p["SheetNames"] = q["TitlesOfParts"].match(new RegExp("<vt:lpstr>([^<]*)<\/vt:lpstr>","g")).map(function(x){return x.match(new RegExp("<vt:lpstr>([^<]*)<\/vt:lpstr>"))[1];});
 	p["Creator"] = q["dc:creator"];
 	p["LastModifiedBy"] = q["cp:lastModifiedBy"];
 	p["CreatedDate"] = new Date(q["dcterms:created"]);
@@ -222,7 +222,7 @@ function parseWB(data) {
 			case '<?xml': break;
 			case '<workbook': wb.xmlns = y.xmlns; break;
 			case '<fileVersion':
-				if(y.appName != "xl") throw "Unexpected workbook.appName: "+y.appName;
+				//if(y.appName != "xl") throw "Unexpected workbook.appName: "+y.appName;
 				delete y[0]; wb.AppVersion = y; break;
 			case '<workbookPr': delete y[0]; wb.WBProps = y; break;
 			case '<workbookPr/>': delete y[0]; wb.WBProps = y; break;
@@ -231,6 +231,7 @@ function parseWB(data) {
 			case '<sheets>': case '</sheets>': break; // aggregate sheet
 			case '<sheet': delete y[0]; wb.Sheets.push(y); break; 
 			case '</extLst>': case '</workbook>': break;
+			case '<workbookProtection/>': break; // LibreOffice 
 			case '<extLst>': break; 
 			case '<calcPr': delete y[0]; wb.CalcPr = y; break;
 			case '<calcPr/>': delete y[0]; wb.CalcPr = y; break;
