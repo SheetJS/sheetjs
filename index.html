@@ -64,7 +64,8 @@ function handleDrop(e) {
 			} else {
 				output = to_csv(xlsx.Sheets[xlsx.SheetNames[0]]);
 			}
-			out.innerText = output;
+			if(out.innerText === undefined) out.textContent = output;
+			else out.innerText = output;
 		};
 		reader.readAsBinaryString(f);
 	}
