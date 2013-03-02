@@ -17,11 +17,22 @@ In the browser:
     <script lang="javascript" src="/path/to/jszip.js"></script>
     <script lang="javascript" src="/path/to/xlsx.js"></script>
 
+## Tested Environments
+
+ - Node >= 0.8.14 (untested in versions before 0.8.14)
+ - IE 6/7/8/9/10 using Base64 mode
+ - FF 18 using Base64 or HTML5 mode
+ - Chrome 24 using Base64 or HTML5 mode
+
 ## Usage
 
 See `xlsx2csv.njs` in the bin directory for usage in node.
 
-See http://niggler.github.com/js-xlsx/ for a browser example.
+See http://niggler.github.com/js-xlsx/ for a browser example. 
+
+Note that IE does not support HTML5 File API, so the base64 mode is provided for testing.  On OSX you can get the base64 encoding by running:
+
+    $ <target_file.xlsx base64 | pbcopy # the pbcopy puts the content in the clipboard
 
 ## Notes 
 
