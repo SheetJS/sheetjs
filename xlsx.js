@@ -115,7 +115,7 @@ function parseSheet(data) { //TODO: use a real xml parser
 			var p = {};
 			q.forEach(function(f){var x=d.match(matchtag(f));if(x)p[f]=unescapexml(x[1]);});
 			/* SCHEMA IS ACTUALLY INCORRECT HERE.  IF A CELL HAS NO T, EMIT "" */
-			if(cell.t === undefined) { p.t = "str"; p.v = undefined; }
+			if(cell.t === undefined && p.v === undefined) { p.t = "str"; p.v = undefined; }
 			else p.t = (cell.t ? cell.t : "n"); // default is "n" in schema
 			switch(p.t) {
 				case 'n': p.v = parseFloat(p.v); break;
@@ -215,6 +215,7 @@ function parseCT(data) {
 
 function parseWB(data) {
 	var wb = { AppVersion:{}, WBProps:{}, WBView:[], Sheets:[], CalcPr:{}, xmlns: "" };
+	var pass = false;
 	data.match(/<[^>]*>/g).forEach(function(x) {
 		var y = parsexmltag(x);
 		switch(y[0]) {
@@ -229,15 +230,20 @@ function parseWB(data) {
 			case '<workbookView': delete y[0]; wb.WBView.push(y); break;
 			case '<sheets>': case '</sheets>': break; // aggregate sheet
 			case '<sheet': delete y[0]; wb.Sheets.push(y); break; 
-			case '</ext>': case '</extLst>': case '</workbook>': break;
+			case '</extLst>': case '</workbook>': break;
 			case '<extLst>': break; 
 			case '<calcPr': delete y[0]; wb.CalcPr = y; break;
 			case '<calcPr/>': delete y[0]; wb.CalcPr = y; break;
 			
 			case '<definedNames/>': break;
 			case '<mx:ArchID': break;
-			case '<ext': break;//TODO: check with different versions of excel
-			default: console.log(y);
+			case '<ext': pass=true; break; //TODO: check with versions of excel
+			case '</ext>': pass=false; break; 
+			
+			/* Introduced for Excel2013 Baseline */
+			case '<mc:AlternateContent': pass=true; break; // TODO: do something 
+			case '</mc:AlternateContent>': pass=false; break; // TODO: do something
+			default: if(!pass) console.error("WB Tag",x,y);
 		}
 	});
 	if(wb.xmlns !== XMLNS_WB) throw "Unknown Namespace: " + wb.xmlns;
