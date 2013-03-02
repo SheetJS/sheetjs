@@ -8,12 +8,17 @@
 	text-align:center;
 	font:20pt bold,"Vollkorn";color:#bbb
 }
+#b64data{
+	width:100%;
+}
 </style>
-<b>JS-XLSX</b><br />
+<b>JS-XLSX Live Demo</b><br />
 <input type="radio" name="format" value="csv" checked> CSV<br>
 <input type="radio" name="format" value="json"> JSON<br>
 
-<div id="drop">Drop an XLSX file here to see the output in CSV.</div>
+<div id="drop">Drop an XLSX file here to see data in CSV or JSON.</div>
+<textarea id="b64data">... or paste a base64-encoding here</textarea>
+<input type="button" id="dotext" value="Click here to process the base64 text" onclick="b64it();"/>
 <pre id="out"></pre>
 <br />
 <script src="jszip.js"></script>
@@ -46,6 +51,23 @@ function to_csv(sheet) {
 	return XLSX.utils.sheet_to_csv(sheet);
 }
 
+var tarea = document.getElementById('b64data');
+function b64it() {
+	var xlsx = XLSX.read(tarea.value, {type: 'base64'});
+	process_xlsx(xlsx);
+}
+
+function process_xlsx(xlsx) {
+	var output = "";
+	if(get_radio_value("format") === "json"){
+		output = JSON.stringify(to_json(xlsx), 2, 2);
+	} else {
+		output = to_csv(xlsx.Sheets[xlsx.SheetNames[0]]);
+	}
+	if(out.innerText === undefined) out.textContent = output;
+	else out.innerText = output;
+}
+
 var drop = document.getElementById('drop');
 function handleDrop(e) {
 	e.stopPropagation();
@@ -58,13 +80,7 @@ function handleDrop(e) {
 		reader.onload = function(e) {
 			var data = e.target.result;
 			var xlsx = XLSX.read(data, {type: 'binary'});
-			var output = "";
-			if(get_radio_value("format") === "json"){
-				output = JSON.stringify(to_json(xlsx), 2, 2);
-			} else {
-				output = to_csv(xlsx.Sheets[xlsx.SheetNames[0]]);
-			}
-			out.innerText = output;
+			process_xlsx(xlsx);
 		};
 		reader.readAsBinaryString(f);
 	}
