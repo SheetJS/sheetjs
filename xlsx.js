@@ -121,7 +121,12 @@ function parseSheet(data) { //TODO: use a real xml parser
 				case 'n': p.v = parseFloat(p.v); break;
 				case 's': p.v = strs[parseInt(p.v, 10)].t; break;
 				case 'str': break; // normal string
-				default: throw "Unrecognized cell type: " + p.t;
+                case 'b':
+                    //Parse a boolean.
+                    //I'm not sure how robust this method is.
+                    p.v = Boolean(p.v);
+                    break;
+				default: throw "Unrecognized cell type [" + p.t + "] with value: " + p.v;
 			}
 			//s.cells[cell.r] = p;
 			s[cell.r] = p;
@@ -369,7 +374,7 @@ function sheet_to_row_object_array(sheet){
 					r: R
 				})];
 				if(val !== undefined) switch(val.t){
-					case 's': case 'str':
+					case 's': case 'str': case 'b': case 'n':
 						if(val.v !== undefined) {
 							rowObject[columnHeaders[C]] = val.v;
 							emptyRow = false;
