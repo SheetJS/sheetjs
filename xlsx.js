@@ -121,6 +121,12 @@ function parseSheet(data) { //TODO: use a real xml parser
 				case 'n': p.v = parseFloat(p.v); break;
 				case 's': p.v = strs[parseInt(p.v, 10)].t; break;
 				case 'str': break; // normal string
+				case 'b':
+					switch(p.v) {
+						case '0': case 'FALSE': case "false": case false: p.v=false; break;
+						case '1': case 'TRUE':  case "true":  case true:  p.v=true;  break;
+						default: throw "Unrecognized boolean: " + p.v;
+					} break;
 				default: throw "Unrecognized cell type: " + p.t;
 			}
 			//s.cells[cell.r] = p;
@@ -369,7 +375,7 @@ function sheet_to_row_object_array(sheet){
 					r: R
 				})];
 				if(val !== undefined) switch(val.t){
-					case 's': case 'str':
+					case 's': case 'str': case 'b': case 'n':
 						if(val.v !== undefined) {
 							rowObject[columnHeaders[C]] = val.v;
 							emptyRow = false;
@@ -391,6 +397,7 @@ function sheet_to_csv(sheet) {
 		switch(val.t){
 			case 'n': return val.v;
 			case 's': case 'str': return JSON.stringify(val.v);
+			case 'b': return val.v ? "TRUE" : "FALSE";
 			default: throw 'unrecognized type ' + val.t;
 		}
 	};
