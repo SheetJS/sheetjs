@@ -91,6 +91,9 @@ function handleDragover(e) {
 	e.preventDefault();
 	e.dataTransfer.dropEffect = 'copy';
 }
-drop.addEventListener('dragover', handleDragover, false);
-drop.addEventListener('drop', handleDrop, false);
+
+if(drop.addEventListener) { // IE compatibility
+	drop.addEventListener('dragover', handleDragover, false);
+	drop.addEventListener('drop', handleDrop, false);
+}
 </script>

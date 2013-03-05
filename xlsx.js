@@ -142,6 +142,19 @@ function parseSheet(data) { //TODO: use a real xml parser
 // matches <foo>...</foo> extracts content
 function matchtag(f,g) {return new RegExp('<' + f + '>([\\s\\S]*)</' + f + '>',g||"");}
 
+function parseVector(data) {
+	var h = parsexmltag(data);
+	
+	var matches = data.match(new RegExp("<vt:" + h.baseType + ">(.*?)</vt:" + h.baseType + ">", 'g'));
+	if(matches.length != h.size) throw "unexpected vector length " + matches.length + " != " + h.size;
+	var res = [];
+	matches.forEach(function(x) {
+		var v = x.replace(/<[/]?vt:variant>/g,"").match(/<vt:([^>]*)>(.*)</);
+		res.push({v:v[2], t:v[1]}); 
+	});
+	return res;
+}
+
 function parseStrs(data) { 
 	var s = [];
 	var sst = data.match(new RegExp("<sst ([^>]*)>([\\s\\S]*)<\/sst>","m"));
@@ -168,8 +181,19 @@ function parseProps(data) {
 		if(cur && cur.length > 0) q[f] = cur[1];
 	});
 
-	if(q["HeadingPairs"]) p["Worksheets"] = parseInt(q["HeadingPairs"].match(new RegExp("<vt:i4>(.*)<\/vt:i4>"))[1], 10); 
-	if(q["TitlesOfParts"]) p["SheetNames"] = q["TitlesOfParts"].match(new RegExp("<vt:lpstr>([^<]*)<\/vt:lpstr>","g")).map(function(x){return x.match(new RegExp("<vt:lpstr>([^<]*)<\/vt:lpstr>"))[1];});
+	if(q["HeadingPairs"] && q["TitlesOfParts"]) {
+		var v = parseVector(q["HeadingPairs"]);
+		var j = 0, widx = 0;
+		for(var i = 0; i !== v.length; ++i) {
+			switch(v[i].v) {
+				case "Worksheets": widx = j; p["Worksheets"] = +v[++i]; break;
+				case "Named Ranges": ++i; break; // TODO: Handle Named Ranges
+				default: throw "Unrecognized key in Heading Pairs: " + v[i].v;
+			}
+		}
+		var parts = parseVector(q["TitlesOfParts"]);
+		p["SheetNames"] = parts.slice(widx, widx + p["Worksheets"])
+	}
 	p["Creator"] = q["dc:creator"];
 	p["LastModifiedBy"] = q["cp:lastModifiedBy"];
 	p["CreatedDate"] = new Date(q["dcterms:created"]);
@@ -242,11 +266,13 @@ function parseWB(data) {
 			case '<calcPr': delete y[0]; wb.CalcPr = y; break;
 			case '<calcPr/>': delete y[0]; wb.CalcPr = y; break;
 			
-			case '<definedNames/>': break;
 			case '<mx:ArchID': break;
 			case '<ext': pass=true; break; //TODO: check with versions of excel
 			case '</ext>': pass=false; break; 
 			
+			case '<definedNames/>': break;
+			case '<definedNames>': pass=true; break;
+			case '</definedNames>': pass=false; break;
 			/* Introduced for Excel2013 Baseline */
 			case '<mc:AlternateContent': pass=true; break; // TODO: do something 
 			case '</mc:AlternateContent>': pass=false; break; // TODO: do something
