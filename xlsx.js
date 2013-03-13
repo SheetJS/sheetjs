@@ -102,12 +102,15 @@ function parseSheet(data) { //TODO: use a real xml parser
 	//s.cells = {};
 	var q = ["v","f"];
 	if(!data.match(/<sheetData *\/>/)) 
-	data.match(/<sheetData>(.*)<\/sheetData>/)[1].split("</row>").forEach(function(x) { if(x === "") return;
+	data.match(/<sheetData>(.*)<\/sheetData>/)[1].split("</row>").forEach(function(x) { 
+		if(x === "") return;
 		var row = parsexmltag(x.match(/<row[^>]*>/)[0]); //s.rows[row.r]=row.spans;
 		if(refguess.s.r > row.r - 1) refguess.s.r = row.r - 1; 
 		if(refguess.e.r < row.r - 1) refguess.e.r = row.r - 1;
-		var cells = x.substr(x.indexOf('>')+1).split(/<\/c>|\/>/);
+
+		var cells = x.substr(x.indexOf('>')+1).split(/<c/);
 		cells.forEach(function(c, idx) { if(c === "") return;
+			c = "<c" + c;
 			if(refguess.s.c > idx) refguess.s.c = idx; 
 			if(refguess.e.c < idx) refguess.e.c = idx;
 			var cell = parsexmltag((c.match(/<c[^>]*>/)||[c])[0]); delete cell[0];
