@@ -387,8 +387,9 @@ function sheet_to_row_object_array(sheet){
 				r: range.s.r
 			})];
 			if(val){
-				if(val.t === "s"){
-					columnHeaders[C] = val.v;
+				switch(val.t) {
+					case "s": case "str": columnHeaders[C] = val.v; break;
+					case "n": columnHeaders[C] = val.v; break;
 				}
 			}
 		}
