@@ -49,9 +49,9 @@ Simple usage:
     var xlsx = XLSX.readFile('test.xlsx');
     var sheet_name_list = xlsx.SheetNames;
     xlsx.SheetNames.forEach(function(y) {
-      for (z in zip.Sheets[y]) {
+      for (z in xlsx.Sheets[y]) {
         if(z[0] === '!') continue;
-        console.log(y + "!" + z + "=" + JSON.stringify(zip.Sheets[y][z].v));
+        console.log(y + "!" + z + "=" + JSON.stringify(xlsx.Sheets[y][z].v));
       }
     });
 
