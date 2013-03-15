@@ -47,8 +47,17 @@ function to_json(workbook) {
 }
 
 
-function to_csv(sheet) {
-	return XLSX.utils.sheet_to_csv(sheet);
+function to_csv(workbook) {
+	var result = [];
+	workbook.SheetNames.forEach(function(sheetName) {
+		var rObjArr = XLSX.utils.sheet_to_csv(workbook.Sheets[sheetName]);
+		if(rObjArr.length > 0){
+			result.push("SHEET: " + sheetName);
+			result.push("");
+			result.push(rObjArr);
+		}
+	});
+	return result.join("\n");
 }
 
 var tarea = document.getElementById('b64data');
@@ -62,7 +71,7 @@ function process_xlsx(xlsx) {
 	if(get_radio_value("format") === "json"){
 		output = JSON.stringify(to_json(xlsx), 2, 2);
 	} else {
-		output = to_csv(xlsx.Sheets[xlsx.SheetNames[0]]);
+		output = to_csv(xlsx);
 	}
 	if(out.innerText === undefined) out.textContent = output;
 	else out.innerText = output;
