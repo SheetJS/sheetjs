@@ -158,12 +158,30 @@ function parseVector(data) {
 	return res;
 }
 
+
+var utf8read = function(orig) {
+	var out = "", i = 0, c = 0, c1 = 0, c2 = 0, c3 = 0;
+	while (i < orig.length) {
+		c = orig.charCodeAt(i++);
+		if (c < 128) out += _chr(c);
+		else {
+			c2 = orig.charCodeAt(i++);
+			if (c>191 && c<224) out += _chr((c & 31) << 6 | c2 & 63);
+			else {
+				c3 = orig.charCodeAt(i++);
+				out += _chr((c & 15) << 12 | (c2 & 63) << 6 | c3 & 63);
+			}
+		}
+	}
+	return out;
+};
+
 function parseStrs(data) { 
 	var s = [];
 	var sst = data.match(new RegExp("<sst ([^>]*)>([\\s\\S]*)<\/sst>","m"));
 	if(sst) {
 		s = sst[2].replace(/<si>/g,"").split(/<\/si>/).map(function(x) { var z = {};
-			var y=x.match(/<(.*)>([\s\S]*)<\/.*/); if(y) z[y[1]]=unescapexml(y[2]); return z;});
+			var y=x.match(/<(.*)>([\s\S]*)<\/.*/); if(y) z[y[1].split(" ")[0]]=utf8read(unescapexml(y[2])); return z;});
 	
 		sst = parsexmltag(sst[1]); s.count = sst.count; s.uniqueCount = sst.uniqueCount;
 	}
@@ -194,7 +212,7 @@ function parseProps(data) {
 				default: console.error("Unrecognized key in Heading Pairs: " + v[i++].v);
 			}
 		}
-		var parts = parseVector(q["TitlesOfParts"]);
+		var parts = parseVector(q["TitlesOfParts"]).map(utf8read);
 		p["SheetNames"] = parts.slice(widx, widx + p["Worksheets"])
 	}
 	p["Creator"] = q["dc:creator"];
@@ -262,7 +280,7 @@ function parseWB(data) {
 			case '<bookViews>': case '</bookViews>': break; // aggregate workbookView
 			case '<workbookView': delete y[0]; wb.WBView.push(y); break;
 			case '<sheets>': case '</sheets>': break; // aggregate sheet
-			case '<sheet': delete y[0]; wb.Sheets.push(y); break; 
+			case '<sheet': delete y[0]; y.name = utf8read(y.name); wb.Sheets.push(y); break; 
 			case '</extLst>': case '</workbook>': break;
 			case '<workbookProtection/>': break; // LibreOffice 
 			case '<extLst>': break; 
@@ -361,7 +379,9 @@ return this;
 
 })();
 
-function encode_col(col) { var s=""; for(++col; col; col=Math.floor((col-1)/26)) s = String.fromCharCode(((col-1)%26) + 65) + s; return s; }
+var _chr = function(c) { return String.fromCharCode(c); };
+
+function encode_col(col) { var s=""; for(++col; col; col=Math.floor((col-1)/26)) s = _chr(((col-1)%26) + 65) + s; return s; }
 function encode_row(row) { return "" + (row + 1); }
 function encode_cell(cell) { return encode_col(cell.c) + encode_row(cell.r); }
 
@@ -388,8 +408,8 @@ function sheet_to_row_object_array(sheet){
 			})];
 			if(val){
 				switch(val.t) {
-					case "s": case "str": columnHeaders[C] = val.v; break;
-					case "n": columnHeaders[C] = val.v; break;
+					case 's': case 'str': columnHeaders[C] = val.v; break;
+					case 'n': columnHeaders[C] = val.v; break;
 				}
 			}
 		}
