@@ -213,7 +213,7 @@ function parseProps(data) {
 			}
 		}
 		var parts = parseVector(q["TitlesOfParts"]).map(utf8read);
-		p["SheetNames"] = parts.slice(widx, widx + p["Worksheets"])
+		p["SheetNames"] = parts.slice(widx, widx + p["Worksheets"]);
 	}
 	p["Creator"] = q["dc:creator"];
 	p["LastModifiedBy"] = q["cp:lastModifiedBy"];
@@ -322,19 +322,24 @@ function parseZip(zip) {
 	var deps = {};
 	if(dir.calcchain) deps=parseDeps(zip.files[dir.calcchain.replace(/^\//,'')].data);
 	if(dir.strs[0]) strs=parseStrs(zip.files[dir.strs[0].replace(/^\//,'')].data);
-	var sheets = {};
+	var sheets = {}, i=0;
 	if(!props.Worksheets) {
+		/* Google Docs doesn't generate the appropriate metadata, so we impute: */
 		var wbsheets = wb.Sheets;
 		props.Worksheets = wbsheets.length;
 		props.SheetNames = [];
 		for(var j = 0; j != wbsheets.length; ++j) {
 			props.SheetNames[j] = wbsheets[j].name;
 		}
+		for(i = 0; i != props.Worksheets; ++i) {
+			sheets[props.SheetNames[i]]=parseSheet(zip.files['xl/worksheets/sheet' + (i+1) + '.xml'].data);
+		}
 	}
-	for(var i = 0; i != props.Worksheets; ++i) {
-		sheets[props.SheetNames[i]]=parseSheet(zip.files[dir.sheets[i].replace(/^\//,'')].data);
+	else {
+		for(i = 0; i != props.Worksheets; ++i) {
+			sheets[props.SheetNames[i]]=parseSheet(zip.files[dir.sheets[i].replace(/^\//,'')].data);
+		}
 	}
-
 	return {
 		Directory: dir,
 		Workbook: wb,
