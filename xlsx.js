@@ -69,6 +69,8 @@ var XMLNS_CT = 'http://schemas.openxmlformats.org/package/2006/content-types';
 var XMLNS_WB = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main';
 
 var encodings = {
+	'&quot;': '"',
+	'&apos;': "'",
 	'&gt;': '>',
 	'&lt;': '<',
 	'&amp;': '&'
@@ -130,6 +132,8 @@ function parseSheet(data) { //TODO: use a real xml parser
 						case '1': case 'TRUE':  case "true":  case true:  p.v=true;  break;
 						default: throw "Unrecognized boolean: " + p.v;
 					} break;
+				/* in case of error, stick value in .err */
+				case 'e': p.err = p.v; p.v = undefined; break;
 				default: throw "Unrecognized cell type: " + p.t;
 			}
 			//s.cells[cell.r] = p;
@@ -436,6 +440,7 @@ function sheet_to_row_object_array(sheet){
 							emptyRow = false;
 						}
 						break;
+					case 'e': break; /* thorw */
 					default: throw 'unrecognized type ' + val.t;
 				}
 			}
@@ -453,6 +458,7 @@ function sheet_to_csv(sheet) {
 			case 'n': return val.v;
 			case 's': case 'str': return JSON.stringify(val.v);
 			case 'b': return val.v ? "TRUE" : "FALSE";
+			case 'e': return ""; /* throw out value in case of error */
 			default: throw 'unrecognized type ' + val.t;
 		}
 	};
