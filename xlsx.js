@@ -104,7 +104,7 @@ function parseSheet(data) { //TODO: use a real xml parser
 	//s.cells = {};
 	var q = ["v","f"];
 	if(!data.match(/<sheetData *\/>/)) 
-	data.match(/<sheetData>(.*)<\/sheetData>/)[1].split("</row>").forEach(function(x) { 
+	data.match(/<sheetData>([^]*)<\/sheetData>/)[1].split("</row>").forEach(function(x) { 
 		if(x === "") return;
 		var row = parsexmltag(x.match(/<row[^>]*>/)[0]); //s.rows[row.r]=row.spans;
 		if(refguess.s.r > row.r - 1) refguess.s.r = row.r - 1; 
@@ -147,7 +147,7 @@ function parseSheet(data) { //TODO: use a real xml parser
 }
 
 // matches <foo>...</foo> extracts content
-function matchtag(f,g) {return new RegExp('<' + f + '>([\\s\\S]*)</' + f + '>',g||"");}
+function matchtag(f,g) {return new RegExp('<'+f+'(?: xml:space="preserve")?>([^]*)</'+f+'>',(g||"")+"m");}
 
 function parseVector(data) {
 	var h = parsexmltag(data);
