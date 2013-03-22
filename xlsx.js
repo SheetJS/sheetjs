@@ -126,7 +126,7 @@ function parseSheet(data) { //TODO: use a real xml parser
 			switch(p.t) {
 				case 'n': p.v = parseFloat(p.v); break;
 				case 's': p.v = strs[parseInt(p.v, 10)].t; break;
-				case 'str': p.v = utf8read(p.v); break; // normal string
+				case 'str': if(p.v) p.v = utf8read(p.v); break; // normal string
 				case 'b':
 					switch(p.v) {
 						case '0': case 'FALSE': case "false": case false: p.v=false; break;
@@ -358,20 +358,20 @@ function parseZip(zip) {
 	};
 }
 
-var fs, jszip;
+var _fs, jszip;
 if(typeof JSZip !== "undefined") jszip = JSZip;
 if (typeof exports !== 'undefined') {
-    if (typeof module !== 'undefined' && module.exports) {
-        if(typeof jszip === 'undefined') jszip = require('./jszip').JSZip;
-        fs = require('fs');
-    }
+	if (typeof module !== 'undefined' && module.exports) {
+		if(typeof jszip === 'undefined') jszip = require('./jszip').JSZip;
+		_fs = require('fs');
+	}
 }
 
 function readSync(data, options) {
 	var zip, d = data;
 	var o = options||{};
 	switch((o.type||"base64")){
-		case "file": d = fs.readFileSync(data).toString('base64');
+		case "file": d = _fs.readFileSync(data).toString('base64');
 			/* falls through */
 		case "base64": zip = new jszip(d, { base64:true }); break;
 		case "binary": zip = new jszip(d, { base64:false }); break;
