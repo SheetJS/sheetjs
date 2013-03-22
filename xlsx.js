@@ -69,15 +69,18 @@ var XMLNS_CT = 'http://schemas.openxmlformats.org/package/2006/content-types';
 var XMLNS_WB = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main';
 
 var encodings = {
+	'&quot;': '"',
+	'&apos;': "'",
 	'&gt;': '>',
 	'&lt;': '<',
 	'&amp;': '&'
 };
 
+// TODO: CP remap (need to read file version to determine OS)
 function unescapexml(text){
 	var s = text + '';
 	for(var y in encodings) s = s.replace(new RegExp(y,'g'), encodings[y]);
-	return s;
+	return s.replace(/_x([0-9a-fA-F]*)_/g,function(m,c) {return _chr(parseInt(c,16));});
 }
 
 function parsexmltag(tag) {
@@ -102,7 +105,7 @@ function parseSheet(data) { //TODO: use a real xml parser
 	//s.cells = {};
 	var q = ["v","f"];
 	if(!data.match(/<sheetData *\/>/)) 
-	data.match(/<sheetData>(.*)<\/sheetData>/)[1].split("</row>").forEach(function(x) { 
+	data.match(/<sheetData>([^]*)<\/sheetData>/m)[1].split("</row>").forEach(function(x) { 
 		if(x === "") return;
 		var row = parsexmltag(x.match(/<row[^>]*>/)[0]); //s.rows[row.r]=row.spans;
 		if(refguess.s.r > row.r - 1) refguess.s.r = row.r - 1; 
@@ -123,13 +126,15 @@ function parseSheet(data) { //TODO: use a real xml parser
 			switch(p.t) {
 				case 'n': p.v = parseFloat(p.v); break;
 				case 's': p.v = strs[parseInt(p.v, 10)].t; break;
-				case 'str': break; // normal string
+				case 'str': p.v = utf8read(p.v); break; // normal string
 				case 'b':
 					switch(p.v) {
 						case '0': case 'FALSE': case "false": case false: p.v=false; break;
 						case '1': case 'TRUE':  case "true":  case true:  p.v=true;  break;
 						default: throw "Unrecognized boolean: " + p.v;
 					} break;
+				/* in case of error, stick value in .err */
+				case 'e': p.err = p.v; p.v = undefined; break;
 				default: throw "Unrecognized cell type: " + p.t;
 			}
 			//s.cells[cell.r] = p;
@@ -143,7 +148,7 @@ function parseSheet(data) { //TODO: use a real xml parser
 }
 
 // matches <foo>...</foo> extracts content
-function matchtag(f,g) {return new RegExp('<' + f + '>([\\s\\S]*)</' + f + '>',g||"");}
+function matchtag(f,g) {return new RegExp('<'+f+'(?: xml:space="preserve")?>([^]*)</'+f+'>',(g||"")+"m");}
 
 function parseVector(data) {
 	var h = parsexmltag(data);
@@ -436,6 +441,7 @@ function sheet_to_row_object_array(sheet){
 							emptyRow = false;
 						}
 						break;
+					case 'e': break; /* thorw */
 					default: throw 'unrecognized type ' + val.t;
 				}
 			}
@@ -453,6 +459,7 @@ function sheet_to_csv(sheet) {
 			case 'n': return val.v;
 			case 's': case 'str': return JSON.stringify(val.v);
 			case 'b': return val.v ? "TRUE" : "FALSE";
+			case 'e': return ""; /* throw out value in case of error */
 			default: throw 'unrecognized type ' + val.t;
 		}
 	};
