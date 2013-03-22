@@ -360,9 +360,11 @@ function parseZip(zip) {
 
 var fs, jszip;
 if(typeof JSZip !== "undefined") jszip = JSZip;
-if(typeof require !== "undefined") {
-	if(typeof jszip === 'undefined') jszip = require('./jszip').JSZip;
-	fs = require('fs');
+if (typeof exports !== 'undefined') {
+    if (typeof module !== 'undefined' && module.exports) {
+        if(typeof jszip === 'undefined') jszip = require('./jszip').JSZip;
+        fs = require('fs');
+    }
 }
 
 function readSync(data, options) {
