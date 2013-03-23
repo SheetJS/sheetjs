@@ -8,7 +8,7 @@ var ct2type = {
 	"application/vnd.openxmlformats-officedocument.extended-properties+xml": "extprops",
 	"application/vnd.openxmlformats-officedocument.spreadsheetml.calcChain+xml": "calcchains",
 	"application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml":"sheets",
-	"application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml": "strs",	
+	"application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml": "strs",
 	"application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml":"styles",
 	"application/vnd.openxmlformats-officedocument.theme+xml":"themes",
 	"foo": "bar"
@@ -89,7 +89,7 @@ function parsexmltag(tag) {
 	if(words.length === 1) return z;
 	tag.match(/(\w+)="([^"]*)"/g).map(
 		function(x){var y=x.match(/(\w+)="([^"]*)"/); z[y[1]] = y[2]; });
-	return z; 
+	return z;
 }
 
 
@@ -105,16 +105,16 @@ function parseSheet(data) { //TODO: use a real xml parser
 	//s.cells = {};
 	var q = ["v","f"];
 	if(!data.match(/<sheetData *\/>/))
-	data.match(/<sheetData>([^]*)<\/sheetData>/m)[1].split("</row>").forEach(function(x) { 
+	data.match(/<sheetData>([^]*)<\/sheetData>/m)[1].split("</row>").forEach(function(x) {
 		if(x === "") return;
 		var row = parsexmltag(x.match(/<row[^>]*>/)[0]); //s.rows[row.r]=row.spans;
-		if(refguess.s.r > row.r - 1) refguess.s.r = row.r - 1; 
+		if(refguess.s.r > row.r - 1) refguess.s.r = row.r - 1;
 		if(refguess.e.r < row.r - 1) refguess.e.r = row.r - 1;
 
 		var cells = x.substr(x.indexOf('>')+1).split(/<c/);
 		cells.forEach(function(c, idx) { if(c === "") return;
 			c = "<c" + c;
-			if(refguess.s.c > idx - 1) refguess.s.c = idx - 1; 
+			if(refguess.s.c > idx - 1) refguess.s.c = idx - 1;
 			if(refguess.e.c < idx - 1) refguess.e.c = idx - 1;
 			var cell = parsexmltag((c.match(/<c[^>]*>/)||[c])[0]); delete cell[0];
 			var d = c.substr(c.indexOf('>')+1);
@@ -152,13 +152,13 @@ function matchtag(f,g) {return new RegExp('<'+f+'(?: xml:space="preserve")?>([^]
 
 function parseVector(data) {
 	var h = parsexmltag(data);
-	
+
 	var matches = data.match(new RegExp("<vt:" + h.baseType + ">(.*?)</vt:" + h.baseType + ">", 'g'));
 	if(matches.length != h.size) throw "unexpected vector length " + matches.length + " != " + h.size;
 	var res = [];
 	matches.forEach(function(x) {
 		var v = x.replace(/<[/]?vt:variant>/g,"").match(/<vt:([^>]*)>(.*)</);
-		res.push({v:v[2], t:v[1]}); 
+		res.push({v:v[2], t:v[1]});
 	});
 	return res;
 }
@@ -181,13 +181,13 @@ var utf8read = function(orig) {
 	return out;
 };
 
-function parseStrs(data) { 
+function parseStrs(data) {
 	var s = [];
 	var sst = data.match(new RegExp("<sst ([^>]*)>([\\s\\S]*)<\/sst>","m"));
 	if(sst) {
 		s = sst[2].replace(/<si>/g,"").split(/<\/si>/).map(function(x) { var z = {};
 			var y=x.match(/<(.*)>([\s\S]*)<\/.*/); if(y) z[y[1].split(" ")[0]]=utf8read(unescapexml(y[2])); return z;});
-	
+
 		sst = parsexmltag(sst[1]); s.count = sst.count; s.uniqueCount = sst.uniqueCount;
 	}
 	if(debug) s.rawdata = data;
@@ -199,7 +199,7 @@ function parseProps(data) {
 	var strings = ["Application", "DocSecurity", "Company", "AppVersion"];
 	var bools = ["HyperlinksChanged","SharedDoc","LinksUpToDate","ScaleCrop"];
 	var xtra = ["HeadingPairs", "TitlesOfParts","dc:creator","cp:lastModifiedBy","dcterms:created", "dcterms:modified"];
-	
+
 	strings.forEach(function(f){p[f] = (data.match(matchtag(f))||[])[1];});
 	bools.forEach(function(f){p[f] = (data.match(matchtag(f))||[])[1] == "true";});
 	xtra.forEach(function(f) {
@@ -224,7 +224,7 @@ function parseProps(data) {
 	p["LastModifiedBy"] = q["cp:lastModifiedBy"];
 	p["CreatedDate"] = new Date(q["dcterms:created"]);
 	p["ModifiedDate"] = new Date(q["dcterms:modified"]);
-	
+
 	if(debug) p.rawdata = data;
 	return p;
 }
@@ -247,7 +247,7 @@ function parseDeps(data) {
 var ctext = {};
 
 function parseCT(data) {
-	var ct = { workbooks: [], sheets: [], calcchains: [], themes: [], styles: [], 
+	var ct = { workbooks: [], sheets: [], calcchains: [], themes: [], styles: [],
 		coreprops: [], extprops: [], strs:[], xmlns: "" };
 	if(data == null) return data;
 	data.match(/<[^>]*>/g).forEach(function(x) {
@@ -256,7 +256,7 @@ function parseCT(data) {
 			case '<?xml': break;
 			case '<Types': ct.xmlns = y.xmlns; break;
 			case '<Default': ctext[y.Extension] = y.ContentType; break;
-			case '<Override': 
+			case '<Override':
 				if(y.ContentType in ct2type)ct[ct2type[y.ContentType]].push(y.PartName);
 				break;
 		}
@@ -278,40 +278,39 @@ function parseWB(data) {
 			case '<?xml': break;
 			case '<workbook': wb.xmlns = y.xmlns; break;
 			case '<fileVersion':
-				//if(y.appName != "xl") throw "Unexpected workbook.appName: "+y.appName;
 				delete y[0]; wb.AppVersion = y; break;
 			case '<workbookPr': delete y[0]; wb.WBProps = y; break;
 			case '<workbookPr/>': delete y[0]; wb.WBProps = y; break;
 			case '<bookViews>': case '</bookViews>': break; // aggregate workbookView
 			case '<workbookView': delete y[0]; wb.WBView.push(y); break;
 			case '<sheets>': case '</sheets>': break; // aggregate sheet
-			case '<sheet': delete y[0]; y.name = utf8read(y.name); wb.Sheets.push(y); break; 
+			case '<sheet': delete y[0]; y.name = utf8read(y.name); wb.Sheets.push(y); break;
 			case '</extLst>': case '</workbook>': break;
-			case '<workbookProtection/>': break; // LibreOffice 
-			case '<extLst>': break; 
+			case '<workbookProtection/>': break; // LibreOffice
+			case '<extLst>': break;
 			case '<calcPr': delete y[0]; wb.CalcPr = y; break;
 			case '<calcPr/>': delete y[0]; wb.CalcPr = y; break;
-			
+
 			case '<mx:ArchID': break;
 			case '<ext': pass=true; break; //TODO: check with versions of excel
-			case '</ext>': pass=false; break; 
-			
+			case '</ext>': pass=false; break;
+
 			case '<definedNames/>': break;
 			case '<definedNames>': pass=true; break;
 			case '</definedNames>': pass=false; break;
 			/* Introduced for Excel2013 Baseline */
-			case '<mc:AlternateContent': pass=true; break; // TODO: do something 
+			case '<mc:AlternateContent': pass=true; break; // TODO: do something
 			case '</mc:AlternateContent>': pass=false; break; // TODO: do something
 			default: if(!pass) console.error("WB Tag",x,y);
 		}
 	});
 	if(wb.xmlns !== XMLNS_WB) throw "Unknown Namespace: " + wb.xmlns;
-	
+
 	var z;
 	for(z in WBPropsDef) if(null == wb.WBProps[z]) wb.WBProps[z] = WBPropsDef[z];
 	wb.WBView.forEach(function(w){for(var z in WBViewDef) if(null==w[z]) w[z]=WBViewDef[z]; });
 	for(z in CalcPrDef) if(null == wb.CalcPr[z]) wb.CalcPr[z] = CalcPrDef[z];
-	wb.Sheets.forEach(function(w){for(var z in SheetDef) if(null==w[z]) w[z]=SheetDef[z]; }); 
+	wb.Sheets.forEach(function(w){for(var z in SheetDef) if(null==w[z]) w[z]=SheetDef[z]; });
 	if(debug) wb.rawdata = data;
 	return wb;
 }
@@ -468,7 +467,7 @@ function sheet_to_csv(sheet) {
 	var out = "";
 	if(sheet["!ref"]) {
 		var r = utils.decode_range(sheet["!ref"]);
-		for(var R = r.s.r; R <= r.e.r; ++R) { 
+		for(var R = r.s.r; R <= r.e.r; ++R) {
 			var row = [];
 			for(var C = r.s.c; C <= r.e.c; ++C) {
 				var val = sheet[utils.encode_cell({c:C,r:R})];
@@ -502,6 +501,6 @@ if(typeof require !== 'undefined' && typeof exports !== 'undefined') {
 		var zip = XLSX.read(args[0], {type:'file'});
 		console.log(zip.Sheets);
 	};
-if(typeof module !== 'undefined' && require.main === module) 
+if(typeof module !== 'undefined' && require.main === module)
 	exports.main(process.argv.slice(2));
 }
