@@ -1,7 +1,6 @@
 /* vim: set ts=2:*/
 /*jshint eqnull:true */
 var XLSX = (function(){
-var debug = 0;
 var ct2type = {
 	"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml": "workbooks",
 	"application/vnd.openxmlformats-package.core-properties+xml": "coreprops",
@@ -96,6 +95,7 @@ function parsexmltag(tag) {
 var strs = {}; // shared strings
 
 
+/* 18.3 Worksheets */
 function parseSheet(data) { //TODO: use a real xml parser
 	var s = {};
 	var ref = data.match(/<dimension ref="([^"]*)"\s*\/>/);
@@ -142,8 +142,6 @@ function parseSheet(data) { //TODO: use a real xml parser
 		});
 	});
 	if(!s["!ref"]) s["!ref"] = encode_range(refguess);
-
-	if(debug) s.rawdata = data;
 	return s;
 }
 
@@ -181,6 +179,7 @@ var utf8read = function(orig) {
 	return out;
 };
 
+/* 18.4 Shared String Table */
 function parseStrs(data) {
 	var s = [];
 	var sst = data.match(new RegExp("<sst ([^>]*)>([\\s\\S]*)<\/sst>","m"));
@@ -190,7 +189,6 @@ function parseStrs(data) {
 
 		sst = parsexmltag(sst[1]); s.count = sst.count; s.uniqueCount = sst.uniqueCount;
 	}
-	if(debug) s.rawdata = data;
 	return s;
 }
 
@@ -224,11 +222,10 @@ function parseProps(data) {
 	p["LastModifiedBy"] = q["cp:lastModifiedBy"];
 	p["CreatedDate"] = new Date(q["dcterms:created"]);
 	p["ModifiedDate"] = new Date(q["dcterms:modified"]);
-
-	if(debug) p.rawdata = data;
 	return p;
 }
 
+/* 18.6 Calculation Chain */
 function parseDeps(data) {
 	var d = [];
 	var l = 0, i = 1;
@@ -236,11 +233,12 @@ function parseDeps(data) {
 		var y = parsexmltag(x);
 		switch(y[0]) {
 			case '<?xml': break;
-			case '<calcChain': break;
+			/* 18.6.2  calcChain CT_CalcChain 1 */
+			case '<calcChain': case '<calcChain>': case '</calcChain>': break;
+			/* 18.6.1  c CT_CalcCell 1 */
 			case '<c': delete y[0]; if(y.i) i = y.i; else y.i = i; d.push(y); break;
 		}
 	});
-	if(debug) d.rawdata = data;
 	return d;
 }
 
@@ -264,11 +262,11 @@ function parseCT(data) {
 	if(ct.xmlns !== XMLNS_CT) throw "Unknown Namespace: " + ct.xmlns;
 	ct.calcchain = ct.calcchains.length > 0 ? ct.calcchains[0] : "";
 	delete ct.calcchains;
-	if(debug) ct.rawdata = data;
 	return ct;
 }
 
 
+/* 18.2 Workbook */
 function parseWB(data) {
 	var wb = { AppVersion:{}, WBProps:{}, WBView:[], Sheets:[], CalcPr:{}, xmlns: "" };
 	var pass = false;
@@ -276,31 +274,99 @@ function parseWB(data) {
 		var y = parsexmltag(x);
 		switch(y[0]) {
 			case '<?xml': break;
+
+			/* 18.2.27 workbook CT_Workbook 1 */
 			case '<workbook': wb.xmlns = y.xmlns; break;
-			case '<fileVersion':
-				delete y[0]; wb.AppVersion = y; break;
+			case '</workbook>': break;
+
+			/* 18.2.13 fileVersion CT_FileVersion ? */
+			case '<fileVersion': delete y[0]; wb.AppVersion = y; break;
+			case '<fileVersion/>': break;
+
+			/* 18.2.12 fileSharing CT_FileSharing ? */
+			case '<fileSharing': case '<fileSharing/>': break;
+
+			/* 18.2.28 workbookPr CT_WorkbookPr ? */
 			case '<workbookPr': delete y[0]; wb.WBProps = y; break;
 			case '<workbookPr/>': delete y[0]; wb.WBProps = y; break;
-			case '<bookViews>': case '</bookViews>': break; // aggregate workbookView
+
+			/* 18.2.29 workbookProtection CT_WorkbookProtection ? */
+			case '<workbookProtection/>': break;
+
+			/* 18.2.1  bookViews CT_BookViews ? */
+			case '<bookViews>': case '</bookViews>': break;
+			/* 18.2.30   workbookView CT_BookView + */
 			case '<workbookView': delete y[0]; wb.WBView.push(y); break;
+
+			/* 18.2.20 sheets CT_Sheets 1 */
 			case '<sheets>': case '</sheets>': break; // aggregate sheet
+			/* 18.2.19   sheet CT_Sheet + */
 			case '<sheet': delete y[0]; y.name = utf8read(y.name); wb.Sheets.push(y); break;
-			case '</extLst>': case '</workbook>': break;
-			case '<workbookProtection/>': break; // LibreOffice
-			case '<extLst>': break;
-			case '<calcPr': delete y[0]; wb.CalcPr = y; break;
-			case '<calcPr/>': delete y[0]; wb.CalcPr = y; break;
 
-			case '<mx:ArchID': break;
-			case '<ext': pass=true; break; //TODO: check with versions of excel
-			case '</ext>': pass=false; break;
+			/* 18.2.15 functionGroups CT_FunctionGroups ? */
+			case '<functionGroups': case '<functionGroups/>': break;
+			/* 18.2.14   functionGroup CT_FunctionGroup + */
+			case '<functionGroup': break;
 
+			/* 18.2.9  externalReferences CT_ExternalReferences ? */
+			case '<externalReferences': case '</externalReferences>': break;
+			/* 18.2.8    externalReference CT_ExternalReference + */
+			case '<externalReference': break;
+
+			/* 18.2.6  definedNames CT_DefinedNames ? */
 			case '<definedNames/>': break;
 			case '<definedNames>': pass=true; break;
 			case '</definedNames>': pass=false; break;
-			/* Introduced for Excel2013 Baseline */
-			case '<mc:AlternateContent': pass=true; break; // TODO: do something
-			case '</mc:AlternateContent>': pass=false; break; // TODO: do something
+			/* 18.2.5    definedName CT_DefinedName + */
+			case '<definedName': case '<definedName/>': case '</definedName>': break;
+
+			/* 18.2.2  calcPr CT_CalcPr ? */
+			case '<calcPr': delete y[0]; wb.CalcPr = y; break;
+			case '<calcPr/>': delete y[0]; wb.CalcPr = y; break;
+
+			/* 18.2.16 oleSize CT_OleSize ? (ref required) */
+			case '<oleSize': break;
+
+			/* 18.2.4  customWorkbookViews CT_CustomWorkbookViews ? */
+			case '<customWorkbookViews>': case '</customWorkbookViews>': case '<customWorkbookViews': break;
+			/* 18.2.3    customWorkbookView CT_CustomWorkbookView + */
+			case '<customWorkbookView': case '</customWorkbookView>': break;
+
+			/* 18.2.18 pivotCaches CT_PivotCaches ? */
+			case '<pivotCaches>': case '</pivotCaches>': case '<pivotCaches': break;
+			/* 18.2.17 pivotCache CT_PivotCache ? */
+			case '<pivotCache': break;
+
+			/* 18.2.21 smartTagPr CT_SmartTagPr ? */
+			case '<smartTagPr': case '<smartTagPr/>': break;
+
+			/* 18.2.23 smartTagTypes CT_SmartTagTypes ? */
+			case '<smartTagTypes': case '<smartTagTypes>': case '</smartTagTypes>': break;
+			/* 18.2.22   smartTagType CT_SmartTagType ? */
+			case '<smartTagType': break;
+
+			/* 18.2.24 webPublishing CT_WebPublishing ? */
+			case '<webPublishing': case '<webPublishing/>': break;
+
+			/* 18.2.11 fileRecoveryPr CT_FileRecoveryPr ? */
+			case '<fileRecoveryPr': case '<fileRecoveryPr/>': break;
+
+			/* 18.2.26 webPublishObjects CT_WebPublishObjects ? */
+			case '<webPublishObjects>': case '<webPublishObjects': case '</webPublishObjects>': break;
+			/* 18.2.25 webPublishObject CT_WebPublishObject ? */
+			case '<webPublishObject': break;
+
+			/* 18.2.10 extLst CT_ExtensionList ? */
+			case '<extLst>': case '</extLst>': case '<extLst/>': break;
+			/* 18.2.7    ext CT_Extension + */
+			case '<ext': pass=true; break; //TODO: check with versions of excel
+			case '</ext>': pass=false; break;
+
+			/* Others */
+			case '<mx:ArchID': break;
+			case '<mc:AlternateContent': pass=true; break;
+			case '</mc:AlternateContent>': pass=false; break;
+
 			default: if(!pass) console.error("WB Tag",x,y);
 		}
 	});
@@ -311,7 +377,6 @@ function parseWB(data) {
 	wb.WBView.forEach(function(w){for(var z in WBViewDef) if(null==w[z]) w[z]=WBViewDef[z]; });
 	for(z in CalcPrDef) if(null == wb.CalcPr[z]) wb.CalcPr[z] = CalcPrDef[z];
 	wb.Sheets.forEach(function(w){for(var z in SheetDef) if(null==w[z]) w[z]=SheetDef[z]; });
-	if(debug) wb.rawdata = data;
 	return wb;
 }
 
