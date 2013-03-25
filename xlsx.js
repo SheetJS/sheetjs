@@ -13,6 +13,7 @@ var ct2type = {
 	"foo": "bar"
 };
 
+/* Table 18.2.28 Defaults */
 var WBPropsDef = {
 	allowRefreshQuery: '0',
 	autoCompressPictures: '1',
@@ -52,6 +53,7 @@ var SheetDef = {
 	state: 'visible'
 };
 
+/* Table 18.2.2 Defaults */
 var CalcPrDef = {
 	calcCompleted: '1',
 	calcMode: 'auto',
@@ -62,6 +64,24 @@ var CalcPrDef = {
 	iterateCount: '100',
 	iterateDelta: '0.001',
 	refMode: 'A1'
+};
+
+/* Table 18.2.3 Defaults */
+var CustomWBViewDef = {
+	autoUpdate: 'false',
+	changesSavedWin: 'false',
+	includeHiddenRowCol: 'true',
+	includePrintSettings: 'true',
+	maximized: 'false',
+	minimized: 'false',
+	onlySync: 'false',
+	personalView: 'false',
+	showHorizontalScroll: 'true',
+	showObjects: 'all',
+	showSheetTabs: 'true',
+	showStatusbar: 'true',
+	showVerticalScroll: 'true',
+	tabRatio: '600'
 };
 
 var XMLNS_CT = 'http://schemas.openxmlformats.org/package/2006/content-types';
@@ -96,7 +116,7 @@ var strs = {}; // shared strings
 
 
 /* 18.3 Worksheets */
-function parseSheet(data) { //TODO: use a real xml parser
+function parseSheet(data) {
 	var s = {};
 	var ref = data.match(/<dimension ref="([^"]*)"\s*\/>/);
 	if(ref) s["!ref"] = ref[1];
@@ -261,6 +281,7 @@ function parseCT(data) {
 	});
 	if(ct.xmlns !== XMLNS_CT) throw "Unknown Namespace: " + ct.xmlns;
 	ct.calcchain = ct.calcchains.length > 0 ? ct.calcchains[0] : "";
+	ct.sst = ct.strs.length > 0 ? ct.strs[0] : "";
 	delete ct.calcchains;
 	return ct;
 }
@@ -373,10 +394,13 @@ function parseWB(data) {
 	if(wb.xmlns !== XMLNS_WB) throw "Unknown Namespace: " + wb.xmlns;
 
 	var z;
+	/* defaults */
 	for(z in WBPropsDef) if(null == wb.WBProps[z]) wb.WBProps[z] = WBPropsDef[z];
-	wb.WBView.forEach(function(w){for(var z in WBViewDef) if(null==w[z]) w[z]=WBViewDef[z]; });
 	for(z in CalcPrDef) if(null == wb.CalcPr[z]) wb.CalcPr[z] = CalcPrDef[z];
+
+	wb.WBView.forEach(function(w){for(var z in WBViewDef) if(null==w[z]) w[z]=WBViewDef[z]; });
 	wb.Sheets.forEach(function(w){for(var z in SheetDef) if(null==w[z]) w[z]=SheetDef[z]; });
+
 	return wb;
 }
 
@@ -390,7 +414,7 @@ function parseZip(zip) {
 	var props = propdata !== "" ? parseProps(propdata) : {};
 	var deps = {};
 	if(dir.calcchain) deps=parseDeps(zip.files[dir.calcchain.replace(/^\//,'')].data);
-	if(dir.strs[0]) strs=parseStrs(zip.files[dir.strs[0].replace(/^\//,'')].data);
+	if(dir.sst) strs=parseStrs(zip.files[dir.sst.replace(/^\//,'')].data);
 	var sheets = {}, i=0;
 	if(!props.Worksheets) {
 		/* Google Docs doesn't generate the appropriate metadata, so we impute: */
