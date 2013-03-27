@@ -1,4 +1,4 @@
-/* vim: set ts=2:*/
+/* vim: set ts=2: */
 /*jshint eqnull:true */
 /* Spreadsheet Format -- jump to XLSX for the XLSX code */
 var SSF = (function() {
@@ -24,7 +24,7 @@ var table_fmt = {
 	11: '0.00E+00',
 	12: '# ?/?',
 	13: '# ??/??',
-	14: 'mm-dd-yy',
+	14: 'mm/dd/yy',
 	15: 'd-mmm-yy',
 	16: 'd-mmm',
 	17: 'mmm-yy',
