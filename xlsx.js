@@ -234,7 +234,7 @@ var ct2type = {
 	"foo": "bar"
 };
 
-/* Table 18.2.28 Defaults */
+/* 18.2.28 (CT_WorkbookProtection) Defaults */
 var WBPropsDef = {
 	allowRefreshQuery: '0',
 	autoCompressPictures: '1',
@@ -257,6 +257,7 @@ var WBPropsDef = {
 	//updateLinks: 'userSet'
 };
 
+/* 18.2.30 (CT_BookView) Defaults */
 var WBViewDef = {
 	activeTab: '0',
 	autoFilterDateGrouping: '1',
@@ -270,24 +271,26 @@ var WBViewDef = {
 	//window{Height,Width}, {x,y}Window
 };
 
+/* 18.2.19 (CT_Sheet) Defaults */
 var SheetDef = {
 	state: 'visible'
 };
 
-/* Table 18.2.2 Defaults */
+/* 18.2.2  (CT_CalcPr) Defaults */
 var CalcPrDef = {
-	calcCompleted: '1',
+	calcCompleted: 'true',
 	calcMode: 'auto',
-	calcOnSave: '1',
-	concurrentCalc: '1',
-	fullCalcOnLoad: '0',
+	calcOnSave: 'true',
+	concurrentCalc: 'true',
+	fullCalcOnLoad: 'false',
+	fullPrecision: 'true',
 	iterate: 'false',
 	iterateCount: '100',
 	iterateDelta: '0.001',
 	refMode: 'A1'
 };
 
-/* Table 18.2.3 Defaults */
+/* 18.2.3 (CT_CustomWorkbookView) Defaults */
 var CustomWBViewDef = {
 	autoUpdate: 'false',
 	changesSavedWin: 'false',
@@ -297,12 +300,16 @@ var CustomWBViewDef = {
 	minimized: 'false',
 	onlySync: 'false',
 	personalView: 'false',
+	showComments: 'commIndicator',
+	showFormulaBar: 'true',
 	showHorizontalScroll: 'true',
 	showObjects: 'all',
 	showSheetTabs: 'true',
 	showStatusbar: 'true',
 	showVerticalScroll: 'true',
-	tabRatio: '600'
+	tabRatio: '600',
+	xWindow: '0',
+	yWindow: '0'
 };
 
 var XMLNS_CT = 'http://schemas.openxmlformats.org/package/2006/content-types';
@@ -339,17 +346,23 @@ var styles = {}; // shared styles
 
 /* 18.3 Worksheets */
 function parseSheet(data) {
+	/* 18.3.1.99 worksheet CT_Worksheet */
 	var s = {};
+
+	/* 18.3.1.35 dimension CT_SheetDimension ? */
 	var ref = data.match(/<dimension ref="([^"]*)"\s*\/>/);
 	if(ref && ref.indexOf(":") !== -1) s["!ref"] = ref[1];
+
 	var refguess = {s: {r:1000000, c:1000000}, e: {r:0, c:0} };
-	//s.rows = {};
-	//s.cells = {};
 	var q = ["v","f"];
+
+	/* 18.3.1.80 sheetData CT_SheetData ? */
 	if(!data.match(/<sheetData *\/>/))
 	data.match(/<sheetData>([^]*)<\/sheetData>/m)[1].split("</row>").forEach(function(x) {
 		if(x === "" || x.trim() === "") return;
-		var row = parsexmltag(x.match(/<row[^>]*>/)[0]); //s.rows[row.r]=row.spans;
+
+		/* 18.3.1.73 row CT_Row */
+		var row = parsexmltag(x.match(/<row[^>]*>/)[0]);
 		if(refguess.s.r > row.r - 1) refguess.s.r = row.r - 1;
 		if(refguess.e.r < row.r - 1) refguess.e.r = row.r - 1;
 
@@ -363,6 +376,7 @@ function parseSheet(data) {
 			var d = c.substr(c.indexOf('>')+1);
 			var p = {};
 			q.forEach(function(f){var x=d.match(matchtag(f));if(x)p[f]=unescapexml(x[1]);});
+
 			/* SCHEMA IS ACTUALLY INCORRECT HERE.  IF A CELL HAS NO T, EMIT "" */
 			if(cell.t === undefined && p.v === undefined) { p.t = "str"; p.v = undefined; }
 			else p.t = (cell.t ? cell.t : "n"); // default is "n" in schema
@@ -383,6 +397,7 @@ function parseSheet(data) {
 				case 'e': p.raw = p.v; p.v = undefined; break;
 				default: throw "Unrecognized cell type: " + p.t;
 			}
+
 			/* formatting */
 			if(cell.s) {
 				var cf = styles.CellXf[cell.s];
@@ -395,7 +410,7 @@ function parseSheet(data) {
 					} catch(e) { p.v = p.raw; }
 				}
 			}
-			//s.cells[cell.r] = p;
+
 			s[cell.r] = p;
 		});
 	});
@@ -454,7 +469,14 @@ function parseProps(data) {
 	var p = { Company:'' }, q = {};
 	var strings = ["Application", "DocSecurity", "Company", "AppVersion"];
 	var bools = ["HyperlinksChanged","SharedDoc","LinksUpToDate","ScaleCrop"];
-	var xtra = ["HeadingPairs", "TitlesOfParts","dc:creator","cp:lastModifiedBy","dcterms:created", "dcterms:modified"];
+	var xtra = ["HeadingPairs", "TitlesOfParts"];
+	var xtracp = ["category", "contentStatus", "lastModifiedBy", "lastPrinted", "revision", "version"];
+	var xtradc = ["creator", "description", "identifier", "language", "subject", "title"];
+	var xtradcterms = ["created", "modified"];
+	xtra = xtra.concat(xtracp.map(function(x) { return "cp:" + x; }));
+	xtra = xtra.concat(xtradc.map(function(x) { return "dc:" + x; }));
+	xtra = xtra.concat(xtradcterms.map(function(x) { return "dcterms:" + x; }));
+
 
 	strings.forEach(function(f){p[f] = (data.match(matchtag(f))||[])[1];});
 	bools.forEach(function(f){p[f] = (data.match(matchtag(f))||[])[1] == "true";});
@@ -667,10 +689,18 @@ function parseCXfs(t) {
 		var y = parsexmltag(x);
 		switch(y[0]) {
 			case '<cellXfs': case '<cellXfs/>': case '</cellXfs>': break;
+
+			/* 18.8.45 xf CT_Xf */
 			case '<xf': if(y.numFmtId) y.numFmtId = parseInt(y.numFmtId, 10);
 				styles.CellXf.push(y); break;
 			case '</xf>': break;
-			case '<alignment': case '<protection': break;
+
+			/* 18.8.1 alignment CT_CellAlignment */
+			case '<alignment': break;
+
+			/* 18.8.33 protection CT_CellProtection */
+			case '<protection': break;
+
 			case '<extLst': case '</extLst>': break;
 			case '<ext': break;
 			default: throw 'unrecognized ' + y[0] + ' in cellXfs';
@@ -680,9 +710,25 @@ function parseCXfs(t) {
 
 /* 18.8 Styles CT_Stylesheet*/
 function parseStyles(data) {
+	/* 18.8.39 styleSheet CT_Stylesheet */
 	var t;
+
+	/* numFmts CT_NumFmts ? */
 	if(t=data.match(/<numFmts([^>]*)>.*<\/numFmts>/)) parseNumFmts(t);
+
+	/* fonts CT_Fonts ? */
+	/* fills CT_Fills ? */
+	/* borders CT_Borders ? */
+	/* cellStyleXfs CT_CellStyleXfs ? */
+
+	/* cellXfs CT_CellXfs ? */
 	if(t=data.match(/<cellXfs([^>]*)>.*<\/cellXfs>/)) parseCXfs(t);
+
+	/* dxfs CT_Dxfs ? */
+	/* tableStyles CT_TableStyles ? */
+	/* colors CT_Colors ? */
+	/* extLst CT_ExtensionList ? */
+
 	return styles;
 }
 
