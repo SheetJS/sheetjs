@@ -131,6 +131,8 @@ var write_date = function(type, fmt, val) {
 			case 'ss': return pad(val.S, 2);
 			default: throw 'bad second format: ' + fmt;
 		}; break;
+		/* TODO: handle the ECMA spec format ee -> yy */ 
+		case 'e': { return val.y; } break; 
 		case 'A': return (val.h>=12 ? 'P' : 'A') + fmt.substr(1);
 		default: throw 'bad format type ' + type + ' in ' + fmt;
 	}
@@ -153,7 +155,7 @@ function eval_fmt(fmt, v, opts) {
 			case '@': /* Text Placeholder */
 				out.push({t:'T', v:v}); ++i; break;
 			/* Dates */
-			case 'm': case 'd': case 'y': case 'h': case 's':
+			case 'm': case 'd': case 'y': case 'h': case 's': case 'e':
 				if(!dt) dt = parse_date_code(v, opts);
 				o = fmt[i]; while(fmt[++i] === c) o+=c;
 				if(c === 'm' && lst.toLowerCase() === 'h') c = 'M'; /* m = minute */
@@ -165,7 +167,7 @@ function eval_fmt(fmt, v, opts) {
 				else if(fmt.substr(i,5) === "AM/PM") { q.v = "AM"; i+=5; hr = 'h' }
 				else q.t = "t";
 				out.push(q); lst = c; break;
-			case '[': /* ignore all conditionals and formatting */
+			case '[': /* TODO: Fix this -- ignore all conditionals and formatting */
 				while(fmt[i++] !== ']'); break;
 			default:
 				if("$-+/():!^&'~{}<>= ".indexOf(c) === -1)
@@ -177,7 +179,7 @@ function eval_fmt(fmt, v, opts) {
 	for(i=out.length-1, lst='t'; i >= 0; --i) {
 		switch(out[i].t) {
 			case 'h': case 'H': out[i].t = hr; lst='h'; break;
-			case 'd': case 'y': case 's': case 'M': lst=out[i].t; break;
+			case 'd': case 'y': case 's': case 'M': case 'e': lst=out[i].t; break;
 			case 'm': if(lst === 's') out[i].t = 'M'; break;
 
 		}
@@ -187,7 +189,7 @@ function eval_fmt(fmt, v, opts) {
 	for(i=0; i < out.length; ++i) {
 		switch(out[i].t) {
 			case 't': case 'T': break;
-			case 'd': case 'm': case 'y': case 'h': case 'H': case 'M': case 's': case 'A':
+			case 'd': case 'm': case 'y': case 'h': case 'H': case 'M': case 's': case 'A': case 'e':
 				out[i].v = write_date(out[i].t, out[i].v, dt);
 				out[i].t = 't'; break;
 			default: throw "unrecognized type " + out[i].t;
