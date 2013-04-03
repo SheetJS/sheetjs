@@ -131,8 +131,8 @@ var write_date = function(type, fmt, val) {
 			case 'ss': return pad(val.S, 2);
 			default: throw 'bad second format: ' + fmt;
 		}; break;
-		/* TODO: handle the ECMA spec format ee -> yy */ 
-		case 'e': { return val.y; } break; 
+		/* TODO: handle the ECMA spec format ee -> yy */
+		case 'e': { return val.y; } break;
 		case 'A': return (val.h>=12 ? 'P' : 'A') + fmt.substr(1);
 		default: throw 'bad format type ' + type + ' in ' + fmt;
 	}
