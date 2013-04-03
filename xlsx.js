@@ -133,8 +133,8 @@ var write_date = function(type, fmt, val) {
 			case 'ss': return pad(val.S, 2);
 			default: throw 'bad second format: ' + fmt;
 		}; break;
-		/* TODO: handle the ECMA spec format ee -> yy */ 
-		case 'e': { return val.y; } break; 
+		/* TODO: handle the ECMA spec format ee -> yy */
+		case 'e': { return val.y; } break;
 		case 'A': return (val.h>=12 ? 'P' : 'A') + fmt.substr(1);
 		default: throw 'bad format type ' + type + ' in ' + fmt;
 	}
@@ -344,7 +344,7 @@ function parsexmltag(tag) {
 
 var strs = {}; // shared strings
 var styles = {}; // shared styles
-
+var _ssfopts = {}; // spreadsheet formatting options
 
 /* 18.3 Worksheets */
 function parseSheet(data) {
@@ -407,7 +407,7 @@ function parseSheet(data) {
 					p.raw = p.v;
 					p.rawt = p.t;
 					try {
-						p.v = SSF.format(cf.numFmtId,p.v);
+						p.v = SSF.format(cf.numFmtId,p.v,_ssfopts);
 						p.t = 'str';
 					} catch(e) { p.v = p.raw; }
 				}
@@ -663,6 +663,8 @@ function parseWB(data) {
 
 	wb.WBView.forEach(function(w){for(var z in WBViewDef) if(null==w[z]) w[z]=WBViewDef[z]; });
 	wb.Sheets.forEach(function(w){for(var z in SheetDef) if(null==w[z]) w[z]=SheetDef[z]; });
+
+	_ssfopts.date1904 = wb.WBProps.date1904;
 
 	return wb;
 }
