@@ -440,7 +440,11 @@ function parseWB(data) {
 	wb.WBView.forEach(function(w){for(var z in WBViewDef) if(null==w[z]) w[z]=WBViewDef[z]; });
 	wb.Sheets.forEach(function(w){for(var z in SheetDef) if(null==w[z]) w[z]=SheetDef[z]; });
 
-	_ssfopts.date1904 = wb.WBProps.date1904;
+	switch(wb.WBProps.date1904) {
+		case '0': case 0: case 'false': case 'FALSE': _ssfopts.date1904=false;break;
+		case '1': case 1: case 'true': case 'TRUE': _ssfopts.date1904 = true; break;
+		default: throw "unrecognized date1904: " + wb.WBProps.date1904;
+	}
 
 	return wb;
 }
