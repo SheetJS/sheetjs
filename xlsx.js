@@ -341,6 +341,13 @@ function parsexmltag(tag) {
 	return z;
 }
 
+function parsexmlbool(value, tag) {
+	switch(value) {
+		case '0': case 0: case 'false': case 'FALSE': return false; 
+		case '1': case 1: case 'true': case 'TRUE': return true; 
+		default: throw "bad boolean value " + value + " in "+(tag||"?");
+	}
+}
 
 var strs = {}; // shared strings
 var styles = {}; // shared styles
@@ -462,7 +469,7 @@ function parseStrs(data) {
 		s = sst[2].replace(/<si>/g,"").split(/<\/si>/).map(function(x) { var z = {};
 			var y=x.match(/<(.*)>([\s\S]*)<\/.*/); if(y) z[y[1].split(" ")[0]]=utf8read(unescapexml(y[2])); return z;});
 
-		sst = parsexmltag(sst[1]); s.count = sst.count; s.uniqueCount = sst.uniqueCount;
+		sst = parsexmltag(sst[1]); s.Count = sst.count; s.Unique = sst.uniqueCount;
 	}
 	return s;
 }
@@ -664,11 +671,7 @@ function parseWB(data) {
 	wb.WBView.forEach(function(w){for(var z in WBViewDef) if(null==w[z]) w[z]=WBViewDef[z]; });
 	wb.Sheets.forEach(function(w){for(var z in SheetDef) if(null==w[z]) w[z]=SheetDef[z]; });
 
-	switch(wb.WBProps.date1904) {
-		case '0': case 0: case 'false': case 'FALSE': _ssfopts.date1904=false;break;
-		case '1': case 1: case 'true': case 'TRUE': _ssfopts.date1904 = true; break;
-		default: throw "unrecognized date1904: " + wb.WBProps.date1904;
-	}
+	_ssfopts.date1904 = parsexmlbool(wb.WBProps.date1904, 'date1904');
 
 	return wb;
 }
