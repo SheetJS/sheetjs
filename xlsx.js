@@ -892,7 +892,7 @@ function sheet_to_row_object_array(sheet){
 function sheet_to_csv(sheet) {
 	var stringify = function stringify(val) {
 		switch(val.t){
-			case 'n': return val.v;
+			case 'n': return String(val.v);
 			case 's': case 'str': return JSON.stringify(val.v);
 			case 'b': return val.v ? "TRUE" : "FALSE";
 			case 'e': return ""; /* throw out value in case of error */
@@ -906,6 +906,7 @@ function sheet_to_csv(sheet) {
 			var row = [];
 			for(var C = r.s.c; C <= r.e.c; ++C) {
 				var val = sheet[utils.encode_cell({c:C,r:R})];
+				console.error(val);
 				row.push(val ? stringify(val).replace(/\\r\\n/g,"\n").replace(/\\t/g,"\t").replace(/\\\\/g,"\\") : "");
 			}
 			out += row.join(",") + "\n";
