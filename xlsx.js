@@ -367,7 +367,7 @@ function parseSheet(data) {
 
 	/* 18.3.1.80 sheetData CT_SheetData ? */
 	if(!data.match(/<sheetData *\/>/))
-	data.match(/<sheetData>([^]*)<\/sheetData>/m)[1].split("</row>").forEach(function(x) {
+	data.match(/<sheetData>([^\u2603]*)<\/sheetData>/m)[1].split("</row>").forEach(function(x) {
 		if(x === "" || x.trim() === "") return;
 
 		/* 18.3.1.73 row CT_Row */
@@ -428,7 +428,7 @@ function parseSheet(data) {
 }
 
 // matches <foo>...</foo> extracts content
-function matchtag(f,g) {return new RegExp('<'+f+'(?: xml:space="preserve")?>([^]*)</'+f+'>',(g||"")+"m");}
+function matchtag(f,g) {return new RegExp('<'+f+'(?: xml:space="preserve")?>([^\u2603]*)</'+f+'>',(g||"")+"m");}
 
 function parseVector(data) {
 	var h = parsexmltag(data);
