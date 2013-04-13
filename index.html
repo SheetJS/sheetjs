@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <style>
 #drop{
 	border:2px dashed #bbb;
@@ -88,10 +89,13 @@ function handleDrop(e) {
 		var name = f.name;
 		reader.onload = function(e) {
 			var data = e.target.result;
-			var xlsx = XLSX.read(data, {type: 'binary'});
+			//var xlsx = XLSX.read(data, {type: 'binary'});
+			var arr = String.fromCharCode.apply(null, new Uint8Array(data));
+			var xlsx = XLSX.read(btoa(arr), {type: 'base64'});
 			process_xlsx(xlsx);
 		};
-		reader.readAsBinaryString(f);
+		//reader.readAsBinaryString(f);
+		reader.readAsArrayBuffer(f);
 	}
 }
 
@@ -101,7 +105,8 @@ function handleDragover(e) {
 	e.dataTransfer.dropEffect = 'copy';
 }
 
-if(drop.addEventListener) { // IE compatibility
+if(drop.addEventListener) {
+	drop.addEventListener('dragenter', handleDragover, false);
 	drop.addEventListener('dragover', handleDragover, false);
 	drop.addEventListener('drop', handleDrop, false);
 }
