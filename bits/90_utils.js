@@ -50,7 +50,7 @@ function sheet_to_row_object_array(sheet){
 							emptyRow = false;
 						}
 						break;
-					case 'e': break; /* thorw */
+					case 'e': break; /* throw */
 					default: throw 'unrecognized type ' + val.t;
 				}
 			}
@@ -87,6 +87,18 @@ function sheet_to_csv(sheet) {
 	return out;
 }
 
+function get_formulae(ws) {
+	var cmds = [];
+	for(y in ws) if(y[0] !=='!' && ws.hasOwnProperty(y)) (function(y,x) {
+		var val = "";
+		if(x.f) val = x.f;
+		else if(typeof x.v === 'number') val = x.v;
+		else val = x.v;
+		cmds.push(y + "=" + val);
+	})(y,ws[y]);
+	return cmds;
+}
+
 var utils = {
 	encode_col: encode_col,
 	encode_row: encode_row,
@@ -98,5 +110,6 @@ var utils = {
 	decode_cell: decode_cell,
 	decode_range: decode_range,
 	sheet_to_csv: sheet_to_csv,
+	get_formulae: get_formulae,
 	sheet_to_row_object_array: sheet_to_row_object_array
 };

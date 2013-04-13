@@ -1,4 +1,4 @@
-Copyright (C) 2012 Niggler 
+Copyright (C) 2012-2013 Niggler 
 
 The MIT License (MIT)
 
@@ -11,4 +11,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 Except where noted, this license applies to any and all software programs and associated documentation files created by the Original Author and distributed with the Software:
 
-'jszip.js' is a modified version of JSZip, Copyright (c) Stuart Knightley, David Duponchel, Franz Buchinger, Ant'onio Afonso.  JSZip is dual licensed and is used according to the terms of the MIT License. 
+'jszip.js' is a modified version of JSZip, Copyright (c) Stuart Knightley, David Duponchel, Franz Buchinger, Ant'onio Afonso.  JSZip is dual licensed and is used according to the terms of the MIT License.
+
+Any code shared between this project and the Apache-licensed XLS parser by the same author (all of which draws from the ECMA-376 specification) falls under this license.
