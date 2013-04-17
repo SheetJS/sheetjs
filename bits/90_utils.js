@@ -66,7 +66,9 @@ function sheet_to_csv(sheet) {
 	var stringify = function stringify(val) {
 		switch(val.t){
 			case 'n': return String(val.v);
-			case 's': case 'str': return JSON.stringify(val.v);
+			case 's': case 'str': 
+				if(typeof val.v === 'undefined') return "";
+				return JSON.stringify(val.v);
 			case 'b': return val.v ? "TRUE" : "FALSE";
 			case 'e': return ""; /* throw out value in case of error */
 			default: throw 'unrecognized type ' + val.t;
@@ -89,13 +91,14 @@ function sheet_to_csv(sheet) {
 
 function get_formulae(ws) {
 	var cmds = [];
-	for(y in ws) if(y[0] !=='!' && ws.hasOwnProperty(y)) (function(y,x) {
+	for(var y in ws) if(y[0] !=='!' && ws.hasOwnProperty(y)) {
+		var x = ws[y];
 		var val = "";
 		if(x.f) val = x.f;
 		else if(typeof x.v === 'number') val = x.v;
 		else val = x.v;
 		cmds.push(y + "=" + val);
-	})(y,ws[y]);
+	}
 	return cmds;
 }
 

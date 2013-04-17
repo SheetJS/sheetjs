@@ -9,10 +9,10 @@ function fill(c,l) { return new Array(l+1).join(c); }
 function pad(v,d){var t=String(v);return t.length>=d?t:(fill(0,d-t.length)+t);}
 /* Options */
 var opts_fmt = {};
-function fixopts(o){for(y in opts_fmt) if(o[y]===undefined) o[y]=opts_fmt[y];}
+function fixopts(o){for(var y in opts_fmt) if(o[y]===undefined) o[y]=opts_fmt[y];}
 SSF.opts = opts_fmt;
 opts_fmt.date1904 = 0;
-opts_fmt.output = ""
+opts_fmt.output = "";
 opts_fmt.mode = "";
 var table_fmt = {
 	1:  '0',
@@ -64,17 +64,17 @@ var months = [
 	['S', 'Sep', 'September'],
 	['O', 'Oct', 'October'],
 	['N', 'Nov', 'November'],
-	['D', 'Dec', 'December'],
+	['D', 'Dec', 'December']
 ];
 var general_fmt = function(v) {
 	if(typeof v === 'boolean') return v ? "TRUE" : "FALSE";
-}
+};
 SSF._general = general_fmt;
 var parse_date_code = function parse_date_code(v,opts) {
 	var date = Math.floor(v), time = Math.round(86400 * (v - date)), dow=0;
 	var dout=[], out={D:date, T:time}; fixopts(opts = (opts||{}));
 	if(opts.date1904) date += 1462;
-	if(date === 60) dout = [1900,2,29], dow=3;
+	if(date === 60) (dout = [1900,2,29], dow=3); /* JSHint bug (issue #1010) */
 	else {
 		if(date > 60) --date;
 		/* 1 = Jan 1 1900 */
@@ -97,7 +97,7 @@ var write_date = function(type, fmt, val) {
 		case 'y': switch(fmt) { /* year */
 			case 'y': case 'yy': return pad(val.y % 100,2);
 			default: return val.y;
-		}; break;
+		} break;
 		case 'm': switch(fmt) { /* month */
 			case 'm': return val.m;
 			case 'mm': return pad(val.m,2);
@@ -105,34 +105,34 @@ var write_date = function(type, fmt, val) {
 			case 'mmmm': return months[val.m-1][2];
 			case 'mmmmm': return months[val.m-1][0];
 			default: throw 'bad month format: ' + fmt;
-		}; break;
+		} break;
 		case 'd': switch(fmt) { /* day */
 			case 'd': return val.d;
 			case 'dd': return pad(val.d,2);
 			case 'ddd': return days[val.q][0];
 			case 'dddd': return days[val.q][1];
 			default: throw 'bad day format: ' + fmt;
-		}; break;
+		} break;
 		case 'h': switch(fmt) { /* 12-hour */
 			case 'h': return 1+(val.H+11)%12;
 			case 'hh': return pad(1+(val.H+11)%12, 2);
 			default: throw 'bad hour format: ' + fmt;
-		}; break;
+		} break;
 		case 'H': switch(fmt) { /* 24-hour */
 			case 'h': return val.H;
 			case 'hh': return pad(val.H, 2);
 			default: throw 'bad hour format: ' + fmt;
-		}; break;
+		} break;
 		case 'M': switch(fmt) { /* minutes */
 			case 'm': return val.M;
 			case 'mm': return pad(val.M, 2);
 			default: throw 'bad minute format: ' + fmt;
-		}; break;
+		} break;
 		case 's': switch(fmt) { /* seconds */
 			case 's': return val.S;
 			case 'ss': return pad(val.S, 2);
 			default: throw 'bad second format: ' + fmt;
-		}; break;
+		} break;
 		/* TODO: handle the ECMA spec format ee -> yy */
 		case 'e': { return val.y; } break;
 		case 'A': return (val.h>=12 ? 'P' : 'A') + fmt.substr(1);
@@ -146,10 +146,10 @@ SSF._split = split_fmt;
 function eval_fmt(fmt, v, opts) {
 	var out = [], o = "", i = 0, c = "", lst='t', q = {}, dt;
 	fixopts(opts = (opts || {}));
-	var hr='H'
+	var hr='H';
 	/* Tokenize */
 	while(i < fmt.length) {
-		switch(c = fmt[i]) {
+		switch((c = fmt[i])) {
 			case '"': /* Literal text */
 				for(o="";fmt[++i] !== '"';) o += fmt[(fmt[i] === '\\' ? ++i : i)];
 				out.push({t:'t', v:o}); break;
@@ -165,8 +165,8 @@ function eval_fmt(fmt, v, opts) {
 				q={t:c, v:o}; out.push(q); lst = c; break;
 			case 'A':
 				q={t:c,v:"A"};
-				if(fmt.substr(i, 3) === "A/P") hr = 'h',i+=3;
-				else if(fmt.substr(i,5) === "AM/PM") { q.v = "AM"; i+=5; hr = 'h' }
+				if(fmt.substr(i, 3) === "A/P") (hr = 'h',i+=3);
+				else if(fmt.substr(i,5) === "AM/PM") { q.v = "AM"; i+=5; hr = 'h'; }
 				else q.t = "t";
 				out.push(q); lst = c; break;
 			case '[': /* TODO: Fix this -- ignore all conditionals and formatting */
@@ -198,12 +198,12 @@ function eval_fmt(fmt, v, opts) {
 		}
 	}
 
-	return out.map(function(x){return x.v}).join("");
+	return out.map(function(x){return x.v;}).join("");
 }
 SSF._eval = eval_fmt;
 function choose_fmt(fmt, v) {
 	if(typeof fmt === "string") fmt = split_fmt(fmt);
-	if(!(typeof v === "number")) return fmt[3];
+	if(typeof v !== "number") return fmt[3];
 	return v > 0 ? fmt[0] : v < 0 ? fmt[1] : fmt[2];
 }
 
@@ -213,7 +213,7 @@ var format = function format(fmt,v,o) {
 	if(typeof fmt === 'number') fmt = table_fmt[fmt];
 	var f = choose_fmt(fmt, v, o);
 	return eval_fmt(f, v, o);
-}
+};
 
 SSF._choose = choose_fmt;
 SSF._table = table_fmt;
@@ -410,7 +410,7 @@ function parseSheet(data) {
 			/* formatting */
 			if(cell.s) {
 				var cf = styles.CellXf[cell.s];
-				if(cf && cf.numFmtId && cf.numFmtId != 0) {
+				if(cf && cf.numFmtId && cf.numFmtId !== 0) {
 					p.raw = p.v;
 					p.rawt = p.t;
 					try {
@@ -494,23 +494,23 @@ function parseProps(data) {
 		if(cur && cur.length > 0) q[f] = cur[1];
 	});
 
-	if(q["HeadingPairs"] && q["TitlesOfParts"]) {
-		var v = parseVector(q["HeadingPairs"]);
+	if(q.HeadingPairs && q.TitlesOfParts) {
+		var v = parseVector(q.HeadingPairs);
 		var j = 0, widx = 0;
 		for(var i = 0; i !== v.length; ++i) {
 			switch(v[i].v) {
-				case "Worksheets": widx = j; p["Worksheets"] = +v[++i]; break;
+				case "Worksheets": widx = j; p.Worksheets = +v[++i]; break;
 				case "Named Ranges": ++i; break; // TODO: Handle Named Ranges
 				default: console.error("Unrecognized key in Heading Pairs: " + v[i++].v);
 			}
 		}
-		var parts = parseVector(q["TitlesOfParts"]).map(utf8read);
-		p["SheetNames"] = parts.slice(widx, widx + p["Worksheets"]);
+		var parts = parseVector(q.TitlesOfParts).map(utf8read);
+		p.SheetNames = parts.slice(widx, widx + p.Worksheets);
 	}
-	p["Creator"] = q["dc:creator"];
-	p["LastModifiedBy"] = q["cp:lastModifiedBy"];
-	p["CreatedDate"] = new Date(q["dcterms:created"]);
-	p["ModifiedDate"] = new Date(q["dcterms:modified"]);
+	p.Creator = q["dc:creator"];
+	p.LastModifiedBy = q["cp:lastModifiedBy"];
+	p.CreatedDate = new Date(q["dcterms:created"]);
+	p.ModifiedDate = new Date(q["dcterms:modified"]);
 	return p;
 }
 
@@ -534,9 +534,9 @@ function parseDeps(data) {
 var ctext = {};
 
 function parseCT(data) {
+	if(!data) return data;
 	var ct = { workbooks: [], sheets: [], calcchains: [], themes: [], styles: [],
 		coreprops: [], extprops: [], strs:[], xmlns: "" };
-	if(data == null) return data;
 	data.match(/<[^>]*>/g).forEach(function(x) {
 		var y = parsexmltag(x);
 		switch(y[0]) {
@@ -665,11 +665,11 @@ function parseWB(data) {
 
 	var z;
 	/* defaults */
-	for(z in WBPropsDef) if(null == wb.WBProps[z]) wb.WBProps[z] = WBPropsDef[z];
-	for(z in CalcPrDef) if(null == wb.CalcPr[z]) wb.CalcPr[z] = CalcPrDef[z];
+	for(z in WBPropsDef) if(typeof wb.WBProps[z] === 'undefined') wb.WBProps[z] = WBPropsDef[z];
+	for(z in CalcPrDef) if(typeof wb.CalcPr[z] === 'undefined') wb.CalcPr[z] = CalcPrDef[z];
 
-	wb.WBView.forEach(function(w){for(var z in WBViewDef) if(null==w[z]) w[z]=WBViewDef[z]; });
-	wb.Sheets.forEach(function(w){for(var z in SheetDef) if(null==w[z]) w[z]=SheetDef[z]; });
+	wb.WBView.forEach(function(w){for(var z in WBViewDef) if(typeof w[z] === 'undefined') w[z]=WBViewDef[z]; });
+	wb.Sheets.forEach(function(w){for(var z in SheetDef) if(typeof w[z] === 'undefined') w[z]=SheetDef[z]; });
 
 	_ssfopts.date1904 = parsexmlbool(wb.WBProps.date1904, 'date1904');
 
@@ -679,7 +679,7 @@ function parseWB(data) {
 /* 18.8.31 numFmts CT_NumFmts */
 function parseNumFmts(t) {
 	styles.NumberFmt = [];
-	for(y in SSF._table) styles.NumberFmt[y] = SSF._table[y];
+	for(var y in SSF._table) styles.NumberFmt[y] = SSF._table[y];
 	t[0].match(/<[^>]*>/g).forEach(function(x) {
 		var y = parsexmltag(x);
 		switch(y[0]) {
@@ -725,7 +725,7 @@ function parseStyles(data) {
 	var t;
 
 	/* numFmts CT_NumFmts ? */
-	if(t=data.match(/<numFmts([^>]*)>.*<\/numFmts>/)) parseNumFmts(t);
+	if((t=data.match(/<numFmts([^>]*)>.*<\/numFmts>/))) parseNumFmts(t);
 
 	/* fonts CT_Fonts ? */
 	/* fills CT_Fills ? */
@@ -733,7 +733,7 @@ function parseStyles(data) {
 	/* cellStyleXfs CT_CellStyleXfs ? */
 
 	/* cellXfs CT_CellXfs ? */
-	if(t=data.match(/<cellXfs([^>]*)>.*<\/cellXfs>/)) parseCXfs(t);
+	if((t=data.match(/<cellXfs([^>]*)>.*<\/cellXfs>/))) parseCXfs(t);
 
 	/* dxfs CT_Dxfs ? */
 	/* tableStyles CT_TableStyles ? */
@@ -793,7 +793,7 @@ function parseZip(zip) {
 }
 
 var _fs, jszip;
-if(typeof JSZip !== "undefined") jszip = JSZip;
+if(typeof JSZip !== 'undefined') jszip = JSZip;
 if (typeof exports !== 'undefined') {
 	if (typeof module !== 'undefined' && module.exports) {
 		if(typeof jszip === 'undefined') jszip = require('./jszip').JSZip;
@@ -893,7 +893,9 @@ function sheet_to_csv(sheet) {
 	var stringify = function stringify(val) {
 		switch(val.t){
 			case 'n': return String(val.v);
-			case 's': case 'str': return JSON.stringify(val.v);
+			case 's': case 'str': 
+				if(typeof val.v === 'undefined') return "";
+				return JSON.stringify(val.v);
 			case 'b': return val.v ? "TRUE" : "FALSE";
 			case 'e': return ""; /* throw out value in case of error */
 			default: throw 'unrecognized type ' + val.t;
@@ -916,13 +918,14 @@ function sheet_to_csv(sheet) {
 
 function get_formulae(ws) {
 	var cmds = [];
-	for(y in ws) if(y[0] !=='!' && ws.hasOwnProperty(y)) (function(y,x) {
+	for(var y in ws) if(y[0] !=='!' && ws.hasOwnProperty(y)) {
+		var x = ws[y];
 		var val = "";
 		if(x.f) val = x.f;
 		else if(typeof x.v === 'number') val = x.v;
 		else val = x.v;
 		cmds.push(y + "=" + val);
-	})(y,ws[y]);
+	}
 	return cmds;
 }
 

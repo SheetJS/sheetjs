@@ -186,7 +186,7 @@ function parseSheet(data) {
 			/* formatting */
 			if(cell.s) {
 				var cf = styles.CellXf[cell.s];
-				if(cf && cf.numFmtId && cf.numFmtId != 0) {
+				if(cf && cf.numFmtId && cf.numFmtId !== 0) {
 					p.raw = p.v;
 					p.rawt = p.t;
 					try {
@@ -270,23 +270,23 @@ function parseProps(data) {
 		if(cur && cur.length > 0) q[f] = cur[1];
 	});
 
-	if(q["HeadingPairs"] && q["TitlesOfParts"]) {
-		var v = parseVector(q["HeadingPairs"]);
+	if(q.HeadingPairs && q.TitlesOfParts) {
+		var v = parseVector(q.HeadingPairs);
 		var j = 0, widx = 0;
 		for(var i = 0; i !== v.length; ++i) {
 			switch(v[i].v) {
-				case "Worksheets": widx = j; p["Worksheets"] = +v[++i]; break;
+				case "Worksheets": widx = j; p.Worksheets = +v[++i]; break;
 				case "Named Ranges": ++i; break; // TODO: Handle Named Ranges
 				default: console.error("Unrecognized key in Heading Pairs: " + v[i++].v);
 			}
 		}
-		var parts = parseVector(q["TitlesOfParts"]).map(utf8read);
-		p["SheetNames"] = parts.slice(widx, widx + p["Worksheets"]);
+		var parts = parseVector(q.TitlesOfParts).map(utf8read);
+		p.SheetNames = parts.slice(widx, widx + p.Worksheets);
 	}
-	p["Creator"] = q["dc:creator"];
-	p["LastModifiedBy"] = q["cp:lastModifiedBy"];
-	p["CreatedDate"] = new Date(q["dcterms:created"]);
-	p["ModifiedDate"] = new Date(q["dcterms:modified"]);
+	p.Creator = q["dc:creator"];
+	p.LastModifiedBy = q["cp:lastModifiedBy"];
+	p.CreatedDate = new Date(q["dcterms:created"]);
+	p.ModifiedDate = new Date(q["dcterms:modified"]);
 	return p;
 }
 
@@ -310,9 +310,9 @@ function parseDeps(data) {
 var ctext = {};
 
 function parseCT(data) {
+	if(!data) return data;
 	var ct = { workbooks: [], sheets: [], calcchains: [], themes: [], styles: [],
 		coreprops: [], extprops: [], strs:[], xmlns: "" };
-	if(data == null) return data;
 	data.match(/<[^>]*>/g).forEach(function(x) {
 		var y = parsexmltag(x);
 		switch(y[0]) {
@@ -441,11 +441,11 @@ function parseWB(data) {
 
 	var z;
 	/* defaults */
-	for(z in WBPropsDef) if(null == wb.WBProps[z]) wb.WBProps[z] = WBPropsDef[z];
-	for(z in CalcPrDef) if(null == wb.CalcPr[z]) wb.CalcPr[z] = CalcPrDef[z];
+	for(z in WBPropsDef) if(typeof wb.WBProps[z] === 'undefined') wb.WBProps[z] = WBPropsDef[z];
+	for(z in CalcPrDef) if(typeof wb.CalcPr[z] === 'undefined') wb.CalcPr[z] = CalcPrDef[z];
 
-	wb.WBView.forEach(function(w){for(var z in WBViewDef) if(null==w[z]) w[z]=WBViewDef[z]; });
-	wb.Sheets.forEach(function(w){for(var z in SheetDef) if(null==w[z]) w[z]=SheetDef[z]; });
+	wb.WBView.forEach(function(w){for(var z in WBViewDef) if(typeof w[z] === 'undefined') w[z]=WBViewDef[z]; });
+	wb.Sheets.forEach(function(w){for(var z in SheetDef) if(typeof w[z] === 'undefined') w[z]=SheetDef[z]; });
 
 	_ssfopts.date1904 = parsexmlbool(wb.WBProps.date1904, 'date1904');
 
@@ -455,7 +455,7 @@ function parseWB(data) {
 /* 18.8.31 numFmts CT_NumFmts */
 function parseNumFmts(t) {
 	styles.NumberFmt = [];
-	for(y in SSF._table) styles.NumberFmt[y] = SSF._table[y];
+	for(var y in SSF._table) styles.NumberFmt[y] = SSF._table[y];
 	t[0].match(/<[^>]*>/g).forEach(function(x) {
 		var y = parsexmltag(x);
 		switch(y[0]) {
@@ -501,7 +501,7 @@ function parseStyles(data) {
 	var t;
 
 	/* numFmts CT_NumFmts ? */
-	if(t=data.match(/<numFmts([^>]*)>.*<\/numFmts>/)) parseNumFmts(t);
+	if((t=data.match(/<numFmts([^>]*)>.*<\/numFmts>/))) parseNumFmts(t);
 
 	/* fonts CT_Fonts ? */
 	/* fills CT_Fills ? */
@@ -509,7 +509,7 @@ function parseStyles(data) {
 	/* cellStyleXfs CT_CellStyleXfs ? */
 
 	/* cellXfs CT_CellXfs ? */
-	if(t=data.match(/<cellXfs([^>]*)>.*<\/cellXfs>/)) parseCXfs(t);
+	if((t=data.match(/<cellXfs([^>]*)>.*<\/cellXfs>/))) parseCXfs(t);
 
 	/* dxfs CT_Dxfs ? */
 	/* tableStyles CT_TableStyles ? */
@@ -569,7 +569,7 @@ function parseZip(zip) {
 }
 
 var _fs, jszip;
-if(typeof JSZip !== "undefined") jszip = JSZip;
+if(typeof JSZip !== 'undefined') jszip = JSZip;
 if (typeof exports !== 'undefined') {
 	if (typeof module !== 'undefined' && module.exports) {
 		if(typeof jszip === 'undefined') jszip = require('./jszip').JSZip;

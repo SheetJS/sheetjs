@@ -7,10 +7,10 @@ function fill(c,l) { return new Array(l+1).join(c); }
 function pad(v,d){var t=String(v);return t.length>=d?t:(fill(0,d-t.length)+t);}
 /* Options */
 var opts_fmt = {};
-function fixopts(o){for(y in opts_fmt) if(o[y]===undefined) o[y]=opts_fmt[y];}
+function fixopts(o){for(var y in opts_fmt) if(o[y]===undefined) o[y]=opts_fmt[y];}
 SSF.opts = opts_fmt;
 opts_fmt.date1904 = 0;
-opts_fmt.output = ""
+opts_fmt.output = "";
 opts_fmt.mode = "";
 var table_fmt = {
 	1:  '0',
@@ -62,17 +62,17 @@ var months = [
 	['S', 'Sep', 'September'],
 	['O', 'Oct', 'October'],
 	['N', 'Nov', 'November'],
-	['D', 'Dec', 'December'],
+	['D', 'Dec', 'December']
 ];
 var general_fmt = function(v) {
 	if(typeof v === 'boolean') return v ? "TRUE" : "FALSE";
-}
+};
 SSF._general = general_fmt;
 var parse_date_code = function parse_date_code(v,opts) {
 	var date = Math.floor(v), time = Math.round(86400 * (v - date)), dow=0;
 	var dout=[], out={D:date, T:time}; fixopts(opts = (opts||{}));
 	if(opts.date1904) date += 1462;
-	if(date === 60) dout = [1900,2,29], dow=3;
+	if(date === 60) (dout = [1900,2,29], dow=3); /* JSHint bug (issue #1010) */
 	else {
 		if(date > 60) --date;
 		/* 1 = Jan 1 1900 */
@@ -95,7 +95,7 @@ var write_date = function(type, fmt, val) {
 		case 'y': switch(fmt) { /* year */
 			case 'y': case 'yy': return pad(val.y % 100,2);
 			default: return val.y;
-		}; break;
+		} break;
 		case 'm': switch(fmt) { /* month */
 			case 'm': return val.m;
 			case 'mm': return pad(val.m,2);
@@ -103,34 +103,34 @@ var write_date = function(type, fmt, val) {
 			case 'mmmm': return months[val.m-1][2];
 			case 'mmmmm': return months[val.m-1][0];
 			default: throw 'bad month format: ' + fmt;
-		}; break;
+		} break;
 		case 'd': switch(fmt) { /* day */
 			case 'd': return val.d;
 			case 'dd': return pad(val.d,2);
 			case 'ddd': return days[val.q][0];
 			case 'dddd': return days[val.q][1];
 			default: throw 'bad day format: ' + fmt;
-		}; break;
+		} break;
 		case 'h': switch(fmt) { /* 12-hour */
 			case 'h': return 1+(val.H+11)%12;
 			case 'hh': return pad(1+(val.H+11)%12, 2);
 			default: throw 'bad hour format: ' + fmt;
-		}; break;
+		} break;
 		case 'H': switch(fmt) { /* 24-hour */
 			case 'h': return val.H;
 			case 'hh': return pad(val.H, 2);
 			default: throw 'bad hour format: ' + fmt;
-		}; break;
+		} break;
 		case 'M': switch(fmt) { /* minutes */
 			case 'm': return val.M;
 			case 'mm': return pad(val.M, 2);
 			default: throw 'bad minute format: ' + fmt;
-		}; break;
+		} break;
 		case 's': switch(fmt) { /* seconds */
 			case 's': return val.S;
 			case 'ss': return pad(val.S, 2);
 			default: throw 'bad second format: ' + fmt;
-		}; break;
+		} break;
 		/* TODO: handle the ECMA spec format ee -> yy */
 		case 'e': { return val.y; } break;
 		case 'A': return (val.h>=12 ? 'P' : 'A') + fmt.substr(1);
@@ -144,10 +144,10 @@ SSF._split = split_fmt;
 function eval_fmt(fmt, v, opts) {
 	var out = [], o = "", i = 0, c = "", lst='t', q = {}, dt;
 	fixopts(opts = (opts || {}));
-	var hr='H'
+	var hr='H';
 	/* Tokenize */
 	while(i < fmt.length) {
-		switch(c = fmt[i]) {
+		switch((c = fmt[i])) {
 			case '"': /* Literal text */
 				for(o="";fmt[++i] !== '"';) o += fmt[(fmt[i] === '\\' ? ++i : i)];
 				out.push({t:'t', v:o}); break;
@@ -163,8 +163,8 @@ function eval_fmt(fmt, v, opts) {
 				q={t:c, v:o}; out.push(q); lst = c; break;
 			case 'A':
 				q={t:c,v:"A"};
-				if(fmt.substr(i, 3) === "A/P") hr = 'h',i+=3;
-				else if(fmt.substr(i,5) === "AM/PM") { q.v = "AM"; i+=5; hr = 'h' }
+				if(fmt.substr(i, 3) === "A/P") (hr = 'h',i+=3);
+				else if(fmt.substr(i,5) === "AM/PM") { q.v = "AM"; i+=5; hr = 'h'; }
 				else q.t = "t";
 				out.push(q); lst = c; break;
 			case '[': /* TODO: Fix this -- ignore all conditionals and formatting */
@@ -196,12 +196,12 @@ function eval_fmt(fmt, v, opts) {
 		}
 	}
 
-	return out.map(function(x){return x.v}).join("");
+	return out.map(function(x){return x.v;}).join("");
 }
 SSF._eval = eval_fmt;
 function choose_fmt(fmt, v) {
 	if(typeof fmt === "string") fmt = split_fmt(fmt);
-	if(!(typeof v === "number")) return fmt[3];
+	if(typeof v !== "number") return fmt[3];
 	return v > 0 ? fmt[0] : v < 0 ? fmt[1] : fmt[2];
 }
 
@@ -211,7 +211,7 @@ var format = function format(fmt,v,o) {
 	if(typeof fmt === 'number') fmt = table_fmt[fmt];
 	var f = choose_fmt(fmt, v, o);
 	return eval_fmt(f, v, o);
-}
+};
 
 SSF._choose = choose_fmt;
 SSF._table = table_fmt;
