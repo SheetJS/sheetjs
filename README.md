@@ -19,8 +19,8 @@ In the browser:
 
 ## Tested Environments
 
- - Node >= 0.8.14 (untested in versions before 0.8.14)
- - IE 6/7/8/9/10 using Base64 mode
+ - Node 0.8.14, 0.10.1
+ - IE 6/7/8/9/10 using Base64 mode (IE10 using HTML5 mode)
  - FF 18 using Base64 or HTML5 mode
  - Chrome 24 using Base64 or HTML5 mode
 
@@ -41,7 +41,7 @@ Note that IE does not support HTML5 File API, so the base64 mode is provided for
 `.Sheets[sheetname]` returns a data structure representing the sheet.  Each key
 that does not start with `!` corresponds to a cell (using `A-1` notation).  
 
-`.Sheets[sheetname][address].v` returns the value of the cell and `.Sheets[sheetname][address].t` returns the type of the cell (constrained to the enumeration `ST_CellType` as documented in page 4215 of ISO/IEC 29500-1:2012(E) ) 
+`.Sheets[sheetname][address].v` returns the value of the specified cell and `.Sheets[sheetname][address].t` returns the type of the cell (constrained to the enumeration `ST_CellType` as documented in page 4215 of ISO/IEC 29500-1:2012(E) ) 
 
 Simple usage:
 
@@ -54,6 +54,12 @@ Simple usage:
         console.log(y + "!" + z + "=" + JSON.stringify(xlsx.Sheets[y][z].v));
       }
     });
+
+For more details:
+
+- `bin/xlsx2csv.njs` is a tool for node
+- `index.html` is the live demo
+- `bits/90_utils.js` contains the logic for generating CSV and JSON from sheets
 
 ## License
 
