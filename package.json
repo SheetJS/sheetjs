@@ -1,6 +1,6 @@
 {
 	"name": "xlsx",
-	"version": "0.2.6",
+	"version": "0.2.7",
 	"author": "Niggler",
 	"description": "(one day) a full-featured XLSX parser and writer.  For now, primitive parser",
 	"keywords": [
@@ -17,7 +17,5 @@
 	"bugs": {
 		"url": "https://github.com/Niggler/js-xlsx/issues"
 	},
-	"engines": {
-		"node": ">=0.8"
-	}
+	"engines": { "node": ">=0.6" }
 }
