@@ -66,7 +66,7 @@ function sheet_to_csv(sheet) {
 	var stringify = function stringify(val) {
 		switch(val.t){
 			case 'n': return String(val.v);
-			case 's': case 'str': 
+			case 's': case 'str':
 				if(typeof val.v === 'undefined') return "";
 				return JSON.stringify(val.v);
 			case 'b': return val.v ? "TRUE" : "FALSE";
