@@ -119,8 +119,8 @@ function parsexmltag(tag) {
 
 function parsexmlbool(value, tag) {
 	switch(value) {
-		case '0': case 0: case 'false': case 'FALSE': return false; 
-		case '1': case 1: case 'true': case 'TRUE': return true; 
+		case '0': case 0: case 'false': case 'FALSE': return false;
+		case '1': case 1: case 'true': case 'TRUE': return true;
 		default: throw "bad boolean value " + value + " in "+(tag||"?");
 	}
 }
@@ -140,7 +140,7 @@ function parseSheet(data) {
 
 	var refguess = {s: {r:1000000, c:1000000}, e: {r:0, c:0} };
 	var q = ["v","f"];
-
+	var sidx = 0;
 	/* 18.3.1.80 sheetData CT_SheetData ? */
 	if(!data.match(/<sheetData *\/>/))
 	data.match(/<sheetData>([^\u2603]*)<\/sheetData>/m)[1].split("</row>").forEach(function(x) {
@@ -167,7 +167,11 @@ function parseSheet(data) {
 			else p.t = (cell.t ? cell.t : "n"); // default is "n" in schema
 			switch(p.t) {
 				case 'n': p.v = parseFloat(p.v); break;
-				case 's': p.v = strs[parseInt(p.v, 10)].t; break;
+				case 's': {
+					sidx = parseInt(p.v, 10);
+					p.v = strs[sidx].t;
+					p.r = strs[sidx].r;
+				} break;
 				case 'str': if(p.v) p.v = utf8read(p.v); break; // normal string
 				case 'inlineStr':
 					p.t = 'str'; p.v = unescapexml(d.match(matchtag('t'))[1]);
@@ -237,13 +241,33 @@ var utf8read = function(orig) {
 	return out;
 };
 
+/* 18.4.8 si CT_Rst */
+function parse_si(x) {
+	var z = {};
+	if(!x) return z;
+	var y;
+	/* 18.4.12 t ST_Xstring plaintext string */
+	if((y = x.match(/^<t[^>]*>([^\u2603]*)<\/t>$/m))) {
+		z.t = utf8read(unescapexml(y[1]));
+		z.r = x;
+	}
+	/* 18.4.4 r CT_RElt Rich Text Run */
+	else if((y = x.match(/<r>/))) {
+		z.r = x;
+		/* TODO: properly parse (note: no other valid child can have body text) */
+		z.t = utf8read(unescapexml(x.replace(/<[^>]*>/gm,"")));
+	}
+	/* TODO: handle rPh and phoneticPr */
+	return z;
+}
+
 /* 18.4 Shared String Table */
 function parseStrs(data) {
 	var s = [];
+	/* 18.4.9 sst CT_Sst */
 	var sst = data.match(new RegExp("<sst ([^>]*)>([\\s\\S]*)<\/sst>","m"));
 	if(sst) {
-		s = sst[2].replace(/<si>/g,"").split(/<\/si>/).map(function(x) { var z = {};
-			var y=x.match(/<(.*)>([\s\S]*)<\/.*/); if(y) z[y[1].split(" ")[0]]=utf8read(unescapexml(y[2])); return z;});
+		s = sst[2].replace(/<si>/g,"").split(/<\/si>/).map(parse_si);
 
 		sst = parsexmltag(sst[1]); s.Count = sst.count; s.Unique = sst.uniqueCount;
 	}
