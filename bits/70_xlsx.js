@@ -1,5 +1,4 @@
 
-var XLSX = (function(){
 var ct2type = {
 	"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml": "workbooks",
 	"application/vnd.openxmlformats-package.core-properties+xml": "coreprops",
@@ -93,38 +92,6 @@ var CustomWBViewDef = {
 var XMLNS_CT = 'http://schemas.openxmlformats.org/package/2006/content-types';
 var XMLNS_WB = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main';
 
-var encodings = {
-	'&quot;': '"',
-	'&apos;': "'",
-	'&gt;': '>',
-	'&lt;': '<',
-	'&amp;': '&'
-};
-
-// TODO: CP remap (need to read file version to determine OS)
-function unescapexml(text){
-	var s = text + '';
-	for(var y in encodings) s = s.replace(new RegExp(y,'g'), encodings[y]);
-	return s.replace(/_x([0-9a-fA-F]*)_/g,function(m,c) {return _chr(parseInt(c,16));});
-}
-
-function parsexmltag(tag) {
-	var words = tag.split(/\s+/);
-	var z = {'0': words[0]};
-	if(words.length === 1) return z;
-	tag.match(/(\w+)="([^"]*)"/g).map(
-		function(x){var y=x.match(/(\w+)="([^"]*)"/); z[y[1]] = y[2]; });
-	return z;
-}
-
-function parsexmlbool(value, tag) {
-	switch(value) {
-		case '0': case 0: case 'false': case 'FALSE': return false;
-		case '1': case 1: case 'true': case 'TRUE': return true;
-		default: throw "bad boolean value " + value + " in "+(tag||"?");
-	}
-}
-
 var strs = {}; // shared strings
 var styles = {}; // shared styles
 var _ssfopts = {}; // spreadsheet formatting options
@@ -204,73 +171,6 @@ function parseSheet(data) {
 		});
 	});
 	if(!s["!ref"]) s["!ref"] = encode_range(refguess);
-	return s;
-}
-
-// matches <foo>...</foo> extracts content
-function matchtag(f,g) {return new RegExp('<'+f+'(?: xml:space="preserve")?>([^\u2603]*)</'+f+'>',(g||"")+"m");}
-
-function parseVector(data) {
-	var h = parsexmltag(data);
-
-	var matches = data.match(new RegExp("<vt:" + h.baseType + ">(.*?)</vt:" + h.baseType + ">", 'g'));
-	if(matches.length != h.size) throw "unexpected vector length " + matches.length + " != " + h.size;
-	var res = [];
-	matches.forEach(function(x) {
-		var v = x.replace(/<[/]?vt:variant>/g,"").match(/<vt:([^>]*)>(.*)</);
-		res.push({v:v[2], t:v[1]});
-	});
-	return res;
-}
-
-
-var utf8read = function(orig) {
-	var out = "", i = 0, c = 0, c1 = 0, c2 = 0, c3 = 0;
-	while (i < orig.length) {
-		c = orig.charCodeAt(i++);
-		if (c < 128) out += _chr(c);
-		else {
-			c2 = orig.charCodeAt(i++);
-			if (c>191 && c<224) out += _chr((c & 31) << 6 | c2 & 63);
-			else {
-				c3 = orig.charCodeAt(i++);
-				out += _chr((c & 15) << 12 | (c2 & 63) << 6 | c3 & 63);
-			}
-		}
-	}
-	return out;
-};
-
-/* 18.4.8 si CT_Rst */
-function parse_si(x) {
-	var z = {};
-	if(!x) return z;
-	var y;
-	/* 18.4.12 t ST_Xstring plaintext string */
-	if((y = x.match(/^<t[^>]*>([^\u2603]*)<\/t>$/m))) {
-		z.t = utf8read(unescapexml(y[1]));
-		z.r = x;
-	}
-	/* 18.4.4 r CT_RElt Rich Text Run */
-	else if((y = x.match(/<r>/))) {
-		z.r = x;
-		/* TODO: properly parse (note: no other valid child can have body text) */
-		z.t = utf8read(unescapexml(x.replace(/<[^>]*>/gm,"")));
-	}
-	/* TODO: handle rPh and phoneticPr */
-	return z;
-}
-
-/* 18.4 Shared String Table */
-function parseStrs(data) {
-	var s = [];
-	/* 18.4.9 sst CT_Sst */
-	var sst = data.match(new RegExp("<sst ([^>]*)>([\\s\\S]*)<\/sst>","m"));
-	if(sst) {
-		s = sst[2].replace(/<si>/g,"").split(/<\/si>/).map(parse_si);
-
-		sst = parsexmltag(sst[1]); s.Count = sst.count; s.Unique = sst.uniqueCount;
-	}
 	return s;
 }
 
@@ -549,7 +449,7 @@ function parseZip(zip) {
 	var dir = parseCT((zip.files['[Content_Types].xml']||{}).data);
 
 	strs = {};
-	if(dir.sst) strs=parseStrs(zip.files[dir.sst.replace(/^\//,'')].data);
+	if(dir.sst) strs=parse_sst(zip.files[dir.sst.replace(/^\//,'')].data);
 
 	styles = {};
 	if(dir.style) styles = parseStyles(zip.files[dir.style.replace(/^\//,'')].data);
@@ -621,7 +521,3 @@ function readFileSync(data, options) {
 this.read = readSync;
 this.readFile = readFileSync;
 this.parseZip = parseZip;
-return this;
-
-})();
-
