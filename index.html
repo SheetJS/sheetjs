@@ -17,7 +17,7 @@
 <input type="radio" name="format" value="csv" checked> CSV<br>
 <input type="radio" name="format" value="json"> JSON<br>
 
-<div id="drop">Drop an XLSX file here to see data in CSV or JSON.</div>
+<div id="drop">Drop an XLSX file here to see sheet data.</div>
 <textarea id="b64data">... or paste a base64-encoding here</textarea>
 <input type="button" id="dotext" value="Click here to process the base64 text" onclick="b64it();"/>
 <pre id="out"></pre>
@@ -34,28 +34,25 @@ function get_radio_value( radioName ) {
 	}
 }
 
-//Row object array form:
-//Each row is an object with column headers as keys
 function to_json(workbook) {
 	var result = {};
 	workbook.SheetNames.forEach(function(sheetName) {
-		var rObjArr = XLSX.utils.sheet_to_row_object_array(workbook.Sheets[sheetName]);
-		if(rObjArr.length > 0){
-			result[sheetName] = rObjArr;
+		var roa = XLSX.utils.sheet_to_row_object_array(workbook.Sheets[sheetName]);
+		if(roa.length > 0){
+			result[sheetName] = roa;
 		}
 	});
 	return result;
 }
 
-
 function to_csv(workbook) {
 	var result = [];
 	workbook.SheetNames.forEach(function(sheetName) {
-		var rObjArr = XLSX.utils.sheet_to_csv(workbook.Sheets[sheetName]);
-		if(rObjArr.length > 0){
+		var csv = XLSX.utils.sheet_to_csv(workbook.Sheets[sheetName]);
+		if(csv.length > 0){
 			result.push("SHEET: " + sheetName);
 			result.push("");
-			result.push(rObjArr);
+			result.push(csv);
 		}
 	});
 	return result.join("\n");
@@ -63,16 +60,16 @@ function to_csv(workbook) {
 
 var tarea = document.getElementById('b64data');
 function b64it() {
-	var xlsx = XLSX.read(tarea.value, {type: 'base64'});
-	process_xlsx(xlsx);
+	var wb = XLSX.read(tarea.value, {type: 'base64'});
+	process_wb(wb);
 }
 
-function process_xlsx(xlsx) {
+function process_wb(wb) {
 	var output = "";
 	if(get_radio_value("format") === "json"){
-		output = JSON.stringify(to_json(xlsx), 2, 2);
+		output = JSON.stringify(to_json(wb), 2, 2);
 	} else {
-		output = to_csv(xlsx);
+		output = to_csv(wb);
 	}
 	if(out.innerText === undefined) out.textContent = output;
 	else out.innerText = output;
@@ -89,10 +86,10 @@ function handleDrop(e) {
 		var name = f.name;
 		reader.onload = function(e) {
 			var data = e.target.result;
-			//var xlsx = XLSX.read(data, {type: 'binary'});
+			//var wb = XLSX.read(data, {type: 'binary'});
 			var arr = String.fromCharCode.apply(null, new Uint8Array(data));
-			var xlsx = XLSX.read(btoa(arr), {type: 'base64'});
-			process_xlsx(xlsx);
+			var wb = XLSX.read(btoa(arr), {type: 'base64'});
+			process_wb(wb);
 		};
 		//reader.readAsBinaryString(f);
 		reader.readAsArrayBuffer(f);
