@@ -16,6 +16,7 @@
 <b>JS-XLSX Live Demo</b><br />
 <input type="radio" name="format" value="csv" checked> CSV<br>
 <input type="radio" name="format" value="json"> JSON<br>
+<input type="radio" name="format" value="form"> FORMULAE<br>
 
 <div id="drop">Drop an XLSX file here to see sheet data.</div>
 <textarea id="b64data">... or paste a base64-encoding here</textarea>
@@ -58,6 +59,19 @@ function to_csv(workbook) {
 	return result.join("\n");
 }
 
+function to_formulae(workbook) {
+	var result = [];
+	workbook.SheetNames.forEach(function(sheetName) {
+		var formulae = XLSX.utils.get_formulae(workbook.Sheets[sheetName]);
+		if(formulae.length > 0){
+			result.push("SHEET: " + sheetName);
+			result.push("");
+			result.push(formulae.join("\n"));
+		}
+	});
+	return result.join("\n");
+}
+
 var tarea = document.getElementById('b64data');
 function b64it() {
 	var wb = XLSX.read(tarea.value, {type: 'base64'});
@@ -66,9 +80,14 @@ function b64it() {
 
 function process_wb(wb) {
 	var output = "";
-	if(get_radio_value("format") === "json"){
+	switch(get_radio_value("format")) {
+		case "json":
 		output = JSON.stringify(to_json(wb), 2, 2);
-	} else {
+			break;
+		case "form":
+			output = to_formulae(wb);
+			break; 
+		default:
 		output = to_csv(wb);
 	}
 	if(out.innerText === undefined) out.textContent = output;
