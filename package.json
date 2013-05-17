@@ -17,5 +17,11 @@
 	"bugs": {
 		"url": "https://github.com/Niggler/js-xlsx/issues"
 	},
+	"devDependencies": {
+		"jasmine-node": "x"
+	},
+	"scripts": {
+		"test": "jasmine-node tests/"
+	},
 	"engines": { "node": ">=0.6" }
 }
