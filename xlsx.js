@@ -631,7 +631,6 @@ function parseProps(data) {
 			switch(v[i].v) {
 				case "Worksheets": widx = j; p.Worksheets = +v[++i]; break;
 				case "Named Ranges": ++i; break; // TODO: Handle Named Ranges
-				default: console.error("Unrecognized key in Heading Pairs: " + v[i++].v);
 			}
 		}
 		var parts = parseVector(q.TitlesOfParts).map(utf8read);
@@ -787,8 +786,6 @@ function parseWB(data) {
 			case '<mx:ArchID': break;
 			case '<mc:AlternateContent': pass=true; break;
 			case '</mc:AlternateContent>': pass=false; break;
-
-			default: if(!pass) console.error("WB Tag",x,y);
 		}
 	});
 	if(wb.xmlns !== XMLNS_WB) throw "Unknown Namespace: " + wb.xmlns;
@@ -1038,7 +1035,7 @@ function sheet_to_csv(sheet) {
 			var row = [];
 			for(var C = r.s.c; C <= r.e.c; ++C) {
 				var val = sheet[utils.encode_cell({c:C,r:R})];
-				row.push(val ? stringify(val).replace(/\\r\\n/g,"\n").replace(/\\t/g,"\t").replace(/\\\\/g,"\\").replace(/\\\"/g,"\"\"") : "");
+				row.push(val ? stringify(val).replace(/\\r\\n/g,"\n").replace(/\\t/g,"\t").replace(/\\\\/g,"\\").replace("\\\"","\"\"") : "");
 			}
 			out += row.join(",") + "\n";
 		}

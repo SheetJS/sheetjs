@@ -201,7 +201,6 @@ function parseProps(data) {
 			switch(v[i].v) {
 				case "Worksheets": widx = j; p.Worksheets = +v[++i]; break;
 				case "Named Ranges": ++i; break; // TODO: Handle Named Ranges
-				default: console.error("Unrecognized key in Heading Pairs: " + v[i++].v);
 			}
 		}
 		var parts = parseVector(q.TitlesOfParts).map(utf8read);
@@ -357,8 +356,6 @@ function parseWB(data) {
 			case '<mx:ArchID': break;
 			case '<mc:AlternateContent': pass=true; break;
 			case '</mc:AlternateContent>': pass=false; break;
-
-			default: if(!pass) console.error("WB Tag",x,y);
 		}
 	});
 	if(wb.xmlns !== XMLNS_WB) throw "Unknown Namespace: " + wb.xmlns;
