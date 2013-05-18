@@ -21,7 +21,8 @@
 		"jasmine-node": "x"
 	},
 	"scripts": {
-		"test": "jasmine-node tests/"
+		"pretest": "git submodule init && git submodule update",
+		"test": "jasmine-node --verbose tests/"
 	},
 	"engines": { "node": ">=0.6" }
 }
