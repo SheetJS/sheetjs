@@ -1,7 +1,7 @@
 ﻿var XLSX = require('../');
 var testCommon = require('./Common.js');
 
-var file = 'חישוב_נקודות_זיכוי.xlsx';
+var file = 'mixed_sheets.xlsx';
 
 describe(file, function () {
 	testCommon(file);
