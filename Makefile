@@ -6,3 +6,6 @@ xlsx.js: $(DEPS)
 .PHONY: clean
 clean:
 	rm xlsx.js
+
+test:
+	npm test
