@@ -1,3 +1,3 @@
 [submodule "tests/files"]
 	path = tests/files
-	url = git@github.com:Sebmaster/js-xlsx-testfiles.git
+	url = git@github.com:Niggler/js-xlsx-testfiles.git
