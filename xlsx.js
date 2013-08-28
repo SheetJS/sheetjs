@@ -629,6 +629,7 @@ function parseProps(data) {
 		var j = 0, widx = 0;
 		for(var i = 0; i !== v.length; ++i) {
 			switch(v[i].v) {
+				case "ArbeitsblÃ¤tter":
 				case "Worksheets": widx = j; p.Worksheets = +v[++i]; break;
 				case "Named Ranges": ++i; break; // TODO: Handle Named Ranges
 				default: console.error("Unrecognized key in Heading Pairs: " + v[i++].v);
