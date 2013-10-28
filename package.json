@@ -1,6 +1,6 @@
 {
 	"name": "xlsx",
-	"version": "0.2.7-d",
+	"version": "0.2.8",
 	"author": "Niggler",
 	"description": "(one day) a full-featured XLSX parser and writer.  For now, primitive parser",
 	"keywords": [
