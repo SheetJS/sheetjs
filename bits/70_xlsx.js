@@ -252,7 +252,7 @@ function parseCT(data) {
 				break;
 		}
 	});
-	if(ct.xmlns !== XMLNS_CT) throw "Unknown Namespace: " + ct.xmlns;
+	if(ct.xmlns !== XMLNS_CT) throw new Error("Unknown Namespace: " + ct.xmlns);
 	ct.calcchain = ct.calcchains.length > 0 ? ct.calcchains[0] : "";
 	ct.sst = ct.strs.length > 0 ? ct.strs[0] : "";
 	ct.style = ct.styles.length > 0 ? ct.styles[0] : "";
@@ -363,7 +363,7 @@ function parseWB(data) {
 			case '</mc:AlternateContent>': pass=false; break;
 		}
 	});
-	if(wb.xmlns !== XMLNS_WB) throw "Unknown Namespace: " + wb.xmlns;
+	if(wb.xmlns !== XMLNS_WB) throw new Error("Unknown Namespace: " + wb.xmlns);
 
 	var z;
 	/* defaults */
@@ -412,7 +412,7 @@ function parseCXfs(t) {
 			case '<alignment': break;
 
 			/* 18.8.33 protection CT_CellProtection */
-			case '<protection': break;
+			case '<protection': case '</protection>': case '<protection/>': break;
 
 			case '<extLst': case '</extLst>': break;
 			case '<ext': break;

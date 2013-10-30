@@ -74,7 +74,7 @@ var parse_date_code = function parse_date_code(v,opts) {
 	var date = Math.floor(v), time = Math.round(86400 * (v - date)), dow=0;
 	var dout=[], out={D:date, T:time}; fixopts(opts = (opts||{}));
 	if(opts.date1904) date += 1462;
-	if(date === 60) (dout = [1900,2,29], dow=3); /* JSHint bug (issue #1010) */
+	if(date === 60) {dout = [1900,2,29]; dow=3;}
 	else {
 		if(date > 60) --date;
 		/* 1 = Jan 1 1900 */
@@ -84,7 +84,7 @@ var parse_date_code = function parse_date_code(v,opts) {
 		dow = d.getDay();
 		if(opts.mode === 'excel' && date < 60) dow = (dow + 6) % 7;
 	}
-	out.y = dout[0], out.m = dout[1], out.d = dout[2];
+	out.y = dout[0]; out.m = dout[1]; out.d = dout[2];
 	out.S = time % 60; time = Math.floor(time / 60);
 	out.M = time % 60; time = Math.floor(time / 60);
 	out.H = time;
@@ -165,7 +165,7 @@ function eval_fmt(fmt, v, opts) {
 				q={t:c, v:o}; out.push(q); lst = c; break;
 			case 'A':
 				q={t:c,v:"A"};
-				if(fmt.substr(i, 3) === "A/P") (hr = 'h',i+=3);
+				if(fmt.substr(i, 3) === "A/P") {hr = 'h';i+=3;}
 				else if(fmt.substr(i,5) === "AM/PM") { q.v = "AM"; i+=5; hr = 'h'; }
 				else q.t = "t";
 				out.push(q); lst = c; break;
@@ -682,7 +682,7 @@ function parseCT(data) {
 				break;
 		}
 	});
-	if(ct.xmlns !== XMLNS_CT) throw "Unknown Namespace: " + ct.xmlns;
+	if(ct.xmlns !== XMLNS_CT) throw new Error("Unknown Namespace: " + ct.xmlns);
 	ct.calcchain = ct.calcchains.length > 0 ? ct.calcchains[0] : "";
 	ct.sst = ct.strs.length > 0 ? ct.strs[0] : "";
 	ct.style = ct.styles.length > 0 ? ct.styles[0] : "";
@@ -793,7 +793,7 @@ function parseWB(data) {
 			case '</mc:AlternateContent>': pass=false; break;
 		}
 	});
-	if(wb.xmlns !== XMLNS_WB) throw "Unknown Namespace: " + wb.xmlns;
+	if(wb.xmlns !== XMLNS_WB) throw new Error("Unknown Namespace: " + wb.xmlns);
 
 	var z;
 	/* defaults */
@@ -842,7 +842,7 @@ function parseCXfs(t) {
 			case '<alignment': break;
 
 			/* 18.8.33 protection CT_CellProtection */
-			case '<protection': break;
+			case '<protection': case '</protection>': case '<protection/>': break;
 
 			case '<extLst': case '</extLst>': break;
 			case '<ext': break;
@@ -1047,6 +1047,7 @@ function sheet_to_csv(sheet) {
 	}
 	return out;
 }
+var make_csv = sheet_to_csv;
 
 function get_formulae(ws) {
 	var cmds = [];
@@ -1072,6 +1073,7 @@ var utils = {
 	decode_cell: decode_cell,
 	decode_range: decode_range,
 	sheet_to_csv: sheet_to_csv,
+	make_csv: sheet_to_csv,
 	get_formulae: get_formulae,
 	sheet_to_row_object_array: sheet_to_row_object_array
 };

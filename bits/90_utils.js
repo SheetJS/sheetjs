@@ -88,6 +88,7 @@ function sheet_to_csv(sheet) {
 	}
 	return out;
 }
+var make_csv = sheet_to_csv;
 
 function get_formulae(ws) {
 	var cmds = [];
@@ -113,6 +114,7 @@ var utils = {
 	decode_cell: decode_cell,
 	decode_range: decode_range,
 	sheet_to_csv: sheet_to_csv,
+	make_csv: sheet_to_csv,
 	get_formulae: get_formulae,
 	sheet_to_row_object_array: sheet_to_row_object_array
 };
