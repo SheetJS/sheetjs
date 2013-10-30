@@ -1,0 +1,9 @@
+language: node_js
+node_js:
+  - "0.10"
+  - "0.8"
+before_install:
+  - "npm install -g mocha"
+before_script:
+  - "make init"
+  - "cd tests/files; make; cd -" 
