@@ -72,7 +72,7 @@ var parse_date_code = function parse_date_code(v,opts) {
 	var date = Math.floor(v), time = Math.round(86400 * (v - date)), dow=0;
 	var dout=[], out={D:date, T:time}; fixopts(opts = (opts||{}));
 	if(opts.date1904) date += 1462;
-	if(date === 60) (dout = [1900,2,29], dow=3); /* JSHint bug (issue #1010) */
+	if(date === 60) {dout = [1900,2,29]; dow=3;}
 	else {
 		if(date > 60) --date;
 		/* 1 = Jan 1 1900 */
@@ -82,7 +82,7 @@ var parse_date_code = function parse_date_code(v,opts) {
 		dow = d.getDay();
 		if(opts.mode === 'excel' && date < 60) dow = (dow + 6) % 7;
 	}
-	out.y = dout[0], out.m = dout[1], out.d = dout[2];
+	out.y = dout[0]; out.m = dout[1]; out.d = dout[2];
 	out.S = time % 60; time = Math.floor(time / 60);
 	out.M = time % 60; time = Math.floor(time / 60);
 	out.H = time;
@@ -163,7 +163,7 @@ function eval_fmt(fmt, v, opts) {
 				q={t:c, v:o}; out.push(q); lst = c; break;
 			case 'A':
 				q={t:c,v:"A"};
-				if(fmt.substr(i, 3) === "A/P") (hr = 'h',i+=3);
+				if(fmt.substr(i, 3) === "A/P") {hr = 'h';i+=3;}
 				else if(fmt.substr(i,5) === "AM/PM") { q.v = "AM"; i+=5; hr = 'h'; }
 				else q.t = "t";
 				out.push(q); lst = c; break;
