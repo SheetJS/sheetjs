@@ -1,6 +1,6 @@
 {
 	"name": "xlsx",
-	"version": "0.2.8",
+	"version": "0.3.0",
 	"author": "Niggler",
 	"description": "(one day) a full-featured XLSX parser and writer.  For now, primitive parser",
 	"keywords": [
@@ -10,19 +10,24 @@
 		"xlsx2csv": "./bin/xlsx2csv.njs"
 	},
 	"main": "./xlsx",
+	"dependencies": {
+		"codepage":"",
+		"commander":""
+	},
+	"devDependencies": {
+		"mocha":"",
+		"jasmine-node": "x"
+	},
 	"repository": {
 		"type":"git",
 		"url": "git://github.com/Niggler/js-xlsx.git"
 	},
-	"bugs": {
-		"url": "https://github.com/Niggler/js-xlsx/issues"
-	},
-	"devDependencies": {
-		"jasmine-node": "x"
-	},
 	"scripts": {
 		"pretest": "git submodule init && git submodule update",
-		"test": "jasmine-node --verbose tests/"
+		"test": "make mocha",
+		"test-jasmine": "jasmine-node --verbose tests/"
 	},
+	"bugs": { "url": "https://github.com/Niggler/js-xlsx/issues" },
+	"license": "Apache-2.0",
 	"engines": { "node": ">=0.6" }
 }

@@ -1,11 +1,27 @@
 DEPS=$(wildcard bits/*.js)
-
-xlsx.js: $(DEPS)
+TARGET=xlsx.js
+$(TARGET): $(DEPS)
 	cat $^ > $@
 
 .PHONY: clean
 clean:
-	rm xlsx.js
+	rm $(TARGET) 
 
-test:
-	npm test
+.PHONY: init
+init:
+	git submodule init
+	git submodule update
+	git submodule foreach git pull origin master 
+
+
+.PHONY: test mocha
+test mocha:
+	mocha -R spec
+
+.PHONY: jasmine
+jasmine:
+	npm run-script test-jasmine
+
+.PHONY: lint
+lint: $(TARGET)
+	jshint --show-non-errors $(TARGET)

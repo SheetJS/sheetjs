@@ -61,9 +61,15 @@ For more details:
 - `index.html` is the live demo
 - `bits/90_utils.js` contains the logic for generating CSV and JSON from sheets
 
+## Test Files
+
+Test files are housed in [another repo](https://github.com/Niggler/test_files).
+
 ## License
 
-Please consult the attached LICENSE file for details.  All rights not explicitly granted by the MIT license are reserved by the Original Author.
+Please consult the attached LICENSE file for details.  All rights not explicitly granted by the Apache 2.0 license are reserved by the Original Author.
+
+It is the opinion of the Original Author that this code conforms to the terms of the Microsoft Open Specifications Promise, falling under the same terms as OpenOffice (which is governed by the Apache License v2).  Given the vagaries of the promise, the Original Author makes no legal claim that in fact end users are protected from future actions.  It is highly recommended that, for commercial uses, you consult a lawyer before proceeding.
 
 ## XLS Support
 
@@ -72,4 +78,8 @@ XLS is not supported in this module.  Due to Licensing issues [that are discusse
 ## References
 
 ISO/IEC 29500:2012(E) "Information technology — Document description and processing languages — Office Open XML File Formats"
+
+OSP-covered specifications:
+
+ - [MS-XLSX]: Excel (.xlsx) Extensions to the Office Open XML SpreadsheetML File Format
 
