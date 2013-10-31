@@ -222,7 +222,8 @@ SSF.format = format;
 
 	return SSF;
 })();
-var XLSX = (function(){
+var XLSX = {};
+(function(XLSX){
 function parsexmltag(tag) {
 	var words = tag.split(/\s+/);
 	var z = {'0': words[0]};
@@ -950,12 +951,12 @@ function readFileSync(data, options) {
 	return readSync(data, o);
 }
 
-this.read = readSync;
-this.readFile = readFileSync;
-this.parseZip = parseZip;
+XLSX.read = readSync;
+XLSX.readFile = readFileSync;
+XLSX.parseZip = parseZip;
 return this;
 
-})();
+})(XLSX);
 
 var _chr = function(c) { return String.fromCharCode(c); };
 
