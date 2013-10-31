@@ -520,6 +520,6 @@ function readFileSync(data, options) {
 	return readSync(data, o);
 }
 
-this.read = readSync;
-this.readFile = readFileSync;
-this.parseZip = parseZip;
+XLSX.read = readSync;
+XLSX.readFile = readFileSync;
+XLSX.parseZip = parseZip;
