@@ -222,7 +222,7 @@ function parseProps(data) {
 function parseDeps(data) {
 	var d = [];
 	var l = 0, i = 1;
-	data.match(/<[^>]*>/g).forEach(function(x) {
+	(data.match(/<[^>]*>/g)||[]).forEach(function(x) {
 		var y = parsexmltag(x);
 		switch(y[0]) {
 			case '<?xml': break;
@@ -445,23 +445,30 @@ function parseStyles(data) {
 	return styles;
 }
 
+function getdata(data) {
+	if(!data) return {};
+	if(data.data) return data.data;
+	if(data._data && data._data.getContent) return Array.prototype.slice.call(data._data.getContent(),0).map(function(x) { return String.fromCharCode(x); }).join("");
+	return {};
+}
+
 function parseZip(zip) {
 	var entries = Object.keys(zip.files);
 	var keys = entries.filter(function(x){return x.substr(-1) != '/';}).sort();
-	var dir = parseCT((zip.files['[Content_Types].xml']||{}).data);
+	var dir = parseCT(getdata(zip.files['[Content_Types].xml']));
 
 	strs = {};
-	if(dir.sst) strs=parse_sst(zip.files[dir.sst.replace(/^\//,'')].data);
+	if(dir.sst) strs=parse_sst(getdata(zip.files[dir.sst.replace(/^\//,'')]));
 
 	styles = {};
-	if(dir.style) styles = parseStyles(zip.files[dir.style.replace(/^\//,'')].data);
+	if(dir.style) styles = parseStyles(getdata(zip.files[dir.style.replace(/^\//,'')]));
 
-	var wb = parseWB(zip.files[dir.workbooks[0].replace(/^\//,'')].data);
-	var propdata = dir.coreprops.length !== 0 ? zip.files[dir.coreprops[0].replace(/^\//,'')].data : "";
-	propdata += dir.extprops.length !== 0 ? zip.files[dir.extprops[0].replace(/^\//,'')].data : "";
+	var wb = parseWB(getdata(zip.files[dir.workbooks[0].replace(/^\//,'')]));
+	var propdata = dir.coreprops.length !== 0 ? getdata(zip.files[dir.coreprops[0].replace(/^\//,'')]) : "";
+	propdata += dir.extprops.length !== 0 ? getdata(zip.files[dir.extprops[0].replace(/^\//,'')]) : "";
 	var props = propdata !== "" ? parseProps(propdata) : {};
 	var deps = {};
-	if(dir.calcchain) deps=parseDeps(zip.files[dir.calcchain.replace(/^\//,'')].data);
+	if(dir.calcchain) deps=parseDeps(getdata(zip.files[dir.calcchain.replace(/^\//,'')]));
 	var sheets = {}, i=0;
 	if(!props.Worksheets) {
 		/* Google Docs doesn't generate the appropriate metadata, so we impute: */
@@ -472,12 +479,12 @@ function parseZip(zip) {
 			props.SheetNames[j] = wbsheets[j].name;
 		}
 		for(i = 0; i != props.Worksheets; ++i) {
-			sheets[props.SheetNames[i]]=parseSheet(zip.files['xl/worksheets/sheet' + (i+1) + '.xml'].data);
+			sheets[props.SheetNames[i]]=parseSheet(getdata(zip.files['xl/worksheets/sheet' + (i+1) + '.xml']));
 		}
 	}
 	else {
 		for(i = 0; i != props.Worksheets; ++i) {
-			sheets[props.SheetNames[i]]=parseSheet(zip.files[dir.sheets[i].replace(/^\//,'')].data);
+			sheets[props.SheetNames[i]]=parseSheet(getdata(zip.files[dir.sheets[i].replace(/^\//,'')]));
 		}
 	}
 	return {

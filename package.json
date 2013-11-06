@@ -1,7 +1,7 @@
 {
 	"name": "xlsx",
-	"version": "0.3.1",
-	"author": "Niggler",
+	"version": "0.3.2",
+	"author": "sheetjs",
 	"description": "(one day) a full-featured XLSX parser and writer.  For now, primitive parser",
 	"keywords": [
 		"xlsx", "office", "excel", "spreadsheet"	
@@ -20,14 +20,14 @@
 	},
 	"repository": {
 		"type":"git",
-		"url": "git://github.com/Niggler/js-xlsx.git"
+		"url": "git://github.com/SheetJS/js-xlsx.git"
 	},
 	"scripts": {
 		"pretest": "git submodule init && git submodule update",
 		"test": "make mocha",
 		"test-jasmine": "jasmine-node --verbose tests/"
 	},
-	"bugs": { "url": "https://github.com/Niggler/js-xlsx/issues" },
+	"bugs": { "url": "https://github.com/SheetJS/js-xlsx/issues" },
 	"license": "Apache-2.0",
 	"engines": { "node": ">=0.6" }
 }
