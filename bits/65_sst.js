@@ -6,7 +6,7 @@ var parse_sst = (function(){
 		/* 18.4.7 rPr CT_RPrElt */
 		var parse_rpr = function(rpr, intro, outro) {
 			var font = {};
-			rpr.match(/<[^>]*>/g).forEach(function(x) {
+			(rpr.match(/<[^>]*>/g)||[]).forEach(function(x) {
 				var y = parsexmltag(x);
 				switch(y[0]) {
 					/* 18.8.12 condense CT_BooleanProperty */
@@ -130,7 +130,7 @@ var parse_sst = (function(){
 		var s = [];
 		/* 18.4.9 sst CT_Sst */
 		var sst = data.match(new RegExp("<sst([^>]*)>([\\s\\S]*)<\/sst>","m"));
-		if(sst) {
+		if(isval(sst)) {
 			s = sst[2].replace(/<si>/g,"").split(/<\/si>/).map(parse_si);
 			sst = parsexmltag(sst[1]); s.Count = sst.count; s.Unique = sst.uniqueCount;
 		}

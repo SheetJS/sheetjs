@@ -2,7 +2,7 @@ function parsexmltag(tag) {
 	var words = tag.split(/\s+/);
 	var z = {'0': words[0]};
 	if(words.length === 1) return z;
-	tag.match(/(\w+)="([^"]*)"/g).map(
+	(tag.match(/(\w+)="([^"]*)"/g) || []).map(
 		function(x){var y=x.match(/(\w+)="([^"]*)"/); z[y[1]] = y[2]; });
 	return z;
 }
@@ -53,7 +53,7 @@ function matchtag(f,g) {return new RegExp('<'+f+'(?: xml:space="preserve")?>([^\
 function parseVector(data) {
 	var h = parsexmltag(data);
 
-	var matches = data.match(new RegExp("<vt:" + h.baseType + ">(.*?)</vt:" + h.baseType + ">", 'g'));
+	var matches = data.match(new RegExp("<vt:" + h.baseType + ">(.*?)</vt:" + h.baseType + ">", 'g'))||[];
 	if(matches.length != h.size) throw "unexpected vector length " + matches.length + " != " + h.size;
 	var res = [];
 	matches.forEach(function(x) {
