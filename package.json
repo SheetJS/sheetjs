@@ -9,6 +9,7 @@
 	},
 	"main": "./xlsx",
 	"dependencies": {
+		"ssf":">=0.1.1",
 		"codepage":"",
 		"commander":""
 	},
