@@ -529,6 +529,7 @@ var _ssfopts = {}; // spreadsheet formatting options
 
 /* 18.3 Worksheets */
 function parseSheet(data) {
+	if(!data) return data;
 	/* 18.3.1.99 worksheet CT_Worksheet */
 	var s = {};
 
@@ -577,7 +578,7 @@ function parseSheet(data) {
 				} break;
 				case 'str': if(p.v) p.v = utf8read(p.v); break; // normal string
 				case 'inlineStr':
-					p.t = 'str'; p.v = unescapexml(d.match(matchtag('t'))[1]);
+					p.t = 'str'; p.v = unescapexml((d.match(matchtag('t'))||["",""])[1]);
 					break; // inline string
 				case 'b':
 					switch(p.v) {
@@ -591,7 +592,7 @@ function parseSheet(data) {
 			}
 
 			/* formatting */
-			if(cell.s) {
+			if(cell.s && styles.CellXf) { /* TODO: second check is a hacked guard */
 				var cf = styles.CellXf[cell.s];
 				if(cf && cf.numFmtId && cf.numFmtId !== 0) {
 					p.raw = p.v;
@@ -669,7 +670,7 @@ function parseDeps(data) {
 var ctext = {};
 
 function parseCT(data) {
-	if(!data) return data;
+	if(!data || !data.match) return data;
 	var ct = { workbooks: [], sheets: [], calcchains: [], themes: [], styles: [],
 		coreprops: [], extprops: [], strs:[], xmlns: "" };
 	(data.match(/<[^>]*>/g)||[]).forEach(function(x) {
@@ -877,29 +878,36 @@ function parseStyles(data) {
 }
 
 function getdata(data) {
-	if(!data) return {};
+	if(!data) return null; 
 	if(data.data) return data.data;
 	if(data._data && data._data.getContent) return Array.prototype.slice.call(data._data.getContent(),0).map(function(x) { return String.fromCharCode(x); }).join("");
-	return {};
+	return null;
+}
+
+function getzipfile(zip, file) {
+	var f = file; if(zip.files[f]) return zip.files[f];
+	f = file.toLowerCase(); if(zip.files[f]) return zip.files[f];
+	f = f.replace(/\//g,'\\'); if(zip.files[f]) return zip.files[f];
+	throw new Error("Cannot find file " + file + " in zip")
 }
 
 function parseZip(zip) {
 	var entries = Object.keys(zip.files);
 	var keys = entries.filter(function(x){return x.substr(-1) != '/';}).sort();
-	var dir = parseCT(getdata(zip.files['[Content_Types].xml']));
+	var dir = parseCT(getdata(getzipfile(zip, '[Content_Types].xml')));
 
 	strs = {};
-	if(dir.sst) strs=parse_sst(getdata(zip.files[dir.sst.replace(/^\//,'')]));
+	if(dir.sst) strs=parse_sst(getdata(getzipfile(zip, dir.sst.replace(/^\//,''))));
 
 	styles = {};
-	if(dir.style) styles = parseStyles(getdata(zip.files[dir.style.replace(/^\//,'')]));
+	if(dir.style) styles = parseStyles(getdata(getzipfile(zip, dir.style.replace(/^\//,''))));
 
-	var wb = parseWB(getdata(zip.files[dir.workbooks[0].replace(/^\//,'')]));
-	var propdata = dir.coreprops.length !== 0 ? getdata(zip.files[dir.coreprops[0].replace(/^\//,'')]) : "";
-	propdata += dir.extprops.length !== 0 ? getdata(zip.files[dir.extprops[0].replace(/^\//,'')]) : "";
+	var wb = parseWB(getdata(getzipfile(zip, dir.workbooks[0].replace(/^\//,''))));
+	var propdata = dir.coreprops.length !== 0 ? getdata(getzipfile(zip, dir.coreprops[0].replace(/^\//,''))) : "";
+	propdata += dir.extprops.length !== 0 ? getdata(getzipfile(zip, dir.extprops[0].replace(/^\//,''))) : "";
 	var props = propdata !== "" ? parseProps(propdata) : {};
 	var deps = {};
-	if(dir.calcchain) deps=parseDeps(getdata(zip.files[dir.calcchain.replace(/^\//,'')]));
+	if(dir.calcchain) deps=parseDeps(getdata(getzipfile(zip, dir.calcchain.replace(/^\//,''))));
 	var sheets = {}, i=0;
 	if(!props.Worksheets) {
 		/* Google Docs doesn't generate the appropriate metadata, so we impute: */
@@ -910,12 +918,16 @@ function parseZip(zip) {
 			props.SheetNames[j] = wbsheets[j].name;
 		}
 		for(i = 0; i != props.Worksheets; ++i) {
-			sheets[props.SheetNames[i]]=parseSheet(getdata(zip.files['xl/worksheets/sheet' + (i+1) + '.xml']));
+			try { /* TODO: remove these guards */ 
+			sheets[props.SheetNames[i]]=parseSheet(getdata(getzipfile(zip, 'xl/worksheets/sheet' + (i+1) + '.xml')));
+			} catch(e) {}
 		}
 	}
 	else {
 		for(i = 0; i != props.Worksheets; ++i) {
-			sheets[props.SheetNames[i]]=parseSheet(getdata(zip.files[dir.sheets[i].replace(/^\//,'')]));
+			try { 
+			sheets[props.SheetNames[i]]=parseSheet(getdata(getzipfile(zip, dir.sheets[i].replace(/^\//,''))));
+			} catch(e) {}
 		}
 	}
 	return {

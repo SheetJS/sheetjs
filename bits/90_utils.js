@@ -76,11 +76,11 @@ function sheet_to_csv(sheet) {
 	};
 	var out = "";
 	if(sheet["!ref"]) {
-		var r = utils.decode_range(sheet["!ref"]);
+		var r = XLSX.utils.decode_range(sheet["!ref"]);
 		for(var R = r.s.r; R <= r.e.r; ++R) {
 			var row = [];
 			for(var C = r.s.c; C <= r.e.c; ++C) {
-				var val = sheet[utils.encode_cell({c:C,r:R})];
+				var val = sheet[XLSX.utils.encode_cell({c:C,r:R})];
 				row.push(val ? stringify(val).replace(/\\r\\n/g,"\n").replace(/\\t/g,"\t").replace(/\\\\/g,"\\").replace("\\\"","\"\"") : "");
 			}
 			out += row.join(",") + "\n";
@@ -103,7 +103,7 @@ function get_formulae(ws) {
 	return cmds;
 }
 
-var utils = {
+XLSX.utils = {
 	encode_col: encode_col,
 	encode_row: encode_row,
 	encode_cell: encode_cell,

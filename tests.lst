@@ -11,7 +11,7 @@
 47668.xlsx
 47737.xlsx
 47804.xlsx
-47813.xlsx
+47813.xlsx.pending
 47862.xlsx
 47889.xlsx
 48495.xlsx
@@ -96,7 +96,7 @@ WithThreeCharts.xlsx
 WithTwoCharts.xlsx
 WithVariousData.xlsx
 atp.xlsx
-chart_sheet.xlsx
+chart_sheet.xlsx.pending
 comments.xlsx
 formula_stress_test.xlsx.pending
 interview.xlsx
@@ -105,7 +105,7 @@ mixed_sheets.xlsx
 named_ranges_2011.xlsx
 picture.xlsx
 reordered_sheets.xlsx
-sample-beta.xlsx
+sample-beta.xlsx.pending
 sample.xlsx
 shared_formulas.xlsx
 sheetProtection_allLocked.xlsx

@@ -1,11 +1,9 @@
 {
 	"name": "xlsx",
-	"version": "0.3.2",
+	"version": "0.3.3",
 	"author": "sheetjs",
 	"description": "(one day) a full-featured XLSX parser and writer.  For now, primitive parser",
-	"keywords": [
-		"xlsx", "office", "excel", "spreadsheet"	
-	], 
+	"keywords": [ "xlsx", "office", "excel", "spreadsheet" ],
 	"bin": {
 		"xlsx2csv": "./bin/xlsx2csv.njs"
 	},
@@ -18,10 +16,7 @@
 		"mocha":"",
 		"jasmine-node": "x"
 	},
-	"repository": {
-		"type":"git",
-		"url": "git://github.com/SheetJS/js-xlsx.git"
-	},
+	"repository": { "type":"git", "url":"git://github.com/SheetJS/js-xlsx.git" },
 	"scripts": {
 		"pretest": "git submodule init && git submodule update",
 		"test": "make mocha",
