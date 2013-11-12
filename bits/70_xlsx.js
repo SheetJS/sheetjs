@@ -457,7 +457,7 @@ function getzipfile(zip, file) {
 	var f = file; if(zip.files[f]) return zip.files[f];
 	f = file.toLowerCase(); if(zip.files[f]) return zip.files[f];
 	f = f.replace(/\//g,'\\'); if(zip.files[f]) return zip.files[f];
-	throw new Error("Cannot find file " + file + " in zip")
+	throw new Error("Cannot find file " + file + " in zip");
 }
 
 function parseZip(zip) {

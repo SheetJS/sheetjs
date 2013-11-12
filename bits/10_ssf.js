@@ -1,4 +1,5 @@
 /* Spreadsheet Format -- jump to XLSX for the XLSX code */
+if(typeof require !== "undefined") SSF = require('ssf');
 var SSF = (function() {
 	var SSF = {};
 String.prototype.reverse=function(){return this.split("").reverse().join("");};
@@ -162,9 +163,10 @@ function eval_fmt(fmt, v, opts) {
 				if(c === 'h') c = hr;
 				q={t:c, v:o}; out.push(q); lst = c; break;
 			case 'A':
+        if(!dt) dt = parse_date_code(v, opts);
 				q={t:c,v:"A"};
-				if(fmt.substr(i, 3) === "A/P") {hr = 'h';i+=3;}
-				else if(fmt.substr(i,5) === "AM/PM") { q.v = "AM"; i+=5; hr = 'h'; }
+        if(fmt.substr(i, 3) === "A/P") {q.v = dt.H >= 12 ? "P" : "A"; q.t = 'T'; hr='h';i+=3;}
+        else if(fmt.substr(i,5) === "AM/PM") { q.v = dt.H >= 12 ? "PM" : "AM"; q.t = 'T'; i+=5; hr='h'; }
 				else q.t = "t";
 				out.push(q); lst = c; break;
 			case '[': /* TODO: Fix this -- ignore all conditionals and formatting */
@@ -181,7 +183,6 @@ function eval_fmt(fmt, v, opts) {
 			case 'h': case 'H': out[i].t = hr; lst='h'; break;
 			case 'd': case 'y': case 's': case 'M': case 'e': lst=out[i].t; break;
 			case 'm': if(lst === 's') out[i].t = 'M'; break;
-
 		}
 	}
 
@@ -217,6 +218,5 @@ SSF._choose = choose_fmt;
 SSF._table = table_fmt;
 SSF.load = function(fmt, idx) { table_fmt[idx] = fmt; };
 SSF.format = format;
-
 	return SSF;
 })();
