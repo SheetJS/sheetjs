@@ -28,7 +28,7 @@ In the browser:
 
 See `xlsx2csv.njs` in the bin directory for usage in node.
 
-See http://niggler.github.com/js-xlsx/ for a browser example. 
+See http://oss.sheetjs.com/js-xlsx/ for a browser example. 
 
 Note that IE does not support HTML5 File API, so the base64 mode is provided for testing.  On OSX you can get the base64 encoding by running:
 
@@ -63,7 +63,7 @@ For more details:
 
 ## Test Files
 
-Test files are housed in [another repo](https://github.com/Niggler/test_files).
+Test files are housed in [another repo](https://github.com/SheetJS/test_files).
 
 ## License
 
@@ -73,7 +73,7 @@ It is the opinion of the Original Author that this code conforms to the terms of
 
 ## XLS Support
 
-XLS is not supported in this module.  Due to Licensing issues [that are discussed in more detail elsewhere](https://github.com/Niggler/js-xls/issues/1#issuecomment-13852286), the implementation cannot be released in a GPL or MIT-style license.  If you need XLS support, consult [my js-xls project](https://github.com/Niggler/js-xls).
+XLS is available in [my js-xls project](https://github.com/SheetJS/js-xls).
 
 ## References
 
