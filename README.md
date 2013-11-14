@@ -4,7 +4,7 @@ Currently a parser for XLSX files.  Cleanroom implementation from the ISO 29500 
 
 This has been tested on some very basic XLSX files generated from Excel 2011.
 
-*THIS WAS WHIPPED UP VERY QUICKLY TO SATISFY A VERY SPECIFIC NEED*.  If you need something that is not currently supported, file an issue and attach a sample file.  I will get to it :)
+If you need something that is not currently supported, file an issue and attach a sample file.  I will get to it :)
 
 ## Installation
 
