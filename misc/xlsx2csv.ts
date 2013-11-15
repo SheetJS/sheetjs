@@ -1,7 +1,8 @@
-#!/usr/bin/env node
-/* xlsx.js (C) 2013 SheetJS -- http://sheetjs.com */
+///<reference path='node.d.ts'/>
+///<reference path='xl.d.ts'/>
+
 /* vim: set ts=2: */
-var XLSX = require('../');
+var XLSX = <XLSX>require('xlsx');
 var fs = require('fs'), program = require('commander');
 program
 	.version('0.3.1')
@@ -15,7 +16,7 @@ program
 	.option('-q, --quiet', 'quiet mode')
 	.parse(process.argv);
 
-var filename, sheetname = '';
+var filename:string, sheetname:string = '';
 if(program.args[0]) {
 	filename = program.args[0];
 	if(program.args[1]) sheetname = program.args[1];
@@ -35,12 +36,12 @@ if(!fs.existsSync(filename)) {
 
 if(program.dev) XLSX.verbose = 2;
 
-var wb;
+var wb:Workbook;
 if(program.dev) wb = XLSX.readFile(filename);
 else try {
 	wb = XLSX.readFile(filename);
 } catch(e) {
-	var msg = (program.quiet) ? "" : "xlsx2csv: error parsing ";
+	var msg:string = (program.quiet) ? "" : "xlsx2csv: error parsing ";
 	msg += filename + ": " + e;
 	console.error(msg);
 	process.exit(3);
@@ -52,10 +53,10 @@ if(program.listSheets) {
 	process.exit(0);
 }
 
-var target_sheet = sheetname || '';
+var target_sheet:string = sheetname || '';
 if(target_sheet === '') target_sheet = wb.SheetNames[0];
 
-var ws;
+var ws:Worksheet;
 try {
 	ws = wb.Sheets[target_sheet];
 	if(!ws) throw "Sheet " + target_sheet + " cannot be found";
@@ -67,3 +68,4 @@ try {
 if(!program.quiet) console.error(target_sheet);
 if(program.formulae) console.log(XLSX.utils.get_formulae(ws).join("\n"));
 else console.log(XLSX.utils.make_csv(ws));
+console.log(ws["C2"]);

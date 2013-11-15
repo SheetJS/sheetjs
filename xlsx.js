@@ -1,3 +1,4 @@
+/* xlsx.js (C) 2013 SheetJS -- http://sheetjs.com */
 /* vim: set ts=2: */
 /*jshint eqnull:true */
 /* Spreadsheet Format -- jump to XLSX for the XLSX code */
