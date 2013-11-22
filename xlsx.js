@@ -2,7 +2,7 @@
 /* vim: set ts=2: */
 /*jshint eqnull:true */
 /* Spreadsheet Format -- jump to XLSX for the XLSX code */
-if(typeof require !== "undefined") SSF = require('ssf');
+if(typeof module !== "undefined" && typeof require !== 'undefined') SSF = require('ssf');
 var SSF = (function() {
 	var SSF = {};
 String.prototype.reverse=function(){return this.split("").reverse().join("");};
