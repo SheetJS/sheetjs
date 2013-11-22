@@ -77,6 +77,7 @@ NumberFormatApproxTests.xlsx
 NumberFormatTests.xlsx
 RepeatingRowsCols.xlsx
 SampleSS.xlsx
+ShrinkToFit.xlsx
 SimpleMultiCell.xlsx
 SimpleWithComments.xlsx
 Tables.xlsx
@@ -116,5 +117,7 @@ workbookProtection_workbook_revision_protected.xlsx
 workbookProtection_workbook_structure_protected.xlsx
 workbookProtection_workbook_windows_protected.xlsx
 workbookProtection_worksheet_protected.xlsx
+xlrd_reveng1.xlsx
+xlrd_text_bar.xlsx
 xlsx-jdbc.xlsx
 חישוב_נקודות_זיכוי.xlsx
