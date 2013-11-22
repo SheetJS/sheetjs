@@ -32,6 +32,19 @@
 <script src="jszip.js"></script>
 <script src="xlsx.js"></script>
 <script>
+function xlsxworker(data, cb) {
+	var worker = new Worker('./xlsxworker.js');
+	worker.onmessage = function(e) {
+		switch(e.data.t) {
+			case 'ready': break;
+			case 'e': console.error(e.data.d);
+			case 'xlsx': cb(JSON.parse(e.data.d)); break;
+		}
+	};
+    var arr = btoa(String.fromCharCode.apply(null, new Uint8Array(data)));
+	worker.postMessage(arr);
+}
+
 function get_radio_value( radioName ) {
 	var radios = document.getElementsByName( radioName );
 	for( var i = 0; i < radios.length; i++ ) {
@@ -111,10 +124,14 @@ function handleDrop(e) {
 		var name = f.name;
 		reader.onload = function(e) {
 			var data = e.target.result;
-			//var wb = XLSX.read(data, {type: 'binary'});
-			var arr = String.fromCharCode.apply(null, new Uint8Array(data));
-			var wb = XLSX.read(btoa(arr), {type: 'base64'});
-			process_wb(wb);
+			if(typeof Worker !== 'undefined') {
+				xlsxworker(data, process_wb);
+			} else {
+				//var wb = XLSX.read(data, {type: 'binary'});
+				var arr = String.fromCharCode.apply(null, new Uint8Array(data));
+				var wb = XLSX.read(btoa(arr), {type: 'base64'});
+				process_wb(wb);
+			}
 		};
 		//reader.readAsBinaryString(f);
 		reader.readAsArrayBuffer(f);
