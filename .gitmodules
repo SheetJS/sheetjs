@@ -1,3 +1,3 @@
 [submodule "tests/files"]
 	path = tests/files
-	url = https://github.com/Niggler/test_files.git
+	url = https://github.com/SheetJS/test_files

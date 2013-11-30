@@ -6,4 +6,4 @@ before_install:
   - "npm install -g mocha"
 before_script:
   - "make init"
-  - "cd tests/files; make; cd -" 
+  - "cd tests/files; make all; cd -" 
