@@ -1,0 +1,22 @@
+{
+  "name": "ssf",
+  "version": "0.2.0",
+  "author": "SheetJS",
+  "description": "pure-JS library to format data using ECMA-376 spreadsheet Format Codes",
+  "keywords": [ "format", "sprintf", "spreadsheet" ],
+  "main": "ssf_node.js",
+  "dependencies": {
+    "voc":"",
+    "colors":""
+  },
+  "devDependencies": {
+    "mocha":""
+  },
+  "repository": { "type":"git", "url":"git://github.com/SheetJS/ssf.git" },
+  "scripts": {
+    "test": "mocha -R spec"
+  },
+  "bugs": { "url": "https://github.com/SheetJS/ssf/issues" },
+  "license": "Apache-2.0",
+  "engines": { "node": ">=0.8" }
+}
