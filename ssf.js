@@ -1,3 +1,4 @@
+/* ssf.js (C) 2013 SheetJS -- http://sheetjs.com */
 var SSF;
 (function(SSF){
 String.prototype.reverse=function(){return this.split("").reverse().join("");};
@@ -65,6 +66,11 @@ var months = [
 ];
 var general_fmt = function(v) {
   if(typeof v === 'boolean') return v ? "TRUE" : "FALSE";
+  if(typeof v === 'number') {
+    return v.toString().substr(0,11);
+  }
+  if(typeof v === 'string') return v;
+  throw "unsupport value in General format: " + v;
 };
 SSF._general = general_fmt;
 var parse_date_code = function parse_date_code(v,opts) {
@@ -128,13 +134,40 @@ var write_date = function(type, fmt, val) {
     case 's': switch(fmt) { /* seconds */
       case 's': return val.S;
       case 'ss': return pad(val.S, 2);
+      case 'ss.0': console.log(val);
       default: throw 'bad second format: ' + fmt;
+    } break;
+    case 'Z': switch(fmt) {
+      case '[h]': return val.D*24+val.H;
+      default: throw 'bad abstime format: ' + fmt;
     } break;
     /* TODO: handle the ECMA spec format ee -> yy */
     case 'e': { return val.y; } break;
     case 'A': return (val.h>=12 ? 'P' : 'A') + fmt.substr(1);
     default: throw 'bad format type ' + type + ' in ' + fmt;
   }
+};
+String.prototype.reverse = function() { return this.split("").reverse().join(""); }
+var commaify = function(s) { return s.reverse().replace(/.../g,"$&,").reverse(); };
+var write_num = function(type, fmt, val) {
+  var mul = 0;
+  fmt = fmt.replace(/%/g,function(x) { mul++; return ""; });
+  if(mul !== 0) return write_num(type, fmt, val * Math.pow(10,2*mul)) + fill("%",mul);
+  if(fmt.indexOf("E") > -1) {
+    var o = val.toExponential(fmt.indexOf("E") - fmt.indexOf(".") - 1);
+    if(fmt.match(/E\+00$/) && o.match(/e[+-][0-9]$/)) o = o.substr(0,o.length-1) + "0" + o[o.length-1];
+    if(fmt.match(/E\-/) && o.match(/e\+/)) o = o.replace(/e\+/,"e");
+    return o.replace("e","E");
+  }
+  switch(fmt) {
+    case "0": return Math.round(val);
+    case "0.00": return Math.round(val*100)/100;
+    case "#,##0": return commaify(String(Math.round(val)));
+    case "#,##0.00": return commaify(String(Math.floor(val))) + "." + Math.round((val-Math.floor(val))*100);
+    default: 
+  }
+  console.log(type, fmt, val);
+  return "0";
 };
 function split_fmt(fmt) {
   var out = [];
@@ -169,6 +202,7 @@ function eval_fmt(fmt, v, opts) {
       case 'm': case 'd': case 'y': case 'h': case 's': case 'e':
         if(!dt) dt = parse_date_code(v, opts);
         o = fmt[i]; while(fmt[++i] === c) o+=c;
+        if(c === 's' && fmt[i] === '.' && fmt[i+1] === '0') { o+='.'; while(fmt[++i] === '0') o+= '0'; }
         if(c === 'm' && lst.toLowerCase() === 'h') c = 'M'; /* m = minute */
         if(c === 'h') c = hr;
         q={t:c, v:o}; out.push(q); lst = c; break;
@@ -180,7 +214,18 @@ function eval_fmt(fmt, v, opts) {
         else q.t = "t";
         out.push(q); lst = c; break;
       case '[': /* TODO: Fix this -- ignore all conditionals and formatting */
-        while(fmt[i++] !== ']'); break;
+        o = c;
+        while(fmt[i++] !== ']') o += fmt[i];
+        if(o == "[h]") out.push({t:'Z', v:o}); 
+        break;
+      /* Numbers */
+      case '0': case '#':
+        var nn = ""; while("0#.,E+-%".indexOf(c=fmt[i++]) > -1) nn += c;
+        out.push({t:'n', v:nn}); break;
+      case '?':
+        o = fmt[i]; while(fmt[++i] === c) o+=c;
+        q={t:c, v:o}; out.push(q); lst = c; break;
+
       default:
         if("$-+/():!^&'~{}<>= ".indexOf(c) === -1)
           throw 'unrecognized character ' + fmt[i] + ' in ' + fmt;
@@ -200,8 +245,11 @@ function eval_fmt(fmt, v, opts) {
   for(i=0; i < out.length; ++i) {
     switch(out[i].t) {
       case 't': case 'T': break;
-      case 'd': case 'm': case 'y': case 'h': case 'H': case 'M': case 's': case 'A': case 'e':
+      case 'd': case 'm': case 'y': case 'h': case 'H': case 'M': case 's': case 'A': case 'e': case 'Z': 
         out[i].v = write_date(out[i].t, out[i].v, dt);
+        out[i].t = 't'; break;
+      case 'n':
+        out[i].v = write_num(out[i].t, out[i].v, v);
         out[i].t = 't'; break;
       default: throw "unrecognized type " + out[i].t;
     }

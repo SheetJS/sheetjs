@@ -134,9 +134,22 @@ Booleans are serialized in upper case:
   if(typeof v === 'boolean') return v ? "TRUE" : "FALSE";
 ```
 
-
+For numbers, try to display up to 11 digits of the number:
 
 ```
+  if(typeof v === 'number') {
+    return v.toString().substr(0,11);
+  }
+```
+
+For strings, just return the text as-is:
+
+```
+  if(typeof v === 'string') return v;
+```
+
+```
+  throw "unsupport value in General format: " + v;
 };
 SSF._general = general_fmt;
 ```
@@ -322,6 +335,48 @@ Because JS dates cannot represent the bad leap day, this returns an object:
 SSF.parse_date_code = parse_date_code;
 ```
 
+## Evaluating Number Formats
+
+```js>tmp/number.js
+String.prototype.reverse = function() { return this.split("").reverse().join(""); }
+var commaify = function(s) { return s.reverse().replace(/.../g,"$&,").reverse(); };
+var write_num = function(type, fmt, val) {
+```
+
+Percentage values should be physically shifted:
+
+```js>tmp/number.js
+  var mul = 0;
+  fmt = fmt.replace(/%/g,function(x) { mul++; return ""; });
+  if(mul !== 0) return write_num(type, fmt, val * Math.pow(10,2*mul)) + fill("%",mul);
+```
+
+For exponents, get the exponent and mantissa and format them separately:
+
+```
+  if(fmt.indexOf("E") > -1) {
+    var o = val.toExponential(fmt.indexOf("E") - fmt.indexOf(".") - 1);
+    if(fmt.match(/E\+00$/) && o.match(/e[+-][0-9]$/)) o = o.substr(0,o.length-1) + "0" + o[o.length-1];
+    if(fmt.match(/E\-/) && o.match(/e\+/)) o = o.replace(/e\+/,"e");
+    return o.replace("e","E");
+  }
+```
+
+The default cases are hard-coded.  TODO: actually parse them
+
+```js>tmp/number.js
+  switch(fmt) {
+    case "0": return Math.round(val);
+    case "0.00": return Math.round(val*100)/100;
+    case "#,##0": return commaify(String(Math.round(val)));
+    case "#,##0.00": return commaify(String(Math.floor(val))) + "." + Math.round((val-Math.floor(val))*100);
+    default: 
+  }
+  console.log(type, fmt, val);
+  return "0";
+};
+```
+
 ## Evaluating Format Strings
 
 ```js>tmp/main.js
@@ -362,6 +417,17 @@ The date codes `m,d,y,h,s` are standard.  There are some special formats like
       case 'm': case 'd': case 'y': case 'h': case 's': case 'e':
         if(!dt) dt = parse_date_code(v, opts);
         o = fmt[i]; while(fmt[++i] === c) o+=c;
+```
+
+For the special case of s.00, the suffix should be swallowed with the s:
+
+```
+        if(c === 's' && fmt[i] === '.' && fmt[i+1] === '0') { o+='.'; while(fmt[++i] === '0') o+= '0'; }
+```
+
+Only the forward corrections are made here.  The reverse corrections are made later:
+
+```
         if(c === 'm' && lst.toLowerCase() === 'h') c = 'M'; /* m = minute */
         if(c === 'h') c = hr;
         q={t:c, v:o}; out.push(q); lst = c; break;
@@ -383,8 +449,37 @@ the HH/hh jazz.  TODO: investigate this further.
         else if(fmt.substr(i,5) === "AM/PM") { q.v = dt.H >= 12 ? "PM" : "AM"; q.t = 'T'; i+=5; hr='h'; }
         else q.t = "t";
         out.push(q); lst = c; break;
+```
+
+Conditional and color blocks should be handled at one point (TODO).  For now, 
+only the absolute time `[h]` is captured (using the pseudo-type `Z`): 
+
+```
       case '[': /* TODO: Fix this -- ignore all conditionals and formatting */
-        while(fmt[i++] !== ']'); break;
+        o = c;
+        while(fmt[i++] !== ']') o += fmt[i];
+        if(o == "[h]") out.push({t:'Z', v:o}); 
+        break;
+```
+
+Number blocks (following the general pattern `[0#][0#.,E+-%]*`) are grouped together:
+
+```
+      /* Numbers */
+      case '0': case '#':
+		var nn = ""; while("0#.,E+-%".indexOf(c=fmt[i++]) > -1) nn += c;
+        out.push({t:'n', v:nn}); break;
+
+```
+
+The fraction question mark characters present their own challenges.  For example, the
+number 123.456 under format `|??| /  |???| |???| foo` is `|15432| /  |125| |   | foo`:
+
+```
+      case '?':
+        o = fmt[i]; while(fmt[++i] === c) o+=c;
+        q={t:c, v:o}; out.push(q); lst = c; break;
+
       default:
         if("$-+/():!^&'~{}<>= ".indexOf(c) === -1)
           throw 'unrecognized character ' + fmt[i] + ' in ' + fmt;
@@ -404,8 +499,11 @@ the HH/hh jazz.  TODO: investigate this further.
   for(i=0; i < out.length; ++i) {
     switch(out[i].t) {
       case 't': case 'T': break;
-      case 'd': case 'm': case 'y': case 'h': case 'H': case 'M': case 's': case 'A': case 'e':
+      case 'd': case 'm': case 'y': case 'h': case 'H': case 'M': case 's': case 'A': case 'e': case 'Z': 
         out[i].v = write_date(out[i].t, out[i].v, dt);
+        out[i].t = 't'; break;
+      case 'n':
+        out[i].v = write_num(out[i].t, out[i].v, v);
         out[i].t = 't'; break;
       default: throw "unrecognized type " + out[i].t;
     }
@@ -464,7 +562,17 @@ var write_date = function(type, fmt, val) {
     case 's': switch(fmt) { /* seconds */
       case 's': return val.S;
       case 'ss': return pad(val.S, 2);
+      case 'ss.0': console.log(val);
       default: throw 'bad second format: ' + fmt;
+    } break;
+```
+
+The `Z` type refers to absolute time measures:
+
+```
+    case 'Z': switch(fmt) {
+      case '[h]': return val.D*24+val.H;
+      default: throw 'bad abstime format: ' + fmt;
     } break;
 ```
 
@@ -514,6 +622,7 @@ SSF.format = format;
 ## JS Boilerplate
 
 ```js>tmp/00_header.js
+/* ssf.js (C) 2013 SheetJS -- http://sheetjs.com */
 var SSF;
 (function(SSF){
 String.prototype.reverse=function(){return this.split("").reverse().join("");};
@@ -535,8 +644,8 @@ function pad(v,d){var t=String(v);return t.length>=d?t:(fill(0,d-t.length)+t);}
 ```bash>tmp/post.sh
 #!/bin/bash
 npm install
-cat tmp/{00_header,opts,consts,general,date,main,zz_footer_n}.js > ssf_node.js
-cat tmp/{00_header,opts,consts,general,date,main,zz_footer}.js > ssf.js
+cat tmp/{00_header,opts,consts,general,date,number,main,zz_footer_n}.js > ssf_node.js
+cat tmp/{00_header,opts,consts,general,date,number,main,zz_footer}.js > ssf.js
 ```
 
 ```json>.vocrc
@@ -552,10 +661,19 @@ node_modules/
 .vocrc
 ```
 
+```make>Makefile
+.PHONY: test ssf
+ssf: ssf.md
+        voc ssf.md
+
+test:
+        npm test
+```
+
 ```json>package.json
 {
   "name": "ssf",
-  "version": "0.1.0",
+  "version": "0.2.1",
   "author": "SheetJS",
   "description": "pure-JS library to format data using ECMA-376 spreadsheet Format Codes",
   "keywords": [ "format", "sprintf", "spreadsheet" ],
@@ -597,9 +715,10 @@ The mocha test driver tests the implied formats:
 var SSF = require('../');
 var fs = require('fs'), assert = require('assert');
 var data = JSON.parse(fs.readFileSync('./test/implied.json','utf8'));
+var skip = [12, 13, 47, 48];
 describe('implied formats', function() {
   data.forEach(function(d) {
-    it(d[1]+" for "+d[0], (d[1]<14||d[1]>22)?null:function(){
+    it(d[1]+" for "+d[0], skip.indexOf(d[1]) > -1 ? null : function(){
       assert.equal(SSF.format(d[1], d[0], {}), d[2]);
     });
   });
