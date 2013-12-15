@@ -65,23 +65,23 @@ var months = [
   ['D', 'Dec', 'December']
 ];
 var frac = function(x, D, mixed) {
-    var n1 = Math.floor(x), d1 = 1;
-    var n2 = n1+1, d2 = 1;
-    if(x !== n1) while(d1 <= D && d2 <= D) {
-        var m = (n1 + n2) / (d1 + d2);
-        if(x === m) {
-            if(d1 + d2 <= D) d1+=d2, n1+=n2, d2=D+1;
-            else if(d1 > d2) d2=D+1;
-            else d1=D+1;
-            break;
-        }
-        else if(x < m) n2 = n1+n2, d2 = d1+d2;
-        else n1 = n1+n2, d1 = d1+d2;
+  var n1 = Math.floor(x), d1 = 1;
+  var n2 = n1+1, d2 = 1;
+  if(x !== n1) while(d1 <= D && d2 <= D) {
+    var m = (n1 + n2) / (d1 + d2);
+    if(x === m) {
+      if(d1 + d2 <= D) { d1+=d2; n1+=n2; d2=D+1; }
+      else if(d1 > d2) d2=D+1;
+      else d1=D+1;
+      break;
     }
-    if(d1 > D) d1 = d2, n1 = n2;
-    if(!mixed) return [0, n1, d1];
-    var q = Math.floor(n1/d1);
-    return [q, n1 - q*d1, d1];
+    else if(x < m) { n2 = n1+n2; d2 = d1+d2; }
+    else { n1 = n1+n2; d1 = d1+d2; }
+  }
+  if(d1 > D) { d1 = d2; n1 = n2; }
+  if(!mixed) return [0, n1, d1];
+  var q = Math.floor(n1/d1);
+  return [q, n1 - q*d1, d1];
 };
 var general_fmt = function(v) {
   if(typeof v === 'boolean') return v ? "TRUE" : "FALSE";
@@ -94,7 +94,7 @@ var general_fmt = function(v) {
 SSF._general = general_fmt;
 var parse_date_code = function parse_date_code(v,opts) {
   var date = Math.floor(v), time = Math.round(86400 * (v - date)), dow=0;
-  var dout=[], out={D:date, T:time}; fixopts(opts = (opts||{}));
+  var dout=[], out={D:date, T:time, u:86400*(v-date)-time}; fixopts(opts = (opts||{}));
   if(opts.date1904) date += 1462;
   if(date === 60) {dout = [1900,2,29]; dow=3;}
   else {
@@ -115,6 +115,7 @@ var parse_date_code = function parse_date_code(v,opts) {
 };
 SSF.parse_date_code = parse_date_code;
 var write_date = function(type, fmt, val) {
+  if(val < 0) return "";
   switch(type) {
     case 'y': switch(fmt) { /* year */
       case 'y': case 'yy': return pad(val.y % 100,2);
@@ -153,7 +154,7 @@ var write_date = function(type, fmt, val) {
     case 's': switch(fmt) { /* seconds */
       case 's': return val.S;
       case 'ss': return pad(val.S, 2);
-      case 'ss.0': console.log(val);
+      case 'ss.0': return pad(val.S,2) + "." + Math.round(10*val.u);
       default: throw 'bad second format: ' + fmt;
     } break;
     case 'Z': switch(fmt) {
@@ -166,9 +167,14 @@ var write_date = function(type, fmt, val) {
     default: throw 'bad format type ' + type + ' in ' + fmt;
   }
 };
-String.prototype.reverse = function() { return this.split("").reverse().join(""); }
+String.prototype.reverse = function() { return this.split("").reverse().join(""); };
 var commaify = function(s) { return s.reverse().replace(/.../g,"$&,").reverse(); };
 var write_num = function(type, fmt, val) {
+  if(type === '(') {
+    var ffmt = fmt.replace(/\( */,"").replace(/ \)/,"").replace(/\)/,""); 
+    if(val >= 0) return write_num('n', ffmt, val);
+    return '(' + write_num('n', ffmt, -val) + ')';
+  }
   var mul = 0;
   fmt = fmt.replace(/%/g,function(x) { mul++; return ""; });
   if(mul !== 0) return write_num(type, fmt, val * Math.pow(10,2*mul)) + fill("%",mul);
@@ -178,14 +184,14 @@ var write_num = function(type, fmt, val) {
     if(fmt.match(/E\-/) && o.match(/e\+/)) o = o.replace(/e\+/,"e");
     return o.replace("e","E");
   }
-  var ff;
+  var ff, aval = val < 0 ? -val : val, sign = val < 0 ? "-" : "";
   switch(fmt) {
     case "0": return Math.round(val);
     case "0.00": return Math.round(val*100)/100;
-    case "#,##0": return commaify(String(Math.round(val)));
-    case "#,##0.00": return commaify(String(Math.floor(val))) + "." + Math.round((val-Math.floor(val))*100);
-    case "# ? / ?": ff = frac(val, 10, true); return ff[0] + " " + ff[1] + "/" + ff[2];  
-    case "# ?? / ??": ff = frac(val, 100, true); return ff[0] + " " + ff[1] + "/" + ff[2];  
+    case "#,##0": return sign + commaify(String(Math.round(aval)));
+    case "#,##0.00": return val < 0 ? "-" + write_num(type, fmt, -val) : commaify(String(Math.floor(val))) + "." + Math.round((val-Math.floor(val))*100);
+    case "# ? / ?": ff = frac(val<0?-val:val, 10, true); return (val<0?"-":"") + ff[0] + " " + ff[1] + "/" + ff[2];  
+    case "# ?? / ??": ff = frac(val<0?-val:val, 100, true); return (val<0?"-":"") + ff[0] + " " + ff[1] + "/" + ff[2];  
     default: 
   }
   throw new Error("unsupported format |" + fmt + "|");
@@ -221,6 +227,7 @@ function eval_fmt(fmt, v, opts) {
         out.push({t:'T', v:v}); ++i; break;
       /* Dates */
       case 'm': case 'd': case 'y': case 'h': case 's': case 'e':
+        if(v < 0) return "";
         if(!dt) dt = parse_date_code(v, opts);
         o = fmt[i]; while(fmt[++i] === c) o+=c;
         if(c === 's' && fmt[i] === '.' && fmt[i+1] === '0') { o+='.'; while(fmt[++i] === '0') o+= '0'; }
@@ -241,14 +248,16 @@ function eval_fmt(fmt, v, opts) {
         break;
       /* Numbers */
       case '0': case '#':
-        var nn = ""; while("0#?.,E+-%".indexOf(c=fmt[i++]) > -1) nn += c;
+        var nn = c; while("0#?.,E+-%".indexOf(c=fmt[++i]) > -1) nn += c;
         out.push({t:'n', v:nn}); break;
       case '?':
         o = fmt[i]; while(fmt[++i] === c) o+=c;
         q={t:c, v:o}; out.push(q); lst = c; break;
 
+      case '(': case ')': out.push({t:c,v:c}); ++i; break;
+      case ' ': out.push({t:c,v:c}); ++i; break;
       default:
-        if("$-+/():!^&'~{}<>= ".indexOf(c) === -1)
+        if("$-+/():!^&'~{}<>=".indexOf(c) === -1)
           throw 'unrecognized character ' + fmt[i] + ' in ' + fmt;
         out.push({t:'t', v:c}); ++i; break;
     }
@@ -266,14 +275,15 @@ function eval_fmt(fmt, v, opts) {
   /* replace fields */
   for(i=0; i < out.length; ++i) {
     switch(out[i].t) {
-      case 't': case 'T': break;
-      case 'd': case 'm': case 'y': case 'h': case 'H': case 'M': case 's': case 'A': case 'e': case 'Z': 
+      case 't': case 'T': case ' ': break;
+      case 'd': case 'm': case 'y': case 'h': case 'H': case 'M': case 's': case 'A': case 'e': case 'Z':
         out[i].v = write_date(out[i].t, out[i].v, dt);
         out[i].t = 't'; break;
-      case 'n':
+      case 'n': case '(':
         var jj = i+1;
-        while(out[jj] && (out[jj].t == '?' || out[jj].t == 't' && out[jj].v == '/')) {
-          out[i].v += ' ' + out[jj].v; delete out[jj]; ++jj
+        while(out[jj] && (out[jj].t == '?' || out[jj].t == ' ' || out[i].t == '(' && (out[jj].t == ')' || out[jj].t == 'n') || out[jj].t == 't' && out[jj].v == '/')) {
+          if(out[jj].v!==' ') out[i].v += ' ' + out[jj].v;
+          delete out[jj]; ++jj;
         }
         out[i].v = write_num(out[i].t, out[i].v, v);
         out[i].t = 't'; 
@@ -286,7 +296,14 @@ function eval_fmt(fmt, v, opts) {
 }
 SSF._eval = eval_fmt;
 function choose_fmt(fmt, v) {
+  if(typeof fmt === 'number') fmt = table_fmt[fmt];
   if(typeof fmt === "string") fmt = split_fmt(fmt);
+  switch(fmt.length) {
+    case 1: fmt = [fmt[0], fmt[0], fmt[0], "@"]; break;
+    case 2: fmt = [fmt[0], fmt[1], fmt[0], "@"]; break;
+    case 4: break; 
+    default: throw "cannot find right format for |" + fmt + "|";
+  }
   if(typeof v !== "number") return fmt[3];
   return v > 0 ? fmt[0] : v < 0 ? fmt[1] : fmt[2];
 }

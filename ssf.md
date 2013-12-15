@@ -229,7 +229,38 @@ These test cases were manually generated in Excel 2011 [value, code, result]:
   [12345.6789, 46, "296296:17:37"],
   [12345.6789, 47, "1737.0"],
   [12345.6789, 48, "12.3E+3"],
-  [12345.6789, 49, "12345.6789"]
+  [12345.6789, 49, "12345.6789"],
+
+  [-12345.6789, 0, "-12345.6789"],
+  [-12345.6789, 1, "-12346"],
+  [-12345.6789, 2, "-12345.68"],
+  [-12345.6789, 3, "-12,346"],
+  [-12345.6789, 4, "-12,345.68"],
+  [-12345.6789, 9, "-1234568%"],
+  [-12345.6789, 10, "-1234567.89%"],
+  [-12345.6789, 11, "-1.23E+04"],
+  [-12345.6789, 12, "-12345 2/3"],
+  [-12345.6789, 13, "-12345 55/81"],
+  [-12345.6789, 14, ""],
+  [-12345.6789, 15, ""],
+  [-12345.6789, 16, ""],
+  [-12345.6789, 17, ""],
+  [-12345.6789, 18, ""],
+  [-12345.6789, 19, ""],
+  [-12345.6789, 20, ""],
+  [-12345.6789, 21, ""],
+  [-12345.6789, 22, ""],
+  [-12345.6789, 37, "(12,346)"],
+  [-12345.6789, 38, "(12,346)"],
+  [-12345.6789, 39, "(12,345.68)"],
+  [-12345.6789, 40, "(12,345.68)"],
+  [-12345.6789, 45, ""],
+  [-12345.6789, 46, ""],
+  [-12345.6789, 47, ""],
+  [-12345.6789, 48, "-12.3E+3"],
+  [-12345.6789, 49, "-12345.6789"],
+
+  [0, 0, "0"]
 ]
 ```
 
@@ -279,7 +310,7 @@ portion of a 24 hour day).
 ```js>tmp/date.js
 var parse_date_code = function parse_date_code(v,opts) {
   var date = Math.floor(v), time = Math.round(86400 * (v - date)), dow=0;
-  var dout=[], out={D:date, T:time}; fixopts(opts = (opts||{}));
+  var dout=[], out={D:date, T:time, u:86400*(v-date)-time}; fixopts(opts = (opts||{}));
 ```
 
 Excel help actually recommends treating the 1904 date codes as 1900 date codes
@@ -338,10 +369,21 @@ SSF.parse_date_code = parse_date_code;
 ## Evaluating Number Formats
 
 ```js>tmp/number.js
-String.prototype.reverse = function() { return this.split("").reverse().join(""); }
+String.prototype.reverse = function() { return this.split("").reverse().join(""); };
 var commaify = function(s) { return s.reverse().replace(/.../g,"$&,").reverse(); };
 var write_num = function(type, fmt, val) {
 ```
+
+For parentheses, explicitly resolve the sign issue:
+
+```js>tmp/number.js
+  if(type === '(') {
+    var ffmt = fmt.replace(/\( */,"").replace(/ \)/,"").replace(/\)/,""); 
+    if(val >= 0) return write_num('n', ffmt, val);
+    return '(' + write_num('n', ffmt, -val) + ')';
+  }
+```
+
 
 Percentage values should be physically shifted:
 
@@ -365,19 +407,19 @@ For exponents, get the exponent and mantissa and format them separately:
 The default cases are hard-coded.  TODO: actually parse them
 
 ```js>tmp/number.js
-  var ff;
+  var ff, aval = val < 0 ? -val : val, sign = val < 0 ? "-" : "";
   switch(fmt) {
     case "0": return Math.round(val);
     case "0.00": return Math.round(val*100)/100;
-    case "#,##0": return commaify(String(Math.round(val)));
-    case "#,##0.00": return commaify(String(Math.floor(val))) + "." + Math.round((val-Math.floor(val))*100);
+    case "#,##0": return sign + commaify(String(Math.round(aval)));
+    case "#,##0.00": return val < 0 ? "-" + write_num(type, fmt, -val) : commaify(String(Math.floor(val))) + "." + Math.round((val-Math.floor(val))*100);
 ```
 
 The frac helper function is used for fraction formats (defined below).
 
 ```js>tmp/number.js
-    case "# ? / ?": ff = frac(val, 10, true); return ff[0] + " " + ff[1] + "/" + ff[2];  
-    case "# ?? / ??": ff = frac(val, 100, true); return ff[0] + " " + ff[1] + "/" + ff[2];  
+    case "# ? / ?": ff = frac(val<0?-val:val, 10, true); return (val<0?"-":"") + ff[0] + " " + ff[1] + "/" + ff[2];  
+    case "# ?? / ??": ff = frac(val<0?-val:val, 100, true); return (val<0?"-":"") + ff[0] + " " + ff[1] + "/" + ff[2];  
     default: 
   }
   throw new Error("unsupported format |" + fmt + "|");
@@ -422,6 +464,17 @@ The date codes `m,d,y,h,s` are standard.  There are some special formats like
 ```
       /* Dates */
       case 'm': case 'd': case 'y': case 'h': case 's': case 'e':
+```
+
+Negative dates are immediately thrown out:
+
+```
+        if(v < 0) return "";
+```
+
+Merge strings like "mmmmm" or "hh" into one block:
+
+```
         if(!dt) dt = parse_date_code(v, opts);
         o = fmt[i]; while(fmt[++i] === c) o+=c;
 ```
@@ -474,7 +527,7 @@ Number blocks (following the general pattern `[0#?][0#?.,E+-%]*`) are grouped to
 ```
       /* Numbers */
       case '0': case '#':
-        var nn = ""; while("0#?.,E+-%".indexOf(c=fmt[i++]) > -1) nn += c;
+        var nn = c; while("0#?.,E+-%".indexOf(c=fmt[++i]) > -1) nn += c;
         out.push({t:'n', v:nn}); break;
 
 ```
@@ -486,9 +539,22 @@ number 123.456 under format `|??| /  |???| |???| foo` is `|15432| /  |125| |   |
       case '?':
         o = fmt[i]; while(fmt[++i] === c) o+=c;
         q={t:c, v:o}; out.push(q); lst = c; break;
+```
 
+The open and close parens `()` also has special meaning (for negative numbers):
+
+```
+
+      case '(': case ')': out.push({t:c,v:c}); ++i; break;
+
+```
+
+The default magic characters are listed in subsubsections 18.8.30-31 of ECMA376:
+
+```
+      case ' ': out.push({t:c,v:c}); ++i; break;
       default:
-        if("$-+/():!^&'~{}<>= ".indexOf(c) === -1)
+        if("$-+/():!^&'~{}<>=".indexOf(c) === -1)
           throw 'unrecognized character ' + fmt[i] + ' in ' + fmt;
         out.push({t:'t', v:c}); ++i; break;
     }
@@ -506,14 +572,15 @@ number 123.456 under format `|??| /  |???| |???| foo` is `|15432| /  |125| |   |
   /* replace fields */
   for(i=0; i < out.length; ++i) {
     switch(out[i].t) {
-      case 't': case 'T': break;
-      case 'd': case 'm': case 'y': case 'h': case 'H': case 'M': case 's': case 'A': case 'e': case 'Z': 
+      case 't': case 'T': case ' ': break;
+      case 'd': case 'm': case 'y': case 'h': case 'H': case 'M': case 's': case 'A': case 'e': case 'Z':
         out[i].v = write_date(out[i].t, out[i].v, dt);
         out[i].t = 't'; break;
-      case 'n':
+      case 'n': case '(':
         var jj = i+1;
-        while(out[jj] && (out[jj].t == '?' || out[jj].t == 't' && out[jj].v == '/')) {
-          out[i].v += ' ' + out[jj].v; delete out[jj]; ++jj
+        while(out[jj] && (out[jj].t == '?' || out[jj].t == ' ' || out[i].t == '(' && (out[jj].t == ')' || out[jj].t == 'n') || out[jj].t == 't' && out[jj].v == '/')) {
+          if(out[jj].v!==' ') out[i].v += ' ' + out[jj].v;
+          delete out[jj]; ++jj;
         }
         out[i].v = write_num(out[i].t, out[i].v, v);
         out[i].t = 't'; 
@@ -537,6 +604,7 @@ display minutes instead of the month.
 
 ```js>tmp/date.js
 var write_date = function(type, fmt, val) {
+  if(val < 0) return "";
   switch(type) {
     case 'y': switch(fmt) { /* year */
       case 'y': case 'yy': return pad(val.y % 100,2);
@@ -575,7 +643,7 @@ var write_date = function(type, fmt, val) {
     case 's': switch(fmt) { /* seconds */
       case 's': return val.S;
       case 'ss': return pad(val.S, 2);
-      case 'ss.0': console.log(val);
+      case 'ss.0': return pad(val.S,2) + "." + Math.round(10*val.u);
       default: throw 'bad second format: ' + fmt;
     } break;
 ```
@@ -601,11 +669,18 @@ should be a two-digit year, but `ee` in excel is actually the four-digit year:
 };
 ```
 
-
+Based on the value, `choose_fmt` picks the right format string:
 
 ```js>tmp/main.js
 function choose_fmt(fmt, v) {
+  if(typeof fmt === 'number') fmt = table_fmt[fmt];
   if(typeof fmt === "string") fmt = split_fmt(fmt);
+  switch(fmt.length) {
+    case 1: fmt = [fmt[0], fmt[0], fmt[0], "@"]; break;
+    case 2: fmt = [fmt[0], fmt[1], fmt[0], "@"]; break;
+    case 4: break; 
+    default: throw "cannot find right format for |" + fmt + "|";
+  }
   if(typeof v !== "number") return fmt[3];
   return v > 0 ? fmt[0] : v < 0 ? fmt[1] : fmt[2];
 }
@@ -638,23 +713,23 @@ The implementation is from [our frac library](https://github.com/SheetJS/frac/):
 
 ```js>tmp/frac.js
 var frac = function(x, D, mixed) {
-    var n1 = Math.floor(x), d1 = 1;
-    var n2 = n1+1, d2 = 1;
-    if(x !== n1) while(d1 <= D && d2 <= D) {
-        var m = (n1 + n2) / (d1 + d2);
-        if(x === m) {
-            if(d1 + d2 <= D) d1+=d2, n1+=n2, d2=D+1;
-            else if(d1 > d2) d2=D+1;
-            else d1=D+1;
-            break;
-        }
-        else if(x < m) n2 = n1+n2, d2 = d1+d2;
-        else n1 = n1+n2, d1 = d1+d2;
+  var n1 = Math.floor(x), d1 = 1;
+  var n2 = n1+1, d2 = 1;
+  if(x !== n1) while(d1 <= D && d2 <= D) {
+    var m = (n1 + n2) / (d1 + d2);
+    if(x === m) {
+      if(d1 + d2 <= D) { d1+=d2; n1+=n2; d2=D+1; }
+      else if(d1 > d2) d2=D+1;
+      else d1=D+1;
+      break;
     }
-    if(d1 > D) d1 = d2, n1 = n2;
-    if(!mixed) return [0, n1, d1];
-    var q = Math.floor(n1/d1);
-    return [q, n1 - q*d1, d1];
+    else if(x < m) { n2 = n1+n2; d2 = d1+d2; }
+    else { n1 = n1+n2; d1 = d1+d2; }
+  }
+  if(d1 > D) { d1 = d2; n1 = n2; }
+  if(!mixed) return [0, n1, d1];
+  var q = Math.floor(n1/d1);
+  return [q, n1 - q*d1, d1];
 };
 ```
 
@@ -712,7 +787,7 @@ test:
 ```json>package.json
 {
   "name": "ssf",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "author": "SheetJS",
   "description": "pure-JS library to format data using ECMA-376 spreadsheet Format Codes",
   "keywords": [ "format", "sprintf", "spreadsheet" ],
@@ -754,7 +829,7 @@ The mocha test driver tests the implied formats:
 var SSF = require('../');
 var fs = require('fs'), assert = require('assert');
 var data = JSON.parse(fs.readFileSync('./test/implied.json','utf8'));
-var skip = [47, 48];
+var skip = [48];
 describe('implied formats', function() {
   data.forEach(function(d) {
     it(d[1]+" for "+d[0], skip.indexOf(d[1]) > -1 ? null : function(){
