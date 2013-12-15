@@ -1,5 +1,5 @@
 /* ssf.js (C) 2013 SheetJS -- http://sheetjs.com */
-var SSF;
+var SSF = {};
 (function(SSF){
 String.prototype.reverse=function(){return this.split("").reverse().join("");};
 var _strrev = function(x) { return String(x).reverse(); };
@@ -86,7 +86,7 @@ var frac = function(x, D, mixed) {
 var general_fmt = function(v) {
   if(typeof v === 'boolean') return v ? "TRUE" : "FALSE";
   if(typeof v === 'number') {
-    return v.toString().substr(0,11);
+    return v.toPrecision(10).replace(/\.0*$/,"").replace(/\.(.*[^0])0*$/,".$1");
   }
   if(typeof v === 'string') return v;
   throw "unsupport value in General format: " + v;

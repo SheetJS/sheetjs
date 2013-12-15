@@ -134,11 +134,12 @@ Booleans are serialized in upper case:
   if(typeof v === 'boolean') return v ? "TRUE" : "FALSE";
 ```
 
-For numbers, try to display up to 11 digits of the number:
+For numbers, try to display up to 11 digits of the number (the original code
+`return v.toString().substr(0,11);` was not satisfactory in the case of 11 2/3)
 
 ```
   if(typeof v === 'number') {
-    return v.toString().substr(0,11);
+    return v.toPrecision(10).replace(/\.0*$/,"").replace(/\.(.*[^0])0*$/,".$1");
   }
 ```
 
@@ -737,7 +738,7 @@ var frac = function(x, D, mixed) {
 
 ```js>tmp/00_header.js
 /* ssf.js (C) 2013 SheetJS -- http://sheetjs.com */
-var SSF;
+var SSF = {};
 (function(SSF){
 String.prototype.reverse=function(){return this.split("").reverse().join("");};
 var _strrev = function(x) { return String(x).reverse(); };
