@@ -365,15 +365,22 @@ For exponents, get the exponent and mantissa and format them separately:
 The default cases are hard-coded.  TODO: actually parse them
 
 ```js>tmp/number.js
+  var ff;
   switch(fmt) {
     case "0": return Math.round(val);
     case "0.00": return Math.round(val*100)/100;
     case "#,##0": return commaify(String(Math.round(val)));
     case "#,##0.00": return commaify(String(Math.floor(val))) + "." + Math.round((val-Math.floor(val))*100);
+```
+
+The frac helper function is used for fraction formats (defined below).
+
+```js>tmp/number.js
+    case "# ? / ?": ff = frac(val, 10, true); return ff[0] + " " + ff[1] + "/" + ff[2];  
+    case "# ?? / ??": ff = frac(val, 100, true); return ff[0] + " " + ff[1] + "/" + ff[2];  
     default: 
   }
-  console.log(type, fmt, val);
-  return "0";
+  throw new Error("unsupported format |" + fmt + "|");
 };
 ```
 
@@ -462,12 +469,12 @@ only the absolute time `[h]` is captured (using the pseudo-type `Z`):
         break;
 ```
 
-Number blocks (following the general pattern `[0#][0#.,E+-%]*`) are grouped together:
+Number blocks (following the general pattern `[0#?][0#?.,E+-%]*`) are grouped together:
 
 ```
       /* Numbers */
       case '0': case '#':
-		var nn = ""; while("0#.,E+-%".indexOf(c=fmt[i++]) > -1) nn += c;
+        var nn = ""; while("0#?.,E+-%".indexOf(c=fmt[i++]) > -1) nn += c;
         out.push({t:'n', v:nn}); break;
 
 ```
@@ -486,6 +493,7 @@ number 123.456 under format `|??| /  |???| |???| foo` is `|15432| /  |125| |   |
         out.push({t:'t', v:c}); ++i; break;
     }
   }
+
   /* walk backwards */
   for(i=out.length-1, lst='t'; i >= 0; --i) {
     switch(out[i].t) {
@@ -503,8 +511,13 @@ number 123.456 under format `|??| /  |???| |???| foo` is `|15432| /  |125| |   |
         out[i].v = write_date(out[i].t, out[i].v, dt);
         out[i].t = 't'; break;
       case 'n':
+        var jj = i+1;
+        while(out[jj] && (out[jj].t == '?' || out[jj].t == 't' && out[jj].v == '/')) {
+          out[i].v += ' ' + out[jj].v; delete out[jj]; ++jj
+        }
         out[i].v = write_num(out[i].t, out[i].v, v);
-        out[i].t = 't'; break;
+        out[i].t = 't'; 
+        i = jj; break;
       default: throw "unrecognized type " + out[i].t;
     }
   }
@@ -619,6 +632,32 @@ SSF.load = function(fmt, idx) { table_fmt[idx] = fmt; };
 SSF.format = format;
 ```
 
+## Fraction Library
+
+The implementation is from [our frac library](https://github.com/SheetJS/frac/):
+
+```js>tmp/frac.js
+var frac = function(x, D, mixed) {
+    var n1 = Math.floor(x), d1 = 1;
+    var n2 = n1+1, d2 = 1;
+    if(x !== n1) while(d1 <= D && d2 <= D) {
+        var m = (n1 + n2) / (d1 + d2);
+        if(x === m) {
+            if(d1 + d2 <= D) d1+=d2, n1+=n2, d2=D+1;
+            else if(d1 > d2) d2=D+1;
+            else d1=D+1;
+            break;
+        }
+        else if(x < m) n2 = n1+n2, d2 = d1+d2;
+        else n1 = n1+n2, d1 = d1+d2;
+    }
+    if(d1 > D) d1 = d2, n1 = n2;
+    if(!mixed) return [0, n1, d1];
+    var q = Math.floor(n1/d1);
+    return [q, n1 - q*d1, d1];
+};
+```
+
 ## JS Boilerplate
 
 ```js>tmp/00_header.js
@@ -644,8 +683,8 @@ function pad(v,d){var t=String(v);return t.length>=d?t:(fill(0,d-t.length)+t);}
 ```bash>tmp/post.sh
 #!/bin/bash
 npm install
-cat tmp/{00_header,opts,consts,general,date,number,main,zz_footer_n}.js > ssf_node.js
-cat tmp/{00_header,opts,consts,general,date,number,main,zz_footer}.js > ssf.js
+cat tmp/{00_header,opts,consts,frac,general,date,number,main,zz_footer_n}.js > ssf_node.js
+cat tmp/{00_header,opts,consts,frac,general,date,number,main,zz_footer}.js > ssf.js
 ```
 
 ```json>.vocrc
@@ -673,7 +712,7 @@ test:
 ```json>package.json
 {
   "name": "ssf",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "author": "SheetJS",
   "description": "pure-JS library to format data using ECMA-376 spreadsheet Format Codes",
   "keywords": [ "format", "sprintf", "spreadsheet" ],
@@ -715,7 +754,7 @@ The mocha test driver tests the implied formats:
 var SSF = require('../');
 var fs = require('fs'), assert = require('assert');
 var data = JSON.parse(fs.readFileSync('./test/implied.json','utf8'));
-var skip = [12, 13, 47, 48];
+var skip = [47, 48];
 describe('implied formats', function() {
   data.forEach(function(d) {
     it(d[1]+" for "+d[0], skip.indexOf(d[1]) > -1 ? null : function(){
