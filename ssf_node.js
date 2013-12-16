@@ -1,6 +1,6 @@
 /* ssf.js (C) 2013 SheetJS -- http://sheetjs.com */
 var SSF = {};
-(function(SSF){
+var make_ssf = function(SSF){
 String.prototype.reverse=function(){return this.split("").reverse().join("");};
 var _strrev = function(x) { return String(x).reverse(); };
 function fill(c,l) { return new Array(l+1).join(c); }
@@ -22,7 +22,7 @@ var table_fmt = {
   11: '0.00E+00',
   12: '# ?/?',
   13: '# ??/??',
-  14: 'mm/dd/yy',
+  14: 'm/d/yy',
   15: 'd-mmm-yy',
   16: 'd-mmm',
   17: 'mmm-yy',
@@ -86,10 +86,18 @@ var frac = function(x, D, mixed) {
 var general_fmt = function(v) {
   if(typeof v === 'boolean') return v ? "TRUE" : "FALSE";
   if(typeof v === 'number') {
-    return v.toPrecision(10).replace(/\.0*$/,"").replace(/\.(.*[^0])0*$/,".$1");
+    var o, V = v < 0 ? -v : v;
+    if(V >= 0.1 && V < 1) o = v.toPrecision(9);
+    else if(V >= 0.01 && V < 0.1) o = v.toPrecision(8);
+    else if(V >= 0.001 && V < 0.01) o = v.toPrecision(7);
+    else if(V > Math.pow(10,-9) && V < Math.pow(10,10)) {
+      o = v.toPrecision(10); if(o.length > 11+(v<0?1:0)) o = v.toExponential(5);
+    } 
+    else o = v.toPrecision(6);
+    return o.replace("e","E").replace(/\.0*$/,"").replace(/\.(.*[^0])0*$/,".$1").replace(/(E[+-])([0-9])$/,"$1"+"0"+"$2");
   }
   if(typeof v === 'string') return v;
-  throw "unsupport value in General format: " + v;
+  throw "unsupported value in General format: " + v;
 };
 SSF._general = general_fmt;
 var parse_date_code = function parse_date_code(v,opts) {
@@ -97,6 +105,7 @@ var parse_date_code = function parse_date_code(v,opts) {
   var dout=[], out={D:date, T:time, u:86400*(v-date)-time}; fixopts(opts = (opts||{}));
   if(opts.date1904) date += 1462;
   if(date === 60) {dout = [1900,2,29]; dow=3;}
+  else if(date === 0) {dout = [1900,1,0]; dow=6;}
   else {
     if(date > 60) --date;
     /* 1 = Jan 1 1900 */
@@ -168,31 +177,42 @@ var write_date = function(type, fmt, val) {
   }
 };
 String.prototype.reverse = function() { return this.split("").reverse().join(""); };
-var commaify = function(s) { return s.reverse().replace(/.../g,"$&,").reverse(); };
+var commaify = function(s) { return s.reverse().replace(/.../g,"$&,").reverse().replace(/^,/,""); };
 var write_num = function(type, fmt, val) {
   if(type === '(') {
-    var ffmt = fmt.replace(/\( */,"").replace(/ \)/,"").replace(/\)/,""); 
+    var ffmt = fmt.replace(/\( */,"").replace(/ \)/,"").replace(/\)/,"");
     if(val >= 0) return write_num('n', ffmt, val);
     return '(' + write_num('n', ffmt, -val) + ')';
   }
-  var mul = 0;
+  var mul = 0, o;
   fmt = fmt.replace(/%/g,function(x) { mul++; return ""; });
   if(mul !== 0) return write_num(type, fmt, val * Math.pow(10,2*mul)) + fill("%",mul);
   if(fmt.indexOf("E") > -1) {
-    var o = val.toExponential(fmt.indexOf("E") - fmt.indexOf(".") - 1);
+    var idx = fmt.indexOf("E") - fmt.indexOf(".") - 1;
+    if(fmt == '##0.0E+0') {
+      var ee = Number(val.toExponential(0).substr(3))%3;
+      o = (val/Math.pow(10,ee%3)).toPrecision(idx+1+(ee%3)).replace(/^([+-]?)([0-9]*)\.([0-9]*)[Ee]/,function($$,$1,$2,$3) { return $1 + $2 + $3.substr(0,ee) + "." + $3.substr(ee) + "E"; });
+    } else o = val.toExponential(idx);
     if(fmt.match(/E\+00$/) && o.match(/e[+-][0-9]$/)) o = o.substr(0,o.length-1) + "0" + o[o.length-1];
     if(fmt.match(/E\-/) && o.match(/e\+/)) o = o.replace(/e\+/,"e");
     return o.replace("e","E");
   }
-  var ff, aval = val < 0 ? -val : val, sign = val < 0 ? "-" : "";
+  if(fmt[0] === "$") return "$"+write_num(type,fmt.substr(fmt[1]==' '?2:1),val);
+  var r, ff, aval = val < 0 ? -val : val, sign = val < 0 ? "-" : "";
   switch(fmt) {
     case "0": return Math.round(val);
-    case "0.00": return Math.round(val*100)/100;
+    case "0.0": o = Math.round(val*10);
+      return String(o/10).replace(/^([^\.]+)$/,"$1.0").replace(/\.$/,".0");
+    case "0.00": o = Math.round(val*100);
+      return String(o/100).replace(/^([^\.]+)$/,"$1.00").replace(/\.$/,".00").replace(/\.([0-9])$/,".$1"+"0");
+    case "0.000": o = Math.round(val*1000);
+      return String(o/1000).replace(/^([^\.]+)$/,"$1.000").replace(/\.$/,".000").replace(/\.([0-9])$/,".$1"+"00").replace(/\.([0-9][0-9])$/,".$1"+"0");
     case "#,##0": return sign + commaify(String(Math.round(aval)));
-    case "#,##0.00": return val < 0 ? "-" + write_num(type, fmt, -val) : commaify(String(Math.floor(val))) + "." + Math.round((val-Math.floor(val))*100);
-    case "# ? / ?": ff = frac(val<0?-val:val, 10, true); return (val<0?"-":"") + ff[0] + " " + ff[1] + "/" + ff[2];  
-    case "# ?? / ??": ff = frac(val<0?-val:val, 100, true); return (val<0?"-":"") + ff[0] + " " + ff[1] + "/" + ff[2];  
-    default: 
+    case "#,##0.0": r = Math.round((val-Math.floor(val))*10); return val < 0 ? "-" + write_num(type, fmt, -val) : commaify(String(Math.floor(val))) + "." + r;
+    case "#,##0.00": r = Math.round((val-Math.floor(val))*100); return val < 0 ? "-" + write_num(type, fmt, -val) : commaify(String(Math.floor(val))) + "." + (r < 10 ? "0"+r:r);
+    case "# ? / ?": ff = frac(val<0?-val:val, 10, true); return (val<0?"-":"") + ff[0] + " " + ff[1] + "/" + ff[2];
+    case "# ?? / ??": ff = frac(val<0?-val:val, 100, true); return (val<0?"-":"") + ff[0] + " " + ff[1] + "/" + ff[2];
+    default:
   }
   throw new Error("unsupported format |" + fmt + "|");
 };
@@ -212,7 +232,7 @@ function split_fmt(fmt) {
   return out;
 }
 SSF._split = split_fmt;
-function eval_fmt(fmt, v, opts) {
+function eval_fmt(fmt, v, opts, flen) {
   var out = [], o = "", i = 0, c = "", lst='t', q = {}, dt;
   fixopts(opts = (opts || {}));
   var hr='H';
@@ -220,9 +240,11 @@ function eval_fmt(fmt, v, opts) {
   while(i < fmt.length) {
     switch((c = fmt[i])) {
       case '"': /* Literal text */
-        for(o="";fmt[++i] !== '"';) o += fmt[(fmt[i] === '\\' ? ++i : i)];
-        out.push({t:'t', v:o}); break;
-      case '\\': out.push({t:'t', v:fmt[++i]}); ++i; break;
+        for(o="";fmt[++i] !== '"';) o += fmt[i];
+        out.push({t:'t', v:o}); ++i; break;
+      case '\\': var w = fmt[++i], t = "()".indexOf(w) === -1 ? 't' : w;
+        out.push({t:t, v:w}); ++i; break;
+      case '_': out.push({t:'t', v:" "}); i+=2; break;
       case '@': /* Text Placeholder */
         out.push({t:'T', v:v}); ++i; break;
       /* Dates */
@@ -244,7 +266,7 @@ function eval_fmt(fmt, v, opts) {
       case '[': /* TODO: Fix this -- ignore all conditionals and formatting */
         o = c;
         while(fmt[i++] !== ']') o += fmt[i];
-        if(o == "[h]") out.push({t:'Z', v:o}); 
+        if(o == "[h]") out.push({t:'Z', v:o});
         break;
       /* Numbers */
       case '0': case '#':
@@ -253,8 +275,8 @@ function eval_fmt(fmt, v, opts) {
       case '?':
         o = fmt[i]; while(fmt[++i] === c) o+=c;
         q={t:c, v:o}; out.push(q); lst = c; break;
-
-      case '(': case ')': out.push({t:c,v:c}); ++i; break;
+      case '*': ++i; if(fmt[i] == ' ') ++i; break; // **
+      case '(': case ')': out.push({t:(flen===1?'t':c),v:c}); ++i; break;
       case ' ': out.push({t:c,v:c}); ++i; break;
       default:
         if("$-+/():!^&'~{}<>=".indexOf(c) === -1)
@@ -281,12 +303,12 @@ function eval_fmt(fmt, v, opts) {
         out[i].t = 't'; break;
       case 'n': case '(':
         var jj = i+1;
-        while(out[jj] && (out[jj].t == '?' || out[jj].t == ' ' || out[i].t == '(' && (out[jj].t == ')' || out[jj].t == 'n') || out[jj].t == 't' && out[jj].v == '/')) {
+        while(out[jj] && (out[jj].t == '?' || out[jj].t == ' ' || out[i].t == '(' && (out[jj].t == ')' || out[jj].t == 'n') || out[jj].t == 't' && (out[jj].v == '/' || out[jj].v == '$'))) {
           if(out[jj].v!==' ') out[i].v += ' ' + out[jj].v;
           delete out[jj]; ++jj;
         }
         out[i].v = write_num(out[i].t, out[i].v, v);
-        out[i].t = 't'; 
+        out[i].t = 't';
         i = jj; break;
       default: throw "unrecognized type " + out[i].t;
     }
@@ -295,29 +317,31 @@ function eval_fmt(fmt, v, opts) {
   return out.map(function(x){return x.v;}).join("");
 }
 SSF._eval = eval_fmt;
-function choose_fmt(fmt, v) {
+function choose_fmt(fmt, v, o) {
   if(typeof fmt === 'number') fmt = table_fmt[fmt];
   if(typeof fmt === "string") fmt = split_fmt(fmt);
+  var l = fmt.length;
   switch(fmt.length) {
     case 1: fmt = [fmt[0], fmt[0], fmt[0], "@"]; break;
     case 2: fmt = [fmt[0], fmt[1], fmt[0], "@"]; break;
-    case 4: break; 
+    case 4: break;
     default: throw "cannot find right format for |" + fmt + "|";
   }
-  if(typeof v !== "number") return fmt[3];
-  return v > 0 ? fmt[0] : v < 0 ? fmt[1] : fmt[2];
+  if(typeof v !== "number") return [fmt.length, fmt[3]];
+  return [l, v > 0 ? fmt[0] : v < 0 ? fmt[1] : fmt[2]];
 }
 
 var format = function format(fmt,v,o) {
   fixopts(o = (o||{}));
   if(fmt === 0) return general_fmt(v, o);
-  if(typeof fmt === 'number') fmt = table_fmt[fmt];
+  fmt = table_fmt[fmt];
   var f = choose_fmt(fmt, v, o);
-  return eval_fmt(f, v, o);
+  return eval_fmt(f[1], v, o, f[0]);
 };
 
 SSF._choose = choose_fmt;
 SSF._table = table_fmt;
 SSF.load = function(fmt, idx) { table_fmt[idx] = fmt; };
 SSF.format = format;
-})(typeof exports !== 'undefined' ? exports : SSF);
+};
+make_ssf(typeof exports !== 'undefined' ? exports : SSF);

@@ -139,7 +139,15 @@ For numbers, try to display up to 11 digits of the number (the original code
 
 ```
   if(typeof v === 'number') {
-    return v.toPrecision(10).replace(/\.0*$/,"").replace(/\.(.*[^0])0*$/,".$1");
+    var o, V = v < 0 ? -v : v;
+    if(V >= 0.1 && V < 1) o = v.toPrecision(9);
+    else if(V >= 0.01 && V < 0.1) o = v.toPrecision(8);
+    else if(V >= 0.001 && V < 0.01) o = v.toPrecision(7);
+    else if(V > Math.pow(10,-9) && V < Math.pow(10,10)) {
+      o = v.toPrecision(10); if(o.length > 11+(v<0?1:0)) o = v.toExponential(5);
+    } 
+    else o = v.toPrecision(6);
+    return o.replace("e","E").replace(/\.0*$/,"").replace(/\.(.*[^0])0*$/,".$1").replace(/(E[+-])([0-9])$/,"$1"+"0"+"$2");
   }
 ```
 
@@ -149,8 +157,10 @@ For strings, just return the text as-is:
   if(typeof v === 'string') return v;
 ```
 
+Anything else is bad:
+
 ```
-  throw "unsupport value in General format: " + v;
+  throw "unsupported value in General format: " + v;
 };
 SSF._general = general_fmt;
 ```
@@ -173,12 +183,12 @@ var table_fmt = {
   13: '# ??/??',
 ```
 
-Now Excel and other formats treat code 14 as `mm/dd/yy` (with slashes).  Given
+Now Excel and other formats treat code 14 as `m/d/yy` (with slashes).  Given
 that the spec gives no internationalization considerations, erring on the side
 of the applications makes sense here:
 
 ```
-  14: 'mm/dd/yy',
+  14: 'm/d/yy',
   15: 'd-mmm-yy',
   16: 'd-mmm',
   17: 'mmm-yy',
@@ -261,6 +271,24 @@ These test cases were manually generated in Excel 2011 [value, code, result]:
   [-12345.6789, 48, "-12.3E+3"],
   [-12345.6789, 49, "-12345.6789"],
 
+```
+
+These test cases emerged from formula_stress_test.xls:
+
+
+```
+  [11.666666666666666, 0, "11.66666667"],
+  [5.057996968497839, 0, "5.057996968"],
+  [4.380353866983808, 0, "4.380353867"],
+  [12.333333333333343, 0, "12.33333333"],
+  [-0.000006211546860868111, 0, "-6.21155E-06"],
+```
+
+Finally, these are fairly obvious:
+
+```
+  [true, 0, "TRUE"],
+  [false, 0, "FALSE"],
   [0, 0, "0"]
 ]
 ```
@@ -325,10 +353,12 @@ Due to a bug in Lotus 1-2-3 which was propagated by Excel and other variants,
 the year 1900 is recognized as a leap year.  JS has no way of representing that
 abomination as a `Date`, so the easiest way is to store the data as a tuple.
 
-February 29, 1900 (date `60`) is recognized as a Wednesday.
+February 29, 1900 (date `60`) is recognized as a Wednesday.  Date `0` is treated
+as January 0, 1900 rather than December 31, 1899.
 
 ```
   if(date === 60) {dout = [1900,2,29]; dow=3;}
+  else if(date === 0) {dout = [1900,1,0]; dow=6;}
 ```
 
 For the other dates, using the JS date mechanism suffices.
@@ -371,7 +401,7 @@ SSF.parse_date_code = parse_date_code;
 
 ```js>tmp/number.js
 String.prototype.reverse = function() { return this.split("").reverse().join(""); };
-var commaify = function(s) { return s.reverse().replace(/.../g,"$&,").reverse(); };
+var commaify = function(s) { return s.reverse().replace(/.../g,"$&,").reverse().replace(/^,/,""); };
 var write_num = function(type, fmt, val) {
 ```
 
@@ -379,7 +409,7 @@ For parentheses, explicitly resolve the sign issue:
 
 ```js>tmp/number.js
   if(type === '(') {
-    var ffmt = fmt.replace(/\( */,"").replace(/ \)/,"").replace(/\)/,""); 
+    var ffmt = fmt.replace(/\( */,"").replace(/ \)/,"").replace(/\)/,"");
     if(val >= 0) return write_num('n', ffmt, val);
     return '(' + write_num('n', ffmt, -val) + ')';
   }
@@ -389,7 +419,7 @@ For parentheses, explicitly resolve the sign issue:
 Percentage values should be physically shifted:
 
 ```js>tmp/number.js
-  var mul = 0;
+  var mul = 0, o;
   fmt = fmt.replace(/%/g,function(x) { mul++; return ""; });
   if(mul !== 0) return write_num(type, fmt, val * Math.pow(10,2*mul)) + fill("%",mul);
 ```
@@ -398,30 +428,51 @@ For exponents, get the exponent and mantissa and format them separately:
 
 ```
   if(fmt.indexOf("E") > -1) {
-    var o = val.toExponential(fmt.indexOf("E") - fmt.indexOf(".") - 1);
+	var idx = fmt.indexOf("E") - fmt.indexOf(".") - 1;
+```
+
+For the special case of engineering notation, "shift" the decimal:
+
+```
+	if(fmt == '##0.0E+0') {
+      var ee = Number(val.toExponential(0).substr(3))%3;
+      o = (val/Math.pow(10,ee%3)).toPrecision(idx+1+(ee%3)).replace(/^([+-]?)([0-9]*)\.([0-9]*)[Ee]/,function($$,$1,$2,$3) { return $1 + $2 + $3.substr(0,ee) + "." + $3.substr(ee) + "E"; });
+    } else o = val.toExponential(idx);
     if(fmt.match(/E\+00$/) && o.match(/e[+-][0-9]$/)) o = o.substr(0,o.length-1) + "0" + o[o.length-1];
     if(fmt.match(/E\-/) && o.match(/e\+/)) o = o.replace(/e\+/,"e");
     return o.replace("e","E");
   }
 ```
 
+TODO: localize the currency:
+
+```
+  if(fmt[0] === "$") return "$"+write_num(type,fmt.substr(fmt[1]==' '?2:1),val);
+```
+
 The default cases are hard-coded.  TODO: actually parse them
 
 ```js>tmp/number.js
-  var ff, aval = val < 0 ? -val : val, sign = val < 0 ? "-" : "";
+  var r, ff, aval = val < 0 ? -val : val, sign = val < 0 ? "-" : "";
   switch(fmt) {
     case "0": return Math.round(val);
-    case "0.00": return Math.round(val*100)/100;
+    case "0.0": o = Math.round(val*10);
+      return String(o/10).replace(/^([^\.]+)$/,"$1.0").replace(/\.$/,".0");
+    case "0.00": o = Math.round(val*100);
+      return String(o/100).replace(/^([^\.]+)$/,"$1.00").replace(/\.$/,".00").replace(/\.([0-9])$/,".$1"+"0");
+    case "0.000": o = Math.round(val*1000);
+      return String(o/1000).replace(/^([^\.]+)$/,"$1.000").replace(/\.$/,".000").replace(/\.([0-9])$/,".$1"+"00").replace(/\.([0-9][0-9])$/,".$1"+"0");
     case "#,##0": return sign + commaify(String(Math.round(aval)));
-    case "#,##0.00": return val < 0 ? "-" + write_num(type, fmt, -val) : commaify(String(Math.floor(val))) + "." + Math.round((val-Math.floor(val))*100);
+    case "#,##0.0": r = Math.round((val-Math.floor(val))*10); return val < 0 ? "-" + write_num(type, fmt, -val) : commaify(String(Math.floor(val))) + "." + r;
+    case "#,##0.00": r = Math.round((val-Math.floor(val))*100); return val < 0 ? "-" + write_num(type, fmt, -val) : commaify(String(Math.floor(val))) + "." + (r < 10 ? "0"+r:r);
 ```
 
 The frac helper function is used for fraction formats (defined below).
 
 ```js>tmp/number.js
-    case "# ? / ?": ff = frac(val<0?-val:val, 10, true); return (val<0?"-":"") + ff[0] + " " + ff[1] + "/" + ff[2];  
-    case "# ?? / ??": ff = frac(val<0?-val:val, 100, true); return (val<0?"-":"") + ff[0] + " " + ff[1] + "/" + ff[2];  
-    default: 
+    case "# ? / ?": ff = frac(val<0?-val:val, 10, true); return (val<0?"-":"") + ff[0] + " " + ff[1] + "/" + ff[2];
+    case "# ?? / ??": ff = frac(val<0?-val:val, 100, true); return (val<0?"-":"") + ff[0] + " " + ff[1] + "/" + ff[2];
+    default:
   }
   throw new Error("unsupported format |" + fmt + "|");
 };
@@ -430,7 +481,7 @@ The frac helper function is used for fraction formats (defined below).
 ## Evaluating Format Strings
 
 ```js>tmp/main.js
-function eval_fmt(fmt, v, opts) {
+function eval_fmt(fmt, v, opts, flen) {
   var out = [], o = "", i = 0, c = "", lst='t', q = {}, dt;
   fixopts(opts = (opts || {}));
   var hr='H';
@@ -444,9 +495,17 @@ literal if they are preceded by a slash:
 
 ```
       case '"': /* Literal text */
-        for(o="";fmt[++i] !== '"';) o += fmt[(fmt[i] === '\\' ? ++i : i)];
-        out.push({t:'t', v:o}); break;
-      case '\\': out.push({t:'t', v:fmt[++i]}); ++i; break;
+        for(o="";fmt[++i] !== '"';) o += fmt[i];
+        out.push({t:'t', v:o}); ++i; break;
+      case '\\': var w = fmt[++i], t = "()".indexOf(w) === -1 ? 't' : w;
+        out.push({t:t, v:w}); ++i; break;
+```
+
+The underscore character represents a literal space.  Apparently, it also marks
+that the next character is junk.  Hence the read pointer is moved by 2:
+
+```
+      case '_': out.push({t:'t', v:" "}); i+=2; break;
 ```
 
 The '@' symbol refers to the original text.  The ECMA spec is not complete, but
@@ -512,14 +571,14 @@ the HH/hh jazz.  TODO: investigate this further.
         out.push(q); lst = c; break;
 ```
 
-Conditional and color blocks should be handled at one point (TODO).  For now, 
-only the absolute time `[h]` is captured (using the pseudo-type `Z`): 
+Conditional and color blocks should be handled at one point (TODO).  For now,
+only the absolute time `[h]` is captured (using the pseudo-type `Z`):
 
 ```
       case '[': /* TODO: Fix this -- ignore all conditionals and formatting */
         o = c;
         while(fmt[i++] !== ']') o += fmt[i];
-        if(o == "[h]") out.push({t:'Z', v:o}); 
+        if(o == "[h]") out.push({t:'Z', v:o});
         break;
 ```
 
@@ -542,12 +601,18 @@ number 123.456 under format `|??| /  |???| |???| foo` is `|15432| /  |125| |   |
         q={t:c, v:o}; out.push(q); lst = c; break;
 ```
 
+Due to how the CSV generation works, asterisk characters are discarded.  TODO: 
+communicate this somehow, possibly with an option
+
+```
+      case '*': ++i; if(fmt[i] == ' ') ++i; break; // **
+```
+
+
 The open and close parens `()` also has special meaning (for negative numbers):
 
 ```
-
-      case '(': case ')': out.push({t:c,v:c}); ++i; break;
-
+      case '(': case ')': out.push({t:(flen===1?'t':c),v:c}); ++i; break;
 ```
 
 The default magic characters are listed in subsubsections 18.8.30-31 of ECMA376:
@@ -579,12 +644,12 @@ The default magic characters are listed in subsubsections 18.8.30-31 of ECMA376:
         out[i].t = 't'; break;
       case 'n': case '(':
         var jj = i+1;
-        while(out[jj] && (out[jj].t == '?' || out[jj].t == ' ' || out[i].t == '(' && (out[jj].t == ')' || out[jj].t == 'n') || out[jj].t == 't' && out[jj].v == '/')) {
+        while(out[jj] && (out[jj].t == '?' || out[jj].t == ' ' || out[i].t == '(' && (out[jj].t == ')' || out[jj].t == 'n') || out[jj].t == 't' && (out[jj].v == '/' || out[jj].v == '$'))) {
           if(out[jj].v!==' ') out[i].v += ' ' + out[jj].v;
           delete out[jj]; ++jj;
         }
         out[i].v = write_num(out[i].t, out[i].v, v);
-        out[i].t = 't'; 
+        out[i].t = 't';
         i = jj; break;
       default: throw "unrecognized type " + out[i].t;
     }
@@ -670,28 +735,30 @@ should be a two-digit year, but `ee` in excel is actually the four-digit year:
 };
 ```
 
-Based on the value, `choose_fmt` picks the right format string:
+Based on the value, `choose_fmt` picks the right format string.  If formats have
+explicit negative specifications, those values should be passed as positive:
 
 ```js>tmp/main.js
-function choose_fmt(fmt, v) {
+function choose_fmt(fmt, v, o) {
   if(typeof fmt === 'number') fmt = table_fmt[fmt];
   if(typeof fmt === "string") fmt = split_fmt(fmt);
+  var l = fmt.length;
   switch(fmt.length) {
     case 1: fmt = [fmt[0], fmt[0], fmt[0], "@"]; break;
     case 2: fmt = [fmt[0], fmt[1], fmt[0], "@"]; break;
-    case 4: break; 
+    case 4: break;
     default: throw "cannot find right format for |" + fmt + "|";
   }
-  if(typeof v !== "number") return fmt[3];
-  return v > 0 ? fmt[0] : v < 0 ? fmt[1] : fmt[2];
+  if(typeof v !== "number") return [fmt.length, fmt[3]];
+  return [l, v > 0 ? fmt[0] : v < 0 ? fmt[1] : fmt[2]];
 }
 
 var format = function format(fmt,v,o) {
   fixopts(o = (o||{}));
   if(fmt === 0) return general_fmt(v, o);
-  if(typeof fmt === 'number') fmt = table_fmt[fmt];
+  fmt = table_fmt[fmt];
   var f = choose_fmt(fmt, v, o);
-  return eval_fmt(f, v, o);
+  return eval_fmt(f[1], v, o, f[0]);
 };
 
 ```
@@ -739,7 +806,7 @@ var frac = function(x, D, mixed) {
 ```js>tmp/00_header.js
 /* ssf.js (C) 2013 SheetJS -- http://sheetjs.com */
 var SSF = {};
-(function(SSF){
+var make_ssf = function(SSF){
 String.prototype.reverse=function(){return this.split("").reverse().join("");};
 var _strrev = function(x) { return String(x).reverse(); };
 function fill(c,l) { return new Array(l+1).join(c); }
@@ -747,11 +814,13 @@ function pad(v,d){var t=String(v);return t.length>=d?t:(fill(0,d-t.length)+t);}
 ```
 
 ```js>tmp/zz_footer_n.js
-})(typeof exports !== 'undefined' ? exports : SSF);
+};
+make_ssf(typeof exports !== 'undefined' ? exports : SSF);
 ```
 
 ```js>tmp/zz_footer.js
-})(SSF);
+};
+make_ssf(SSF);
 ```
 
 ## .vocrc and post-commands
@@ -788,7 +857,7 @@ test:
 ```json>package.json
 {
   "name": "ssf",
-  "version": "0.2.3",
+  "version": "0.3.0",
   "author": "SheetJS",
   "description": "pure-JS library to format data using ECMA-376 spreadsheet Format Codes",
   "keywords": [ "format", "sprintf", "spreadsheet" ],
@@ -830,7 +899,7 @@ The mocha test driver tests the implied formats:
 var SSF = require('../');
 var fs = require('fs'), assert = require('assert');
 var data = JSON.parse(fs.readFileSync('./test/implied.json','utf8'));
-var skip = [48];
+var skip = [];
 describe('implied formats', function() {
   data.forEach(function(d) {
     it(d[1]+" for "+d[0], skip.indexOf(d[1]) > -1 ? null : function(){
