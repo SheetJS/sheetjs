@@ -90,11 +90,20 @@ var general_fmt = function(v) {
     if(V >= 0.1 && V < 1) o = v.toPrecision(9);
     else if(V >= 0.01 && V < 0.1) o = v.toPrecision(8);
     else if(V >= 0.001 && V < 0.01) o = v.toPrecision(7);
-    else if(V > Math.pow(10,-9) && V < Math.pow(10,10)) {
-      o = v.toPrecision(10); if(o.length > 11+(v<0?1:0)) o = v.toExponential(5);
+    else if(V >= 0.0001 && V < 0.001) o = v.toPrecision(6);
+    else if(V >= Math.pow(10,10) && V < Math.pow(10,11)) o = v.toFixed(10).substr(0,12);
+    else if(V > Math.pow(10,-9) && V < Math.pow(10,11)) {
+      o = v.toFixed(12).replace(/(\.[0-9]*[1-9])0*$/,"$1").replace(/\.$/,""); 
+      if(o.length > 11+(v<0?1:0)) o = v.toPrecision(10);
+      if(o.length > 11+(v<0?1:0)) o = v.toExponential(5);
     } 
-    else o = v.toPrecision(6);
-    return o.replace("e","E").replace(/\.0*$/,"").replace(/\.(.*[^0])0*$/,".$1").replace(/(E[+-])([0-9])$/,"$1"+"0"+"$2");
+    else {
+        o = v.toFixed(11).replace(/(\.[0-9]*[1-9])0*$/,"$1")
+        if(o.length > 11 + (v<0?1:0)) o = v.toPrecision(6); 
+    }
+    if(v==0.000000001) console.log(v, o);
+    o = o.replace(/(\.[0-9]*[1-9])0+e/,"$1e").replace(/\.0*e/,"e");
+    return o.replace("e","E").replace(/\.0*$/,"").replace(/\.([0-9]*[^0])0*$/,".$1").replace(/(E[+-])([0-9])$/,"$1"+"0"+"$2");
   }
   if(typeof v === 'string') return v;
   throw "unsupported value in General format: " + v;
