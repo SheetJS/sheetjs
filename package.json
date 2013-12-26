@@ -1,6 +1,6 @@
 {
   "name": "ssf",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "author": "SheetJS",
   "description": "pure-JS library to format data using ECMA-376 spreadsheet Format Codes",
   "keywords": [ "format", "sprintf", "spreadsheet" ],

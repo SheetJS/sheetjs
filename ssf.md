@@ -151,10 +151,9 @@ For numbers, try to display up to 11 digits of the number (the original code
       if(o.length > 11+(v<0?1:0)) o = v.toExponential(5);
     } 
     else {
-		o = v.toFixed(11).replace(/(\.[0-9]*[1-9])0*$/,"$1")
-		if(o.length > 11 + (v<0?1:0)) o = v.toPrecision(6); 
-	}
-	if(v==0.000000001) console.log(v, o);
+      o = v.toFixed(11).replace(/(\.[0-9]*[1-9])0*$/,"$1");
+      if(o.length > 11 + (v<0?1:0)) o = v.toPrecision(6); 
+    }
     o = o.replace(/(\.[0-9]*[1-9])0+e/,"$1e").replace(/\.0*e/,"e");
     return o.replace("e","E").replace(/\.0*$/,"").replace(/\.([0-9]*[^0])0*$/,".$1").replace(/(E[+-])([0-9])$/,"$1"+"0"+"$2");
   }
@@ -353,13 +352,13 @@ For exponents, get the exponent and mantissa and format them separately:
 
 ```
   if(fmt.indexOf("E") > -1) {
-	var idx = fmt.indexOf("E") - fmt.indexOf(".") - 1;
+    var idx = fmt.indexOf("E") - fmt.indexOf(".") - 1;
 ```
 
 For the special case of engineering notation, "shift" the decimal:
 
 ```
-	if(fmt == '##0.0E+0') {
+    if(fmt == '##0.0E+0') {
       var ee = Number(val.toExponential(0).substr(3))%3;
       o = (val/Math.pow(10,ee%3)).toPrecision(idx+1+(ee%3)).replace(/^([+-]?)([0-9]*)\.([0-9]*)[Ee]/,function($$,$1,$2,$3) { return $1 + $2 + $3.substr(0,ee) + "." + $3.substr(ee) + "E"; });
     } else o = val.toExponential(idx);
@@ -375,10 +374,20 @@ TODO: localize the currency:
   if(fmt[0] === "$") return "$"+write_num(type,fmt.substr(fmt[1]==' '?2:1),val);
 ```
 
-The default cases are hard-coded.  TODO: actually parse them
+Fractions with known denominator are resolved by rounding:
 
 ```js>tmp/number.js
   var r, ff, aval = val < 0 ? -val : val, sign = val < 0 ? "-" : "";
+  if((r = fmt.match(/# (\?+) \/ (\d+)/))) {
+    var den = Number(r[2]), rnd = Math.round(aval * den), base = Math.floor(rnd/den);
+    var myn = (rnd - base*den), myd = den;
+    return sign + (base?base:"") + " " + (myn === 0 ? fill(" ", r[1].length + 1 + r[2].length) : pad(myn,r[1].length," ") + "/" + pad(myd,r[2].length));
+  }
+```
+
+The default cases are hard-coded.  TODO: actually parse them
+
+```js>tmp/number.js
   switch(fmt) {
     case "0": return Math.round(val);
     case "0.0": o = Math.round(val*10);
@@ -395,8 +404,9 @@ The default cases are hard-coded.  TODO: actually parse them
 The frac helper function is used for fraction formats (defined below).
 
 ```js>tmp/number.js
-    case "# ? / ?": ff = frac(val<0?-val:val, 10, true); return (val<0?"-":"") + ff[0] + " " + ff[1] + "/" + ff[2];
-    case "# ?? / ??": ff = frac(val<0?-val:val, 100, true); return (val<0?"-":"") + ff[0] + " " + ff[1] + "/" + ff[2];
+    case "# ? / ?": ff = frac(aval, 9, true); return sign + (ff[0]||"") + " " + (ff[1] === 0 ? "   " : ff[1] + "/" + ff[2]);
+    case "# ?? / ??": ff = frac(aval, 99, true); return sign + (ff[0]||"") + " " + (ff[1] ? pad(ff[1],2," ") + "/" + rpad(ff[2],2," ") : "     ");
+    case "# ??? / ???": ff = frac(aval, 999, true); return sign + (ff[0]||"") + " " + (ff[1] ? pad(ff[1],3," ") + "/" + rpad(ff[2],3," ") : "       ");
     default:
   }
   throw new Error("unsupported format |" + fmt + "|");
@@ -512,8 +522,8 @@ Number blocks (following the general pattern `[0#?][0#?.,E+-%]*`) are grouped to
 ```
       /* Numbers */
       case '0': case '#':
-        var nn = c; while("0#?.,E+-%".indexOf(c=fmt[++i]) > -1) nn += c;
-        out.push({t:'n', v:nn}); break;
+        o = c; while("0#?.,E+-%".indexOf(c=fmt[++i]) > -1) o += c;
+        out.push({t:'n', v:o}); break;
 
 ```
 
@@ -540,7 +550,16 @@ The open and close parens `()` also has special meaning (for negative numbers):
       case '(': case ')': out.push({t:(flen===1?'t':c),v:c}); ++i; break;
 ```
 
+The nonzero digits show up in fraction denominators:
+
+```
+      case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':
+        o = fmt[i]; while("0123456789".indexOf(fmt[++i]) > -1) o+=fmt[i];
+        out.push({t:'D', v:o}); break;
+```
+
 The default magic characters are listed in subsubsections 18.8.30-31 of ECMA376:
+
 
 ```
       case ' ': out.push({t:c,v:c}); ++i; break;
@@ -569,7 +588,7 @@ The default magic characters are listed in subsubsections 18.8.30-31 of ECMA376:
         out[i].t = 't'; break;
       case 'n': case '(':
         var jj = i+1;
-        while(out[jj] && (out[jj].t == '?' || out[jj].t == ' ' || out[i].t == '(' && (out[jj].t == ')' || out[jj].t == 'n') || out[jj].t == 't' && (out[jj].v == '/' || out[jj].v == '$'))) {
+        while(out[jj] && ("? D".indexOf(out[jj].t) > -1 || out[i].t == '(' && (out[jj].t == ')' || out[jj].t == 'n') || out[jj].t == 't' && (out[jj].v == '/' || out[jj].v == '$' || (out[jj].v == ' ' && (out[jj+1]||{}).t == '?')))) {
           if(out[jj].v!==' ') out[i].v += ' ' + out[jj].v;
           delete out[jj]; ++jj;
         }
@@ -670,7 +689,7 @@ function choose_fmt(fmt, v, o) {
   var l = fmt.length;
   switch(fmt.length) {
     case 1: fmt = [fmt[0], fmt[0], fmt[0], "@"]; break;
-    case 2: fmt = [fmt[0], fmt[1], fmt[0], "@"]; break;
+    case 2: fmt = [fmt[0], fmt[fmt[1] === "@"?0:1], fmt[0], "@"]; break;
     case 4: break;
     default: throw "cannot find right format for |" + fmt + "|";
   }
@@ -681,7 +700,7 @@ function choose_fmt(fmt, v, o) {
 var format = function format(fmt,v,o) {
   fixopts(o = (o||{}));
   if(fmt === 0) return general_fmt(v, o);
-  fmt = table_fmt[fmt];
+  if(typeof fmt === 'number') fmt = table_fmt[fmt];
   var f = choose_fmt(fmt, v, o);
   return eval_fmt(f[1], v, o, f[0]);
 };
@@ -705,24 +724,26 @@ SSF.format = format;
 The implementation is from [our frac library](https://github.com/SheetJS/frac/):
 
 ```js>tmp/frac.js
-var frac = function(x, D, mixed) {
-  var n1 = Math.floor(x), d1 = 1;
-  var n2 = n1+1, d2 = 1;
-  if(x !== n1) while(d1 <= D && d2 <= D) {
-    var m = (n1 + n2) / (d1 + d2);
-    if(x === m) {
-      if(d1 + d2 <= D) { d1+=d2; n1+=n2; d2=D+1; }
-      else if(d1 > d2) d2=D+1;
-      else d1=D+1;
-      break;
+var frac = function frac(x, D, mixed) {
+    var sgn = x < 0 ? -1 : 1;
+    var B = x * sgn;
+    var P_2 = 0, P_1 = 1, P = 0;
+    var Q_2 = 1, Q_1 = 0, Q = 0;
+    var A = B|0;
+    while(Q_1 < D) {
+        A = B|0;
+        P = A * P_1 + P_2;
+        Q = A * Q_1 + Q_2;
+        if((B - A) < 0.0000000001) break;
+        B = 1 / (B - A);
+        P_2 = P_1; P_1 = P;
+        Q_2 = Q_1; Q_1 = Q;
     }
-    else if(x < m) { n2 = n1+n2; d2 = d1+d2; }
-    else { n1 = n1+n2; d1 = d1+d2; }
-  }
-  if(d1 > D) { d1 = d2; n1 = n2; }
-  if(!mixed) return [0, n1, d1];
-  var q = Math.floor(n1/d1);
-  return [q, n1 - q*d1, d1];
+    if(Q > D) { Q = Q_1; P = P_1; }
+    if(Q > D) { Q = Q_2; P = P_2; }
+    if(!mixed) return [0, sgn * P, Q];
+    var q = Math.floor(sgn * P/Q);
+    return [q, sgn*P - q*Q, Q];
 };
 ```
 
@@ -735,7 +756,8 @@ var make_ssf = function(SSF){
 String.prototype.reverse=function(){return this.split("").reverse().join("");};
 var _strrev = function(x) { return String(x).reverse(); };
 function fill(c,l) { return new Array(l+1).join(c); }
-function pad(v,d){var t=String(v);return t.length>=d?t:(fill(0,d-t.length)+t);}
+function pad(v,d,c){var t=String(v);return t.length>=d?t:(fill(c||0,d-t.length)+t);}
+function rpad(v,d,c){var t=String(v);return t.length>=d?t:(t+fill(c||0,d-t.length));}
 ```
 
 ```js>tmp/zz_footer_n.js
@@ -755,6 +777,7 @@ make_ssf(SSF);
 npm install
 cat tmp/{00_header,opts,consts,frac,general,date,number,main,zz_footer_n}.js > ssf_node.js
 cat tmp/{00_header,opts,consts,frac,general,date,number,main,zz_footer}.js > ssf.js
+
 ```
 
 ```json>.vocrc
@@ -782,7 +805,7 @@ test:
 ```json>package.json
 {
   "name": "ssf",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "author": "SheetJS",
   "description": "pure-JS library to format data using ECMA-376 spreadsheet Format Codes",
   "keywords": [ "format", "sprintf", "spreadsheet" ],
@@ -829,6 +852,42 @@ describe('implied formats', function() {
   data.forEach(function(d) {
     it(d[1]+" for "+d[0], skip.indexOf(d[1]) > -1 ? null : function(){
       assert.equal(SSF.format(d[1], d[0], {}), d[2]);
+    });
+  });
+});
+```
+
+The general test driver tests the General format:
+
+```js>test/general.js
+/* vim: set ts=2: */
+var SSF = require('../');
+var fs = require('fs'), assert = require('assert');
+var data = JSON.parse(fs.readFileSync('./test/general.json','utf8'));
+var skip = [];
+describe('General format', function() {
+  data.forEach(function(d) {
+    it(d[1]+" for "+d[0], skip.indexOf(d[1]) > -1 ? null : function(){
+      assert.equal(SSF.format(d[1], d[0], {}), d[2]);
+    });
+  });
+});
+```
+
+The fraction test driver tests fractional formats:
+
+```js>test/fraction.js
+/* vim: set ts=2: */
+var SSF = require('../');
+var fs = require('fs'), assert = require('assert');
+var data = JSON.parse(fs.readFileSync('./test/fraction.json','utf8'));
+var skip = [];
+describe('fractional formats', function() {
+  data.forEach(function(d) {
+    it(d[1]+" for "+d[0], skip.indexOf(d[1]) > -1 ? null : function(){
+      var expected = d[2], actual = SSF.format(d[1], d[0], {})
+      //var r = actual.match(/(-?)\d* *\d+\/\d+/);
+      assert.equal(actual, expected);
     });
   });
 });
