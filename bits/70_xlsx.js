@@ -464,7 +464,7 @@ function parseZip(zip) {
 	var entries = Object.keys(zip.files);
 	var keys = entries.filter(function(x){return x.substr(-1) != '/';}).sort();
 	var dir = parseCT(getdata(getzipfile(zip, '[Content_Types].xml')));
-
+	if(dir.workbooks.length === 0) throw new Error("Could not find workbook entry");
 	strs = {};
 	if(dir.sst) strs=parse_sst(getdata(getzipfile(zip, dir.sst.replace(/^\//,''))));
 
