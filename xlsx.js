@@ -263,7 +263,7 @@ function eval_fmt(fmt, v, opts, flen) {
 	while(i < fmt.length) {
 		switch((c = fmt[i])) {
 			case '"': /* Literal text */
-				for(o="";fmt[++i] !== '"';) o += fmt[i];
+				for(o="";fmt[++i] !== '"' && i < fmt.length;) o += fmt[i];
 				out.push({t:'t', v:o}); ++i; break;
 			case '\\': var w = fmt[++i], t = "()".indexOf(w) === -1 ? 't' : w;
 				out.push({t:t, v:w}); ++i; break;
