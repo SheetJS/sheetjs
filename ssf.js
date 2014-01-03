@@ -350,12 +350,12 @@ function choose_fmt(fmt, v, o) {
   if(typeof v !== "number") return [fmt.length, fmt[3]];
   return [l, v > 0 ? fmt[0] : v < 0 ? fmt[1] : fmt[2]];
 }
-
 var format = function format(fmt,v,o) {
   fixopts(o = (o||{}));
-  if(fmt === 0) return general_fmt(v, o);
+  if(fmt === 0 || (typeof fmt === "string" && fmt.toLowerCase() === "general")) return general_fmt(v, o);
   if(typeof fmt === 'number') fmt = table_fmt[fmt];
   var f = choose_fmt(fmt, v, o);
+  if(f[1].toLowerCase() === "general") return general_fmt(v,o);
   return eval_fmt(f[1], v, o, f[0]);
 };
 
