@@ -24,6 +24,12 @@ In the browser:
  - FF 18 using Base64 or HTML5 mode
  - Chrome 24 using Base64 or HTML5 mode
 
+Tests utilize the mocha testing framework.  Travis-CI and Sauce Labs links:
+
+ - <https://travis-ci.org/SheetJS/js-xlsx> for XLSX module in node
+ - <https://travis-ci.org/SheetJS/SheetJS.github.io> for XLS* modules
+ - <https://saucelabs.com/u/sheetjs> for XLS* modules using Sauce Labs 
+
 ## Usage
 
 See `xlsx2csv.njs` in the bin directory for usage in node.
@@ -82,4 +88,6 @@ ISO/IEC 29500:2012(E) "Information technology — Document description and proce
 OSP-covered specifications:
 
  - [MS-XLSX]: Excel (.xlsx) Extensions to the Office Open XML SpreadsheetML File Format
+
+[![githalytics.com alpha](https://cruel-carlota.pagodabox.com/ed5bb2c4c4346a474fef270f847f3f78 "githalytics.com")](http://githalytics.com/SheetJS/js-xlsx)
 
