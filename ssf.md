@@ -8,7 +8,7 @@ spreadsheet format codes.
 The various API functions take an `opts` argument which control parsing.  The
 default options are described below:
 
-```js>tmp/opts.js
+```js>tmp/10_opts.js
 /* Options */
 var opts_fmt = {};
 function fixopts(o){for(var y in opts_fmt) if(o[y]===undefined) o[y]=opts_fmt[y];}
@@ -63,7 +63,7 @@ numbers, zero values, and text, in that order.
 Semicolons can be escaped with the `\` character, so we need to split on those
 semicolons that aren't prefaced by a slash or within a quoted string:
 
-```js>tmp/main.js
+```js>tmp/90_main.js
 function split_fmt(fmt) {
   var out = [];
   var in_str = -1;
@@ -124,7 +124,7 @@ The 'general' format for spreadsheets (identified by format code 0) is highly
 context-sensitive and the implementation tries to follow the format to the best
 of its abilities given the knowledge.
 
-```js>tmp/general.js
+```js>tmp/40_general.js
 var general_fmt = function(v) {
 ```
 
@@ -178,7 +178,7 @@ SSF._general = general_fmt;
 These are the commonly-used formats that have a special implied code.
 None of the international formats are included here.
 
-```js>tmp/consts.js
+```js>tmp/20_consts.js
 var table_fmt = {
   1:  '0',
   2:  '0.00',
@@ -221,7 +221,7 @@ of the applications makes sense here:
 
 The code `ddd` displays short day-of-week and `dddd` shows long day-of-week:
 
-```js>tmp/consts.js
+```js>tmp/20_consts.js
 var days = [
   ['Sun', 'Sunday'],
   ['Mon', 'Monday'],
@@ -260,7 +260,7 @@ the integer part is a day code based on a format and the fractional part is the
 portion of a 24 hour day).
 
 
-```js>tmp/date.js
+```js>tmp/50_date.js
 var parse_date_code = function parse_date_code(v,opts) {
   var date = Math.floor(v), time = Math.round(86400 * (v - date)), dow=0;
   var dout=[], out={D:date, T:time, u:86400*(v-date)-time}; fixopts(opts = (opts||{}));
@@ -323,7 +323,7 @@ SSF.parse_date_code = parse_date_code;
 
 ## Evaluating Number Formats
 
-```js>tmp/number.js
+```js>tmp/60_number.js
 String.prototype.reverse = function() { return this.split("").reverse().join(""); };
 var commaify = function(s) { return s.reverse().replace(/.../g,"$&,").reverse().replace(/^,/,""); };
 var write_num = function(type, fmt, val) {
@@ -331,7 +331,7 @@ var write_num = function(type, fmt, val) {
 
 For parentheses, explicitly resolve the sign issue:
 
-```js>tmp/number.js
+```js>tmp/60_number.js
   if(type === '(') {
     var ffmt = fmt.replace(/\( */,"").replace(/ \)/,"").replace(/\)/,"");
     if(val >= 0) return write_num('n', ffmt, val);
@@ -342,7 +342,7 @@ For parentheses, explicitly resolve the sign issue:
 
 Percentage values should be physically shifted:
 
-```js>tmp/number.js
+```js>tmp/60_number.js
   var mul = 0, o;
   fmt = fmt.replace(/%/g,function(x) { mul++; return ""; });
   if(mul !== 0) return write_num(type, fmt, val * Math.pow(10,2*mul)) + fill("%",mul);
@@ -376,7 +376,7 @@ TODO: localize the currency:
 
 Fractions with known denominator are resolved by rounding:
 
-```js>tmp/number.js
+```js>tmp/60_number.js
   var r, ff, aval = val < 0 ? -val : val, sign = val < 0 ? "-" : "";
   if((r = fmt.match(/# (\?+) \/ (\d+)/))) {
     var den = Number(r[2]), rnd = Math.round(aval * den), base = Math.floor(rnd/den);
@@ -387,7 +387,7 @@ Fractions with known denominator are resolved by rounding:
 
 The default cases are hard-coded.  TODO: actually parse them
 
-```js>tmp/number.js
+```js>tmp/60_number.js
   switch(fmt) {
     case "0": return Math.round(val);
     case "0.0": o = Math.round(val*10);
@@ -403,7 +403,7 @@ The default cases are hard-coded.  TODO: actually parse them
 
 The frac helper function is used for fraction formats (defined below).
 
-```js>tmp/number.js
+```js>tmp/60_number.js
     case "# ? / ?": ff = frac(aval, 9, true); return sign + (ff[0]||"") + " " + (ff[1] === 0 ? "   " : ff[1] + "/" + ff[2]);
     case "# ?? / ??": ff = frac(aval, 99, true); return sign + (ff[0]||"") + " " + (ff[1] ? pad(ff[1],2," ") + "/" + rpad(ff[2],2," ") : "     ");
     case "# ??? / ???": ff = frac(aval, 999, true); return sign + (ff[0]||"") + " " + (ff[1] ? pad(ff[1],3," ") + "/" + rpad(ff[2],3," ") : "       ");
@@ -415,7 +415,7 @@ The frac helper function is used for fraction formats (defined below).
 
 ## Evaluating Format Strings
 
-```js>tmp/main.js
+```js>tmp/90_main.js
 function eval_fmt(fmt, v, opts, flen) {
   var out = [], o = "", i = 0, c = "", lst='t', q = {}, dt;
   fixopts(opts = (opts || {}));
@@ -615,7 +615,7 @@ hours) or immediately before the "ss" code (for seconds), the application shall
 display minutes instead of the month.
 
 
-```js>tmp/date.js
+```js>tmp/50_date.js
 var write_date = function(type, fmt, val) {
   if(val < 0) return "";
   switch(type) {
@@ -685,9 +685,9 @@ should be a two-digit year, but `ee` in excel is actually the four-digit year:
 Based on the value, `choose_fmt` picks the right format string.  If formats have
 explicit negative specifications, those values should be passed as positive:
 
-```js>tmp/main.js
+```js>tmp/90_main.js
 function choose_fmt(fmt, v, o) {
-  if(typeof fmt === 'number') fmt = table_fmt[fmt];
+  if(typeof fmt === 'number') fmt = ((o&&o.table) ? o.table : table_fmt)[fmt];
   if(typeof fmt === "string") fmt = split_fmt(fmt);
   var l = fmt.length;
   switch(fmt.length) {
@@ -712,18 +712,18 @@ LibreOffice appears to emit the format "GENERAL" for general:
 
 ```
   if(fmt === 0 || (typeof fmt === "string" && fmt.toLowerCase() === "general")) return general_fmt(v, o);
-  if(typeof fmt === 'number') fmt = table_fmt[fmt];
+  if(typeof fmt === 'number') fmt = (o.table || table_fmt)[fmt];
   var f = choose_fmt(fmt, v, o);
+  if(f[1].toLowerCase() === "general") return general_fmt(v,o);
   return eval_fmt(f[1], v, o, f[0]);
 };
 
 ```
 
+The methods beginning with an underscore are subject to change and should not be
+used directly in programs.
 
-
-
-
-```js>tmp/main.js
+```js>tmp/90_main.js
 
 SSF._choose = choose_fmt;
 SSF._table = table_fmt;
@@ -731,38 +731,45 @@ SSF.load = function(fmt, idx) { table_fmt[idx] = fmt; };
 SSF.format = format;
 ```
 
+To support multiple SSF tables:  
+
+```
+SSF.get_table = function() { return table_fmt; };
+SSF.load_table = function(tbl) { for(var i=0; i!=0x0188; ++i) if(table_fmt[i]) SSF.load(i, table_fmt[i]); };
+```
+
 ## Fraction Library
 
 The implementation is from [our frac library](https://github.com/SheetJS/frac/):
 
-```js>tmp/frac.js
+```js>tmp/30_frac.js
 var frac = function frac(x, D, mixed) {
-    var sgn = x < 0 ? -1 : 1;
-    var B = x * sgn;
-    var P_2 = 0, P_1 = 1, P = 0;
-    var Q_2 = 1, Q_1 = 0, Q = 0;
-    var A = B|0;
-    while(Q_1 < D) {
-        A = B|0;
-        P = A * P_1 + P_2;
-        Q = A * Q_1 + Q_2;
-        if((B - A) < 0.0000000001) break;
-        B = 1 / (B - A);
-        P_2 = P_1; P_1 = P;
-        Q_2 = Q_1; Q_1 = Q;
-    }
-    if(Q > D) { Q = Q_1; P = P_1; }
-    if(Q > D) { Q = Q_2; P = P_2; }
-    if(!mixed) return [0, sgn * P, Q];
-    var q = Math.floor(sgn * P/Q);
-    return [q, sgn*P - q*Q, Q];
+  var sgn = x < 0 ? -1 : 1;
+  var B = x * sgn;
+  var P_2 = 0, P_1 = 1, P = 0;
+  var Q_2 = 1, Q_1 = 0, Q = 0;
+  var A = B|0;
+  while(Q_1 < D) {
+    A = B|0;
+    P = A * P_1 + P_2;
+    Q = A * Q_1 + Q_2;
+    if((B - A) < 0.0000000005) break;
+    B = 1 / (B - A);
+    P_2 = P_1; P_1 = P;
+    Q_2 = Q_1; Q_1 = Q;
+  }
+  if(Q > D) { Q = Q_1; P = P_1; }
+  if(Q > D) { Q = Q_2; P = P_2; }
+  if(!mixed) return [0, sgn * P, Q];
+  var q = Math.floor(sgn * P/Q);
+  return [q, sgn*P - q*Q, Q];
 };
 ```
 
 ## JS Boilerplate
 
 ```js>tmp/00_header.js
-/* ssf.js (C) 2013 SheetJS -- http://sheetjs.com */
+/* ssf.js (C) 2013-2014 SheetJS -- http://sheetjs.com */
 var SSF = {};
 var make_ssf = function(SSF){
 String.prototype.reverse=function(){return this.split("").reverse().join("");};
@@ -772,14 +779,10 @@ function pad(v,d,c){var t=String(v);return t.length>=d?t:(fill(c||0,d-t.length)+
 function rpad(v,d,c){var t=String(v);return t.length>=d?t:(t+fill(c||0,d-t.length));}
 ```
 
-```js>tmp/zz_footer_n.js
-};
-make_ssf(typeof exports !== 'undefined' ? exports : SSF);
-```
-
-```js>tmp/zz_footer.js
+```js>tmp/99_footer.js
 };
 make_ssf(SSF);
+if(typeof module !== 'undefined' && typeof DO_NOT_EXPORT_SSF === 'undefined') module.exports = SSF;
 ```
 
 ## .vocrc and post-commands
@@ -787,9 +790,7 @@ make_ssf(SSF);
 ```bash>tmp/post.sh
 #!/bin/bash
 npm install
-cat tmp/{00_header,opts,consts,frac,general,date,number,main,zz_footer_n}.js > ssf_node.js
-cat tmp/{00_header,opts,consts,frac,general,date,number,main,zz_footer}.js > ssf.js
-
+cat tmp/*.js > ssf.js
 ```
 
 ```json>.vocrc
@@ -817,11 +818,11 @@ test:
 ```json>package.json
 {
   "name": "ssf",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "author": "SheetJS",
   "description": "pure-JS library to format data using ECMA-376 spreadsheet Format Codes",
   "keywords": [ "format", "sprintf", "spreadsheet" ],
-  "main": "ssf_node.js",
+  "main": "ssf.js",
   "dependencies": {
     "voc":"",
     "colors":""
@@ -832,6 +833,9 @@ test:
   "repository": { "type":"git", "url":"git://github.com/SheetJS/ssf.git" },
   "scripts": {
     "test": "mocha -R spec"
+  },
+  "bin": {
+    "ssf": "./bin/ssf.njs"
   },
   "bugs": { "url": "https://github.com/SheetJS/ssf/issues" },
   "license": "Apache-2.0",
@@ -905,33 +909,10 @@ describe('fractional formats', function() {
 });
 ```
 
-The old test driver was manual:
-
-```js>tmp/test.njs
-var SSF = require('../ssf_node');
-var x = 'd\\-mmm\\-yy\\ yyyy\\ dd\\ \\;\\ yy\\ mm\\ dd';
-var y = 'd\\-mmm\\-yy\\ yyyy\\ dd\\ ;\\ yy\\ mm\\ dd';
-var z = 'd\\ dd\\ ddd\\ dddd\\ m\\ mm\\ mmm\\ mmmm\\ mmmmm\\ yy\\ yyyy';
-console.error(SSF.parse_date_code(65.9));
-console.error(SSF.format(x, 65.9));
-console.error(SSF.format(y, 65.9));
-console.error()
-console.error(SSF.format(z, 55.9));
-console.error(SSF.format(z, 55.9, {mode:"excel"}));
-console.error(SSF.format(z, 55.9));
-console.error()
-console.error(SSF.format(z, 65.9));
-console.error(SSF.format(z, 65.9, {mode:"excel"}));
-console.error(SSF.format(z, 65.9));
-console.error()
-console.error(SSF.format(19, 65.9));
-console.error(SSF.format(20, 65.9));
-```
-
 # LICENSE
 
 ```>LICENSE
-Copyright 2013   SheetJS
+Copyright (C) 2013-2014   SheetJS
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.

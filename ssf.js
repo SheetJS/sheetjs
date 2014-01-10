@@ -1,4 +1,4 @@
-/* ssf.js (C) 2013 SheetJS -- http://sheetjs.com */
+/* ssf.js (C) 2013-2014 SheetJS -- http://sheetjs.com */
 var SSF = {};
 var make_ssf = function(SSF){
 String.prototype.reverse=function(){return this.split("").reverse().join("");};
@@ -66,25 +66,25 @@ var months = [
   ['D', 'Dec', 'December']
 ];
 var frac = function frac(x, D, mixed) {
-    var sgn = x < 0 ? -1 : 1;
-    var B = x * sgn;
-    var P_2 = 0, P_1 = 1, P = 0;
-    var Q_2 = 1, Q_1 = 0, Q = 0;
-    var A = B|0;
-    while(Q_1 < D) {
-        A = B|0;
-        P = A * P_1 + P_2;
-        Q = A * Q_1 + Q_2;
-        if((B - A) < 0.0000000001) break;
-        B = 1 / (B - A);
-        P_2 = P_1; P_1 = P;
-        Q_2 = Q_1; Q_1 = Q;
-    }
-    if(Q > D) { Q = Q_1; P = P_1; }
-    if(Q > D) { Q = Q_2; P = P_2; }
-    if(!mixed) return [0, sgn * P, Q];
-    var q = Math.floor(sgn * P/Q);
-    return [q, sgn*P - q*Q, Q];
+  var sgn = x < 0 ? -1 : 1;
+  var B = x * sgn;
+  var P_2 = 0, P_1 = 1, P = 0;
+  var Q_2 = 1, Q_1 = 0, Q = 0;
+  var A = B|0;
+  while(Q_1 < D) {
+    A = B|0;
+    P = A * P_1 + P_2;
+    Q = A * Q_1 + Q_2;
+    if((B - A) < 0.0000000005) break;
+    B = 1 / (B - A);
+    P_2 = P_1; P_1 = P;
+    Q_2 = Q_1; Q_1 = Q;
+  }
+  if(Q > D) { Q = Q_1; P = P_1; }
+  if(Q > D) { Q = Q_2; P = P_2; }
+  if(!mixed) return [0, sgn * P, Q];
+  var q = Math.floor(sgn * P/Q);
+  return [q, sgn*P - q*Q, Q];
 };
 var general_fmt = function(v) {
   if(typeof v === 'boolean') return v ? "TRUE" : "FALSE";
@@ -338,7 +338,7 @@ function eval_fmt(fmt, v, opts, flen) {
 }
 SSF._eval = eval_fmt;
 function choose_fmt(fmt, v, o) {
-  if(typeof fmt === 'number') fmt = table_fmt[fmt];
+  if(typeof fmt === 'number') fmt = ((o&&o.table) ? o.table : table_fmt)[fmt];
   if(typeof fmt === "string") fmt = split_fmt(fmt);
   var l = fmt.length;
   switch(fmt.length) {
@@ -353,7 +353,7 @@ function choose_fmt(fmt, v, o) {
 var format = function format(fmt,v,o) {
   fixopts(o = (o||{}));
   if(fmt === 0 || (typeof fmt === "string" && fmt.toLowerCase() === "general")) return general_fmt(v, o);
-  if(typeof fmt === 'number') fmt = table_fmt[fmt];
+  if(typeof fmt === 'number') fmt = (o.table || table_fmt)[fmt];
   var f = choose_fmt(fmt, v, o);
   if(f[1].toLowerCase() === "general") return general_fmt(v,o);
   return eval_fmt(f[1], v, o, f[0]);
@@ -363,5 +363,8 @@ SSF._choose = choose_fmt;
 SSF._table = table_fmt;
 SSF.load = function(fmt, idx) { table_fmt[idx] = fmt; };
 SSF.format = format;
+SSF.get_table = function() { return table_fmt; };
+SSF.load_table = function(tbl) { for(var i=0; i!=0x0188; ++i) if(table_fmt[i]) SSF.load(i, table_fmt[i]); };
 };
 make_ssf(SSF);
+if(typeof module !== 'undefined' && typeof DO_NOT_EXPORT_SSF === 'undefined') module.exports = SSF;
