@@ -146,13 +146,13 @@ For numbers, try to display up to 11 digits of the number (the original code
     else if(V >= 0.0001 && V < 0.001) o = v.toPrecision(6);
     else if(V >= Math.pow(10,10) && V < Math.pow(10,11)) o = v.toFixed(10).substr(0,12);
     else if(V > Math.pow(10,-9) && V < Math.pow(10,11)) {
-      o = v.toFixed(12).replace(/(\.[0-9]*[1-9])0*$/,"$1").replace(/\.$/,""); 
+      o = v.toFixed(12).replace(/(\.[0-9]*[1-9])0*$/,"$1").replace(/\.$/,"");
       if(o.length > 11+(v<0?1:0)) o = v.toPrecision(10);
       if(o.length > 11+(v<0?1:0)) o = v.toExponential(5);
-    } 
+    }
     else {
       o = v.toFixed(11).replace(/(\.[0-9]*[1-9])0*$/,"$1");
-      if(o.length > 11 + (v<0?1:0)) o = v.toPrecision(6); 
+      if(o.length > 11 + (v<0?1:0)) o = v.toPrecision(6);
     }
     o = o.replace(/(\.[0-9]*[1-9])0+e/,"$1e").replace(/\.0*e/,"e");
     return o.replace("e","E").replace(/\.0*$/,"").replace(/\.([0-9]*[^0])0*$/,".$1").replace(/(E[+-])([0-9])$/,"$1"+"0"+"$2");
@@ -262,7 +262,7 @@ portion of a 24 hour day).
 
 ```js>tmp/50_date.js
 var parse_date_code = function parse_date_code(v,opts) {
-  var date = Math.floor(v), time = Math.round(86400 * (v - date)), dow=0;
+  var date = Math.floor(v), time = Math.floor(86400 * (v - date)), dow=0;
   var dout=[], out={D:date, T:time, u:86400*(v-date)-time}; fixopts(opts = (opts||{}));
 ```
 
@@ -271,6 +271,12 @@ shifted by 1462 days.
 
 ```
   if(opts.date1904) date += 1462;
+```
+
+Date codes beyond 12/31/9999 are invalid:
+
+```
+  if(date > 2958465) return null;
 ```
 
 Due to a bug in Lotus 1-2-3 which was propagated by Excel and other variants,
@@ -359,8 +365,19 @@ For the special case of engineering notation, "shift" the decimal:
 
 ```
     if(fmt == '##0.0E+0') {
-      var ee = Number(val.toExponential(0).substr(3))%3;
-      o = (val/Math.pow(10,ee%3)).toPrecision(idx+1+(ee%3)).replace(/^([+-]?)([0-9]*)\.([0-9]*)[Ee]/,function($$,$1,$2,$3) { return $1 + $2 + $3.substr(0,ee) + "." + $3.substr(ee) + "E"; });
+      var ee = (Number(val.toExponential(0).substr(2+(val<0))))%3;
+      o = (val/Math.pow(10,ee)).toPrecision(idx+1+(3+ee)%3);
+      if(!o.match(/[Ee]/)) {
+```
+
+TODO: something reasonable
+
+```
+        var fakee = (Number(val.toExponential(0).substr(2+(val<0))));
+        if(o.indexOf(".") === -1) o = o[0] + "." + o.substr(1) + "E+" + (fakee - o.length+ee);
+        else throw "missing E";
+      }
+      o = o.replace(/^([+-]?)([0-9]*)\.([0-9]*)[Ee]/,function($$,$1,$2,$3) { return $1 + $2 + $3.substr(0,(3+ee)%3) + "." + $3.substr(ee) + "E"; });
     } else o = val.toExponential(idx);
     if(fmt.match(/E\+00$/) && o.match(/e[+-][0-9]$/)) o = o.substr(0,o.length-1) + "0" + o[o.length-1];
     if(fmt.match(/E\-/) && o.match(/e\+/)) o = o.replace(/e\+/,"e");
@@ -404,9 +421,9 @@ The default cases are hard-coded.  TODO: actually parse them
 The frac helper function is used for fraction formats (defined below).
 
 ```js>tmp/60_number.js
-    case "# ? / ?": ff = frac(aval, 9, true); return sign + (ff[0]||"") + " " + (ff[1] === 0 ? "   " : ff[1] + "/" + ff[2]);
-    case "# ?? / ??": ff = frac(aval, 99, true); return sign + (ff[0]||"") + " " + (ff[1] ? pad(ff[1],2," ") + "/" + rpad(ff[2],2," ") : "     ");
-    case "# ??? / ???": ff = frac(aval, 999, true); return sign + (ff[0]||"") + " " + (ff[1] ? pad(ff[1],3," ") + "/" + rpad(ff[2],3," ") : "       ");
+    case "# ? / ?": ff = frac(aval, 9, true); return sign + (ff[0]||(ff[1] ? "" : "0")) + " " + (ff[1] === 0 ? "   " : ff[1] + "/" + ff[2]);
+    case "# ?? / ??": ff = frac(aval, 99, true); return sign + (ff[0]||(ff[1] ? "" : "0")) + " " + (ff[1] ? pad(ff[1],2," ") + "/" + rpad(ff[2],2," ") : "     ");
+    case "# ??? / ???": ff = frac(aval, 999, true); return sign + (ff[0]||(ff[1] ? "" : "0")) + " " + (ff[1] ? pad(ff[1],3," ") + "/" + rpad(ff[2],3," ") : "       ");
     default:
   }
   throw new Error("unsupported format |" + fmt + "|");
@@ -474,6 +491,7 @@ Merge strings like "mmmmm" or "hh" into one block:
 
 ```
         if(!dt) dt = parse_date_code(v, opts);
+        if(!dt) return "";
         o = fmt[i]; while(fmt[++i] === c) o+=c;
 ```
 
@@ -502,6 +520,7 @@ the HH/hh jazz.  TODO: investigate this further.
 ```
       case 'A':
         if(!dt) dt = parse_date_code(v, opts);
+        if(!dt) return "";
         q={t:c,v:"A"};
         if(fmt.substr(i, 3) === "A/P") {q.v = dt.H >= 12 ? "P" : "A"; q.t = 'T'; hr='h';i+=3;}
         else if(fmt.substr(i,5) === "AM/PM") { q.v = dt.H >= 12 ? "PM" : "AM"; q.t = 'T'; i+=5; hr='h'; }
@@ -539,7 +558,7 @@ number 123.456 under format `|??| /  |???| |???| foo` is `|15432| /  |125| |   |
         q={t:c, v:o}; out.push(q); lst = c; break;
 ```
 
-Due to how the CSV generation works, asterisk characters are discarded.  TODO: 
+Due to how the CSV generation works, asterisk characters are discarded.  TODO:
 communicate this somehow, possibly with an option
 
 ```
@@ -591,17 +610,16 @@ The default magic characters are listed in subsubsections 18.8.30-31 of ECMA376:
         out[i].t = 't'; break;
       case 'n': case '(':
         var jj = i+1;
-        while(out[jj] && ("? D".indexOf(out[jj].t) > -1 || out[i].t == '(' && (out[jj].t == ')' || out[jj].t == 'n') || out[jj].t == 't' && (out[jj].v == '/' || out[jj].v == '$' || (out[jj].v == ' ' && (out[jj+1]||{}).t == '?')))) {
+        while(out[jj] && ("?D".indexOf(out[jj].t) > -1 || (out[jj].t == " " && (out[jj+1]||{}).t === "?" ) || out[i].t == '(' && (out[jj].t == ')' || out[jj].t == 'n') || out[jj].t == 't' && (out[jj].v == '/' || out[jj].v == '$' || (out[jj].v == ' ' && (out[jj+1]||{}).t == '?')))) {
           if(out[jj].v!==' ') out[i].v += ' ' + out[jj].v;
           delete out[jj]; ++jj;
         }
         out[i].v = write_num(out[i].t, out[i].v, v);
         out[i].t = 't';
-        i = jj; break;
+        i = jj-1; break;
       default: throw "unrecognized type " + out[i].t;
     }
   }
-
   return out.map(function(x){return x.v;}).join("");
 }
 SSF._eval = eval_fmt;
@@ -655,8 +673,8 @@ var write_date = function(type, fmt, val) {
     } break;
     case 's': switch(fmt) { /* seconds */
       case 's': return val.S;
-      case 'ss': return pad(val.S, 2);
-      case 'ss.0': return pad(val.S,2) + "." + Math.round(10*val.u);
+      case 'ss': return pad(Math.round(val.S+val.u), 2);
+      case 'ss.0': var o = pad(Math.round(10*(val.S+val.u)),3); return o.substr(0,2)+"." + o.substr(2);
       default: throw 'bad second format: ' + fmt;
     } break;
 ```
@@ -731,11 +749,11 @@ SSF.load = function(fmt, idx) { table_fmt[idx] = fmt; };
 SSF.format = format;
 ```
 
-To support multiple SSF tables:  
+To support multiple SSF tables:
 
 ```
 SSF.get_table = function() { return table_fmt; };
-SSF.load_table = function(tbl) { for(var i=0; i!=0x0188; ++i) if(table_fmt[i]) SSF.load(i, table_fmt[i]); };
+SSF.load_table = function(tbl) { for(var i=0; i!=0x0188; ++i) if(tbl[i]) SSF.load(tbl[i], i); };
 ```
 
 ## Fraction Library
@@ -748,9 +766,9 @@ var frac = function frac(x, D, mixed) {
   var B = x * sgn;
   var P_2 = 0, P_1 = 1, P = 0;
   var Q_2 = 1, Q_1 = 0, Q = 0;
-  var A = B|0;
+  var A = Math.floor(B);
   while(Q_1 < D) {
-    A = B|0;
+    A = Math.floor(B);
     P = A * P_1 + P_2;
     Q = A * Q_1 + Q_2;
     if((B - A) < 0.0000000005) break;
@@ -761,6 +779,7 @@ var frac = function frac(x, D, mixed) {
   if(Q > D) { Q = Q_1; P = P_1; }
   if(Q > D) { Q = Q_2; P = P_2; }
   if(!mixed) return [0, sgn * P, Q];
+  if(Q==0) throw "Unexpected state: "+P+" "+P_1+" "+P_2+" "+Q+" "+Q_1+" "+Q_2;
   var q = Math.floor(sgn * P/Q);
   return [q, sgn*P - q*Q, Q];
 };
@@ -818,14 +837,15 @@ test:
 ```json>package.json
 {
   "name": "ssf",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "author": "SheetJS",
   "description": "pure-JS library to format data using ECMA-376 spreadsheet Format Codes",
   "keywords": [ "format", "sprintf", "spreadsheet" ],
   "main": "ssf.js",
   "dependencies": {
     "voc":"",
-    "colors":""
+    "colors":"",
+    "frac":"0.3.1"
   },
   "devDependencies": {
     "mocha":""
@@ -859,14 +879,17 @@ before_install:
 The mocha test driver tests the implied formats:
 
 ```js>test/implied.js
-/* vim: set ts=2: */
 var SSF = require('../');
 var fs = require('fs'), assert = require('assert');
 var data = JSON.parse(fs.readFileSync('./test/implied.json','utf8'));
 var skip = [];
+function doit(d) {
+  d[1].forEach(function(r){if(!r[2])assert.equal(SSF.format(r[0],d[0]),r[1]);});
+}
 describe('implied formats', function() {
   data.forEach(function(d) {
-    it(d[1]+" for "+d[0], skip.indexOf(d[1]) > -1 ? null : function(){
+    if(d.length == 2) it(d[0], function() { doit(d); });
+    else it(d[1]+" for "+d[0], skip.indexOf(d[1]) > -1 ? null : function(){
       assert.equal(SSF.format(d[1], d[0], {}), d[2]);
     });
   });
