@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- xlsx.js (C) 2013 SheetJS http://sheetjs.com -->
+<!-- xlsx.js (C) 2013-2014 SheetJS http://sheetjs.com -->
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
@@ -36,7 +36,7 @@
 <script src="xlsx.js"></script>
 <script src="shim.js"></script>
 <script>
-var rABS = typeof FileReader.prototype.readAsBinaryString !== "undefined";
+var rABS = typeof FileReader !== "undefined" && typeof FileReader.prototype !== "undefined" && typeof FileReader.prototype.readAsBinaryString !== "undefined";
 function xlsxworker(data, cb) {
 	var worker = new Worker('./xlsxworker.js');
 	worker.onmessage = function(e) {
