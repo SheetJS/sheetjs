@@ -588,6 +588,7 @@ var ct2type = {
 	"application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml": "strs",
 	"application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml":"styles",
 	"application/vnd.openxmlformats-officedocument.theme+xml":"themes",
+	"application/vnd.openxmlformats-officedocument.spreadsheetml.comments+xml": "comments",
 	"foo": "bar"
 };
 
@@ -821,7 +822,7 @@ var ctext = {};
 function parseCT(data) {
 	if(!data || !data.match) return data;
 	var ct = { workbooks: [], sheets: [], calcchains: [], themes: [], styles: [],
-		coreprops: [], extprops: [], strs:[], xmlns: "" };
+		coreprops: [], extprops: [], strs:[], comments: [], xmlns: "" };
 	(data.match(/<[^>]*>/g)||[]).forEach(function(x) {
 		var y = parsexmltag(x);
 		switch(y[0]) {
@@ -1026,6 +1027,104 @@ function parseStyles(data) {
 	return styles;
 }
 
+/* 9.3.2 OPC Relationships Markup */
+function parseRels(data, currentFilePath) {
+	if (!data) return data;
+	if (currentFilePath.charAt(0) !== '/') {
+		currentFilePath = '/'+currentFilePath;
+	}
+	var rels = {};
+
+	var resolveRelativePathIntoAbsolute = function (to) {
+	    var toksFrom = currentFilePath.split('/');
+	 	toksFrom.pop(); // folder path
+	    var toksTo = to.split('/');
+	    var reversed = [];
+	    while (toksTo.length !== 0) {
+	        var tokTo = toksTo.shift();
+	        if (tokTo === '..') {
+	            toksFrom.pop();
+	        } else if (tokTo !== '.') {
+	            toksFrom.push(tokTo);
+	        }
+	    }
+	    return toksFrom.join('/');
+	}
+
+	data.match(/<[^>]*>/g).forEach(function(x) {
+		var y = parsexmltag(x);
+		/* 9.3.2.2 OPC_Relationships */
+		if (y[0] === '<Relationship') {
+			var rel = {}; rel.Type = y.Type; rel.Target = y.Target; rel.Id = y.Id; rel.TargetMode = y.TargetMode;
+			var canonictarget = resolveRelativePathIntoAbsolute(y.Target);
+			rels[canonictarget] = rel;
+		}
+	});
+
+	return rels;
+}
+
+/* 18.7.3 CT_Comment */
+function parseComments(data) {
+	if(data.match(/<comments *\/>/)) {
+		throw new Error('Not a valid comments xml');
+	}
+	var authors = [];
+	var commentList = [];
+	data.match(/<authors>([^\u2603]*)<\/authors>/m)[1].split('</author>').forEach(function(x) {
+		if(x === "" || x.trim() === "") return;
+		authors.push(x.match(/<author[^>]*>(.*)/)[1]);
+	});
+	data.match(/<commentList>([^\u2603]*)<\/commentList>/m)[1].split('</comment>').forEach(function(x, index) {
+		if(x === "" || x.trim() === "") return;
+		var y = parsexmltag(x.match(/<comment[^>]*>/)[0]);
+		var comment = { author: y.authorId && authors[y.authorId] ? authors[y.authorId] : undefined, ref: y.ref, guid: y.guid, texts:[] };
+		x.match(/<text>([^\u2603]*)<\/text>/m)[1].split('</r>').forEach(function(r) {
+			if(r === "" || r.trim() === "") return;
+			/* 18.4.12 t ST_Xstring */
+			var ct = r.match(matchtag('t'));
+			comment.texts.push(utf8read(unescapexml(ct[1])));
+			// TODO: parse rich text format
+		});
+		commentList.push(comment);
+	});
+	return commentList;
+}
+
+function parseCommentsAddToSheets(zip, dirComments, sheets, sheetRels) {
+	for(var i = 0; i != dirComments.length; ++i) {
+		var canonicalpath=dirComments[i];
+		var comments=parseComments(getdata(getzipfile(zip, canonicalpath.replace(/^\//,''))));
+		// find the sheets targeted by these comments
+		var sheetNames = Object.keys(sheets);
+		for(var j = 0; j != sheetNames.length; ++j) {
+			var sheetName = sheetNames[j];
+			var rels = sheetRels[sheetName];
+			if (rels) {
+				var rel = rels[canonicalpath];
+				if (rel) {
+					insertCommentsIntoSheet(sheetName, sheets[sheetName], comments);
+				}
+			}
+		}
+	}	
+}
+
+function insertCommentsIntoSheet(sheetName, sheet, comments) {
+	comments.forEach(function(comment) {
+		var cell = sheet[comment.ref];
+		if (!cell) {
+			cell = {};
+			sheet[comment.ref] = cell;
+		} 
+
+		if (!cell.c) {
+			cell.c = [];
+		}
+		cell.c.push({a: comment.author, t: comment.texts});
+	});
+}
+
 function getdata(data) {
 	if(!data) return null; 
 	if(data.data) return data.data;
@@ -1058,26 +1157,37 @@ function parseZip(zip) {
 	var deps = {};
 	if(dir.calcchain) deps=parseDeps(getdata(getzipfile(zip, dir.calcchain.replace(/^\//,''))));
 	var sheets = {}, i=0;
+	var sheetRels = {};	
 	if(!props.Worksheets) {
-		/* Google Docs doesn't generate the appropriate metadata, so we impute: */
-		var wbsheets = wb.Sheets;
-		props.Worksheets = wbsheets.length;
-		props.SheetNames = [];
-		for(var j = 0; j != wbsheets.length; ++j) {
-			props.SheetNames[j] = wbsheets[j].name;
-		}
-		for(i = 0; i != props.Worksheets; ++i) {
-			try { /* TODO: remove these guards */ 
-			sheets[props.SheetNames[i]]=parseSheet(getdata(getzipfile(zip, 'xl/worksheets/sheet' + (i+1) + '.xml')));
-			} catch(e) {}
-		}
-	}
-	else {
-		for(i = 0; i != props.Worksheets; ++i) {
-			try { 
-			sheets[props.SheetNames[i]]=parseSheet(getdata(getzipfile(zip, dir.sheets[i].replace(/^\//,''))));
-			} catch(e) {}
-		}
+        /* Google Docs doesn't generate the appropriate metadata, so we impute: */
+        var wbsheets = wb.Sheets;
+        props.Worksheets = wbsheets.length;
+        props.SheetNames = [];
+        for(var j = 0; j != wbsheets.length; ++j) {
+                props.SheetNames[j] = wbsheets[j].name;
+        }
+        for(i = 0; i != props.Worksheets; ++i) {
+                try { /* TODO: remove these guards */
+	                var path = 'xl/worksheets/sheet' + (i+1) + '.xml';
+	                var relsPath = path.replace(/^(.*)(\/)([^\/]*)$/, "$1/_rels/$3.rels");
+	                sheets[props.SheetNames[i]]=parseSheet(getdata(getzipfile(zip, path)));
+	                sheetRels[props.SheetNames[i]]=parseRels(getdata(getzipfile(zip, relsPath)), path);
+                } catch(e) {}
+        }
+    }
+    else {
+        for(i = 0; i != props.Worksheets; ++i) {
+            try {
+            	var path = dir.sheets[i].replace(/^\//,'');
+				var relsPath = path.replace(/^(.*)(\/)([^\/]*)$/, "$1/_rels/$3.rels");
+            	sheets[props.SheetNames[i]]=parseSheet(getdata(getzipfile(zip, path)));
+            	sheetRels[props.SheetNames[i]]=parseRels(getdata(getzipfile(zip, relsPath)), path);
+            } catch(e) {}
+        }
+    }
+
+	if(dir.comments) {
+		parseCommentsAddToSheets(zip, dir.comments, sheets, sheetRels);
 	}
 	return {
 		Directory: dir,
