@@ -5,13 +5,14 @@ $(TARGET): $(DEPS)
 
 .PHONY: clean
 clean:
-	rm $(TARGET) 
+	rm $(TARGET)
 
 .PHONY: init
 init:
 	git submodule init
 	git submodule update
-	git submodule foreach git pull origin master 
+	git submodule foreach git pull origin master
+	git submodule foreach make
 
 
 .PHONY: test mocha
