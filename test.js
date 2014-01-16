@@ -42,7 +42,7 @@ describe('should parse test files', function() {
 
 describe('should have comment as part of cell\'s properties', function(){
 	it('Parse comments.xml and insert into cell',function(){
-		var wb = XLSX.readFile('./test_files/SimpleWithComments.xlsx');
+		var wb = XLSX.readFile('./test_files/apachepoi_SimpleWithComments.xlsx');
 		var sheetName = 'Sheet1';
 		var ws = wb.Sheets[sheetName];
 		assert.equal(ws.B1.c.length, 1,"must have 1 comment");
