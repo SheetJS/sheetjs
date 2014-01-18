@@ -498,16 +498,13 @@ function parseComments(data) {
 	data.match(/<commentList>([^\u2603]*)<\/commentList>/m)[1].split('</comment>').forEach(function(x, index) {
 		if(x === "" || x.trim() === "") return;
 		var y = parsexmltag(x.match(/<comment[^>]*>/)[0]);
-		var comment = { author: y.authorId && authors[y.authorId] ? authors[y.authorId] : undefined, ref: y.ref, guid: y.guid, texts:[] };
+		var comment = { author: y.authorId && authors[y.authorId] ? authors[y.authorId] : undefined, ref: y.ref, guid: y.guid };
 		var textMatch = x.match(/<text>([^\u2603]*)<\/text>/m);
 		if (!textMatch || !textMatch[1]) return; // a comment may contain an empty text tag.
-		textMatch[1].split('</r>').forEach(function(r) {
-			if(r === "" || r.trim() === "") return;
-			/* 18.4.12 t ST_Xstring */
-			var ct = r.match(matchtag('t'));
-			comment.texts.push(utf8read(unescapexml(ct[1])));
-			// TODO: parse rich text format
-		});
+	    var rt = parse_si(textMatch[1]);
+		comment.raw = rt.raw;
+		comment.t = rt.t;
+		comment.r = rt.r;
 		commentList.push(comment);
 	});
 	return commentList;
@@ -543,7 +540,7 @@ function insertCommentsIntoSheet(sheetName, sheet, comments) {
 		if (!cell.c) {
 			cell.c = [];
 		}
-		cell.c.push({a: comment.author, t: comment.texts});
+		cell.c.push({a: comment.author, t: comment.t, raw: comment.raw, r: comment.r});
 	});
 }
 
