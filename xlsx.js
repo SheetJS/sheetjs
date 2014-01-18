@@ -1079,7 +1079,9 @@ function parseComments(data) {
 		if(x === "" || x.trim() === "") return;
 		var y = parsexmltag(x.match(/<comment[^>]*>/)[0]);
 		var comment = { author: y.authorId && authors[y.authorId] ? authors[y.authorId] : undefined, ref: y.ref, guid: y.guid, texts:[] };
-		x.match(/<text>([^\u2603]*)<\/text>/m)[1].split('</r>').forEach(function(r) {
+		var textMatch = x.match(/<text>([^\u2603]*)<\/text>/m);
+		if (!textMatch || !textMatch[1]) return; // a comment may contain an empty text tag.
+		textMatch[1].split('</r>').forEach(function(r) {
 			if(r === "" || r.trim() === "") return;
 			/* 18.4.12 t ST_Xstring */
 			var ct = r.match(matchtag('t'));
