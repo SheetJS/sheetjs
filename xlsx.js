@@ -1114,6 +1114,14 @@ function insertCommentsIntoSheet(sheetName, sheet, comments) {
 		if (!cell) {
 			cell = {};
 			sheet[comment.ref] = cell;
+			var range = decode_range(sheet["!ref"]);
+			var thisCell = decode_cell(comment.ref);
+			if(range.s.r > thisCell.r) range.s.r = thisCell.r;
+			if(range.e.r < thisCell.r) range.e.r = thisCell.r;
+			if(range.s.c > thisCell.c) range.s.c = thisCell.c;
+			if(range.e.c < thisCell.c) range.e.c = thisCell.c;
+			var encoded = encode_range(range);
+			if (encoded !== sheet["!ref"]) sheet["!ref"] = encoded;
 		} 
 
 		if (!cell.c) {
