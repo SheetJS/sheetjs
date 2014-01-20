@@ -1,0 +1,5 @@
+test/*.tsv
+node_modules/
+tmp/
+.gitignore
+.vocrc

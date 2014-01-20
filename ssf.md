@@ -180,6 +180,7 @@ None of the international formats are included here.
 
 ```js>tmp/20_consts.js
 var table_fmt = {
+  0:  'General',
   1:  '0',
   2:  '0.00',
   3:  '#,##0',
@@ -262,7 +263,7 @@ portion of a 24 hour day).
 
 ```js>tmp/50_date.js
 var parse_date_code = function parse_date_code(v,opts) {
-  var date = Math.floor(v), time = Math.floor(86400 * (v - date)), dow=0;
+  var date = Math.floor(v), time = Math.floor(86400 * (v - date)+1e-6), dow=0;
   var dout=[], out={D:date, T:time, u:86400*(v-date)-time}; fixopts(opts = (opts||{}));
 ```
 
@@ -310,7 +311,7 @@ Saturday.  The "right" thing to do is to keep the DOW consistent and just break
 the fact that there are two Wednesdays in that "week".
 
 ```
-    if(opts.mode === 'excel' && date < 60) dow = (dow + 6) % 7;
+    if(/* opts.mode === 'excel' && */ date < 60) dow = (dow + 6) % 7;
   }
 ```
 
@@ -330,8 +331,7 @@ SSF.parse_date_code = parse_date_code;
 ## Evaluating Number Formats
 
 ```js>tmp/60_number.js
-String.prototype.reverse = function() { return this.split("").reverse().join(""); };
-var commaify = function(s) { return s.reverse().replace(/.../g,"$&,").reverse().replace(/^,/,""); };
+var commaify = function(s) { return _strrev(_strrev(s).replace(/.../g,"$&,")).replace(/^,/,""); };
 var write_num = function(type, fmt, val) {
 ```
 
@@ -364,9 +364,11 @@ For exponents, get the exponent and mantissa and format them separately:
 For the special case of engineering notation, "shift" the decimal:
 
 ```
+    //if(fmt.match(/^#+0\.0E\+0$/))
     if(fmt == '##0.0E+0') {
-      var ee = (Number(val.toExponential(0).substr(2+(val<0))))%3;
-      o = (val/Math.pow(10,ee)).toPrecision(idx+1+(3+ee)%3);
+      var period = fmt.length - 5;
+      var ee = (Number(val.toExponential(0).substr(2+(val<0))))%period;
+      o = (val/Math.pow(10,ee)).toPrecision(idx+1+(period+ee)%period);
       if(!o.match(/[Ee]/)) {
 ```
 
@@ -375,9 +377,9 @@ TODO: something reasonable
 ```
         var fakee = (Number(val.toExponential(0).substr(2+(val<0))));
         if(o.indexOf(".") === -1) o = o[0] + "." + o.substr(1) + "E+" + (fakee - o.length+ee);
-        else throw "missing E";
+        else throw "missing E |" + o;
       }
-      o = o.replace(/^([+-]?)([0-9]*)\.([0-9]*)[Ee]/,function($$,$1,$2,$3) { return $1 + $2 + $3.substr(0,(3+ee)%3) + "." + $3.substr(ee) + "E"; });
+      o = o.replace(/^([+-]?)([0-9]*)\.([0-9]*)[Ee]/,function($$,$1,$2,$3) { return $1 + $2 + $3.substr(0,(period+ee)%period) + "." + $3.substr(ee) + "E"; });
     } else o = val.toExponential(idx);
     if(fmt.match(/E\+00$/) && o.match(/e[+-][0-9]$/)) o = o.substr(0,o.length-1) + "0" + o[o.length-1];
     if(fmt.match(/E\-/) && o.match(/e\+/)) o = o.replace(/e\+/,"e");
@@ -402,6 +404,13 @@ Fractions with known denominator are resolved by rounding:
   }
 ```
 
+A few special general cases can be handled in a very dumb manner:
+
+```
+  if(fmt.match(/^00*$/)) return (val<0?"-":"")+pad(Math.round(aval),fmt.length);
+  if(fmt.match(/^####*$/)) return Math.round(val);
+```
+
 The default cases are hard-coded.  TODO: actually parse them
 
 ```js>tmp/60_number.js
@@ -413,6 +422,9 @@ The default cases are hard-coded.  TODO: actually parse them
       return String(o/100).replace(/^([^\.]+)$/,"$1.00").replace(/\.$/,".00").replace(/\.([0-9])$/,".$1"+"0");
     case "0.000": o = Math.round(val*1000);
       return String(o/1000).replace(/^([^\.]+)$/,"$1.000").replace(/\.$/,".000").replace(/\.([0-9])$/,".$1"+"00").replace(/\.([0-9][0-9])$/,".$1"+"0");
+    case "#.##": o = Math.round(val*100);
+      return String(o/100).replace(/^([^\.]+)$/,"$1.").replace(/^0\.$/,".");
+    case "#,###": var x = commaify(String(Math.round(aval))); return x !== "0" ? sign + x : "";
     case "#,##0": return sign + commaify(String(Math.round(aval)));
     case "#,##0.0": r = Math.round((val-Math.floor(val))*10); return val < 0 ? "-" + write_num(type, fmt, -val) : commaify(String(Math.floor(val))) + "." + r;
     case "#,##0.00": r = Math.round((val-Math.floor(val))*100); return val < 0 ? "-" + write_num(type, fmt, -val) : commaify(String(Math.floor(val))) + "." + (r < 10 ? "0"+r:r);
@@ -440,6 +452,15 @@ function eval_fmt(fmt, v, opts, flen) {
   /* Tokenize */
   while(i < fmt.length) {
     switch((c = fmt[i])) {
+```
+
+LO Formats sometimes leak "GENERAL" or "General" to stand for general format:
+
+```
+      case 'G': /* General */
+        if(fmt.substr(i, i+6).toLowerCase() !== "general")
+          throw 'unrecognized character ' + fmt[i] + ' in ' + fmt;
+        out.push({t:'G',v:'General'}); i+=7; break;
 ```
 
 Text between double-quotes are treated literally, and individual characters are
@@ -478,6 +499,9 @@ The date codes `m,d,y,h,s` are standard.  There are some special formats like
 
 ```
       /* Dates */
+      case 'M': case 'D': case 'Y': case 'H': case 'S': case 'E':
+        c = c.toLowerCase();
+        /* falls through */
       case 'm': case 'd': case 'y': case 'h': case 's': case 'e':
 ```
 
@@ -492,7 +516,7 @@ Merge strings like "mmmmm" or "hh" into one block:
 ```
         if(!dt) dt = parse_date_code(v, opts);
         if(!dt) return "";
-        o = fmt[i]; while(fmt[++i] === c) o+=c;
+        o = fmt[i]; while((fmt[++i]||"").toLowerCase() === c) o+=c;
 ```
 
 For the special case of s.00, the suffix should be swallowed with the s:
@@ -506,6 +530,7 @@ Only the forward corrections are made here.  The reverse corrections are made la
 ```
         if(c === 'm' && lst.toLowerCase() === 'h') c = 'M'; /* m = minute */
         if(c === 'h') c = hr;
+        o = o.toLowerCase();
         q={t:c, v:o}; out.push(q); lst = c; break;
 ```
 
@@ -524,18 +549,22 @@ the HH/hh jazz.  TODO: investigate this further.
         q={t:c,v:"A"};
         if(fmt.substr(i, 3) === "A/P") {q.v = dt.H >= 12 ? "P" : "A"; q.t = 'T'; hr='h';i+=3;}
         else if(fmt.substr(i,5) === "AM/PM") { q.v = dt.H >= 12 ? "PM" : "AM"; q.t = 'T'; i+=5; hr='h'; }
-        else q.t = "t";
+        else { q.t = "t"; i++; }
         out.push(q); lst = c; break;
 ```
 
-Conditional and color blocks should be handled at one point (TODO).  For now,
-only the absolute time `[h]` is captured (using the pseudo-type `Z`):
+Conditional and color blocks should be handled at one point (TODO).  The 
+pseudo-type `Z` is used to capture absolute time blocks:
 
 ```
       case '[': /* TODO: Fix this -- ignore all conditionals and formatting */
         o = c;
         while(fmt[i++] !== ']') o += fmt[i];
-        if(o == "[h]") out.push({t:'Z', v:o});
+        if(o.match(/\[[HhMmSs]*\]/)) {
+          if(!dt) dt = parse_date_code(v, opts);
+          if(!dt) return "";
+          out.push({t:'Z', v:o.toLowerCase()});
+        } else { o=""; }
         break;
 ```
 
@@ -617,6 +646,7 @@ The default magic characters are listed in subsubsections 18.8.30-31 of ECMA376:
         out[i].v = write_num(out[i].t, out[i].v, v);
         out[i].t = 't';
         i = jj-1; break;
+      case 'G': out[i].t = 't'; out[i].v = general_fmt(v,opts); break;
       default: throw "unrecognized type " + out[i].t;
     }
   }
@@ -632,15 +662,17 @@ There is some overloading of the `m` character.  According to the spec:
 hours) or immediately before the "ss" code (for seconds), the application shall
 display minutes instead of the month.
 
-
 ```js>tmp/50_date.js
+/*jshint -W086 */
 var write_date = function(type, fmt, val) {
   if(val < 0) return "";
+  var o;
   switch(type) {
     case 'y': switch(fmt) { /* year */
       case 'y': case 'yy': return pad(val.y % 100,2);
-      default: return val.y;
-    } break;
+      case 'yyy': case 'yyyy': return pad(val.y % 10000,4);
+      default: throw 'bad year format: ' + fmt;
+    }
     case 'm': switch(fmt) { /* month */
       case 'm': return val.m;
       case 'mm': return pad(val.m,2);
@@ -648,44 +680,48 @@ var write_date = function(type, fmt, val) {
       case 'mmmm': return months[val.m-1][2];
       case 'mmmmm': return months[val.m-1][0];
       default: throw 'bad month format: ' + fmt;
-    } break;
+    }
     case 'd': switch(fmt) { /* day */
       case 'd': return val.d;
       case 'dd': return pad(val.d,2);
       case 'ddd': return days[val.q][0];
       case 'dddd': return days[val.q][1];
       default: throw 'bad day format: ' + fmt;
-    } break;
+    }
     case 'h': switch(fmt) { /* 12-hour */
       case 'h': return 1+(val.H+11)%12;
       case 'hh': return pad(1+(val.H+11)%12, 2);
       default: throw 'bad hour format: ' + fmt;
-    } break;
+    }
     case 'H': switch(fmt) { /* 24-hour */
       case 'h': return val.H;
       case 'hh': return pad(val.H, 2);
       default: throw 'bad hour format: ' + fmt;
-    } break;
+    }
     case 'M': switch(fmt) { /* minutes */
       case 'm': return val.M;
       case 'mm': return pad(val.M, 2);
       default: throw 'bad minute format: ' + fmt;
-    } break;
+    }
     case 's': switch(fmt) { /* seconds */
-      case 's': return val.S;
+      case 's': return Math.round(val.S+val.u);
       case 'ss': return pad(Math.round(val.S+val.u), 2);
-      case 'ss.0': var o = pad(Math.round(10*(val.S+val.u)),3); return o.substr(0,2)+"." + o.substr(2);
+      case 'ss.0': o = pad(Math.round(10*(val.S+val.u)),3); return o.substr(0,2)+"." + o.substr(2);
+      case 'ss.00': o = pad(Math.round(100*(val.S+val.u)),4); return o.substr(0,2)+"." + o.substr(2);
+      case 'ss.000': o = pad(Math.round(1000*(val.S+val.u)),5); return o.substr(0,2)+"." + o.substr(2);
       default: throw 'bad second format: ' + fmt;
-    } break;
+    }
 ```
 
 The `Z` type refers to absolute time measures:
 
 ```
     case 'Z': switch(fmt) {
-      case '[h]': return val.D*24+val.H;
+      case '[h]': case '[hh]': o = val.D*24+val.H; break;
+      case '[m]': case '[mm]': o = (val.D*24+val.H)*60+val.M; break;
+      case '[s]': case '[ss]': o = ((val.D*24+val.H)*60+val.M)*60+Math.round(val.S+val.u); break;
       default: throw 'bad abstime format: ' + fmt;
-    } break;
+    } return fmt.length === 3 ? o : pad(o, 2);
 ```
 
 The `e` format behavior in excel diverges from the spec.  It claims that `ee`
@@ -698,6 +734,7 @@ should be a two-digit year, but `ee` in excel is actually the four-digit year:
     default: throw 'bad format type ' + type + ' in ' + fmt;
   }
 };
+/*jshint +W086 */
 ```
 
 Based on the value, `choose_fmt` picks the right format string.  If formats have
@@ -709,8 +746,21 @@ function choose_fmt(fmt, v, o) {
   if(typeof fmt === "string") fmt = split_fmt(fmt);
   var l = fmt.length;
   switch(fmt.length) {
-    case 1: fmt = [fmt[0], fmt[0], fmt[0], "@"]; break;
-    case 2: fmt = [fmt[0], fmt[fmt[1] === "@"?0:1], fmt[0], "@"]; break;
+```
+
+In the case of one format, if it contains an "@" then it is a text format.  
+There is a big TODO here regarding how to best handle this case.
+
+```
+    case 1: fmt = fmt[0].indexOf("@")>-1 ? ["General", "General", "General", fmt[0]] : [fmt[0], fmt[0], fmt[0], "@"]; break;
+```
+
+In the case of 2 or 3 formats, if an `@` appears in the last field of the format
+it is treated as the text format
+
+```
+    case 2: fmt = fmt[1].indexOf("@")>-1 ? [fmt[0], fmt[0], fmt[0], fmt[1]] : [fmt[0], fmt[1], fmt[0], "@"]; break;
+    case 3: fmt = fmt[2].indexOf("@")>-1 ? [fmt[0], fmt[1], fmt[0], fmt[2]] : [fmt[0], fmt[1], fmt[2], "@"]; break;
     case 4: break;
     default: throw "cannot find right format for |" + fmt + "|";
   }
@@ -729,10 +779,19 @@ var format = function format(fmt,v,o) {
 LibreOffice appears to emit the format "GENERAL" for general:
 
 ```
-  if(fmt === 0 || (typeof fmt === "string" && fmt.toLowerCase() === "general")) return general_fmt(v, o);
+  if(typeof fmt === "string" && fmt.toLowerCase() === "general") return general_fmt(v, o);
   if(typeof fmt === 'number') fmt = (o.table || table_fmt)[fmt];
   var f = choose_fmt(fmt, v, o);
   if(f[1].toLowerCase() === "general") return general_fmt(v,o);
+```
+
+The boolean TRUE and FALSE are formatted as if they are the uppercase text:
+
+```
+  if(v === true) v = "TRUE"; if(v === false) v = "FALSE";
+```
+
+```
   return eval_fmt(f[1], v, o, f[0]);
 };
 
@@ -779,7 +838,7 @@ var frac = function frac(x, D, mixed) {
   if(Q > D) { Q = Q_1; P = P_1; }
   if(Q > D) { Q = Q_2; P = P_2; }
   if(!mixed) return [0, sgn * P, Q];
-  if(Q==0) throw "Unexpected state: "+P+" "+P_1+" "+P_2+" "+Q+" "+Q_1+" "+Q_2;
+  if(Q===0) throw "Unexpected state: "+P+" "+P_1+" "+P_2+" "+Q+" "+Q_1+" "+Q_2;
   var q = Math.floor(sgn * P/Q);
   return [q, sgn*P - q*Q, Q];
 };
@@ -791,8 +850,7 @@ var frac = function frac(x, D, mixed) {
 /* ssf.js (C) 2013-2014 SheetJS -- http://sheetjs.com */
 var SSF = {};
 var make_ssf = function(SSF){
-String.prototype.reverse=function(){return this.split("").reverse().join("");};
-var _strrev = function(x) { return String(x).reverse(); };
+var _strrev = function(x) { return String(x).split("").reverse().join("");};
 function fill(c,l) { return new Array(l+1).join(c); }
 function pad(v,d,c){var t=String(v);return t.length>=d?t:(fill(c||0,d-t.length)+t);}
 function rpad(v,d,c){var t=String(v);return t.length>=d?t:(t+fill(c||0,d-t.length));}
@@ -825,6 +883,14 @@ node_modules/
 .vocrc
 ```
 
+```>.npmignore
+test/*.tsv
+node_modules/
+tmp/
+.gitignore
+.vocrc
+```
+
 ```make>Makefile
 .PHONY: test ssf
 ssf: ssf.md
@@ -832,12 +898,36 @@ ssf: ssf.md
 
 test:
         npm test
+
+.PHONY: lint
+lint:
+        jshint ssf.js test/
+```
+
+Coverage tests use [blanket](http://npm.im/blanket):
+
+```
+
+.PHONY: cov
+cov: tmp/coverage.html
+
+tmp/coverage.html: ssf.md
+        mocha --require blanket -R html-cov > tmp/coverage.html
+```
+
+Coveralls.io support
+
+```
+
+.PHONY: coveralls
+coveralls:
+        mocha --require blanket --reporter mocha-lcov-reporter | ./node_modules/coveralls/bin/coveralls.js
 ```
 
 ```json>package.json
 {
   "name": "ssf",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "author": "SheetJS",
   "description": "pure-JS library to format data using ECMA-376 spreadsheet Format Codes",
   "keywords": [ "format", "sprintf", "spreadsheet" ],
@@ -857,6 +947,11 @@ test:
   "bin": {
     "ssf": "./bin/ssf.njs"
   },
+  "config": {
+    "blanket": {
+      "pattern": "ssf.js"
+    }
+  },
   "bugs": { "url": "https://github.com/SheetJS/ssf/issues" },
   "license": "Apache-2.0",
   "engines": { "node": ">=0.8" }
@@ -874,6 +969,10 @@ node_js:
   - "0.8"
 before_install:
   - "npm install -g mocha"
+  - "npm install blanket"
+  - "npm install coveralls mocha-lcov-reporter"
+after_success: 
+  - "make coveralls"
 ```
 
 The mocha test driver tests the implied formats:
@@ -910,6 +1009,12 @@ describe('General format', function() {
       assert.equal(SSF.format(d[1], d[0], {}), d[2]);
     });
   });
+  it('should fail for undefined and null', function() {
+    assert.throws(function() {
+      SSF.format("General", undefined);
+      SSF.format("General", null);
+    });
+  });
 });
 ```
 
@@ -924,9 +1029,94 @@ var skip = [];
 describe('fractional formats', function() {
   data.forEach(function(d) {
     it(d[1]+" for "+d[0], skip.indexOf(d[1]) > -1 ? null : function(){
-      var expected = d[2], actual = SSF.format(d[1], d[0], {})
+      var expected = d[2], actual = SSF.format(d[1], d[0], {});
       //var r = actual.match(/(-?)\d* *\d+\/\d+/);
       assert.equal(actual, expected);
+    });
+  });
+});
+```
+
+The dates test driver tests the date and time formats:
+
+```js>test/date.js
+/* vim: set ts=2: */
+/*jshint loopfunc:true */
+var SSF = require('../');
+var fs = require('fs'), assert = require('assert');
+var dates = fs.readFileSync('./test/dates.tsv','utf8').split("\n");
+var times = fs.readFileSync('./test/times.tsv','utf8').split("\n");
+
+function doit(data) {
+  var step = Math.ceil(data.length/100), i = 1;
+  var headers = data[0].split("\t");
+  for(j=0;j<=100;++j) it(j, function() {
+    for(var k = 0; k <= step; ++k,++i) {
+      if(!data[i]) return;
+      var d = data[i].replace(/#{255}/g,"").split("\t");
+      for(var w = 1; w < headers.length; ++w) {
+        var expected = d[w], actual = SSF.format(headers[w], Number(d[0]), {});
+        if(actual != expected) throw [actual, expected, w, headers[w],d[0],d].join("|");
+        actual = SSF.format(headers[w].toUpperCase(), Number(d[0]), {});
+        if(actual != expected) throw [actual, expected, w, headers[w],d[0],d].join("|");
+      }
+    }
+  });
+}
+describe('time formats', function() { doit(times.slice(0,1000)); });
+describe('date formats', function() {
+  doit(dates);
+  it('should fail for bad formats', function() {
+    var bad = ['yyyyy', 'mmmmmm', 'ddddd'];
+    var chk = function(fmt){ return function(){ SSF.format(fmt,0); }; };
+    bad.forEach(function(fmt){assert.throws(chk(fmt));});
+  });
+});
+```
+
+The exponential test driver tests exponential formats (pipe denotes fails)
+
+```js>test/exp.js
+/* vim: set ts=2: */
+/*jshint loopfunc:true */
+var SSF = require('../');
+var fs = require('fs'), assert = require('assert');
+var data = fs.readFileSync('./test/exp.tsv','utf8').split("\n");
+function doit(d, headers) {
+  it(d[0], function() {
+    for(var w = 2; w < 3 /*TODO: 1:headers.length */; ++w) {
+      var expected = d[w].replace("|", ""), actual;
+      try { actual = SSF.format(headers[w], Number(d[0]), {}); } catch(e) { }
+      if(actual != expected && d[w][0] !== "|") throw [actual, expected, w, headers[w],d[0],d].join("|");
+    }
+  });
+}
+describe('exponential formats', function() {
+  var headers = data[0].split("\t");
+  for(var j=14/* TODO: start from 1 */;j<data.length;++j) {
+    if(!data[j]) return;
+    doit(data[j].replace(/#{255}/g,"").split("\t"), headers);
+  }
+});
+```
+
+The oddities test driver tests random odd formats
+
+```js>test/oddities.js
+/* vim: set ts=2: */
+/*jshint loopfunc:true */
+var SSF = require('../');
+var fs = require('fs'), assert = require('assert');
+var data = JSON.parse(fs.readFileSync('./test/oddities.json','utf8'));
+describe('oddities', function() {
+  data.forEach(function(d) {
+    it(d[0], function(){
+      for(j=1;j<d.length;++j) {
+        if(d[j].length == 2) {
+          var expected = d[j][1], actual = SSF.format(d[0], d[j][0], {});
+          assert.equal(actual, expected);
+        } else assert.throws(function() { SSF.format(d[0], d[j][0]); });
+      }
     });
   });
 });

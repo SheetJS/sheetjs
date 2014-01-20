@@ -9,4 +9,10 @@ describe('General format', function() {
       assert.equal(SSF.format(d[1], d[0], {}), d[2]);
     });
   });
+  it('should fail for undefined and null', function() {
+    assert.throws(function() {
+      SSF.format("General", undefined);
+      SSF.format("General", null);
+    });
+  });
 });

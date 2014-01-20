@@ -23,11 +23,11 @@ define `DO_NOT_EXPORT_SSF`:
 
 ## Usage
 
-`.load(fmt, idx)` sets custom formats (generally indices above `164`)
+`.load(fmt, idx)` sets custom formats (generally indices above `164`).
 
-`.format(fmt, val)` formats `val` using the format `fmt`.  If `fmt` is of type
-`number`, the internal table (and custom formats) will be used.  If `fmt` is a
-literal format, then it will be parsed and evaluated.
+`.format(fmt, val, opts)` formats `val` using the format `fmt`.  If `fmt` is of 
+type `number`, the internal table (and custom formats) will be used.  If `fmt` 
+is a literal format, then it will be parsed and evaluated.
 
 `.parse_date_code(val, opts)` parses `val` as date code and returns object:
 
@@ -35,6 +35,10 @@ literal format, then it will be parsed and evaluated.
 - `y,m,d`: Year, Month, Day
 - `H,M,S,u`: (0-23)Hour, Minute, Second, Sub-second
 - `q`: Day of Week (0=Sunday, 1=Monday, ..., 5=Friday, 6=Saturday)
+
+`.get_table()` gets the internal format table (number to format mapping).
+
+`.load_table(table)` sets the internal format table.
 
 ## Notes
 
