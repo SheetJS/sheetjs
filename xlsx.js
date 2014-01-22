@@ -1,12 +1,11 @@
-/* xlsx.js (C) 2013 SheetJS -- http://sheetjs.com */
+/* xlsx.js (C) 2013-2014 SheetJS -- http://sheetjs.com */
 /* vim: set ts=2: */
 /*jshint eqnull:true */
 /* Spreadsheet Format -- jump to XLSX for the XLSX code */
 /* ssf.js (C) 2013 SheetJS -- http://sheetjs.com */
 var SSF = {};
 var make_ssf = function(SSF){
-String.prototype.reverse=function(){return this.split("").reverse().join("");};
-var _strrev = function(x) { return String(x).reverse(); };
+var _strrev = function(x) { return String(x).split("").reverse().join("");};
 function fill(c,l) { return new Array(l+1).join(c); }
 function pad(v,d,c){var t=String(v);return t.length>=d?t:(fill(c||0,d-t.length)+t);}
 function rpad(v,d,c){var t=String(v);return t.length>=d?t:(t+fill(c||0,d-t.length));}
@@ -18,6 +17,7 @@ opts_fmt.date1904 = 0;
 opts_fmt.output = "";
 opts_fmt.mode = "";
 var table_fmt = {
+  0:  'General',
 	1:  '0',
 	2:  '0.00',
 	3:  '#,##0',
@@ -74,12 +74,12 @@ var frac = function frac(x, D, mixed) {
 	var B = x * sgn;
 	var P_2 = 0, P_1 = 1, P = 0;
 	var Q_2 = 1, Q_1 = 0, Q = 0;
-	var A = B|0;
+  var A = Math.floor(B);
 	while(Q_1 < D) {
-		A = B|0;
+    A = Math.floor(B);
 		P = A * P_1 + P_2;
 		Q = A * Q_1 + Q_2;
-		if((B - A) < 0.0000000001) break;
+    if((B - A) < 0.0000000005) break;
 		B = 1 / (B - A);
 		P_2 = P_1; P_1 = P;
 		Q_2 = Q_1; Q_1 = Q;
@@ -87,6 +87,7 @@ var frac = function frac(x, D, mixed) {
 	if(Q > D) { Q = Q_1; P = P_1; }
 	if(Q > D) { Q = Q_2; P = P_2; }
 	if(!mixed) return [0, sgn * P, Q];
+  if(Q===0) throw "Unexpected state: "+P+" "+P_1+" "+P_2+" "+Q+" "+Q_1+" "+Q_2;
 	var q = Math.floor(sgn * P/Q);
 	return [q, sgn*P - q*Q, Q];
 };
@@ -116,9 +117,10 @@ var general_fmt = function(v) {
 };
 SSF._general = general_fmt;
 var parse_date_code = function parse_date_code(v,opts) {
-	var date = Math.floor(v), time = Math.round(86400 * (v - date)), dow=0;
+  var date = Math.floor(v), time = Math.floor(86400 * (v - date)+1e-6), dow=0;
 	var dout=[], out={D:date, T:time, u:86400*(v-date)-time}; fixopts(opts = (opts||{}));
 	if(opts.date1904) date += 1462;
+  if(date > 2958465) return null;
 	if(date === 60) {dout = [1900,2,29]; dow=3;}
 	else if(date === 0) {dout = [1900,1,0]; dow=6;}
 	else {
@@ -128,7 +130,7 @@ var parse_date_code = function parse_date_code(v,opts) {
 		d.setDate(d.getDate() + date - 1);
 		dout = [d.getFullYear(), d.getMonth()+1,d.getDate()];
 		dow = d.getDay();
-		if(opts.mode === 'excel' && date < 60) dow = (dow + 6) % 7;
+    if(/* opts.mode === 'excel' && */ date < 60) dow = (dow + 6) % 7;
 	}
 	out.y = dout[0]; out.m = dout[1]; out.d = dout[2];
 	out.S = time % 60; time = Math.floor(time / 60);
@@ -138,13 +140,16 @@ var parse_date_code = function parse_date_code(v,opts) {
 	return out;
 };
 SSF.parse_date_code = parse_date_code;
+/*jshint -W086 */
 var write_date = function(type, fmt, val) {
 	if(val < 0) return "";
+  var o;
 	switch(type) {
 		case 'y': switch(fmt) { /* year */
 			case 'y': case 'yy': return pad(val.y % 100,2);
-			default: return val.y;
-		} break;
+      case 'yyy': case 'yyyy': return pad(val.y % 10000,4);
+      default: throw 'bad year format: ' + fmt;
+    }
 		case 'm': switch(fmt) { /* month */
 			case 'm': return val.m;
 			case 'mm': return pad(val.m,2);
@@ -152,47 +157,51 @@ var write_date = function(type, fmt, val) {
 			case 'mmmm': return months[val.m-1][2];
 			case 'mmmmm': return months[val.m-1][0];
 			default: throw 'bad month format: ' + fmt;
-		} break;
+    }
 		case 'd': switch(fmt) { /* day */
 			case 'd': return val.d;
 			case 'dd': return pad(val.d,2);
 			case 'ddd': return days[val.q][0];
 			case 'dddd': return days[val.q][1];
 			default: throw 'bad day format: ' + fmt;
-		} break;
+    }
 		case 'h': switch(fmt) { /* 12-hour */
 			case 'h': return 1+(val.H+11)%12;
 			case 'hh': return pad(1+(val.H+11)%12, 2);
 			default: throw 'bad hour format: ' + fmt;
-		} break;
+    }
 		case 'H': switch(fmt) { /* 24-hour */
 			case 'h': return val.H;
 			case 'hh': return pad(val.H, 2);
 			default: throw 'bad hour format: ' + fmt;
-		} break;
+    }
 		case 'M': switch(fmt) { /* minutes */
 			case 'm': return val.M;
 			case 'mm': return pad(val.M, 2);
 			default: throw 'bad minute format: ' + fmt;
-		} break;
+    }
 		case 's': switch(fmt) { /* seconds */
-			case 's': return val.S;
-			case 'ss': return pad(val.S, 2);
-			case 'ss.0': return pad(val.S,2) + "." + Math.round(10*val.u);
+      case 's': return Math.round(val.S+val.u);
+      case 'ss': return pad(Math.round(val.S+val.u), 2);
+      case 'ss.0': o = pad(Math.round(10*(val.S+val.u)),3); return o.substr(0,2)+"." + o.substr(2);
+      case 'ss.00': o = pad(Math.round(100*(val.S+val.u)),4); return o.substr(0,2)+"." + o.substr(2);
+      case 'ss.000': o = pad(Math.round(1000*(val.S+val.u)),5); return o.substr(0,2)+"." + o.substr(2);
 			default: throw 'bad second format: ' + fmt;
-		} break;
+    }
 		case 'Z': switch(fmt) {
-			case '[h]': return val.D*24+val.H;
+      case '[h]': case '[hh]': o = val.D*24+val.H; break;
+      case '[m]': case '[mm]': o = (val.D*24+val.H)*60+val.M; break;
+      case '[s]': case '[ss]': o = ((val.D*24+val.H)*60+val.M)*60+Math.round(val.S+val.u); break;
 			default: throw 'bad abstime format: ' + fmt;
-		} break;
+    } return fmt.length === 3 ? o : pad(o, 2);
 		/* TODO: handle the ECMA spec format ee -> yy */
 		case 'e': { return val.y; } break;
 		case 'A': return (val.h>=12 ? 'P' : 'A') + fmt.substr(1);
 		default: throw 'bad format type ' + type + ' in ' + fmt;
 	}
 };
-String.prototype.reverse = function() { return this.split("").reverse().join(""); };
-var commaify = function(s) { return s.reverse().replace(/.../g,"$&,").reverse().replace(/^,/,""); };
+/*jshint +W086 */
+var commaify = function(s) { return _strrev(_strrev(s).replace(/.../g,"$&,")).replace(/^,/,""); };
 var write_num = function(type, fmt, val) {
 	if(type === '(') {
 		var ffmt = fmt.replace(/\( */,"").replace(/ \)/,"").replace(/\)/,"");
@@ -204,9 +213,17 @@ var write_num = function(type, fmt, val) {
 	if(mul !== 0) return write_num(type, fmt, val * Math.pow(10,2*mul)) + fill("%",mul);
 	if(fmt.indexOf("E") > -1) {
 		var idx = fmt.indexOf("E") - fmt.indexOf(".") - 1;
+    //if(fmt.match(/^#+0\.0E\+0$/))
 		if(fmt == '##0.0E+0') {
-			var ee = Number(val.toExponential(0).substr(3))%3;
-			o = (val/Math.pow(10,ee%3)).toPrecision(idx+1+(ee%3)).replace(/^([+-]?)([0-9]*)\.([0-9]*)[Ee]/,function($$,$1,$2,$3) { return $1 + $2 + $3.substr(0,ee) + "." + $3.substr(ee) + "E"; });
+      var period = fmt.length - 5;
+      var ee = (Number(val.toExponential(0).substr(2+(val<0))))%period;
+      o = (val/Math.pow(10,ee)).toPrecision(idx+1+(period+ee)%period);
+      if(!o.match(/[Ee]/)) {
+        var fakee = (Number(val.toExponential(0).substr(2+(val<0))));
+        if(o.indexOf(".") === -1) o = o[0] + "." + o.substr(1) + "E+" + (fakee - o.length+ee);
+        else throw "missing E |" + o;
+      }
+      o = o.replace(/^([+-]?)([0-9]*)\.([0-9]*)[Ee]/,function($$,$1,$2,$3) { return $1 + $2 + $3.substr(0,(period+ee)%period) + "." + $3.substr(ee) + "E"; });
 		} else o = val.toExponential(idx);
 		if(fmt.match(/E\+00$/) && o.match(/e[+-][0-9]$/)) o = o.substr(0,o.length-1) + "0" + o[o.length-1];
 		if(fmt.match(/E\-/) && o.match(/e\+/)) o = o.replace(/e\+/,"e");
@@ -219,8 +236,8 @@ var write_num = function(type, fmt, val) {
 		var myn = (rnd - base*den), myd = den;
 		return sign + (base?base:"") + " " + (myn === 0 ? fill(" ", r[1].length + 1 + r[2].length) : pad(myn,r[1].length," ") + "/" + pad(myd,r[2].length));
 	}
-	if(fmt.match(/^00*$/)) return (val<0?"-":"")+pad(Math.round(Math.abs(val)), fmt.length);
-	if(fmt.match(/^####*$/)) return "dafuq";
+  if(fmt.match(/^00*$/)) return (val<0?"-":"")+pad(Math.round(aval),fmt.length);
+  if(fmt.match(/^####*$/)) return Math.round(val);
 	switch(fmt) {
 		case "0": return Math.round(val);
 		case "0.0": o = Math.round(val*10);
@@ -229,12 +246,15 @@ var write_num = function(type, fmt, val) {
 			return String(o/100).replace(/^([^\.]+)$/,"$1.00").replace(/\.$/,".00").replace(/\.([0-9])$/,".$1"+"0");
 		case "0.000": o = Math.round(val*1000);
 			return String(o/1000).replace(/^([^\.]+)$/,"$1.000").replace(/\.$/,".000").replace(/\.([0-9])$/,".$1"+"00").replace(/\.([0-9][0-9])$/,".$1"+"0");
+    case "#.##": o = Math.round(val*100);
+      return String(o/100).replace(/^([^\.]+)$/,"$1.").replace(/^0\.$/,".");
+    case "#,###": var x = commaify(String(Math.round(aval))); return x !== "0" ? sign + x : "";
 		case "#,##0": return sign + commaify(String(Math.round(aval)));
 		case "#,##0.0": r = Math.round((val-Math.floor(val))*10); return val < 0 ? "-" + write_num(type, fmt, -val) : commaify(String(Math.floor(val))) + "." + r;
 		case "#,##0.00": r = Math.round((val-Math.floor(val))*100); return val < 0 ? "-" + write_num(type, fmt, -val) : commaify(String(Math.floor(val))) + "." + (r < 10 ? "0"+r:r);
-		case "# ? / ?": ff = frac(aval, 9, true); return sign + (ff[0]||"") + " " + (ff[1] === 0 ? "   " : ff[1] + "/" + ff[2]);
-		case "# ?? / ??": ff = frac(aval, 99, true); return sign + (ff[0]||"") + " " + (ff[1] ? pad(ff[1],2," ") + "/" + rpad(ff[2],2," ") : "     ");
-		case "# ??? / ???": ff = frac(aval, 999, true); return sign + (ff[0]||"") + " " + (ff[1] ? pad(ff[1],3," ") + "/" + rpad(ff[2],3," ") : "       ");
+    case "# ? / ?": ff = frac(aval, 9, true); return sign + (ff[0]||(ff[1] ? "" : "0")) + " " + (ff[1] === 0 ? "   " : ff[1] + "/" + ff[2]);
+    case "# ?? / ??": ff = frac(aval, 99, true); return sign + (ff[0]||(ff[1] ? "" : "0")) + " " + (ff[1] ? pad(ff[1],2," ") + "/" + rpad(ff[2],2," ") : "     ");
+    case "# ??? / ???": ff = frac(aval, 999, true); return sign + (ff[0]||(ff[1] ? "" : "0")) + " " + (ff[1] ? pad(ff[1],3," ") + "/" + rpad(ff[2],3," ") : "       ");
 		default:
 	}
 	throw new Error("unsupported format |" + fmt + "|");
@@ -262,8 +282,12 @@ function eval_fmt(fmt, v, opts, flen) {
 	/* Tokenize */
 	while(i < fmt.length) {
 		switch((c = fmt[i])) {
+      case 'G': /* General */
+        if(fmt.substr(i, i+6).toLowerCase() !== "general")
+          throw 'unrecognized character ' + fmt[i] + ' in ' + fmt;
+        out.push({t:'G',v:'General'}); i+=7; break;
 			case '"': /* Literal text */
-				for(o="";fmt[++i] !== '"';) o += fmt[i];
+				for(o="";fmt[++i] !== '"' && i < fmt.length;) o += fmt[i];
 				out.push({t:'t', v:o}); ++i; break;
 			case '\\': var w = fmt[++i], t = "()".indexOf(w) === -1 ? 't' : w;
 				out.push({t:t, v:w}); ++i; break;
@@ -271,25 +295,35 @@ function eval_fmt(fmt, v, opts, flen) {
 			case '@': /* Text Placeholder */
 				out.push({t:'T', v:v}); ++i; break;
 			/* Dates */
+      case 'M': case 'D': case 'Y': case 'H': case 'S': case 'E':
+        c = c.toLowerCase();
+        /* falls through */
 			case 'm': case 'd': case 'y': case 'h': case 's': case 'e':
 				if(v < 0) return "";
 				if(!dt) dt = parse_date_code(v, opts);
-				o = fmt[i]; while(fmt[++i] === c) o+=c;
+        if(!dt) return "";
+        o = fmt[i]; while((fmt[++i]||"").toLowerCase() === c) o+=c;
 				if(c === 's' && fmt[i] === '.' && fmt[i+1] === '0') { o+='.'; while(fmt[++i] === '0') o+= '0'; }
 				if(c === 'm' && lst.toLowerCase() === 'h') c = 'M'; /* m = minute */
 				if(c === 'h') c = hr;
+        o = o.toLowerCase();
 				q={t:c, v:o}; out.push(q); lst = c; break;
 			case 'A':
-        if(!dt) dt = parse_date_code(v, opts);
+				if(!dt) dt = parse_date_code(v, opts);
+        if(!dt) return "";
 				q={t:c,v:"A"};
-        if(fmt.substr(i, 3) === "A/P") {q.v = dt.H >= 12 ? "P" : "A"; q.t = 'T'; hr='h';i+=3;}
-        else if(fmt.substr(i,5) === "AM/PM") { q.v = dt.H >= 12 ? "PM" : "AM"; q.t = 'T'; i+=5; hr='h'; }
-				else q.t = "t";
+				if(fmt.substr(i, 3) === "A/P") {q.v = dt.H >= 12 ? "P" : "A"; q.t = 'T'; hr='h';i+=3;}
+				else if(fmt.substr(i,5) === "AM/PM") { q.v = dt.H >= 12 ? "PM" : "AM"; q.t = 'T'; i+=5; hr='h'; }
+        else { q.t = "t"; i++; }
 				out.push(q); lst = c; break;
 			case '[': /* TODO: Fix this -- ignore all conditionals and formatting */
 				o = c;
 				while(fmt[i++] !== ']') o += fmt[i];
-				if(o == "[h]") out.push({t:'Z', v:o});
+        if(o.match(/\[[HhMmSs]*\]/)) {
+          if(!dt) dt = parse_date_code(v, opts);
+          if(!dt) return "";
+          out.push({t:'Z', v:o.toLowerCase()});
+        } else { o=""; }
 				break;
 			/* Numbers */
 			case '0': case '#':
@@ -329,39 +363,41 @@ function eval_fmt(fmt, v, opts, flen) {
 				out[i].t = 't'; break;
 			case 'n': case '(':
 				var jj = i+1;
-				while(out[jj] && ("? D".indexOf(out[jj].t) > -1 || out[i].t == '(' && (out[jj].t == ')' || out[jj].t == 'n') || out[jj].t == 't' && (out[jj].v == '/' || out[jj].v == '$' || (out[jj].v == ' ' && (out[jj+1]||{}).t == '?')))) {
+        while(out[jj] && ("?D".indexOf(out[jj].t) > -1 || (out[jj].t == " " && (out[jj+1]||{}).t === "?" ) || out[i].t == '(' && (out[jj].t == ')' || out[jj].t == 'n') || out[jj].t == 't' && (out[jj].v == '/' || out[jj].v == '$' || (out[jj].v == ' ' && (out[jj+1]||{}).t == '?')))) {
 					if(out[jj].v!==' ') out[i].v += ' ' + out[jj].v;
 					delete out[jj]; ++jj;
 				}
 				out[i].v = write_num(out[i].t, out[i].v, v);
 				out[i].t = 't';
-				i = jj; break;
+        i = jj-1; break;
+      case 'G': out[i].t = 't'; out[i].v = general_fmt(v,opts); break;
 			default: throw "unrecognized type " + out[i].t;
 		}
 	}
-
 	return out.map(function(x){return x.v;}).join("");
 }
 SSF._eval = eval_fmt;
 function choose_fmt(fmt, v, o) {
-	if(typeof fmt === 'number') fmt = table_fmt[fmt];
+  if(typeof fmt === 'number') fmt = ((o&&o.table) ? o.table : table_fmt)[fmt];
 	if(typeof fmt === "string") fmt = split_fmt(fmt);
 	var l = fmt.length;
 	switch(fmt.length) {
-		case 1: fmt = [fmt[0], fmt[0], fmt[0], "@"]; break;
-		case 2: fmt = [fmt[0], fmt[fmt[1] === "@"?0:1], fmt[0], "@"]; break;
+    case 1: fmt = fmt[0].indexOf("@")>-1 ? ["General", "General", "General", fmt[0]] : [fmt[0], fmt[0], fmt[0], "@"]; break;
+    case 2: fmt = fmt[1].indexOf("@")>-1 ? [fmt[0], fmt[0], fmt[0], fmt[1]] : [fmt[0], fmt[1], fmt[0], "@"]; break;
+    case 3: fmt = fmt[2].indexOf("@")>-1 ? [fmt[0], fmt[1], fmt[0], fmt[2]] : [fmt[0], fmt[1], fmt[2], "@"]; break;
 		case 4: break;
 		default: throw "cannot find right format for |" + fmt + "|";
 	}
 	if(typeof v !== "number") return [fmt.length, fmt[3]];
 	return [l, v > 0 ? fmt[0] : v < 0 ? fmt[1] : fmt[2]];
 }
-
 var format = function format(fmt,v,o) {
 	fixopts(o = (o||{}));
-	if(fmt === 0) return general_fmt(v, o);
-	if(typeof fmt === 'number') fmt = table_fmt[fmt];
+  if(typeof fmt === "string" && fmt.toLowerCase() === "general") return general_fmt(v, o);
+  if(typeof fmt === 'number') fmt = (o.table || table_fmt)[fmt];
 	var f = choose_fmt(fmt, v, o);
+  if(f[1].toLowerCase() === "general") return general_fmt(v,o);
+  if(v === true) v = "TRUE"; if(v === false) v = "FALSE";
 	return eval_fmt(f[1], v, o, f[0]);
 };
 
@@ -369,10 +405,13 @@ SSF._choose = choose_fmt;
 SSF._table = table_fmt;
 SSF.load = function(fmt, idx) { table_fmt[idx] = fmt; };
 SSF.format = format;
+SSF.get_table = function() { return table_fmt; };
+SSF.load_table = function(tbl) { for(var i=0; i!=0x0188; ++i) if(tbl[i]) SSF.load(tbl[i], i); };
 };
 make_ssf(SSF);
 var XLSX = {};
 (function(XLSX){
+XLSX.version = '0.3.7';
 function parsexmltag(tag) {
 	var words = tag.split(/\s+/);
 	var z = {'0': words[0]};
@@ -439,134 +478,133 @@ function parseVector(data) {
 }
 
 function isval(x) { return typeof x !== "undefined" && x !== null; }
-/* 18.4 Shared String Table */
-var parse_sst = (function(){
+/* Parse a list of <r> tags */
+var parse_rs = (function() {
 	var tregex = matchtag("t"), rpregex = matchtag("rPr");
-	/* Parse a list of <r> tags */
-	var parse_rs = (function() {
-		/* 18.4.7 rPr CT_RPrElt */
-		var parse_rpr = function(rpr, intro, outro) {
-			var font = {};
-			(rpr.match(/<[^>]*>/g)||[]).forEach(function(x) {
-				var y = parsexmltag(x);
-				switch(y[0]) {
-					/* 18.8.12 condense CT_BooleanProperty */
-					/* ** not required . */
-					case '<condense': break;
-					/* 18.8.17 extend CT_BooleanProperty */
-					/* ** not required . */
-					case '<extend': break;
-					/* 18.8.36 shadow CT_BooleanProperty */
-					/* ** not required . */
-					case '<shadow': break;
+	/* 18.4.7 rPr CT_RPrElt */
+	var parse_rpr = function(rpr, intro, outro) {
+		var font = {};
+		(rpr.match(/<[^>]*>/g)||[]).forEach(function(x) {
+			var y = parsexmltag(x);
+			switch(y[0]) {
+				/* 18.8.12 condense CT_BooleanProperty */
+				/* ** not required . */
+				case '<condense': break;
+				/* 18.8.17 extend CT_BooleanProperty */
+				/* ** not required . */
+				case '<extend': break;
+				/* 18.8.36 shadow CT_BooleanProperty */
+				/* ** not required . */
+				case '<shadow': break;
 
-					/* 18.4.1 charset CT_IntProperty TODO */
-					case '<charset': break;
+				/* 18.4.1 charset CT_IntProperty TODO */
+				case '<charset': break;
 
-					/* 18.4.2 outline CT_BooleanProperty TODO */
-					case '<outline': break;
+				/* 18.4.2 outline CT_BooleanProperty TODO */
+				case '<outline': break;
 
-					/* 18.4.5 rFont CT_FontName */
-					case '<rFont': font.name = y.val; break;
+				/* 18.4.5 rFont CT_FontName */
+				case '<rFont': font.name = y.val; break;
 
-					/* 18.4.11 sz CT_FontSize */
-					case '<sz': font.sz = y.val; break;
+				/* 18.4.11 sz CT_FontSize */
+				case '<sz': font.sz = y.val; break;
 
-					/* 18.4.10 strike CT_BooleanProperty */
-					case '<strike':
-						if(!y.val) break;
-						/* falls through */
-					case '<strike/>': font.strike = 1; break;
-					case '</strike>': break;
+				/* 18.4.10 strike CT_BooleanProperty */
+				case '<strike':
+					if(!y.val) break;
+					/* falls through */
+				case '<strike/>': font.strike = 1; break;
+				case '</strike>': break;
 
-					/* 18.4.13 u CT_UnderlineProperty */
-					case '<u':
-						if(!y.val) break;
-						/* falls through */
-					case '<u/>': font.u = 1; break;
-					case '</u>': break;
+				/* 18.4.13 u CT_UnderlineProperty */
+				case '<u':
+					if(!y.val) break;
+					/* falls through */
+				case '<u/>': font.u = 1; break;
+				case '</u>': break;
 
-					/* 18.8.2 b */
-					case '<b':
-						if(!y.val) break;
-						/* falls through */
-					case '<b/>': font.b = 1; break;
-					case '</b>': break;
+				/* 18.8.2 b */
+				case '<b':
+					if(!y.val) break;
+					/* falls through */
+				case '<b/>': font.b = 1; break;
+				case '</b>': break;
 
-					/* 18.8.26 i */
-					case '<i':
-						if(!y.val) break;
-						/* falls through */
-					case '<i/>': font.i = 1; break;
-					case '</i>': break;
+				/* 18.8.26 i */
+				case '<i':
+					if(!y.val) break;
+					/* falls through */
+				case '<i/>': font.i = 1; break;
+				case '</i>': break;
 
-					/* 18.3.1.15 color CT_Color TODO: tint, theme, auto, indexed */
-					case '<color':
-						if(y.rgb) font.color = y.rgb.substr(2,6);
-						break;
+				/* 18.3.1.15 color CT_Color TODO: tint, theme, auto, indexed */
+				case '<color':
+					if(y.rgb) font.color = y.rgb.substr(2,6);
+					break;
 
-					/* 18.8.18 family ST_FontFamily */
-					case '<family': font.family = y.val; break;
+				/* 18.8.18 family ST_FontFamily */
+				case '<family': font.family = y.val; break;
 
-					/* 18.4.14 vertAlign CT_VerticalAlignFontProperty TODO */
-					case '<vertAlign': break;
+				/* 18.4.14 vertAlign CT_VerticalAlignFontProperty TODO */
+				case '<vertAlign': break;
 
-					/* 18.8.35 scheme CT_FontScheme TODO */
-					case '<scheme': break;
+				/* 18.8.35 scheme CT_FontScheme TODO */
+				case '<scheme': break;
 
-					default:
-						if(y[0][2] !== '/') throw 'Unrecognized rich format ' + y[0];
-				}
-			});
-			/* TODO: These should be generated styles, not inline */
-			var style = [];
-			if(font.b) style.push("font-weight: bold;");
-			if(font.i) style.push("font-style: italic;");
-			intro.push('<span style="' + style.join("") + '">');
-			outro.push("</span>");
-		};
-
-		/* 18.4.4 r CT_RElt */
-		function parse_r(r) {
-			var terms = [[],"",[]];
-			/* 18.4.12 t ST_Xstring */
-			var t = r.match(tregex);
-			if(!isval(t)) return "";
-			terms[1] = t[1];
-
-			var rpr = r.match(rpregex);
-			if(isval(rpr)) parse_rpr(rpr[1], terms[0], terms[2]);
-			return terms[0].join("") + terms[1].replace(/\r\n/g,'<br/>') + terms[2].join("");
-		}
-		return function(rs) {
-			return rs.replace(/<r>/g,"").split(/<\/r>/).map(parse_r).join("");
-		};
-	})();
-
-	/* 18.4.8 si CT_Rst */
-	var parse_si = function(x) {
-		var z = {};
-		if(!x) return z;
-		var y;
-		/* 18.4.12 t ST_Xstring (Plaintext String) */
-		if(x[1] === 't') {
-			z.t = utf8read(unescapexml(x.replace(/<[^>]*>/g,"")));
-			z.raw = x;
-			z.r = z.t;
-		}
-		/* 18.4.4 r CT_RElt (Rich Text Run) */
-		else if((y = x.match(/<r>/))) {
-			z.raw = x;
-			/* TODO: properly parse (note: no other valid child can have body text) */
-			z.t = utf8read(unescapexml(x.replace(/<[^>]*>/gm,"")));
-			z.r = parse_rs(x);
-		}
-		/* 18.4.3 phoneticPr CT_PhoneticPr (TODO: needed for Asian support) */
-		/* 18.4.6 rPh CT_PhoneticRun (TODO: needed for Asian support) */
-		return z;
+				default:
+					if(y[0][2] !== '/') throw 'Unrecognized rich format ' + y[0];
+			}
+		});
+		/* TODO: These should be generated styles, not inline */
+		var style = [];
+		if(font.b) style.push("font-weight: bold;");
+		if(font.i) style.push("font-style: italic;");
+		intro.push('<span style="' + style.join("") + '">');
+		outro.push("</span>");
 	};
 
+	/* 18.4.4 r CT_RElt */
+	function parse_r(r) {
+		var terms = [[],"",[]];
+		/* 18.4.12 t ST_Xstring */
+		var t = r.match(tregex);
+		if(!isval(t)) return "";
+		terms[1] = t[1];
 
+		var rpr = r.match(rpregex);
+		if(isval(rpr)) parse_rpr(rpr[1], terms[0], terms[2]);
+		return terms[0].join("") + terms[1].replace(/\r\n/g,'<br/>') + terms[2].join("");
+	}
+	return function(rs) {
+		return rs.replace(/<r>/g,"").split(/<\/r>/).map(parse_r).join("");
+	};
+})();
+
+/* 18.4.8 si CT_Rst */
+var parse_si = function(x) {
+	var z = {};
+	if(!x) return z;
+	var y;
+	/* 18.4.12 t ST_Xstring (Plaintext String) */
+	if(x[1] === 't') {
+		z.t = utf8read(unescapexml(x.replace(/<[^>]*>/g,"")));
+		z.raw = x;
+		z.r = z.t;
+	}
+	/* 18.4.4 r CT_RElt (Rich Text Run) */
+	else if((y = x.match(/<r>/))) {
+		z.raw = x;
+		/* TODO: properly parse (note: no other valid child can have body text) */
+		z.t = utf8read(unescapexml(x.replace(/<[^>]*>/gm,"")));
+		z.r = parse_rs(x);
+	}
+	/* 18.4.3 phoneticPr CT_PhoneticPr (TODO: needed for Asian support) */
+	/* 18.4.6 rPh CT_PhoneticRun (TODO: needed for Asian support) */
+	return z;
+};
+
+/* 18.4 Shared String Table */
+var parse_sst = (function(){
 	return function(data) {
 		var s = [];
 		/* 18.4.9 sst CT_Sst */
@@ -588,6 +626,7 @@ var ct2type = {
 	"application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml": "strs",
 	"application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml":"styles",
 	"application/vnd.openxmlformats-officedocument.theme+xml":"themes",
+	"application/vnd.openxmlformats-officedocument.spreadsheetml.comments+xml": "comments",
 	"foo": "bar"
 };
 
@@ -821,7 +860,7 @@ var ctext = {};
 function parseCT(data) {
 	if(!data || !data.match) return data;
 	var ct = { workbooks: [], sheets: [], calcchains: [], themes: [], styles: [],
-		coreprops: [], extprops: [], strs:[], xmlns: "" };
+		coreprops: [], extprops: [], strs:[], comments: [], xmlns: "" };
 	(data.match(/<[^>]*>/g)||[]).forEach(function(x) {
 		var y = parsexmltag(x);
 		switch(y[0]) {
@@ -1026,8 +1065,113 @@ function parseStyles(data) {
 	return styles;
 }
 
+/* 9.3.2 OPC Relationships Markup */
+function parseRels(data, currentFilePath) {
+	if (!data) return data;
+	if (currentFilePath.charAt(0) !== '/') {
+		currentFilePath = '/'+currentFilePath;
+	}
+	var rels = {};
+
+	var resolveRelativePathIntoAbsolute = function (to) {
+	    var toksFrom = currentFilePath.split('/');
+	 	toksFrom.pop(); // folder path
+	    var toksTo = to.split('/');
+	    var reversed = [];
+	    while (toksTo.length !== 0) {
+	        var tokTo = toksTo.shift();
+	        if (tokTo === '..') {
+	            toksFrom.pop();
+	        } else if (tokTo !== '.') {
+	            toksFrom.push(tokTo);
+	        }
+	    }
+	    return toksFrom.join('/');
+	}
+
+	data.match(/<[^>]*>/g).forEach(function(x) {
+		var y = parsexmltag(x);
+		/* 9.3.2.2 OPC_Relationships */
+		if (y[0] === '<Relationship') {
+			var rel = {}; rel.Type = y.Type; rel.Target = y.Target; rel.Id = y.Id; rel.TargetMode = y.TargetMode;
+			var canonictarget = resolveRelativePathIntoAbsolute(y.Target);
+			rels[canonictarget] = rel;
+		}
+	});
+
+	return rels;
+}
+
+/* 18.7.3 CT_Comment */
+function parseComments(data) {
+	if(data.match(/<comments *\/>/)) {
+		throw new Error('Not a valid comments xml');
+	}
+	var authors = [];
+	var commentList = [];
+	data.match(/<authors>([^\u2603]*)<\/authors>/m)[1].split('</author>').forEach(function(x) {
+		if(x === "" || x.trim() === "") return;
+		authors.push(x.match(/<author[^>]*>(.*)/)[1]);
+	});
+	data.match(/<commentList>([^\u2603]*)<\/commentList>/m)[1].split('</comment>').forEach(function(x, index) {
+		if(x === "" || x.trim() === "") return;
+		var y = parsexmltag(x.match(/<comment[^>]*>/)[0]);
+		var comment = { author: y.authorId && authors[y.authorId] ? authors[y.authorId] : undefined, ref: y.ref, guid: y.guid };
+		var textMatch = x.match(/<text>([^\u2603]*)<\/text>/m);
+		if (!textMatch || !textMatch[1]) return; // a comment may contain an empty text tag.
+		var rt = parse_si(textMatch[1]);
+		comment.raw = rt.raw;
+		comment.t = rt.t;
+		comment.r = rt.r;
+		commentList.push(comment);
+	});
+	return commentList;
+}
+
+function parseCommentsAddToSheets(zip, dirComments, sheets, sheetRels) {
+	for(var i = 0; i != dirComments.length; ++i) {
+		var canonicalpath=dirComments[i];
+		var comments=parseComments(getdata(getzipfile(zip, canonicalpath.replace(/^\//,''))));
+		// find the sheets targeted by these comments
+		var sheetNames = Object.keys(sheets);
+		for(var j = 0; j != sheetNames.length; ++j) {
+			var sheetName = sheetNames[j];
+			var rels = sheetRels[sheetName];
+			if (rels) {
+				var rel = rels[canonicalpath];
+				if (rel) {
+					insertCommentsIntoSheet(sheetName, sheets[sheetName], comments);
+				}
+			}
+		}
+	}	
+}
+
+function insertCommentsIntoSheet(sheetName, sheet, comments) {
+	comments.forEach(function(comment) {
+		var cell = sheet[comment.ref];
+		if (!cell) {
+			cell = {};
+			sheet[comment.ref] = cell;
+			var range = decode_range(sheet["!ref"]);
+			var thisCell = decode_cell(comment.ref);
+			if(range.s.r > thisCell.r) range.s.r = thisCell.r;
+			if(range.e.r < thisCell.r) range.e.r = thisCell.r;
+			if(range.s.c > thisCell.c) range.s.c = thisCell.c;
+			if(range.e.c < thisCell.c) range.e.c = thisCell.c;
+			var encoded = encode_range(range);
+			if (encoded !== sheet["!ref"]) sheet["!ref"] = encoded;
+		}
+
+		if (!cell.c) {
+			cell.c = [];
+		}
+		cell.c.push({a: comment.author, t: comment.t, raw: comment.raw, r: comment.r});
+	});
+}
+
 function getdata(data) {
-	if(!data) return null; 
+	if(!data) return null;
 	if(data.data) return data.data;
 	if(data._data && data._data.getContent) return Array.prototype.slice.call(data._data.getContent(),0).map(function(x) { return String.fromCharCode(x); }).join("");
 	return null;
@@ -1058,6 +1202,7 @@ function parseZip(zip) {
 	var deps = {};
 	if(dir.calcchain) deps=parseDeps(getdata(getzipfile(zip, dir.calcchain.replace(/^\//,''))));
 	var sheets = {}, i=0;
+	var sheetRels = {};	
 	if(!props.Worksheets) {
 		/* Google Docs doesn't generate the appropriate metadata, so we impute: */
 		var wbsheets = wb.Sheets;
@@ -1067,18 +1212,26 @@ function parseZip(zip) {
 			props.SheetNames[j] = wbsheets[j].name;
 		}
 		for(i = 0; i != props.Worksheets; ++i) {
-			try { /* TODO: remove these guards */ 
-			sheets[props.SheetNames[i]]=parseSheet(getdata(getzipfile(zip, 'xl/worksheets/sheet' + (i+1) + '.xml')));
+			try { /* TODO: remove these guards */
+				var path = 'xl/worksheets/sheet' + (i+1) + '.xml';
+				var relsPath = path.replace(/^(.*)(\/)([^\/]*)$/, "$1/_rels/$3.rels");
+				sheets[props.SheetNames[i]]=parseSheet(getdata(getzipfile(zip, path)));
+				sheetRels[props.SheetNames[i]]=parseRels(getdata(getzipfile(zip, relsPath)), path);
 			} catch(e) {}
 		}
-	}
-	else {
+	} else {
 		for(i = 0; i != props.Worksheets; ++i) {
-			try { 
-			sheets[props.SheetNames[i]]=parseSheet(getdata(getzipfile(zip, dir.sheets[i].replace(/^\//,''))));
+			try {
+				var path = dir.sheets[i].replace(/^\//,'');
+				var relsPath = path.replace(/^(.*)(\/)([^\/]*)$/, "$1/_rels/$3.rels");
+				sheets[props.SheetNames[i]]=parseSheet(getdata(getzipfile(zip, path)));
+				sheetRels[props.SheetNames[i]]=parseRels(getdata(getzipfile(zip, relsPath)), path);
 			} catch(e) {}
 		}
 	}
+
+	if(dir.comments) parseCommentsAddToSheets(zip, dir.comments, sheets, sheetRels);
+
 	return {
 		Directory: dir,
 		Workbook: wb,
@@ -1251,6 +1404,7 @@ if(typeof require !== 'undefined' && typeof exports !== 'undefined') {
 	exports.read = XLSX.read;
 	exports.readFile = XLSX.readFile;
 	exports.utils = XLSX.utils;
+	exports.version = XLSX.version;
 	exports.main = function(args) {
 		var zip = XLSX.read(args[0], {type:'file'});
 		console.log(zip.Sheets);
