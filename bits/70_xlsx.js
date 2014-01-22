@@ -501,7 +501,7 @@ function parseComments(data) {
 		var comment = { author: y.authorId && authors[y.authorId] ? authors[y.authorId] : undefined, ref: y.ref, guid: y.guid };
 		var textMatch = x.match(/<text>([^\u2603]*)<\/text>/m);
 		if (!textMatch || !textMatch[1]) return; // a comment may contain an empty text tag.
-	    var rt = parse_si(textMatch[1]);
+		var rt = parse_si(textMatch[1]);
 		comment.raw = rt.raw;
 		comment.t = rt.t;
 		comment.r = rt.r;
@@ -543,7 +543,7 @@ function insertCommentsIntoSheet(sheetName, sheet, comments) {
 			if(range.e.c < thisCell.c) range.e.c = thisCell.c;
 			var encoded = encode_range(range);
 			if (encoded !== sheet["!ref"]) sheet["!ref"] = encoded;
-		} 
+		}
 
 		if (!cell.c) {
 			cell.c = [];
@@ -553,7 +553,7 @@ function insertCommentsIntoSheet(sheetName, sheet, comments) {
 }
 
 function getdata(data) {
-	if(!data) return null; 
+	if(!data) return null;
 	if(data.data) return data.data;
 	if(data._data && data._data.getContent) return Array.prototype.slice.call(data._data.getContent(),0).map(function(x) { return String.fromCharCode(x); }).join("");
 	return null;
@@ -586,36 +586,34 @@ function parseZip(zip) {
 	var sheets = {}, i=0;
 	var sheetRels = {};	
 	if(!props.Worksheets) {
-        /* Google Docs doesn't generate the appropriate metadata, so we impute: */
-        var wbsheets = wb.Sheets;
-        props.Worksheets = wbsheets.length;
-        props.SheetNames = [];
-        for(var j = 0; j != wbsheets.length; ++j) {
-                props.SheetNames[j] = wbsheets[j].name;
-        }
-        for(i = 0; i != props.Worksheets; ++i) {
-                try { /* TODO: remove these guards */
-	                var path = 'xl/worksheets/sheet' + (i+1) + '.xml';
-	                var relsPath = path.replace(/^(.*)(\/)([^\/]*)$/, "$1/_rels/$3.rels");
-	                sheets[props.SheetNames[i]]=parseSheet(getdata(getzipfile(zip, path)));
-	                sheetRels[props.SheetNames[i]]=parseRels(getdata(getzipfile(zip, relsPath)), path);
-                } catch(e) {}
-        }
-    }
-    else {
-        for(i = 0; i != props.Worksheets; ++i) {
-            try {
-            	var path = dir.sheets[i].replace(/^\//,'');
+		/* Google Docs doesn't generate the appropriate metadata, so we impute: */
+		var wbsheets = wb.Sheets;
+		props.Worksheets = wbsheets.length;
+		props.SheetNames = [];
+		for(var j = 0; j != wbsheets.length; ++j) {
+			props.SheetNames[j] = wbsheets[j].name;
+		}
+		for(i = 0; i != props.Worksheets; ++i) {
+			try { /* TODO: remove these guards */
+				var path = 'xl/worksheets/sheet' + (i+1) + '.xml';
 				var relsPath = path.replace(/^(.*)(\/)([^\/]*)$/, "$1/_rels/$3.rels");
-            	sheets[props.SheetNames[i]]=parseSheet(getdata(getzipfile(zip, path)));
-            	sheetRels[props.SheetNames[i]]=parseRels(getdata(getzipfile(zip, relsPath)), path);
-            } catch(e) {}
-        }
-    }
-
-	if(dir.comments) {
-		parseCommentsAddToSheets(zip, dir.comments, sheets, sheetRels);
+				sheets[props.SheetNames[i]]=parseSheet(getdata(getzipfile(zip, path)));
+				sheetRels[props.SheetNames[i]]=parseRels(getdata(getzipfile(zip, relsPath)), path);
+			} catch(e) {}
+		}
+	} else {
+		for(i = 0; i != props.Worksheets; ++i) {
+			try {
+				var path = dir.sheets[i].replace(/^\//,'');
+				var relsPath = path.replace(/^(.*)(\/)([^\/]*)$/, "$1/_rels/$3.rels");
+				sheets[props.SheetNames[i]]=parseSheet(getdata(getzipfile(zip, path)));
+				sheetRels[props.SheetNames[i]]=parseRels(getdata(getzipfile(zip, relsPath)), path);
+			} catch(e) {}
+		}
 	}
+
+	if(dir.comments) parseCommentsAddToSheets(zip, dir.comments, sheets, sheetRels);
+
 	return {
 		Directory: dir,
 		Workbook: wb,

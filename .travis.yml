@@ -4,6 +4,10 @@ node_js:
   - "0.8"
 before_install:
   - "npm install -g mocha"
+  - "npm install blanket"
+  - "npm install coveralls mocha-lcov-reporter"
 before_script:
   - "make init"
   - "cd tests/files; make all; cd -" 
+after_success:
+  - "make coveralls"
