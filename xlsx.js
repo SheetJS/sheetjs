@@ -439,134 +439,133 @@ function parseVector(data) {
 }
 
 function isval(x) { return typeof x !== "undefined" && x !== null; }
-/* 18.4 Shared String Table */
-var parse_sst = (function(){
+/* Parse a list of <r> tags */
+var parse_rs = (function() {
 	var tregex = matchtag("t"), rpregex = matchtag("rPr");
-	/* Parse a list of <r> tags */
-	var parse_rs = (function() {
-		/* 18.4.7 rPr CT_RPrElt */
-		var parse_rpr = function(rpr, intro, outro) {
-			var font = {};
-			(rpr.match(/<[^>]*>/g)||[]).forEach(function(x) {
-				var y = parsexmltag(x);
-				switch(y[0]) {
-					/* 18.8.12 condense CT_BooleanProperty */
-					/* ** not required . */
-					case '<condense': break;
-					/* 18.8.17 extend CT_BooleanProperty */
-					/* ** not required . */
-					case '<extend': break;
-					/* 18.8.36 shadow CT_BooleanProperty */
-					/* ** not required . */
-					case '<shadow': break;
+	/* 18.4.7 rPr CT_RPrElt */
+	var parse_rpr = function(rpr, intro, outro) {
+		var font = {};
+		(rpr.match(/<[^>]*>/g)||[]).forEach(function(x) {
+			var y = parsexmltag(x);
+			switch(y[0]) {
+				/* 18.8.12 condense CT_BooleanProperty */
+				/* ** not required . */
+				case '<condense': break;
+				/* 18.8.17 extend CT_BooleanProperty */
+				/* ** not required . */
+				case '<extend': break;
+				/* 18.8.36 shadow CT_BooleanProperty */
+				/* ** not required . */
+				case '<shadow': break;
 
-					/* 18.4.1 charset CT_IntProperty TODO */
-					case '<charset': break;
+				/* 18.4.1 charset CT_IntProperty TODO */
+				case '<charset': break;
 
-					/* 18.4.2 outline CT_BooleanProperty TODO */
-					case '<outline': break;
+				/* 18.4.2 outline CT_BooleanProperty TODO */
+				case '<outline': break;
 
-					/* 18.4.5 rFont CT_FontName */
-					case '<rFont': font.name = y.val; break;
+				/* 18.4.5 rFont CT_FontName */
+				case '<rFont': font.name = y.val; break;
 
-					/* 18.4.11 sz CT_FontSize */
-					case '<sz': font.sz = y.val; break;
+				/* 18.4.11 sz CT_FontSize */
+				case '<sz': font.sz = y.val; break;
 
-					/* 18.4.10 strike CT_BooleanProperty */
-					case '<strike':
-						if(!y.val) break;
-						/* falls through */
-					case '<strike/>': font.strike = 1; break;
-					case '</strike>': break;
+				/* 18.4.10 strike CT_BooleanProperty */
+				case '<strike':
+					if(!y.val) break;
+					/* falls through */
+				case '<strike/>': font.strike = 1; break;
+				case '</strike>': break;
 
-					/* 18.4.13 u CT_UnderlineProperty */
-					case '<u':
-						if(!y.val) break;
-						/* falls through */
-					case '<u/>': font.u = 1; break;
-					case '</u>': break;
+				/* 18.4.13 u CT_UnderlineProperty */
+				case '<u':
+					if(!y.val) break;
+					/* falls through */
+				case '<u/>': font.u = 1; break;
+				case '</u>': break;
 
-					/* 18.8.2 b */
-					case '<b':
-						if(!y.val) break;
-						/* falls through */
-					case '<b/>': font.b = 1; break;
-					case '</b>': break;
+				/* 18.8.2 b */
+				case '<b':
+					if(!y.val) break;
+					/* falls through */
+				case '<b/>': font.b = 1; break;
+				case '</b>': break;
 
-					/* 18.8.26 i */
-					case '<i':
-						if(!y.val) break;
-						/* falls through */
-					case '<i/>': font.i = 1; break;
-					case '</i>': break;
+				/* 18.8.26 i */
+				case '<i':
+					if(!y.val) break;
+					/* falls through */
+				case '<i/>': font.i = 1; break;
+				case '</i>': break;
 
-					/* 18.3.1.15 color CT_Color TODO: tint, theme, auto, indexed */
-					case '<color':
-						if(y.rgb) font.color = y.rgb.substr(2,6);
-						break;
+				/* 18.3.1.15 color CT_Color TODO: tint, theme, auto, indexed */
+				case '<color':
+					if(y.rgb) font.color = y.rgb.substr(2,6);
+					break;
 
-					/* 18.8.18 family ST_FontFamily */
-					case '<family': font.family = y.val; break;
+				/* 18.8.18 family ST_FontFamily */
+				case '<family': font.family = y.val; break;
 
-					/* 18.4.14 vertAlign CT_VerticalAlignFontProperty TODO */
-					case '<vertAlign': break;
+				/* 18.4.14 vertAlign CT_VerticalAlignFontProperty TODO */
+				case '<vertAlign': break;
 
-					/* 18.8.35 scheme CT_FontScheme TODO */
-					case '<scheme': break;
+				/* 18.8.35 scheme CT_FontScheme TODO */
+				case '<scheme': break;
 
-					default:
-						if(y[0][2] !== '/') throw 'Unrecognized rich format ' + y[0];
-				}
-			});
-			/* TODO: These should be generated styles, not inline */
-			var style = [];
-			if(font.b) style.push("font-weight: bold;");
-			if(font.i) style.push("font-style: italic;");
-			intro.push('<span style="' + style.join("") + '">');
-			outro.push("</span>");
-		};
-
-		/* 18.4.4 r CT_RElt */
-		function parse_r(r) {
-			var terms = [[],"",[]];
-			/* 18.4.12 t ST_Xstring */
-			var t = r.match(tregex);
-			if(!isval(t)) return "";
-			terms[1] = t[1];
-
-			var rpr = r.match(rpregex);
-			if(isval(rpr)) parse_rpr(rpr[1], terms[0], terms[2]);
-			return terms[0].join("") + terms[1].replace(/\r\n/g,'<br/>') + terms[2].join("");
-		}
-		return function(rs) {
-			return rs.replace(/<r>/g,"").split(/<\/r>/).map(parse_r).join("");
-		};
-	})();
-
-	/* 18.4.8 si CT_Rst */
-	var parse_si = function(x) {
-		var z = {};
-		if(!x) return z;
-		var y;
-		/* 18.4.12 t ST_Xstring (Plaintext String) */
-		if(x[1] === 't') {
-			z.t = utf8read(unescapexml(x.replace(/<[^>]*>/g,"")));
-			z.raw = x;
-			z.r = z.t;
-		}
-		/* 18.4.4 r CT_RElt (Rich Text Run) */
-		else if((y = x.match(/<r>/))) {
-			z.raw = x;
-			/* TODO: properly parse (note: no other valid child can have body text) */
-			z.t = utf8read(unescapexml(x.replace(/<[^>]*>/gm,"")));
-			z.r = parse_rs(x);
-		}
-		/* 18.4.3 phoneticPr CT_PhoneticPr (TODO: needed for Asian support) */
-		/* 18.4.6 rPh CT_PhoneticRun (TODO: needed for Asian support) */
-		return z;
+				default:
+					if(y[0][2] !== '/') throw 'Unrecognized rich format ' + y[0];
+			}
+		});
+		/* TODO: These should be generated styles, not inline */
+		var style = [];
+		if(font.b) style.push("font-weight: bold;");
+		if(font.i) style.push("font-style: italic;");
+		intro.push('<span style="' + style.join("") + '">');
+		outro.push("</span>");
 	};
 
+	/* 18.4.4 r CT_RElt */
+	function parse_r(r) {
+		var terms = [[],"",[]];
+		/* 18.4.12 t ST_Xstring */
+		var t = r.match(tregex);
+		if(!isval(t)) return "";
+		terms[1] = t[1];
 
+		var rpr = r.match(rpregex);
+		if(isval(rpr)) parse_rpr(rpr[1], terms[0], terms[2]);
+		return terms[0].join("") + terms[1].replace(/\r\n/g,'<br/>') + terms[2].join("");
+	}
+	return function(rs) {
+		return rs.replace(/<r>/g,"").split(/<\/r>/).map(parse_r).join("");
+	};
+})();
+
+/* 18.4.8 si CT_Rst */
+var parse_si = function(x) {
+	var z = {};
+	if(!x) return z;
+	var y;
+	/* 18.4.12 t ST_Xstring (Plaintext String) */
+	if(x[1] === 't') {
+		z.t = utf8read(unescapexml(x.replace(/<[^>]*>/g,"")));
+		z.raw = x;
+		z.r = z.t;
+	}
+	/* 18.4.4 r CT_RElt (Rich Text Run) */
+	else if((y = x.match(/<r>/))) {
+		z.raw = x;
+		/* TODO: properly parse (note: no other valid child can have body text) */
+		z.t = utf8read(unescapexml(x.replace(/<[^>]*>/gm,"")));
+		z.r = parse_rs(x);
+	}
+	/* 18.4.3 phoneticPr CT_PhoneticPr (TODO: needed for Asian support) */
+	/* 18.4.6 rPh CT_PhoneticRun (TODO: needed for Asian support) */
+	return z;
+};
+
+/* 18.4 Shared String Table */
+var parse_sst = (function(){
 	return function(data) {
 		var s = [];
 		/* 18.4.9 sst CT_Sst */
@@ -588,6 +587,7 @@ var ct2type = {
 	"application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml": "strs",
 	"application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml":"styles",
 	"application/vnd.openxmlformats-officedocument.theme+xml":"themes",
+	"application/vnd.openxmlformats-officedocument.spreadsheetml.comments+xml": "comments",
 	"foo": "bar"
 };
 
@@ -821,7 +821,7 @@ var ctext = {};
 function parseCT(data) {
 	if(!data || !data.match) return data;
 	var ct = { workbooks: [], sheets: [], calcchains: [], themes: [], styles: [],
-		coreprops: [], extprops: [], strs:[], xmlns: "" };
+		coreprops: [], extprops: [], strs:[], comments: [], xmlns: "" };
 	(data.match(/<[^>]*>/g)||[]).forEach(function(x) {
 		var y = parsexmltag(x);
 		switch(y[0]) {
@@ -1026,6 +1026,111 @@ function parseStyles(data) {
 	return styles;
 }
 
+/* 9.3.2 OPC Relationships Markup */
+function parseRels(data, currentFilePath) {
+	if (!data) return data;
+	if (currentFilePath.charAt(0) !== '/') {
+		currentFilePath = '/'+currentFilePath;
+	}
+	var rels = {};
+
+	var resolveRelativePathIntoAbsolute = function (to) {
+	    var toksFrom = currentFilePath.split('/');
+	 	toksFrom.pop(); // folder path
+	    var toksTo = to.split('/');
+	    var reversed = [];
+	    while (toksTo.length !== 0) {
+	        var tokTo = toksTo.shift();
+	        if (tokTo === '..') {
+	            toksFrom.pop();
+	        } else if (tokTo !== '.') {
+	            toksFrom.push(tokTo);
+	        }
+	    }
+	    return toksFrom.join('/');
+	}
+
+	data.match(/<[^>]*>/g).forEach(function(x) {
+		var y = parsexmltag(x);
+		/* 9.3.2.2 OPC_Relationships */
+		if (y[0] === '<Relationship') {
+			var rel = {}; rel.Type = y.Type; rel.Target = y.Target; rel.Id = y.Id; rel.TargetMode = y.TargetMode;
+			var canonictarget = resolveRelativePathIntoAbsolute(y.Target);
+			rels[canonictarget] = rel;
+		}
+	});
+
+	return rels;
+}
+
+/* 18.7.3 CT_Comment */
+function parseComments(data) {
+	if(data.match(/<comments *\/>/)) {
+		throw new Error('Not a valid comments xml');
+	}
+	var authors = [];
+	var commentList = [];
+	data.match(/<authors>([^\u2603]*)<\/authors>/m)[1].split('</author>').forEach(function(x) {
+		if(x === "" || x.trim() === "") return;
+		authors.push(x.match(/<author[^>]*>(.*)/)[1]);
+	});
+	data.match(/<commentList>([^\u2603]*)<\/commentList>/m)[1].split('</comment>').forEach(function(x, index) {
+		if(x === "" || x.trim() === "") return;
+		var y = parsexmltag(x.match(/<comment[^>]*>/)[0]);
+		var comment = { author: y.authorId && authors[y.authorId] ? authors[y.authorId] : undefined, ref: y.ref, guid: y.guid };
+		var textMatch = x.match(/<text>([^\u2603]*)<\/text>/m);
+		if (!textMatch || !textMatch[1]) return; // a comment may contain an empty text tag.
+	    var rt = parse_si(textMatch[1]);
+		comment.raw = rt.raw;
+		comment.t = rt.t;
+		comment.r = rt.r;
+		commentList.push(comment);
+	});
+	return commentList;
+}
+
+function parseCommentsAddToSheets(zip, dirComments, sheets, sheetRels) {
+	for(var i = 0; i != dirComments.length; ++i) {
+		var canonicalpath=dirComments[i];
+		var comments=parseComments(getdata(getzipfile(zip, canonicalpath.replace(/^\//,''))));
+		// find the sheets targeted by these comments
+		var sheetNames = Object.keys(sheets);
+		for(var j = 0; j != sheetNames.length; ++j) {
+			var sheetName = sheetNames[j];
+			var rels = sheetRels[sheetName];
+			if (rels) {
+				var rel = rels[canonicalpath];
+				if (rel) {
+					insertCommentsIntoSheet(sheetName, sheets[sheetName], comments);
+				}
+			}
+		}
+	}	
+}
+
+function insertCommentsIntoSheet(sheetName, sheet, comments) {
+	comments.forEach(function(comment) {
+		var cell = sheet[comment.ref];
+		if (!cell) {
+			cell = {};
+			sheet[comment.ref] = cell;
+			var range = decode_range(sheet["!ref"]);
+			var thisCell = decode_cell(comment.ref);
+			if(range.s.r > thisCell.r) range.s.r = thisCell.r;
+			if(range.e.r < thisCell.r) range.e.r = thisCell.r;
+			if(range.s.c > thisCell.c) range.s.c = thisCell.c;
+			if(range.e.c < thisCell.c) range.e.c = thisCell.c;
+			var encoded = encode_range(range);
+			if (encoded !== sheet["!ref"]) sheet["!ref"] = encoded;
+		} 
+
+		if (!cell.c) {
+			cell.c = [];
+		}
+		cell.c.push({a: comment.author, t: comment.t, raw: comment.raw, r: comment.r});
+	});
+}
+
 function getdata(data) {
 	if(!data) return null; 
 	if(data.data) return data.data;
@@ -1058,26 +1163,37 @@ function parseZip(zip) {
 	var deps = {};
 	if(dir.calcchain) deps=parseDeps(getdata(getzipfile(zip, dir.calcchain.replace(/^\//,''))));
 	var sheets = {}, i=0;
+	var sheetRels = {};	
 	if(!props.Worksheets) {
-		/* Google Docs doesn't generate the appropriate metadata, so we impute: */
-		var wbsheets = wb.Sheets;
-		props.Worksheets = wbsheets.length;
-		props.SheetNames = [];
-		for(var j = 0; j != wbsheets.length; ++j) {
-			props.SheetNames[j] = wbsheets[j].name;
-		}
-		for(i = 0; i != props.Worksheets; ++i) {
-			try { /* TODO: remove these guards */ 
-			sheets[props.SheetNames[i]]=parseSheet(getdata(getzipfile(zip, 'xl/worksheets/sheet' + (i+1) + '.xml')));
-			} catch(e) {}
-		}
-	}
-	else {
-		for(i = 0; i != props.Worksheets; ++i) {
-			try { 
-			sheets[props.SheetNames[i]]=parseSheet(getdata(getzipfile(zip, dir.sheets[i].replace(/^\//,''))));
-			} catch(e) {}
-		}
+        /* Google Docs doesn't generate the appropriate metadata, so we impute: */
+        var wbsheets = wb.Sheets;
+        props.Worksheets = wbsheets.length;
+        props.SheetNames = [];
+        for(var j = 0; j != wbsheets.length; ++j) {
+                props.SheetNames[j] = wbsheets[j].name;
+        }
+        for(i = 0; i != props.Worksheets; ++i) {
+                try { /* TODO: remove these guards */
+	                var path = 'xl/worksheets/sheet' + (i+1) + '.xml';
+	                var relsPath = path.replace(/^(.*)(\/)([^\/]*)$/, "$1/_rels/$3.rels");
+	                sheets[props.SheetNames[i]]=parseSheet(getdata(getzipfile(zip, path)));
+	                sheetRels[props.SheetNames[i]]=parseRels(getdata(getzipfile(zip, relsPath)), path);
+                } catch(e) {}
+        }
+    }
+    else {
+        for(i = 0; i != props.Worksheets; ++i) {
+            try {
+            	var path = dir.sheets[i].replace(/^\//,'');
+				var relsPath = path.replace(/^(.*)(\/)([^\/]*)$/, "$1/_rels/$3.rels");
+            	sheets[props.SheetNames[i]]=parseSheet(getdata(getzipfile(zip, path)));
+            	sheetRels[props.SheetNames[i]]=parseRels(getdata(getzipfile(zip, relsPath)), path);
+            } catch(e) {}
+        }
+    }
+
+	if(dir.comments) {
+		parseCommentsAddToSheets(zip, dir.comments, sheets, sheetRels);
 	}
 	return {
 		Directory: dir,

@@ -39,3 +39,19 @@ describe('should parse test files', function() {
 		});
 	});
 });
+
+describe('should have comment as part of cell\'s properties', function(){
+	var ws;
+	before(function() {
+		XLSX = require('./xlsx');
+		var wb = XLSX.readFile('./test_files/apachepoi_SimpleWithComments.xlsx');
+		var sheetName = 'Sheet1';
+		ws = wb.Sheets[sheetName];
+	});
+	it('Parse comments.xml and insert into cell',function(){
+		assert.equal(ws.B1.c.length, 1,"must have 1 comment");
+		assert.equal(ws.B1.c[0].t, "Yegor Kozlov:\r\nfirst cell", "must have the concatenated texts");
+		assert.equal(ws.B1.c[0].r, '<span style="font-weight: bold;">Yegor Kozlov:</span><span style=""><br/>first cell</span>', "must have the html representation");
+		assert.equal(ws.B1.c[0].a, "Yegor Kozlov","must have the same author");
+	});
+});
