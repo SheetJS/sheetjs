@@ -1,6 +1,6 @@
 {
 	"name": "xlsx",
-	"version": "0.3.7",
+	"version": "0.3.8",
 	"author": "sheetjs",
 	"description": "(one day) a full-featured XLSX parser and writer.  For now, primitive parser",
 	"keywords": [ "xlsx", "office", "excel", "spreadsheet" ],

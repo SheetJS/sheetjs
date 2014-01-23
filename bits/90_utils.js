@@ -10,60 +10,50 @@ function split_cell(cstr) { return cstr.replace(/(\$?[A-Z]*)(\$?[0-9]*)/,"$1,$2"
 function decode_cell(cstr) { var splt = split_cell(cstr); return { c:decode_col(splt[0]), r:decode_row(splt[1]) }; }
 function decode_range(range) { var x =range.split(":").map(decode_cell); return {s:x[0],e:x[x.length-1]}; }
 function encode_range(range) { return encode_cell(range.s) + ":" + encode_cell(range.e); }
-/**
- * Convert a sheet into an array of objects where the column headers are keys.
- **/
-function sheet_to_row_object_array(sheet){
-	var val, rowObject, range, columnHeaders, emptyRow, C;
-	var outSheet = [];
-	if (sheet["!ref"]) {
-		range = decode_range(sheet["!ref"]);
 
-		columnHeaders = {};
-		for (C = range.s.c; C <= range.e.c; ++C) {
-			val = sheet[encode_cell({
-				c: C,
-				r: range.s.r
-			})];
-			if(val){
-				switch(val.t) {
-					case 's': case 'str': columnHeaders[C] = val.v; break;
-					case 'n': columnHeaders[C] = val.v; break;
-				}
-			}
-		}
-
-		for (var R = range.s.r + 1; R <= range.e.r; ++R) {
-			emptyRow = true;
-			//Row number is recorded in the prototype
-			//so that it doesn't appear when stringified.
-			rowObject = Object.create({ __rowNum__ : R });
-			for (C = range.s.c; C <= range.e.c; ++C) {
-				val = sheet[encode_cell({
-					c: C,
-					r: R
-				})];
-				if(val !== undefined) switch(val.t){
-					case 's': case 'str': case 'b': case 'n':
-						if(val.v !== undefined) {
-							rowObject[columnHeaders[C]] = val.v;
-							emptyRow = false;
-						}
-						break;
-					case 'e': break; /* throw */
-					default: throw 'unrecognized type ' + val.t;
-				}
-			}
-			if(!emptyRow) {
-				outSheet.push(rowObject);
+function sheet_to_row_object_array(sheet, opts){
+	var val, row, r, hdr = {}, isempty, R, C, v;
+	var out = [];
+	opts = opts || {};
+	if(!sheet["!ref"]) return out;
+	r = XLSX.utils.decode_range(sheet["!ref"]);
+	for(R=r.s.r, C = r.s.c; C <= r.e.c; ++C) {
+		val = sheet[encode_cell({c:C,r:R})];
+		if(val){
+			switch(val.t) {
+				case 's': case 'str': hdr[C] = val.v; break;
+				case 'n': hdr[C] = val.v; break;
 			}
 		}
 	}
-	return outSheet;
+
+	for (R = r.s.r + 1; R <= r.e.r; ++R) {
+		isempty = true;
+		/* row index available as __rowNum__ */
+		row = Object.create({ __rowNum__ : R });
+		for (C = r.s.c; C <= r.e.c; ++C) {
+			val = sheet[encode_cell({c: C,r: R})];
+			if(!val) continue;
+			v = (val || {}).v;
+			switch(val.t){
+				case 's': case 'str': case 'b': case 'n':
+					if(val.v !== undefined) {
+						row[hdr[C]] = val.v;
+						isempty = false;
+					}
+					break;
+				case 'e': break; /* throw */
+				default: throw 'unrecognized type ' + val.t;
+			}
+		}
+		if(!isempty) out.push(row);
+	}
+	return out;
 }
 
-function sheet_to_csv(sheet) {
+function sheet_to_csv(sheet, opts) {
 	var stringify = function stringify(val) {
+		if(!val.t) return "";
 		switch(val.t){
 			case 'n': return String(val.v);
 			case 's': case 'str':
@@ -74,17 +64,19 @@ function sheet_to_csv(sheet) {
 			default: throw 'unrecognized type ' + val.t;
 		}
 	};
-	var out = "";
-	if(sheet["!ref"]) {
-		var r = XLSX.utils.decode_range(sheet["!ref"]);
-		for(var R = r.s.r; R <= r.e.r; ++R) {
-			var row = [];
-			for(var C = r.s.c; C <= r.e.c; ++C) {
-				var val = sheet[XLSX.utils.encode_cell({c:C,r:R})];
-				row.push(val ? stringify(val).replace(/\\r\\n/g,"\n").replace(/\\t/g,"\t").replace(/\\\\/g,"\\").replace("\\\"","\"\"") : "");
-			}
-			out += row.join(",") + "\n";
+	var out = "", txt = "";
+	opts = opts || {};
+	if(!sheet["!ref"]) return out;
+	var r = XLSX.utils.decode_range(sheet["!ref"]);
+	for(var R = r.s.r; R <= r.e.r; ++R) {
+		var row = [];
+		for(var C = r.s.c; C <= r.e.c; ++C) {
+			var val = sheet[XLSX.utils.encode_cell({c:C,r:R})];
+			if(!val) { row.push(""); continue; }
+			txt = stringify(val);
+			row.push(String(txt).replace(/\\r\\n/g,"\n").replace(/\\t/g,"\t").replace(/\\\\/g,"\\").replace("\\\"","\"\""));
 		}
+		out += row.join(opts.FS||",") + (opts.RS||"\n");
 	}
 	return out;
 }

@@ -1,9 +1,12 @@
 /* vim: set ts=2: */
 var XLSX;
 var fs = require('fs'), assert = require('assert');
-describe('source', function() { it('should load', function() { XLSX = require('./'); }); });
+describe('source',function(){ it('should load', function(){ XLSX = require('./'); });});
 
 var files = (fs.existsSync('tests.lst') ? fs.readFileSync('tests.lst', 'utf-8').split("\n") : fs.readdirSync('test_files')).filter(function(x){return x.substr(-5)==".xlsx" || x.substr(-13)==".xlsx.pending"});
+
+/* Excel enforces 31 character sheet limit, although technical file limit is 255 */
+function fixsheetname(x) { return x.substr(0,31); }
 
 function normalizecsv(x) { return x.replace(/\t/g,",").replace(/#{255}/g,"").replace(/"/g,"").replace(/[\n\r]+/g,"\n").replace(/\n*$/,""); }
 
@@ -15,9 +18,16 @@ function parsetest(x, wb) {
 		});
 		it('should have the right sheet names', fs.existsSync(sname) ? function() {
 			var file = fs.readFileSync(sname, 'utf-8');
-			var names = wb.SheetNames.join("\n") + "\n";
+			var names = wb.SheetNames.map(fixsheetname).join("\n") + "\n";
 			assert.equal(names, file);
 		} : null);
+	});
+	describe(x + ' should generate CSV', function() {
+		wb.SheetNames.forEach(function(ws, i) {
+			it('#' + i + ' (' + ws + ')', function() {
+				var csv = XLSX.utils.make_csv(wb.Sheets[ws]);
+			});
+		});
 	});
 	describe(x + ' should generate correct output', function() {
 		wb.SheetNames.forEach(function(ws, i) {
