@@ -214,7 +214,20 @@ of the applications makes sense here:
   46: '[h]:mm:ss',
   47: 'mmss.0',
   48: '##0.0E+0',
-  49: '@'
+  49: '@',
+```
+
+There are special implicit format codes identified in [ECMA-376] 18.8.30.
+Assuming zh-tw is the default:
+
+```
+  56: '"上午/下午 "hh"時"mm"分"ss"秒 "',
+```
+
+some writers erroneously emit 65535 for general:
+
+```
+  65535: 'General'
 };
 ```
 
@@ -345,7 +358,6 @@ For parentheses, explicitly resolve the sign issue:
   }
 ```
 
-
 Percentage values should be physically shifted:
 
 ```js>tmp/60_number.js
@@ -364,7 +376,6 @@ For exponents, get the exponent and mantissa and format them separately:
 For the special case of engineering notation, "shift" the decimal:
 
 ```
-    //if(fmt.match(/^#+0\.0E\+0$/))
     if(fmt == '##0.0E+0') {
       var period = fmt.length - 5;
       var ee = (Number(val.toExponential(0).substr(2+(val<0))))%period;
@@ -397,45 +408,57 @@ Fractions with known denominator are resolved by rounding:
 
 ```js>tmp/60_number.js
   var r, ff, aval = val < 0 ? -val : val, sign = val < 0 ? "-" : "";
-  if((r = fmt.match(/# (\?+) \/ (\d+)/))) {
-    var den = Number(r[2]), rnd = Math.round(aval * den), base = Math.floor(rnd/den);
+  if((r = fmt.match(/# (\?+)([ ]?)\/([ ]?)(\d+)/))) {
+    var den = Number(r[4]), rnd = Math.round(aval * den), base = Math.floor(rnd/den);
     var myn = (rnd - base*den), myd = den;
-    return sign + (base?base:"") + " " + (myn === 0 ? fill(" ", r[1].length + 1 + r[2].length) : pad(myn,r[1].length," ") + "/" + pad(myd,r[2].length));
+    return sign + (base?base:"") + " " + (myn === 0 ? fill(" ", r[1].length + 1 + r[4].length) : pad(myn,r[1].length," ") + r[2] + "/" + r[3] + pad(myd,r[4].length));
   }
 ```
 
 A few special general cases can be handled in a very dumb manner:
 
 ```
-  if(fmt.match(/^00*$/)) return (val<0?"-":"")+pad(Math.round(aval),fmt.length);
-  if(fmt.match(/^####*$/)) return Math.round(val);
+  if(fmt.match(/^00+$/)) return (val<0?"-":"")+pad(Math.round(aval),fmt.length);
+  if(fmt.match(/^[#?]+$/)) return String(Math.round(val)).replace(/^0$/,"");
+  if(r = fmt.match(/^#*0+\.(0+)/)) {
+    o = Math.round(val * Math.pow(10,r[1].length));
+    return String(o/Math.pow(10,r[1].length)).replace(/^([^\.]+)$/,"$1."+r[1]).replace(/\.$/,"."+r[1]).replace(/\.([0-9]*)$/,function($$, $1) { return "." + $1 + fill("0", r[1].length-$1.length); });
+  }
+```
+
+The frac helper function is used for fraction formats (defined below).
+
+```
+  if(r = fmt.match(/^# ([?]+)([ ]?)\/([ ]?)([?]+)/)) {
+    var rr = Math.min(Math.max(r[1].length, r[4].length),7);
+    ff = frac(aval, Math.pow(10,rr)-1, true);
+    return sign + (ff[0]||(ff[1] ? "" : "0")) + " " + (ff[1] ? pad(ff[1],rr," ") + r[2] + "/" + r[3] + rpad(ff[2],rr," "): fill(" ", 2*rr+1 + r[2].length + r[3].length));
+  }
 ```
 
 The default cases are hard-coded.  TODO: actually parse them
 
 ```js>tmp/60_number.js
   switch(fmt) {
-    case "0": return Math.round(val);
-    case "0.0": o = Math.round(val*10);
-      return String(o/10).replace(/^([^\.]+)$/,"$1.0").replace(/\.$/,".0");
-    case "0.00": o = Math.round(val*100);
-      return String(o/100).replace(/^([^\.]+)$/,"$1.00").replace(/\.$/,".00").replace(/\.([0-9])$/,".$1"+"0");
-    case "0.000": o = Math.round(val*1000);
-      return String(o/1000).replace(/^([^\.]+)$/,"$1.000").replace(/\.$/,".000").replace(/\.([0-9])$/,".$1"+"00").replace(/\.([0-9][0-9])$/,".$1"+"0");
+    case "0": case "#0": return Math.round(val);
     case "#.##": o = Math.round(val*100);
       return String(o/100).replace(/^([^\.]+)$/,"$1.").replace(/^0\.$/,".");
     case "#,###": var x = commaify(String(Math.round(aval))); return x !== "0" ? sign + x : "";
     case "#,##0": return sign + commaify(String(Math.round(aval)));
-    case "#,##0.0": r = Math.round((val-Math.floor(val))*10); return val < 0 ? "-" + write_num(type, fmt, -val) : commaify(String(Math.floor(val))) + "." + r;
-    case "#,##0.00": r = Math.round((val-Math.floor(val))*100); return val < 0 ? "-" + write_num(type, fmt, -val) : commaify(String(Math.floor(val))) + "." + (r < 10 ? "0"+r:r);
+    case "#,##0.0": r = Math.round((val-Math.floor(val))*10); return val < 0 ? "-" + write_num(type, fmt, -val) : commaify(String(Math.floor(val))) + "." + pad(r,1,"0");
+    case "#,##0.00": r = Math.round((val-Math.floor(val))*100); return val < 0 ? "-" + write_num(type, fmt, -val) : commaify(String(Math.floor(val))) + "." + pad(r,2,"0");
+    case "#,##0.000": r = Math.round((val-Math.floor(val))*1000); return val < 0 ? "-" + write_num(type, fmt, -val) : commaify(String(Math.floor(val))) + "." + pad(r,3,0);
+    case "#,##0.0000": r = Math.round((val-Math.floor(val))*10000); return val < 0 ? "-" + write_num(type, fmt, -val) : commaify(String(Math.floor(val))) + "." + pad(r,4,0);
+    case "#,##0.00000": r = Math.round((val-Math.floor(val))*Math.pow(10,5)); return val < 0 ? "-" + write_num(type, fmt, -val) : commaify(String(Math.floor(val))) + "." + pad(r,5,0);
+    case "#,##0.000000": r = Math.round((val-Math.floor(val))*Math.pow(10,6)); return val < 0 ? "-" + write_num(type, fmt, -val) : commaify(String(Math.floor(val))) + "." + pad(r,6,0);
+    case "#,##0.0000000": r = Math.round((val-Math.floor(val))*Math.pow(10,7)); return val < 0 ? "-" + write_num(type, fmt, -val) : commaify(String(Math.floor(val))) + "." + pad(r,7,0);
+    case "#,##0.00000000": r = Math.round((val-Math.floor(val))*Math.pow(10,8)); return val < 0 ? "-" + write_num(type, fmt, -val) : commaify(String(Math.floor(val))) + "." + pad(r,8,0);
+    case "#,##0.000000000": r = Math.round((val-Math.floor(val))*Math.pow(10,9)); return val < 0 ? "-" + write_num(type, fmt, -val) : commaify(String(Math.floor(val))) + "." + pad(r,9,0);
 ```
 
-The frac helper function is used for fraction formats (defined below).
+For now, the default case is an error:
 
 ```js>tmp/60_number.js
-    case "# ? / ?": ff = frac(aval, 9, true); return sign + (ff[0]||(ff[1] ? "" : "0")) + " " + (ff[1] === 0 ? "   " : ff[1] + "/" + ff[2]);
-    case "# ?? / ??": ff = frac(aval, 99, true); return sign + (ff[0]||(ff[1] ? "" : "0")) + " " + (ff[1] ? pad(ff[1],2," ") + "/" + rpad(ff[2],2," ") : "     ");
-    case "# ??? / ???": ff = frac(aval, 999, true); return sign + (ff[0]||(ff[1] ? "" : "0")) + " " + (ff[1] ? pad(ff[1],3," ") + "/" + rpad(ff[2],3," ") : "       ");
     default:
   }
   throw new Error("unsupported format |" + fmt + "|");
@@ -615,7 +638,7 @@ The default magic characters are listed in subsubsections 18.8.30-31 of ECMA376:
 ```
       case ' ': out.push({t:c,v:c}); ++i; break;
       default:
-        if("$-+/():!^&'~{}<>=".indexOf(c) === -1)
+        if(",$-+/():!^&'~{}<>=".indexOf(c) === -1)
           throw 'unrecognized character ' + fmt[i] + ' in ' + fmt;
         out.push({t:'t', v:c}); ++i; break;
     }
@@ -637,17 +660,17 @@ The default magic characters are listed in subsubsections 18.8.30-31 of ECMA376:
       case 'd': case 'm': case 'y': case 'h': case 'H': case 'M': case 's': case 'A': case 'e': case 'Z':
         out[i].v = write_date(out[i].t, out[i].v, dt);
         out[i].t = 't'; break;
-      case 'n': case '(':
+      case 'n': case '(': case '?':
         var jj = i+1;
-        while(out[jj] && ("?D".indexOf(out[jj].t) > -1 || (out[jj].t == " " && (out[jj+1]||{}).t === "?" ) || out[i].t == '(' && (out[jj].t == ')' || out[jj].t == 'n') || out[jj].t == 't' && (out[jj].v == '/' || out[jj].v == '$' || (out[jj].v == ' ' && (out[jj+1]||{}).t == '?')))) {
-          if(out[jj].v!==' ') out[i].v += ' ' + out[jj].v;
+        while(out[jj] && ("?D".indexOf(out[jj].t) > -1 || (" t".indexOf(out[jj].t) > -1 && "?t".indexOf((out[jj+1]||{}).t)>-1 && (out[jj+1].t == '?' || out[jj+1].v == '/')) || out[i].t == '(' && (out[jj].t == ')' || out[jj].t == 'n') || out[jj].t == 't' && (out[jj].v == '/' || out[jj].v == '$' || (out[jj].v == ' ' && (out[jj+1]||{}).t == '?')))) {
+          out[i].v += out[jj].v;
           delete out[jj]; ++jj;
         }
         out[i].v = write_num(out[i].t, out[i].v, v);
         out[i].t = 't';
         i = jj-1; break;
       case 'G': out[i].t = 't'; out[i].v = general_fmt(v,opts); break;
-      default: throw "unrecognized type " + out[i].t;
+      default: console.error(out); throw "unrecognized type " + out[i].t;
     }
   }
   return out.map(function(x){return x.v;}).join("");
@@ -730,7 +753,6 @@ should be a two-digit year, but `ee` in excel is actually the four-digit year:
 ```
     /* TODO: handle the ECMA spec format ee -> yy */
     case 'e': { return val.y; } break;
-    case 'A': return (val.h>=12 ? 'P' : 'A') + fmt.substr(1);
     default: throw 'bad format type ' + type + ' in ' + fmt;
   }
 };
@@ -867,6 +889,7 @@ if(typeof module !== 'undefined' && typeof DO_NOT_EXPORT_SSF === 'undefined') mo
 ```bash>tmp/post.sh
 #!/bin/bash
 npm install
+echo "SSF.version = '"`grep version package.json | awk '{gsub(/[^0-9\.]/,"",$2); print $2}'`"';" > tmp/01_version.js
 cat tmp/*.js > ssf.js
 ```
 
@@ -927,7 +950,7 @@ coveralls:
 ```json>package.json
 {
   "name": "ssf",
-  "version": "0.5.2",
+  "version": "0.5.3",
   "author": "SheetJS",
   "description": "pure-JS library to format data using ECMA-376 spreadsheet Format Codes",
   "keywords": [ "format", "sprintf", "spreadsheet" ],

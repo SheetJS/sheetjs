@@ -5,6 +5,7 @@ var _strrev = function(x) { return String(x).split("").reverse().join("");};
 function fill(c,l) { return new Array(l+1).join(c); }
 function pad(v,d,c){var t=String(v);return t.length>=d?t:(fill(c||0,d-t.length)+t);}
 function rpad(v,d,c){var t=String(v);return t.length>=d?t:(t+fill(c||0,d-t.length));}
+SSF.version = '0.5.3';
 /* Options */
 var opts_fmt = {};
 function fixopts(o){for(var y in opts_fmt) if(o[y]===undefined) o[y]=opts_fmt[y];}
@@ -40,7 +41,9 @@ var table_fmt = {
   46: '[h]:mm:ss',
   47: 'mmss.0',
   48: '##0.0E+0',
-  49: '@'
+  49: '@',
+  56: '"上午/下午 "hh"時"mm"分"ss"秒 "',
+  65535: 'General'
 };
 var days = [
   ['Sun', 'Sunday'],
@@ -192,7 +195,6 @@ var write_date = function(type, fmt, val) {
     } return fmt.length === 3 ? o : pad(o, 2);
     /* TODO: handle the ECMA spec format ee -> yy */
     case 'e': { return val.y; } break;
-    case 'A': return (val.h>=12 ? 'P' : 'A') + fmt.substr(1);
     default: throw 'bad format type ' + type + ' in ' + fmt;
   }
 };
@@ -209,7 +211,6 @@ var write_num = function(type, fmt, val) {
   if(mul !== 0) return write_num(type, fmt, val * Math.pow(10,2*mul)) + fill("%",mul);
   if(fmt.indexOf("E") > -1) {
     var idx = fmt.indexOf("E") - fmt.indexOf(".") - 1;
-    //if(fmt.match(/^#+0\.0E\+0$/))
     if(fmt == '##0.0E+0') {
       var period = fmt.length - 5;
       var ee = (Number(val.toExponential(0).substr(2+(val<0))))%period;
@@ -227,30 +228,37 @@ var write_num = function(type, fmt, val) {
   }
   if(fmt[0] === "$") return "$"+write_num(type,fmt.substr(fmt[1]==' '?2:1),val);
   var r, ff, aval = val < 0 ? -val : val, sign = val < 0 ? "-" : "";
-  if((r = fmt.match(/# (\?+) \/ (\d+)/))) {
-    var den = Number(r[2]), rnd = Math.round(aval * den), base = Math.floor(rnd/den);
+  if((r = fmt.match(/# (\?+)([ ]?)\/([ ]?)(\d+)/))) {
+    var den = Number(r[4]), rnd = Math.round(aval * den), base = Math.floor(rnd/den);
     var myn = (rnd - base*den), myd = den;
-    return sign + (base?base:"") + " " + (myn === 0 ? fill(" ", r[1].length + 1 + r[2].length) : pad(myn,r[1].length," ") + "/" + pad(myd,r[2].length));
+    return sign + (base?base:"") + " " + (myn === 0 ? fill(" ", r[1].length + 1 + r[4].length) : pad(myn,r[1].length," ") + r[2] + "/" + r[3] + pad(myd,r[4].length));
   }
-  if(fmt.match(/^00*$/)) return (val<0?"-":"")+pad(Math.round(aval),fmt.length);
-  if(fmt.match(/^####*$/)) return Math.round(val);
+  if(fmt.match(/^00+$/)) return (val<0?"-":"")+pad(Math.round(aval),fmt.length);
+  if(fmt.match(/^[#?]+$/)) return String(Math.round(val)).replace(/^0$/,"");
+  if(r = fmt.match(/^#*0+\.(0+)/)) {
+    o = Math.round(val * Math.pow(10,r[1].length));
+    return String(o/Math.pow(10,r[1].length)).replace(/^([^\.]+)$/,"$1."+r[1]).replace(/\.$/,"."+r[1]).replace(/\.([0-9]*)$/,function($$, $1) { return "." + $1 + fill("0", r[1].length-$1.length); });
+  }
+  if(r = fmt.match(/^# ([?]+)([ ]?)\/([ ]?)([?]+)/)) {
+    var rr = Math.min(Math.max(r[1].length, r[4].length),7);
+    ff = frac(aval, Math.pow(10,rr)-1, true);
+    return sign + (ff[0]||(ff[1] ? "" : "0")) + " " + (ff[1] ? pad(ff[1],rr," ") + r[2] + "/" + r[3] + rpad(ff[2],rr," "): fill(" ", 2*rr+1 + r[2].length + r[3].length));
+  }
   switch(fmt) {
-    case "0": return Math.round(val);
-    case "0.0": o = Math.round(val*10);
-      return String(o/10).replace(/^([^\.]+)$/,"$1.0").replace(/\.$/,".0");
-    case "0.00": o = Math.round(val*100);
-      return String(o/100).replace(/^([^\.]+)$/,"$1.00").replace(/\.$/,".00").replace(/\.([0-9])$/,".$1"+"0");
-    case "0.000": o = Math.round(val*1000);
-      return String(o/1000).replace(/^([^\.]+)$/,"$1.000").replace(/\.$/,".000").replace(/\.([0-9])$/,".$1"+"00").replace(/\.([0-9][0-9])$/,".$1"+"0");
+    case "0": case "#0": return Math.round(val);
     case "#.##": o = Math.round(val*100);
       return String(o/100).replace(/^([^\.]+)$/,"$1.").replace(/^0\.$/,".");
     case "#,###": var x = commaify(String(Math.round(aval))); return x !== "0" ? sign + x : "";
     case "#,##0": return sign + commaify(String(Math.round(aval)));
-    case "#,##0.0": r = Math.round((val-Math.floor(val))*10); return val < 0 ? "-" + write_num(type, fmt, -val) : commaify(String(Math.floor(val))) + "." + r;
-    case "#,##0.00": r = Math.round((val-Math.floor(val))*100); return val < 0 ? "-" + write_num(type, fmt, -val) : commaify(String(Math.floor(val))) + "." + (r < 10 ? "0"+r:r);
-    case "# ? / ?": ff = frac(aval, 9, true); return sign + (ff[0]||(ff[1] ? "" : "0")) + " " + (ff[1] === 0 ? "   " : ff[1] + "/" + ff[2]);
-    case "# ?? / ??": ff = frac(aval, 99, true); return sign + (ff[0]||(ff[1] ? "" : "0")) + " " + (ff[1] ? pad(ff[1],2," ") + "/" + rpad(ff[2],2," ") : "     ");
-    case "# ??? / ???": ff = frac(aval, 999, true); return sign + (ff[0]||(ff[1] ? "" : "0")) + " " + (ff[1] ? pad(ff[1],3," ") + "/" + rpad(ff[2],3," ") : "       ");
+    case "#,##0.0": r = Math.round((val-Math.floor(val))*10); return val < 0 ? "-" + write_num(type, fmt, -val) : commaify(String(Math.floor(val))) + "." + pad(r,1,"0");
+    case "#,##0.00": r = Math.round((val-Math.floor(val))*100); return val < 0 ? "-" + write_num(type, fmt, -val) : commaify(String(Math.floor(val))) + "." + pad(r,2,"0");
+    case "#,##0.000": r = Math.round((val-Math.floor(val))*1000); return val < 0 ? "-" + write_num(type, fmt, -val) : commaify(String(Math.floor(val))) + "." + pad(r,3,0);
+    case "#,##0.0000": r = Math.round((val-Math.floor(val))*10000); return val < 0 ? "-" + write_num(type, fmt, -val) : commaify(String(Math.floor(val))) + "." + pad(r,4,0);
+    case "#,##0.00000": r = Math.round((val-Math.floor(val))*Math.pow(10,5)); return val < 0 ? "-" + write_num(type, fmt, -val) : commaify(String(Math.floor(val))) + "." + pad(r,5,0);
+    case "#,##0.000000": r = Math.round((val-Math.floor(val))*Math.pow(10,6)); return val < 0 ? "-" + write_num(type, fmt, -val) : commaify(String(Math.floor(val))) + "." + pad(r,6,0);
+    case "#,##0.0000000": r = Math.round((val-Math.floor(val))*Math.pow(10,7)); return val < 0 ? "-" + write_num(type, fmt, -val) : commaify(String(Math.floor(val))) + "." + pad(r,7,0);
+    case "#,##0.00000000": r = Math.round((val-Math.floor(val))*Math.pow(10,8)); return val < 0 ? "-" + write_num(type, fmt, -val) : commaify(String(Math.floor(val))) + "." + pad(r,8,0);
+    case "#,##0.000000000": r = Math.round((val-Math.floor(val))*Math.pow(10,9)); return val < 0 ? "-" + write_num(type, fmt, -val) : commaify(String(Math.floor(val))) + "." + pad(r,9,0);
     default:
   }
   throw new Error("unsupported format |" + fmt + "|");
@@ -335,7 +343,7 @@ function eval_fmt(fmt, v, opts, flen) {
         out.push({t:'D', v:o}); break;
       case ' ': out.push({t:c,v:c}); ++i; break;
       default:
-        if("$-+/():!^&'~{}<>=".indexOf(c) === -1)
+        if(",$-+/():!^&'~{}<>=".indexOf(c) === -1)
           throw 'unrecognized character ' + fmt[i] + ' in ' + fmt;
         out.push({t:'t', v:c}); ++i; break;
     }
@@ -357,17 +365,17 @@ function eval_fmt(fmt, v, opts, flen) {
       case 'd': case 'm': case 'y': case 'h': case 'H': case 'M': case 's': case 'A': case 'e': case 'Z':
         out[i].v = write_date(out[i].t, out[i].v, dt);
         out[i].t = 't'; break;
-      case 'n': case '(':
+      case 'n': case '(': case '?':
         var jj = i+1;
-        while(out[jj] && ("?D".indexOf(out[jj].t) > -1 || (out[jj].t == " " && (out[jj+1]||{}).t === "?" ) || out[i].t == '(' && (out[jj].t == ')' || out[jj].t == 'n') || out[jj].t == 't' && (out[jj].v == '/' || out[jj].v == '$' || (out[jj].v == ' ' && (out[jj+1]||{}).t == '?')))) {
-          if(out[jj].v!==' ') out[i].v += ' ' + out[jj].v;
+        while(out[jj] && ("?D".indexOf(out[jj].t) > -1 || (" t".indexOf(out[jj].t) > -1 && "?t".indexOf((out[jj+1]||{}).t)>-1 && (out[jj+1].t == '?' || out[jj+1].v == '/')) || out[i].t == '(' && (out[jj].t == ')' || out[jj].t == 'n') || out[jj].t == 't' && (out[jj].v == '/' || out[jj].v == '$' || (out[jj].v == ' ' && (out[jj+1]||{}).t == '?')))) {
+          out[i].v += out[jj].v;
           delete out[jj]; ++jj;
         }
         out[i].v = write_num(out[i].t, out[i].v, v);
         out[i].t = 't';
         i = jj-1; break;
       case 'G': out[i].t = 't'; out[i].v = general_fmt(v,opts); break;
-      default: throw "unrecognized type " + out[i].t;
+      default: console.error(out); throw "unrecognized type " + out[i].t;
     }
   }
   return out.map(function(x){return x.v;}).join("");
