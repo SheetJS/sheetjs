@@ -162,17 +162,17 @@ function parseSheet(data) {
 			}
 
 			/* formatting */
-			if(cell.s && styles.CellXf) { /* TODO: second check is a hacked guard */
+			var fmtid = 0;
+			if(cell.s && styles.CellXf) {
 				var cf = styles.CellXf[cell.s];
-				if(cf && cf.numFmtId && cf.numFmtId !== 0) {
+				if(cf && cf.numFmtId) fmtid = cf.numFmtId;
+			}
 					p.raw = p.v;
 					p.rawt = p.t;
 					try {
-						p.v = SSF.format(cf.numFmtId,p.v,_ssfopts);
+				p.v = SSF.format(fmtid,p.v,_ssfopts);
 						p.t = 'str';
-					} catch(e) { p.v = p.raw; }
-				}
-			}
+			} catch(e) { p.v = p.raw; p.t = p.rawt; }
 
 			s[cell.r] = p;
 		});
@@ -456,19 +456,19 @@ function parseRels(data, currentFilePath) {
 	var rels = {};
 
 	var resolveRelativePathIntoAbsolute = function (to) {
-	    var toksFrom = currentFilePath.split('/');
-	 	toksFrom.pop(); // folder path
-	    var toksTo = to.split('/');
-	    var reversed = [];
-	    while (toksTo.length !== 0) {
-	        var tokTo = toksTo.shift();
-	        if (tokTo === '..') {
-	            toksFrom.pop();
-	        } else if (tokTo !== '.') {
-	            toksFrom.push(tokTo);
-	        }
-	    }
-	    return toksFrom.join('/');
+		var toksFrom = currentFilePath.split('/');
+		toksFrom.pop(); // folder path
+		var toksTo = to.split('/');
+		var reversed = [];
+		while (toksTo.length !== 0) {
+			var tokTo = toksTo.shift();
+			if (tokTo === '..') {
+				toksFrom.pop();
+			} else if (tokTo !== '.') {
+				toksFrom.push(tokTo);
+			}
+		}
+		return toksFrom.join('/');
 	}
 
 	data.match(/<[^>]*>/g).forEach(function(x) {

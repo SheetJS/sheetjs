@@ -104,13 +104,13 @@ var general_fmt = function(v) {
 		else if(V >= 0.0001 && V < 0.001) o = v.toPrecision(6);
 		else if(V >= Math.pow(10,10) && V < Math.pow(10,11)) o = v.toFixed(10).substr(0,12);
 		else if(V > Math.pow(10,-9) && V < Math.pow(10,11)) {
-			o = v.toFixed(12).replace(/(\.[0-9]*[1-9])0*$/,"$1").replace(/\.$/,""); 
+			o = v.toFixed(12).replace(/(\.[0-9]*[1-9])0*$/,"$1").replace(/\.$/,"");
 			if(o.length > 11+(v<0?1:0)) o = v.toPrecision(10);
 			if(o.length > 11+(v<0?1:0)) o = v.toExponential(5);
-		} 
+		}
 		else {
 			o = v.toFixed(11).replace(/(\.[0-9]*[1-9])0*$/,"$1");
-				if(o.length > 11 + (v<0?1:0)) o = v.toPrecision(6); 
+				if(o.length > 11 + (v<0?1:0)) o = v.toPrecision(6);
 		}
 		o = o.replace(/(\.[0-9]*[1-9])0+e/,"$1e").replace(/\.0*e/,"e");
 		return o.replace("e","E").replace(/\.0*$/,"").replace(/\.([0-9]*[^0])0*$/,".$1").replace(/(E[+-])([0-9])$/,"$1"+"0"+"$2");
@@ -419,7 +419,7 @@ SSF.load_table = function(tbl) { for(var i=0; i!=0x0188; ++i) if(tbl[i]) SSF.loa
 make_ssf(SSF);
 var XLSX = {};
 (function(XLSX){
-XLSX.version = '0.3.8';
+XLSX.version = '0.3.9';
 function parsexmltag(tag) {
 	var words = tag.split(/\s+/);
 	var z = {'0': words[0]};
@@ -788,17 +788,17 @@ function parseSheet(data) {
 			}
 
 			/* formatting */
-			if(cell.s && styles.CellXf) { /* TODO: second check is a hacked guard */
+			var fmtid = 0;
+			if(cell.s && styles.CellXf) {
 				var cf = styles.CellXf[cell.s];
-				if(cf && cf.numFmtId && cf.numFmtId !== 0) {
+				if(cf && cf.numFmtId) fmtid = cf.numFmtId;
+			}
 					p.raw = p.v;
 					p.rawt = p.t;
 					try {
-						p.v = SSF.format(cf.numFmtId,p.v,_ssfopts);
+				p.v = SSF.format(fmtid,p.v,_ssfopts);
 						p.t = 'str';
-					} catch(e) { p.v = p.raw; }
-				}
-			}
+			} catch(e) { p.v = p.raw; p.t = p.rawt; }
 
 			s[cell.r] = p;
 		});
@@ -1082,19 +1082,19 @@ function parseRels(data, currentFilePath) {
 	var rels = {};
 
 	var resolveRelativePathIntoAbsolute = function (to) {
-	    var toksFrom = currentFilePath.split('/');
-	 	toksFrom.pop(); // folder path
-	    var toksTo = to.split('/');
-	    var reversed = [];
-	    while (toksTo.length !== 0) {
-	        var tokTo = toksTo.shift();
-	        if (tokTo === '..') {
-	            toksFrom.pop();
-	        } else if (tokTo !== '.') {
-	            toksFrom.push(tokTo);
-	        }
-	    }
-	    return toksFrom.join('/');
+		var toksFrom = currentFilePath.split('/');
+		toksFrom.pop(); // folder path
+		var toksTo = to.split('/');
+		var reversed = [];
+		while (toksTo.length !== 0) {
+			var tokTo = toksTo.shift();
+			if (tokTo === '..') {
+				toksFrom.pop();
+			} else if (tokTo !== '.') {
+				toksFrom.push(tokTo);
+			}
+		}
+		return toksFrom.join('/');
 	}
 
 	data.match(/<[^>]*>/g).forEach(function(x) {
@@ -1304,15 +1304,14 @@ function sheet_to_row_object_array(sheet, opts){
 	var val, row, r, hdr = {}, isempty, R, C, v;
 	var out = [];
 	opts = opts || {};
-	if(!sheet["!ref"]) return out;
+	if(!sheet || !sheet["!ref"]) return out;
 	r = XLSX.utils.decode_range(sheet["!ref"]);
 	for(R=r.s.r, C = r.s.c; C <= r.e.c; ++C) {
 		val = sheet[encode_cell({c:C,r:R})];
-		if(val){
-			switch(val.t) {
-				case 's': case 'str': hdr[C] = val.v; break;
-				case 'n': hdr[C] = val.v; break;
-			}
+		if(!val) continue;
+		switch(val.t) {
+			case 's': case 'str': hdr[C] = val.v; break;
+			case 'n': hdr[C] = val.v; break;
 		}
 	}
 
@@ -1322,7 +1321,7 @@ function sheet_to_row_object_array(sheet, opts){
 		row = Object.create({ __rowNum__ : R });
 		for (C = r.s.c; C <= r.e.c; ++C) {
 			val = sheet[encode_cell({c: C,r: R})];
-			if(!val) continue;
+			if(!val || !val.t) continue;
 			v = (val || {}).v;
 			switch(val.t){
 				case 's': case 'str': case 'b': case 'n':
@@ -1355,7 +1354,7 @@ function sheet_to_csv(sheet, opts) {
 	};
 	var out = "", txt = "";
 	opts = opts || {};
-	if(!sheet["!ref"]) return out;
+	if(!sheet || !sheet["!ref"]) return out;
 	var r = XLSX.utils.decode_range(sheet["!ref"]);
 	for(var R = r.s.r; R <= r.e.r; ++R) {
 		var row = [];

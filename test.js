@@ -29,6 +29,20 @@ function parsetest(x, wb) {
 			});
 		});
 	});
+	describe(x + ' should generate JSON', function() {
+		wb.SheetNames.forEach(function(ws, i) {
+			it('#' + i + ' (' + ws + ')', function() {
+				var json = XLSX.utils.sheet_to_row_object_array(wb.Sheets[ws]);
+			});
+		});
+	});
+	describe(x + ' should generate formulae', function() {
+		wb.SheetNames.forEach(function(ws, i) {
+			it('#' + i + ' (' + ws + ')', function() {
+				var json = XLSX.utils.get_formulae(wb.Sheets[ws]);
+			});
+		});
+	});
 	describe(x + ' should generate correct output', function() {
 		wb.SheetNames.forEach(function(ws, i) {
 			var name = ('./test_files/' + x + '.' + i + '.csv');

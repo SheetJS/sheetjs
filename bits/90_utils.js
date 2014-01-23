@@ -15,15 +15,14 @@ function sheet_to_row_object_array(sheet, opts){
 	var val, row, r, hdr = {}, isempty, R, C, v;
 	var out = [];
 	opts = opts || {};
-	if(!sheet["!ref"]) return out;
+	if(!sheet || !sheet["!ref"]) return out;
 	r = XLSX.utils.decode_range(sheet["!ref"]);
 	for(R=r.s.r, C = r.s.c; C <= r.e.c; ++C) {
 		val = sheet[encode_cell({c:C,r:R})];
-		if(val){
-			switch(val.t) {
-				case 's': case 'str': hdr[C] = val.v; break;
-				case 'n': hdr[C] = val.v; break;
-			}
+		if(!val) continue;
+		switch(val.t) {
+			case 's': case 'str': hdr[C] = val.v; break;
+			case 'n': hdr[C] = val.v; break;
 		}
 	}
 
@@ -33,7 +32,7 @@ function sheet_to_row_object_array(sheet, opts){
 		row = Object.create({ __rowNum__ : R });
 		for (C = r.s.c; C <= r.e.c; ++C) {
 			val = sheet[encode_cell({c: C,r: R})];
-			if(!val) continue;
+			if(!val || !val.t) continue;
 			v = (val || {}).v;
 			switch(val.t){
 				case 's': case 'str': case 'b': case 'n':
@@ -66,7 +65,7 @@ function sheet_to_csv(sheet, opts) {
 	};
 	var out = "", txt = "";
 	opts = opts || {};
-	if(!sheet["!ref"]) return out;
+	if(!sheet || !sheet["!ref"]) return out;
 	var r = XLSX.utils.decode_range(sheet["!ref"]);
 	for(var R = r.s.r; R <= r.e.r; ++R) {
 		var row = [];

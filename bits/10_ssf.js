@@ -101,13 +101,13 @@ var general_fmt = function(v) {
 		else if(V >= 0.0001 && V < 0.001) o = v.toPrecision(6);
 		else if(V >= Math.pow(10,10) && V < Math.pow(10,11)) o = v.toFixed(10).substr(0,12);
 		else if(V > Math.pow(10,-9) && V < Math.pow(10,11)) {
-			o = v.toFixed(12).replace(/(\.[0-9]*[1-9])0*$/,"$1").replace(/\.$/,""); 
+			o = v.toFixed(12).replace(/(\.[0-9]*[1-9])0*$/,"$1").replace(/\.$/,"");
 			if(o.length > 11+(v<0?1:0)) o = v.toPrecision(10);
 			if(o.length > 11+(v<0?1:0)) o = v.toExponential(5);
-		} 
+		}
 		else {
 			o = v.toFixed(11).replace(/(\.[0-9]*[1-9])0*$/,"$1");
-				if(o.length > 11 + (v<0?1:0)) o = v.toPrecision(6); 
+				if(o.length > 11 + (v<0?1:0)) o = v.toPrecision(6);
 		}
 		o = o.replace(/(\.[0-9]*[1-9])0+e/,"$1e").replace(/\.0*e/,"e");
 		return o.replace("e","E").replace(/\.0*$/,"").replace(/\.([0-9]*[^0])0*$/,".$1").replace(/(E[+-])([0-9])$/,"$1"+"0"+"$2");
