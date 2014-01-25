@@ -1,6 +1,7 @@
 
 var ct2type = {
 	"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml": "workbooks",
+	"application/vnd.ms-excel.sheet.macroEnabled.main+xml":"workbooks", /*XLSM*/
 	"application/vnd.openxmlformats-package.core-properties+xml": "coreprops",
 	"application/vnd.openxmlformats-officedocument.extended-properties+xml": "extprops",
 	"application/vnd.openxmlformats-officedocument.spreadsheetml.calcChain+xml": "calcchains",
