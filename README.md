@@ -1,7 +1,7 @@
 # xlsx
 
-Currently a parser for XLSX and XLSM files.  Cleanroom implementation from the 
-ISO 29500  Office Open XML specifications and related documents.
+Currently a parser for XLSX/XLSM/XLSB files.  Cleanroom implementation from the 
+ISO 29500  Office Open XML specifications, [MS-XLSB], and related documents.
 
 ## Installation
 
@@ -17,7 +17,7 @@ In the browser:
 
 ## Usage
 
-The node version installs a binary `xlsx2csv` which can read XLSX/XLSM files and output the contents in various formats.  The source is available at `xlsx2csv.njs` in the bin directory.
+The node version installs a binary `xlsx2csv` which can read XLSX/XLSM/XLSB files and output the contents in various formats.  The source is available at `xlsx2csv.njs` in the bin directory.
 
 See <http://oss.sheetjs.com/js-xlsx/> for a browser example. 
 
@@ -92,6 +92,7 @@ ISO/IEC 29500:2012(E) "Information technology — Document description and proce
 OSP-covered specifications:
 
  - [MS-XLSX]: Excel (.xlsx) Extensions to the Office Open XML SpreadsheetML File Format
+ - [MS-XLSB]: Excel (.xlsb) Binary File Format
 
 ## Badges
 

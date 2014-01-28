@@ -3,7 +3,11 @@ var XLSX;
 var fs = require('fs'), assert = require('assert');
 describe('source',function(){ it('should load', function(){ XLSX = require('./'); });});
 
-var files = (fs.existsSync('tests.lst') ? fs.readFileSync('tests.lst', 'utf-8').split("\n") : fs.readdirSync('test_files')).filter(function(x){return x.substr(-5)==".xlsx" || x.substr(-13)==".xlsx.pending"});
+var ex = [".xlsb", ".xlsm", ".xlsx"];
+var exp = ex.map(function(x){ return x + ".pending"; }); 
+function test_file(x){return ex.indexOf(x.substr(-5))>=0||exp.indexOf(x.substr(-13))>=0;}
+
+var files = (fs.existsSync('tests.lst') ? fs.readFileSync('tests.lst', 'utf-8').split("\n") : fs.readdirSync('test_files')).filter(test_file);
 
 /* Excel enforces 31 character sheet limit, although technical file limit is 255 */
 function fixsheetname(x) { return x.substr(0,31); }
@@ -67,7 +71,7 @@ describe('should parse test files', function() {
 describe('should have comment as part of cell\'s properties', function(){
 	var ws;
 	before(function() {
-		XLSX = require('./xlsx');
+		XLSX = require('./');
 		var wb = XLSX.readFile('./test_files/apachepoi_SimpleWithComments.xlsx');
 		var sheetName = 'Sheet1';
 		ws = wb.Sheets[sheetName];

@@ -1,0 +1,2 @@
+var styles = {}; // shared styles
+

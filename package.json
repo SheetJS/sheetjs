@@ -1,9 +1,9 @@
 {
 	"name": "xlsx",
-	"version": "0.3.10",
+	"version": "0.4.0",
 	"author": "sheetjs",
-	"description": "(one day) a full-featured XLSX parser and writer.  For now, primitive parser",
-	"keywords": [ "xlsx", "office", "excel", "spreadsheet" ],
+	"description": "XLSB / XLSX / XLSM parser",
+	"keywords": [ "xlsx", "xlsb", "xlsm", "office", "excel", "spreadsheet" ],
 	"bin": {
 		"xlsx2csv": "./bin/xlsx2csv.njs"
 	},

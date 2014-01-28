@@ -4,8 +4,8 @@ TARGET=xlsx.js
 $(TARGET): $(DEPS)
 	cat $^ > $@
 
-bits/51_version.js: package.json
-	echo "XLSX.version = '"`grep version package.json | awk '{gsub(/[^0-9\.]/,"",$$2); print $$2}'`"';" > bits/51_version.js
+bits/31_version.js: package.json
+	echo "XLSX.version = '"`grep version package.json | awk '{gsub(/[^0-9\.]/,"",$$2); print $$2}'`"';" > $@ 
 
 .PHONY: clean
 clean:

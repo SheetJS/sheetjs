@@ -7,6 +7,12 @@ function parsexmltag(tag) {
 	return z;
 }
 
+function evert(obj) { 
+	var o = {};
+	Object.keys(obj).forEach(function(k) { if(obj.hasOwnProperty(k)) o[obj[k]] = k; });
+	return o;
+}
+
 var encodings = {
 	'&quot;': '"',
 	'&apos;': "'",
@@ -14,13 +20,21 @@ var encodings = {
 	'&lt;': '<',
 	'&amp;': '&'
 };
-
+var rencoding = evert(encodings); 
+var rencstr = "&<>'\"".split("");
+ 
 // TODO: CP remap (need to read file version to determine OS)
 function unescapexml(text){
 	var s = text + '';
 	for(var y in encodings) s = s.replace(new RegExp(y,'g'), encodings[y]);
 	return s.replace(/_x([0-9a-fA-F]*)_/g,function(m,c) {return _chr(parseInt(c,16));});
 }
+function escapexml(text){
+	var s = text + '';
+	rencstr.forEach(function(y){s=s.replace(new RegExp(y,'g'), rencoding[y]);});
+	return s;
+}
+
 
 function parsexmlbool(value, tag) {
 	switch(value) {

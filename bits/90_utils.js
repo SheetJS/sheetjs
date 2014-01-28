@@ -59,7 +59,7 @@ function sheet_to_csv(sheet, opts) {
 				if(typeof val.v === 'undefined') return "";
 				return JSON.stringify(val.v);
 			case 'b': return val.v ? "TRUE" : "FALSE";
-			case 'e': return ""; /* throw out value in case of error */
+			case 'e': return val.v; /* throw out value in case of error */
 			default: throw 'unrecognized type ' + val.t;
 		}
 	};

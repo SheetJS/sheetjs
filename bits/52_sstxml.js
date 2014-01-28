@@ -124,15 +124,14 @@ var parse_si = function(x) {
 };
 
 /* 18.4 Shared String Table */
-var parse_sst = (function(){
-	return function(data) {
-		var s = [];
-		/* 18.4.9 sst CT_Sst */
-		var sst = data.match(new RegExp("<sst([^>]*)>([\\s\\S]*)<\/sst>","m"));
-		if(isval(sst)) {
-			s = sst[2].replace(/<si>/g,"").split(/<\/si>/).map(parse_si);
-			sst = parsexmltag(sst[1]); s.Count = sst.count; s.Unique = sst.uniqueCount;
-		}
-		return s;
-	};
-})();
+var parse_sst_xml = function(data) {
+	var s = [];
+	/* 18.4.9 sst CT_Sst */
+	var sst = data.match(new RegExp("<sst([^>]*)>([\\s\\S]*)<\/sst>","m"));
+	if(isval(sst)) {
+		s = sst[2].replace(/<si>/g,"").split(/<\/si>/).map(parse_si);
+		sst = parsexmltag(sst[1]); s.Count = sst.count; s.Unique = sst.uniqueCount;
+	}
+	return s;
+};
+

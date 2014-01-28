@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- xlsx.js (C) 2013-2014 SheetJS http://sheetjs.com -->
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
@@ -19,12 +20,12 @@
 </style>
 </head>
 <body>
-<b>JS-XLSX Live Demo</b><br />
+<b>JS-XLSX (XLSX/XLSB/XLSM) Live Demo</b><br />
 <input type="radio" name="format" value="csv" checked> CSV<br>
 <input type="radio" name="format" value="json"> JSON<br>
 <input type="radio" name="format" value="form"> FORMULAE<br>
 
-<div id="drop">Drop an XLSX or XLSM file here to see sheet data.</div>
+<div id="drop">Drop an XLSX or XLSM or XLSB file here to see sheet data.</div>
 <textarea id="b64data">... or paste a base64-encoding here</textarea>
 <input type="button" id="dotext" value="Click here to process the base64 text" onclick="b64it();"/>
 <pre id="out"></pre>
