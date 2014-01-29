@@ -22,10 +22,10 @@ function parse_worksheet(data) {
 		if(refguess.e.r < row.r - 1) refguess.e.r = row.r - 1;
 
 		/* 18.3.1.4 c CT_Cell */
-		var cells = x.substr(x.indexOf('>')+1).split(/<c/);
+		var cells = x.substr(x.indexOf('>')+1).split(/<c /);
 		cells.forEach(function(c, idx) { if(c === "" || c.trim() === "") return;
 			var cref = c.match(/r="([^"]*)"/);
-			c = "<c" + c;
+			c = "<c " + c;
 			if(cref && cref.length == 2) {
 				var cref_cell = decode_cell(cref[1]);
 				idx = cref_cell.c;
@@ -47,9 +47,11 @@ function parse_worksheet(data) {
 					p.v = strs[sidx].t;
 					p.r = strs[sidx].r;
 				} break;
-				case 'str': if(p.v) p.v = utf8read(p.v); break; // normal string
+				case 'str': if(p.v) p.v = utf8read(p.v); break;
 				case 'inlineStr':
-					p.t = 'str'; p.v = unescapexml((d.match(matchtag('t'))||["",""])[1]);
+					var is = d.match(/<is>(.*)<\/is>/);
+					is = is ? parse_si(is[1]) : {t:"",r:""};
+					p.t = 'str'; p.v = is.t;
 					break; // inline string
 				case 'b':
 					switch(p.v) {

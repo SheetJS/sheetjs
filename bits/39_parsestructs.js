@@ -4,11 +4,11 @@ var parse_RichStr = function(data, length) {
 	var flags = data.read_shift(1);
 	var fRichStr = flags & 1, fExtStr = flags & 2;
 	var str = parse_XLWideString(data);
-	z = {
+	var z = {
 		t: str,
 		raw:"<t>" + escapexml(str) + "</t>",
 		r: str
-	}
+	};
 	if(fRichStr) {
 		/* TODO: formatted string */
 		var dwSizeStrRun = data.read_shift(4);
@@ -53,7 +53,7 @@ var parse_UncheckedRfX = function(data) {
 	cell.s.c = data.read_shift(4);
 	cell.e.c = data.read_shift(4);
 	return cell;
-}
+};
 
 /* [MS-XLSB] 2.5.166 */
 var parse_XLNullableWideString = function(data) {

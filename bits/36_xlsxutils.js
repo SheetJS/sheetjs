@@ -7,7 +7,7 @@ function parsexmltag(tag) {
 	return z;
 }
 
-function evert(obj) { 
+function evert(obj) {
 	var o = {};
 	Object.keys(obj).forEach(function(k) { if(obj.hasOwnProperty(k)) o[obj[k]] = k; });
 	return o;
@@ -20,9 +20,9 @@ var encodings = {
 	'&lt;': '<',
 	'&amp;': '&'
 };
-var rencoding = evert(encodings); 
+var rencoding = evert(encodings);
 var rencstr = "&<>'\"".split("");
- 
+
 // TODO: CP remap (need to read file version to determine OS)
 function unescapexml(text){
 	var s = text + '';

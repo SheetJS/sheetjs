@@ -107,7 +107,7 @@ var parse_si = function(x) {
 	var y;
 	/* 18.4.12 t ST_Xstring (Plaintext String) */
 	if(x[1] === 't') {
-		z.t = utf8read(unescapexml(x.replace(/<[^>]*>/g,"")));
+		z.t = utf8read(unescapexml(x.substr(x.indexOf(">")+1).split(/<\/t>/)[0]));
 		z.raw = x;
 		z.r = z.t;
 	}

@@ -23,6 +23,7 @@ function parseZip(zip) {
 	if(dir.calcchain) deps=parseDeps(getdata(getzipfile(zip, dir.calcchain.replace(/^\//,''))));
 	var sheets = {}, i=0;
 	var sheetRels = {};
+	var path, relsPath;
 	if(!props.Worksheets) {
 		/* Google Docs doesn't generate the appropriate metadata, so we impute: */
 		var wbsheets = wb.Sheets;
@@ -33,8 +34,8 @@ function parseZip(zip) {
 		}
 		for(i = 0; i != props.Worksheets; ++i) {
 			try { /* TODO: remove these guards */
-				var path = 'xl/worksheets/sheet' + (i+1) + (xlsb?'.bin':'.xml');
-				var relsPath = path.replace(/^(.*)(\/)([^\/]*)$/, "$1/_rels/$3.rels");
+				path = 'xl/worksheets/sheet' + (i+1) + (xlsb?'.bin':'.xml');
+				relsPath = path.replace(/^(.*)(\/)([^\/]*)$/, "$1/_rels/$3.rels");
 				sheets[props.SheetNames[i]]=parse_ws(getdata(getzipfile(zip, path)),path);
 				sheetRels[props.SheetNames[i]]=parseRels(getdata(getzipfile(zip, relsPath)), path);
 			} catch(e) {}
@@ -43,8 +44,8 @@ function parseZip(zip) {
 		for(i = 0; i != props.Worksheets; ++i) {
 			try {
 				//var path = dir.sheets[i].replace(/^\//,'');
-				var path = 'xl/worksheets/sheet' + (i+1) + (xlsb?'.bin':'.xml');
-				var relsPath = path.replace(/^(.*)(\/)([^\/]*)$/, "$1/_rels/$3.rels");
+				path = 'xl/worksheets/sheet' + (i+1) + (xlsb?'.bin':'.xml');
+				relsPath = path.replace(/^(.*)(\/)([^\/]*)$/, "$1/_rels/$3.rels");
 				sheets[props.SheetNames[i]]=parse_ws(getdata(getzipfile(zip, path)),path);
 				sheetRels[props.SheetNames[i]]=parseRels(getdata(getzipfile(zip, relsPath)), path);
 			} catch(e) {/*console.error(e);*/}

@@ -40,7 +40,7 @@ function parseCommentsAddToSheets(zip, dirComments, sheets, sheetRels) {
 				}
 			}
 		}
-	}	
+	}
 }
 
 function insertCommentsIntoSheet(sheetName, sheet, comments) {

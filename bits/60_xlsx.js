@@ -129,7 +129,7 @@ function parseRels(data, currentFilePath) {
 			}
 		}
 		return toksFrom.join('/');
-	}
+	};
 
 	data.match(/<[^>]*>/g).forEach(function(x) {
 		var y = parsexmltag(x);

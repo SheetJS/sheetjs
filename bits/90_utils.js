@@ -57,7 +57,7 @@ function sheet_to_csv(sheet, opts) {
 			case 'n': return String(val.v);
 			case 's': case 'str':
 				if(typeof val.v === 'undefined') return "";
-				return JSON.stringify(val.v);
+				return '"' + val.v.replace(/"/,'""') + '"';
 			case 'b': return val.v ? "TRUE" : "FALSE";
 			case 'e': return val.v; /* throw out value in case of error */
 			default: throw 'unrecognized type ' + val.t;

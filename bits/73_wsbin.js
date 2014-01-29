@@ -60,10 +60,11 @@ var parse_BrtCellSt = function(data, length) {
 	return [cell, value, 'str'];
 };
 
-/* [MS-XLSB] 2.4.648 BrtCellError */
-var parse_BrtCellError = function(data, length) {
+/* [MS-XLSB] 2.4.648 BrtFmlaError */
+var parse_BrtFmlaError = function(data, length) {
 	var cell = parse_Cell(data);
 	var fBool = data.read_shift(1);
+	data.l += length-9;
 	return [cell, fBool, 'e'];
 };
 
@@ -76,7 +77,6 @@ var parse_BrtFmlaNum = function(data, length) {
 };
 
 var parse_BrtCellBlank = parsenoop;
-var parse_BrtFmlaError = parsenoop;
 var parse_BrtFmlaBool = parsenoop;
 var parse_BrtFmlaString = parsenoop;
 
