@@ -6,5 +6,5 @@ before_install:
   - "npm install -g mocha"
   - "npm install blanket"
   - "npm install coveralls mocha-lcov-reporter"
-after_success: 
+after_success:
   - "make coveralls"

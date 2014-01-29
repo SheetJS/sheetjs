@@ -420,7 +420,7 @@ A few special general cases can be handled in a very dumb manner:
 ```
   if(fmt.match(/^00+$/)) return (val<0?"-":"")+pad(Math.round(aval),fmt.length);
   if(fmt.match(/^[#?]+$/)) return String(Math.round(val)).replace(/^0$/,"");
-  if(r = fmt.match(/^#*0+\.(0+)/)) {
+  if((r = fmt.match(/^#*0+\.(0+)/))) {
     o = Math.round(val * Math.pow(10,r[1].length));
     return String(o/Math.pow(10,r[1].length)).replace(/^([^\.]+)$/,"$1."+r[1]).replace(/\.$/,"."+r[1]).replace(/\.([0-9]*)$/,function($$, $1) { return "." + $1 + fill("0", r[1].length-$1.length); });
   }
@@ -429,7 +429,7 @@ A few special general cases can be handled in a very dumb manner:
 The frac helper function is used for fraction formats (defined below).
 
 ```
-  if(r = fmt.match(/^# ([?]+)([ ]?)\/([ ]?)([?]+)/)) {
+  if((r = fmt.match(/^# ([?]+)([ ]?)\/([ ]?)([?]+)/))) {
     var rr = Math.min(Math.max(r[1].length, r[4].length),7);
     ff = frac(aval, Math.pow(10,rr)-1, true);
     return sign + (ff[0]||(ff[1] ? "" : "0")) + " " + (ff[1] ? pad(ff[1],rr," ") + r[2] + "/" + r[3] + rpad(ff[2],rr," "): fill(" ", 2*rr+1 + r[2].length + r[3].length));
@@ -576,7 +576,7 @@ the HH/hh jazz.  TODO: investigate this further.
         out.push(q); lst = c; break;
 ```
 
-Conditional and color blocks should be handled at one point (TODO).  The 
+Conditional and color blocks should be handled at one point (TODO).  The
 pseudo-type `Z` is used to capture absolute time blocks:
 
 ```
@@ -770,7 +770,7 @@ function choose_fmt(fmt, v, o) {
   switch(fmt.length) {
 ```
 
-In the case of one format, if it contains an "@" then it is a text format.  
+In the case of one format, if it contains an "@" then it is a text format.
 There is a big TODO here regarding how to best handle this case.
 
 ```
@@ -813,7 +813,10 @@ The boolean TRUE and FALSE are formatted as if they are the uppercase text:
   if(v === true) v = "TRUE"; if(v === false) v = "FALSE";
 ```
 
+Empty string should always emit empty, even if there are other characters:
+
 ```
+  if(v === "" || typeof v === "undefined") return ""; 
   return eval_fmt(f[1], v, o, f[0]);
 };
 
@@ -950,7 +953,7 @@ coveralls:
 ```json>package.json
 {
   "name": "ssf",
-  "version": "0.5.3",
+  "version": "0.5.4",
   "author": "SheetJS",
   "description": "pure-JS library to format data using ECMA-376 spreadsheet Format Codes",
   "keywords": [ "format", "sprintf", "spreadsheet" ],
@@ -994,7 +997,7 @@ before_install:
   - "npm install -g mocha"
   - "npm install blanket"
   - "npm install coveralls mocha-lcov-reporter"
-after_success: 
+after_success:
   - "make coveralls"
 ```
 
