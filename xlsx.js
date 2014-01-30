@@ -420,7 +420,7 @@ SSF.load_table = function(tbl) { for(var i=0; i!=0x0188; ++i) if(tbl[i]) SSF.loa
 make_ssf(SSF);
 var XLSX = {};
 (function(XLSX){
-XLSX.version = '0.4.1';
+XLSX.version = '0.4.2';
 var current_codepage, current_cptable, cptable;
 if(typeof module !== "undefined" && typeof require !== 'undefined') {
 	if(typeof cptable === 'undefined') cptable = require('codepage');
@@ -434,6 +434,8 @@ function _getchar(x) { return String.fromCharCode(x); }
 function getdata(data) {
 	if(!data) return null;
 	if(data.data) return data.data;
+	if(data.asNodeBuffer && typeof Buffer !== 'undefined' && data.name.substr(-4)===".bin") return data.asNodeBuffer();
+	if(data.asBinary && data.name.substr(-4) !== ".bin") return data.asBinary();
 	if(data._data && data._data.getContent) {
 		/* TODO: something far more intelligent */
 		if(data.name.substr(-4) === ".bin") return Array.prototype.slice.call(data._data.getContent());
@@ -453,6 +455,7 @@ var _fs, jszip;
 if(typeof JSZip !== 'undefined') jszip = JSZip;
 if (typeof exports !== 'undefined') {
 	if (typeof module !== 'undefined' && module.exports) {
+		if(typeof Buffer !== 'undefined' && typeof jszip === 'undefined') jszip = require('jszip');
 		if(typeof jszip === 'undefined') jszip = require('./jszip').JSZip;
 		_fs = require('fs');
 	}
@@ -2638,7 +2641,9 @@ function readSync(data, options) {
 	var zip, d = data;
 	var o = options||{};
 	switch((o.type||"base64")){
-		case "file": d = _fs.readFileSync(data).toString('base64');
+		case "file":
+			if(typeof Buffer !== 'undefined') { zip=new jszip(d=_fs.readFileSync(data)); break; }
+			d = _fs.readFileSync(data).toString('base64');
 			/* falls through */
 		case "base64": zip = new jszip(d, { base64:true }); break;
 		case "binary": zip = new jszip(d, { base64:false }); break;

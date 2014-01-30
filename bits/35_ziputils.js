@@ -1,6 +1,8 @@
 function getdata(data) {
 	if(!data) return null;
 	if(data.data) return data.data;
+	if(data.asNodeBuffer && typeof Buffer !== 'undefined' && data.name.substr(-4)===".bin") return data.asNodeBuffer();
+	if(data.asBinary && data.name.substr(-4) !== ".bin") return data.asBinary();
 	if(data._data && data._data.getContent) {
 		/* TODO: something far more intelligent */
 		if(data.name.substr(-4) === ".bin") return Array.prototype.slice.call(data._data.getContent());
@@ -20,6 +22,7 @@ var _fs, jszip;
 if(typeof JSZip !== 'undefined') jszip = JSZip;
 if (typeof exports !== 'undefined') {
 	if (typeof module !== 'undefined' && module.exports) {
+		if(typeof Buffer !== 'undefined' && typeof jszip === 'undefined') jszip = require('jszip');
 		if(typeof jszip === 'undefined') jszip = require('./jszip').JSZip;
 		_fs = require('fs');
 	}
