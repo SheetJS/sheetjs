@@ -666,7 +666,13 @@ The default magic characters are listed in subsubsections 18.8.30-31 of ECMA376:
           out[i].v += out[jj].v;
           delete out[jj]; ++jj;
         }
-        out[i].v = write_num(out[i].t, out[i].v, v);
+```
+
+The magic in the next line is to ensure that the negative number is passed as
+positive when there is an explicit hyphen before it (e.g. `#,##0.0;-#,##0.0`):
+
+```
+        out[i].v = write_num(out[i].t, out[i].v, (flen >1 && v < 0 && i>0 && out[i-1].v == "-" ? -v:v));
         out[i].t = 't';
         i = jj-1; break;
       case 'G': out[i].t = 't'; out[i].v = general_fmt(v,opts); break;
@@ -767,6 +773,7 @@ function choose_fmt(fmt, v, o) {
   if(typeof fmt === 'number') fmt = ((o&&o.table) ? o.table : table_fmt)[fmt];
   if(typeof fmt === "string") fmt = split_fmt(fmt);
   var l = fmt.length;
+  if(l<4 && fmt[l-1].indexOf("@")>-1) --l;
   switch(fmt.length) {
 ```
 
@@ -816,7 +823,7 @@ The boolean TRUE and FALSE are formatted as if they are the uppercase text:
 Empty string should always emit empty, even if there are other characters:
 
 ```
-  if(v === "" || typeof v === "undefined") return ""; 
+  if(v === "" || typeof v === "undefined") return "";
   return eval_fmt(f[1], v, o, f[0]);
 };
 
@@ -953,7 +960,7 @@ coveralls:
 ```json>package.json
 {
   "name": "ssf",
-  "version": "0.5.4",
+  "version": "0.5.5",
   "author": "SheetJS",
   "description": "pure-JS library to format data using ECMA-376 spreadsheet Format Codes",
   "keywords": [ "format", "sprintf", "spreadsheet" ],

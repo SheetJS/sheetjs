@@ -5,7 +5,7 @@ var _strrev = function(x) { return String(x).split("").reverse().join("");};
 function fill(c,l) { return new Array(l+1).join(c); }
 function pad(v,d,c){var t=String(v);return t.length>=d?t:(fill(c||0,d-t.length)+t);}
 function rpad(v,d,c){var t=String(v);return t.length>=d?t:(t+fill(c||0,d-t.length));}
-SSF.version = '0.5.4';
+SSF.version = '0.5.5';
 /* Options */
 var opts_fmt = {};
 function fixopts(o){for(var y in opts_fmt) if(o[y]===undefined) o[y]=opts_fmt[y];}
@@ -371,7 +371,7 @@ function eval_fmt(fmt, v, opts, flen) {
           out[i].v += out[jj].v;
           delete out[jj]; ++jj;
         }
-        out[i].v = write_num(out[i].t, out[i].v, v);
+        out[i].v = write_num(out[i].t, out[i].v, (flen >1 && v < 0 && i>0 && out[i-1].v == "-" ? -v:v));
         out[i].t = 't';
         i = jj-1; break;
       case 'G': out[i].t = 't'; out[i].v = general_fmt(v,opts); break;
@@ -385,6 +385,7 @@ function choose_fmt(fmt, v, o) {
   if(typeof fmt === 'number') fmt = ((o&&o.table) ? o.table : table_fmt)[fmt];
   if(typeof fmt === "string") fmt = split_fmt(fmt);
   var l = fmt.length;
+  if(l<4 && fmt[l-1].indexOf("@")>-1) --l;
   switch(fmt.length) {
     case 1: fmt = fmt[0].indexOf("@")>-1 ? ["General", "General", "General", fmt[0]] : [fmt[0], fmt[0], fmt[0], "@"]; break;
     case 2: fmt = fmt[1].indexOf("@")>-1 ? [fmt[0], fmt[0], fmt[0], fmt[1]] : [fmt[0], fmt[1], fmt[0], "@"]; break;
@@ -402,7 +403,7 @@ var format = function format(fmt,v,o) {
   var f = choose_fmt(fmt, v, o);
   if(f[1].toLowerCase() === "general") return general_fmt(v,o);
   if(v === true) v = "TRUE"; if(v === false) v = "FALSE";
-  if(v === "" || typeof v === "undefined") return ""; 
+  if(v === "" || typeof v === "undefined") return "";
   return eval_fmt(f[1], v, o, f[0]);
 };
 
