@@ -26,7 +26,7 @@ function parse_Cell(data) {
 	var iStyleRef = data.read_shift(2);
 	iStyleRef += data.read_shift(1) <<16;
 	var fPhShow = data.read_shift(1);
-	return { c:col };
+	return { c:col, iStyleRef: iStyleRef };
 }
 
 /* [MS-XLSB] 2.5.21 */

@@ -1,4 +1,6 @@
 formula_stress_test.xlsb
+number_format.xlsb
+rich_text_stress.xlsb
 time_stress_test_1.xlsb
 LONumbers-2010.xlsx
 LONumbers-2011.xlsx
@@ -41,6 +43,7 @@ apachepoi_50846-border_colours.xlsx
 apachepoi_50867_with_table.xlsx
 apachepoi_51222.xlsx
 apachepoi_51470.xlsx
+apachepoi_51585.xlsx
 apachepoi_51710.xlsx
 apachepoi_51850.xlsx
 apachepoi_51963.xlsx
@@ -122,6 +125,7 @@ apachepoi_workbookProtection_workbook_structure_protected.xlsx
 apachepoi_workbookProtection_workbook_windows_protected.xlsx
 apachepoi_workbookProtection_worksheet_protected.xlsx
 apachepoi_xlsx-jdbc.xlsx
+comments_stress_test.xlsx
 excel-reader-xlsx_data01.xlsx
 excel-reader-xlsx_data02.xlsx
 excel-reader-xlsx_error02.xlsx.pending
@@ -163,6 +167,7 @@ openpyxl_r_date_1904.xlsx
 openpyxl_r_formulae.xlsx
 openpyxl_r_null_archive.xlsx.pending
 openpyxl_r_null_file.xlsx.pending
+rich_text_stress.xlsx
 roo_1900_base.xlsx
 roo_1904_base.xlsx
 roo_Bibelbund.xlsx
@@ -195,6 +200,7 @@ spreadsheet-parsexlsx_bug-11.xlsx
 spreadsheet-parsexlsx_bug-12.xlsx
 spreadsheet-parsexlsx_bug-13.xlsx
 spreadsheet-parsexlsx_bug-14.xlsx
+spreadsheet-parsexlsx_bug-15.xlsx
 spreadsheet-parsexlsx_bug-2.xlsx
 spreadsheet-parsexlsx_bug-3.xlsx
 spreadsheet-parsexlsx_bug-4.xlsx
@@ -203,11 +209,15 @@ spreadsheet-parsexlsx_bug-6-2.xlsx
 spreadsheet-parsexlsx_bug-6.xlsx
 spreadsheet-parsexlsx_bug-7.xlsx
 spreadsheet-parsexlsx_bug-8.xlsx
+xlrd_merged_cells.xlsx
 xlrd_reveng1.xlsx
+xlrd_test_comments_excel.xlsx
+xlrd_test_comments_gdocs.xlsx
 xlrd_text_bar.xlsx
 חישוב_נקודות_זיכוי.xlsx
 apachepoi_45431.xlsm
 apachepoi_47026.xlsm
 apachepoi_47089.xlsm
 apachepoi_ExcelWithAttachments.xlsm
+number_format.xlsm
 openpyxl_r_vba-test.xlsm

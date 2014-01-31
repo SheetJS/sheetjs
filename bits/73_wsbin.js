@@ -115,6 +115,9 @@ var parse_ws_bin = function(data) {
 					case 'str': if(p.v) p.v = utf8read(p.v); break;
 				}
 				if(val[3]) p.f = val[3];
+				if(styles.CellXf[val[0].iStyleRef]) try {
+					p.w = SSF.format(styles.CellXf[val[0].iStyleRef].ifmt,p.v,_ssfopts);
+				} catch(e) { }
 				s[encode_cell({c:val[0].c,r:row.r})] = p;
 				break; // TODO
 
@@ -144,8 +147,8 @@ var parse_ws_bin = function(data) {
 			case 'BrtPrintOptions': break; // TODO
 			case 'BrtMargins': break; // TODO
 			case 'BrtPageSetup': break; // TODO
-			case 'BrtFRTBegin': pass = true; break; // TODO
-			case 'BrtFRTEnd': pass = false; break; // TODO
+			case 'BrtFRTBegin': pass = true; break;
+			case 'BrtFRTEnd': pass = false; break;
 			case 'BrtEndSheet': break; // TODO
 			//default: if(!pass) throw new Error("Unexpected record " + R.n);
 		}

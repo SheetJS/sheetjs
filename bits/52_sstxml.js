@@ -15,13 +15,17 @@ var parse_rs = (function() {
 				case '<extend': break;
 				/* 18.8.36 shadow CT_BooleanProperty */
 				/* ** not required . */
-				case '<shadow': break;
+				case '<shadow':
+					/* falls through */
+				case '<shadow/>': break;
 
 				/* 18.4.1 charset CT_IntProperty TODO */
 				case '<charset': break;
 
 				/* 18.4.2 outline CT_BooleanProperty TODO */
-				case '<outline': break;
+				case '<outline':
+					/* falls through */
+				case '<outline/>': break;
 
 				/* 18.4.5 rFont CT_FontName */
 				case '<rFont': font.name = y.val; break;
@@ -103,7 +107,7 @@ var parse_rs = (function() {
 /* 18.4.8 si CT_Rst */
 var parse_si = function(x) {
 	var z = {};
-	if(!x) return z;
+	if(!x) return null;
 	var y;
 	/* 18.4.12 t ST_Xstring (Plaintext String) */
 	if(x[1] === 't') {
@@ -129,7 +133,7 @@ var parse_sst_xml = function(data) {
 	/* 18.4.9 sst CT_Sst */
 	var sst = data.match(new RegExp("<sst([^>]*)>([\\s\\S]*)<\/sst>","m"));
 	if(isval(sst)) {
-		s = sst[2].replace(/<si>/g,"").split(/<\/si>/).map(parse_si);
+		s = sst[2].replace(/<si>/g,"").split(/<\/si>/).map(parse_si).filter(function(x) { return x; });
 		sst = parsexmltag(sst[1]); s.Count = sst.count; s.Unique = sst.uniqueCount;
 	}
 	return s;

@@ -24,7 +24,8 @@ function parseCXfs(t) {
 			case '<cellXfs': case '<cellXfs/>': case '</cellXfs>': break;
 
 			/* 18.8.45 xf CT_Xf */
-			case '<xf': if(y.numFmtId) y.numFmtId = parseInt(y.numFmtId, 10);
+			case '<xf': delete y[0];
+				if(y.numFmtId) y.numFmtId = parseInt(y.numFmtId, 10);
 				styles.CellXf.push(y); break;
 			case '</xf>': break;
 

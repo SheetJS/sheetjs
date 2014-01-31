@@ -33,8 +33,8 @@ function sheet_to_row_object_array(sheet, opts){
 		for (C = r.s.c; C <= r.e.c; ++C) {
 			val = sheet[encode_cell({c: C,r: R})];
 			if(!val || !val.t) continue;
-			v = (val || {}).v;
-			switch(val.t){
+			if(typeof val.w !== 'undefined') { row[hdr[C]] = val.w; isempty = false; }
+			else switch(val.t){
 				case 's': case 'str': case 'b': case 'n':
 					if(val.v !== undefined) {
 						row[hdr[C]] = val.v;
@@ -53,6 +53,7 @@ function sheet_to_row_object_array(sheet, opts){
 function sheet_to_csv(sheet, opts) {
 	var stringify = function stringify(val) {
 		if(!val.t) return "";
+		if(typeof val.w !== 'undefined') return '"' + val.w.replace(/"/,'""') + '"';
 		switch(val.t){
 			case 'n': return String(val.v);
 			case 's': case 'str':
