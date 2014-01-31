@@ -420,7 +420,7 @@ SSF.load_table = function(tbl) { for(var i=0; i!=0x0188; ++i) if(tbl[i]) SSF.loa
 make_ssf(SSF);
 var XLSX = {};
 (function(XLSX){
-XLSX.version = '0.4.2';
+XLSX.version = '0.4.3';
 var current_codepage, current_cptable, cptable;
 if(typeof module !== "undefined" && typeof require !== 'undefined') {
 	if(typeof cptable === 'undefined') cptable = require('codepage');
@@ -705,11 +705,10 @@ var recordhopper = function(data, cb) {
 		var RT = data.read_shift(1);
 		if(RT & 0x80) RT = (RT & 0x7F) + ((data.read_shift(1) & 0x7F)<<7);
 		var R = RecordEnum[RT] || RecordEnum[0xFFFF];
-
 		length = tmpbyte = data.read_shift(1);
 		for(cntbyte = 1; cntbyte <4 && (tmpbyte & 0x80); ++cntbyte) length += ((tmpbyte = data.read_shift(1)) & 0x7F)<<(7*cntbyte);
 		var d = R.f(data, length);
-		if(cb(d, R)) return;
+		if(cb(d, R, RT)) return;
 	}
 };
 /* [MS-XLSB] 2.1.7.121 */
@@ -740,7 +739,7 @@ function parse_Cell(data) {
 	var iStyleRef = data.read_shift(2);
 	iStyleRef += data.read_shift(1) <<16;
 	var fPhShow = data.read_shift(1);
-	return { c:col };
+	return { c:col, iStyleRef: iStyleRef };
 }
 
 /* [MS-XLSB] 2.5.21 */
@@ -815,13 +814,17 @@ var parse_rs = (function() {
 				case '<extend': break;
 				/* 18.8.36 shadow CT_BooleanProperty */
 				/* ** not required . */
-				case '<shadow': break;
+				case '<shadow':
+					/* falls through */
+				case '<shadow/>': break;
 
 				/* 18.4.1 charset CT_IntProperty TODO */
 				case '<charset': break;
 
 				/* 18.4.2 outline CT_BooleanProperty TODO */
-				case '<outline': break;
+				case '<outline':
+					/* falls through */
+				case '<outline/>': break;
 
 				/* 18.4.5 rFont CT_FontName */
 				case '<rFont': font.name = y.val; break;
@@ -903,7 +906,7 @@ var parse_rs = (function() {
 /* 18.4.8 si CT_Rst */
 var parse_si = function(x) {
 	var z = {};
-	if(!x) return z;
+	if(!x) return null;
 	var y;
 	/* 18.4.12 t ST_Xstring (Plaintext String) */
 	if(x[1] === 't') {
@@ -929,7 +932,7 @@ var parse_sst_xml = function(data) {
 	/* 18.4.9 sst CT_Sst */
 	var sst = data.match(new RegExp("<sst([^>]*)>([\\s\\S]*)<\/sst>","m"));
 	if(isval(sst)) {
-		s = sst[2].replace(/<si>/g,"").split(/<\/si>/).map(parse_si);
+		s = sst[2].replace(/<si>/g,"").split(/<\/si>/).map(parse_si).filter(function(x) { return x; });
 		sst = parsexmltag(sst[1]); s.Count = sst.count; s.Unique = sst.uniqueCount;
 	}
 	return s;
@@ -985,7 +988,8 @@ function parseCXfs(t) {
 			case '<cellXfs': case '<cellXfs/>': case '</cellXfs>': break;
 
 			/* 18.8.45 xf CT_Xf */
-			case '<xf': if(y.numFmtId) y.numFmtId = parseInt(y.numFmtId, 10);
+			case '<xf': delete y[0];
+				if(y.numFmtId) y.numFmtId = parseInt(y.numFmtId, 10);
 				styles.CellXf.push(y); break;
 			case '</xf>': break;
 
@@ -1025,8 +1029,71 @@ function parse_styles(data) {
 
 	return styles;
 }
-function parse_sty_bin(data) {
+function parse_BrtFmt(data, length) {
+	var ifmt = data.read_shift(2);
+	var stFmtCode = parse_XLWideString(data,length-2);
+	return [ifmt, stFmtCode];
+}
 
+function parse_BrtXF(data, length) {
+	var ixfeParent = data.read_shift(2);
+	var ifmt = data.read_shift(2);
+	parsenoop(data, length-4);
+	return {ixfe:ixfeParent, ifmt:ifmt };
+}
+
+function parse_sty_bin(data) {
+	styles.NumberFmt = [];
+	for(var y in SSF._table) styles.NumberFmt[y] = SSF._table[y];
+	
+	styles.CellXf = [];
+	var state = "";
+	var pass = false;
+	recordhopper(data, function(val, R, RT) {
+		switch(R.n) {
+			case 'BrtFmt':
+				styles.NumberFmt[val[0]] = val[1]; SSF.load(val[1], val[0]);
+				break;
+			case 'BrtFont': break; /* TODO */
+			case 'BrtKnownFonts': break; /* TODO */
+			case 'BrtFill': break; /* TODO */
+			case 'BrtBorder': break; /* TODO */
+			case 'BrtXF':
+				if(state === "CELLXFS") {
+					styles.CellXf.push(val);
+				}
+				break; /* TODO */
+			case 'BrtStyle': break; /* TODO */
+			case 'BrtRowHdr': break; /* TODO */
+			case 'BrtCellMeta': break; /* ?? */
+			case 'BrtBeginStyleSheet': break;
+			case 'BrtEndStyleSheet': break;
+			case 'BrtBeginFmts': state = "FMTS"; break;
+			case 'BrtEndFmts': state = ""; break;
+			case 'BrtBeginFonts': state = "FONTS"; break;
+			case 'BrtEndFonts': state = ""; break;
+			case 'BrtACBegin': state = "ACFONTS"; break;
+			case 'BrtACEnd': state = ""; break;
+			case 'BrtBeginFills': state = "FILLS"; break;
+			case 'BrtEndFills': state = ""; break;
+			case 'BrtBeginBorders': state = "BORDERS"; break;
+			case 'BrtEndBorders': state = ""; break;
+			case 'BrtBeginCellStyleXFs': state = "CELLSTYLEXFS"; break;
+			case 'BrtEndCellStyleXFs': state = ""; break;
+			case 'BrtBeginCellXFs': state = "CELLXFS"; break;
+			case 'BrtEndCellXFs': state = ""; break;
+			case 'BrtBeginStyles': state = "STYLES"; break;
+			case 'BrtEndStyles': state = ""; break;
+			case 'BrtBeginDXFs': state = "DXFS"; break;
+			case 'BrtEndDXFs': state = ""; break;
+			case 'BrtBeginTableStyles': state = "TABLESTYLES"; break;
+			case 'BrtEndTableStyles': state = ""; break;
+			case 'BrtFRTBegin': pass = true; break;
+			case 'BrtFRTEnd': pass = false; break;
+			//default: if(!pass) throw new Error("Unexpected record " + RT + " " + R.n);
+		}
+	});
+	return styles;
 }
 
 var ct2type = {
@@ -1449,6 +1516,9 @@ var parse_ws_bin = function(data) {
 					case 'str': if(p.v) p.v = utf8read(p.v); break;
 				}
 				if(val[3]) p.f = val[3];
+				if(styles.CellXf[val[0].iStyleRef]) try {
+					p.w = SSF.format(styles.CellXf[val[0].iStyleRef].ifmt,p.v,_ssfopts);
+				} catch(e) { }
 				s[encode_cell({c:val[0].c,r:row.r})] = p;
 				break; // TODO
 
@@ -1478,8 +1548,8 @@ var parse_ws_bin = function(data) {
 			case 'BrtPrintOptions': break; // TODO
 			case 'BrtMargins': break; // TODO
 			case 'BrtPageSetup': break; // TODO
-			case 'BrtFRTBegin': pass = true; break; // TODO
-			case 'BrtFRTEnd': pass = false; break; // TODO
+			case 'BrtFRTBegin': pass = true; break;
+			case 'BrtFRTEnd': pass = false; break;
 			case 'BrtEndSheet': break; // TODO
 			//default: if(!pass) throw new Error("Unexpected record " + R.n);
 		}
@@ -1786,10 +1856,10 @@ var RecordEnum = {
 	0x0028: { n:"BrtIndexRowBlock", f:parsenoop },
 	0x002A: { n:"BrtIndexBlock", f:parsenoop },
 	0x002B: { n:"BrtFont", f:parsenoop },
-	0x002C: { n:"BrtFmt", f:parsenoop },
+	0x002C: { n:"BrtFmt", f:parse_BrtFmt },
 	0x002D: { n:"BrtFill", f:parsenoop },
 	0x002E: { n:"BrtBorder", f:parsenoop },
-	0x002F: { n:"BrtXF", f:parsenoop },
+	0x002F: { n:"BrtXF", f:parse_BrtXF },
 	0x0030: { n:"BrtStyle", f:parsenoop },
 	0x0031: { n:"BrtCellMeta", f:parsenoop },
 	0x0032: { n:"BrtValueMeta", f:parsenoop },
@@ -2698,8 +2768,8 @@ function sheet_to_row_object_array(sheet, opts){
 		for (C = r.s.c; C <= r.e.c; ++C) {
 			val = sheet[encode_cell({c: C,r: R})];
 			if(!val || !val.t) continue;
-			v = (val || {}).v;
-			switch(val.t){
+			if(typeof val.w !== 'undefined') { row[hdr[C]] = val.w; isempty = false; }
+			else switch(val.t){
 				case 's': case 'str': case 'b': case 'n':
 					if(val.v !== undefined) {
 						row[hdr[C]] = val.v;
@@ -2718,6 +2788,7 @@ function sheet_to_row_object_array(sheet, opts){
 function sheet_to_csv(sheet, opts) {
 	var stringify = function stringify(val) {
 		if(!val.t) return "";
+		if(typeof val.w !== 'undefined') return '"' + val.w.replace(/"/,'""') + '"';
 		switch(val.t){
 			case 'n': return String(val.v);
 			case 's': case 'str':
