@@ -1,4 +1,8 @@
-var XMLNS_WB = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main';
+var XMLNS_WB = [
+	'http://schemas.openxmlformats.org/spreadsheetml/2006/main',
+	'http://schemas.microsoft.com/office/excel/2006/main',
+	'http://schemas.microsoft.com/office/excel/2006/2'
+];
 
 /* 18.2 Workbook */
 function parse_workbook(data) {
@@ -102,7 +106,7 @@ function parse_workbook(data) {
 			case '</mc:AlternateContent>': pass=false; break;
 		}
 	});
-	if(wb.xmlns !== XMLNS_WB) throw new Error("Unknown Namespace: " + wb.xmlns);
+	if(XMLNS_WB.indexOf(wb.xmlns) === -1) throw new Error("Unknown Namespace: " + wb.xmlns);
 
 	var z;
 	/* defaults */

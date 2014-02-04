@@ -20,7 +20,8 @@ function sheet_to_row_object_array(sheet, opts){
 	for(R=r.s.r, C = r.s.c; C <= r.e.c; ++C) {
 		val = sheet[encode_cell({c:C,r:R})];
 		if(!val) continue;
-		switch(val.t) {
+		if(val.w) hdr[C] = val.w;
+		else switch(val.t) {
 			case 's': case 'str': hdr[C] = val.v; break;
 			case 'n': hdr[C] = val.v; break;
 		}
@@ -33,7 +34,7 @@ function sheet_to_row_object_array(sheet, opts){
 		for (C = r.s.c; C <= r.e.c; ++C) {
 			val = sheet[encode_cell({c: C,r: R})];
 			if(!val || !val.t) continue;
-			if(typeof val.w !== 'undefined') { row[hdr[C]] = val.w; isempty = false; }
+			if(typeof val.w !== 'undefined' && !opts.raw) { row[hdr[C]] = val.w; isempty = false; }
 			else switch(val.t){
 				case 's': case 'str': case 'b': case 'n':
 					if(val.v !== undefined) {

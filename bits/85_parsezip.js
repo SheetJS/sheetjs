@@ -16,9 +16,12 @@ function parseZip(zip) {
 	if(dir.style) styles = parse_sty(getdata(getzipfile(zip, dir.style.replace(/^\//,''))),dir.style);
 
 	var wb = parse_wb(getdata(getzipfile(zip, dir.workbooks[0].replace(/^\//,''))), dir.workbooks[0]);
-	var propdata = dir.coreprops.length !== 0 ? getdata(getzipfile(zip, dir.coreprops[0].replace(/^\//,''))) : "";
+	var props = {}, propdata = "";
+	try {
+		propdata = dir.coreprops.length !== 0 ? getdata(getzipfile(zip, dir.coreprops[0].replace(/^\//,''))) : "";
 	propdata += dir.extprops.length !== 0 ? getdata(getzipfile(zip, dir.extprops[0].replace(/^\//,''))) : "";
-	var props = propdata !== "" ? parseProps(propdata) : {};
+		props = propdata !== "" ? parseProps(propdata) : {};
+	} catch(e) { }
 	var deps = {};
 	if(dir.calcchain) deps=parseDeps(getdata(getzipfile(zip, dir.calcchain.replace(/^\//,''))));
 	var sheets = {}, i=0;

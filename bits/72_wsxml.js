@@ -70,12 +70,7 @@ function parse_worksheet(data) {
 				var cf = styles.CellXf[cell.s];
 				if(cf && cf.numFmtId) fmtid = cf.numFmtId;
 			}
-			p.raw = p.v;
-			p.rawt = p.t;
-			try {
-				p.v = SSF.format(fmtid,p.v,_ssfopts);
-				p.t = 'str';
-			} catch(e) { p.v = p.raw; p.t = p.rawt; }
+			try { p.w = SSF.format(fmtid,p.v,_ssfopts); } catch(e) { }
 
 			s[cell.r] = p;
 		});

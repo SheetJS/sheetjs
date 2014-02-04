@@ -1,6 +1,6 @@
 # xlsx
 
-Currently a parser for XLSX/XLSM/XLSB files.  Cleanroom implementation from the 
+Currently a parser for XLSX/XLSM/XLSB files.  Cleanroom implementation from the
 ISO 29500  Office Open XML specifications, [MS-XLSB], and related documents.
 
 ## Installation
@@ -19,7 +19,7 @@ In the browser:
 
 The node version installs a binary `xlsx2csv` which can read XLSX/XLSM/XLSB files and output the contents in various formats.  The source is available at `xlsx2csv.njs` in the bin directory.
 
-See <http://oss.sheetjs.com/js-xlsx/> for a browser example. 
+See <http://oss.sheetjs.com/js-xlsx/> for a browser example.
 
 Note that older versions of IE does not support HTML5 File API, so the base64 mode is provided for testing.  On OSX you can get the base64 encoding by running:
 
@@ -39,18 +39,24 @@ Simple usage (walks through every cell of every sheet and dumps the values):
 
 Some helper functions in `XLSX.utils` generate different views of the sheets:
 
-- `XLSX.utils.sheet_to_csv` generates CSV 
+- `XLSX.utils.sheet_to_csv` generates CSV
 - `XLSX.utils.sheet_to_row_object_array` interprets sheets as tables with a header column and generates an array of objects
 - `XLSX.utils.get_formulae` generates a list of formulae
 
-## Notes 
+## Notes
 
 `.SheetNames` is an ordered list of the sheets in the workbook
 
 `.Sheets[sheetname]` returns a data structure representing the sheet.  Each key
-that does not start with `!` corresponds to a cell (using `A-1` notation).  
+that does not start with `!` corresponds to a cell (using `A-1` notation).
 
-`.Sheets[sheetname][address].v` returns the value of the specified cell and `.Sheets[sheetname][address].t` returns the type of the cell (constrained to the enumeration `ST_CellType` as documented in page 4215 of ISO/IEC 29500-1:2012(E) ) 
+`.Sheets[sheetname][address]` returns the specified cell:
+
+- `.v` returns the raw value of the cell
+- `.w` returns the formatted text of the cell
+- `.t` returns the type of the cell (constrained to the enumeration `ST_CellType` as documented in page 4215 of ISO/IEC 29500-1:2012(E) )
+
+For dates, `.v` holds the raw date code from the sheet and `.w` holds the text
 
 For more details:
 
@@ -69,11 +75,24 @@ Tests utilize the mocha testing framework.  Travis-CI and Sauce Labs links:
 
  - <https://travis-ci.org/SheetJS/js-xlsx> for XLSX module in node
  - <https://travis-ci.org/SheetJS/SheetJS.github.io> for XLS* modules
- - <https://saucelabs.com/u/sheetjs> for XLS* modules using Sauce Labs 
+ - <https://saucelabs.com/u/sheetjs> for XLS* modules using Sauce Labs
 
 ## Test Files
 
 Test files are housed in [another repo](https://github.com/SheetJS/test_files).
+
+## Testing
+
+`make test` will run the node-based tests.  To run the in-browser tests, clone
+[the oss.sheetjs.com repo](https://github.com/SheetJS/SheetJS.github.io) and
+replace the xlsx.js file (then fire up the browser and go to `stress.html`):
+
+```
+$ cp xlsx.js ../SheetJS.github.io
+$ cd ../SheetJS.github.io
+$ simplehttpserver # or "python -mSimpleHTTPServer" or "serve"
+$ open -a Chromium.app http://localhost:8000/stress.html
+```
 
 ## XLS Support
 

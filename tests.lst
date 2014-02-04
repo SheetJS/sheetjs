@@ -51,6 +51,7 @@ apachepoi_52348.xlsx
 apachepoi_52716.xlsx
 apachepoi_53101.xlsx
 apachepoi_53282.xlsx
+apachepoi_53282b.xlsx
 apachepoi_53568.xlsx
 apachepoi_53734.xlsx
 apachepoi_53798.xlsx
@@ -66,6 +67,12 @@ apachepoi_54607.xlsx
 apachepoi_55640.xlsx
 apachepoi_55745.xlsx
 apachepoi_55850.xlsx
+apachepoi_55923.xlsx
+apachepoi_55924.xlsx
+apachepoi_55926.xlsx
+apachepoi_55927.xlsx
+apachepoi_56011.xlsx
+apachepoi_56017.xlsx
 apachepoi_AverageTaxRates.xlsx
 apachepoi_Booleans.xlsx
 apachepoi_BrNotClosed.xlsx
@@ -111,9 +118,10 @@ apachepoi_WithVariousData.xlsx
 apachepoi_atp.xlsx
 apachepoi_chart_sheet.xlsx.pending
 apachepoi_comments.xlsx
+apachepoi_headerFooterTest.xlsx
 apachepoi_picture.xlsx
 apachepoi_reordered_sheets.xlsx
-apachepoi_sample-beta.xlsx.pending
+apachepoi_sample-beta.xlsx
 apachepoi_sample.xlsx
 apachepoi_shared_formulas.xlsx
 apachepoi_sheetProtection_allLocked.xlsx
@@ -154,7 +162,7 @@ openpyxl_g_empty-with-styles.xlsx
 openpyxl_g_empty.xlsx
 openpyxl_g_empty_libre.xlsx
 openpyxl_g_empty_no_dimensions.xlsx
-openpyxl_g_empty_with_no_properties.xlsx.pending
+openpyxl_g_empty_with_no_properties.xlsx
 openpyxl_g_guess_types.xlsx
 openpyxl_g_libreoffice_nrt.xlsx
 openpyxl_g_merge_range.xlsx
