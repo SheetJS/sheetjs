@@ -420,7 +420,7 @@ SSF.load_table = function(tbl) { for(var i=0; i!=0x0188; ++i) if(tbl[i]) SSF.loa
 make_ssf(SSF);
 var XLSX = {};
 (function(XLSX){
-XLSX.version = '0.4.3';
+XLSX.version = '0.5.0';
 var current_codepage, current_cptable, cptable;
 if(typeof module !== "undefined" && typeof require !== 'undefined') {
 	if(typeof cptable === 'undefined') cptable = require('codepage');
@@ -932,7 +932,7 @@ var parse_sst_xml = function(data) {
 	/* 18.4.9 sst CT_Sst */
 	var sst = data.match(new RegExp("<sst([^>]*)>([\\s\\S]*)<\/sst>","m"));
 	if(isval(sst)) {
-		s = sst[2].replace(/<si>/g,"").split(/<\/si>/).map(parse_si).filter(function(x) { return x; });
+		s = sst[2].replace(/<(?:si|sstItem)>/g,"").split(/<\/(?:si|sstItem)>/).map(parse_si).filter(function(x) { return x; });
 		sst = parsexmltag(sst[1]); s.Count = sst.count; s.Unique = sst.uniqueCount;
 	}
 	return s;
@@ -1385,12 +1385,7 @@ function parse_worksheet(data) {
 				var cf = styles.CellXf[cell.s];
 				if(cf && cf.numFmtId) fmtid = cf.numFmtId;
 			}
-			p.raw = p.v;
-			p.rawt = p.t;
-			try {
-				p.v = SSF.format(fmtid,p.v,_ssfopts);
-				p.t = 'str';
-			} catch(e) { p.v = p.raw; p.t = p.rawt; }
+			try { p.w = SSF.format(fmtid,p.v,_ssfopts); } catch(e) { }
 
 			s[cell.r] = p;
 		});
@@ -1635,7 +1630,11 @@ var CustomWBViewDef = {
 	xWindow: '0',
 	yWindow: '0'
 };
-var XMLNS_WB = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main';
+var XMLNS_WB = [
+	'http://schemas.openxmlformats.org/spreadsheetml/2006/main',
+	'http://schemas.microsoft.com/office/excel/2006/main',
+	'http://schemas.microsoft.com/office/excel/2006/2'
+];
 
 /* 18.2 Workbook */
 function parse_workbook(data) {
@@ -1739,7 +1738,7 @@ function parse_workbook(data) {
 			case '</mc:AlternateContent>': pass=false; break;
 		}
 	});
-	if(wb.xmlns !== XMLNS_WB) throw new Error("Unknown Namespace: " + wb.xmlns);
+	if(XMLNS_WB.indexOf(wb.xmlns) === -1) throw new Error("Unknown Namespace: " + wb.xmlns);
 
 	var z;
 	/* defaults */
@@ -2656,9 +2655,12 @@ function parseZip(zip) {
 	if(dir.style) styles = parse_sty(getdata(getzipfile(zip, dir.style.replace(/^\//,''))),dir.style);
 
 	var wb = parse_wb(getdata(getzipfile(zip, dir.workbooks[0].replace(/^\//,''))), dir.workbooks[0]);
-	var propdata = dir.coreprops.length !== 0 ? getdata(getzipfile(zip, dir.coreprops[0].replace(/^\//,''))) : "";
+	var props = {}, propdata = "";
+	try {
+		propdata = dir.coreprops.length !== 0 ? getdata(getzipfile(zip, dir.coreprops[0].replace(/^\//,''))) : "";
 	propdata += dir.extprops.length !== 0 ? getdata(getzipfile(zip, dir.extprops[0].replace(/^\//,''))) : "";
-	var props = propdata !== "" ? parseProps(propdata) : {};
+		props = propdata !== "" ? parseProps(propdata) : {};
+	} catch(e) { }
 	var deps = {};
 	if(dir.calcchain) deps=parseDeps(getdata(getzipfile(zip, dir.calcchain.replace(/^\//,''))));
 	var sheets = {}, i=0;
@@ -2755,7 +2757,8 @@ function sheet_to_row_object_array(sheet, opts){
 	for(R=r.s.r, C = r.s.c; C <= r.e.c; ++C) {
 		val = sheet[encode_cell({c:C,r:R})];
 		if(!val) continue;
-		switch(val.t) {
+		if(val.w) hdr[C] = val.w;
+		else switch(val.t) {
 			case 's': case 'str': hdr[C] = val.v; break;
 			case 'n': hdr[C] = val.v; break;
 		}
@@ -2768,7 +2771,7 @@ function sheet_to_row_object_array(sheet, opts){
 		for (C = r.s.c; C <= r.e.c; ++C) {
 			val = sheet[encode_cell({c: C,r: R})];
 			if(!val || !val.t) continue;
-			if(typeof val.w !== 'undefined') { row[hdr[C]] = val.w; isempty = false; }
+			if(typeof val.w !== 'undefined' && !opts.raw) { row[hdr[C]] = val.w; isempty = false; }
 			else switch(val.t){
 				case 's': case 'str': case 'b': case 'n':
 					if(val.v !== undefined) {

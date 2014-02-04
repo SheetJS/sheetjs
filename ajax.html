@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<style>
+#drop{
+	border:2px dashed #bbb;
+	-moz-border-radius:5px;
+	-webkit-border-radius:5px;
+	border-radius:5px;
+	padding:25px;
+	text-align:center;
+	font:20pt bold,"Vollkorn";color:#bbb
+}
+#b64data{
+	width:100%;
+}
+</style>
+<b>JS-XLSX AJAX Demo</b><br />
+<pre id="out"></pre>
+<br />
+<script src="shim.js"></script>
+<script src="jszip.js"></script>
+<script src="xlsx.js"></script>
+<script>
+function to_csv(workbook) {
+	var result = [];
+	workbook.SheetNames.forEach(function(sheetName) {
+		var csv = XLSX.utils.make_csv(workbook.Sheets[sheetName]);
+		if(csv.length > 0){
+			result.push("SHEET: " + sheetName);
+			result.push("");
+			result.push(csv);
+		}
+	});
+	return result.join("\n");
+}
+
+function process_wb(wb) {
+	var output = to_csv(wb);
+	if(out.innerText === undefined) out.textContent = output;
+	else out.innerText = output;
+}
+
+var url = "test_files/formula_stress_test_ajax.xlsx";
+
+var oReq = new XMLHttpRequest();
+oReq.open("GET", url, true);
+oReq.responseType = "arraybuffer";
+oReq.onload = function(e) {
+	var arraybuffer = oReq.response;
+	var data = new Uint8Array(arraybuffer);
+	var arr = new Array();
+	for(var i = 0; i != data.length; ++i) arr[i] = String.fromCharCode(data[i]);
+	var wb = XLSX.read(arr.join(""), {type:"binary"});
+	process_wb(wb);
+}
+oReq.send();
+
+</script>
+<script type="text/javascript">
+	var _gaq = _gaq || [];
+	_gaq.push(['_setAccount', 'UA-36810333-1']);
+	_gaq.push(['_trackPageview']);
+
+	(function() {
+		var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+		ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+		var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+	})();
+</script>
