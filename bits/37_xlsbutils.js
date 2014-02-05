@@ -132,26 +132,11 @@ function ReadShift(size, t) {
 	this.l+=size; return o;
 }
 
-function CheckField(hexstr, fld) {
-	var b = this.slice(this.l, this.l+hexstr.length/2);
-	var m = b.hexlify ? b.hexlify() : __hexlify(b);
-	if(m !== hexstr) throw (fld||"") + 'Expected ' + hexstr + ' saw ' + m;
-	this.l += hexstr.length/2;
-}
-
-function WarnField(hexstr, fld) {
-	var b = this.slice(this.l, this.l+hexstr.length/2);
-	var m = b.hexlify ? b.hexlify() : __hexlify(b);
-	if(m !== hexstr) console.error((fld||"") + 'Expected ' + hexstr +' saw ' + m);
-	this.l += hexstr.length/2;
-}
-
 function prep_blob(blob, pos) {
 	blob.read_shift = ReadShift.bind(blob);
-	blob.chk = CheckField;
 	blob.l = pos || 0;
-	var read = ReadShift.bind(blob), chk = CheckField.bind(blob);
-	return [read, chk];
+	var read = ReadShift.bind(blob);
+	return [read];
 }
 
 function parsenoop(blob, length) { blob.l += length; }

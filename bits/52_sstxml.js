@@ -112,15 +112,15 @@ var parse_si = function(x) {
 	/* 18.4.12 t ST_Xstring (Plaintext String) */
 	if(x[1] === 't') {
 		z.t = utf8read(unescapexml(x.substr(x.indexOf(">")+1).split(/<\/t>/)[0]));
-		z.raw = x;
-		z.r = z.t;
+		z.r = x;
+		z.h = z.t;
 	}
 	/* 18.4.4 r CT_RElt (Rich Text Run) */
 	else if((y = x.match(/<r>/))) {
-		z.raw = x;
+		z.r = x;
 		/* TODO: properly parse (note: no other valid child can have body text) */
 		z.t = utf8read(unescapexml(x.replace(/<[^>]*>/gm,"")));
-		z.r = parse_rs(x);
+		z.h = parse_rs(x);
 	}
 	/* 18.4.3 phoneticPr CT_PhoneticPr (TODO: needed for Asian support) */
 	/* 18.4.6 rPh CT_PhoneticRun (TODO: needed for Asian support) */

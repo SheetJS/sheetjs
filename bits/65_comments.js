@@ -16,9 +16,9 @@ function parseComments(data) {
 		var textMatch = x.match(/<text>([^\u2603]*)<\/text>/m);
 		if (!textMatch || !textMatch[1]) return; // a comment may contain an empty text tag.
 		var rt = parse_si(textMatch[1]);
-		comment.raw = rt.raw;
-		comment.t = rt.t;
 		comment.r = rt.r;
+		comment.t = rt.t;
+		comment.h = rt.h;
 		commentList.push(comment);
 	});
 	return commentList;
@@ -62,7 +62,7 @@ function insertCommentsIntoSheet(sheetName, sheet, comments) {
 		if (!cell.c) {
 			cell.c = [];
 		}
-		cell.c.push({a: comment.author, t: comment.t, raw: comment.raw, r: comment.r});
+		cell.c.push({a: comment.author, t: comment.t, r: comment.r, h: comment.h});
 	});
 }
 

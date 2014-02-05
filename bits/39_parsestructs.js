@@ -6,8 +6,8 @@ var parse_RichStr = function(data, length) {
 	var str = parse_XLWideString(data);
 	var z = {
 		t: str,
-		raw:"<t>" + escapexml(str) + "</t>",
-		r: str
+		r:"<t>" + escapexml(str) + "</t>",
+		h: str
 	};
 	if(fRichStr) {
 		/* TODO: formatted string */

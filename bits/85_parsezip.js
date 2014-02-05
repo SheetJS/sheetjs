@@ -1,4 +1,5 @@
 function parseZip(zip) {
+	reset_cp();
 	var entries = Object.keys(zip.files);
 	var keys = entries.filter(function(x){return x.substr(-1) != '/';}).sort();
 	var dir = parseCT(getdata(getzipfile(zip, '[Content_Types].xml')));

@@ -79,7 +79,8 @@ describe('should have comment as part of cell\'s properties', function(){
 	it('Parse comments.xml and insert into cell',function(){
 		assert.equal(ws.B1.c.length, 1,"must have 1 comment");
 		assert.equal(ws.B1.c[0].t, "Yegor Kozlov:\r\nfirst cell", "must have the concatenated texts");
-		assert.equal(ws.B1.c[0].r, '<span style="font-weight: bold;">Yegor Kozlov:</span><span style=""><br/>first cell</span>', "must have the html representation");
+		assert.equal(ws.B1.c[0].h, '<span style="font-weight: bold;">Yegor Kozlov:</span><span style=""><br/>first cell</span>', "must have the html representation");
+		assert.equal(ws.B1.c[0].r, '<r><rPr><b/><sz val="8"/><color indexed="81"/><rFont val="Tahoma"/></rPr><t>Yegor Kozlov:</t></r><r><rPr><sz val="8"/><color indexed="81"/><rFont val="Tahoma"/></rPr><t xml:space="preserve">\r\nfirst cell</t></r>', "must have the rich text representation");
 		assert.equal(ws.B1.c[0].a, "Yegor Kozlov","must have the same author");
 	});
 });

@@ -24,7 +24,7 @@ function parse_worksheet(data) {
 		/* 18.3.1.4 c CT_Cell */
 		var cells = x.substr(x.indexOf('>')+1).split(/<c /);
 		cells.forEach(function(c, idx) { if(c === "" || c.trim() === "") return;
-			var cref = c.match(/r="([^"]*)"/);
+			var cref = c.match(/r=["']([^"']*)["']/);
 			c = "<c " + c;
 			if(cref && cref.length == 2) {
 				var cref_cell = decode_cell(cref[1]);
@@ -46,6 +46,7 @@ function parse_worksheet(data) {
 					sidx = parseInt(p.v, 10);
 					p.v = strs[sidx].t;
 					p.r = strs[sidx].r;
+					p.h = strs[sidx].h;
 				} break;
 				case 'str': if(p.v) p.v = utf8read(p.v); break;
 				case 'inlineStr':
@@ -71,7 +72,6 @@ function parse_worksheet(data) {
 				if(cf && cf.numFmtId) fmtid = cf.numFmtId;
 			}
 			try { p.w = SSF.format(fmtid,p.v,_ssfopts); } catch(e) { }
-
 			s[cell.r] = p;
 		});
 	});
