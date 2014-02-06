@@ -89,6 +89,7 @@ function get_formulae(ws) {
 		var x = ws[y];
 		var val = "";
 		if(x.f) val = x.f;
+		else if(typeof x.v === 'undefined') continue;
 		else if(typeof x.v === 'number') val = x.v;
 		else val = x.v;
 		cmds.push(y + "=" + val);
