@@ -420,7 +420,7 @@ SSF.load_table = function(tbl) { for(var i=0; i!=0x0188; ++i) if(tbl[i]) SSF.loa
 make_ssf(SSF);
 var XLSX = {};
 (function(XLSX){
-XLSX.version = '0.5.1';
+XLSX.version = '0.5.2';
 var current_codepage, current_cptable, cptable;
 if(typeof module !== "undefined" && typeof require !== 'undefined') {
 	if(typeof cptable === 'undefined') cptable = require('codepage');
@@ -2814,6 +2814,7 @@ function get_formulae(ws) {
 		var x = ws[y];
 		var val = "";
 		if(x.f) val = x.f;
+		else if(typeof x.v === 'undefined') continue;
 		else if(typeof x.v === 'number') val = x.v;
 		else val = x.v;
 		cmds.push(y + "=" + val);
