@@ -9,7 +9,7 @@ function readSync(data, options) {
 		case "base64": zip = new jszip(d, { base64:true }); break;
 		case "binary": zip = new jszip(d, { base64:false }); break;
 	}
-	return parseZip(zip);
+	return parseZip(zip, o);
 }
 
 function readFileSync(data, options) {

@@ -81,14 +81,14 @@ var parse_BrtFmlaBool = parsenoop;
 var parse_BrtFmlaString = parsenoop;
 
 /* [MS-XLSB] 2.1.7.61 Worksheet */
-var parse_ws_bin = function(data) {
+var parse_ws_bin = function(data, opts) {
 	if(!data) return data;
 	var s = {};
 
 	var ref;
 
 	var pass = false;
-	var row, p;
+	var row, p, cf;
 	recordhopper(data, function(val, R) {
 		switch(R.n) {
 			case 'BrtWsDim': ref = val; break;
@@ -115,8 +115,9 @@ var parse_ws_bin = function(data) {
 					case 'str': if(p.v) p.v = utf8read(p.v); break;
 				}
 				if(val[3]) p.f = val[3];
-				if(styles.CellXf[val[0].iStyleRef]) try {
-					p.w = SSF.format(styles.CellXf[val[0].iStyleRef].ifmt,p.v,_ssfopts);
+				if((cf = styles.CellXf[val[0].iStyleRef])) try {
+					p.w = SSF.format(cf.ifmt,p.v,_ssfopts);
+					if(opts.cellNF) p.z = SSF._table[cf.ifmt];
 				} catch(e) { }
 				s[encode_cell({c:val[0].c,r:row.r})] = p;
 				break; // TODO

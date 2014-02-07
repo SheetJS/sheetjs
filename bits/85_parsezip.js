@@ -1,4 +1,6 @@
-function parseZip(zip) {
+function parseZip(zip, opts) {
+	opts = opts || {};
+	fixopts(opts);
 	reset_cp();
 	var entries = Object.keys(zip.files);
 	var keys = entries.filter(function(x){return x.substr(-1) != '/';}).sort();
@@ -40,7 +42,7 @@ function parseZip(zip) {
 			try { /* TODO: remove these guards */
 				path = 'xl/worksheets/sheet' + (i+1) + (xlsb?'.bin':'.xml');
 				relsPath = path.replace(/^(.*)(\/)([^\/]*)$/, "$1/_rels/$3.rels");
-				sheets[props.SheetNames[i]]=parse_ws(getdata(getzipfile(zip, path)),path);
+				sheets[props.SheetNames[i]]=parse_ws(getdata(getzipfile(zip, path)),path,opts);
 				sheetRels[props.SheetNames[i]]=parseRels(getdata(getzipfile(zip, relsPath)), path);
 			} catch(e) {}
 		}
@@ -50,7 +52,7 @@ function parseZip(zip) {
 				//var path = dir.sheets[i].replace(/^\//,'');
 				path = 'xl/worksheets/sheet' + (i+1) + (xlsb?'.bin':'.xml');
 				relsPath = path.replace(/^(.*)(\/)([^\/]*)$/, "$1/_rels/$3.rels");
-				sheets[props.SheetNames[i]]=parse_ws(getdata(getzipfile(zip, path)),path);
+				sheets[props.SheetNames[i]]=parse_ws(getdata(getzipfile(zip, path)),path,opts);
 				sheetRels[props.SheetNames[i]]=parseRels(getdata(getzipfile(zip, relsPath)), path);
 			} catch(e) {/*console.error(e);*/}
 		}

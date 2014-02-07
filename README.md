@@ -43,7 +43,13 @@ Some helper functions in `XLSX.utils` generate different views of the sheets:
 - `XLSX.utils.sheet_to_row_object_array` interprets sheets as tables with a header column and generates an array of objects
 - `XLSX.utils.get_formulae` generates a list of formulae
 
-## Notes
+For more details:
+
+- `bin/xlsx2csv.njs` is a tool for node
+- `index.html` is the live demo
+- `bits/90_utils.js` contains the logic for generating CSV and JSON from sheets
+
+## Cell Object Description 
 
 `.SheetNames` is an ordered list of the sheets in the workbook
 
@@ -52,17 +58,27 @@ that does not start with `!` corresponds to a cell (using `A-1` notation).
 
 `.Sheets[sheetname][address]` returns the specified cell:
 
-- `.v` returns the raw value of the cell
-- `.w` returns the formatted text of the cell
-- `.t` returns the type of the cell (constrained to the enumeration `ST_CellType` as documented in page 4215 of ISO/IEC 29500-1:2012(E) )
+- `.v` : the raw value of the cell
+- `.w` : the formatted text of the cell (if applicable)
+- `.t` : the type of the cell (constrained to the enumeration `ST_CellType` as documented in page 4215 of ISO/IEC 29500-1:2012(E) )
+- `.f` : the formula of the cell (if applicable)
+- `.r` : the rich text encoding of a cell text (if applicable)
+- `.h` : an HTML rendering of the rich text (if applicable)
+- `.c` : comments associated with the cell
+- `.z` : the number format string associated with the cell (if requested) 
 
 For dates, `.v` holds the raw date code from the sheet and `.w` holds the text
 
-For more details:
+## Options
 
-- `bin/xlsx2csv.njs` is a tool for node
-- `index.html` is the live demo
-- `bits/90_utils.js` contains the logic for generating CSV and JSON from sheets
+The exported `read` and `readFile` functions accept an options argument:
+
+| Option Name | Default | Description |
+| :---------- | ------: | :---------- |
+| cellNF      | false   | Save number format string to the .z field |
+| sheetStubs  | true    | Create cell objects for stub cells |
+
+The defaults are enumerated in bits/84_defaults.js 
 
 ## Tested Environments
 
@@ -93,6 +109,10 @@ $ cd ../SheetJS.github.io
 $ simplehttpserver # or "python -mSimpleHTTPServer" or "serve"
 $ open -a Chromium.app http://localhost:8000/stress.html
 ```
+
+## Contributing
+
+Due to the precarious nature of the Open Specifications Promise, it is very important to ensure code is cleanroom.  Consult CONTRIBUTING.md 
 
 ## XLS Support
 

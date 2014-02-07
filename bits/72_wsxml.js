@@ -1,5 +1,5 @@
 /* 18.3 Worksheets */
-function parse_worksheet(data) {
+function parse_ws_xml(data, opts) {
 	if(!data) return data;
 	/* 18.3.1.99 worksheet CT_Worksheet */
 	var s = {};
@@ -30,16 +30,19 @@ function parse_worksheet(data) {
 				var cref_cell = decode_cell(cref[1]);
 				idx = cref_cell.c;
 			}
-			if(refguess.s.c > idx) refguess.s.c = idx;
-			if(refguess.e.c < idx) refguess.e.c = idx;
 			var cell = parsexmltag((c.match(/<c[^>]*>/)||[c])[0]); delete cell[0];
 			var d = c.substr(c.indexOf('>')+1);
 			var p = {};
 			q.forEach(function(f){var x=d.match(matchtag(f));if(x)p[f]=unescapexml(x[1]);});
 
 			/* SCHEMA IS ACTUALLY INCORRECT HERE.  IF A CELL HAS NO T, EMIT "" */
-			if(cell.t === undefined && p.v === undefined) { p.t = "str"; p.v = undefined; }
+			if(cell.t === undefined && p.v === undefined) {
+				if(!opts.sheetEmptyCells) return;
+				p.t = "str"; p.v = undefined;
+			}
 			else p.t = (cell.t ? cell.t : "n"); // default is "n" in schema
+			if(refguess.s.c > idx) refguess.s.c = idx;
+			if(refguess.e.c < idx) refguess.e.c = idx;
 			switch(p.t) {
 				case 'n': p.v = parseFloat(p.v); break;
 				case 's': {
@@ -71,7 +74,10 @@ function parse_worksheet(data) {
 				var cf = styles.CellXf[cell.s];
 				if(cf && cf.numFmtId) fmtid = cf.numFmtId;
 			}
-			try { p.w = SSF.format(fmtid,p.v,_ssfopts); } catch(e) { }
+			try {
+				p.w = SSF.format(fmtid,p.v,_ssfopts);
+				if(opts.cellNF) p.z = SSF._table[fmtid];
+			} catch(e) { }
 			s[cell.r] = p;
 		});
 	});

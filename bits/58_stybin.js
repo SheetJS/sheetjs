@@ -14,7 +14,7 @@ function parse_BrtXF(data, length) {
 function parse_sty_bin(data) {
 	styles.NumberFmt = [];
 	for(var y in SSF._table) styles.NumberFmt[y] = SSF._table[y];
-	
+
 	styles.CellXf = [];
 	var state = "";
 	var pass = false;

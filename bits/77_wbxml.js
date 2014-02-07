@@ -5,7 +5,7 @@ var XMLNS_WB = [
 ];
 
 /* 18.2 Workbook */
-function parse_workbook(data) {
+function parse_wb_xml(data) {
 	var wb = { AppVersion:{}, WBProps:{}, WBView:[], Sheets:[], CalcPr:{}, xmlns: "" };
 	var pass = false;
 	data.match(/<[^>]*>/g).forEach(function(x) {

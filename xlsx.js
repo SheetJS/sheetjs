@@ -420,7 +420,7 @@ SSF.load_table = function(tbl) { for(var i=0; i!=0x0188; ++i) if(tbl[i]) SSF.loa
 make_ssf(SSF);
 var XLSX = {};
 (function(XLSX){
-XLSX.version = '0.5.2';
+XLSX.version = '0.5.3';
 var current_codepage, current_cptable, cptable;
 if(typeof module !== "undefined" && typeof require !== 'undefined') {
 	if(typeof cptable === 'undefined') cptable = require('codepage');
@@ -994,7 +994,7 @@ function parseCXfs(t) {
 }
 
 /* 18.8 Styles CT_Stylesheet*/
-function parse_styles(data) {
+function parse_sty_xml(data) {
 	/* 18.8.39 styleSheet CT_Stylesheet */
 	var t;
 
@@ -1032,7 +1032,7 @@ function parse_BrtXF(data, length) {
 function parse_sty_bin(data) {
 	styles.NumberFmt = [];
 	for(var y in SSF._table) styles.NumberFmt[y] = SSF._table[y];
-	
+
 	styles.CellXf = [];
 	var state = "";
 	var pass = false;
@@ -1301,7 +1301,7 @@ var strs = {}; // shared strings
 var _ssfopts = {}; // spreadsheet formatting options
 
 /* 18.3 Worksheets */
-function parse_worksheet(data) {
+function parse_ws_xml(data, opts) {
 	if(!data) return data;
 	/* 18.3.1.99 worksheet CT_Worksheet */
 	var s = {};
@@ -1332,16 +1332,19 @@ function parse_worksheet(data) {
 				var cref_cell = decode_cell(cref[1]);
 				idx = cref_cell.c;
 			}
-			if(refguess.s.c > idx) refguess.s.c = idx;
-			if(refguess.e.c < idx) refguess.e.c = idx;
 			var cell = parsexmltag((c.match(/<c[^>]*>/)||[c])[0]); delete cell[0];
 			var d = c.substr(c.indexOf('>')+1);
 			var p = {};
 			q.forEach(function(f){var x=d.match(matchtag(f));if(x)p[f]=unescapexml(x[1]);});
 
 			/* SCHEMA IS ACTUALLY INCORRECT HERE.  IF A CELL HAS NO T, EMIT "" */
-			if(cell.t === undefined && p.v === undefined) { p.t = "str"; p.v = undefined; }
+			if(cell.t === undefined && p.v === undefined) {
+				if(!opts.sheetEmptyCells) return;
+				p.t = "str"; p.v = undefined;
+			}
 			else p.t = (cell.t ? cell.t : "n"); // default is "n" in schema
+			if(refguess.s.c > idx) refguess.s.c = idx;
+			if(refguess.e.c < idx) refguess.e.c = idx;
 			switch(p.t) {
 				case 'n': p.v = parseFloat(p.v); break;
 				case 's': {
@@ -1373,7 +1376,10 @@ function parse_worksheet(data) {
 				var cf = styles.CellXf[cell.s];
 				if(cf && cf.numFmtId) fmtid = cf.numFmtId;
 			}
-			try { p.w = SSF.format(fmtid,p.v,_ssfopts); } catch(e) { }
+			try {
+				p.w = SSF.format(fmtid,p.v,_ssfopts);
+				if(opts.cellNF) p.z = SSF._table[fmtid];
+			} catch(e) { }
 			s[cell.r] = p;
 		});
 	});
@@ -1464,14 +1470,14 @@ var parse_BrtFmlaBool = parsenoop;
 var parse_BrtFmlaString = parsenoop;
 
 /* [MS-XLSB] 2.1.7.61 Worksheet */
-var parse_ws_bin = function(data) {
+var parse_ws_bin = function(data, opts) {
 	if(!data) return data;
 	var s = {};
 
 	var ref;
 
 	var pass = false;
-	var row, p;
+	var row, p, cf;
 	recordhopper(data, function(val, R) {
 		switch(R.n) {
 			case 'BrtWsDim': ref = val; break;
@@ -1498,8 +1504,9 @@ var parse_ws_bin = function(data) {
 					case 'str': if(p.v) p.v = utf8read(p.v); break;
 				}
 				if(val[3]) p.f = val[3];
-				if(styles.CellXf[val[0].iStyleRef]) try {
-					p.w = SSF.format(styles.CellXf[val[0].iStyleRef].ifmt,p.v,_ssfopts);
+				if((cf = styles.CellXf[val[0].iStyleRef])) try {
+					p.w = SSF.format(cf.ifmt,p.v,_ssfopts);
+					if(opts.cellNF) p.z = SSF._table[cf.ifmt];
 				} catch(e) { }
 				s[encode_cell({c:val[0].c,r:row.r})] = p;
 				break; // TODO
@@ -1624,7 +1631,7 @@ var XMLNS_WB = [
 ];
 
 /* 18.2 Workbook */
-function parse_workbook(data) {
+function parse_wb_xml(data) {
 	var wb = { AppVersion:{}, WBProps:{}, WBView:[], Sheets:[], CalcPr:{}, xmlns: "" };
 	var pass = false;
 	data.match(/<[^>]*>/g).forEach(function(x) {
@@ -1793,16 +1800,16 @@ var parse_wb_bin = function(data) {
 
 	return wb;
 };
-function parse_wb(data, name) {
-	return name.substr(-4)===".bin" ? parse_wb_bin(data) : parse_workbook(data);
+function parse_wb(data, name, opts) {
+	return name.substr(-4)===".bin" ? parse_wb_bin(data, opts) : parse_wb_xml(data, opts);
 }
 
-function parse_ws(data, name) {
-	return name.substr(-4)===".bin" ? parse_ws_bin(data) : parse_worksheet(data);
+function parse_ws(data, name, opts) {
+	return name.substr(-4)===".bin" ? parse_ws_bin(data, opts) : parse_ws_xml(data, opts);
 }
 
-function parse_sty(data, name) {
-	return name.substr(-4)===".bin" ? parse_sty_bin(data) : parse_styles(data);
+function parse_sty(data, name, opts) {
+	return name.substr(-4)===".bin" ? parse_sty_bin(data, opts) : parse_sty_xml(data, opts);
 }
 /* [MS-XLSB] 2.3 Record Enumeration */
 var RecordEnum = {
@@ -2624,7 +2631,19 @@ var RecordEnum = {
 	0xFFFF: { n:"", f:parsenoop }
 };
 
-function parseZip(zip) {
+function fixopts(opts) {
+	var defaults = [
+		['cellNF', false], /* emit cell number format string as .z */
+
+		['sheetStubs', true], /* emit empty cells */
+
+		['WTF', false] /* WTF mode (do not use) */
+	];
+	defaults.forEach(function(d) { if(typeof opts[d[0]] === 'undefined') opts[d[0]] = d[1]; });
+}
+function parseZip(zip, opts) {
+	opts = opts || {};
+	fixopts(opts);
 	reset_cp();
 	var entries = Object.keys(zip.files);
 	var keys = entries.filter(function(x){return x.substr(-1) != '/';}).sort();
@@ -2666,7 +2685,7 @@ function parseZip(zip) {
 			try { /* TODO: remove these guards */
 				path = 'xl/worksheets/sheet' + (i+1) + (xlsb?'.bin':'.xml');
 				relsPath = path.replace(/^(.*)(\/)([^\/]*)$/, "$1/_rels/$3.rels");
-				sheets[props.SheetNames[i]]=parse_ws(getdata(getzipfile(zip, path)),path);
+				sheets[props.SheetNames[i]]=parse_ws(getdata(getzipfile(zip, path)),path,opts);
 				sheetRels[props.SheetNames[i]]=parseRels(getdata(getzipfile(zip, relsPath)), path);
 			} catch(e) {}
 		}
@@ -2676,7 +2695,7 @@ function parseZip(zip) {
 				//var path = dir.sheets[i].replace(/^\//,'');
 				path = 'xl/worksheets/sheet' + (i+1) + (xlsb?'.bin':'.xml');
 				relsPath = path.replace(/^(.*)(\/)([^\/]*)$/, "$1/_rels/$3.rels");
-				sheets[props.SheetNames[i]]=parse_ws(getdata(getzipfile(zip, path)),path);
+				sheets[props.SheetNames[i]]=parse_ws(getdata(getzipfile(zip, path)),path,opts);
 				sheetRels[props.SheetNames[i]]=parseRels(getdata(getzipfile(zip, relsPath)), path);
 			} catch(e) {/*console.error(e);*/}
 		}
@@ -2708,7 +2727,7 @@ function readSync(data, options) {
 		case "base64": zip = new jszip(d, { base64:true }); break;
 		case "binary": zip = new jszip(d, { base64:false }); break;
 	}
-	return parseZip(zip);
+	return parseZip(zip, o);
 }
 
 function readFileSync(data, options) {

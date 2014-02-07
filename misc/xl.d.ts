@@ -1,7 +1,12 @@
 interface Cell {
   v;
-  t: string;
-  ixfe: number;
+  w?: string;
+  t?: string;
+  f?: string;
+  r?: string;
+  h?: string;
+  c?: any;
+  z?: string;
 }
 
 interface Worksheet {

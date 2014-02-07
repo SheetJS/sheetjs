@@ -43,7 +43,7 @@ function parseCXfs(t) {
 }
 
 /* 18.8 Styles CT_Stylesheet*/
-function parse_styles(data) {
+function parse_sty_xml(data) {
 	/* 18.8.39 styleSheet CT_Stylesheet */
 	var t;
 
