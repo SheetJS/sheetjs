@@ -377,8 +377,9 @@ For the special case of engineering notation, "shift" the decimal:
 
 ```
     if(fmt == '##0.0E+0') {
-      var period = fmt.length - 5;
+      var period = fmt.indexOf("."); if(period === -1) period=fmt.indexOf('E');
       var ee = (Number(val.toExponential(0).substr(2+(val<0))))%period;
+      if(ee < 0) ee += period;
       o = (val/Math.pow(10,ee)).toPrecision(idx+1+(period+ee)%period);
       if(!o.match(/[Ee]/)) {
 ```
@@ -388,7 +389,12 @@ TODO: something reasonable
 ```
         var fakee = (Number(val.toExponential(0).substr(2+(val<0))));
         if(o.indexOf(".") === -1) o = o[0] + "." + o.substr(1) + "E+" + (fakee - o.length+ee);
-        else throw "missing E |" + o;
+        else o += "E+" + (fakee - ee);
+        while(o.substr(0,2) === "0.") {
+          o = o[0] + o.substr(2,period) + "." + o.substr(2+period);
+          o = o.replace(/^0+([1-9])/,"$1").replace(/^0+\./,"0.");
+        }
+        o = o.replace(/\+-/,"-");
       }
       o = o.replace(/^([+-]?)([0-9]*)\.([0-9]*)[Ee]/,function($$,$1,$2,$3) { return $1 + $2 + $3.substr(0,(period+ee)%period) + "." + $3.substr(ee) + "E"; });
     } else o = val.toExponential(idx);
@@ -418,6 +424,7 @@ Fractions with known denominator are resolved by rounding:
 A few special general cases can be handled in a very dumb manner:
 
 ```
+  if(fmt.match(/^#+0+$/)) fmt = fmt.replace(/#/g,"");
   if(fmt.match(/^00+$/)) return (val<0?"-":"")+pad(Math.round(aval),fmt.length);
   if(fmt.match(/^[#?]+$/)) return String(Math.round(val)).replace(/^0$/,"");
   if((r = fmt.match(/^#*0+\.(0+)/))) {
@@ -638,7 +645,7 @@ The default magic characters are listed in subsubsections 18.8.30-31 of ECMA376:
 ```
       case ' ': out.push({t:c,v:c}); ++i; break;
       default:
-        if(",$-+/():!^&'~{}<>=".indexOf(c) === -1)
+        if(",$-+/():!^&'~{}<>=€".indexOf(c) === -1)
           throw 'unrecognized character ' + fmt[i] + ' in ' + fmt;
         out.push({t:'t', v:c}); ++i; break;
     }
@@ -662,7 +669,7 @@ The default magic characters are listed in subsubsections 18.8.30-31 of ECMA376:
         out[i].t = 't'; break;
       case 'n': case '(': case '?':
         var jj = i+1;
-        while(out[jj] && ("?D".indexOf(out[jj].t) > -1 || (" t".indexOf(out[jj].t) > -1 && "?t".indexOf((out[jj+1]||{}).t)>-1 && (out[jj+1].t == '?' || out[jj+1].v == '/')) || out[i].t == '(' && (out[jj].t == ')' || out[jj].t == 'n') || out[jj].t == 't' && (out[jj].v == '/' || out[jj].v == '$' || (out[jj].v == ' ' && (out[jj+1]||{}).t == '?')))) {
+        while(out[jj] && ("?D".indexOf(out[jj].t) > -1 || (" t".indexOf(out[jj].t) > -1 && "?t".indexOf((out[jj+1]||{}).t)>-1 && (out[jj+1].t == '?' || out[jj+1].v == '/')) || out[i].t == '(' && (out[jj].t == ')' || out[jj].t == 'n') || out[jj].t == 't' && (out[jj].v == '/' || '$€'.indexOf(out[jj].v) > -1 || (out[jj].v == ' ' && (out[jj+1]||{}).t == '?')))) {
           out[i].v += out[jj].v;
           delete out[jj]; ++jj;
         }
@@ -960,7 +967,7 @@ coveralls:
 ```json>package.json
 {
   "name": "ssf",
-  "version": "0.5.5",
+  "version": "0.5.6",
   "author": "SheetJS",
   "description": "pure-JS library to format data using ECMA-376 spreadsheet Format Codes",
   "keywords": [ "format", "sprintf", "spreadsheet" ],
