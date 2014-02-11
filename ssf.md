@@ -376,7 +376,7 @@ For exponents, get the exponent and mantissa and format them separately:
 For the special case of engineering notation, "shift" the decimal:
 
 ```
-    if(fmt == '##0.0E+0') {
+    if(fmt.match(/^#+0.0E\+0$/)) {
       var period = fmt.indexOf("."); if(period === -1) period=fmt.indexOf('E');
       var ee = (Number(val.toExponential(0).substr(2+(val<0))))%period;
       if(ee < 0) ee += period;
@@ -589,7 +589,8 @@ pseudo-type `Z` is used to capture absolute time blocks:
 ```
       case '[': /* TODO: Fix this -- ignore all conditionals and formatting */
         o = c;
-        while(fmt[i++] !== ']') o += fmt[i];
+        while(fmt[i++] !== ']' && i < fmt.length) o += fmt[i];
+        if(o.substr(-1) !== ']') throw 'unterminated "[" block: |' + o + '|';
         if(o.match(/\[[HhMmSs]*\]/)) {
           if(!dt) dt = parse_date_code(v, opts);
           if(!dt) return "";
@@ -663,8 +664,8 @@ The default magic characters are listed in subsubsections 18.8.30-31 of ECMA376:
   /* replace fields */
   for(i=0; i < out.length; ++i) {
     switch(out[i].t) {
-      case 't': case 'T': case ' ': break;
-      case 'd': case 'm': case 'y': case 'h': case 'H': case 'M': case 's': case 'A': case 'e': case 'Z':
+      case 't': case 'T': case ' ': case 'D': break;
+      case 'd': case 'm': case 'y': case 'h': case 'H': case 'M': case 's': case 'e': case 'Z':
         out[i].v = write_date(out[i].t, out[i].v, dt);
         out[i].t = 't'; break;
       case 'n': case '(': case '?':
@@ -683,7 +684,12 @@ positive when there is an explicit hyphen before it (e.g. `#,##0.0;-#,##0.0`):
         out[i].t = 't';
         i = jj-1; break;
       case 'G': out[i].t = 't'; out[i].v = general_fmt(v,opts); break;
-      default: console.error(out); throw "unrecognized type " + out[i].t;
+```
+
+The default case should not be reachable.  In testing, add the line
+`default: console.error(out); throw "unrecognized type " + out[i].t;`
+
+```
     }
   }
   return out.map(function(x){return x.v;}).join("");
@@ -706,23 +712,35 @@ var write_date = function(type, fmt, val) {
   switch(type) {
     case 'y': switch(fmt) { /* year */
       case 'y': case 'yy': return pad(val.y % 100,2);
-      case 'yyy': case 'yyyy': return pad(val.y % 10000,4);
-      default: throw 'bad year format: ' + fmt;
+```
+
+Apparently, even `yyyyyyyyyyyyyyyyyyyy` is a 4 digit year
+
+```
+      default: return pad(val.y % 10000,4);
     }
     case 'm': switch(fmt) { /* month */
       case 'm': return val.m;
       case 'mm': return pad(val.m,2);
       case 'mmm': return months[val.m-1][1];
-      case 'mmmm': return months[val.m-1][2];
       case 'mmmmm': return months[val.m-1][0];
-      default: throw 'bad month format: ' + fmt;
+```
+
+Strangely enough, `mmmmmmmmmmmmmmmmmmmm` is treated as the full month name:
+
+```
+      default: return months[val.m-1][2];
     }
     case 'd': switch(fmt) { /* day */
       case 'd': return val.d;
       case 'dd': return pad(val.d,2);
       case 'ddd': return days[val.q][0];
-      case 'dddd': return days[val.q][1];
-      default: throw 'bad day format: ' + fmt;
+```
+
+Strangely enough, `dddddddddddddddddddd` is treated as the full day name:
+
+```
+      default: return days[val.q][1];
     }
     case 'h': switch(fmt) { /* 12-hour */
       case 'h': return 1+(val.H+11)%12;
@@ -766,7 +784,12 @@ should be a two-digit year, but `ee` in excel is actually the four-digit year:
 ```
     /* TODO: handle the ECMA spec format ee -> yy */
     case 'e': { return val.y; } break;
-    default: throw 'bad format type ' + type + ' in ' + fmt;
+```
+
+There is no input to the function that ends up triggering the default behavior:
+it is not exported and is only called when the type is in `ymdhHMsZe`
+
+```
   }
 };
 /*jshint +W086 */
@@ -939,6 +962,9 @@ ssf: ssf.md
 test:
         npm test
 
+test_min:
+        MINTEST=1 npm test
+
 .PHONY: lint
 lint:
         jshint ssf.js test/
@@ -951,8 +977,12 @@ Coverage tests use [blanket](http://npm.im/blanket):
 .PHONY: cov
 cov: tmp/coverage.html
 
-tmp/coverage.html: ssf.md
+tmp/coverage.html: ssf
         mocha --require blanket -R html-cov > tmp/coverage.html
+
+.PHONY: cov_min
+cov_min:
+        MINTEST=1 make cov
 ```
 
 Coveralls.io support
@@ -967,7 +997,7 @@ coveralls:
 ```json>package.json
 {
   "name": "ssf",
-  "version": "0.5.6",
+  "version": "0.5.7",
   "author": "SheetJS",
   "description": "pure-JS library to format data using ECMA-376 spreadsheet Format Codes",
   "keywords": [ "format", "sprintf", "spreadsheet" ],
@@ -1105,9 +1135,9 @@ function doit(data) {
 }
 describe('time formats', function() { doit(times.slice(0,1000)); });
 describe('date formats', function() {
-  doit(dates);
+  doit(process.env.MINTEST ? dates.slice(0,1000) : dates);
   it('should fail for bad formats', function() {
-    var bad = ['yyyyy', 'mmmmmm', 'ddddd'];
+    var bad = [];
     var chk = function(fmt){ return function(){ SSF.format(fmt,0); }; };
     bad.forEach(function(fmt){assert.throws(chk(fmt));});
   });
@@ -1124,7 +1154,7 @@ var fs = require('fs'), assert = require('assert');
 var data = fs.readFileSync('./test/exp.tsv','utf8').split("\n");
 function doit(d, headers) {
   it(d[0], function() {
-    for(var w = 2; w < 3 /*TODO: 1:headers.length */; ++w) {
+    for(var w = 1; w < headers.length; ++w) {
       var expected = d[w].replace("|", ""), actual;
       try { actual = SSF.format(headers[w], Number(d[0]), {}); } catch(e) { }
       if(actual != expected && d[w][0] !== "|") throw [actual, expected, w, headers[w],d[0],d].join("|");
@@ -1133,7 +1163,7 @@ function doit(d, headers) {
 }
 describe('exponential formats', function() {
   var headers = data[0].split("\t");
-  for(var j=14/* TODO: start from 1 */;j<data.length;++j) {
+  for(var j=1;j<data.length;++j) {
     if(!data[j]) return;
     doit(data[j].replace(/#{255}/g,"").split("\t"), headers);
   }
@@ -1158,6 +1188,11 @@ describe('oddities', function() {
         } else assert.throws(function() { SSF.format(d[0], d[j][0]); });
       }
     });
+  });
+  it('should fail for bad formats', function() {
+    var bad = ['##,##'];
+    var chk = function(fmt){ return function(){ SSF.format(fmt,0); }; };
+    bad.forEach(function(fmt){assert.throws(chk(fmt));});
   });
 });
 ```

@@ -14,4 +14,9 @@ describe('oddities', function() {
       }
     });
   });
+  it('should fail for bad formats', function() {
+    var bad = ['##,##'];
+    var chk = function(fmt){ return function(){ SSF.format(fmt,0); }; };
+    bad.forEach(function(fmt){assert.throws(chk(fmt));});
+  });
 });

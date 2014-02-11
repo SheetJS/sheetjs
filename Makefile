@@ -5,6 +5,9 @@ ssf: ssf.md
 test:
 	npm test
 
+test_min:
+	MINTEST=1 npm test
+
 .PHONY: lint
 lint:
 	jshint ssf.js test/
@@ -12,8 +15,12 @@ lint:
 .PHONY: cov
 cov: tmp/coverage.html
 
-tmp/coverage.html: ssf.md
+tmp/coverage.html: ssf
 	mocha --require blanket -R html-cov > tmp/coverage.html
+
+.PHONY: cov_min
+cov_min:
+	MINTEST=1 make cov
 
 .PHONY: coveralls
 coveralls:
