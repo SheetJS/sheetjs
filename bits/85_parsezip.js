@@ -13,7 +13,7 @@ function parseZip(zip, opts) {
 		xlsb = true;
 	}
 	strs = {};
-	if(dir.sst) strs=parse_sst(getdata(getzipfile(zip, dir.sst.replace(/^\//,''))), dir.sst);
+	if(dir.sst) strs=parse_sst(getdata(getzipfile(zip, dir.sst.replace(/^\//,''))), dir.sst, opts);
 
 	styles = {};
 	if(dir.style) styles = parse_sty(getdata(getzipfile(zip, dir.style.replace(/^\//,''))),dir.style);
@@ -58,7 +58,7 @@ function parseZip(zip, opts) {
 		}
 	}
 
-	if(dir.comments) parseCommentsAddToSheets(zip, dir.comments, sheets, sheetRels);
+	if(dir.comments) parse_comments(zip, dir.comments, sheets, sheetRels, opts);
 
 	return {
 		Directory: dir,

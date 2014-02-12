@@ -4,7 +4,7 @@ var fs = require('fs'), assert = require('assert');
 describe('source',function(){ it('should load', function(){ XLSX = require('./'); });});
 
 var ex = [".xlsb", ".xlsm", ".xlsx"];
-var exp = ex.map(function(x){ return x + ".pending"; }); 
+var exp = ex.map(function(x){ return x + ".pending"; });
 function test_file(x){return ex.indexOf(x.substr(-5))>=0||exp.indexOf(x.substr(-13))>=0;}
 
 var files = (fs.existsSync('tests.lst') ? fs.readFileSync('tests.lst', 'utf-8').split("\n") : fs.readdirSync('test_files')).filter(test_file);
@@ -82,5 +82,28 @@ describe('should have comment as part of cell\'s properties', function(){
 		assert.equal(ws.B1.c[0].h, '<span style="font-weight: bold;">Yegor Kozlov:</span><span style=""><br/>first cell</span>', "must have the html representation");
 		assert.equal(ws.B1.c[0].r, '<r><rPr><b/><sz val="8"/><color indexed="81"/><rFont val="Tahoma"/></rPr><t>Yegor Kozlov:</t></r><r><rPr><sz val="8"/><color indexed="81"/><rFont val="Tahoma"/></rPr><t xml:space="preserve">\r\nfirst cell</t></r>', "must have the rich text representation");
 		assert.equal(ws.B1.c[0].a, "Yegor Kozlov","must have the same author");
+	});
+});
+
+describe('options', function() {
+	var html_cell_types = ['s'];
+	before(function() {
+		XLSX = require('./');
+	});
+	it('should generate HTML by default', function() {
+		var wb = XLSX.readFile('./test_files/comments_stress_test.xlsx');
+		var ws = wb.Sheets.Sheet1;
+		Object.keys(ws).forEach(function(addr) {
+			if(addr[0] === "!" || !ws.hasOwnProperty(addr)) return;
+			assert(html_cell_types.indexOf(ws[addr].t) === -1 || ws[addr].h);
+		});
+	});
+	it('should not generate HTML when requested', function() {
+		var wb = XLSX.readFile('./test_files/comments_stress_test.xlsx', {cellHTML: false});
+		var ws = wb.Sheets.Sheet1;
+		Object.keys(ws).forEach(function(addr) {
+			if(addr[0] === "!" || !ws.hasOwnProperty(addr)) return;
+			assert(typeof ws[addr].h === 'undefined');
+		});
 	});
 });

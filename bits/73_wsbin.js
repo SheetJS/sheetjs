@@ -60,6 +60,14 @@ var parse_BrtCellSt = function(data, length) {
 	return [cell, value, 'str'];
 };
 
+/* [MS-XLSB] 2.4.647 BrtFmlaBool */
+var parse_BrtFmlaBool = function(data, length) {
+	var cell = parse_Cell(data);
+	var value = data.read_shift(1);
+	data.l += length-9;
+	return [cell, value, 'b' /*, formula */];
+};
+
 /* [MS-XLSB] 2.4.648 BrtFmlaError */
 var parse_BrtFmlaError = function(data, length) {
 	var cell = parse_Cell(data);
@@ -76,9 +84,16 @@ var parse_BrtFmlaNum = function(data, length) {
 	return [cell, value, 'n' /*, formula */];
 };
 
+/* [MS-XLSB] 2.4.650 BrtFmlaString */
+var parse_BrtFmlaString = function(data, length) {
+	var start = data.l;
+	var cell = parse_Cell(data);
+	var value = parse_XLWideString(data);
+	data.l = start + length;
+	return [cell, value, 'str' /*, formula */];
+};
+
 var parse_BrtCellBlank = parsenoop;
-var parse_BrtFmlaBool = parsenoop;
-var parse_BrtFmlaString = parsenoop;
 
 /* [MS-XLSB] 2.1.7.61 Worksheet */
 var parse_ws_bin = function(data, opts) {
@@ -92,15 +107,12 @@ var parse_ws_bin = function(data, opts) {
 	recordhopper(data, function(val, R) {
 		switch(R.n) {
 			case 'BrtWsDim': ref = val; break;
+			case 'BrtRowHdr': row = val; break;
 
-			case 'BrtRowHdr':
-				row = val;
-				break; // TODO
-
-			case 'BrtFmlaError': break; // TODO
-			case 'BrtFmlaString': break; // TODO
-			case 'BrtFmlaBool': break; // TODO
+			case 'BrtFmlaBool':
+			case 'BrtFmlaError':
 			case 'BrtFmlaNum':
+			case 'BrtFmlaString':
 			case 'BrtCellBool':
 			case 'BrtCellError':
 			case 'BrtCellIsst':
@@ -112,9 +124,9 @@ var parse_ws_bin = function(data, opts) {
 					case 's': p.v = strs[val[1]].t; p.r = strs[val[1]].r; break;
 					case 'b': p.v = val[1] ? true : false; break;
 					case 'e': p.raw = val[1]; p.v = BErr[p.raw]; break;
-					case 'str': if(p.v) p.v = utf8read(p.v); break;
+					case 'str': p.v = utf8read(val[1]); break;
 				}
-				if(val[3]) p.f = val[3];
+				if(val[3] && opts.cellFormula) p.f = val[3];
 				if((cf = styles.CellXf[val[0].iStyleRef])) try {
 					p.w = SSF.format(cf.ifmt,p.v,_ssfopts);
 					if(opts.cellNF) p.z = SSF._table[cf.ifmt];

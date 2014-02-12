@@ -105,7 +105,8 @@ var parse_rs = (function() {
 })();
 
 /* 18.4.8 si CT_Rst */
-var parse_si = function(x) {
+var parse_si = function(x, opts) {
+	var html = opts ? opts.cellHTML : true;
 	var z = {};
 	if(!x) return null;
 	var y;
@@ -113,14 +114,14 @@ var parse_si = function(x) {
 	if(x[1] === 't') {
 		z.t = utf8read(unescapexml(x.substr(x.indexOf(">")+1).split(/<\/t>/)[0]));
 		z.r = x;
-		z.h = z.t;
+		if(html) z.h = z.t;
 	}
 	/* 18.4.4 r CT_RElt (Rich Text Run) */
 	else if((y = x.match(/<r>/))) {
 		z.r = x;
 		/* TODO: properly parse (note: no other valid child can have body text) */
 		z.t = utf8read(unescapexml(x.replace(/<[^>]*>/gm,"")));
-		z.h = parse_rs(x);
+		if(html) z.h = parse_rs(x);
 	}
 	/* 18.4.3 phoneticPr CT_PhoneticPr (TODO: needed for Asian support) */
 	/* 18.4.6 rPh CT_PhoneticRun (TODO: needed for Asian support) */
@@ -128,12 +129,12 @@ var parse_si = function(x) {
 };
 
 /* 18.4 Shared String Table */
-var parse_sst_xml = function(data) {
+var parse_sst_xml = function(data, opts) {
 	var s = [];
 	/* 18.4.9 sst CT_Sst */
 	var sst = data.match(new RegExp("<sst([^>]*)>([\\s\\S]*)<\/sst>","m"));
 	if(isval(sst)) {
-		s = sst[2].replace(/<(?:si|sstItem)>/g,"").split(/<\/(?:si|sstItem)>/).map(parse_si).filter(function(x) { return x; });
+		s = sst[2].replace(/<(?:si|sstItem)>/g,"").split(/<\/(?:si|sstItem)>/).map(function(x) { return parse_si(x, opts); }).filter(function(x) { return x; });
 		sst = parsexmltag(sst[1]); s.Count = sst.count; s.Unique = sst.uniqueCount;
 	}
 	return s;

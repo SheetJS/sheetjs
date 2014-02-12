@@ -1,10 +1,16 @@
+RkNumber.xlsb
+comments_stress_test.xlsb
 formula_stress_test.xlsb
+large_strings.xlsb.pending
+merge_cells.xlsb
+named_ranges_2011.xlsb
 number_format.xlsb
 rich_text_stress.xlsb
 time_stress_test_1.xlsb
 LONumbers-2010.xlsx
 LONumbers-2011.xlsx
 LONumbers.xlsx
+RkNumber.xlsx
 apachepoi_45430.xlsx
 apachepoi_45540_classic_Footer.xlsx
 apachepoi_45540_classic_Header.xlsx
@@ -153,6 +159,7 @@ jxls-core_simple.xlsx
 jxls-examples_stress1.xlsx
 jxls-examples_stress2.xlsx
 jxls-reader_departmentData.xlsx
+large_strings.xlsx.pending
 merge_cells.xlsx
 mixed_sheets.xlsx
 named_ranges_2011.xlsx
@@ -166,6 +173,7 @@ openpyxl_g_empty_with_no_properties.xlsx
 openpyxl_g_guess_types.xlsx
 openpyxl_g_libreoffice_nrt.xlsx
 openpyxl_g_merge_range.xlsx
+openpyxl_r_bigfoot.xlsx.pending
 openpyxl_r_comments.xlsx
 openpyxl_r_complex-styles.xlsx
 openpyxl_r_conditional-formatting.xlsx

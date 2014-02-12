@@ -12,7 +12,7 @@ function decode_range(range) { var x =range.split(":").map(decode_cell); return 
 function encode_range(range) { return encode_cell(range.s) + ":" + encode_cell(range.e); }
 
 function sheet_to_row_object_array(sheet, opts){
-	var val, row, r, hdr = {}, isempty, R, C, v;
+	var val, row, r, hdr = {}, isempty, R, C;
 	var out = [];
 	opts = opts || {};
 	if(!sheet || !sheet["!ref"]) return out;
@@ -54,12 +54,10 @@ function sheet_to_row_object_array(sheet, opts){
 function sheet_to_csv(sheet, opts) {
 	var stringify = function stringify(val) {
 		if(!val.t) return "";
-		if(typeof val.w !== 'undefined') return '"' + val.w.replace(/"/,'""') + '"';
+		if(typeof val.w !== 'undefined') return val.w;
 		switch(val.t){
 			case 'n': return String(val.v);
-			case 's': case 'str':
-				if(typeof val.v === 'undefined') return "";
-				return '"' + val.v.replace(/"/,'""') + '"';
+			case 's': case 'str': return typeof val.v !== 'undefined' ? val.v : "";
 			case 'b': return val.v ? "TRUE" : "FALSE";
 			case 'e': return val.v; /* throw out value in case of error */
 			default: throw 'unrecognized type ' + val.t;
@@ -69,15 +67,18 @@ function sheet_to_csv(sheet, opts) {
 	opts = opts || {};
 	if(!sheet || !sheet["!ref"]) return out;
 	var r = XLSX.utils.decode_range(sheet["!ref"]);
+	var fs = opts.FS||",", rs = opts.RS||"\n";
 	for(var R = r.s.r; R <= r.e.r; ++R) {
 		var row = [];
 		for(var C = r.s.c; C <= r.e.c; ++C) {
 			var val = sheet[XLSX.utils.encode_cell({c:C,r:R})];
 			if(!val) { row.push(""); continue; }
-			txt = stringify(val);
-			row.push(String(txt).replace(/\\r\\n/g,"\n").replace(/\\t/g,"\t").replace(/\\\\/g,"\\").replace("\\\"","\"\""));
+			txt = String(stringify(val));
+			if(txt.indexOf(fs)!==-1 || txt.indexOf(rs)!==-1 || txt.indexOf('"')!==-1)
+				txt = "\"" + txt.replace(/"/g, '""') + "\"";
+			row.push(txt);
 		}
-		out += row.join(opts.FS||",") + (opts.RS||"\n");
+		out += row.join(fs) + (rs);
 	}
 	return out;
 }

@@ -17,14 +17,6 @@ In the browser:
 
 ## Usage
 
-The node version installs a binary `xlsx2csv` which can read XLSX/XLSM/XLSB files and output the contents in various formats.  The source is available at `xlsx2csv.njs` in the bin directory.
-
-See <http://oss.sheetjs.com/js-xlsx/> for a browser example.
-
-Note that older versions of IE does not support HTML5 File API, so the base64 mode is provided for testing.  On OSX you can get the base64 encoding by running:
-
-    $ <target_file.xlsx base64 | pbcopy # the pbcopy puts the content in the clipboard
-
 Simple usage (walks through every cell of every sheet and dumps the values):
 
     var XLSX = require('xlsx')
@@ -36,6 +28,14 @@ Simple usage (walks through every cell of every sheet and dumps the values):
         console.log(y + "!" + z + "=" + JSON.stringify(xlsx.Sheets[y][z].v));
       }
     });
+
+The node version installs a binary `xlsx2csv` which can read XLSX/XLSM/XLSB files and output the contents in various formats.  The source is available at `xlsx2csv.njs` in the bin directory.
+
+See <http://oss.sheetjs.com/js-xlsx/> for a browser example.
+
+Note that older versions of IE does not support HTML5 File API, so the base64 mode is provided for testing.  On OSX you can get the base64 encoding by running:
+
+    $ <target_file.xlsx base64 | pbcopy # the pbcopy puts the content in the clipboard
 
 Some helper functions in `XLSX.utils` generate different views of the sheets:
 
@@ -75,8 +75,14 @@ The exported `read` and `readFile` functions accept an options argument:
 
 | Option Name | Default | Description |
 | :---------- | ------: | :---------- |
+| cellFormula | true    | Save formulae to the .f field ** |
+| cellHTML    | true    | Parse rich text and save HTML to the .h field |
 | cellNF      | false   | Save number format string to the .z field |
-| sheetStubs  | true    | Create cell objects for stub cells |
+| sheetStubs  | false   | Create cell objects for stub cells |
+
+- `cellFormula` only applies to constructing XLSB formulae.  XLSX/XLSM formulae
+  are stored in plaintext, but XLSB formulae are stored in a binary format.
+- Even if `cellNF` is false, formatted text (.w) will be generated
 
 The defaults are enumerated in bits/84_defaults.js 
 

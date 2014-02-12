@@ -37,7 +37,7 @@ function parse_ws_xml(data, opts) {
 
 			/* SCHEMA IS ACTUALLY INCORRECT HERE.  IF A CELL HAS NO T, EMIT "" */
 			if(cell.t === undefined && p.v === undefined) {
-				if(!opts.sheetEmptyCells) return;
+				if(!opts.sheetStubs) return;
 				p.t = "str"; p.v = undefined;
 			}
 			else p.t = (cell.t ? cell.t : "n"); // default is "n" in schema
@@ -49,7 +49,7 @@ function parse_ws_xml(data, opts) {
 					sidx = parseInt(p.v, 10);
 					p.v = strs[sidx].t;
 					p.r = strs[sidx].r;
-					p.h = strs[sidx].h;
+					if(opts.cellHTML) p.h = strs[sidx].h;
 				} break;
 				case 'str': if(p.v) p.v = utf8read(p.v); break;
 				case 'inlineStr':

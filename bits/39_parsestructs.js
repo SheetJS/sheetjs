@@ -1,9 +1,16 @@
+
+/* [MS-XLSB] 2.5.143 */
+var parse_StrRun = function(data, length) {
+	return { ich: data.read_shift(2), ifnt: data.read_shift(2) };
+}
+
 /* [MS-XLSB] 2.1.7.121 */
 var parse_RichStr = function(data, length) {
 	var start = data.l;
 	var flags = data.read_shift(1);
 	var fRichStr = flags & 1, fExtStr = flags & 2;
 	var str = parse_XLWideString(data);
+	var rgsStrRun = [];
 	var z = {
 		t: str,
 		r:"<t>" + escapexml(str) + "</t>",
@@ -12,6 +19,7 @@ var parse_RichStr = function(data, length) {
 	if(fRichStr) {
 		/* TODO: formatted string */
 		var dwSizeStrRun = data.read_shift(4);
+		for(var i = 0; i != dwSizeStrRun; ++i) rgsStrRun.push(parse_StrRun(data));
 	}
 	if(fExtStr) {
 		/* TODO: phonetic string */
