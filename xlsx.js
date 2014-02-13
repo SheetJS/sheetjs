@@ -639,7 +639,7 @@ var recordhopper = function(data, cb, opts) {
 /* [MS-XLSB] 2.5.143 */
 var parse_StrRun = function(data, length) {
 	return { ich: data.read_shift(2), ifnt: data.read_shift(2) };
-}
+};
 
 /* [MS-XLSB] 2.1.7.121 */
 var parse_RichStr = function(data, length) {

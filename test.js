@@ -5,7 +5,6 @@ describe('source',function(){ it('should load', function(){ XLSX = require('./')
 
 var ex = [".xlsb", ".xlsm", ".xlsx"];
 if(process.env.FMTS) ex=process.env.FMTS.split(":").map(function(x){return x[0]==="."?x:"."+x;});
-console.log(ex, process.env.FMTS);
 var exp = ex.map(function(x){ return x + ".pending"; });
 function test_file(x){return ex.indexOf(x.substr(-5))>=0||exp.indexOf(x.substr(-13))>=0;}
 
@@ -113,7 +112,6 @@ describe('options', function() {
 		var found = false;
 		wb.SheetNames.forEach(function(s) {
 			var ws = wb.Sheets[s];
-			console.log(ws);
 			Object.keys(ws).forEach(function(addr) {
 				if(addr[0] === "!" || !ws.hasOwnProperty(addr)) return;
 				if(typeof ws[addr].f !== 'undefined') return found = true; 
@@ -128,6 +126,34 @@ describe('options', function() {
 			Object.keys(ws).forEach(function(addr) {
 				if(addr[0] === "!" || !ws.hasOwnProperty(addr)) return;
 				assert(typeof ws[addr].f === 'undefined');
+			});
+		});
+	});
+	it('should not generate sheet stubs by default', function() {
+		var wb = XLSX.readFile('./test_files/merge_cells.xlsx');
+		assert.throws(function() { wb.Sheets.Merge.A2.v; });
+	});
+	it('should generate sheet stubs when requested', function() {
+		var wb = XLSX.readFile('./test_files/merge_cells.xlsx', {sheetStubs:true});
+		assert(typeof wb.Sheets.Merge.A2.t !== 'undefined');
+	});
+	it('should not generate number formats by default', function() {
+		var wb = XLSX.readFile('./test_files/number_format.xlsm');
+		wb.SheetNames.forEach(function(s) {
+			var ws = wb.Sheets[s];
+			Object.keys(ws).forEach(function(addr) {
+				if(addr[0] === "!" || !ws.hasOwnProperty(addr)) return;
+				assert(typeof ws[addr].z === 'undefined');
+			});
+		});
+	});
+	it('should generate number formats when requested', function() {
+		var wb = XLSX.readFile('./test_files/number_format.xlsm', {cellNF: true});
+		wb.SheetNames.forEach(function(s) {
+			var ws = wb.Sheets[s];
+			Object.keys(ws).forEach(function(addr) {
+				if(addr[0] === "!" || !ws.hasOwnProperty(addr)) return;
+				assert(typeof ws[addr].t !== 'n' || typeof ws[addr].z !== 'undefined');
 			});
 		});
 	});
