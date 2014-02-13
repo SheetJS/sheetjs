@@ -46,10 +46,13 @@ if(!fs.existsSync(filename)) {
 
 if(program.dev) X.verbose = 2;
 
+var opts = {};
+if(program.listSheets) opts.bookSheets = true;
+
 var wb;
-if(program.dev) wb = X.readFile(filename);
+if(program.dev) wb = X.readFile(filename, opts);
 else try {
-	wb = X.readFile(filename);
+	wb = X.readFile(filename, opts);
 } catch(e) {
 	var msg = (program.quiet) ? "" : n + "2csv: error parsing ";
 	msg += filename + ": " + e;

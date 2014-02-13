@@ -4,6 +4,8 @@ var fs = require('fs'), assert = require('assert');
 describe('source',function(){ it('should load', function(){ XLSX = require('./'); });});
 
 var ex = [".xlsb", ".xlsm", ".xlsx"];
+if(process.env.FMTS) ex=process.env.FMTS.split(":").map(function(x){return x[0]==="."?x:"."+x;});
+console.log(ex, process.env.FMTS);
 var exp = ex.map(function(x){ return x + ".pending"; });
 function test_file(x){return ex.indexOf(x.substr(-5))>=0||exp.indexOf(x.substr(-13))>=0;}
 
@@ -104,6 +106,29 @@ describe('options', function() {
 		Object.keys(ws).forEach(function(addr) {
 			if(addr[0] === "!" || !ws.hasOwnProperty(addr)) return;
 			assert(typeof ws[addr].h === 'undefined');
+		});
+	});
+	it('should generate formulae by default', function() {
+		var wb = XLSX.readFile('./test_files/formula_stress_test.xlsb');
+		var found = false;
+		wb.SheetNames.forEach(function(s) {
+			var ws = wb.Sheets[s];
+			console.log(ws);
+			Object.keys(ws).forEach(function(addr) {
+				if(addr[0] === "!" || !ws.hasOwnProperty(addr)) return;
+				if(typeof ws[addr].f !== 'undefined') return found = true; 
+			});
+		});
+		assert(found);
+	});
+	it('should not generate formulae when requested', function() {
+		var wb = XLSX.readFile('./test_files/formula_stress_test.xlsb', {cellFormula: false});
+		wb.SheetNames.forEach(function(s) {
+			var ws = wb.Sheets[s];
+			Object.keys(ws).forEach(function(addr) {
+				if(addr[0] === "!" || !ws.hasOwnProperty(addr)) return;
+				assert(typeof ws[addr].f === 'undefined');
+			});
 		});
 	});
 });

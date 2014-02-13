@@ -12,19 +12,29 @@ function parseZip(zip, opts) {
 		dir.workbooks.push(binname);
 		xlsb = true;
 	}
-	strs = {};
-	if(dir.sst) strs=parse_sst(getdata(getzipfile(zip, dir.sst.replace(/^\//,''))), dir.sst, opts);
 
-	styles = {};
-	if(dir.style) styles = parse_sty(getdata(getzipfile(zip, dir.style.replace(/^\//,''))),dir.style);
+	if(!opts.bookSheets) {
+		strs = {};
+		if(dir.sst) strs=parse_sst(getdata(getzipfile(zip, dir.sst.replace(/^\//,''))), dir.sst, opts);
 
-	var wb = parse_wb(getdata(getzipfile(zip, dir.workbooks[0].replace(/^\//,''))), dir.workbooks[0]);
+		styles = {};
+		if(dir.style) styles = parse_sty(getdata(getzipfile(zip, dir.style.replace(/^\//,''))),dir.style);
+	}
+
+	var wb = parse_wb(getdata(getzipfile(zip, dir.workbooks[0].replace(/^\//,''))), dir.workbooks[0], opts);
+
 	var props = {}, propdata = "";
 	try {
 		propdata = dir.coreprops.length !== 0 ? getdata(getzipfile(zip, dir.coreprops[0].replace(/^\//,''))) : "";
 	propdata += dir.extprops.length !== 0 ? getdata(getzipfile(zip, dir.extprops[0].replace(/^\//,''))) : "";
 		props = propdata !== "" ? parseProps(propdata) : {};
 	} catch(e) { }
+
+	if(opts.bookSheets) {
+		if(props.Worksheets && props.SheetNames.length > 0) return { SheetNames:props.SheetNames };
+		else if(wb.Sheets) return { SheetNames:wb.Sheets.map(function(x) { return x.name; }) };
+	}
+
 	var deps = {};
 	if(dir.calcchain) deps=parseDeps(getdata(getzipfile(zip, dir.calcchain.replace(/^\//,''))));
 	var sheets = {}, i=0;

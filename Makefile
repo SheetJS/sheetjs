@@ -1,5 +1,6 @@
 DEPS=$(wildcard bits/*.js)
 TARGET=xlsx.js
+FMT=xlsx xlsm xlsb
 
 $(TARGET): $(DEPS)
 	cat $^ > $@
@@ -22,6 +23,11 @@ init:
 .PHONY: test mocha
 test mocha:
 	mocha -R spec
+
+TESTFMT=$(patsubst %,test_%,$(FMT))
+.PHONY: $(TESTFMT)
+$(TESTFMT): test_%:
+	FMTS=$* make test
 
 .PHONY: jasmine
 jasmine:

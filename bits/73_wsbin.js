@@ -1,3 +1,4 @@
+
 /* [MS-XLSB] 2.4.718 BrtRowHdr */
 var parse_BrtRowHdr = function(data, length) {
 	var z = {};
@@ -17,6 +18,9 @@ var parse_BrtWsProp = function(data, length) {
 	z.name = parse_CodeName(data, length - 19);
 	return z;
 };
+
+/* [MS-XLSB] 2.4.303 BrtCellBlank */
+var parse_BrtCellBlank = parsenoop;
 
 /* [MS-XLSB] 2.4.304 BrtCellBool */
 var parse_BrtCellBool = function(data, length) {
@@ -53,7 +57,7 @@ var parse_BrtCellRk = function(data, length) {
 	return [cell, value, 'n'];
 };
 
-/* [MS-XLSB] 2.4.311 BrtCellRk */
+/* [MS-XLSB] 2.4.314 BrtCellSt */
 var parse_BrtCellSt = function(data, length) {
 	var cell = parse_Cell(data);
 	var value = parse_XLWideString(data);
@@ -61,39 +65,57 @@ var parse_BrtCellSt = function(data, length) {
 };
 
 /* [MS-XLSB] 2.4.647 BrtFmlaBool */
-var parse_BrtFmlaBool = function(data, length) {
+var parse_BrtFmlaBool = function(data, length, opts) {
 	var cell = parse_Cell(data);
 	var value = data.read_shift(1);
-	data.l += length-9;
-	return [cell, value, 'b' /*, formula */];
+	var o = [cell, value, 'b'];
+	if(opts.cellFormula) {
+		var formula = parse_CellParsedFormula(data, length-9);
+		o[3] = ""; /* TODO */
+	}
+	else data.l += length-9;
+	return o;
 };
 
 /* [MS-XLSB] 2.4.648 BrtFmlaError */
-var parse_BrtFmlaError = function(data, length) {
+var parse_BrtFmlaError = function(data, length, opts) {
 	var cell = parse_Cell(data);
-	var fBool = data.read_shift(1);
-	data.l += length-9;
-	return [cell, fBool, 'e'];
+	var value = data.read_shift(1);
+	var o = [cell, value, 'e'];
+	if(opts.cellFormula) {
+		var formula = parse_CellParsedFormula(data, length-9);
+		o[3] = ""; /* TODO */
+	}
+	else data.l += length-9;
+	return o;
 };
 
 /* [MS-XLSB] 2.4.649 BrtFmlaNum */
-var parse_BrtFmlaNum = function(data, length) {
+var parse_BrtFmlaNum = function(data, length, opts) {
 	var cell = parse_Cell(data);
 	var value = parse_Xnum(data);
-	data.l += length-16;
-	return [cell, value, 'n' /*, formula */];
+	var o = [cell, value, 'n'];
+	if(opts.cellFormula) {
+		var formula = parse_CellParsedFormula(data, length - 16);
+		o[3] = ""; /* TODO */
+	}
+	else data.l += length-16;
+	return o;
 };
 
 /* [MS-XLSB] 2.4.650 BrtFmlaString */
-var parse_BrtFmlaString = function(data, length) {
+var parse_BrtFmlaString = function(data, length, opts) {
 	var start = data.l;
 	var cell = parse_Cell(data);
 	var value = parse_XLWideString(data);
-	data.l = start + length;
-	return [cell, value, 'str' /*, formula */];
+	var o = [cell, value, 'str'];
+	if(opts.cellFormula) {
+		var formula = parse_CellParsedFormula(data, start + length - data.l);
+		o[3] = ""; /* TODO */
+	}
+	else data.l = start + length;
+	return o;
 };
-
-var parse_BrtCellBlank = parsenoop;
 
 /* [MS-XLSB] 2.1.7.61 Worksheet */
 var parse_ws_bin = function(data, opts) {
@@ -126,7 +148,7 @@ var parse_ws_bin = function(data, opts) {
 					case 'e': p.raw = val[1]; p.v = BErr[p.raw]; break;
 					case 'str': p.v = utf8read(val[1]); break;
 				}
-				if(val[3] && opts.cellFormula) p.f = val[3];
+				if(opts.cellFormula && val.length > 3) p.f = val[3];
 				if((cf = styles.CellXf[val[0].iStyleRef])) try {
 					p.w = SSF.format(cf.ifmt,p.v,_ssfopts);
 					if(opts.cellNF) p.z = SSF._table[cf.ifmt];
@@ -136,7 +158,6 @@ var parse_ws_bin = function(data, opts) {
 
 			case 'BrtCellBlank': break; // (blank cell)
 
-			case 'BrtFmt': break; // TODO
 			case 'BrtArrFmla': break; // TODO
 			case 'BrtShrFmla': break; // TODO
 			case 'BrtBeginSheet': break;
@@ -163,9 +184,13 @@ var parse_ws_bin = function(data, opts) {
 			case 'BrtFRTBegin': pass = true; break;
 			case 'BrtFRTEnd': pass = false; break;
 			case 'BrtEndSheet': break; // TODO
+			case 'BrtBeginMergeCells': break; // TODO
+			case 'BrtMergeCell': break; // TODO
+			case 'BrtEndMergeCells': break; // TODO
+			case 'BrtLegacyDrawing': break; // TODO
 			//default: if(!pass) throw new Error("Unexpected record " + R.n);
 		}
-	});
+	}, opts);
 	s["!ref"] = encode_range(ref);
 	return s;
 };

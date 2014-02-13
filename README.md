@@ -49,7 +49,7 @@ For more details:
 - `index.html` is the live demo
 - `bits/90_utils.js` contains the logic for generating CSV and JSON from sheets
 
-## Cell Object Description 
+## Cell Object Description
 
 `.SheetNames` is an ordered list of the sheets in the workbook
 
@@ -65,7 +65,7 @@ that does not start with `!` corresponds to a cell (using `A-1` notation).
 - `.r` : the rich text encoding of a cell text (if applicable)
 - `.h` : an HTML rendering of the rich text (if applicable)
 - `.c` : comments associated with the cell
-- `.z` : the number format string associated with the cell (if requested) 
+- `.z` : the number format string associated with the cell (if requested)
 
 For dates, `.v` holds the raw date code from the sheet and `.w` holds the text
 
@@ -79,12 +79,14 @@ The exported `read` and `readFile` functions accept an options argument:
 | cellHTML    | true    | Parse rich text and save HTML to the .h field |
 | cellNF      | false   | Save number format string to the .z field |
 | sheetStubs  | false   | Create cell objects for stub cells |
+| bookSheets  | false   | If true, only parse enough to get the sheet names |
 
 - `cellFormula` only applies to constructing XLSB formulae.  XLSX/XLSM formulae
   are stored in plaintext, but XLSB formulae are stored in a binary format.
 - Even if `cellNF` is false, formatted text (.w) will be generated
+- In some cases, sheets may be parsed even if `bookSheets` is false.
 
-The defaults are enumerated in bits/84_defaults.js 
+The defaults are enumerated in bits/84_defaults.js
 
 ## Tested Environments
 
@@ -118,7 +120,7 @@ $ open -a Chromium.app http://localhost:8000/stress.html
 
 ## Contributing
 
-Due to the precarious nature of the Open Specifications Promise, it is very important to ensure code is cleanroom.  Consult CONTRIBUTING.md 
+Due to the precarious nature of the Open Specifications Promise, it is very important to ensure code is cleanroom.  Consult CONTRIBUTING.md
 
 ## XLS Support
 
@@ -138,6 +140,7 @@ OSP-covered specifications:
 
  - [MS-XLSX]: Excel (.xlsx) Extensions to the Office Open XML SpreadsheetML File Format
  - [MS-XLSB]: Excel (.xlsb) Binary File Format
+ - [MS-OE376]: Office Implementation Information for ECMA-376 Standards Support
 
 ## Badges
 
