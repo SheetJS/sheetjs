@@ -29,6 +29,13 @@ function parseZip(zip, opts) {
 	propdata += dir.extprops.length !== 0 ? getdata(getzipfile(zip, dir.extprops[0].replace(/^\//,''))) : "";
 		props = propdata !== "" ? parseProps(propdata) : {};
 	} catch(e) { }
+	var custprops = {};
+	if (dir.custprops.length !== 0) {
+		try {
+			propdata = getdata(getzipfile(zip, dir.custprops[0].replace(/^\//,'')));
+			custprops = parseCustomProps(propdata);
+		} catch(e) {/*console.error(e);*/}
+	}
 
 	if(opts.bookSheets) {
 		if(props.Worksheets && props.SheetNames.length > 0) return { SheetNames:props.SheetNames };
@@ -74,6 +81,7 @@ function parseZip(zip, opts) {
 		Directory: dir,
 		Workbook: wb,
 		Props: props,
+		Custprops: custprops,
 		Deps: deps,
 		Sheets: sheets,
 		SheetNames: props.SheetNames,

@@ -1044,6 +1044,7 @@ var ct2type = {
 
 	"application/vnd.openxmlformats-package.core-properties+xml": "coreprops",
 	"application/vnd.openxmlformats-officedocument.extended-properties+xml": "extprops",
+	"application/vnd.openxmlformats-officedocument.custom-properties+xml": "custprops",
 	"application/vnd.openxmlformats-officedocument.theme+xml":"themes",
 	"application/vnd.openxmlformats-officedocument.spreadsheetml.comments+xml": "comments",
 	"foo": "bar"
@@ -1090,6 +1091,46 @@ function parseProps(data) {
 	return p;
 }
 
+/* 15.2.12.2 Custom File Properties Part */
+function parseCustomProps(data) {
+	var p = {}, name;
+	data.match(/<[^>]+>([^<]*)/g).forEach(function(x) {
+		var y = parsexmltag(x);
+		switch(y[0]) {
+			case '<property': name = y.name; break;
+			case '</property>': name = null; break;
+			default: if (x.indexOf('<vt:') === 0) {
+				var toks = x.split('>');
+				var type = toks[0].substring(4), text = toks[1];
+				/* 22.4.2.32 (CT_Variant). Omit the binary types from 22.4 (Variant Types) */
+				switch(type) {
+					case 'lpstr': case 'lpwstr': case 'bstr': case 'lpwstr':
+						p[name] = unescapexml(text);
+						break;
+					case 'bool':
+						p[name] = parsexmlbool(text, '<vt:bool>');
+						break;
+					case 'i1': case 'i2': case 'i4': case 'i8': case 'int': case 'uint':
+						p[name] = parseInt(text, 10);
+						break;
+					case 'r4': case 'r8': case 'decimal':
+						p[name] = parseFloat(text);
+						break;
+					case 'filetime': case 'date':
+						p[name] = text; // should we make this into a date?
+						break;
+					case 'cy': case 'error':
+						p[name] = unescapexml(text);
+						break;
+					default:
+						console.warn('Unexpected', x, type, toks);
+				}
+			}
+		}
+	});
+	return p;
+}
+
 /* 18.6 Calculation Chain */
 function parseDeps(data) {
 	var d = [];
@@ -1111,7 +1152,7 @@ var ctext = {};
 function parseCT(data) {
 	if(!data || !data.match) return data;
 	var ct = { workbooks: [], sheets: [], calcchains: [], themes: [], styles: [],
-		coreprops: [], extprops: [], strs:[], comments: [], xmlns: "" };
+		coreprops: [], extprops: [], custprops: [], strs:[], comments: [], xmlns: "" };
 	(data.match(/<[^>]*>/g)||[]).forEach(function(x) {
 		var y = parsexmltag(x);
 		switch(y[0]) {
@@ -2660,6 +2701,13 @@ function parseZip(zip, opts) {
 	propdata += dir.extprops.length !== 0 ? getdata(getzipfile(zip, dir.extprops[0].replace(/^\//,''))) : "";
 		props = propdata !== "" ? parseProps(propdata) : {};
 	} catch(e) { }
+	var custprops = {};
+	if (dir.custprops.length !== 0) {
+		try {
+			propdata = getdata(getzipfile(zip, dir.custprops[0].replace(/^\//,'')));
+			custprops = parseCustomProps(propdata);
+		} catch(e) {/*console.error(e);*/}
+	}
 
 	if(opts.bookSheets) {
 		if(props.Worksheets && props.SheetNames.length > 0) return { SheetNames:props.SheetNames };
@@ -2705,6 +2753,7 @@ function parseZip(zip, opts) {
 		Directory: dir,
 		Workbook: wb,
 		Props: props,
+		Custprops: custprops,
 		Deps: deps,
 		Sheets: sheets,
 		SheetNames: props.SheetNames,
