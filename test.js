@@ -157,13 +157,38 @@ describe('options', function() {
 			});
 		});
 	});
+	describe('book', function() {
+		it('bookSheets should not generate sheets', function() {
+			var wb = XLSX.readFile('./test_files/merge_cells.xlsx', {bookSheets:true});
+			assert(typeof wb.Sheets === 'undefined');
+		});
+		it('bookProps should not generate sheets', function() {
+			var wb = XLSX.readFile('./test_files/number_format.xlsb', {bookProps:true});
+			assert(typeof wb.Sheets === 'undefined');
+		});
+		it('bookProps && bookSheets should not generate sheets', function() {
+			var wb = XLSX.readFile('./test_files/LONumbers.xlsx', {bookProps:true, bookSheets:true});
+			assert(typeof wb.Sheets === 'undefined');
+		});
+	});
 });
 
-describe.skip('should have core properties and custom properties parsed', function() {
+describe('input formats', function() {
+	it('should read binary strings', function() {
+		XLSX.read(fs.readFileSync('./test_files/comments_stress_test.xlsb', 'binary'), {type: 'binary'}); 
+		XLSX.read(fs.readFileSync('./test_files/comments_stress_test.xlsx', 'binary'), {type: 'binary'}); 
+	});
+	it('should read base64 strings', function() {
+		XLSX.read(fs.readFileSync('./test_files/comments_stress_test.xlsb', 'base64'), {type: 'base64'}); 
+		XLSX.read(fs.readFileSync('./test_files/comments_stress_test.xlsx', 'base64'), {type: 'base64'}); 
+	});
+});
+
+describe('should have core properties and custom properties parsed', function() {
 	var wb;
 	before(function() {
 		XLSX = require('./');
-		wb = XLSX.readFile('./test_files/excel-properties.xlsx', { sheetStubs: false });
+		wb = XLSX.readFile('./test_files/custom_properties.xlsx');
 	});
 	it('Must have read the core properties', function() {
 		assert.equal(wb.Props.Company, 'Vector Inc');

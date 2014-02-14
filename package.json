@@ -1,6 +1,6 @@
 {
 	"name": "xlsx",
-	"version": "0.5.5",
+	"version": "0.5.6",
 	"author": "sheetjs",
 	"description": "XLSB / XLSX / XLSM parser",
 	"keywords": [ "xlsx", "xlsb", "xlsm", "office", "excel", "spreadsheet" ],
@@ -16,6 +16,7 @@
 	},
 	"devDependencies": {
 		"mocha":"",
+		"uglify-js":"",
 		"jasmine-node": "x"
 	},
 	"repository": { "type":"git", "url":"git://github.com/SheetJS/js-xlsx.git" },

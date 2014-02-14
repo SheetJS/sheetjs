@@ -79,12 +79,14 @@ The exported `read` and `readFile` functions accept an options argument:
 | cellHTML    | true    | Parse rich text and save HTML to the .h field |
 | cellNF      | false   | Save number format string to the .z field |
 | sheetStubs  | false   | Create cell objects for stub cells |
+| bookProps   | false   | If true, only parse enough to get book metadata ** |
 | bookSheets  | false   | If true, only parse enough to get the sheet names |
 
 - `cellFormula` only applies to constructing XLSB formulae.  XLSX/XLSM formulae
   are stored in plaintext, but XLSB formulae are stored in a binary format.
 - Even if `cellNF` is false, formatted text (.w) will be generated
 - In some cases, sheets may be parsed even if `bookSheets` is false.
+- `bookSheets` and `bookProps` combine to give both sets of information
 
 The defaults are enumerated in bits/84_defaults.js
 

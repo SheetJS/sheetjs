@@ -40,9 +40,13 @@ lint: $(TARGET)
 .PHONY: cov
 cov: misc/coverage.html
 
-misc/coverage.html: xlsx.js 
+misc/coverage.html: xlsx.js test.js
 	mocha --require blanket -R html-cov > misc/coverage.html
 
 .PHONY: coveralls
 coveralls:
 	mocha --require blanket --reporter mocha-lcov-reporter | ./node_modules/coveralls/bin/coveralls.js
+
+.PHONY: dist
+dist: xlsx.js
+	uglifyjs xlsx.js -o dist/xlsx.min.js --source-map dist/xlsx.min.map --preamble "$$(head -n 1 bits/00_header.js)"

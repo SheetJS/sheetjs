@@ -13,7 +13,7 @@ function parseZip(zip, opts) {
 		xlsb = true;
 	}
 
-	if(!opts.bookSheets) {
+	if(!opts.bookSheets && !opts.bookProps) {
 		strs = {};
 		if(dir.sst) strs=parse_sst(getdata(getzipfile(zip, dir.sst.replace(/^\//,''))), dir.sst, opts);
 
@@ -29,17 +29,23 @@ function parseZip(zip, opts) {
 	propdata += dir.extprops.length !== 0 ? getdata(getzipfile(zip, dir.extprops[0].replace(/^\//,''))) : "";
 		props = propdata !== "" ? parseProps(propdata) : {};
 	} catch(e) { }
+
 	var custprops = {};
-	if (dir.custprops.length !== 0) {
-		try {
+	if(!opts.bookSheets || opts.bookProps) {
+		if (dir.custprops.length !== 0) try {
 			propdata = getdata(getzipfile(zip, dir.custprops[0].replace(/^\//,'')));
 			custprops = parseCustomProps(propdata);
 		} catch(e) {/*console.error(e);*/}
 	}
 
-	if(opts.bookSheets) {
-		if(props.Worksheets && props.SheetNames.length > 0) return { SheetNames:props.SheetNames };
-		else if(wb.Sheets) return { SheetNames:wb.Sheets.map(function(x) { return x.name; }) };
+	var out = {};
+	if(opts.bookSheets || opts.bookProps) {
+		var sheets;
+		if(props.Worksheets && props.SheetNames.length > 0) sheets=props.SheetNames;
+		else if(wb.Sheets) sheets = wb.Sheets.map(function(x){ return x.name; });
+		if(opts.bookProps) { out.Props = props; out.Custprops = custprops; }
+		if(typeof sheets !== 'undefined') out.SheetNames = sheets;
+		if(opts.bookSheets ? out.SheetNames : opts.bookProps) return out;
 	}
 
 	var deps = {};

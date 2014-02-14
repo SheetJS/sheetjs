@@ -424,7 +424,7 @@ SSF.load_table = function(tbl) { for(var i=0; i!=0x0188; ++i) if(tbl[i]) SSF.loa
 make_ssf(SSF);
 var XLSX = {};
 (function(XLSX){
-XLSX.version = '0.5.5';
+XLSX.version = '0.5.6';
 var current_codepage, current_cptable, cptable;
 if(typeof module !== "undefined" && typeof require !== 'undefined') {
 	if(typeof cptable === 'undefined') cptable = require('codepage');
@@ -1795,6 +1795,12 @@ var parse_wb_bin = function(data) {
 			case 'BrtEndBookViews': break;
 			case 'BrtBeginBundleShs': break;
 			case 'BrtEndBundleShs': break;
+			case 'BrtBeginFnGroup': break;
+			case 'BrtEndFnGroup': break;
+			case 'BrtBeginExternals': break;
+			case 'BrtSupSelf': break;
+			case 'BrtExternSheet': break;
+			case 'BrtEndExternals': break;
 			case 'BrtName': break;
 			case 'BrtCalcProp': break;
 			case 'BrtBeginPivotCacheIDs': break;
@@ -1805,7 +1811,6 @@ var parse_wb_bin = function(data) {
 			case 'BrtFRTBegin': pass = true; break;
 			case 'BrtFRTEnd': pass = false; break;
 			case 'BrtEndBook': break;
-			case '': break;
 			//default: if(!pass) throw new Error("Unexpected record " + R.n);
 		}
 	});
@@ -2665,6 +2670,7 @@ function fixopts(opts) {
 		['sheetStubs', false], /* emit empty cells */
 
 		['bookSheets', false], /* only try to get sheet names (no Sheets) */
+		['bookProps', false], /* only try to get properties (no Sheets) */
 
 		['WTF', false] /* WTF mode (do not use) */
 	];
@@ -2685,7 +2691,7 @@ function parseZip(zip, opts) {
 		xlsb = true;
 	}
 
-	if(!opts.bookSheets) {
+	if(!opts.bookSheets && !opts.bookProps) {
 		strs = {};
 		if(dir.sst) strs=parse_sst(getdata(getzipfile(zip, dir.sst.replace(/^\//,''))), dir.sst, opts);
 
@@ -2701,17 +2707,23 @@ function parseZip(zip, opts) {
 	propdata += dir.extprops.length !== 0 ? getdata(getzipfile(zip, dir.extprops[0].replace(/^\//,''))) : "";
 		props = propdata !== "" ? parseProps(propdata) : {};
 	} catch(e) { }
+
 	var custprops = {};
-	if (dir.custprops.length !== 0) {
-		try {
+	if(!opts.bookSheets || opts.bookProps) {
+		if (dir.custprops.length !== 0) try {
 			propdata = getdata(getzipfile(zip, dir.custprops[0].replace(/^\//,'')));
 			custprops = parseCustomProps(propdata);
 		} catch(e) {/*console.error(e);*/}
 	}
 
-	if(opts.bookSheets) {
-		if(props.Worksheets && props.SheetNames.length > 0) return { SheetNames:props.SheetNames };
-		else if(wb.Sheets) return { SheetNames:wb.Sheets.map(function(x) { return x.name; }) };
+	var out = {};
+	if(opts.bookSheets || opts.bookProps) {
+		var sheets;
+		if(props.Worksheets && props.SheetNames.length > 0) sheets=props.SheetNames;
+		else if(wb.Sheets) sheets = wb.Sheets.map(function(x){ return x.name; });
+		if(opts.bookProps) { out.Props = props; out.Custprops = custprops; }
+		if(typeof sheets !== 'undefined') out.SheetNames = sheets;
+		if(opts.bookSheets ? out.SheetNames : opts.bookProps) return out;
 	}
 
 	var deps = {};

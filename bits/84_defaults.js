@@ -7,6 +7,7 @@ function fixopts(opts) {
 		['sheetStubs', false], /* emit empty cells */
 
 		['bookSheets', false], /* only try to get sheet names (no Sheets) */
+		['bookProps', false], /* only try to get properties (no Sheets) */
 
 		['WTF', false] /* WTF mode (do not use) */
 	];

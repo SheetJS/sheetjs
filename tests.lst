@@ -1,5 +1,6 @@
 RkNumber.xlsb
 comments_stress_test.xlsb
+custom_properties.xlsb
 formula_stress_test.xlsb
 large_strings.xlsb.pending
 merge_cells.xlsb
@@ -140,6 +141,7 @@ apachepoi_workbookProtection_workbook_windows_protected.xlsx
 apachepoi_workbookProtection_worksheet_protected.xlsx
 apachepoi_xlsx-jdbc.xlsx
 comments_stress_test.xlsx
+custom_properties.xlsx
 excel-reader-xlsx_data01.xlsx
 excel-reader-xlsx_data02.xlsx
 excel-reader-xlsx_error02.xlsx.pending

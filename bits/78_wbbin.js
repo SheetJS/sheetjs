@@ -25,6 +25,12 @@ var parse_wb_bin = function(data) {
 			case 'BrtEndBookViews': break;
 			case 'BrtBeginBundleShs': break;
 			case 'BrtEndBundleShs': break;
+			case 'BrtBeginFnGroup': break;
+			case 'BrtEndFnGroup': break;
+			case 'BrtBeginExternals': break;
+			case 'BrtSupSelf': break;
+			case 'BrtExternSheet': break;
+			case 'BrtEndExternals': break;
 			case 'BrtName': break;
 			case 'BrtCalcProp': break;
 			case 'BrtBeginPivotCacheIDs': break;
@@ -35,7 +41,6 @@ var parse_wb_bin = function(data) {
 			case 'BrtFRTBegin': pass = true; break;
 			case 'BrtFRTEnd': pass = false; break;
 			case 'BrtEndBook': break;
-			case '': break;
 			//default: if(!pass) throw new Error("Unexpected record " + R.n);
 		}
 	});
