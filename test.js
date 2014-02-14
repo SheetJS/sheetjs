@@ -158,3 +158,21 @@ describe('options', function() {
 		});
 	});
 });
+
+describe.skip('should have core properties and custom properties parsed', function() {
+	var wb;
+	before(function() {
+		XLSX = require('./');
+		wb = XLSX.readFile('./test_files/excel-properties.xlsx', { sheetStubs: false });
+	});
+	it('Must have read the core properties', function() {
+		assert.equal(wb.Props.Company, 'Vector Inc');
+		assert.equal(wb.Props.Creator, 'Pony Foo');
+	});
+	it('Must have read the custom properties', function() {
+		assert.equal(wb.Custprops['I am a boolean'], true);
+		assert.equal(wb.Custprops['Date completed'], '1967-03-09T16:30:00Z');
+		assert.equal(wb.Custprops.Status, 2);
+		assert.equal(wb.Custprops.Counter, -3.14);
+	});
+});
