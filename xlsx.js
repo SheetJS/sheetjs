@@ -424,7 +424,7 @@ SSF.load_table = function(tbl) { for(var i=0; i!=0x0188; ++i) if(tbl[i]) SSF.loa
 make_ssf(SSF);
 var XLSX = {};
 (function(XLSX){
-XLSX.version = '0.5.5';
+XLSX.version = '0.5.6';
 var current_codepage, current_cptable, cptable;
 if(typeof module !== "undefined" && typeof require !== 'undefined') {
 	if(typeof cptable === 'undefined') cptable = require('codepage');
@@ -639,7 +639,7 @@ var recordhopper = function(data, cb, opts) {
 /* [MS-XLSB] 2.5.143 */
 var parse_StrRun = function(data, length) {
 	return { ich: data.read_shift(2), ifnt: data.read_shift(2) };
-}
+};
 
 /* [MS-XLSB] 2.1.7.121 */
 var parse_RichStr = function(data, length) {
@@ -1044,6 +1044,7 @@ var ct2type = {
 
 	"application/vnd.openxmlformats-package.core-properties+xml": "coreprops",
 	"application/vnd.openxmlformats-officedocument.extended-properties+xml": "extprops",
+	"application/vnd.openxmlformats-officedocument.custom-properties+xml": "custprops",
 	"application/vnd.openxmlformats-officedocument.theme+xml":"themes",
 	"application/vnd.openxmlformats-officedocument.spreadsheetml.comments+xml": "comments",
 	"foo": "bar"
@@ -1090,6 +1091,46 @@ function parseProps(data) {
 	return p;
 }
 
+/* 15.2.12.2 Custom File Properties Part */
+function parseCustomProps(data) {
+	var p = {}, name;
+	data.match(/<[^>]+>([^<]*)/g).forEach(function(x) {
+		var y = parsexmltag(x);
+		switch(y[0]) {
+			case '<property': name = y.name; break;
+			case '</property>': name = null; break;
+			default: if (x.indexOf('<vt:') === 0) {
+				var toks = x.split('>');
+				var type = toks[0].substring(4), text = toks[1];
+				/* 22.4.2.32 (CT_Variant). Omit the binary types from 22.4 (Variant Types) */
+				switch(type) {
+					case 'lpstr': case 'lpwstr': case 'bstr': case 'lpwstr':
+						p[name] = unescapexml(text);
+						break;
+					case 'bool':
+						p[name] = parsexmlbool(text, '<vt:bool>');
+						break;
+					case 'i1': case 'i2': case 'i4': case 'i8': case 'int': case 'uint':
+						p[name] = parseInt(text, 10);
+						break;
+					case 'r4': case 'r8': case 'decimal':
+						p[name] = parseFloat(text);
+						break;
+					case 'filetime': case 'date':
+						p[name] = text; // should we make this into a date?
+						break;
+					case 'cy': case 'error':
+						p[name] = unescapexml(text);
+						break;
+					default:
+						console.warn('Unexpected', x, type, toks);
+				}
+			}
+		}
+	});
+	return p;
+}
+
 /* 18.6 Calculation Chain */
 function parseDeps(data) {
 	var d = [];
@@ -1111,7 +1152,7 @@ var ctext = {};
 function parseCT(data) {
 	if(!data || !data.match) return data;
 	var ct = { workbooks: [], sheets: [], calcchains: [], themes: [], styles: [],
-		coreprops: [], extprops: [], strs:[], comments: [], xmlns: "" };
+		coreprops: [], extprops: [], custprops: [], strs:[], comments: [], xmlns: "" };
 	(data.match(/<[^>]*>/g)||[]).forEach(function(x) {
 		var y = parsexmltag(x);
 		switch(y[0]) {
@@ -1754,6 +1795,12 @@ var parse_wb_bin = function(data) {
 			case 'BrtEndBookViews': break;
 			case 'BrtBeginBundleShs': break;
 			case 'BrtEndBundleShs': break;
+			case 'BrtBeginFnGroup': break;
+			case 'BrtEndFnGroup': break;
+			case 'BrtBeginExternals': break;
+			case 'BrtSupSelf': break;
+			case 'BrtExternSheet': break;
+			case 'BrtEndExternals': break;
 			case 'BrtName': break;
 			case 'BrtCalcProp': break;
 			case 'BrtBeginPivotCacheIDs': break;
@@ -1764,7 +1811,6 @@ var parse_wb_bin = function(data) {
 			case 'BrtFRTBegin': pass = true; break;
 			case 'BrtFRTEnd': pass = false; break;
 			case 'BrtEndBook': break;
-			case '': break;
 			//default: if(!pass) throw new Error("Unexpected record " + R.n);
 		}
 	});
@@ -2624,6 +2670,7 @@ function fixopts(opts) {
 		['sheetStubs', false], /* emit empty cells */
 
 		['bookSheets', false], /* only try to get sheet names (no Sheets) */
+		['bookProps', false], /* only try to get properties (no Sheets) */
 
 		['WTF', false] /* WTF mode (do not use) */
 	];
@@ -2644,7 +2691,7 @@ function parseZip(zip, opts) {
 		xlsb = true;
 	}
 
-	if(!opts.bookSheets) {
+	if(!opts.bookSheets && !opts.bookProps) {
 		strs = {};
 		if(dir.sst) strs=parse_sst(getdata(getzipfile(zip, dir.sst.replace(/^\//,''))), dir.sst, opts);
 
@@ -2661,9 +2708,22 @@ function parseZip(zip, opts) {
 		props = propdata !== "" ? parseProps(propdata) : {};
 	} catch(e) { }
 
-	if(opts.bookSheets) {
-		if(props.Worksheets && props.SheetNames.length > 0) return { SheetNames:props.SheetNames };
-		else if(wb.Sheets) return { SheetNames:wb.Sheets.map(function(x) { return x.name; }) };
+	var custprops = {};
+	if(!opts.bookSheets || opts.bookProps) {
+		if (dir.custprops.length !== 0) try {
+			propdata = getdata(getzipfile(zip, dir.custprops[0].replace(/^\//,'')));
+			custprops = parseCustomProps(propdata);
+		} catch(e) {/*console.error(e);*/}
+	}
+
+	var out = {};
+	if(opts.bookSheets || opts.bookProps) {
+		var sheets;
+		if(props.Worksheets && props.SheetNames.length > 0) sheets=props.SheetNames;
+		else if(wb.Sheets) sheets = wb.Sheets.map(function(x){ return x.name; });
+		if(opts.bookProps) { out.Props = props; out.Custprops = custprops; }
+		if(typeof sheets !== 'undefined') out.SheetNames = sheets;
+		if(opts.bookSheets ? out.SheetNames : opts.bookProps) return out;
 	}
 
 	var deps = {};
@@ -2705,6 +2765,7 @@ function parseZip(zip, opts) {
 		Directory: dir,
 		Workbook: wb,
 		Props: props,
+		Custprops: custprops,
 		Deps: deps,
 		Sheets: sheets,
 		SheetNames: props.SheetNames,
