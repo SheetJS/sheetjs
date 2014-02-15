@@ -201,3 +201,18 @@ describe('should have core properties and custom properties parsed', function() 
 		assert.equal(wb.Custprops.Counter, -3.14);
 	});
 });
+
+describe.skip('should parse a sheet with a d date cell', function() {
+	var wb, ws;
+	before(function() {
+		XLSX = require('./');
+		wb = XLSX.readFile('./test_files/xlsx-stream-d-date-cell.xlsx');
+		// wb = XLSX.readFile('./test_files/xlsx-stream-array.xlsx');
+		var sheetName = 'Sheet1';
+		ws = wb.Sheets[sheetName];
+	});
+	it('Must have read the date', function() {
+		var sheet = XLSX.utils.sheet_to_row_object_array(ws);
+		assert.equal(sheet[3]['てすと'], '2/14/14');
+	});
+});
