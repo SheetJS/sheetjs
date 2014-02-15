@@ -1349,6 +1349,11 @@ function parse_ws_xml(data, opts) {
 						case '1': case 'TRUE':  case "true":  case true:  p.v=true;  break;
 						default: throw "Unrecognized boolean: " + p.v;
 					} break;
+				case 'd':
+					var epoch = Date.parse(p.v);
+					p.v = (epoch - new Date(Date.UTC(1899, 11, 30))) / (24 * 60 * 60 * 1000);
+					p.t = 'n';
+					break;
 				/* in case of error, stick value in .raw */
 				case 'e': p.raw = RBErr[p.v]; break;
 				default: throw "Unrecognized cell type: " + p.t;
