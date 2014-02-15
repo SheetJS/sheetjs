@@ -152,7 +152,7 @@ var parse_ws_bin = function(data, opts) {
 				if((cf = styles.CellXf[val[0].iStyleRef])) try {
 					p.w = SSF.format(cf.ifmt,p.v,_ssfopts);
 					if(opts.cellNF) p.z = SSF._table[cf.ifmt];
-				} catch(e) { }
+				} catch(e) { if(opts.WTF) throw e; }
 				s[encode_cell({c:val[0].c,r:row.r})] = p;
 				break; // TODO
 

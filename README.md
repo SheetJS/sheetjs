@@ -79,6 +79,7 @@ The exported `read` and `readFile` functions accept an options argument:
 | cellHTML    | true    | Parse rich text and save HTML to the .h field |
 | cellNF      | false   | Save number format string to the .z field |
 | sheetStubs  | false   | Create cell objects for stub cells |
+| bookDeps    | false   | If true, parse calculation chains |
 | bookProps   | false   | If true, only parse enough to get book metadata ** |
 | bookSheets  | false   | If true, only parse enough to get the sheet names |
 
@@ -87,6 +88,7 @@ The exported `read` and `readFile` functions accept an options argument:
 - Even if `cellNF` is false, formatted text (.w) will be generated
 - In some cases, sheets may be parsed even if `bookSheets` is false.
 - `bookSheets` and `bookProps` combine to give both sets of information
+- `Deps` will be an empty object if `bookDeps` is falsy
 
 The defaults are enumerated in bits/84_defaults.js
 

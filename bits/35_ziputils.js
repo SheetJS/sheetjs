@@ -18,6 +18,12 @@ function getzipfile(zip, file) {
 	throw new Error("Cannot find file " + file + " in zip");
 }
 
+function getzipdata(zip, file, safe) {
+	if(!safe) return getdata(getzipfile(zip, file));
+	if(!file) return null;
+	try { return getzipdata(zip, file); } catch(e) { return null; }
+}
+
 var _fs, jszip;
 if(typeof JSZip !== 'undefined') jszip = JSZip;
 if (typeof exports !== 'undefined') {

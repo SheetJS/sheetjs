@@ -44,13 +44,14 @@ if(!fs.existsSync(filename)) {
 	process.exit(2);
 }
 
-if(program.dev) X.verbose = 2;
-
-var opts = {};
+var opts = {}, wb;
 if(program.listSheets) opts.bookSheets = true;
 
-var wb;
-if(program.dev) wb = X.readFile(filename, opts);
+if(program.dev) {
+	X.verbose = 2;
+	opts.WTF = true;
+	wb = X.readFile(filename, opts);
+}
 else try {
 	wb = X.readFile(filename, opts);
 } catch(e) {

@@ -43,6 +43,7 @@ function parse_ws_xml(data, opts) {
 			else p.t = (cell.t ? cell.t : "n"); // default is "n" in schema
 			if(refguess.s.c > idx) refguess.s.c = idx;
 			if(refguess.e.c < idx) refguess.e.c = idx;
+			/* 18.18.11 t ST_CellType */
 			switch(p.t) {
 				case 'n': p.v = parseFloat(p.v); break;
 				case 's': {
@@ -57,20 +58,14 @@ function parse_ws_xml(data, opts) {
 					is = is ? parse_si(is[1]) : {t:"",r:""};
 					p.t = 'str'; p.v = is.t;
 					break; // inline string
-				case 'b':
-					switch(p.v) {
-						case '0': case 'FALSE': case "false": case false: p.v=false; break;
-						case '1': case 'TRUE':  case "true":  case true:  p.v=true;  break;
-						default: throw "Unrecognized boolean: " + p.v;
-					} break;
-				case 'd':
+				case 'b': if(typeof p.v !== 'boolean') p.v = parsexmlbool(p.v); break;
+				case 'd': /* TODO: date1904 logic */
 					var epoch = Date.parse(p.v);
 					p.v = (epoch - new Date(Date.UTC(1899, 11, 30))) / (24 * 60 * 60 * 1000);
 					p.t = 'n';
 					break;
 				/* in case of error, stick value in .raw */
 				case 'e': p.raw = RBErr[p.v]; break;
-				default: throw "Unrecognized cell type: " + p.t;
 			}
 
 			/* formatting */
@@ -82,7 +77,7 @@ function parse_ws_xml(data, opts) {
 			try {
 				p.w = SSF.format(fmtid,p.v,_ssfopts);
 				if(opts.cellNF) p.z = SSF._table[fmtid];
-			} catch(e) { }
+			} catch(e) { if(opts.WTF) throw e; }
 			s[cell.r] = p;
 		});
 	});

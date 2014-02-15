@@ -6,10 +6,11 @@ function fixopts(opts) {
 
 		['sheetStubs', false], /* emit empty cells */
 
+		['bookDeps', false], /* parse calculation chains */
 		['bookSheets', false], /* only try to get sheet names (no Sheets) */
 		['bookProps', false], /* only try to get properties (no Sheets) */
 
-		['WTF', false] /* WTF mode (do not use) */
+		['WTF', false] /* WTF mode (throws errors) */
 	];
 	defaults.forEach(function(d) { if(typeof opts[d[0]] === 'undefined') opts[d[0]] = d[1]; });
 }

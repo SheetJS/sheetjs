@@ -424,7 +424,7 @@ SSF.load_table = function(tbl) { for(var i=0; i!=0x0188; ++i) if(tbl[i]) SSF.loa
 make_ssf(SSF);
 var XLSX = {};
 (function(XLSX){
-XLSX.version = '0.5.6';
+XLSX.version = '0.5.7';
 var current_codepage, current_cptable, cptable;
 if(typeof module !== "undefined" && typeof require !== 'undefined') {
 	if(typeof cptable === 'undefined') cptable = require('codepage');
@@ -453,6 +453,12 @@ function getzipfile(zip, file) {
 	f = file.toLowerCase(); if(zip.files[f]) return zip.files[f];
 	f = f.replace(/\//g,'\\'); if(zip.files[f]) return zip.files[f];
 	throw new Error("Cannot find file " + file + " in zip");
+}
+
+function getzipdata(zip, file, safe) {
+	if(!safe) return getdata(getzipfile(zip, file));
+	if(!file) return null;
+	try { return getzipdata(zip, file); } catch(e) { return null; }
 }
 
 var _fs, jszip;
@@ -1239,7 +1245,8 @@ function parse_comments_xml(data, opts) {
 function parse_comments(zip, dirComments, sheets, sheetRels, opts) {
 	for(var i = 0; i != dirComments.length; ++i) {
 		var canonicalpath=dirComments[i];
-		var comments=parse_comments_xml(getdata(getzipfile(zip, canonicalpath.replace(/^\//,''))), opts);
+		var comments=parse_comments_xml(getzipdata(zip, canonicalpath.replace(/^\//,''), true), opts);
+		if(!comments || !comments.length) return;
 		// find the sheets targeted by these comments
 		var sheetNames = Object.keys(sheets);
 		for(var j = 0; j != sheetNames.length; ++j) {
@@ -1329,6 +1336,7 @@ function parse_ws_xml(data, opts) {
 			else p.t = (cell.t ? cell.t : "n"); // default is "n" in schema
 			if(refguess.s.c > idx) refguess.s.c = idx;
 			if(refguess.e.c < idx) refguess.e.c = idx;
+			/* 18.18.11 t ST_CellType */
 			switch(p.t) {
 				case 'n': p.v = parseFloat(p.v); break;
 				case 's': {
@@ -1343,20 +1351,14 @@ function parse_ws_xml(data, opts) {
 					is = is ? parse_si(is[1]) : {t:"",r:""};
 					p.t = 'str'; p.v = is.t;
 					break; // inline string
-				case 'b':
-					switch(p.v) {
-						case '0': case 'FALSE': case "false": case false: p.v=false; break;
-						case '1': case 'TRUE':  case "true":  case true:  p.v=true;  break;
-						default: throw "Unrecognized boolean: " + p.v;
-					} break;
-				case 'd':
+				case 'b': if(typeof p.v !== 'boolean') p.v = parsexmlbool(p.v); break;
+				case 'd': /* TODO: date1904 logic */
 					var epoch = Date.parse(p.v);
 					p.v = (epoch - new Date(Date.UTC(1899, 11, 30))) / (24 * 60 * 60 * 1000);
 					p.t = 'n';
 					break;
 				/* in case of error, stick value in .raw */
 				case 'e': p.raw = RBErr[p.v]; break;
-				default: throw "Unrecognized cell type: " + p.t;
 			}
 
 			/* formatting */
@@ -1368,7 +1370,7 @@ function parse_ws_xml(data, opts) {
 			try {
 				p.w = SSF.format(fmtid,p.v,_ssfopts);
 				if(opts.cellNF) p.z = SSF._table[fmtid];
-			} catch(e) { }
+			} catch(e) { if(opts.WTF) throw e; }
 			s[cell.r] = p;
 		});
 	});
@@ -1530,7 +1532,7 @@ var parse_ws_bin = function(data, opts) {
 				if((cf = styles.CellXf[val[0].iStyleRef])) try {
 					p.w = SSF.format(cf.ifmt,p.v,_ssfopts);
 					if(opts.cellNF) p.z = SSF._table[cf.ifmt];
-				} catch(e) { }
+				} catch(e) { if(opts.WTF) throw e; }
 				s[encode_cell({c:val[0].c,r:row.r})] = p;
 				break; // TODO
 
@@ -2674,10 +2676,11 @@ function fixopts(opts) {
 
 		['sheetStubs', false], /* emit empty cells */
 
+		['bookDeps', false], /* parse calculation chains */
 		['bookSheets', false], /* only try to get sheet names (no Sheets) */
 		['bookProps', false], /* only try to get properties (no Sheets) */
 
-		['WTF', false] /* WTF mode (do not use) */
+		['WTF', false] /* WTF mode (throws errors) */
 	];
 	defaults.forEach(function(d) { if(typeof opts[d[0]] === 'undefined') opts[d[0]] = d[1]; });
 }
@@ -2687,8 +2690,9 @@ function parseZip(zip, opts) {
 	reset_cp();
 	var entries = Object.keys(zip.files);
 	var keys = entries.filter(function(x){return x.substr(-1) != '/';}).sort();
-	var dir = parseCT(getdata(getzipfile(zip, '[Content_Types].xml')));
+	var dir = parseCT(getzipdata(zip, '[Content_Types].xml'));
 	var xlsb = false;
+	var sheets;
 	if(dir.workbooks.length === 0) {
 		var binname = "xl/workbook.bin";
 		if(!getzipfile(zip,binname)) throw new Error("Could not find workbook entry");
@@ -2698,42 +2702,43 @@ function parseZip(zip, opts) {
 
 	if(!opts.bookSheets && !opts.bookProps) {
 		strs = {};
-		if(dir.sst) strs=parse_sst(getdata(getzipfile(zip, dir.sst.replace(/^\//,''))), dir.sst, opts);
+		if(dir.sst) strs=parse_sst(getzipdata(zip, dir.sst.replace(/^\//,'')), dir.sst, opts);
 
 		styles = {};
-		if(dir.style) styles = parse_sty(getdata(getzipfile(zip, dir.style.replace(/^\//,''))),dir.style);
+		if(dir.style) styles = parse_sty(getzipdata(zip, dir.style.replace(/^\//,'')),dir.style);
 	}
 
-	var wb = parse_wb(getdata(getzipfile(zip, dir.workbooks[0].replace(/^\//,''))), dir.workbooks[0], opts);
+	var wb = parse_wb(getzipdata(zip, dir.workbooks[0].replace(/^\//,'')), dir.workbooks[0], opts);
 
 	var props = {}, propdata = "";
 	try {
-		propdata = dir.coreprops.length !== 0 ? getdata(getzipfile(zip, dir.coreprops[0].replace(/^\//,''))) : "";
-	propdata += dir.extprops.length !== 0 ? getdata(getzipfile(zip, dir.extprops[0].replace(/^\//,''))) : "";
+		propdata = dir.coreprops.length !== 0 ? getzipdata(zip, dir.coreprops[0].replace(/^\//,'')) : "";
+		propdata += dir.extprops.length !== 0 ? getzipdata(zip, dir.extprops[0].replace(/^\//,'')) : "";
 		props = propdata !== "" ? parseProps(propdata) : {};
 	} catch(e) { }
 
 	var custprops = {};
 	if(!opts.bookSheets || opts.bookProps) {
-		if (dir.custprops.length !== 0) try {
-			propdata = getdata(getzipfile(zip, dir.custprops[0].replace(/^\//,'')));
-			custprops = parseCustomProps(propdata);
-		} catch(e) {/*console.error(e);*/}
+		if (dir.custprops.length !== 0) {
+			propdata = getzipdata(zip, dir.custprops[0].replace(/^\//,''), true);
+			if(propdata) custprops = parseCustomProps(propdata);
+		}
 	}
 
 	var out = {};
 	if(opts.bookSheets || opts.bookProps) {
-		var sheets;
 		if(props.Worksheets && props.SheetNames.length > 0) sheets=props.SheetNames;
 		else if(wb.Sheets) sheets = wb.Sheets.map(function(x){ return x.name; });
 		if(opts.bookProps) { out.Props = props; out.Custprops = custprops; }
 		if(typeof sheets !== 'undefined') out.SheetNames = sheets;
 		if(opts.bookSheets ? out.SheetNames : opts.bookProps) return out;
 	}
+	sheets = {};
 
 	var deps = {};
-	if(dir.calcchain) deps=parseDeps(getdata(getzipfile(zip, dir.calcchain.replace(/^\//,''))));
-	var sheets = {}, i=0;
+	if(opts.bookDeps && dir.calcchain) deps=parseDeps(getzipdata(zip, dir.calcchain.replace(/^\//,'')));
+
+	var i=0;
 	var sheetRels = {};
 	var path, relsPath;
 	if(!props.Worksheets) {
@@ -2745,12 +2750,12 @@ function parseZip(zip, opts) {
 			props.SheetNames[j] = wbsheets[j].name;
 		}
 		for(i = 0; i != props.Worksheets; ++i) {
-			try { /* TODO: remove these guards */
+			try {
 				path = 'xl/worksheets/sheet' + (i+1) + (xlsb?'.bin':'.xml');
 				relsPath = path.replace(/^(.*)(\/)([^\/]*)$/, "$1/_rels/$3.rels");
-				sheets[props.SheetNames[i]]=parse_ws(getdata(getzipfile(zip, path)),path,opts);
-				sheetRels[props.SheetNames[i]]=parseRels(getdata(getzipfile(zip, relsPath)), path);
-			} catch(e) {}
+				sheets[props.SheetNames[i]]=parse_ws(getzipdata(zip, path),path,opts);
+				sheetRels[props.SheetNames[i]]=parseRels(getzipdata(zip, relsPath, true), path);
+			} catch(e) { if(opts.WTF) throw e; }
 		}
 	} else {
 		for(i = 0; i != props.Worksheets; ++i) {
@@ -2758,9 +2763,9 @@ function parseZip(zip, opts) {
 				//var path = dir.sheets[i].replace(/^\//,'');
 				path = 'xl/worksheets/sheet' + (i+1) + (xlsb?'.bin':'.xml');
 				relsPath = path.replace(/^(.*)(\/)([^\/]*)$/, "$1/_rels/$3.rels");
-				sheets[props.SheetNames[i]]=parse_ws(getdata(getzipfile(zip, path)),path,opts);
-				sheetRels[props.SheetNames[i]]=parseRels(getdata(getzipfile(zip, relsPath)), path);
-			} catch(e) {/*console.error(e);*/}
+				sheets[props.SheetNames[i]]=parse_ws(getzipdata(zip, path),path,opts);
+				sheetRels[props.SheetNames[i]]=parseRels(getzipdata(zip, relsPath, true), path);
+			} catch(e) { if(opts.WTF) throw e; }
 		}
 	}
 

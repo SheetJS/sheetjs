@@ -25,7 +25,8 @@ function parse_comments_xml(data, opts) {
 function parse_comments(zip, dirComments, sheets, sheetRels, opts) {
 	for(var i = 0; i != dirComments.length; ++i) {
 		var canonicalpath=dirComments[i];
-		var comments=parse_comments_xml(getdata(getzipfile(zip, canonicalpath.replace(/^\//,''))), opts);
+		var comments=parse_comments_xml(getzipdata(zip, canonicalpath.replace(/^\//,''), true), opts);
+		if(!comments || !comments.length) return;
 		// find the sheets targeted by these comments
 		var sheetNames = Object.keys(sheets);
 		for(var j = 0; j != sheetNames.length; ++j) {
