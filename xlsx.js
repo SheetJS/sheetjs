@@ -9,7 +9,7 @@ var _strrev = function(x) { return String(x).split("").reverse().join("");};
 function fill(c,l) { return new Array(l+1).join(c); }
 function pad(v,d,c){var t=String(v);return t.length>=d?t:(fill(c||0,d-t.length)+t);}
 function rpad(v,d,c){var t=String(v);return t.length>=d?t:(t+fill(c||0,d-t.length));}
-SSF.version = '0.5.7';
+SSF.version = '0.5.8';
 /* Options */
 var opts_fmt = {};
 function fixopts(o){for(var y in opts_fmt) if(o[y]===undefined) o[y]=opts_fmt[y];}
@@ -116,7 +116,7 @@ var general_fmt = function(v) {
 		return o.replace("e","E").replace(/\.0*$/,"").replace(/\.([0-9]*[^0])0*$/,".$1").replace(/(E[+-])([0-9])$/,"$1"+"0"+"$2");
 	}
 	if(typeof v === 'string') return v;
-	throw "unsupported value in General format: " + v;
+	throw new Error("unsupported value in General format: " + v);
 };
 SSF._general = general_fmt;
 var parse_date_code = function parse_date_code(v,opts) {
@@ -233,7 +233,7 @@ var write_num = function(type, fmt, val) {
 		return o.replace("e","E");
 	}
 	if(fmt[0] === "$") return "$"+write_num(type,fmt.substr(fmt[1]==' '?2:1),val);
-	var r, ff, aval = val < 0 ? -val : val, sign = val < 0 ? "-" : "";
+	var r, rr, ff, aval = val < 0 ? -val : val, sign = val < 0 ? "-" : "";
 	if((r = fmt.match(/# (\?+)([ ]?)\/([ ]?)(\d+)/))) {
 		var den = Number(r[4]), rnd = Math.round(aval * den), base = Math.floor(rnd/den);
 		var myn = (rnd - base*den), myd = den;
@@ -246,8 +246,17 @@ var write_num = function(type, fmt, val) {
 		o = Math.round(val * Math.pow(10,r[1].length));
 		return String(o/Math.pow(10,r[1].length)).replace(/^([^\.]+)$/,"$1."+r[1]).replace(/\.$/,"."+r[1]).replace(/\.([0-9]*)$/,function($$, $1) { return "." + $1 + fill("0", r[1].length-$1.length); });
 	}
+	if((r = fmt.match(/^(0*)\.(#*)$/))) {
+		o = Math.round(val*Math.pow(10,r[2].length));
+		return String(o * Math.pow(10,-r[2].length)).replace(/\.(\d*[1-9])0*$/,".$1").replace(/^([-]?\d*)$/,"$1.").replace(/^0\./,r[1].length?"0.":".");
+	}
+	if((r = fmt.match(/^#,##0([.]?)$/))) return sign + commaify(String(Math.round(aval)));
+	if((r = fmt.match(/^#,##0\.([#0]*0)$/))) {
+		rr = Math.round((val-Math.floor(val))*Math.pow(10,r[1].length));
+		return val < 0 ? "-" + write_num(type, fmt, -val) : commaify(String(Math.floor(val))) + "." + pad(rr,r[1].length,0);
+	}
 	if((r = fmt.match(/^# ([?]+)([ ]?)\/([ ]?)([?]+)/))) {
-		var rr = Math.min(Math.max(r[1].length, r[4].length),7);
+		rr = Math.min(Math.max(r[1].length, r[4].length),7);
 		ff = frac(aval, Math.pow(10,rr)-1, true);
 		return sign + (ff[0]||(ff[1] ? "" : "0")) + " " + (ff[1] ? pad(ff[1],rr," ") + r[2] + "/" + r[3] + rpad(ff[2],rr," "): fill(" ", 2*rr+1 + r[2].length + r[3].length));
 	}
@@ -256,16 +265,6 @@ var write_num = function(type, fmt, val) {
 		case "#.##": o = Math.round(val*100);
 			return String(o/100).replace(/^([^\.]+)$/,"$1.").replace(/^0\.$/,".");
 		case "#,###": var x = commaify(String(Math.round(aval))); return x !== "0" ? sign + x : "";
-		case "#,##0": return sign + commaify(String(Math.round(aval)));
-		case "#,##0.0": r = Math.round((val-Math.floor(val))*10); return val < 0 ? "-" + write_num(type, fmt, -val) : commaify(String(Math.floor(val))) + "." + pad(r,1,"0");
-		case "#,##0.00": r = Math.round((val-Math.floor(val))*100); return val < 0 ? "-" + write_num(type, fmt, -val) : commaify(String(Math.floor(val))) + "." + pad(r,2,"0");
-		case "#,##0.000": r = Math.round((val-Math.floor(val))*1000); return val < 0 ? "-" + write_num(type, fmt, -val) : commaify(String(Math.floor(val))) + "." + pad(r,3,0);
-		case "#,##0.0000": r = Math.round((val-Math.floor(val))*10000); return val < 0 ? "-" + write_num(type, fmt, -val) : commaify(String(Math.floor(val))) + "." + pad(r,4,0);
-		case "#,##0.00000": r = Math.round((val-Math.floor(val))*Math.pow(10,5)); return val < 0 ? "-" + write_num(type, fmt, -val) : commaify(String(Math.floor(val))) + "." + pad(r,5,0);
-		case "#,##0.000000": r = Math.round((val-Math.floor(val))*Math.pow(10,6)); return val < 0 ? "-" + write_num(type, fmt, -val) : commaify(String(Math.floor(val))) + "." + pad(r,6,0);
-		case "#,##0.0000000": r = Math.round((val-Math.floor(val))*Math.pow(10,7)); return val < 0 ? "-" + write_num(type, fmt, -val) : commaify(String(Math.floor(val))) + "." + pad(r,7,0);
-		case "#,##0.00000000": r = Math.round((val-Math.floor(val))*Math.pow(10,8)); return val < 0 ? "-" + write_num(type, fmt, -val) : commaify(String(Math.floor(val))) + "." + pad(r,8,0);
-		case "#,##0.000000000": r = Math.round((val-Math.floor(val))*Math.pow(10,9)); return val < 0 ? "-" + write_num(type, fmt, -val) : commaify(String(Math.floor(val))) + "." + pad(r,9,0);
 		default:
 	}
 	throw new Error("unsupported format |" + fmt + "|");
@@ -282,7 +281,7 @@ function split_fmt(fmt) {
 		j = i+1;
 	}
 	out.push(fmt.slice(j));
-	if(in_str !=-1) throw "Format |" + fmt + "| unterminated string at " + in_str;
+	if(in_str !=-1) throw new Error("Format |" + fmt + "| unterminated string at " + in_str);
 	return out;
 }
 SSF._split = split_fmt;
@@ -295,7 +294,7 @@ function eval_fmt(fmt, v, opts, flen) {
 		switch((c = fmt[i])) {
 			case 'G': /* General */
 				if(fmt.substr(i, i+6).toLowerCase() !== "general")
-					throw 'unrecognized character ' + fmt[i] + ' in ' + fmt;
+					throw new Error('unrecognized character ' + fmt[i] + ' in ' +fmt);
 				out.push({t:'G',v:'General'}); i+=7; break;
 			case '"': /* Literal text */
 				for(o="";fmt[++i] !== '"' && i < fmt.length;) o += fmt[i];
@@ -338,7 +337,7 @@ function eval_fmt(fmt, v, opts, flen) {
 				} else { o=""; }
 				break;
 			/* Numbers */
-			case '0': case '#':
+			case '0': case '#': case '.':
 				o = c; while("0#?.,E+-%".indexOf(c=fmt[++i]) > -1) o += c;
 				out.push({t:'n', v:o}); break;
 			case '?':
@@ -424,7 +423,7 @@ SSF.load_table = function(tbl) { for(var i=0; i!=0x0188; ++i) if(tbl[i]) SSF.loa
 make_ssf(SSF);
 var XLSX = {};
 (function(XLSX){
-XLSX.version = '0.5.7';
+XLSX.version = '0.5.8';
 var current_codepage, current_cptable, cptable;
 if(typeof module !== "undefined" && typeof require !== 'undefined') {
 	if(typeof cptable === 'undefined') cptable = require('codepage');
@@ -982,7 +981,7 @@ function parse_sty_bin(data) {
 	for(var y in SSF._table) styles.NumberFmt[y] = SSF._table[y];
 
 	styles.CellXf = [];
-	var state = "";
+	var state = ""; /* TODO: this should be a stack */
 	var pass = false;
 	recordhopper(data, function(val, R, RT) {
 		switch(R.n) {
@@ -1001,8 +1000,14 @@ function parse_sty_bin(data) {
 			case 'BrtStyle': break; /* TODO */
 			case 'BrtRowHdr': break; /* TODO */
 			case 'BrtCellMeta': break; /* ?? */
+			case 'BrtDXF': break; /* TODO */
+			case 'BrtMRUColor': break; /* TODO */
+			case 'BrtIndexedColor': break; /* TODO */
 			case 'BrtBeginStyleSheet': break;
 			case 'BrtEndStyleSheet': break;
+			case 'BrtBeginTableStyle': break;
+			case 'BrtTableStyleElement': break;
+			case 'BrtEndTableStyle': break;
 			case 'BrtBeginFmts': state = "FMTS"; break;
 			case 'BrtEndFmts': state = ""; break;
 			case 'BrtBeginFonts': state = "FONTS"; break;
@@ -1023,6 +1028,12 @@ function parse_sty_bin(data) {
 			case 'BrtEndDXFs': state = ""; break;
 			case 'BrtBeginTableStyles': state = "TABLESTYLES"; break;
 			case 'BrtEndTableStyles': state = ""; break;
+			case 'BrtBeginColorPalette': state = "COLORPALETTE"; break;
+			case 'BrtBeginIndexedColors': state = "INDEXEDCOLORS"; break;
+			case 'BrtEndIndexedColors': state = ""; break;
+			case 'BrtBeginMRUColors': state = "MRUCOLORS"; break;
+			case 'BrtEndMRUColors': state = ""; break;
+			case 'BrtEndColorPalette': state = ""; break;
 			case 'BrtFRTBegin': pass = true; break;
 			case 'BrtFRTEnd': pass = false; break;
 			//default: if(!pass) throw new Error("Unexpected record " + RT + " " + R.n);
@@ -1797,6 +1808,11 @@ var parse_wb_bin = function(data) {
 			case 'BrtBeginBook': break;
 			case 'BrtFileVersion': break;
 			case 'BrtWbProp': break;
+			case 'BrtACBegin': break;
+			case 'BrtAbsPath15': break;
+			case 'BrtACEnd': break;
+			/*case 'BrtBookProtectionIso': break;*/
+			case 'BrtBookProtection': break;
 			case 'BrtBeginBookViews': break;
 			case 'BrtBookView': break;
 			case 'BrtEndBookViews': break;
@@ -1806,15 +1822,22 @@ var parse_wb_bin = function(data) {
 			case 'BrtEndFnGroup': break;
 			case 'BrtBeginExternals': break;
 			case 'BrtSupSelf': break;
+			case 'BrtSupBookSrc': break;
 			case 'BrtExternSheet': break;
 			case 'BrtEndExternals': break;
 			case 'BrtName': break;
 			case 'BrtCalcProp': break;
+			case 'BrtUserBookView': break;
 			case 'BrtBeginPivotCacheIDs': break;
 			case 'BrtBeginPivotCacheID': break;
 			case 'BrtEndPivotCacheID': break;
 			case 'BrtEndPivotCacheIDs': break;
+			case 'BrtWebOpt': break;
 			case 'BrtFileRecover': break;
+			/*case 'BrtBeginWebPubItems': break;
+			case 'BrtBeginWebPubItem': break;
+			case 'BrtEndWebPubItem': break;
+			case 'BrtEndWebPubItems': break;*/
 			case 'BrtFRTBegin': pass = true; break;
 			case 'BrtFRTEnd': pass = false; break;
 			case 'BrtEndBook': break;
@@ -2679,6 +2702,7 @@ function fixopts(opts) {
 		['bookDeps', false], /* parse calculation chains */
 		['bookSheets', false], /* only try to get sheet names (no Sheets) */
 		['bookProps', false], /* only try to get properties (no Sheets) */
+		['bookFiles', false], /* include raw file structure (keys, files) */
 
 		['WTF', false] /* WTF mode (throws errors) */
 	];
@@ -2771,7 +2795,7 @@ function parseZip(zip, opts) {
 
 	if(dir.comments) parse_comments(zip, dir.comments, sheets, sheetRels, opts);
 
-	return {
+	out = {
 		Directory: dir,
 		Workbook: wb,
 		Props: props,
@@ -2781,9 +2805,12 @@ function parseZip(zip, opts) {
 		SheetNames: props.SheetNames,
 		Strings: strs,
 		Styles: styles,
-		keys: keys,
-		files: zip.files
 	};
+	if(opts.bookFiles) {
+		out.keys = keys,
+		out.files = zip.files
+	}
+	return out;
 }
 function readSync(data, options) {
 	var zip, d = data;
@@ -2850,7 +2877,7 @@ function sheet_to_row_object_array(sheet, opts){
 			if(typeof val.w !== 'undefined' && !opts.raw) { row[hdr[C]] = val.w; isempty = false; }
 			else switch(val.t){
 				case 's': case 'str': case 'b': case 'n':
-					if(val.v !== undefined) {
+					if(typeof val.v !== 'undefined') {
 						row[hdr[C]] = val.v;
 						isempty = false;
 					}
@@ -2881,6 +2908,7 @@ function sheet_to_csv(sheet, opts) {
 	if(!sheet || !sheet["!ref"]) return out;
 	var r = XLSX.utils.decode_range(sheet["!ref"]);
 	var fs = opts.FS||",", rs = opts.RS||"\n";
+
 	for(var R = r.s.r; R <= r.e.r; ++R) {
 		var row = [];
 		for(var C = r.s.c; C <= r.e.c; ++C) {
@@ -2903,8 +2931,8 @@ function get_formulae(ws) {
 		var x = ws[y];
 		var val = "";
 		if(x.f) val = x.f;
+		else if(typeof x.w !== 'undefined') val = "'" + x.w;
 		else if(typeof x.v === 'undefined') continue;
-		else if(typeof x.v === 'number') val = x.v;
 		else val = x.v;
 		cmds.push(y + "=" + val);
 	}
