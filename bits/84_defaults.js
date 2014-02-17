@@ -9,6 +9,7 @@ function fixopts(opts) {
 		['bookDeps', false], /* parse calculation chains */
 		['bookSheets', false], /* only try to get sheet names (no Sheets) */
 		['bookProps', false], /* only try to get properties (no Sheets) */
+		['bookFiles', false], /* include raw file structure (keys, files) */
 
 		['WTF', false] /* WTF mode (throws errors) */
 	];

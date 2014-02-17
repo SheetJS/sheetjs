@@ -16,7 +16,7 @@ function parse_sty_bin(data) {
 	for(var y in SSF._table) styles.NumberFmt[y] = SSF._table[y];
 
 	styles.CellXf = [];
-	var state = "";
+	var state = ""; /* TODO: this should be a stack */
 	var pass = false;
 	recordhopper(data, function(val, R, RT) {
 		switch(R.n) {
@@ -35,8 +35,14 @@ function parse_sty_bin(data) {
 			case 'BrtStyle': break; /* TODO */
 			case 'BrtRowHdr': break; /* TODO */
 			case 'BrtCellMeta': break; /* ?? */
+			case 'BrtDXF': break; /* TODO */
+			case 'BrtMRUColor': break; /* TODO */
+			case 'BrtIndexedColor': break; /* TODO */
 			case 'BrtBeginStyleSheet': break;
 			case 'BrtEndStyleSheet': break;
+			case 'BrtBeginTableStyle': break;
+			case 'BrtTableStyleElement': break;
+			case 'BrtEndTableStyle': break;
 			case 'BrtBeginFmts': state = "FMTS"; break;
 			case 'BrtEndFmts': state = ""; break;
 			case 'BrtBeginFonts': state = "FONTS"; break;
@@ -57,6 +63,12 @@ function parse_sty_bin(data) {
 			case 'BrtEndDXFs': state = ""; break;
 			case 'BrtBeginTableStyles': state = "TABLESTYLES"; break;
 			case 'BrtEndTableStyles': state = ""; break;
+			case 'BrtBeginColorPalette': state = "COLORPALETTE"; break;
+			case 'BrtBeginIndexedColors': state = "INDEXEDCOLORS"; break;
+			case 'BrtEndIndexedColors': state = ""; break;
+			case 'BrtBeginMRUColors': state = "MRUCOLORS"; break;
+			case 'BrtEndMRUColors': state = ""; break;
+			case 'BrtEndColorPalette': state = ""; break;
 			case 'BrtFRTBegin': pass = true; break;
 			case 'BrtFRTEnd': pass = false; break;
 			//default: if(!pass) throw new Error("Unexpected record " + RT + " " + R.n);

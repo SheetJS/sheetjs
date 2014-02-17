@@ -37,7 +37,7 @@ function sheet_to_row_object_array(sheet, opts){
 			if(typeof val.w !== 'undefined' && !opts.raw) { row[hdr[C]] = val.w; isempty = false; }
 			else switch(val.t){
 				case 's': case 'str': case 'b': case 'n':
-					if(val.v !== undefined) {
+					if(typeof val.v !== 'undefined') {
 						row[hdr[C]] = val.v;
 						isempty = false;
 					}
@@ -68,6 +68,7 @@ function sheet_to_csv(sheet, opts) {
 	if(!sheet || !sheet["!ref"]) return out;
 	var r = XLSX.utils.decode_range(sheet["!ref"]);
 	var fs = opts.FS||",", rs = opts.RS||"\n";
+
 	for(var R = r.s.r; R <= r.e.r; ++R) {
 		var row = [];
 		for(var C = r.s.c; C <= r.e.c; ++C) {
@@ -90,8 +91,8 @@ function get_formulae(ws) {
 		var x = ws[y];
 		var val = "";
 		if(x.f) val = x.f;
+		else if(typeof x.w !== 'undefined') val = "'" + x.w;
 		else if(typeof x.v === 'undefined') continue;
-		else if(typeof x.v === 'number') val = x.v;
 		else val = x.v;
 		cmds.push(y + "=" + val);
 	}

@@ -20,6 +20,11 @@ var parse_wb_bin = function(data) {
 			case 'BrtBeginBook': break;
 			case 'BrtFileVersion': break;
 			case 'BrtWbProp': break;
+			case 'BrtACBegin': break;
+			case 'BrtAbsPath15': break;
+			case 'BrtACEnd': break;
+			/*case 'BrtBookProtectionIso': break;*/
+			case 'BrtBookProtection': break;
 			case 'BrtBeginBookViews': break;
 			case 'BrtBookView': break;
 			case 'BrtEndBookViews': break;
@@ -29,15 +34,22 @@ var parse_wb_bin = function(data) {
 			case 'BrtEndFnGroup': break;
 			case 'BrtBeginExternals': break;
 			case 'BrtSupSelf': break;
+			case 'BrtSupBookSrc': break;
 			case 'BrtExternSheet': break;
 			case 'BrtEndExternals': break;
 			case 'BrtName': break;
 			case 'BrtCalcProp': break;
+			case 'BrtUserBookView': break;
 			case 'BrtBeginPivotCacheIDs': break;
 			case 'BrtBeginPivotCacheID': break;
 			case 'BrtEndPivotCacheID': break;
 			case 'BrtEndPivotCacheIDs': break;
+			case 'BrtWebOpt': break;
 			case 'BrtFileRecover': break;
+			/*case 'BrtBeginWebPubItems': break;
+			case 'BrtBeginWebPubItem': break;
+			case 'BrtEndWebPubItem': break;
+			case 'BrtEndWebPubItems': break;*/
 			case 'BrtFRTBegin': pass = true; break;
 			case 'BrtFRTEnd': pass = false; break;
 			case 'BrtEndBook': break;

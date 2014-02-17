@@ -63,6 +63,12 @@ function parsetest(x, wb) {
 			} : null);
 		});
 	});
+	if(!fs.existsSync(dir + '2013/' + x + '.xlsb')) return;
+	describe(x + '.xlsb from 2013', function() {
+		it('should parse', function() {
+			var xlsb = XLSX.readFile(dir + '2013/' + x + '.xlsb', opts);
+		});
+	});
 }
 
 describe('should parse test files', function() {
@@ -163,12 +169,28 @@ describe('options', function() {
 			assert(typeof wb.Sheets === 'undefined');
 		});
 		it('should not generate deps by default', function() {
+			var wb = XLSX.readFile(dir+'formula_stress_test.xlsx');
+			assert(typeof wb.Deps === 'undefined' || !(wb.Deps.length>0));
+		});
+		it('bookDeps should generate deps', function() {
 			var wb = XLSX.readFile(dir+'formula_stress_test.xlsx', {bookDeps:true});
 			assert(typeof wb.Deps !== 'undefined' && wb.Deps.length > 0);
 		});
-		it('bookDeps should generate deps', function() {
+		it('should not generate files or keys by default', function() {
 			var wb = XLSX.readFile(dir+'formula_stress_test.xlsx');
-			assert(typeof wb.Deps === 'undefined' || !(wb.Deps.length>0));
+			assert(typeof wb.files === 'undefined');
+			assert(typeof wb.keys === 'undefined');
+			wb = XLSX.readFile(dir+'formula_stress_test.xlsb');
+			assert(typeof wb.files === 'undefined');
+			assert(typeof wb.keys === 'undefined');
+		});
+		it('bookFiles should generate files and keys', function() {
+			var wb = XLSX.readFile(dir+'formula_stress_test.xlsx', {bookFiles:true});
+			assert(typeof wb.files !== 'undefined');
+			assert(typeof wb.keys !== 'undefined');
+			wb = XLSX.readFile(dir+'formula_stress_test.xlsb', {bookFiles:true});
+			assert(typeof wb.files !== 'undefined');
+			assert(typeof wb.keys !== 'undefined');
 		});
 	});
 });

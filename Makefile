@@ -1,12 +1,13 @@
+LIB=xlsx
 DEPS=$(wildcard bits/*.js)
-TARGET=xlsx.js
+TARGET=$(LIB).js
 FMT=xlsx xlsm xlsb
 
 $(TARGET): $(DEPS)
 	cat $^ > $@
 
 bits/31_version.js: package.json
-	echo "XLSX.version = '"`grep version package.json | awk '{gsub(/[^0-9\.]/,"",$$2); print $$2}'`"';" > $@ 
+	echo "XLSX.version = '"`grep version package.json | awk '{gsub(/[^0-9\.]/,"",$$2); print $$2}'`"';" > $@
 
 .PHONY: clean
 clean:
@@ -21,7 +22,7 @@ init:
 
 
 .PHONY: test mocha
-test mocha:
+test mocha: test.js
 	mocha -R spec
 
 TESTFMT=$(patsubst %,test_%,$(FMT))
@@ -40,7 +41,7 @@ lint: $(TARGET)
 .PHONY: cov
 cov: misc/coverage.html
 
-misc/coverage.html: xlsx.js test.js
+misc/coverage.html: $(TARGET) test.js
 	mocha --require blanket -R html-cov > misc/coverage.html
 
 .PHONY: coveralls
@@ -48,5 +49,7 @@ coveralls:
 	mocha --require blanket --reporter mocha-lcov-reporter | ./node_modules/coveralls/bin/coveralls.js
 
 .PHONY: dist
-dist: xlsx.js
-	uglifyjs xlsx.js -o dist/xlsx.min.js --source-map dist/xlsx.min.map --preamble "$$(head -n 1 bits/00_header.js)"
+dist: $(TARGET)
+	cp $(TARGET) dist/
+	cp LICENSE dist/
+	uglifyjs $(TARGET) -o dist/$(LIB).min.js --source-map dist/$(LIB).min.map --preamble "$$(head -n 1 bits/00_header.js)"

@@ -85,7 +85,7 @@ function parseZip(zip, opts) {
 
 	if(dir.comments) parse_comments(zip, dir.comments, sheets, sheetRels, opts);
 
-	return {
+	out = {
 		Directory: dir,
 		Workbook: wb,
 		Props: props,
@@ -95,7 +95,10 @@ function parseZip(zip, opts) {
 		SheetNames: props.SheetNames,
 		Strings: strs,
 		Styles: styles,
-		keys: keys,
-		files: zip.files
 	};
+	if(opts.bookFiles) {
+		out.keys = keys,
+		out.files = zip.files
+	}
+	return out;
 }

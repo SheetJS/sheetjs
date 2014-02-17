@@ -6,7 +6,7 @@ var _strrev = function(x) { return String(x).split("").reverse().join("");};
 function fill(c,l) { return new Array(l+1).join(c); }
 function pad(v,d,c){var t=String(v);return t.length>=d?t:(fill(c||0,d-t.length)+t);}
 function rpad(v,d,c){var t=String(v);return t.length>=d?t:(t+fill(c||0,d-t.length));}
-SSF.version = '0.5.7';
+SSF.version = '0.5.8';
 /* Options */
 var opts_fmt = {};
 function fixopts(o){for(var y in opts_fmt) if(o[y]===undefined) o[y]=opts_fmt[y];}
@@ -113,7 +113,7 @@ var general_fmt = function(v) {
 		return o.replace("e","E").replace(/\.0*$/,"").replace(/\.([0-9]*[^0])0*$/,".$1").replace(/(E[+-])([0-9])$/,"$1"+"0"+"$2");
 	}
 	if(typeof v === 'string') return v;
-	throw "unsupported value in General format: " + v;
+	throw new Error("unsupported value in General format: " + v);
 };
 SSF._general = general_fmt;
 var parse_date_code = function parse_date_code(v,opts) {
@@ -230,7 +230,7 @@ var write_num = function(type, fmt, val) {
 		return o.replace("e","E");
 	}
 	if(fmt[0] === "$") return "$"+write_num(type,fmt.substr(fmt[1]==' '?2:1),val);
-	var r, ff, aval = val < 0 ? -val : val, sign = val < 0 ? "-" : "";
+	var r, rr, ff, aval = val < 0 ? -val : val, sign = val < 0 ? "-" : "";
 	if((r = fmt.match(/# (\?+)([ ]?)\/([ ]?)(\d+)/))) {
 		var den = Number(r[4]), rnd = Math.round(aval * den), base = Math.floor(rnd/den);
 		var myn = (rnd - base*den), myd = den;
@@ -243,8 +243,17 @@ var write_num = function(type, fmt, val) {
 		o = Math.round(val * Math.pow(10,r[1].length));
 		return String(o/Math.pow(10,r[1].length)).replace(/^([^\.]+)$/,"$1."+r[1]).replace(/\.$/,"."+r[1]).replace(/\.([0-9]*)$/,function($$, $1) { return "." + $1 + fill("0", r[1].length-$1.length); });
 	}
+	if((r = fmt.match(/^(0*)\.(#*)$/))) {
+		o = Math.round(val*Math.pow(10,r[2].length));
+		return String(o * Math.pow(10,-r[2].length)).replace(/\.(\d*[1-9])0*$/,".$1").replace(/^([-]?\d*)$/,"$1.").replace(/^0\./,r[1].length?"0.":".");
+	}
+	if((r = fmt.match(/^#,##0([.]?)$/))) return sign + commaify(String(Math.round(aval)));
+	if((r = fmt.match(/^#,##0\.([#0]*0)$/))) {
+		rr = Math.round((val-Math.floor(val))*Math.pow(10,r[1].length));
+		return val < 0 ? "-" + write_num(type, fmt, -val) : commaify(String(Math.floor(val))) + "." + pad(rr,r[1].length,0);
+	}
 	if((r = fmt.match(/^# ([?]+)([ ]?)\/([ ]?)([?]+)/))) {
-		var rr = Math.min(Math.max(r[1].length, r[4].length),7);
+		rr = Math.min(Math.max(r[1].length, r[4].length),7);
 		ff = frac(aval, Math.pow(10,rr)-1, true);
 		return sign + (ff[0]||(ff[1] ? "" : "0")) + " " + (ff[1] ? pad(ff[1],rr," ") + r[2] + "/" + r[3] + rpad(ff[2],rr," "): fill(" ", 2*rr+1 + r[2].length + r[3].length));
 	}
@@ -253,16 +262,6 @@ var write_num = function(type, fmt, val) {
 		case "#.##": o = Math.round(val*100);
 			return String(o/100).replace(/^([^\.]+)$/,"$1.").replace(/^0\.$/,".");
 		case "#,###": var x = commaify(String(Math.round(aval))); return x !== "0" ? sign + x : "";
-		case "#,##0": return sign + commaify(String(Math.round(aval)));
-		case "#,##0.0": r = Math.round((val-Math.floor(val))*10); return val < 0 ? "-" + write_num(type, fmt, -val) : commaify(String(Math.floor(val))) + "." + pad(r,1,"0");
-		case "#,##0.00": r = Math.round((val-Math.floor(val))*100); return val < 0 ? "-" + write_num(type, fmt, -val) : commaify(String(Math.floor(val))) + "." + pad(r,2,"0");
-		case "#,##0.000": r = Math.round((val-Math.floor(val))*1000); return val < 0 ? "-" + write_num(type, fmt, -val) : commaify(String(Math.floor(val))) + "." + pad(r,3,0);
-		case "#,##0.0000": r = Math.round((val-Math.floor(val))*10000); return val < 0 ? "-" + write_num(type, fmt, -val) : commaify(String(Math.floor(val))) + "." + pad(r,4,0);
-		case "#,##0.00000": r = Math.round((val-Math.floor(val))*Math.pow(10,5)); return val < 0 ? "-" + write_num(type, fmt, -val) : commaify(String(Math.floor(val))) + "." + pad(r,5,0);
-		case "#,##0.000000": r = Math.round((val-Math.floor(val))*Math.pow(10,6)); return val < 0 ? "-" + write_num(type, fmt, -val) : commaify(String(Math.floor(val))) + "." + pad(r,6,0);
-		case "#,##0.0000000": r = Math.round((val-Math.floor(val))*Math.pow(10,7)); return val < 0 ? "-" + write_num(type, fmt, -val) : commaify(String(Math.floor(val))) + "." + pad(r,7,0);
-		case "#,##0.00000000": r = Math.round((val-Math.floor(val))*Math.pow(10,8)); return val < 0 ? "-" + write_num(type, fmt, -val) : commaify(String(Math.floor(val))) + "." + pad(r,8,0);
-		case "#,##0.000000000": r = Math.round((val-Math.floor(val))*Math.pow(10,9)); return val < 0 ? "-" + write_num(type, fmt, -val) : commaify(String(Math.floor(val))) + "." + pad(r,9,0);
 		default:
 	}
 	throw new Error("unsupported format |" + fmt + "|");
@@ -279,7 +278,7 @@ function split_fmt(fmt) {
 		j = i+1;
 	}
 	out.push(fmt.slice(j));
-	if(in_str !=-1) throw "Format |" + fmt + "| unterminated string at " + in_str;
+	if(in_str !=-1) throw new Error("Format |" + fmt + "| unterminated string at " + in_str);
 	return out;
 }
 SSF._split = split_fmt;
@@ -292,7 +291,7 @@ function eval_fmt(fmt, v, opts, flen) {
 		switch((c = fmt[i])) {
 			case 'G': /* General */
 				if(fmt.substr(i, i+6).toLowerCase() !== "general")
-					throw 'unrecognized character ' + fmt[i] + ' in ' + fmt;
+					throw new Error('unrecognized character ' + fmt[i] + ' in ' +fmt);
 				out.push({t:'G',v:'General'}); i+=7; break;
 			case '"': /* Literal text */
 				for(o="";fmt[++i] !== '"' && i < fmt.length;) o += fmt[i];
@@ -335,7 +334,7 @@ function eval_fmt(fmt, v, opts, flen) {
 				} else { o=""; }
 				break;
 			/* Numbers */
-			case '0': case '#':
+			case '0': case '#': case '.':
 				o = c; while("0#?.,E+-%".indexOf(c=fmt[++i]) > -1) o += c;
 				out.push({t:'n', v:o}); break;
 			case '?':
