@@ -53,5 +53,7 @@ Apache 2.0
 
 [![Build Status](https://travis-ci.org/SheetJS/frac.png?branch=master)](https://travis-ci.org/SheetJS/frac)
 
+[![Coverage Status](https://coveralls.io/repos/SheetJS/ssf/badge.png?branch=master)](https://coveralls.io/r/SheetJS/ssf?branch=master)
+
 [![githalytics.com alpha](https://cruel-carlota.pagodabox.com/c1dac903f4b43f82a529bc8df145d085 "githalytics.com")](http://githalytics.com/SheetJS/ssf)
 
