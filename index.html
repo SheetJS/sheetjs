@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <!-- xlsx.js (C) 2013-2014 SheetJS http://sheetjs.com -->
+<!-- vim: set ts=2: -->
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
@@ -34,6 +35,14 @@
 <script src="xlsx.js"></script>
 <script>
 var rABS = typeof FileReader !== "undefined" && typeof FileReader.prototype !== "undefined" && typeof FileReader.prototype.readAsBinaryString !== "undefined";
+function fixdata(data) {
+	var o = "", l = 0, w = 10240;
+	for(; l<data.byteLength/w; ++l)
+		o+=String.fromCharCode.apply(null,new Uint8Array(data.slice(l*w,l*w+w)));
+	o+=String.fromCharCode.apply(null, new Uint8Array(data.slice(o.length)));
+	return o;
+}
+
 function xlsxworker(data, cb) {
 	var worker = new Worker('./xlsxworker.js');
 	worker.onmessage = function(e) {
@@ -43,7 +52,7 @@ function xlsxworker(data, cb) {
 			case 'xlsx': cb(JSON.parse(e.data.d)); break;
 		}
 	};
-	var arr = rABS ? data : btoa(String.fromCharCode.apply(null, new Uint8Array(data)));
+	var arr = rABS ? data : btoa(fixdata(data));
 	worker.postMessage({d:arr,b:rABS});
 }
 
@@ -103,11 +112,11 @@ function process_wb(wb) {
 	var output = "";
 	switch(get_radio_value("format")) {
 		case "json":
-		output = JSON.stringify(to_json(wb), 2, 2);
+			output = JSON.stringify(to_json(wb), 2, 2);
 			break;
 		case "form":
 			output = to_formulae(wb);
-			break; 
+			break;
 		default:
 		output = to_csv(wb);
 	}
@@ -133,7 +142,7 @@ function handleDrop(e) {
 				if(rABS) {
 					wb = XLSX.read(data, {type: 'binary'});
 				} else {
-				var arr = String.fromCharCode.apply(null, new Uint8Array(data));
+				var arr = fixdata(data);
 					wb = XLSX.read(btoa(arr), {type: 'base64'});
 				}
 				process_wb(wb);
