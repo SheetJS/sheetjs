@@ -5,7 +5,6 @@ describe('source',function(){it('should load',function(){XLSX=require('./');});}
 
 var opts = {};
 if(process.env.WTF) opts.WTF = true;
-
 var ex = [".xlsb", ".xlsm", ".xlsx"];
 if(process.env.FMTS) ex=process.env.FMTS.split(":").map(function(x){return x[0]==="."?x:"."+x;});
 var exp = ex.map(function(x){ return x + ".pending"; });
@@ -154,6 +153,42 @@ describe('options', function() {
 			var wb = XLSX.readFile(dir+'merge_cells.xlsx', {sheetStubs:true});
 			assert(typeof wb.Sheets.Merge.A2.t !== 'undefined');
 		});
+		it('should read all cells by default', function() {
+			var wb = XLSX.readFile(dir+'formula_stress_test.xlsb');
+			assert(typeof wb.Sheets.Text.A46 !== 'undefined');
+			assert(typeof wb.Sheets.Text.B26 !== 'undefined');
+			assert(typeof wb.Sheets.Text.C16 !== 'undefined');
+			assert(typeof wb.Sheets.Text.D2 !== 'undefined');
+			wb = XLSX.readFile(dir+'formula_stress_test.xlsx');
+			assert(typeof wb.Sheets.Text.A46 !== 'undefined');
+			assert(typeof wb.Sheets.Text.B26 !== 'undefined');
+			assert(typeof wb.Sheets.Text.C16 !== 'undefined');
+			assert(typeof wb.Sheets.Text.D2 !== 'undefined');
+		});
+		it('sheetRows n=20', function() {
+			var wb = XLSX.readFile(dir+'formula_stress_test.xlsx', {sheetRows:20});
+			assert(typeof wb.Sheets.Text.A46 === 'undefined');
+			assert(typeof wb.Sheets.Text.B26 === 'undefined');
+			assert(typeof wb.Sheets.Text.C16 !== 'undefined');
+			assert(typeof wb.Sheets.Text.D2 !== 'undefined');
+			wb = XLSX.readFile(dir+'formula_stress_test.xlsb', {sheetRows:20});
+			assert(typeof wb.Sheets.Text.A46 === 'undefined');
+			assert(typeof wb.Sheets.Text.B26 === 'undefined');
+			assert(typeof wb.Sheets.Text.C16 !== 'undefined');
+			assert(typeof wb.Sheets.Text.D2 !== 'undefined');
+		});
+		it('sheetRows n=10', function() {
+			var wb = XLSX.readFile(dir+'formula_stress_test.xlsb', {sheetRows:10});
+			assert(typeof wb.Sheets.Text.A46 === 'undefined');
+			assert(typeof wb.Sheets.Text.B26 === 'undefined');
+			assert(typeof wb.Sheets.Text.C16 === 'undefined');
+			assert(typeof wb.Sheets.Text.D2 !== 'undefined');
+			wb = XLSX.readFile(dir+'formula_stress_test.xlsx', {sheetRows:10});
+			assert(typeof wb.Sheets.Text.A46 === 'undefined');
+			assert(typeof wb.Sheets.Text.B26 === 'undefined');
+			assert(typeof wb.Sheets.Text.C16 === 'undefined');
+			assert(typeof wb.Sheets.Text.D2 !== 'undefined');
+		});
 	});
 	describe('book', function() {
 		it('bookSheets should not generate sheets', function() {
@@ -224,7 +259,7 @@ describe('features', function() {
 		});
 	});
 
-	describe('should have core properties and custom properties parsed', function() {
+	describe('should parse core properties and custom properties', function() {
 		var wb;
 		before(function() {
 			XLSX = require('./');
@@ -242,7 +277,7 @@ describe('features', function() {
 		});
 	});
 
-	describe('should parse cells with date type', function() {
+	describe('should parse cells with date type (XLSX/XLSB)', function() {
 		var wb, ws;
 		before(function() {
 			XLSX = require('./');
@@ -253,6 +288,31 @@ describe('features', function() {
 		it('Must have read the date', function() {
 			var sheet = XLSX.utils.sheet_to_row_object_array(ws);
 			assert.equal(sheet[3]['てすと'], '2/14/14');
+		});
+	});
+
+	describe('sheetRows', function() {
+		it('should use original range if not set', function() {
+			var wb = XLSX.readFile(dir+'formula_stress_test.xlsb');
+			assert.equal(wb.Sheets.Text["!ref"],"A1:F49");
+			wb = XLSX.readFile(dir+'formula_stress_test.xlsx');
+			assert.equal(wb.Sheets.Text["!ref"],"A1:F49");
+		});
+		it('should adjust range if set', function() {
+			var wb = XLSX.readFile(dir+'formula_stress_test.xlsx', {sheetRows:10});
+			assert.equal(wb.Sheets.Text["!fullref"],"A1:F49");
+			assert.equal(wb.Sheets.Text["!ref"],"A1:F10");
+			wb = XLSX.readFile(dir+'formula_stress_test.xlsb', {sheetRows:10});
+			assert.equal(wb.Sheets.Text["!fullref"],"A1:F49");
+			assert.equal(wb.Sheets.Text["!ref"],"A1:F10");
+		});
+		it('should not generate comment cells', function() {
+			var wb = XLSX.readFile(dir+'comments_stress_test.xlsx', {sheetRows:10});
+			assert.equal(wb.Sheets.Sheet7["!fullref"],"A1:N34");
+			assert.equal(wb.Sheets.Sheet7["!ref"],"A1:A1");
+			wb = XLSX.readFile(dir+'comments_stress_test.xlsb', {sheetRows:10});
+			assert.equal(wb.Sheets.Sheet7["!fullref"],"A1:N34");
+			assert.equal(wb.Sheets.Sheet7["!ref"],"A1:A1");
 		});
 	});
 });

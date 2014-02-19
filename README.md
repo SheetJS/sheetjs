@@ -79,7 +79,9 @@ The exported `read` and `readFile` functions accept an options argument:
 | cellHTML    | true    | Parse rich text and save HTML to the .h field |
 | cellNF      | false   | Save number format string to the .z field |
 | sheetStubs  | false   | Create cell objects for stub cells |
+| sheetRows   | 0       | If >0, read the first `sheetRows` rows ** |
 | bookDeps    | false   | If true, parse calculation chains |
+| bookFiles   | false   | If true, add raw files to book object ** |
 | bookProps   | false   | If true, only parse enough to get book metadata ** |
 | bookSheets  | false   | If true, only parse enough to get the sheet names |
 
@@ -89,13 +91,17 @@ The exported `read` and `readFile` functions accept an options argument:
 - In some cases, sheets may be parsed even if `bookSheets` is false.
 - `bookSheets` and `bookProps` combine to give both sets of information
 - `Deps` will be an empty object if `bookDeps` is falsy
+- `bookFiles` adds a `keys` array (paths in the ZIP) and a `files` hash (whose
+  keys are paths and values are objects representing the files)
+- `sheetRows-1` rows will be generated when looking at the JSON object output
+  (since the header row is counted as a row when parsing the data)
 
 The defaults are enumerated in bits/84_defaults.js
 
 ## Tested Environments
 
  - Node 0.8.14, 0.10.1
- - IE 6/7/8/9/10 using Base64 mode (IE10 using HTML5 mode)
+ - IE 6/7/8/9/10 using Base64 mode (IE10/11 using HTML5 mode)
  - FF 18 using Base64 or HTML5 mode
  - Chrome 24 using Base64 or HTML5 mode
 

@@ -18,9 +18,9 @@ function parse_ws_xml(data, opts) {
 
 		/* 18.3.1.73 row CT_Row */
 		var row = parsexmltag(x.match(/<row[^>]*>/)[0]);
+		if(opts.sheetRows && opts.sheetRows < +row.r) return;
 		if(refguess.s.r > row.r - 1) refguess.s.r = row.r - 1;
 		if(refguess.e.r < row.r - 1) refguess.e.r = row.r - 1;
-
 		/* 18.3.1.4 c CT_Cell */
 		var cells = x.substr(x.indexOf('>')+1).split(/<c /);
 		cells.forEach(function(c, idx) { if(c === "" || c.trim() === "") return;
@@ -82,6 +82,18 @@ function parse_ws_xml(data, opts) {
 		});
 	});
 	if(!s["!ref"]) s["!ref"] = encode_range(refguess);
+	if(opts.sheetRows) {
+		var tmpref = decode_range(s["!ref"]);
+		if(opts.sheetRows < +tmpref.e.r) {
+			tmpref.e.r = opts.sheetRows - 1;
+			if(tmpref.e.r > refguess.e.r) tmpref.e.r = refguess.e.r;
+			if(tmpref.e.r < tmpref.s.r) tmpref.s.r = tmpref.e.r;
+			if(tmpref.e.c > refguess.e.c) tmpref.e.c = refguess.e.c;
+			if(tmpref.e.c < tmpref.s.c) tmpref.s.c = tmpref.e.c;
+			s["!fullref"] = s["!ref"];
+			s["!ref"] = encode_range(tmpref);
+		}
+	}
 	return s;
 }
 

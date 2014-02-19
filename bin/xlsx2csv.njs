@@ -15,6 +15,7 @@ program
 	.option('-J, --raw-js', 'emit raw JS object rather than CSV (raw numbers)')
 	.option('-F, --field-sep <sep>', 'CSV field separator', ",")
 	.option('-R, --row-sep <sep>', 'CSV row separator', "\n")
+	.option('-n, --sheet-rows <num>', 'Number of rows to process (0=all rows)')
 	.option('--dev', 'development mode')
 	.option('--read', 'read but do not print out contents')
 	.option('-q, --quiet', 'quiet mode');
@@ -46,6 +47,7 @@ if(!fs.existsSync(filename)) {
 
 var opts = {}, wb;
 if(program.listSheets) opts.bookSheets = true;
+if(program.sheetRows) opts.sheetRows = program.sheetRows;
 
 if(program.dev) {
 	X.verbose = 2;

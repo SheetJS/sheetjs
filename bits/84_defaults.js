@@ -5,7 +5,7 @@ function fixopts(opts) {
 		['cellFormula', true], /* emit formulae as .h */
 
 		['sheetStubs', false], /* emit empty cells */
-
+		['sheetRows', 0, 'n'], /* read n rows (0 = read all rows) */
 		['bookDeps', false], /* parse calculation chains */
 		['bookSheets', false], /* only try to get sheet names (no Sheets) */
 		['bookProps', false], /* only try to get properties (no Sheets) */
@@ -13,5 +13,8 @@ function fixopts(opts) {
 
 		['WTF', false] /* WTF mode (throws errors) */
 	];
-	defaults.forEach(function(d) { if(typeof opts[d[0]] === 'undefined') opts[d[0]] = d[1]; });
+	defaults.forEach(function(d) {
+		if(typeof opts[d[0]] === 'undefined') opts[d[0]] = d[1];
+		if(d[2] === 'n') opts[d[0]] = Number(opts[d[0]]);
+	});
 }

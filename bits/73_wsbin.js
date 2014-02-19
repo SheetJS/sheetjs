@@ -123,13 +123,18 @@ var parse_ws_bin = function(data, opts) {
 	var s = {};
 
 	var ref;
+	var refguess = {s: {r:1000000, c:1000000}, e: {r:0, c:0} };
 
-	var pass = false;
+	var pass = false, end = false;
 	var row, p, cf;
 	recordhopper(data, function(val, R) {
+		if(end) return;
 		switch(R.n) {
 			case 'BrtWsDim': ref = val; break;
-			case 'BrtRowHdr': row = val; break;
+			case 'BrtRowHdr':
+				row = val;
+				if(opts.sheetRows && opts.sheetRows <= row.r) end=true;
+				break;
 
 			case 'BrtFmlaBool':
 			case 'BrtFmlaError':
@@ -154,7 +159,11 @@ var parse_ws_bin = function(data, opts) {
 					if(opts.cellNF) p.z = SSF._table[cf.ifmt];
 				} catch(e) { if(opts.WTF) throw e; }
 				s[encode_cell({c:val[0].c,r:row.r})] = p;
-				break; // TODO
+				if(refguess.s.r > row.r) refguess.s.r = row.r;
+				if(refguess.s.c > val[0].c) refguess.s.c = val[0].c;
+				if(refguess.e.r < row.r) refguess.e.r = row.r;
+				if(refguess.e.c < val[0].c) refguess.e.c = val[0].c;
+				break;
 
 			case 'BrtCellBlank': break; // (blank cell)
 
@@ -192,6 +201,18 @@ var parse_ws_bin = function(data, opts) {
 		}
 	}, opts);
 	s["!ref"] = encode_range(ref);
+	if(opts.sheetRows) {
+		var tmpref = decode_range(s["!ref"]);
+		if(opts.sheetRows < +tmpref.e.r) {
+			tmpref.e.r = opts.sheetRows - 1;
+			if(tmpref.e.r > refguess.e.r) tmpref.e.r = refguess.e.r;
+			if(tmpref.e.r < tmpref.s.r) tmpref.s.r = tmpref.e.r;
+			if(tmpref.e.c > refguess.e.c) tmpref.e.c = refguess.e.c;
+			if(tmpref.e.c < tmpref.s.c) tmpref.s.c = tmpref.e.c;
+			s["!fullref"] = s["!ref"];
+			s["!ref"] = encode_range(tmpref);
+		}
+	}
 	return s;
 };
 

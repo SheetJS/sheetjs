@@ -1,7 +1,7 @@
 LIB=xlsx
 DEPS=$(wildcard bits/*.js)
 TARGET=$(LIB).js
-FMT=xlsx xlsm xlsb
+FMT=xlsx xlsm xlsb misc
 
 $(TARGET): $(DEPS)
 	cat $^ > $@

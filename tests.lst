@@ -8,6 +8,7 @@ named_ranges_2011.xlsb
 number_format.xlsb
 rich_text_stress.xlsb
 time_stress_test_1.xlsb
+xlsx-stream-d-date-cell.xlsb
 LONumbers-2010.xlsx
 LONumbers-2011.xlsx
 LONumbers.xlsx
@@ -233,6 +234,7 @@ xlrd_test_comments_excel.xlsx
 xlrd_test_comments_gdocs.xlsx
 xlrd_text_bar.xlsx
 חישוב_נקודות_זיכוי.xlsx
+xlsx-stream-d-date-cell.xlsx
 apachepoi_45431.xlsm
 apachepoi_47026.xlsm
 apachepoi_47089.xlsm
