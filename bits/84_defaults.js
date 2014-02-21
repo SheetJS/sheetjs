@@ -2,7 +2,7 @@ function fixopts(opts) {
 	var defaults = [
 		['cellNF', false], /* emit cell number format string as .z */
 		['cellHTML', true], /* emit html string as .h */
-		['cellFormula', true], /* emit formulae as .h */
+		['cellFormula', true], /* emit formulae as .f */
 
 		['sheetStubs', false], /* emit empty cells */
 		['sheetRows', 0, 'n'], /* read n rows (0 = read all rows) */
