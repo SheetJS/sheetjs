@@ -37,7 +37,7 @@ var __readDoubleLE = function(b, idx) { return b.readDoubleLE ? b.readDoubleLE(i
 
 
 function ReadShift(size, t) {
-	var o, w, vv, i, loc; t = t || 'u';
+	var o = "", oo = [], w, vv, i, loc; t = t || 'u';
 	if(size === 'ieee754') { size = 8; t = 'f'; }
 	switch(size) {
 		case 1: o = __readUInt8(this, this.l); break;
@@ -49,11 +49,11 @@ function ReadShift(size, t) {
 
 		/* sbcs and dbcs support continue records in the SST way TODO codepages */
 		/* TODO: DBCS http://msdn.microsoft.com/en-us/library/cc194788.aspx */
-		case 'dbcs': size = 2*t; o = ""; loc = this.l;
+		case 'dbcs': size = 2*t; loc = this.l;
 			for(i = 0; i != t; ++i) {
-				o += _getchar(__readUInt16LE(this, loc));
+				oo.push(_getchar(__readUInt16LE(this, loc)));
 				loc+=2;
-			} break;
+			} o = oo.join(""); break;
 
 		case 'sbcs': size = t; o = ""; loc = this.l;
 			for(i = 0; i != t; ++i) {

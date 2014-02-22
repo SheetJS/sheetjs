@@ -55,6 +55,12 @@ function parsetest(x, wb) {
 	describe(x + ' should generate correct output', function() {
 		wb.SheetNames.forEach(function(ws, i) {
 			var name = (dir + x + '.' + i + '.csv');
+			if(x.substr(-5) === ".xlsb") {
+				root = x.slice(0,-5);
+				//if(!fs.existsSync(name)) name=(dir + root + '.xlsx.'+i+'.csv');
+				//if(!fs.existsSync(name)) name=(dir + root + '.xlsm.'+i+'.csv');
+				//if(!fs.existsSync(name)) name=(dir + root + '.xls.'+i+'.csv');
+			}
 			it('#' + i + ' (' + ws + ')', fs.existsSync(name) ? function() {
 				var file = fs.readFileSync(name, 'utf-8');
 				var csv = XLSX.utils.make_csv(wb.Sheets[ws]);

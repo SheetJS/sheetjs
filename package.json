@@ -1,6 +1,6 @@
 {
 	"name": "xlsx",
-	"version": "0.5.10",
+	"version": "0.5.10-a",
 	"author": "sheetjs",
 	"description": "XLSB / XLSX / XLSM parser",
 	"keywords": [ "xlsx", "xlsb", "xlsm", "office", "excel", "spreadsheet" ],

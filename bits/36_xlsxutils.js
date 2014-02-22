@@ -47,20 +47,20 @@ function parsexmlbool(value, tag) {
 }
 
 var utf8read = function(orig) {
-	var out = "", i = 0, c = 0, c1 = 0, c2 = 0, c3 = 0;
+	var out = [], i = 0, c = 0, c1 = 0, c2 = 0, c3 = 0;
 	while (i < orig.length) {
 		c = orig.charCodeAt(i++);
-		if (c < 128) out += _chr(c);
+		if (c < 128) out.push(_chr(c));
 		else {
 			c2 = orig.charCodeAt(i++);
-			if (c>191 && c<224) out += _chr((c & 31) << 6 | c2 & 63);
+			if (c>191 && c<224) out.push(_chr((c & 31) << 6 | c2 & 63));
 			else {
 				c3 = orig.charCodeAt(i++);
-				out += _chr((c & 15) << 12 | (c2 & 63) << 6 | c3 & 63);
+				out.push(_chr((c & 15) << 12 | (c2 & 63) << 6 | c3 & 63));
 			}
 		}
 	}
-	return out;
+	return out.join("");
 };
 
 // matches <foo>...</foo> extracts content

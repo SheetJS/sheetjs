@@ -63,9 +63,9 @@ function sheet_to_csv(sheet, opts) {
 			default: throw 'unrecognized type ' + val.t;
 		}
 	};
-	var out = "", txt = "";
+	var out = [], txt = "";
 	opts = opts || {};
-	if(!sheet || !sheet["!ref"]) return out;
+	if(!sheet || !sheet["!ref"]) return "";
 	var r = XLSX.utils.decode_range(sheet["!ref"]);
 	var fs = opts.FS||",", rs = opts.RS||"\n";
 
@@ -79,9 +79,9 @@ function sheet_to_csv(sheet, opts) {
 				txt = "\"" + txt.replace(/"/g, '""') + "\"";
 			row.push(txt);
 		}
-		out += row.join(fs) + (rs);
+		out.push(row.join(fs));
 	}
-	return out;
+	return out.join(rs) + (out.length ? rs : "");
 }
 var make_csv = sheet_to_csv;
 

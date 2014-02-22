@@ -2,7 +2,7 @@ RkNumber.xlsb
 comments_stress_test.xlsb
 custom_properties.xlsb
 formula_stress_test.xlsb
-large_strings.xlsb.pending
+large_strings.xlsb
 merge_cells.xlsb
 named_ranges_2011.xlsb
 number_format.xlsb
@@ -162,7 +162,7 @@ jxls-core_simple.xlsx
 jxls-examples_stress1.xlsx
 jxls-examples_stress2.xlsx
 jxls-reader_departmentData.xlsx
-large_strings.xlsx.pending
+large_strings.xlsx
 merge_cells.xlsx
 mixed_sheets.xlsx
 named_ranges_2011.xlsx

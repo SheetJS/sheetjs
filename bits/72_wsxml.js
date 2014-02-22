@@ -26,10 +26,7 @@ function parse_ws_xml(data, opts) {
 		cells.forEach(function(c, idx) { if(c === "" || c.trim() === "") return;
 			var cref = c.match(/r=["']([^"']*)["']/);
 			c = "<c " + c;
-			if(cref && cref.length == 2) {
-				var cref_cell = decode_cell(cref[1]);
-				idx = cref_cell.c;
-			}
+			if(cref && cref.length == 2) idx = decode_cell(cref[1]).c;
 			var cell = parsexmltag((c.match(/<c[^>]*>/)||[c])[0]); delete cell[0];
 			var d = c.substr(c.indexOf('>')+1);
 			var p = {};

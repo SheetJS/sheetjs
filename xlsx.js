@@ -423,7 +423,7 @@ SSF.load_table = function(tbl) { for(var i=0; i!=0x0188; ++i) if(tbl[i]) SSF.loa
 make_ssf(SSF);
 var XLSX = {};
 (function(XLSX){
-XLSX.version = '0.5.10';
+XLSX.version = '0.5.10-a';
 var current_codepage, current_cptable, cptable;
 if(typeof module !== "undefined" && typeof require !== 'undefined') {
 	if(typeof cptable === 'undefined') cptable = require('codepage');
@@ -518,20 +518,20 @@ function parsexmlbool(value, tag) {
 }
 
 var utf8read = function(orig) {
-	var out = "", i = 0, c = 0, c1 = 0, c2 = 0, c3 = 0;
+	var out = [], i = 0, c = 0, c1 = 0, c2 = 0, c3 = 0;
 	while (i < orig.length) {
 		c = orig.charCodeAt(i++);
-		if (c < 128) out += _chr(c);
+		if (c < 128) out.push(_chr(c));
 		else {
 			c2 = orig.charCodeAt(i++);
-			if (c>191 && c<224) out += _chr((c & 31) << 6 | c2 & 63);
+			if (c>191 && c<224) out.push(_chr((c & 31) << 6 | c2 & 63));
 			else {
 				c3 = orig.charCodeAt(i++);
-				out += _chr((c & 15) << 12 | (c2 & 63) << 6 | c3 & 63);
+				out.push(_chr((c & 15) << 12 | (c2 & 63) << 6 | c3 & 63));
 			}
 		}
 	}
-	return out;
+	return out.join("");
 };
 
 // matches <foo>...</foo> extracts content
@@ -590,7 +590,7 @@ var __readDoubleLE = function(b, idx) { return b.readDoubleLE ? b.readDoubleLE(i
 
 
 function ReadShift(size, t) {
-	var o, w, vv, i, loc; t = t || 'u';
+	var o = "", oo = [], w, vv, i, loc; t = t || 'u';
 	if(size === 'ieee754') { size = 8; t = 'f'; }
 	switch(size) {
 		case 1: o = __readUInt8(this, this.l); break;
@@ -602,11 +602,11 @@ function ReadShift(size, t) {
 
 		/* sbcs and dbcs support continue records in the SST way TODO codepages */
 		/* TODO: DBCS http://msdn.microsoft.com/en-us/library/cc194788.aspx */
-		case 'dbcs': size = 2*t; o = ""; loc = this.l;
+		case 'dbcs': size = 2*t; loc = this.l;
 			for(i = 0; i != t; ++i) {
-				o += _getchar(__readUInt16LE(this, loc));
+				oo.push(_getchar(__readUInt16LE(this, loc)));
 				loc+=2;
-			} break;
+			} o = oo.join(""); break;
 
 		case 'sbcs': size = t; o = ""; loc = this.l;
 			for(i = 0; i != t; ++i) {
@@ -1332,10 +1332,7 @@ function parse_ws_xml(data, opts) {
 		cells.forEach(function(c, idx) { if(c === "" || c.trim() === "") return;
 			var cref = c.match(/r=["']([^"']*)["']/);
 			c = "<c " + c;
-			if(cref && cref.length == 2) {
-				var cref_cell = decode_cell(cref[1]);
-				idx = cref_cell.c;
-			}
+			if(cref && cref.length == 2) idx = decode_cell(cref[1]).c;
 			var cell = parsexmltag((c.match(/<c[^>]*>/)||[c])[0]); delete cell[0];
 			var d = c.substr(c.indexOf('>')+1);
 			var p = {};
@@ -2935,9 +2932,9 @@ function sheet_to_csv(sheet, opts) {
 			default: throw 'unrecognized type ' + val.t;
 		}
 	};
-	var out = "", txt = "";
+	var out = [], txt = "";
 	opts = opts || {};
-	if(!sheet || !sheet["!ref"]) return out;
+	if(!sheet || !sheet["!ref"]) return "";
 	var r = XLSX.utils.decode_range(sheet["!ref"]);
 	var fs = opts.FS||",", rs = opts.RS||"\n";
 
@@ -2951,9 +2948,9 @@ function sheet_to_csv(sheet, opts) {
 				txt = "\"" + txt.replace(/"/g, '""') + "\"";
 			row.push(txt);
 		}
-		out += row.join(fs) + (rs);
+		out.push(row.join(fs));
 	}
-	return out;
+	return out.join(rs) + (out.length ? rs : "");
 }
 var make_csv = sheet_to_csv;
 
