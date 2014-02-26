@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /* xlsx.js (C) 2013-2014 SheetJS -- http://sheetjs.com */
 var n = "xlsx";
-/* vim: set ts=2: */
+/* vim: set ts=2 ft=javascript: */
 var X = require('../');
 var fs = require('fs'), program = require('commander');
 program

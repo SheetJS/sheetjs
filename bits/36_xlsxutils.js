@@ -5,7 +5,7 @@ function parsexmltag(tag) {
 	var z = {'0': words[0]};
 	if(words.length === 1) return z;
 	(tag.match(attregexg) || []).map(
-		function(x){var y=x.match(attregex); z[y[1]] = y[2].substr(1,y[2].length-2); });
+		function(x){var y=x.match(attregex); z[y[1].replace(/^[a-zA-Z]*:/,"")] = y[2].substr(1,y[2].length-2); });
 	return z;
 }
 

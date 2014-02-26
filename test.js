@@ -57,9 +57,9 @@ function parsetest(x, wb) {
 			var name = (dir + x + '.' + i + '.csv');
 			if(x.substr(-5) === ".xlsb") {
 				root = x.slice(0,-5);
-				//if(!fs.existsSync(name)) name=(dir + root + '.xlsx.'+i+'.csv');
-				//if(!fs.existsSync(name)) name=(dir + root + '.xlsm.'+i+'.csv');
-				//if(!fs.existsSync(name)) name=(dir + root + '.xls.'+i+'.csv');
+				if(!fs.existsSync(name)) name=(dir + root + '.xlsx.'+i+'.csv');
+				if(!fs.existsSync(name)) name=(dir + root + '.xlsm.'+i+'.csv');
+				if(!fs.existsSync(name)) name=(dir + root + '.xls.'+i+'.csv');
 			}
 			it('#' + i + ' (' + ws + ')', fs.existsSync(name) ? function() {
 				var file = fs.readFileSync(name, 'utf-8');
@@ -145,7 +145,7 @@ describe('options', function() {
 				var ws = wb.Sheets[s];
 				Object.keys(ws).forEach(function(addr) {
 					if(addr[0] === "!" || !ws.hasOwnProperty(addr)) return;
-					assert(typeof ws[addr].t!== 'n' || typeof ws[addr].z !== 'undefined');
+					assert(ws[addr].t!== 'n' || typeof ws[addr].z !== 'undefined');
 				});
 			});
 		});

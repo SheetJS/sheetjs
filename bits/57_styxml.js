@@ -8,7 +8,7 @@ function parseNumFmts(t) {
 			case '<numFmts': case '</numFmts>': case '<numFmts/>': break;
 			case '<numFmt': {
 				var f=unescapexml(y.formatCode), i=parseInt(y.numFmtId,10);
-				styles.NumberFmt[i] = f; SSF.load(f,i);
+				styles.NumberFmt[i] = f; if(i>0) SSF.load(f,i);
 			} break;
 			default: throw 'unrecognized ' + y[0] + ' in numFmts';
 		}

@@ -6,6 +6,7 @@ large_strings.xlsb
 merge_cells.xlsb
 named_ranges_2011.xlsb
 number_format.xlsb
+pivot_table_test.xlsb
 rich_text_stress.xlsb
 time_stress_test_1.xlsb
 xlsx-stream-d-date-cell.xlsb
@@ -162,7 +163,7 @@ jxls-core_simple.xlsx
 jxls-examples_stress1.xlsx
 jxls-examples_stress2.xlsx
 jxls-reader_departmentData.xlsx
-large_strings.xlsx
+large_strings.xlsx.pending
 merge_cells.xlsx
 mixed_sheets.xlsx
 named_ranges_2011.xlsx
@@ -233,11 +234,12 @@ xlrd_reveng1.xlsx
 xlrd_test_comments_excel.xlsx
 xlrd_test_comments_gdocs.xlsx
 xlrd_text_bar.xlsx
-חישוב_נקודות_זיכוי.xlsx
 xlsx-stream-d-date-cell.xlsx
+חישוב_נקודות_זיכוי.xlsx
 apachepoi_45431.xlsm
 apachepoi_47026.xlsm
 apachepoi_47089.xlsm
 apachepoi_ExcelWithAttachments.xlsm
 number_format.xlsm
 openpyxl_r_vba-test.xlsm
+pivot_table_test.xlsm

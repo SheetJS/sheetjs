@@ -423,7 +423,7 @@ SSF.load_table = function(tbl) { for(var i=0; i!=0x0188; ++i) if(tbl[i]) SSF.loa
 make_ssf(SSF);
 var XLSX = {};
 (function(XLSX){
-XLSX.version = '0.5.10-a';
+XLSX.version = '0.5.10-b';
 var current_codepage, current_cptable, cptable;
 if(typeof module !== "undefined" && typeof require !== 'undefined') {
 	if(typeof cptable === 'undefined') cptable = require('codepage');
@@ -476,7 +476,7 @@ function parsexmltag(tag) {
 	var z = {'0': words[0]};
 	if(words.length === 1) return z;
 	(tag.match(attregexg) || []).map(
-		function(x){var y=x.match(attregex); z[y[1]] = y[2].substr(1,y[2].length-2); });
+		function(x){var y=x.match(attregex); z[y[1].replace(/^[a-zA-Z]*:/,"")] = y[2].substr(1,y[2].length-2); });
 	return z;
 }
 
@@ -906,7 +906,7 @@ function parseNumFmts(t) {
 			case '<numFmts': case '</numFmts>': case '<numFmts/>': break;
 			case '<numFmt': {
 				var f=unescapexml(y.formatCode), i=parseInt(y.numFmtId,10);
-				styles.NumberFmt[i] = f; SSF.load(f,i);
+				styles.NumberFmt[i] = f; if(i>0) SSF.load(f,i);
 			} break;
 			default: throw 'unrecognized ' + y[0] + ' in numFmts';
 		}

@@ -30,9 +30,6 @@ TESTFMT=$(patsubst %,test_%,$(FMT))
 $(TESTFMT): test_%:
 	FMTS=$* make test
 
-.PHONY: jasmine
-jasmine:
-	npm run-script test-jasmine
 
 .PHONY: lint
 lint: $(TARGET)
