@@ -53,7 +53,7 @@ var parse_wb_bin = function(data) {
 			case 'BrtFRTBegin': pass = true; break;
 			case 'BrtFRTEnd': pass = false; break;
 			case 'BrtEndBook': break;
-			//default: if(!pass) throw new Error("Unexpected record " + R.n);
+			default: if(!pass) throw new Error("Unexpected record " + R.n);
 		}
 	});
 

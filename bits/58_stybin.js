@@ -71,7 +71,7 @@ function parse_sty_bin(data) {
 			case 'BrtEndColorPalette': state = ""; break;
 			case 'BrtFRTBegin': pass = true; break;
 			case 'BrtFRTEnd': pass = false; break;
-			//default: if(!pass) throw new Error("Unexpected record " + RT + " " + R.n);
+			default: if(!pass) throw new Error("Unexpected record " + RT + " " + R.n);
 		}
 	});
 	return styles;

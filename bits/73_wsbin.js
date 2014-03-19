@@ -145,6 +145,7 @@ var parse_ws_bin = function(data, opts) {
 			case 'BrtCellIsst':
 			case 'BrtCellReal':
 			case 'BrtCellRk':
+			case 'BrtCellSt':
 				p = {t:val[2]};
 				switch(val[2]) {
 					case 'n': p.v = val[1]; break;
@@ -174,10 +175,12 @@ var parse_ws_bin = function(data, opts) {
 			case 'BrtSheetCalcProp': break; // TODO
 			case 'BrtBeginWsViews': break; // TODO
 			case 'BrtBeginWsView': break; // TODO
+			case 'BrtPane': break; // TODO
+			case 'BrtSel': break; // TODO
 			case 'BrtEndWsView': break; // TODO
 			case 'BrtEndWsViews': break; // TODO
-			case 'BrtSel': break; // TODO
 			case 'BrtACBegin': break; // TODO
+			case 'BrtRwDescent': break; // TODO
 			case 'BrtACEnd': break; // TODO
 			case 'BrtWsFmtInfoEx14': break; // TODO
 			case 'BrtWsFmtInfo': break; // TODO
@@ -196,8 +199,44 @@ var parse_ws_bin = function(data, opts) {
 			case 'BrtBeginMergeCells': break; // TODO
 			case 'BrtMergeCell': break; // TODO
 			case 'BrtEndMergeCells': break; // TODO
+			case 'BrtHLink': break; // TODO
+			case 'BrtDrawing': break; // TODO
 			case 'BrtLegacyDrawing': break; // TODO
-			//default: if(!pass) throw new Error("Unexpected record " + R.n);
+			case 'BrtPhoneticInfo': break; // TODO
+			case 'BrtBeginHeaderFooter': break; // TODO
+			case 'BrtEndHeaderFooter': break; // TODO
+			case 'BrtBrk': break; // TODO
+			case 'BrtBeginRwBrk': break; // TODO
+			case 'BrtEndRwBrk': break; // TODO
+			case 'BrtBeginColBrk': break; // TODO
+			case 'BrtEndColBrk': break; // TODO
+			case 'BrtBeginUserShViews': break; // TODO
+			case 'BrtBeginUserShView': break; // TODO
+			case 'BrtEndUserShView': break; // TODO
+			case 'BrtEndUserShViews': break; // TODO
+			case 'BrtBkHim': break; // TODO
+			case 'BrtBeginOleObjects': break; // TODO
+			case 'BrtOleObject': break; // TODO
+			case 'BrtEndOleObjects': break; // TODO
+			case 'BrtBeginListParts': break; // TODO
+			case 'BrtListPart': break; // TODO
+			case 'BrtEndListParts': break; // TODO
+			case 'BrtBeginSortState': break; // TODO
+			case 'BrtBeginSortCond': break; // TODO
+			case 'BrtEndSortCond': break; // TODO
+			case 'BrtEndSortState': break; // TODO
+			case 'BrtBeginConditionalFormatting': break; // TODO
+			case 'BrtEndConditionalFormatting': break; // TODO
+			case 'BrtBeginCFRule': break; // TODO
+			case 'BrtEndCFRule': break; // TODO
+			case 'BrtBeginDVals': break; // TODO
+			case 'BrtDVal': break; // TODO
+			case 'BrtEndDVals': break; // TODO
+			case 'BrtRangeProtection': break; // TODO
+			case 'BrtBeginActiveXControls': break; // TODO
+			case 'BrtActiveX': break; // TODO
+			case 'BrtEndActiveXControls': break; // TODO
+			default: if(!pass) throw new Error("Unexpected record " + R.n);
 		}
 	}, opts);
 	s["!ref"] = encode_range(ref);

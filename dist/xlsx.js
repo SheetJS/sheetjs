@@ -9,7 +9,7 @@ var _strrev = function(x) { return String(x).split("").reverse().join("");};
 function fill(c,l) { return new Array(l+1).join(c); }
 function pad(v,d,c){var t=String(v);return t.length>=d?t:(fill(c||0,d-t.length)+t);}
 function rpad(v,d,c){var t=String(v);return t.length>=d?t:(t+fill(c||0,d-t.length));}
-SSF.version = '0.5.8';
+SSF.version = '0.5.9';
 /* Options */
 var opts_fmt = {};
 function fixopts(o){for(var y in opts_fmt) if(o[y]===undefined) o[y]=opts_fmt[y];}
@@ -246,9 +246,10 @@ var write_num = function(type, fmt, val) {
 		o = Math.round(val * Math.pow(10,r[1].length));
 		return String(o/Math.pow(10,r[1].length)).replace(/^([^\.]+)$/,"$1."+r[1]).replace(/\.$/,"."+r[1]).replace(/\.([0-9]*)$/,function($$, $1) { return "." + $1 + fill("0", r[1].length-$1.length); });
 	}
+	fmt = fmt.replace(/^#+0/, "0");
 	if((r = fmt.match(/^(0*)\.(#*)$/))) {
-		o = Math.round(val*Math.pow(10,r[2].length));
-		return String(o * Math.pow(10,-r[2].length)).replace(/\.(\d*[1-9])0*$/,".$1").replace(/^([-]?\d*)$/,"$1.").replace(/^0\./,r[1].length?"0.":".");
+		o = Math.round(aval*Math.pow(10,r[2].length));
+		return sign + String(o / Math.pow(10,r[2].length)).replace(/\.(\d*[1-9])0*$/,".$1").replace(/^([-]?\d*)$/,"$1.").replace(/^0\./,r[1].length?"0.":".");
 	}
 	if((r = fmt.match(/^#,##0([.]?)$/))) return sign + commaify(String(Math.round(aval)));
 	if((r = fmt.match(/^#,##0\.([#0]*0)$/))) {
@@ -423,7 +424,7 @@ SSF.load_table = function(tbl) { for(var i=0; i!=0x0188; ++i) if(tbl[i]) SSF.loa
 make_ssf(SSF);
 var XLSX = {};
 (function(XLSX){
-XLSX.version = '0.5.10-b';
+XLSX.version = '0.5.11';
 var current_codepage, current_cptable, cptable;
 if(typeof module !== "undefined" && typeof require !== 'undefined') {
 	if(typeof cptable === 'undefined') cptable = require('codepage');
@@ -889,7 +890,9 @@ var parse_sst_bin = function(data) {
 			case 'BrtBeginSst': s.Count = val[0]; s.Unique = val[1]; break;
 			case 'BrtSSTItem': s.push(val); break;
 			case 'BrtEndSst': return true;
-			default: throw new Error("Unexpected record " + R.n);
+			case 'BrtFRTBegin': pass = true; break;
+			case 'BrtFRTEnd': pass = false; break;
+			default: if(!pass) throw new Error("Unexpected record " + RT + " " + R.n);
 		}
 	});
 	return s;
@@ -1036,7 +1039,7 @@ function parse_sty_bin(data) {
 			case 'BrtEndColorPalette': state = ""; break;
 			case 'BrtFRTBegin': pass = true; break;
 			case 'BrtFRTEnd': pass = false; break;
-			//default: if(!pass) throw new Error("Unexpected record " + RT + " " + R.n);
+			default: if(!pass) throw new Error("Unexpected record " + RT + " " + R.n);
 		}
 	});
 	return styles;
@@ -1547,6 +1550,7 @@ var parse_ws_bin = function(data, opts) {
 			case 'BrtCellIsst':
 			case 'BrtCellReal':
 			case 'BrtCellRk':
+			case 'BrtCellSt':
 				p = {t:val[2]};
 				switch(val[2]) {
 					case 'n': p.v = val[1]; break;
@@ -1576,10 +1580,12 @@ var parse_ws_bin = function(data, opts) {
 			case 'BrtSheetCalcProp': break; // TODO
 			case 'BrtBeginWsViews': break; // TODO
 			case 'BrtBeginWsView': break; // TODO
+			case 'BrtPane': break; // TODO
+			case 'BrtSel': break; // TODO
 			case 'BrtEndWsView': break; // TODO
 			case 'BrtEndWsViews': break; // TODO
-			case 'BrtSel': break; // TODO
 			case 'BrtACBegin': break; // TODO
+			case 'BrtRwDescent': break; // TODO
 			case 'BrtACEnd': break; // TODO
 			case 'BrtWsFmtInfoEx14': break; // TODO
 			case 'BrtWsFmtInfo': break; // TODO
@@ -1598,8 +1604,44 @@ var parse_ws_bin = function(data, opts) {
 			case 'BrtBeginMergeCells': break; // TODO
 			case 'BrtMergeCell': break; // TODO
 			case 'BrtEndMergeCells': break; // TODO
+			case 'BrtHLink': break; // TODO
+			case 'BrtDrawing': break; // TODO
 			case 'BrtLegacyDrawing': break; // TODO
-			//default: if(!pass) throw new Error("Unexpected record " + R.n);
+			case 'BrtPhoneticInfo': break; // TODO
+			case 'BrtBeginHeaderFooter': break; // TODO
+			case 'BrtEndHeaderFooter': break; // TODO
+			case 'BrtBrk': break; // TODO
+			case 'BrtBeginRwBrk': break; // TODO
+			case 'BrtEndRwBrk': break; // TODO
+			case 'BrtBeginColBrk': break; // TODO
+			case 'BrtEndColBrk': break; // TODO
+			case 'BrtBeginUserShViews': break; // TODO
+			case 'BrtBeginUserShView': break; // TODO
+			case 'BrtEndUserShView': break; // TODO
+			case 'BrtEndUserShViews': break; // TODO
+			case 'BrtBkHim': break; // TODO
+			case 'BrtBeginOleObjects': break; // TODO
+			case 'BrtOleObject': break; // TODO
+			case 'BrtEndOleObjects': break; // TODO
+			case 'BrtBeginListParts': break; // TODO
+			case 'BrtListPart': break; // TODO
+			case 'BrtEndListParts': break; // TODO
+			case 'BrtBeginSortState': break; // TODO
+			case 'BrtBeginSortCond': break; // TODO
+			case 'BrtEndSortCond': break; // TODO
+			case 'BrtEndSortState': break; // TODO
+			case 'BrtBeginConditionalFormatting': break; // TODO
+			case 'BrtEndConditionalFormatting': break; // TODO
+			case 'BrtBeginCFRule': break; // TODO
+			case 'BrtEndCFRule': break; // TODO
+			case 'BrtBeginDVals': break; // TODO
+			case 'BrtDVal': break; // TODO
+			case 'BrtEndDVals': break; // TODO
+			case 'BrtRangeProtection': break; // TODO
+			case 'BrtBeginActiveXControls': break; // TODO
+			case 'BrtActiveX': break; // TODO
+			case 'BrtEndActiveXControls': break; // TODO
+			default: if(!pass) throw new Error("Unexpected record " + R.n);
 		}
 	}, opts);
 	s["!ref"] = encode_range(ref);
@@ -1873,7 +1915,7 @@ var parse_wb_bin = function(data) {
 			case 'BrtFRTBegin': pass = true; break;
 			case 'BrtFRTEnd': pass = false; break;
 			case 'BrtEndBook': break;
-			//default: if(!pass) throw new Error("Unexpected record " + R.n);
+			default: if(!pass) throw new Error("Unexpected record " + R.n);
 		}
 	});
 

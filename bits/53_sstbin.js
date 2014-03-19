@@ -11,7 +11,9 @@ var parse_sst_bin = function(data) {
 			case 'BrtBeginSst': s.Count = val[0]; s.Unique = val[1]; break;
 			case 'BrtSSTItem': s.push(val); break;
 			case 'BrtEndSst': return true;
-			default: throw new Error("Unexpected record " + R.n);
+			case 'BrtFRTBegin': pass = true; break;
+			case 'BrtFRTEnd': pass = false; break;
+			default: if(!pass) throw new Error("Unexpected record " + RT + " " + R.n);
 		}
 	});
 	return s;

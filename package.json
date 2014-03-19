@@ -1,15 +1,15 @@
 {
 	"name": "xlsx",
-	"version": "0.5.10-b",
+	"version": "0.5.11",
 	"author": "sheetjs",
-	"description": "XLSB / XLSX / XLSM parser",
+	"description": "XLSB / XLSX / XLSM (Excel 2007+ Spreadsheet) parser",
 	"keywords": [ "xlsx", "xlsb", "xlsm", "office", "excel", "spreadsheet" ],
 	"bin": {
 		"xlsx2csv": "./bin/xlsx2csv.njs"
 	},
 	"main": "./xlsx",
 	"dependencies": {
-		"ssf":"~0.5.6",
+		"ssf":"~0.5.9",
 		"codepage":"",
 		"cfb":"",
 		"jszip":"~2.1.0",

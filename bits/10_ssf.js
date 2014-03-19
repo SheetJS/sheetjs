@@ -6,7 +6,7 @@ var _strrev = function(x) { return String(x).split("").reverse().join("");};
 function fill(c,l) { return new Array(l+1).join(c); }
 function pad(v,d,c){var t=String(v);return t.length>=d?t:(fill(c||0,d-t.length)+t);}
 function rpad(v,d,c){var t=String(v);return t.length>=d?t:(t+fill(c||0,d-t.length));}
-SSF.version = '0.5.8';
+SSF.version = '0.5.9';
 /* Options */
 var opts_fmt = {};
 function fixopts(o){for(var y in opts_fmt) if(o[y]===undefined) o[y]=opts_fmt[y];}
@@ -243,9 +243,10 @@ var write_num = function(type, fmt, val) {
 		o = Math.round(val * Math.pow(10,r[1].length));
 		return String(o/Math.pow(10,r[1].length)).replace(/^([^\.]+)$/,"$1."+r[1]).replace(/\.$/,"."+r[1]).replace(/\.([0-9]*)$/,function($$, $1) { return "." + $1 + fill("0", r[1].length-$1.length); });
 	}
+	fmt = fmt.replace(/^#+0/, "0");
 	if((r = fmt.match(/^(0*)\.(#*)$/))) {
-		o = Math.round(val*Math.pow(10,r[2].length));
-		return String(o * Math.pow(10,-r[2].length)).replace(/\.(\d*[1-9])0*$/,".$1").replace(/^([-]?\d*)$/,"$1.").replace(/^0\./,r[1].length?"0.":".");
+		o = Math.round(aval*Math.pow(10,r[2].length));
+		return sign + String(o / Math.pow(10,r[2].length)).replace(/\.(\d*[1-9])0*$/,".$1").replace(/^([-]?\d*)$/,"$1.").replace(/^0\./,r[1].length?"0.":".");
 	}
 	if((r = fmt.match(/^#,##0([.]?)$/))) return sign + commaify(String(Math.round(aval)));
 	if((r = fmt.match(/^#,##0\.([#0]*0)$/))) {
