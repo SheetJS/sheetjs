@@ -424,7 +424,7 @@ SSF.load_table = function(tbl) { for(var i=0; i!=0x0188; ++i) if(tbl[i]) SSF.loa
 make_ssf(SSF);
 var XLSX = {};
 (function(XLSX){
-XLSX.version = '0.5.11';
+XLSX.version = '0.5.12';
 var current_codepage, current_cptable, cptable;
 if(typeof module !== "undefined" && typeof require !== 'undefined') {
 	if(typeof cptable === 'undefined') cptable = require('codepage');
@@ -1638,9 +1638,26 @@ var parse_ws_bin = function(data, opts) {
 			case 'BrtDVal': break; // TODO
 			case 'BrtEndDVals': break; // TODO
 			case 'BrtRangeProtection': break; // TODO
-			case 'BrtBeginActiveXControls': break; // TODO
-			case 'BrtActiveX': break; // TODO
-			case 'BrtEndActiveXControls': break; // TODO
+
+			/* ActiveX */
+			case 'BrtBeginActiveXControls': break;
+			case 'BrtActiveX': break;
+			case 'BrtEndActiveXControls': break;
+
+			/* AutoFilter */
+			case 'BrtBeginAFilter': break;
+			case 'BrtEndAFilter': break;
+			case 'BrtBeginFilterColumn': break;
+			case 'BrtBeginFilters': break;
+			case 'BrtFilter': break; 
+			case 'BrtEndFilters': break;
+			case 'BrtEndFilterColumn': break;
+			case 'BrtDynamicFilter': break;
+			case 'BrtTop10Filter': break;
+			case 'BrtBeginCustomFilters': break;
+			case 'BrtCustomFilter': break;
+			case 'BrtEndCustomFilters': break;
+
 			default: if(!pass) throw new Error("Unexpected record " + R.n);
 		}
 	}, opts);
