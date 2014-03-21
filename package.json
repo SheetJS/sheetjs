@@ -1,6 +1,6 @@
 {
 	"name": "xlsx",
-	"version": "0.5.11",
+	"version": "0.5.12",
 	"author": "sheetjs",
 	"description": "XLSB / XLSX / XLSM (Excel 2007+ Spreadsheet) parser",
 	"keywords": [ "xlsx", "xlsb", "xlsm", "office", "excel", "spreadsheet" ],
@@ -33,5 +33,5 @@
 	},
 	"bugs": { "url": "https://github.com/SheetJS/js-xlsx/issues" },
 	"license": "Apache-2.0",
-	"engines": { "node": ">=0.6" }
+	"engines": { "node": ">=0.8" }
 }

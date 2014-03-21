@@ -150,6 +150,7 @@ OSP-covered specifications:
 
  - [MS-XLSX]: Excel (.xlsx) Extensions to the Office Open XML SpreadsheetML File Format
  - [MS-XLSB]: Excel (.xlsb) Binary File Format
+ - [MS-XLDM]: Spreadsheet Data Model File Format
  - [MS-OE376]: Office Implementation Information for ECMA-376 Standards Support
 
 ## Badges

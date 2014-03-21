@@ -233,9 +233,26 @@ var parse_ws_bin = function(data, opts) {
 			case 'BrtDVal': break; // TODO
 			case 'BrtEndDVals': break; // TODO
 			case 'BrtRangeProtection': break; // TODO
-			case 'BrtBeginActiveXControls': break; // TODO
-			case 'BrtActiveX': break; // TODO
-			case 'BrtEndActiveXControls': break; // TODO
+
+			/* ActiveX */
+			case 'BrtBeginActiveXControls': break;
+			case 'BrtActiveX': break;
+			case 'BrtEndActiveXControls': break;
+
+			/* AutoFilter */
+			case 'BrtBeginAFilter': break;
+			case 'BrtEndAFilter': break;
+			case 'BrtBeginFilterColumn': break;
+			case 'BrtBeginFilters': break;
+			case 'BrtFilter': break; 
+			case 'BrtEndFilters': break;
+			case 'BrtEndFilterColumn': break;
+			case 'BrtDynamicFilter': break;
+			case 'BrtTop10Filter': break;
+			case 'BrtBeginCustomFilters': break;
+			case 'BrtCustomFilter': break;
+			case 'BrtEndCustomFilters': break;
+
 			default: if(!pass) throw new Error("Unexpected record " + R.n);
 		}
 	}, opts);

@@ -1,3 +1,4 @@
+AutoFilter.xlsb
 RkNumber.xlsb
 comments_stress_test.xlsb
 custom_properties.xlsb
@@ -10,6 +11,7 @@ pivot_table_test.xlsb
 rich_text_stress.xlsb
 time_stress_test_1.xlsb
 xlsx-stream-d-date-cell.xlsb
+AutoFilter.xlsx
 LONumbers-2010.xlsx
 LONumbers-2011.xlsx
 LONumbers.xlsx
