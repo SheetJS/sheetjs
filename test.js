@@ -321,4 +321,19 @@ describe('features', function() {
 			assert.equal(wb.Sheets.Sheet7["!ref"],"A1:A1");
 		});
 	});
+
+	describe('merge cells',function() {
+		var wbxls, wbxml;
+		before(function() {
+			XLS = require('./');
+			wbxlsx = XLS.readFile(dir+'merge_cells.xlsx');
+			wbxlsb = XLS.readFile(dir+'merge_cells.xlsb');
+		});
+		it('should have !merges', function() {
+			assert(wbxlsb.Sheets.Merge['!merges']);
+			assert(wbxlsx.Sheets.Merge['!merges']);
+			var m = [wbxlsx,wbxlsb].map(function(x) { return x.Sheets.Merge['!merges'].map(function(y) { return XLS.utils.encode_range(y); });});
+			assert.deepEqual(m[0].sort(),m[1].sort());
+		});
+	});
 });

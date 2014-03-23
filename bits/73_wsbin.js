@@ -117,6 +117,9 @@ var parse_BrtFmlaString = function(data, length, opts) {
 	return o;
 };
 
+/* [MS-XLSB] 2.4.676 BrtMergeCell */
+var parse_BrtMergeCell = parse_UncheckedRfX;
+
 /* [MS-XLSB] 2.1.7.61 Worksheet */
 var parse_ws_bin = function(data, opts) {
 	if(!data) return data;
@@ -127,6 +130,7 @@ var parse_ws_bin = function(data, opts) {
 
 	var pass = false, end = false;
 	var row, p, cf;
+	var mergecells = [];
 	recordhopper(data, function(val, R) {
 		if(end) return;
 		switch(R.n) {
@@ -168,6 +172,11 @@ var parse_ws_bin = function(data, opts) {
 
 			case 'BrtCellBlank': break; // (blank cell)
 
+			/* Merge Cells */
+			case 'BrtBeginMergeCells': break;
+			case 'BrtEndMergeCells': break;
+			case 'BrtMergeCell': mergecells.push(val); break;
+			
 			case 'BrtArrFmla': break; // TODO
 			case 'BrtShrFmla': break; // TODO
 			case 'BrtBeginSheet': break;
@@ -196,9 +205,6 @@ var parse_ws_bin = function(data, opts) {
 			case 'BrtFRTBegin': pass = true; break;
 			case 'BrtFRTEnd': pass = false; break;
 			case 'BrtEndSheet': break; // TODO
-			case 'BrtBeginMergeCells': break; // TODO
-			case 'BrtMergeCell': break; // TODO
-			case 'BrtEndMergeCells': break; // TODO
 			case 'BrtHLink': break; // TODO
 			case 'BrtDrawing': break; // TODO
 			case 'BrtLegacyDrawing': break; // TODO
@@ -253,7 +259,7 @@ var parse_ws_bin = function(data, opts) {
 			case 'BrtCustomFilter': break;
 			case 'BrtEndCustomFilters': break;
 
-			default: if(!pass) throw new Error("Unexpected record " + R.n);
+			default: if(!pass || opts.WTF) throw new Error("Unexpected record " + R.n);
 		}
 	}, opts);
 	s["!ref"] = encode_range(ref);
@@ -269,6 +275,7 @@ var parse_ws_bin = function(data, opts) {
 			s["!ref"] = encode_range(tmpref);
 		}
 	}
+	if(mergecells.length > 0) s["!merges"] = mergecells;
 	return s;
 };
 

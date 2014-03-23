@@ -8,9 +8,19 @@ function parse_ws_xml(data, opts) {
 	var ref = data.match(/<dimension ref="([^"]*)"\s*\/>/);
 	if(ref && ref.length == 2 && ref[1].indexOf(":") !== -1) s["!ref"] = ref[1];
 
+	/* 18.3.1.55 mergeCells CT_MergeCells */
+	var mergecells = [];
+	if(data.match(/<\/mergeCells>/)) {
+		var merges = data.match(/<mergeCell ref="([A-Z0-9:]+)"\s*\/>/g);
+		mergecells = merges.map(function(range) { 
+			return decode_range(/<mergeCell ref="([A-Z0-9:]+)"\s*\/>/.exec(range)[1]);
+		});
+	}
+
 	var refguess = {s: {r:1000000, c:1000000}, e: {r:0, c:0} };
 	var q = ["v","f"];
 	var sidx = 0;
+
 	/* 18.3.1.80 sheetData CT_SheetData ? */
 	if(!data.match(/<sheetData *\/>/))
 	data.match(/<sheetData>([^\u2603]*)<\/sheetData>/m)[1].split("</row>").forEach(function(x) {
@@ -91,6 +101,7 @@ function parse_ws_xml(data, opts) {
 			s["!ref"] = encode_range(tmpref);
 		}
 	}
+	if(mergecells.length > 0) s["!merges"] = mergecells;
 	return s;
 }
 

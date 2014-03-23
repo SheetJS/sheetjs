@@ -107,7 +107,7 @@ var RecordEnum = {
 	0x00AD: { n:"BrtEndCustomFilters", f:parsenoop },
 	0x00AE: { n:"BrtCustomFilter", f:parsenoop },
 	0x00AF: { n:"BrtAFilterDateGroupItem", f:parsenoop },
-	0x00B0: { n:"BrtMergeCell", f:parsenoop },
+	0x00B0: { n:"BrtMergeCell", f:parse_BrtMergeCell },
 	0x00B1: { n:"BrtBeginMergeCells", f:parsenoop },
 	0x00B2: { n:"BrtEndMergeCells", f:parsenoop },
 	0x00B3: { n:"BrtBeginPivotCacheDef", f:parsenoop },

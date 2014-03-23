@@ -9,7 +9,7 @@ var parse_BrtBundleSh = function(data, length) {
 };
 
 /* [MS-XLSB] 2.1.7.60 Workbook */
-var parse_wb_bin = function(data) {
+var parse_wb_bin = function(data, opts) {
 	var wb = { AppVersion:{}, WBProps:{}, WBView:[], Sheets:[], CalcPr:{}, xmlns: "" };
 	var pass = false, z;
 

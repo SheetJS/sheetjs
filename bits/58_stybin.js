@@ -1,9 +1,11 @@
+/* [MS-XLSB] 2.4.651 BrtFmt */
 function parse_BrtFmt(data, length) {
 	var ifmt = data.read_shift(2);
 	var stFmtCode = parse_XLWideString(data,length-2);
 	return [ifmt, stFmtCode];
 }
 
+/* [MS-XLSB] 2.4.816 BrtXF */
 function parse_BrtXF(data, length) {
 	var ixfeParent = data.read_shift(2);
 	var ifmt = data.read_shift(2);
@@ -11,7 +13,8 @@ function parse_BrtXF(data, length) {
 	return {ixfe:ixfeParent, ifmt:ifmt };
 }
 
-function parse_sty_bin(data) {
+/* [MS-XLSB] 2.1.7.50 Styles */
+function parse_sty_bin(data, opts) {
 	styles.NumberFmt = [];
 	for(var y in SSF._table) styles.NumberFmt[y] = SSF._table[y];
 
@@ -64,14 +67,22 @@ function parse_sty_bin(data) {
 			case 'BrtBeginTableStyles': state = "TABLESTYLES"; break;
 			case 'BrtEndTableStyles': state = ""; break;
 			case 'BrtBeginColorPalette': state = "COLORPALETTE"; break;
+			case 'BrtEndColorPalette': state = ""; break;
 			case 'BrtBeginIndexedColors': state = "INDEXEDCOLORS"; break;
 			case 'BrtEndIndexedColors': state = ""; break;
 			case 'BrtBeginMRUColors': state = "MRUCOLORS"; break;
 			case 'BrtEndMRUColors': state = ""; break;
-			case 'BrtEndColorPalette': state = ""; break;
 			case 'BrtFRTBegin': pass = true; break;
 			case 'BrtFRTEnd': pass = false; break;
-			default: if(!pass) throw new Error("Unexpected record " + RT + " " + R.n);
+			case 'BrtBeginStyleSheetExt14': break;
+			case 'BrtBeginSlicerStyles': break;
+			case 'BrtEndSlicerStyles': break;
+			case 'BrtBeginTimelineStylesheetExt15': break;
+			case 'BrtEndTimelineStylesheetExt15': break;
+			case 'BrtBeginTimelineStyles': break;
+			case 'BrtEndTimelineStyles': break;
+			case 'BrtEndStyleSheetExt14': break;
+			default: if(!pass || opts.WTF) throw new Error("Unexpected record " + RT + " " + R.n);
 		}
 	});
 	return styles;
