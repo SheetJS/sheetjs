@@ -424,7 +424,7 @@ SSF.load_table = function(tbl) { for(var i=0; i!=0x0188; ++i) if(tbl[i]) SSF.loa
 make_ssf(SSF);
 var XLSX = {};
 (function(XLSX){
-XLSX.version = '0.5.12';
+XLSX.version = '0.5.13';
 var current_codepage, current_cptable, cptable;
 if(typeof module !== "undefined" && typeof require !== 'undefined') {
 	if(typeof cptable === 'undefined') cptable = require('codepage');
@@ -883,16 +883,17 @@ var parse_BrtBeginSst = function(data, length) {
 };
 
 /* [MS-XLSB] 2.1.7.45 Shared Strings */
-var parse_sst_bin = function(data) {
+var parse_sst_bin = function(data, opts) {
 	var s = [];
 	recordhopper(data, function(val, R) {
 		switch(R.n) {
 			case 'BrtBeginSst': s.Count = val[0]; s.Unique = val[1]; break;
 			case 'BrtSSTItem': s.push(val); break;
 			case 'BrtEndSst': return true;
+			/* TODO: produce a test case with a future record */
 			case 'BrtFRTBegin': pass = true; break;
 			case 'BrtFRTEnd': pass = false; break;
-			default: if(!pass) throw new Error("Unexpected record " + RT + " " + R.n);
+			default: if(!pass || opts.WTF) throw new Error("Unexpected record " + RT + " " + R.n);
 		}
 	});
 	return s;
@@ -966,12 +967,14 @@ function parse_sty_xml(data) {
 
 	return styles;
 }
+/* [MS-XLSB] 2.4.651 BrtFmt */
 function parse_BrtFmt(data, length) {
 	var ifmt = data.read_shift(2);
 	var stFmtCode = parse_XLWideString(data,length-2);
 	return [ifmt, stFmtCode];
 }
 
+/* [MS-XLSB] 2.4.816 BrtXF */
 function parse_BrtXF(data, length) {
 	var ixfeParent = data.read_shift(2);
 	var ifmt = data.read_shift(2);
@@ -979,7 +982,8 @@ function parse_BrtXF(data, length) {
 	return {ixfe:ixfeParent, ifmt:ifmt };
 }
 
-function parse_sty_bin(data) {
+/* [MS-XLSB] 2.1.7.50 Styles */
+function parse_sty_bin(data, opts) {
 	styles.NumberFmt = [];
 	for(var y in SSF._table) styles.NumberFmt[y] = SSF._table[y];
 
@@ -1032,14 +1036,22 @@ function parse_sty_bin(data) {
 			case 'BrtBeginTableStyles': state = "TABLESTYLES"; break;
 			case 'BrtEndTableStyles': state = ""; break;
 			case 'BrtBeginColorPalette': state = "COLORPALETTE"; break;
+			case 'BrtEndColorPalette': state = ""; break;
 			case 'BrtBeginIndexedColors': state = "INDEXEDCOLORS"; break;
 			case 'BrtEndIndexedColors': state = ""; break;
 			case 'BrtBeginMRUColors': state = "MRUCOLORS"; break;
 			case 'BrtEndMRUColors': state = ""; break;
-			case 'BrtEndColorPalette': state = ""; break;
 			case 'BrtFRTBegin': pass = true; break;
 			case 'BrtFRTEnd': pass = false; break;
-			default: if(!pass) throw new Error("Unexpected record " + RT + " " + R.n);
+			case 'BrtBeginStyleSheetExt14': break;
+			case 'BrtBeginSlicerStyles': break;
+			case 'BrtEndSlicerStyles': break;
+			case 'BrtBeginTimelineStylesheetExt15': break;
+			case 'BrtEndTimelineStylesheetExt15': break;
+			case 'BrtBeginTimelineStyles': break;
+			case 'BrtEndTimelineStyles': break;
+			case 'BrtEndStyleSheetExt14': break;
+			default: if(!pass || opts.WTF) throw new Error("Unexpected record " + RT + " " + R.n);
 		}
 	});
 	return styles;
@@ -1317,9 +1329,19 @@ function parse_ws_xml(data, opts) {
 	var ref = data.match(/<dimension ref="([^"]*)"\s*\/>/);
 	if(ref && ref.length == 2 && ref[1].indexOf(":") !== -1) s["!ref"] = ref[1];
 
+	/* 18.3.1.55 mergeCells CT_MergeCells */
+	var mergecells = [];
+	if(data.match(/<\/mergeCells>/)) {
+		var merges = data.match(/<mergeCell ref="([A-Z0-9:]+)"\s*\/>/g);
+		mergecells = merges.map(function(range) { 
+			return decode_range(/<mergeCell ref="([A-Z0-9:]+)"\s*\/>/.exec(range)[1]);
+		});
+	}
+
 	var refguess = {s: {r:1000000, c:1000000}, e: {r:0, c:0} };
 	var q = ["v","f"];
 	var sidx = 0;
+
 	/* 18.3.1.80 sheetData CT_SheetData ? */
 	if(!data.match(/<sheetData *\/>/))
 	data.match(/<sheetData>([^\u2603]*)<\/sheetData>/m)[1].split("</row>").forEach(function(x) {
@@ -1400,6 +1422,7 @@ function parse_ws_xml(data, opts) {
 			s["!ref"] = encode_range(tmpref);
 		}
 	}
+	if(mergecells.length > 0) s["!merges"] = mergecells;
 	return s;
 }
 
@@ -1522,6 +1545,9 @@ var parse_BrtFmlaString = function(data, length, opts) {
 	return o;
 };
 
+/* [MS-XLSB] 2.4.676 BrtMergeCell */
+var parse_BrtMergeCell = parse_UncheckedRfX;
+
 /* [MS-XLSB] 2.1.7.61 Worksheet */
 var parse_ws_bin = function(data, opts) {
 	if(!data) return data;
@@ -1532,6 +1558,7 @@ var parse_ws_bin = function(data, opts) {
 
 	var pass = false, end = false;
 	var row, p, cf;
+	var mergecells = [];
 	recordhopper(data, function(val, R) {
 		if(end) return;
 		switch(R.n) {
@@ -1573,6 +1600,11 @@ var parse_ws_bin = function(data, opts) {
 
 			case 'BrtCellBlank': break; // (blank cell)
 
+			/* Merge Cells */
+			case 'BrtBeginMergeCells': break;
+			case 'BrtEndMergeCells': break;
+			case 'BrtMergeCell': mergecells.push(val); break;
+			
 			case 'BrtArrFmla': break; // TODO
 			case 'BrtShrFmla': break; // TODO
 			case 'BrtBeginSheet': break;
@@ -1601,9 +1633,6 @@ var parse_ws_bin = function(data, opts) {
 			case 'BrtFRTBegin': pass = true; break;
 			case 'BrtFRTEnd': pass = false; break;
 			case 'BrtEndSheet': break; // TODO
-			case 'BrtBeginMergeCells': break; // TODO
-			case 'BrtMergeCell': break; // TODO
-			case 'BrtEndMergeCells': break; // TODO
 			case 'BrtHLink': break; // TODO
 			case 'BrtDrawing': break; // TODO
 			case 'BrtLegacyDrawing': break; // TODO
@@ -1658,7 +1687,7 @@ var parse_ws_bin = function(data, opts) {
 			case 'BrtCustomFilter': break;
 			case 'BrtEndCustomFilters': break;
 
-			default: if(!pass) throw new Error("Unexpected record " + R.n);
+			default: if(!pass || opts.WTF) throw new Error("Unexpected record " + R.n);
 		}
 	}, opts);
 	s["!ref"] = encode_range(ref);
@@ -1674,6 +1703,7 @@ var parse_ws_bin = function(data, opts) {
 			s["!ref"] = encode_range(tmpref);
 		}
 	}
+	if(mergecells.length > 0) s["!merges"] = mergecells;
 	return s;
 };
 
@@ -1888,7 +1918,7 @@ var parse_BrtBundleSh = function(data, length) {
 };
 
 /* [MS-XLSB] 2.1.7.60 Workbook */
-var parse_wb_bin = function(data) {
+var parse_wb_bin = function(data, opts) {
 	var wb = { AppVersion:{}, WBProps:{}, WBView:[], Sheets:[], CalcPr:{}, xmlns: "" };
 	var pass = false, z;
 
@@ -2071,7 +2101,7 @@ var RecordEnum = {
 	0x00AD: { n:"BrtEndCustomFilters", f:parsenoop },
 	0x00AE: { n:"BrtCustomFilter", f:parsenoop },
 	0x00AF: { n:"BrtAFilterDateGroupItem", f:parsenoop },
-	0x00B0: { n:"BrtMergeCell", f:parsenoop },
+	0x00B0: { n:"BrtMergeCell", f:parse_BrtMergeCell },
 	0x00B1: { n:"BrtBeginMergeCells", f:parsenoop },
 	0x00B2: { n:"BrtEndMergeCells", f:parsenoop },
 	0x00B3: { n:"BrtBeginPivotCacheDef", f:parsenoop },
@@ -2823,7 +2853,7 @@ function parseZip(zip, opts) {
 		if(dir.sst) strs=parse_sst(getzipdata(zip, dir.sst.replace(/^\//,'')), dir.sst, opts);
 
 		styles = {};
-		if(dir.style) styles = parse_sty(getzipdata(zip, dir.style.replace(/^\//,'')),dir.style);
+		if(dir.style) styles = parse_sty(getzipdata(zip, dir.style.replace(/^\//,'')),dir.style, opts);
 	}
 
 	var wb = parse_wb(getzipdata(zip, dir.workbooks[0].replace(/^\//,'')), dir.workbooks[0], opts);
