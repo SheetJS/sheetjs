@@ -460,6 +460,11 @@ The next few simplifications ignore leading optional sigils (`#`):
 The frac helper function is used for fraction formats (defined below).
 
 ```
+  if((r = fmt.match(/^([?]+)([ ]?)\/([ ]?)([?]+)/))) {
+    rr = Math.min(Math.max(r[1].length, r[4].length),7);
+    ff = frac(aval, Math.pow(10,rr)-1, false);
+    return sign + (ff[0]||(ff[1] ? "" : "0")) + (ff[1] ? pad(ff[1],rr," ") + r[2] + "/" + r[3] + rpad(ff[2],rr," "): fill(" ", 2*rr+1 + r[2].length + r[3].length));
+  }
   if((r = fmt.match(/^# ([?]+)([ ]?)\/([ ]?)([?]+)/))) {
     rr = Math.min(Math.max(r[1].length, r[4].length),7);
     ff = frac(aval, Math.pow(10,rr)-1, true);
@@ -472,8 +477,6 @@ The default cases are hard-coded.  TODO: actually parse them
 ```js>tmp/60_number.js
   switch(fmt) {
     case "0": case "#0": return Math.round(val);
-    case "#.##": o = Math.round(val*100);
-      return String(o/100).replace(/^([^\.]+)$/,"$1.").replace(/^0\.$/,".");
     case "#,###": var x = commaify(String(Math.round(aval))); return x !== "0" ? sign + x : "";
 ```
 
@@ -539,14 +542,14 @@ mode but I'm not convinced that's the right approach)
 ```
 
 The date codes `m,d,y,h,s` are standard.  There are some special formats like
-`e` (era year) that have different behaviors in Japanese/Chinese locales.
+`e / g` (era year) that have different behaviors in Japanese/Chinese locales.
 
 ```
       /* Dates */
       case 'M': case 'D': case 'Y': case 'H': case 'S': case 'E':
         c = c.toLowerCase();
         /* falls through */
-      case 'm': case 'd': case 'y': case 'h': case 's': case 'e':
+      case 'm': case 'd': case 'y': case 'h': case 's': case 'e': case 'g':
 ```
 
 Negative dates are immediately thrown out:
@@ -1011,7 +1014,7 @@ coveralls:
 ```json>package.json
 {
   "name": "ssf",
-  "version": "0.5.10",
+  "version": "0.5.11",
   "author": "SheetJS",
   "description": "pure-JS library to format data using ECMA-376 spreadsheet Format Codes",
   "keywords": [ "format", "sprintf", "spreadsheet" ],

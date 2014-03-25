@@ -5,7 +5,7 @@ var _strrev = function(x) { return String(x).split("").reverse().join("");};
 function fill(c,l) { return new Array(l+1).join(c); }
 function pad(v,d,c){var t=String(v);return t.length>=d?t:(fill(c||0,d-t.length)+t);}
 function rpad(v,d,c){var t=String(v);return t.length>=d?t:(t+fill(c||0,d-t.length));}
-SSF.version = '0.5.10';
+SSF.version = '0.5.11';
 /* Options */
 var opts_fmt = {};
 function fixopts(o){for(var y in opts_fmt) if(o[y]===undefined) o[y]=opts_fmt[y];}
@@ -255,6 +255,11 @@ var write_num = function(type, fmt, val) {
     rr = Math.round((val-Math.floor(val))*Math.pow(10,r[1].length));
     return val < 0 ? "-" + write_num(type, fmt, -val) : commaify(String(Math.floor(val))) + "." + pad(rr,r[1].length,0);
   }
+  if((r = fmt.match(/^([?]+)([ ]?)\/([ ]?)([?]+)/))) {
+    rr = Math.min(Math.max(r[1].length, r[4].length),7);
+    ff = frac(aval, Math.pow(10,rr)-1, false);
+    return sign + (ff[0]||(ff[1] ? "" : "0")) + (ff[1] ? pad(ff[1],rr," ") + r[2] + "/" + r[3] + rpad(ff[2],rr," "): fill(" ", 2*rr+1 + r[2].length + r[3].length));
+  }
   if((r = fmt.match(/^# ([?]+)([ ]?)\/([ ]?)([?]+)/))) {
     rr = Math.min(Math.max(r[1].length, r[4].length),7);
     ff = frac(aval, Math.pow(10,rr)-1, true);
@@ -262,8 +267,6 @@ var write_num = function(type, fmt, val) {
   }
   switch(fmt) {
     case "0": case "#0": return Math.round(val);
-    case "#.##": o = Math.round(val*100);
-      return String(o/100).replace(/^([^\.]+)$/,"$1.").replace(/^0\.$/,".");
     case "#,###": var x = commaify(String(Math.round(aval))); return x !== "0" ? sign + x : "";
     default:
   }
@@ -308,7 +311,7 @@ function eval_fmt(fmt, v, opts, flen) {
       case 'M': case 'D': case 'Y': case 'H': case 'S': case 'E':
         c = c.toLowerCase();
         /* falls through */
-      case 'm': case 'd': case 'y': case 'h': case 's': case 'e':
+      case 'm': case 'd': case 'y': case 'h': case 's': case 'e': case 'g':
         if(v < 0) return "";
         if(!dt) dt = parse_date_code(v, opts);
         if(!dt) return "";
