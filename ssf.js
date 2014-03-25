@@ -5,7 +5,7 @@ var _strrev = function(x) { return String(x).split("").reverse().join("");};
 function fill(c,l) { return new Array(l+1).join(c); }
 function pad(v,d,c){var t=String(v);return t.length>=d?t:(fill(c||0,d-t.length)+t);}
 function rpad(v,d,c){var t=String(v);return t.length>=d?t:(t+fill(c||0,d-t.length));}
-SSF.version = '0.5.9';
+SSF.version = '0.5.10';
 /* Options */
 var opts_fmt = {};
 function fixopts(o){for(var y in opts_fmt) if(o[y]===undefined) o[y]=opts_fmt[y];}
@@ -205,6 +205,8 @@ var write_num = function(type, fmt, val) {
   var mul = 0, o;
   fmt = fmt.replace(/%/g,function(x) { mul++; return ""; });
   if(mul !== 0) return write_num(type, fmt, val * Math.pow(10,2*mul)) + fill("%",mul);
+  fmt = fmt.replace(/(\.0+)(,+)$/g,function($$,$1,$2) { mul=$2.length; return $1; });
+  if(mul !== 0) return write_num(type, fmt, val / Math.pow(10,3*mul));
   if(fmt.indexOf("E") > -1) {
     var idx = fmt.indexOf("E") - fmt.indexOf(".") - 1;
     if(fmt.match(/^#+0.0E\+0$/)) {
@@ -238,11 +240,12 @@ var write_num = function(type, fmt, val) {
   if(fmt.match(/^#+0+$/)) fmt = fmt.replace(/#/g,"");
   if(fmt.match(/^00+$/)) return (val<0?"-":"")+pad(Math.round(aval),fmt.length);
   if(fmt.match(/^[#?]+$/)) return String(Math.round(val)).replace(/^0$/,"");
-  if((r = fmt.match(/^#*0+\.(0+)/))) {
+  if((r = fmt.match(/^#*0*\.(0+)/))) {
     o = Math.round(val * Math.pow(10,r[1].length));
-    return String(o/Math.pow(10,r[1].length)).replace(/^([^\.]+)$/,"$1."+r[1]).replace(/\.$/,"."+r[1]).replace(/\.([0-9]*)$/,function($$, $1) { return "." + $1 + fill("0", r[1].length-$1.length); });
+    rr = String(o/Math.pow(10,r[1].length)).replace(/^([^\.]+)$/,"$1."+r[1]).replace(/\.$/,"."+r[1]).replace(/\.([0-9]*)$/,function($$, $1) { return "." + $1 + fill("0", r[1].length-$1.length); });
+    return fmt.match(/0\./) ? rr : rr.replace(/^0\./,".");
   }
-  fmt = fmt.replace(/^#+0/, "0");
+  fmt = fmt.replace(/^#+([0.])/, "$1");
   if((r = fmt.match(/^(0*)\.(#*)$/))) {
     o = Math.round(aval*Math.pow(10,r[2].length));
     return sign + String(o / Math.pow(10,r[2].length)).replace(/\.(\d*[1-9])0*$/,".$1").replace(/^([-]?\d*)$/,"$1.").replace(/^0\./,r[1].length?"0.":".");

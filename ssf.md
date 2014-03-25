@@ -366,6 +366,14 @@ Percentage values should be physically shifted:
   if(mul !== 0) return write_num(type, fmt, val * Math.pow(10,2*mul)) + fill("%",mul);
 ```
 
+Formats with multiple commas after the decimal point should be shifted by the
+appropiate multiple of 1000 (more magic):
+
+```js>tmp/60_number.js
+  fmt = fmt.replace(/(\.0+)(,+)$/g,function($$,$1,$2) { mul=$2.length; return $1; });
+  if(mul !== 0) return write_num(type, fmt, val / Math.pow(10,3*mul));
+```
+
 For exponents, get the exponent and mantissa and format them separately:
 
 ```
@@ -427,16 +435,17 @@ A few special general cases can be handled in a very dumb manner:
   if(fmt.match(/^#+0+$/)) fmt = fmt.replace(/#/g,"");
   if(fmt.match(/^00+$/)) return (val<0?"-":"")+pad(Math.round(aval),fmt.length);
   if(fmt.match(/^[#?]+$/)) return String(Math.round(val)).replace(/^0$/,"");
-  if((r = fmt.match(/^#*0+\.(0+)/))) {
+  if((r = fmt.match(/^#*0*\.(0+)/))) {
     o = Math.round(val * Math.pow(10,r[1].length));
-    return String(o/Math.pow(10,r[1].length)).replace(/^([^\.]+)$/,"$1."+r[1]).replace(/\.$/,"."+r[1]).replace(/\.([0-9]*)$/,function($$, $1) { return "." + $1 + fill("0", r[1].length-$1.length); });
+    rr = String(o/Math.pow(10,r[1].length)).replace(/^([^\.]+)$/,"$1."+r[1]).replace(/\.$/,"."+r[1]).replace(/\.([0-9]*)$/,function($$, $1) { return "." + $1 + fill("0", r[1].length-$1.length); });
+    return fmt.match(/0\./) ? rr : rr.replace(/^0\./,".");
   }
 ```
 
 The next few simplifications ignore leading optional sigils (`#`):
 
 ```
-  fmt = fmt.replace(/^#+0/, "0");
+  fmt = fmt.replace(/^#+([0.])/, "$1");
   if((r = fmt.match(/^(0*)\.(#*)$/))) {
     o = Math.round(aval*Math.pow(10,r[2].length));
     return sign + String(o / Math.pow(10,r[2].length)).replace(/\.(\d*[1-9])0*$/,".$1").replace(/^([-]?\d*)$/,"$1.").replace(/^0\./,r[1].length?"0.":".");
@@ -1002,7 +1011,7 @@ coveralls:
 ```json>package.json
 {
   "name": "ssf",
-  "version": "0.5.9",
+  "version": "0.5.10",
   "author": "SheetJS",
   "description": "pure-JS library to format data using ECMA-376 spreadsheet Format Codes",
   "keywords": [ "format", "sprintf", "spreadsheet" ],
