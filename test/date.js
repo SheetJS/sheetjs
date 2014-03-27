@@ -21,7 +21,7 @@ function doit(data) {
     }
   });
 }
-describe('time formats', function() { doit(times.slice(0,1000)); });
+describe('time formats', function() { doit(process.env.MINTEST ? times.slice(0,4000) : times); });
 describe('date formats', function() {
   doit(process.env.MINTEST ? dates.slice(0,1000) : dates);
   it('should fail for bad formats', function() {

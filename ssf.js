@@ -5,7 +5,7 @@ var _strrev = function(x) { return String(x).split("").reverse().join("");};
 function fill(c,l) { return new Array(l+1).join(c); }
 function pad(v,d,c){var t=String(v);return t.length>=d?t:(fill(c||0,d-t.length)+t);}
 function rpad(v,d,c){var t=String(v);return t.length>=d?t:(t+fill(c||0,d-t.length));}
-SSF.version = '0.5.12';
+SSF.version = '0.6.0';
 /* Options */
 var opts_fmt = {};
 function fixopts(o){for(var y in opts_fmt) if(o[y]===undefined) o[y]=opts_fmt[y];}
@@ -122,7 +122,7 @@ var parse_date_code = function parse_date_code(v,opts) {
   if(date > 2958465) return null;
   if(out.u > .999) {
     out.u = 0;
-    ++time;
+    if(++time == 86400) { time = 0; ++date; }
   }
   if(date === 60) {dout = [1900,2,29]; dow=3;}
   else if(date === 0) {dout = [1900,1,0]; dow=6;}
@@ -146,7 +146,7 @@ SSF.parse_date_code = parse_date_code;
 /*jshint -W086 */
 var write_date = function(type, fmt, val) {
   if(val < 0) return "";
-  var o;
+  var o, ss;
   switch(type) {
     case 'y': switch(fmt) { /* year */
       case 'y': case 'yy': return pad(val.y % 100,2);
@@ -181,11 +181,11 @@ var write_date = function(type, fmt, val) {
       default: throw 'bad minute format: ' + fmt;
     }
     case 's': switch(fmt) { /* seconds */
-      case 's': return Math.round(val.S+val.u);
-      case 'ss': return pad(Math.round(val.S+val.u), 2);
-      case 'ss.0': o = pad(Math.round(10*(val.S+val.u)),3); return o.substr(0,2)+"." + o.substr(2);
-      case 'ss.00': o = pad(Math.round(100*(val.S+val.u)),4); return o.substr(0,2)+"." + o.substr(2);
-      case 'ss.000': o = pad(Math.round(1000*(val.S+val.u)),5); return o.substr(0,2)+"." + o.substr(2);
+      case 's': ss=Math.round(val.S+val.u); return ss >= 60 ? 0 : ss;
+      case 'ss': ss=Math.round(val.S+val.u); if(ss>=60) ss=0; return pad(ss,2);
+      case 'ss.0': ss=Math.round(10*(val.S+val.u)); if(ss>=600) ss = 0; o = pad(ss,3); return o.substr(0,2)+"." + o.substr(2);
+      case 'ss.00': ss=Math.round(100*(val.S+val.u)); if(ss>=6000) ss = 0; o = pad(ss,4); return o.substr(0,2)+"." + o.substr(2);
+      case 'ss.000': ss=Math.round(1000*(val.S+val.u)); if(ss>=60000) ss = 0; o = pad(ss,5); return o.substr(0,2)+"." + o.substr(2);
       default: throw 'bad second format: ' + fmt;
     }
     case 'Z': switch(fmt) {
@@ -362,22 +362,38 @@ function eval_fmt(fmt, v, opts, flen) {
         out.push({t:'t', v:c}); ++i; break;
     }
   }
-
-  /* walk backwards */
+  var bt = 0;
   for(i=out.length-1, lst='t'; i >= 0; --i) {
     switch(out[i].t) {
-      case 'h': case 'H': out[i].t = hr; lst='h'; break;
-      case 'd': case 'y': case 's': case 'M': case 'e': lst=out[i].t; break;
-      case 'm': if(lst === 's') out[i].t = 'M'; break;
+      case 'h': case 'H': out[i].t = hr; lst='h'; if(bt < 1) bt = 1; break;
+      case 's': if(bt < 3) bt = 3;
+      /* falls through */
+      case 'd': case 'y': case 'M': case 'e': lst=out[i].t; break;
+      case 'm': if(lst === 's') { out[i].t = 'M'; if(bt < 2) bt = 2; } break;
+      case 'Z':
+        if(bt < 1 && out[i].v.match(/[Hh]/)) bt = 1;
+        if(bt < 2 && out[i].v.match(/[Mm]/)) bt = 2;
+        if(bt < 3 && out[i].v.match(/[Ss]/)) bt = 3;
     }
   }
-
+  switch(bt) {
+    case 0: break;
+    case 1:
+      if(dt.u >= .5) { dt.u = 0; ++dt.S; }
+      if(dt.S >= 60) { dt.S = 0; ++dt.M; }
+      if(dt.M >= 60) { dt.M = 0; ++dt.H; }
+      break;
+    case 2:
+      if(dt.u >= .5) { dt.u = 0; ++dt.S; }
+      if(dt.S >= 60) { dt.S = 0; ++dt.M; }
+      break;
+  }
   /* replace fields */
   for(i=0; i < out.length; ++i) {
     switch(out[i].t) {
       case 't': case 'T': case ' ': case 'D': break;
       case 'd': case 'm': case 'y': case 'h': case 'H': case 'M': case 's': case 'e': case 'Z':
-        out[i].v = write_date(out[i].t, out[i].v, dt);
+        out[i].v = write_date(out[i].t, out[i].v, dt, bt);
         out[i].t = 't'; break;
       case 'n': case '(': case '?':
         var jj = i+1;
