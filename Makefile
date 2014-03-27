@@ -22,6 +22,9 @@ tmp/coverage.html: ssf
 cov_min:
 	MINTEST=1 make cov
 
-.PHONY: coveralls
-coveralls:
+.PHONY: coveralls full_coveralls
+full_coveralls:
 	mocha --require blanket --reporter mocha-lcov-reporter | ./node_modules/coveralls/bin/coveralls.js
+
+coveralls:
+	MINTEST=1 make full_coveralls

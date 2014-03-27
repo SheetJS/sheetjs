@@ -1049,9 +1049,13 @@ Coveralls.io support
 
 ```
 
-.PHONY: coveralls
-coveralls:
+.PHONY: coveralls full_coveralls
+full_coveralls:
         mocha --require blanket --reporter mocha-lcov-reporter | ./node_modules/coveralls/bin/coveralls.js
+
+coveralls:
+        MINTEST=1 make full_coveralls
+
 ```
 
 ```json>package.json
