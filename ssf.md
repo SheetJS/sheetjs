@@ -293,6 +293,15 @@ Date codes beyond 12/31/9999 are invalid:
   if(date > 2958465) return null;
 ```
 
+Due to floating point issues, correct for subseconds:
+
+```
+  if(out.u > .999) {
+    out.u = 0;
+    ++time;
+  }
+```
+
 Due to a bug in Lotus 1-2-3 which was propagated by Excel and other variants,
 the year 1900 is recognized as a leap year.  JS has no way of representing that
 abomination as a `Date`, so the easiest way is to store the data as a tuple.
@@ -1014,7 +1023,7 @@ coveralls:
 ```json>package.json
 {
   "name": "ssf",
-  "version": "0.5.11",
+  "version": "0.5.12",
   "author": "SheetJS",
   "description": "pure-JS library to format data using ECMA-376 spreadsheet Format Codes",
   "keywords": [ "format", "sprintf", "spreadsheet" ],

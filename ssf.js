@@ -5,7 +5,7 @@ var _strrev = function(x) { return String(x).split("").reverse().join("");};
 function fill(c,l) { return new Array(l+1).join(c); }
 function pad(v,d,c){var t=String(v);return t.length>=d?t:(fill(c||0,d-t.length)+t);}
 function rpad(v,d,c){var t=String(v);return t.length>=d?t:(t+fill(c||0,d-t.length));}
-SSF.version = '0.5.11';
+SSF.version = '0.5.12';
 /* Options */
 var opts_fmt = {};
 function fixopts(o){for(var y in opts_fmt) if(o[y]===undefined) o[y]=opts_fmt[y];}
@@ -120,6 +120,10 @@ var parse_date_code = function parse_date_code(v,opts) {
   var dout=[], out={D:date, T:time, u:86400*(v-date)-time}; fixopts(opts = (opts||{}));
   if(opts.date1904) date += 1462;
   if(date > 2958465) return null;
+  if(out.u > .999) {
+    out.u = 0;
+    ++time;
+  }
   if(date === 60) {dout = [1900,2,29]; dow=3;}
   else if(date === 0) {dout = [1900,1,0]; dow=6;}
   else {
