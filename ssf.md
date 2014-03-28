@@ -464,6 +464,7 @@ The next few simplifications ignore leading optional sigils (`#`):
     rr = Math.round((val-Math.floor(val))*Math.pow(10,r[1].length));
     return val < 0 ? "-" + write_num(type, fmt, -val) : commaify(String(Math.floor(val))) + "." + pad(rr,r[1].length,0);
   }
+  if((r = fmt.match(/^#,#*,#0/))) return write_num(type,fmt.replace(/^#,#*,/,""),val);
 ```
 
 The frac helper function is used for fraction formats (defined below).
@@ -484,6 +485,15 @@ The frac helper function is used for fraction formats (defined below).
 The default cases are hard-coded.  TODO: actually parse them
 
 ```js>tmp/60_number.js
+  if((r = fmt.match(/^00,000\.([#0]*0)$/))) {
+    rr = val == Math.floor(val) ? 0 : Math.round((val-Math.floor(val))*Math.pow(10,r[1].length));
+```
+
+Note that this is technically incorrect
+
+```
+    return val < 0 ? "-" + write_num(type, fmt, -val) : commaify(String(Math.floor(val))).replace(/^\d,\d{3}$/,"0$&").replace(/^\d*$/,function($$) { return "00," + ($$.length < 3 ? pad(0,3-$$.length) : "") + $$; }) + "." + pad(rr,r[1].length,0);
+  }
   switch(fmt) {
     case "0": case "#0": return Math.round(val);
     case "#,###": var x = commaify(String(Math.round(aval))); return x !== "0" ? sign + x : "";
@@ -648,7 +658,7 @@ Due to how the CSV generation works, asterisk characters are discarded.  TODO:
 communicate this somehow, possibly with an option
 
 ```
-      case '*': ++i; if(fmt[i] == ' ') ++i; break; // **
+      case '*': ++i; if(fmt[i] == ' ' || fmt[i] == '*') ++i; break; // **
 ```
 
 
@@ -1061,7 +1071,7 @@ coveralls:
 ```json>package.json
 {
   "name": "ssf",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "author": "SheetJS",
   "description": "pure-JS library to format data using ECMA-376 spreadsheet Format Codes",
   "keywords": [ "format", "sprintf", "spreadsheet" ],
@@ -1249,7 +1259,7 @@ describe('oddities', function() {
         if(d[j].length == 2) {
           var expected = d[j][1], actual = SSF.format(d[0], d[j][0], {});
           assert.equal(actual, expected);
-        } else assert.throws(function() { SSF.format(d[0], d[j][0]); });
+        } else if(d[j][2] !== "#") assert.throws(function() { SSF.format(d[0], d[j][0]); });
       }
     });
   });

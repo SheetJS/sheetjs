@@ -10,7 +10,7 @@ describe('oddities', function() {
         if(d[j].length == 2) {
           var expected = d[j][1], actual = SSF.format(d[0], d[j][0], {});
           assert.equal(actual, expected);
-        } else assert.throws(function() { SSF.format(d[0], d[j][0]); });
+        } else if(d[j][2] !== "#") assert.throws(function() { SSF.format(d[0], d[j][0]); });
       }
     });
   });

@@ -5,7 +5,7 @@ var _strrev = function(x) { return String(x).split("").reverse().join("");};
 function fill(c,l) { return new Array(l+1).join(c); }
 function pad(v,d,c){var t=String(v);return t.length>=d?t:(fill(c||0,d-t.length)+t);}
 function rpad(v,d,c){var t=String(v);return t.length>=d?t:(t+fill(c||0,d-t.length));}
-SSF.version = '0.6.0';
+SSF.version = '0.6.1';
 /* Options */
 var opts_fmt = {};
 function fixopts(o){for(var y in opts_fmt) if(o[y]===undefined) o[y]=opts_fmt[y];}
@@ -259,6 +259,7 @@ var write_num = function(type, fmt, val) {
     rr = Math.round((val-Math.floor(val))*Math.pow(10,r[1].length));
     return val < 0 ? "-" + write_num(type, fmt, -val) : commaify(String(Math.floor(val))) + "." + pad(rr,r[1].length,0);
   }
+  if((r = fmt.match(/^#,#*,#0/))) return write_num(type,fmt.replace(/^#,#*,/,""),val);
   if((r = fmt.match(/^([?]+)([ ]?)\/([ ]?)([?]+)/))) {
     rr = Math.min(Math.max(r[1].length, r[4].length),7);
     ff = frac(aval, Math.pow(10,rr)-1, false);
@@ -268,6 +269,10 @@ var write_num = function(type, fmt, val) {
     rr = Math.min(Math.max(r[1].length, r[4].length),7);
     ff = frac(aval, Math.pow(10,rr)-1, true);
     return sign + (ff[0]||(ff[1] ? "" : "0")) + " " + (ff[1] ? pad(ff[1],rr," ") + r[2] + "/" + r[3] + rpad(ff[2],rr," "): fill(" ", 2*rr+1 + r[2].length + r[3].length));
+  }
+  if((r = fmt.match(/^00,000\.([#0]*0)$/))) {
+    rr = val == Math.floor(val) ? 0 : Math.round((val-Math.floor(val))*Math.pow(10,r[1].length));
+    return val < 0 ? "-" + write_num(type, fmt, -val) : commaify(String(Math.floor(val))).replace(/^\d,\d{3}$/,"0$&").replace(/^\d*$/,function($$) { return "00," + ($$.length < 3 ? pad(0,3-$$.length) : "") + $$; }) + "." + pad(rr,r[1].length,0);
   }
   switch(fmt) {
     case "0": case "#0": return Math.round(val);
@@ -350,7 +355,7 @@ function eval_fmt(fmt, v, opts, flen) {
       case '?':
         o = fmt[i]; while(fmt[++i] === c) o+=c;
         q={t:c, v:o}; out.push(q); lst = c; break;
-      case '*': ++i; if(fmt[i] == ' ') ++i; break; // **
+      case '*': ++i; if(fmt[i] == ' ' || fmt[i] == '*') ++i; break; // **
       case '(': case ')': out.push({t:(flen===1?'t':c),v:c}); ++i; break;
       case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':
         o = fmt[i]; while("0123456789".indexOf(fmt[++i]) > -1) o+=fmt[i];
