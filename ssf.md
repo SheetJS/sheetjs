@@ -296,7 +296,7 @@ Date codes beyond 12/31/9999 are invalid:
 Due to floating point issues, correct for subseconds:
 
 ```
-  if(out.u > .999) {
+  if(out.u > 0.999) {
     out.u = 0;
     if(++time == 86400) { time = 0; ++date; }
   }
@@ -360,7 +360,7 @@ var write_num = function(type, fmt, val) {
 For parentheses, explicitly resolve the sign issue:
 
 ```js>tmp/60_number.js
-  if(type === '(') {
+  if(type === '(' && !fmt.match(/\).*[0#]/)) {
     var ffmt = fmt.replace(/\( */,"").replace(/ \)/,"").replace(/\)/,"");
     if(val >= 0) return write_num('n', ffmt, val);
     return '(' + write_num('n', ffmt, -val) + ')';
@@ -371,7 +371,7 @@ Percentage values should be physically shifted:
 
 ```js>tmp/60_number.js
   var mul = 0, o;
-  fmt = fmt.replace(/%/g,function(x) { mul++; return ""; });
+  fmt = fmt.replace(/%/g,function() { mul++; return ""; });
   if(mul !== 0) return write_num(type, fmt, val * Math.pow(10,2*mul)) + fill("%",mul);
 ```
 
@@ -465,6 +465,29 @@ The next few simplifications ignore leading optional sigils (`#`):
     return val < 0 ? "-" + write_num(type, fmt, -val) : commaify(String(Math.floor(val))) + "." + pad(rr,r[1].length,0);
   }
   if((r = fmt.match(/^#,#*,#0/))) return write_num(type,fmt.replace(/^#,#*,/,""),val);
+```
+
+The `Zip Code + 4` format needs to treat an interstitial hyphen as a character:
+
+```
+  if((r = fmt.match(/^([0#]+)-([0#]+)$/))) {
+    ff = write_num(type, fmt.replace(/-/,""), val);
+    return ff.substr(0,ff.length - r[2].length) + "-" + ff.substr(ff.length-r[2].length);
+  }
+  if((r = fmt.match(/^([0#]+)-([0#]+)-([0#]+)$/))) {
+    ff = write_num(type, fmt.replace(/-/g,""), val);
+    return ff.substr(0,ff.length - r[2].length - r[3].length) + "-" + ff.substr(ff.length-r[2].length - r[3].length, r[2].length) + "-" + ff.substr(ff.length-r[3].length);
+  }
+```
+
+There's a better way to generalize the phone number and other formats in terms
+of first drawing the digits, but this selection allows for more nuance:
+
+```
+  if(fmt == "(###) ###-####") {
+    ff = write_num(type, "##########", val);
+    return "(" + ff.substr(0,3) + ") " + ff.substr(3, 3) + "-" + ff.substr(6);
+  }
 ```
 
 The frac helper function is used for fraction formats (defined below).
@@ -717,13 +740,13 @@ Having determined the smallest time unit, round appropriately:
   switch(bt) {
     case 0: break;
     case 1:
-      if(dt.u >= .5) { dt.u = 0; ++dt.S; }
-      if(dt.S >= 60) { dt.S = 0; ++dt.M; }
-      if(dt.M >= 60) { dt.M = 0; ++dt.H; }
+      if(dt.u >= 0.5) { dt.u = 0; ++dt.S; }
+      if(dt.S >=  60) { dt.S = 0; ++dt.M; }
+      if(dt.M >=  60) { dt.M = 0; ++dt.H; }
       break;
     case 2:
-      if(dt.u >= .5) { dt.u = 0; ++dt.S; }
-      if(dt.S >= 60) { dt.S = 0; ++dt.M; }
+      if(dt.u >= 0.5) { dt.u = 0; ++dt.S; }
+      if(dt.S >=  60) { dt.S = 0; ++dt.M; }
       break;
   }
 ```
@@ -740,7 +763,7 @@ Finally, actually write the numbers:
         out[i].t = 't'; break;
       case 'n': case '(': case '?':
         var jj = i+1;
-        while(out[jj] && ("?D".indexOf(out[jj].t) > -1 || (" t".indexOf(out[jj].t) > -1 && "?t".indexOf((out[jj+1]||{}).t)>-1 && (out[jj+1].t == '?' || out[jj+1].v == '/')) || out[i].t == '(' && (out[jj].t == ')' || out[jj].t == 'n') || out[jj].t == 't' && (out[jj].v == '/' || '$€'.indexOf(out[jj].v) > -1 || (out[jj].v == ' ' && (out[jj+1]||{}).t == '?')))) {
+        while(out[jj] && ("?D".indexOf(out[jj].t) > -1 || (" t".indexOf(out[jj].t) > -1 && "?t".indexOf((out[jj+1]||{}).t)>-1 && (out[jj+1].t == '?' || out[jj+1].v == '/')) || out[i].t == '(' && (")n ".indexOf(out[jj].t) > -1) || out[jj].t == 't' && (out[jj].v == '/' || '$€'.indexOf(out[jj].v) > -1 || (out[jj].v == ' ' && (out[jj+1]||{}).t == '?')))) {
           out[i].v += out[jj].v;
           delete out[jj]; ++jj;
         }
@@ -894,7 +917,34 @@ it is treated as the text format
     default: throw "cannot find right format for |" + fmt + "|";
   }
   if(typeof v !== "number") return [fmt.length, fmt[3]];
-  return [l, v > 0 ? fmt[0] : v < 0 ? fmt[1] : fmt[2]];
+```
+
+Here we have to scan for conditions:
+
+```
+  var ff = v > 0 ? fmt[0] : v < 0 ? fmt[1] : fmt[2];
+  if(fmt[0].match(/\[[=<>]/) || fmt[1].match(/\[[=<>]/)) {
+    var chk = function(v, rr, out) {
+      if(!rr) return null;
+      var found = false;
+      var thresh = Number(rr[2]);
+      switch(rr[1]) {
+        case "=":  if(v == thresh) found = true; break;
+        case ">":  if(v >  thresh) found = true; break;
+        case "<":  if(v <  thresh) found = true; break;
+        case "<>": if(v != thresh) found = true; break;
+        case ">=": if(v >= thresh) found = true; break;
+        case "<=": if(v <= thresh) found = true; break;
+      }
+      return found ? out : null;
+    }
+    var m1 = fmt[0].match(/\[([=<>]*)([-]?\d+)\]/);
+    var m2 = fmt[1].match(/\[([=<>]*)([-]?\d+)\]/);
+    return chk(v, m1, [l, fmt[0]])
+        || chk(v, m2, [l, fmt[1]])
+        || [l, fmt[m1&&m2?2:1]];
+  }
+  return [l, ff];
 }
 ```
 
@@ -1071,7 +1121,7 @@ coveralls:
 ```json>package.json
 {
   "name": "ssf",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "author": "SheetJS",
   "description": "pure-JS library to format data using ECMA-376 spreadsheet Format Codes",
   "keywords": [ "format", "sprintf", "spreadsheet" ],
