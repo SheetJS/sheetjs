@@ -16,11 +16,13 @@ var ct2type = {
 	"application/vnd.openxmlformats-officedocument.spreadsheetml.calcChain+xml": "calcchains", /*XLS[XM]*/
 	//"application/vnd.ms-excel.calcChain": "calcchains", /*XLSB*/
 
+	"application/vnd.openxmlformats-officedocument.spreadsheetml.comments+xml": "comments", /*XLS[XM]*/
+	"application/vnd.ms-excel.comments": "comments", /*XLSB*/
+
 	"application/vnd.openxmlformats-package.core-properties+xml": "coreprops",
 	"application/vnd.openxmlformats-officedocument.extended-properties+xml": "extprops",
 	"application/vnd.openxmlformats-officedocument.custom-properties+xml": "custprops",
 	"application/vnd.openxmlformats-officedocument.theme+xml":"themes",
-	"application/vnd.openxmlformats-officedocument.spreadsheetml.comments+xml": "comments",
 	"foo": "bar"
 };
 

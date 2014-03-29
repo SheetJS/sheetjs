@@ -20,6 +20,7 @@ var parse_RichStr = function(data, length) {
 		/* TODO: formatted string */
 		var dwSizeStrRun = data.read_shift(4);
 		for(var i = 0; i != dwSizeStrRun; ++i) rgsStrRun.push(parse_StrRun(data));
+		z.r = JSON.stringify(rgsStrRun);
 	}
 	if(fExtStr) {
 		/* TODO: phonetic string */
@@ -92,3 +93,32 @@ var BErr = {
 };
 var RBErr = evert(BErr);
 
+/* [MS-XLSB] 2.4.321 BrtColor */
+function parse_BrtColor(data, length) {
+	var read = data.read_shift.bind(data);
+	var out = {};
+	var d = read(1);
+	out.fValidRGB = d & 1;
+	out.xColorType = d >>> 1;
+	out.index = read(1)
+	out.nTintAndShade = read(2, 'i');
+	out.bRed   = read(1);
+	out.bGreen = read(1);
+	out.bBlue  = read(1);
+	out.bAlpha = read(1);
+}
+
+/* [MS-XLSB 2.5.52 */
+function parse_FontFlags(data, length) {
+	var d = data.read_shift(1);
+	data.l++;
+	var out = {
+		fItalic: d & 0x2,
+		fStrikeout: d & 0x8,
+		fOutline: d & 0x10,
+		fShadow: d & 0x20,
+		fCondense: d & 0x40,
+		fExtend: d & 0x80,
+	};
+	return out;
+}

@@ -46,6 +46,7 @@ var parse_wb_bin = function(data, opts) {
 			case 'BrtEndPivotCacheIDs': break;
 			case 'BrtWebOpt': break;
 			case 'BrtFileRecover': break;
+			case 'BrtFileSharing': break;
 			/*case 'BrtBeginWebPubItems': break;
 			case 'BrtBeginWebPubItem': break;
 			case 'BrtEndWebPubItem': break;

@@ -5,6 +5,34 @@ function parse_BrtFmt(data, length) {
 	return [ifmt, stFmtCode];
 }
 
+/* [MS-XLSB] 2.4.653 BrtFont TODO */
+function parse_BrtFont(data, length) {
+	var read = data.read_shift.bind(data);
+	var out = {flags:{}};
+	out.dyHeight = read(2);
+	out.grbit = parse_FontFlags(data, 2);
+	out.bls = read(2);
+	out.sss = read(2);
+	out.uls = read(1);
+	out.bFamily = read(1);
+	out.bCharSet = read(1);
+	data.l++;
+	out.brtColor = parse_BrtColor(data, 8);
+	out.bFontScheme = read(1);
+	out.name = parse_XLWideString(data, length - 21);
+
+	out.flags.Bold = out.bls === 0x02BC;
+	out.flags.Italic = out.grbit.fItalic;
+	out.flags.Strikeout = out.grbit.fStrikeout;
+	out.flags.Outline = out.grbit.fOutline;
+	out.flags.Shadow = out.grbit.fShadow;
+	out.flags.Condense = out.grbit.fCondense;
+	out.flags.Extend = out.grbit.fExtend;
+	out.flags.Sub = out.sss & 0x2;
+	out.flags.Sup = out.sss & 0x1;
+	return out;
+}
+
 /* [MS-XLSB] 2.4.816 BrtXF */
 function parse_BrtXF(data, length) {
 	var ixfeParent = data.read_shift(2);

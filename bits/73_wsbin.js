@@ -208,6 +208,7 @@ var parse_ws_bin = function(data, opts) {
 			case 'BrtHLink': break; // TODO
 			case 'BrtDrawing': break; // TODO
 			case 'BrtLegacyDrawing': break; // TODO
+			case 'BrtLegacyDrawingHF': break; // TODO
 			case 'BrtPhoneticInfo': break; // TODO
 			case 'BrtBeginHeaderFooter': break; // TODO
 			case 'BrtEndHeaderFooter': break; // TODO
@@ -239,6 +240,11 @@ var parse_ws_bin = function(data, opts) {
 			case 'BrtDVal': break; // TODO
 			case 'BrtEndDVals': break; // TODO
 			case 'BrtRangeProtection': break; // TODO
+			case 'BrtBeginDCon': break; // TODO
+			case 'BrtEndDCon': break; // TODO
+			case 'BrtBeginDRefs': break;
+			case 'BrtDRef': break;
+			case 'BrtEndDRefs': break;
 
 			/* ActiveX */
 			case 'BrtBeginActiveXControls': break;
@@ -258,6 +264,19 @@ var parse_ws_bin = function(data, opts) {
 			case 'BrtBeginCustomFilters': break;
 			case 'BrtCustomFilter': break;
 			case 'BrtEndCustomFilters': break;
+
+			/* Cell Watch */
+			case 'BrtBeginCellWatches': break;
+			case 'BrtCellWatch': break;
+			case 'BrtEndCellWatches': break;
+
+			/* Table */
+			case 'BrtTable': break;
+
+			/* Ignore Cell Errors */
+			case 'BrtBeginCellIgnoreECs': break;
+			case 'BrtCellIgnoreEC': break;
+			case 'BrtEndCellIgnoreECs': break;
 
 			default: if(!pass || opts.WTF) throw new Error("Unexpected record " + R.n);
 		}

@@ -1,4 +1,5 @@
 AutoFilter.xlsb
+BlankSheetTypes.xlsb
 RkNumber.xlsb
 comments_stress_test.xlsb
 custom_properties.xlsb
@@ -7,10 +8,22 @@ large_strings.xlsb
 merge_cells.xlsb
 named_ranges_2011.xlsb
 number_format.xlsb
+pivot_table_named_range.xlsb
 pivot_table_test.xlsb
 rich_text_stress.xlsb
 time_stress_test_1.xlsb
 xlsx-stream-d-date-cell.xlsb
+2013/apachepoi_29982.xls.xlsb
+2013/apachepoi_43251.xls.xlsb
+2013/apachepoi_44593.xls.xlsb
+2013/apachepoi_44643.xls.xlsb
+2013/apachepoi_44958.xls.xlsb
+2013/apachepoi_46136-NoWarnings.xls.xlsb
+2013/apachepoi_48968.xls.xlsb
+2013/apachepoi_50939.xls.xlsb
+2013/apachepoi_54016.xls.xlsb
+2013/apachepoi_ReadOnlyRecommended.xls.xlsb
+2013/apachepoi_testArraysAndTables.xls.xlsb
 AutoFilter.xlsx
 LONumbers-2010.xlsx
 LONumbers-2011.xlsx
@@ -191,6 +204,7 @@ openpyxl_r_date_1904.xlsx
 openpyxl_r_formulae.xlsx
 openpyxl_r_null_archive.xlsx.pending
 openpyxl_r_null_file.xlsx.pending
+pivot_table_named_range.xlsx
 rich_text_stress.xlsx
 roo_1900_base.xlsx
 roo_1904_base.xlsx
@@ -208,6 +222,7 @@ roo_formula.xlsx
 roo_formula_string_error.xlsx
 roo_link.xlsx
 roo_named_cells.xlsx
+roo_numbers-export.xlsx
 roo_numbers1.xlsx
 roo_numeric-link.xlsx
 roo_only_one_sheet.xlsx
@@ -240,6 +255,7 @@ xlrd_test_comments_gdocs.xlsx
 xlrd_text_bar.xlsx
 xlsx-stream-d-date-cell.xlsx
 חישוב_נקודות_זיכוי.xlsx
+BlankSheetTypes.xlsm
 apachepoi_45431.xlsm
 apachepoi_47026.xlsm
 apachepoi_47089.xlsm
