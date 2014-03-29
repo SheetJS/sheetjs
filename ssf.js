@@ -455,12 +455,10 @@ function choose_fmt(fmt, v, o) {
         case "<=": if(v <= thresh) found = true; break;
       }
       return found ? out : null;
-    }
+    };
     var m1 = fmt[0].match(/\[([=<>]*)([-]?\d+)\]/);
     var m2 = fmt[1].match(/\[([=<>]*)([-]?\d+)\]/);
-    return chk(v, m1, [l, fmt[0]])
-        || chk(v, m2, [l, fmt[1]])
-        || [l, fmt[m1&&m2?2:1]];
+    return chk(v, m1, [l, fmt[0]]) || chk(v, m2, [l, fmt[1]]) || [l, fmt[m1&&m2?2:1]];
   }
   return [l, ff];
 }
