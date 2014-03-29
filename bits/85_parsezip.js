@@ -50,7 +50,7 @@ function parseZip(zip, opts) {
 	sheets = {};
 
 	var deps = {};
-	if(opts.bookDeps && dir.calcchain) deps=parseDeps(getzipdata(zip, dir.calcchain.replace(/^\//,'')));
+	if(opts.bookDeps && dir.calcchain) deps=parse_cc(getzipdata(zip, dir.calcchain.replace(/^\//,'')),dir.calcchain,opts);
 
 	var i=0;
 	var sheetRels = {};

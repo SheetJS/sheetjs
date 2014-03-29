@@ -100,7 +100,7 @@ function parse_BrtColor(data, length) {
 	var d = read(1);
 	out.fValidRGB = d & 1;
 	out.xColorType = d >>> 1;
-	out.index = read(1)
+	out.index = read(1);
 	out.nTintAndShade = read(2, 'i');
 	out.bRed   = read(1);
 	out.bGreen = read(1);

@@ -20,7 +20,10 @@ var parse_BrtWsProp = function(data, length) {
 };
 
 /* [MS-XLSB] 2.4.303 BrtCellBlank */
-var parse_BrtCellBlank = parsenoop;
+var parse_BrtCellBlank = function(data, length) {
+	var cell = parse_Cell(data);
+	return [cell];
+};
 
 /* [MS-XLSB] 2.4.304 BrtCellBool */
 var parse_BrtCellBool = function(data, length) {
@@ -170,7 +173,14 @@ var parse_ws_bin = function(data, opts) {
 				if(refguess.e.c < val[0].c) refguess.e.c = val[0].c;
 				break;
 
-			case 'BrtCellBlank': break; // (blank cell)
+			case 'BrtCellBlank': if(!opts.sheetStubs) break;
+				p = {t:'str',v:undefined};
+				s[encode_cell({c:val[0].c,r:row.r})] = p;
+				if(refguess.s.r > row.r) refguess.s.r = row.r;
+				if(refguess.s.c > val[0].c) refguess.s.c = val[0].c;
+				if(refguess.e.r < row.r) refguess.e.r = row.r;
+				if(refguess.e.c < val[0].c) refguess.e.c = val[0].c;
+				break;
 
 			/* Merge Cells */
 			case 'BrtBeginMergeCells': break;
@@ -281,8 +291,8 @@ var parse_ws_bin = function(data, opts) {
 			default: if(!pass || opts.WTF) throw new Error("Unexpected record " + R.n);
 		}
 	}, opts);
-	s["!ref"] = encode_range(ref);
-	if(opts.sheetRows) {
+	if(!s["!ref"] && ref) s["!ref"] = encode_range(ref);
+	if(opts.sheetRows && s["!ref"]) {
 		var tmpref = decode_range(s["!ref"]);
 		if(opts.sheetRows < +tmpref.e.r) {
 			tmpref.e.r = opts.sheetRows - 1;

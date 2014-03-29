@@ -1,5 +1,6 @@
 AutoFilter.xlsb
 BlankSheetTypes.xlsb
+NumberFormatCondition.xlsb
 RkNumber.xlsb
 comments_stress_test.xlsb
 custom_properties.xlsb
@@ -256,6 +257,7 @@ xlrd_text_bar.xlsx
 xlsx-stream-d-date-cell.xlsx
 חישוב_נקודות_זיכוי.xlsx
 BlankSheetTypes.xlsm
+NumberFormatCondition.xlsm
 apachepoi_45431.xlsm
 apachepoi_47026.xlsm
 apachepoi_47089.xlsm

@@ -6,7 +6,7 @@ var _strrev = function(x) { return String(x).split("").reverse().join("");};
 function fill(c,l) { return new Array(l+1).join(c); }
 function pad(v,d,c){var t=String(v);return t.length>=d?t:(fill(c||0,d-t.length)+t);}
 function rpad(v,d,c){var t=String(v);return t.length>=d?t:(t+fill(c||0,d-t.length));}
-SSF.version = '0.6.1';
+SSF.version = '0.6.2';
 /* Options */
 var opts_fmt = {};
 function fixopts(o){for(var y in opts_fmt) if(o[y]===undefined) o[y]=opts_fmt[y];}
@@ -121,7 +121,7 @@ var parse_date_code = function parse_date_code(v,opts) {
 	var dout=[], out={D:date, T:time, u:86400*(v-date)-time}; fixopts(opts = (opts||{}));
 	if(opts.date1904) date += 1462;
 	if(date > 2958465) return null;
-	if(out.u > .999) {
+	if(out.u > 0.999) {
 		out.u = 0;
 		if(++time == 86400) { time = 0; ++date; }
 	}
@@ -202,13 +202,13 @@ var write_date = function(type, fmt, val) {
 /*jshint +W086 */
 var commaify = function(s) { return _strrev(_strrev(s).replace(/.../g,"$&,")).replace(/^,/,""); };
 var write_num = function(type, fmt, val) {
-	if(type === '(') {
+	if(type === '(' && !fmt.match(/\).*[0#]/)) {
 		var ffmt = fmt.replace(/\( */,"").replace(/ \)/,"").replace(/\)/,"");
 		if(val >= 0) return write_num('n', ffmt, val);
 		return '(' + write_num('n', ffmt, -val) + ')';
 	}
 	var mul = 0, o;
-	fmt = fmt.replace(/%/g,function(x) { mul++; return ""; });
+	fmt = fmt.replace(/%/g,function() { mul++; return ""; });
 	if(mul !== 0) return write_num(type, fmt, val * Math.pow(10,2*mul)) + fill("%",mul);
 	fmt = fmt.replace(/(\.0+)(,+)$/g,function($$,$1,$2) { mul=$2.length; return $1; });
 	if(mul !== 0) return write_num(type, fmt, val / Math.pow(10,3*mul));
@@ -261,6 +261,18 @@ var write_num = function(type, fmt, val) {
 		return val < 0 ? "-" + write_num(type, fmt, -val) : commaify(String(Math.floor(val))) + "." + pad(rr,r[1].length,0);
 	}
 	if((r = fmt.match(/^#,#*,#0/))) return write_num(type,fmt.replace(/^#,#*,/,""),val);
+	if((r = fmt.match(/^([0#]+)-([0#]+)$/))) {
+		ff = write_num(type, fmt.replace(/-/,""), val);
+		return ff.substr(0,ff.length - r[2].length) + "-" + ff.substr(ff.length-r[2].length);
+	}
+	if((r = fmt.match(/^([0#]+)-([0#]+)-([0#]+)$/))) {
+		ff = write_num(type, fmt.replace(/-/g,""), val);
+		return ff.substr(0,ff.length - r[2].length - r[3].length) + "-" + ff.substr(ff.length-r[2].length - r[3].length, r[2].length) + "-" + ff.substr(ff.length-r[3].length);
+	}
+	if(fmt == "(###) ###-####") {
+		ff = write_num(type, "##########", val);
+		return "(" + ff.substr(0,3) + ") " + ff.substr(3, 3) + "-" + ff.substr(6);
+	}
 	if((r = fmt.match(/^([?]+)([ ]?)\/([ ]?)([?]+)/))) {
 		rr = Math.min(Math.max(r[1].length, r[4].length),7);
 		ff = frac(aval, Math.pow(10,rr)-1, false);
@@ -385,12 +397,12 @@ function eval_fmt(fmt, v, opts, flen) {
 	switch(bt) {
 		case 0: break;
 		case 1:
-			if(dt.u >= .5) { dt.u = 0; ++dt.S; }
+			if(dt.u >= 0.5) { dt.u = 0; ++dt.S; }
 			if(dt.S >= 60) { dt.S = 0; ++dt.M; }
 			if(dt.M >= 60) { dt.M = 0; ++dt.H; }
 			break;
 		case 2:
-			if(dt.u >= .5) { dt.u = 0; ++dt.S; }
+			if(dt.u >= 0.5) { dt.u = 0; ++dt.S; }
 			if(dt.S >= 60) { dt.S = 0; ++dt.M; }
 			break;
 	}
@@ -403,7 +415,7 @@ function eval_fmt(fmt, v, opts, flen) {
 				out[i].t = 't'; break;
 			case 'n': case '(': case '?':
 				var jj = i+1;
-				while(out[jj] && ("?D".indexOf(out[jj].t) > -1 || (" t".indexOf(out[jj].t) > -1 && "?t".indexOf((out[jj+1]||{}).t)>-1 && (out[jj+1].t == '?' || out[jj+1].v == '/')) || out[i].t == '(' && (out[jj].t == ')' || out[jj].t == 'n') || out[jj].t == 't' && (out[jj].v == '/' || '$€'.indexOf(out[jj].v) > -1 || (out[jj].v == ' ' && (out[jj+1]||{}).t == '?')))) {
+				while(out[jj] && ("?D".indexOf(out[jj].t) > -1 || (" t".indexOf(out[jj].t) > -1 && "?t".indexOf((out[jj+1]||{}).t)>-1 && (out[jj+1].t == '?' || out[jj+1].v == '/')) || out[i].t == '(' && (")n ".indexOf(out[jj].t) > -1) || out[jj].t == 't' && (out[jj].v == '/' || '$€'.indexOf(out[jj].v) > -1 || (out[jj].v == ' ' && (out[jj+1]||{}).t == '?')))) {
 					out[i].v += out[jj].v;
 					delete out[jj]; ++jj;
 				}
@@ -429,7 +441,27 @@ function choose_fmt(fmt, v, o) {
 		default: throw "cannot find right format for |" + fmt + "|";
 	}
 	if(typeof v !== "number") return [fmt.length, fmt[3]];
-	return [l, v > 0 ? fmt[0] : v < 0 ? fmt[1] : fmt[2]];
+	var ff = v > 0 ? fmt[0] : v < 0 ? fmt[1] : fmt[2];
+	if(fmt[0].match(/\[[=<>]/) || fmt[1].match(/\[[=<>]/)) {
+		var chk = function(v, rr, out) {
+			if(!rr) return null;
+			var found = false;
+			var thresh = Number(rr[2]);
+			switch(rr[1]) {
+				case "=":  if(v == thresh) found = true; break;
+				case ">":  if(v >  thresh) found = true; break;
+				case "<":  if(v <  thresh) found = true; break;
+				case "<>": if(v != thresh) found = true; break;
+				case ">=": if(v >= thresh) found = true; break;
+				case "<=": if(v <= thresh) found = true; break;
+			}
+			return found ? out : null;
+		};
+		var m1 = fmt[0].match(/\[([=<>]*)([-]?\d+)\]/);
+		var m2 = fmt[1].match(/\[([=<>]*)([-]?\d+)\]/);
+		return chk(v, m1, [l, fmt[0]]) || chk(v, m2, [l, fmt[1]]) || [l, fmt[m1&&m2?2:1]];
+	}
+	return [l, ff];
 }
 var format = function format(fmt,v,o) {
 	fixopts(o = (o||{}));

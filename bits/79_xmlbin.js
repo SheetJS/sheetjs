@@ -17,3 +17,7 @@ function parse_sst(data, name, opts) {
 function parse_cmnt(data, name, opts) {
 	return name.substr(-4)===".bin" ? parse_comments_bin(data, opts) : parse_comments_xml(data, opts);
 }
+
+function parse_cc(data, name, opts) {
+	return name.substr(-4)===".bin" ? parse_cc_bin(data, opts) : parse_cc_xml(data, opts);
+}

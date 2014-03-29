@@ -6,7 +6,8 @@ var parse_BrtBeginSst = function(data, length) {
 /* [MS-XLSB] 2.1.7.45 Shared Strings */
 var parse_sst_bin = function(data, opts) {
 	var s = [];
-	recordhopper(data, function(val, R) {
+	var pass = false;
+	recordhopper(data, function(val, R, RT) {
 		switch(R.n) {
 			case 'BrtBeginSst': s.Count = val[0]; s.Unique = val[1]; break;
 			case 'BrtSSTItem': s.push(val); break;

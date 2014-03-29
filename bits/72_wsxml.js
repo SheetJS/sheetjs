@@ -88,8 +88,8 @@ function parse_ws_xml(data, opts) {
 			s[cell.r] = p;
 		});
 	});
-	if(!s["!ref"]) s["!ref"] = encode_range(refguess);
-	if(opts.sheetRows) {
+	if(!s["!ref"] && refguess.e.c >= refguess.s.c && refguess.e.r >= refguess.s.r) s["!ref"] = encode_range(refguess);
+	if(opts.sheetRows && s["!ref"]) {
 		var tmpref = decode_range(s["!ref"]);
 		if(opts.sheetRows < +tmpref.e.r) {
 			tmpref.e.r = opts.sheetRows - 1;
