@@ -3,6 +3,7 @@
 var SSF = require('../');
 var fs = require('fs'), assert = require('assert');
 var dates = fs.readFileSync('./test/dates.tsv','utf8').split("\n");
+var date2 = fs.readFileSync('./test/cal.tsv',  'utf8').split("\n");
 var times = fs.readFileSync('./test/times.tsv','utf8').split("\n");
 
 function doit(data) {
@@ -21,9 +22,12 @@ function doit(data) {
     }
   });
 }
-describe('time formats', function() { doit(process.env.MINTEST ? times.slice(0,4000) : times); });
+describe('time formats', function() {
+  doit(process.env.MINTEST ? times.slice(0,4000) : times);
+});
 describe('date formats', function() {
-  doit(process.env.MINTEST ? dates.slice(0,1000) : dates);
+  doit(process.env.MINTEST ? dates.slice(0,4000) : dates);
+  //doit(process.env.MINTEST ? date2.slice(0,1000) : date2);
   it('should fail for bad formats', function() {
     var bad = [];
     var chk = function(fmt){ return function(){ SSF.format(fmt,0); }; };

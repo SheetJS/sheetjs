@@ -39,19 +39,6 @@ control the output, set the `output` variable:
 opts_fmt.output = "";
 ```
 
-There are a few places where the specification is ambiguous or where Excel does
-not follow the spec.  They are noted in the document.
-
-The `mode` option controls compatibility:
-
-- `ssf`: options that the author believes makes the most sense (default)
-- `ecma`: compatibility with ECMA-376
-- `excel`: compatibility with MS-XLSX
-
-```
-opts_fmt.mode = "";
-```
-
 ## Conditional Format Codes
 
 The specification is a bit unclear here.  It initially claims in §18.3.1:
@@ -273,9 +260,10 @@ Most spreadsheet formats store dates and times as floating point numbers (where
 the integer part is a day code based on a format and the fractional part is the
 portion of a 24 hour day).
 
+Excel supports the alternative Hijri calendar (indicated with `b2`):
 
 ```js>tmp/50_date.js
-var parse_date_code = function parse_date_code(v,opts) {
+var parse_date_code = function parse_date_code(v,opts,b2) {
   var date = Math.floor(v), time = Math.floor(86400 * (v - date)+1e-6), dow=0;
   var dout=[], out={D:date, T:time, u:86400*(v-date)-time}; fixopts(opts = (opts||{}));
 ```
@@ -310,8 +298,8 @@ February 29, 1900 (date `60`) is recognized as a Wednesday.  Date `0` is treated
 as January 0, 1900 rather than December 31, 1899.
 
 ```
-  if(date === 60) {dout = [1900,2,29]; dow=3;}
-  else if(date === 0) {dout = [1900,1,0]; dow=6;}
+  if(date === 60) {dout = b2 ? [1317,10,29] : [1900,2,29]; dow=3;}
+  else if(date === 0) {dout = b2 ? [1317,8,29] : [1900,1,0]; dow=6;}
 ```
 
 For the other dates, using the JS date mechanism suffices.
@@ -333,7 +321,13 @@ Saturday.  The "right" thing to do is to keep the DOW consistent and just break
 the fact that there are two Wednesdays in that "week".
 
 ```
-    if(/* opts.mode === 'excel' && */ date < 60) dow = (dow + 6) % 7;
+    if(date < 60) dow = (dow + 6) % 7;
+```
+
+For the hijri calendar, the date needs to be fixed
+
+```
+    if(b2) dow = fix_hijri(d, dout);
   }
 ```
 
@@ -348,6 +342,12 @@ Because JS dates cannot represent the bad leap day, this returns an object:
   return out;
 };
 SSF.parse_date_code = parse_date_code;
+```
+
+TODO: suitable hijri correction
+
+```js>tmp/45_hijri.js
+function fix_hijri(date, o) { }
 ```
 
 ## Evaluating Number Formats
@@ -547,7 +547,7 @@ LO Formats sometimes leak "GENERAL" or "General" to stand for general format:
 
 ```
       case 'G': /* General */
-        if(fmt.substr(i, i+6).toLowerCase() !== "general")
+        if(fmt.substr(i, 7).toLowerCase() !== "general")
           throw new Error('unrecognized character ' + fmt[i] + ' in ' +fmt);
         out.push({t:'G',v:'General'}); i+=7; break;
 ```
@@ -583,11 +583,22 @@ mode but I'm not convinced that's the right approach)
         out.push({t:'T', v:v}); ++i; break;
 ```
 
+`B1` and `B2` specify which calendar to use, while `b` is the buddhist year.  It
+acts just like `y` except the year is shifted:
+
+```
+      case 'B': case 'b':
+        if(fmt[i+1] === "1" || fmt[i+1] === "2") {
+          if(!dt) dt = parse_date_code(v, opts, fmt[i+1] === "2");
+          q={t:'X', v:fmt.substr(i,2)}; out.push(q); lst = c; i+=2; break;
+        }
+        /* falls through */
+```
+
 The date codes `m,d,y,h,s` are standard.  There are some special formats like
 `e / g` (era year) that have different behaviors in Japanese/Chinese locales.
 
 ```
-      /* Dates */
       case 'M': case 'D': case 'Y': case 'H': case 'S': case 'E':
         c = c.toLowerCase();
         /* falls through */
@@ -646,7 +657,7 @@ Conditional and color blocks should be handled at one point (TODO).  The
 pseudo-type `Z` is used to capture absolute time blocks:
 
 ```
-      case '[': /* TODO: Fix this -- ignore all conditionals and formatting */
+      case '[':
         o = c;
         while(fmt[i++] !== ']' && i < fmt.length) o += fmt[i];
         if(o.substr(-1) !== ']') throw 'unterminated "[" block: |' + o + '|';
@@ -701,11 +712,10 @@ The nonzero digits show up in fraction denominators:
 
 The default magic characters are listed in subsubsections 18.8.30-31 of ECMA376:
 
-
 ```
       case ' ': out.push({t:c,v:c}); ++i; break;
       default:
-        if(",$-+/():!^&'~{}<>=€".indexOf(c) === -1)
+        if(",$-+/():!^&'~{}<>=€acfijklopqrtuvwxz".indexOf(c) === -1)
           throw 'unrecognized character ' + fmt[i] + ' in ' + fmt;
         out.push({t:'t', v:c}); ++i; break;
     }
@@ -726,6 +736,8 @@ identify the smallest time unit (0 = no time, 1 = hour, 2 = minute, 3 = second):
       /* falls through */
       case 'd': case 'y': case 'M': case 'e': lst=out[i].t; break;
       case 'm': if(lst === 's') { out[i].t = 'M'; if(bt < 2) bt = 2; } break;
+      case 'X': if(out[i].v === "B2");
+        break;
       case 'Z':
         if(bt < 1 && out[i].v.match(/[Hh]/)) bt = 1;
         if(bt < 2 && out[i].v.match(/[Mm]/)) bt = 2;
@@ -758,8 +770,9 @@ Finally, actually write the numbers:
   for(i=0; i < out.length; ++i) {
     switch(out[i].t) {
       case 't': case 'T': case ' ': case 'D': break;
-      case 'd': case 'm': case 'y': case 'h': case 'H': case 'M': case 's': case 'e': case 'Z':
-        out[i].v = write_date(out[i].t, out[i].v, dt, bt);
+      case 'X': delete out[i]; break;
+      case 'd': case 'm': case 'y': case 'h': case 'H': case 'M': case 's': case 'e': case 'b': case 'Z':
+        out[i].v = write_date(out[i].t, out[i].v, dt);
         out[i].t = 't'; break;
       case 'n': case '(': case '?':
         var jj = i+1;
@@ -801,18 +814,25 @@ display minutes instead of the month.
 /*jshint -W086 */
 var write_date = function(type, fmt, val) {
   if(val < 0) return "";
-  var o, ss;
+  var o, ss, y = val.y;
   switch(type) {
-    case 'y': switch(fmt) { /* year */
-      case 'y': case 'yy': return pad(val.y % 100,2);
+```
+
+`b` years are shifted by 543 (`y` 1900 == `b` 2443):
+
+```
+    case 'b': y = val.y + 543;
+      /* falls through */
+    case 'y': switch(fmt.length) { /* year */
+      case 1: case 2: return pad(y % 100,2);
 ```
 
 Apparently, even `yyyyyyyyyyyyyyyyyyyy` is a 4 digit year
 
 ```
-      default: return pad(val.y % 10000,4);
+      default: return pad(y % 10000,4);
     }
-    case 'm': switch(fmt) { /* month */
+    case 'm': switch(fmt) {
       case 'm': return val.m;
       case 'mm': return pad(val.m,2);
       case 'mmm': return months[val.m-1][1];
@@ -1119,7 +1139,7 @@ coveralls:
 ```json>package.json
 {
   "name": "ssf",
-  "version": "0.6.2",
+  "version": "0.6.3",
   "author": "SheetJS",
   "description": "pure-JS library to format data using ECMA-376 spreadsheet Format Codes",
   "keywords": [ "format", "sprintf", "spreadsheet" ],
@@ -1237,6 +1257,7 @@ The dates test driver tests the date and time formats:
 var SSF = require('../');
 var fs = require('fs'), assert = require('assert');
 var dates = fs.readFileSync('./test/dates.tsv','utf8').split("\n");
+var date2 = fs.readFileSync('./test/cal.tsv',  'utf8').split("\n");
 var times = fs.readFileSync('./test/times.tsv','utf8').split("\n");
 
 function doit(data) {
@@ -1255,9 +1276,12 @@ function doit(data) {
     }
   });
 }
-describe('time formats', function() { doit(process.env.MINTEST ? times.slice(0,4000) : times); });
+describe('time formats', function() {
+  doit(process.env.MINTEST ? times.slice(0,4000) : times);
+});
 describe('date formats', function() {
-  doit(process.env.MINTEST ? dates.slice(0,1000) : dates);
+  doit(process.env.MINTEST ? dates.slice(0,4000) : dates);
+  //doit(process.env.MINTEST ? date2.slice(0,1000) : date2);
   it('should fail for bad formats', function() {
     var bad = [];
     var chk = function(fmt){ return function(){ SSF.format(fmt,0); }; };
