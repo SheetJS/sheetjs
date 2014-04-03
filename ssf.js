@@ -5,7 +5,7 @@ var _strrev = function(x) { return String(x).split("").reverse().join("");};
 function fill(c,l) { return new Array(l+1).join(c); }
 function pad(v,d,c){var t=String(v);return t.length>=d?t:(fill(c||0,d-t.length)+t);}
 function rpad(v,d,c){var t=String(v);return t.length>=d?t:(t+fill(c||0,d-t.length));}
-SSF.version = '0.6.3';
+SSF.version = '0.6.4';
 /* Options */
 var opts_fmt = {};
 function fixopts(o){for(var y in opts_fmt) if(o[y]===undefined) o[y]=opts_fmt[y];}
@@ -263,15 +263,15 @@ var write_num = function(type, fmt, val) {
     return val < 0 ? "-" + write_num(type, fmt, -val) : commaify(String(Math.floor(val))) + "." + pad(rr,r[1].length,0);
   }
   if((r = fmt.match(/^#,#*,#0/))) return write_num(type,fmt.replace(/^#,#*,/,""),val);
-  if((r = fmt.match(/^([0#]+)-([0#]+)$/))) {
-    ff = write_num(type, fmt.replace(/-/,""), val);
+  if((r = fmt.match(/^([0#]+)\\?-([0#]+)$/))) {
+    ff = write_num(type, fmt.replace(/[\\-]/g,""), val);
     return ff.substr(0,ff.length - r[2].length) + "-" + ff.substr(ff.length-r[2].length);
   }
-  if((r = fmt.match(/^([0#]+)-([0#]+)-([0#]+)$/))) {
-    ff = write_num(type, fmt.replace(/-/g,""), val);
+  if((r = fmt.match(/^([0#]+)\\?-([0#]+)\\?-([0#]+)$/))) {
+    ff = write_num(type, fmt.replace(/[\\-]/g,""), val);
     return ff.substr(0,ff.length - r[2].length - r[3].length) + "-" + ff.substr(ff.length-r[2].length - r[3].length, r[2].length) + "-" + ff.substr(ff.length-r[3].length);
   }
-  if(fmt == "(###) ###-####") {
+  if(fmt.match(/\(###\) ###\\?-####/)) {
     ff = write_num(type, "##########", val);
     return "(" + ff.substr(0,3) + ") " + ff.substr(3, 3) + "-" + ff.substr(6);
   }
@@ -370,7 +370,7 @@ function eval_fmt(fmt, v, opts, flen) {
         break;
       /* Numbers */
       case '0': case '#': case '.':
-        o = c; while("0#?.,E+-%".indexOf(c=fmt[++i]) > -1) o += c;
+        o = c; while("0#?.,E+-%".indexOf(c=fmt[++i]) > -1 || c=='\\' && fmt[i+1] == "-" && "0#".indexOf(fmt[i+2])>-1) o += c;
         out.push({t:'n', v:o}); break;
       case '?':
         o = fmt[i]; while(fmt[++i] === c) o+=c;

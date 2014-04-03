@@ -470,12 +470,12 @@ The next few simplifications ignore leading optional sigils (`#`):
 The `Zip Code + 4` format needs to treat an interstitial hyphen as a character:
 
 ```
-  if((r = fmt.match(/^([0#]+)-([0#]+)$/))) {
-    ff = write_num(type, fmt.replace(/-/,""), val);
+  if((r = fmt.match(/^([0#]+)\\?-([0#]+)$/))) {
+    ff = write_num(type, fmt.replace(/[\\-]/g,""), val);
     return ff.substr(0,ff.length - r[2].length) + "-" + ff.substr(ff.length-r[2].length);
   }
-  if((r = fmt.match(/^([0#]+)-([0#]+)-([0#]+)$/))) {
-    ff = write_num(type, fmt.replace(/-/g,""), val);
+  if((r = fmt.match(/^([0#]+)\\?-([0#]+)\\?-([0#]+)$/))) {
+    ff = write_num(type, fmt.replace(/[\\-]/g,""), val);
     return ff.substr(0,ff.length - r[2].length - r[3].length) + "-" + ff.substr(ff.length-r[2].length - r[3].length, r[2].length) + "-" + ff.substr(ff.length-r[3].length);
   }
 ```
@@ -484,7 +484,7 @@ There's a better way to generalize the phone number and other formats in terms
 of first drawing the digits, but this selection allows for more nuance:
 
 ```
-  if(fmt == "(###) ###-####") {
+  if(fmt.match(/\(###\) ###\\?-####/)) {
     ff = write_num(type, "##########", val);
     return "(" + ff.substr(0,3) + ") " + ff.substr(3, 3) + "-" + ff.substr(6);
   }
@@ -669,12 +669,13 @@ pseudo-type `Z` is used to capture absolute time blocks:
         break;
 ```
 
-Number blocks (following the general pattern `[0#?][0#?.,E+-%]*`) are grouped together:
+Number blocks (following the general pattern `[0#?][0#?.,E+-%]*`) are grouped
+together.  Literal hyphens are swallowed as well:
 
 ```
       /* Numbers */
       case '0': case '#': case '.':
-        o = c; while("0#?.,E+-%".indexOf(c=fmt[++i]) > -1) o += c;
+        o = c; while("0#?.,E+-%".indexOf(c=fmt[++i]) > -1 || c=='\\' && fmt[i+1] == "-" && "0#".indexOf(fmt[i+2])>-1) o += c;
         out.push({t:'n', v:o}); break;
 
 ```
@@ -1139,7 +1140,7 @@ coveralls:
 ```json>package.json
 {
   "name": "ssf",
-  "version": "0.6.3",
+  "version": "0.6.4",
   "author": "SheetJS",
   "description": "pure-JS library to format data using ECMA-376 spreadsheet Format Codes",
   "keywords": [ "format", "sprintf", "spreadsheet" ],
