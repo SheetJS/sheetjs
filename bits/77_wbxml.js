@@ -7,14 +7,17 @@ var XMLNS_WB = [
 /* 18.2 Workbook */
 function parse_wb_xml(data) {
 	var wb = { AppVersion:{}, WBProps:{}, WBView:[], Sheets:[], CalcPr:{}, xmlns: "" };
-	var pass = false;
+	var pass = false, xmlns = "xmlns";
 	data.match(/<[^>]*>/g).forEach(function(x) {
 		var y = parsexmltag(x);
-		switch(y[0]) {
+		switch(y[0].replace(/<\w+:/,"<")) {
 			case '<?xml': break;
 
 			/* 18.2.27 workbook CT_Workbook 1 */
-			case '<workbook': wb.xmlns = y.xmlns; break;
+			case '<workbook':
+				if(x.match(/<\w+:workbook/)) xmlns = "xmlns" + x.match(/<(\w+):/)[1];
+				wb.xmlns = y[xmlns];
+				break;
 			case '</workbook>': break;
 
 			/* 18.2.13 fileVersion CT_FileVersion ? */

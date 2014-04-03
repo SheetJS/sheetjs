@@ -6,10 +6,12 @@ function fixopts(opts) {
 
 		['sheetStubs', false], /* emit empty cells */
 		['sheetRows', 0, 'n'], /* read n rows (0 = read all rows) */
+
 		['bookDeps', false], /* parse calculation chains */
 		['bookSheets', false], /* only try to get sheet names (no Sheets) */
 		['bookProps', false], /* only try to get properties (no Sheets) */
 		['bookFiles', false], /* include raw file structure (keys, files) */
+		['bookVBA', false], /* include vba raw data (vbaraw) */
 
 		['WTF', false] /* WTF mode (throws errors) */
 	];

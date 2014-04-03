@@ -11,6 +11,7 @@ var exp = ex.map(function(x){ return x + ".pending"; });
 function test_file(x){return ex.indexOf(x.substr(-5))>=0||exp.indexOf(x.substr(-13))>=0;}
 
 var files = (fs.existsSync('tests.lst') ? fs.readFileSync('tests.lst', 'utf-8').split("\n") : fs.readdirSync('test_files')).filter(test_file);
+var fileA = (fs.existsSync('testA.lst') ? fs.readFileSync('testA.lst', 'utf-8').split("\n") : []).filter(test_file);
 
 /* Excel enforces 31 character sheet limit, although technical file limit is 255 */
 function fixsheetname(x) { return x.substr(0,31); }
@@ -39,7 +40,7 @@ var paths = {
 var N1 = 'XLSX';
 var N2 = 'XLSB';
 
-function parsetest(x, wb) {
+function parsetest(x, wb, full) {
 	describe(x + ' should have all bits', function() {
 		var sname = dir + '2011/' + x + '.sheetnames';
 		it('should have all sheets', function() {
@@ -72,6 +73,7 @@ function parsetest(x, wb) {
 			});
 		});
 	});
+  if(!full) return;
 	describe(x + ' should generate correct output', function() {
 		wb.SheetNames.forEach(function(ws, i) {
 			var name = (dir + x + '.' + i + '.csv');
@@ -100,7 +102,13 @@ describe('should parse test files', function() {
 	files.forEach(function(x) {
 		it(x, x.substr(-8) == ".pending" ? null : function() {
 			var wb = X.readFile(dir + x, opts);
-			parsetest(x, wb);
+			parsetest(x, wb, true);
+		});
+	});
+  fileA.forEach(function(x) {
+		it(x, x.substr(-8) == ".pending" ? null : function() {
+			var wb = X.readFile(dir + x, {WTF:opts.wtf, sheetRows:10});
+			parsetest(x, wb, false);
 		});
 	});
 });
@@ -251,6 +259,18 @@ describe('options', function() {
 			ckf(wb, ['files', 'keys'], true);
 			wb = X.readFile(paths.fst2, {bookFiles:true});
 			ckf(wb, ['files', 'keys'], true);
+		});
+		it('should not generate VBA by default', function() {
+			var wb = X.readFile(paths.nf1);
+			assert(typeof wb.vbaraw === 'undefined');
+			wb = X.readFile(paths.nf2);
+			assert(typeof wb.vbaraw === 'undefined');
+		});
+		it('bookVBA should generate vbaraw', function() {
+			var wb = X.readFile(paths.nf1,{bookVBA:true});
+			assert(typeof wb.vbaraw !== 'undefined');
+			wb = X.readFile(paths.nf2,{bookVBA:true});
+			assert(typeof wb.vbaraw !== 'undefined');
 		});
 	});
 });

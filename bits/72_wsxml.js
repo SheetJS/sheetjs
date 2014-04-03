@@ -22,17 +22,17 @@ function parse_ws_xml(data, opts) {
 	var sidx = 0;
 
 	/* 18.3.1.80 sheetData CT_SheetData ? */
-	if(!data.match(/<sheetData *\/>/))
-	data.match(/<sheetData>([^\u2603]*)<\/sheetData>/m)[1].split("</row>").forEach(function(x) {
+	if(!data.match(/<(\w+:)?sheetData *\/>/))
+	data.match(/<(?:\w+:)?sheetData>([^\u2603]*)<\/(?:\w+:)?sheetData>/m)[1].split(/<\/(?:\w+:)?row>/).forEach(function(x) {
 		if(x === "" || x.trim() === "") return;
 
 		/* 18.3.1.73 row CT_Row */
-		var row = parsexmltag(x.match(/<row[^>]*>/)[0]);
+		var row = parsexmltag(x.match(/<(?:\w+:)?row[^>]*>/)[0]);
 		if(opts.sheetRows && opts.sheetRows < +row.r) return;
 		if(refguess.s.r > row.r - 1) refguess.s.r = row.r - 1;
 		if(refguess.e.r < row.r - 1) refguess.e.r = row.r - 1;
 		/* 18.3.1.4 c CT_Cell */
-		var cells = x.substr(x.indexOf('>')+1).split(/<c /);
+		var cells = x.substr(x.indexOf('>')+1).split(/<(?:\w+:)?c /);
 		cells.forEach(function(c, idx) { if(c === "" || c.trim() === "") return;
 			var cref = c.match(/r=["']([^"']*)["']/);
 			c = "<c " + c;
@@ -41,7 +41,6 @@ function parse_ws_xml(data, opts) {
 			var d = c.substr(c.indexOf('>')+1);
 			var p = {};
 			q.forEach(function(f){var x=d.match(matchtag(f));if(x)p[f]=unescapexml(x[1]);});
-
 			/* SCHEMA IS ACTUALLY INCORRECT HERE.  IF A CELL HAS NO T, EMIT "" */
 			if(cell.t === undefined && p.v === undefined) {
 				if(!opts.sheetStubs) return;

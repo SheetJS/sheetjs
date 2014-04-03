@@ -84,6 +84,7 @@ The exported `read` and `readFile` functions accept an options argument:
 | bookFiles   | false   | If true, add raw files to book object ** |
 | bookProps   | false   | If true, only parse enough to get book metadata ** |
 | bookSheets  | false   | If true, only parse enough to get the sheet names |
+| bookVBA     | false   | If true, expose vbaProject.bin to `vbaraw` field ** |
 
 - `cellFormula` only applies to constructing XLSB formulae.  XLSX/XLSM formulae
   are stored in plaintext, but XLSB formulae are stored in a binary format.
@@ -95,6 +96,7 @@ The exported `read` and `readFile` functions accept an options argument:
   keys are paths and values are objects representing the files)
 - `sheetRows-1` rows will be generated when looking at the JSON object output
   (since the header row is counted as a row when parsing the data)
+- `bookVBA` merely exposes the raw vba object.  It does not parse the data.
 
 The defaults are enumerated in bits/84_defaults.js
 

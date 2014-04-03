@@ -4,12 +4,16 @@ function parseZip(zip, opts) {
 	reset_cp();
 	var entries = Object.keys(zip.files);
 	var keys = entries.filter(function(x){return x.substr(-1) != '/';}).sort();
-	var dir = parseCT(getzipdata(zip, '[Content_Types].xml'));
+	var dir = parseCT(getzipdata(zip, '[Content_Types].xml'), opts);
 	var xlsb = false;
-	var sheets;
+	var sheets, binname;
 	if(dir.workbooks.length === 0) {
-		var binname = "xl/workbook.bin";
-		if(!getzipfile(zip,binname)) throw new Error("Could not find workbook entry");
+		binname = "xl/workbook.xml";
+		if(getzipdata(zip,binname, true)) dir.workbooks.push(binname);
+	}
+	if(dir.workbooks.length === 0) {
+		binname = "xl/workbook.bin";
+		if(!getzipfile(zip,binname,true)) throw new Error("Could not find workbook");
 		dir.workbooks.push(binname);
 		xlsb = true;
 	}
@@ -93,6 +97,10 @@ function parseZip(zip, opts) {
 	if(opts.bookFiles) {
 		out.keys = keys;
 		out.files = zip.files;
+	}
+	if(opts.bookVBA) {
+		if(dir.vba.length > 0) out.vbaraw = getzipdata(zip,dir.vba[0],true);
+		else if(dir.defaults.bin === 'application/vnd.ms-office.vbaProject') out.vbaraw = getzipdata(zip,'xl/vbaProject.bin',true);
 	}
 	return out;
 }

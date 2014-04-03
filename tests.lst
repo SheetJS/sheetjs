@@ -2,6 +2,8 @@ AutoFilter.xlsb
 BlankSheetTypes.xlsb
 NumberFormatCondition.xlsb
 RkNumber.xlsb
+calendar_stress_test.xlsb.pending
+calendar_stress_test.xlsx.pending
 comments_stress_test.xlsb
 custom_properties.xlsb
 formula_stress_test.xlsb

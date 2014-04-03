@@ -6,14 +6,13 @@ var _strrev = function(x) { return String(x).split("").reverse().join("");};
 function fill(c,l) { return new Array(l+1).join(c); }
 function pad(v,d,c){var t=String(v);return t.length>=d?t:(fill(c||0,d-t.length)+t);}
 function rpad(v,d,c){var t=String(v);return t.length>=d?t:(t+fill(c||0,d-t.length));}
-SSF.version = '0.6.2';
+SSF.version = '0.6.4';
 /* Options */
 var opts_fmt = {};
 function fixopts(o){for(var y in opts_fmt) if(o[y]===undefined) o[y]=opts_fmt[y];}
 SSF.opts = opts_fmt;
 opts_fmt.date1904 = 0;
 opts_fmt.output = "";
-opts_fmt.mode = "";
 var table_fmt = {
 	0:  'General',
 	1:  '0',
@@ -116,7 +115,8 @@ var general_fmt = function(v) {
 	throw new Error("unsupported value in General format: " + v);
 };
 SSF._general = general_fmt;
-var parse_date_code = function parse_date_code(v,opts) {
+function fix_hijri(date, o) { }
+var parse_date_code = function parse_date_code(v,opts,b2) {
 	var date = Math.floor(v), time = Math.floor(86400 * (v - date)+1e-6), dow=0;
 	var dout=[], out={D:date, T:time, u:86400*(v-date)-time}; fixopts(opts = (opts||{}));
 	if(opts.date1904) date += 1462;
@@ -125,8 +125,8 @@ var parse_date_code = function parse_date_code(v,opts) {
 		out.u = 0;
 		if(++time == 86400) { time = 0; ++date; }
 	}
-	if(date === 60) {dout = [1900,2,29]; dow=3;}
-	else if(date === 0) {dout = [1900,1,0]; dow=6;}
+	if(date === 60) {dout = b2 ? [1317,10,29] : [1900,2,29]; dow=3;}
+	else if(date === 0) {dout = b2 ? [1317,8,29] : [1900,1,0]; dow=6;}
 	else {
 		if(date > 60) --date;
 		/* 1 = Jan 1 1900 */
@@ -134,7 +134,8 @@ var parse_date_code = function parse_date_code(v,opts) {
 		d.setDate(d.getDate() + date - 1);
 		dout = [d.getFullYear(), d.getMonth()+1,d.getDate()];
 		dow = d.getDay();
-		if(/* opts.mode === 'excel' && */ date < 60) dow = (dow + 6) % 7;
+		if(date < 60) dow = (dow + 6) % 7;
+		if(b2) dow = fix_hijri(d, dout);
 	}
 	out.y = dout[0]; out.m = dout[1]; out.d = dout[2];
 	out.S = time % 60; time = Math.floor(time / 60);
@@ -147,13 +148,15 @@ SSF.parse_date_code = parse_date_code;
 /*jshint -W086 */
 var write_date = function(type, fmt, val) {
 	if(val < 0) return "";
-	var o, ss;
+	var o, ss, y = val.y;
 	switch(type) {
-		case 'y': switch(fmt) { /* year */
-			case 'y': case 'yy': return pad(val.y % 100,2);
-			default: return pad(val.y % 10000,4);
+		case 'b': y = val.y + 543;
+			/* falls through */
+		case 'y': switch(fmt.length) { /* year */
+			case 1: case 2: return pad(y % 100,2);
+			default: return pad(y % 10000,4);
 		}
-		case 'm': switch(fmt) { /* month */
+		case 'm': switch(fmt) {
 			case 'm': return val.m;
 			case 'mm': return pad(val.m,2);
 			case 'mmm': return months[val.m-1][1];
@@ -261,15 +264,15 @@ var write_num = function(type, fmt, val) {
 		return val < 0 ? "-" + write_num(type, fmt, -val) : commaify(String(Math.floor(val))) + "." + pad(rr,r[1].length,0);
 	}
 	if((r = fmt.match(/^#,#*,#0/))) return write_num(type,fmt.replace(/^#,#*,/,""),val);
-	if((r = fmt.match(/^([0#]+)-([0#]+)$/))) {
-		ff = write_num(type, fmt.replace(/-/,""), val);
+	if((r = fmt.match(/^([0#]+)\\?-([0#]+)$/))) {
+		ff = write_num(type, fmt.replace(/[\\-]/g,""), val);
 		return ff.substr(0,ff.length - r[2].length) + "-" + ff.substr(ff.length-r[2].length);
 	}
-	if((r = fmt.match(/^([0#]+)-([0#]+)-([0#]+)$/))) {
-		ff = write_num(type, fmt.replace(/-/g,""), val);
+	if((r = fmt.match(/^([0#]+)\\?-([0#]+)\\?-([0#]+)$/))) {
+		ff = write_num(type, fmt.replace(/[\\-]/g,""), val);
 		return ff.substr(0,ff.length - r[2].length - r[3].length) + "-" + ff.substr(ff.length-r[2].length - r[3].length, r[2].length) + "-" + ff.substr(ff.length-r[3].length);
 	}
-	if(fmt == "(###) ###-####") {
+	if(fmt.match(/\(###\) ###\\?-####/)) {
 		ff = write_num(type, "##########", val);
 		return "(" + ff.substr(0,3) + ") " + ff.substr(3, 3) + "-" + ff.substr(6);
 	}
@@ -318,7 +321,7 @@ function eval_fmt(fmt, v, opts, flen) {
 	while(i < fmt.length) {
 		switch((c = fmt[i])) {
 			case 'G': /* General */
-				if(fmt.substr(i, i+6).toLowerCase() !== "general")
+				if(fmt.substr(i, 7).toLowerCase() !== "general")
 					throw new Error('unrecognized character ' + fmt[i] + ' in ' +fmt);
 				out.push({t:'G',v:'General'}); i+=7; break;
 			case '"': /* Literal text */
@@ -329,7 +332,12 @@ function eval_fmt(fmt, v, opts, flen) {
 			case '_': out.push({t:'t', v:" "}); i+=2; break;
 			case '@': /* Text Placeholder */
 				out.push({t:'T', v:v}); ++i; break;
-			/* Dates */
+			case 'B': case 'b':
+				if(fmt[i+1] === "1" || fmt[i+1] === "2") {
+					if(!dt) dt = parse_date_code(v, opts, fmt[i+1] === "2");
+					q={t:'X', v:fmt.substr(i,2)}; out.push(q); lst = c; i+=2; break;
+				}
+				/* falls through */
 			case 'M': case 'D': case 'Y': case 'H': case 'S': case 'E':
 				c = c.toLowerCase();
 				/* falls through */
@@ -351,7 +359,7 @@ function eval_fmt(fmt, v, opts, flen) {
 				else if(fmt.substr(i,5) === "AM/PM") { q.v = dt.H >= 12 ? "PM" : "AM"; q.t = 'T'; i+=5; hr='h'; }
 				else { q.t = "t"; i++; }
 				out.push(q); lst = c; break;
-			case '[': /* TODO: Fix this -- ignore all conditionals and formatting */
+			case '[':
 				o = c;
 				while(fmt[i++] !== ']' && i < fmt.length) o += fmt[i];
 				if(o.substr(-1) !== ']') throw 'unterminated "[" block: |' + o + '|';
@@ -363,7 +371,7 @@ function eval_fmt(fmt, v, opts, flen) {
 				break;
 			/* Numbers */
 			case '0': case '#': case '.':
-				o = c; while("0#?.,E+-%".indexOf(c=fmt[++i]) > -1) o += c;
+				o = c; while("0#?.,E+-%".indexOf(c=fmt[++i]) > -1 || c=='\\' && fmt[i+1] == "-" && "0#".indexOf(fmt[i+2])>-1) o += c;
 				out.push({t:'n', v:o}); break;
 			case '?':
 				o = fmt[i]; while(fmt[++i] === c) o+=c;
@@ -375,7 +383,7 @@ function eval_fmt(fmt, v, opts, flen) {
 				out.push({t:'D', v:o}); break;
 			case ' ': out.push({t:c,v:c}); ++i; break;
 			default:
-				if(",$-+/():!^&'~{}<>=€".indexOf(c) === -1)
+				if(",$-+/():!^&'~{}<>=€acfijklopqrtuvwxz".indexOf(c) === -1)
 					throw 'unrecognized character ' + fmt[i] + ' in ' + fmt;
 				out.push({t:'t', v:c}); ++i; break;
 		}
@@ -388,6 +396,8 @@ function eval_fmt(fmt, v, opts, flen) {
 			/* falls through */
 			case 'd': case 'y': case 'M': case 'e': lst=out[i].t; break;
 			case 'm': if(lst === 's') { out[i].t = 'M'; if(bt < 2) bt = 2; } break;
+			case 'X': if(out[i].v === "B2");
+				break;
 			case 'Z':
 				if(bt < 1 && out[i].v.match(/[Hh]/)) bt = 1;
 				if(bt < 2 && out[i].v.match(/[Mm]/)) bt = 2;
@@ -410,8 +420,9 @@ function eval_fmt(fmt, v, opts, flen) {
 	for(i=0; i < out.length; ++i) {
 		switch(out[i].t) {
 			case 't': case 'T': case ' ': case 'D': break;
-			case 'd': case 'm': case 'y': case 'h': case 'H': case 'M': case 's': case 'e': case 'Z':
-				out[i].v = write_date(out[i].t, out[i].v, dt, bt);
+			case 'X': delete out[i]; break;
+			case 'd': case 'm': case 'y': case 'h': case 'H': case 'M': case 's': case 'e': case 'b': case 'Z':
+				out[i].v = write_date(out[i].t, out[i].v, dt);
 				out[i].t = 't'; break;
 			case 'n': case '(': case '?':
 				var jj = i+1;

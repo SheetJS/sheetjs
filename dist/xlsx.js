@@ -9,14 +9,13 @@ var _strrev = function(x) { return String(x).split("").reverse().join("");};
 function fill(c,l) { return new Array(l+1).join(c); }
 function pad(v,d,c){var t=String(v);return t.length>=d?t:(fill(c||0,d-t.length)+t);}
 function rpad(v,d,c){var t=String(v);return t.length>=d?t:(t+fill(c||0,d-t.length));}
-SSF.version = '0.6.2';
+SSF.version = '0.6.4';
 /* Options */
 var opts_fmt = {};
 function fixopts(o){for(var y in opts_fmt) if(o[y]===undefined) o[y]=opts_fmt[y];}
 SSF.opts = opts_fmt;
 opts_fmt.date1904 = 0;
 opts_fmt.output = "";
-opts_fmt.mode = "";
 var table_fmt = {
 	0:  'General',
 	1:  '0',
@@ -119,7 +118,8 @@ var general_fmt = function(v) {
 	throw new Error("unsupported value in General format: " + v);
 };
 SSF._general = general_fmt;
-var parse_date_code = function parse_date_code(v,opts) {
+function fix_hijri(date, o) { }
+var parse_date_code = function parse_date_code(v,opts,b2) {
 	var date = Math.floor(v), time = Math.floor(86400 * (v - date)+1e-6), dow=0;
 	var dout=[], out={D:date, T:time, u:86400*(v-date)-time}; fixopts(opts = (opts||{}));
 	if(opts.date1904) date += 1462;
@@ -128,8 +128,8 @@ var parse_date_code = function parse_date_code(v,opts) {
 		out.u = 0;
 		if(++time == 86400) { time = 0; ++date; }
 	}
-	if(date === 60) {dout = [1900,2,29]; dow=3;}
-	else if(date === 0) {dout = [1900,1,0]; dow=6;}
+	if(date === 60) {dout = b2 ? [1317,10,29] : [1900,2,29]; dow=3;}
+	else if(date === 0) {dout = b2 ? [1317,8,29] : [1900,1,0]; dow=6;}
 	else {
 		if(date > 60) --date;
 		/* 1 = Jan 1 1900 */
@@ -137,7 +137,8 @@ var parse_date_code = function parse_date_code(v,opts) {
 		d.setDate(d.getDate() + date - 1);
 		dout = [d.getFullYear(), d.getMonth()+1,d.getDate()];
 		dow = d.getDay();
-		if(/* opts.mode === 'excel' && */ date < 60) dow = (dow + 6) % 7;
+		if(date < 60) dow = (dow + 6) % 7;
+		if(b2) dow = fix_hijri(d, dout);
 	}
 	out.y = dout[0]; out.m = dout[1]; out.d = dout[2];
 	out.S = time % 60; time = Math.floor(time / 60);
@@ -150,13 +151,15 @@ SSF.parse_date_code = parse_date_code;
 /*jshint -W086 */
 var write_date = function(type, fmt, val) {
 	if(val < 0) return "";
-	var o, ss;
+	var o, ss, y = val.y;
 	switch(type) {
-		case 'y': switch(fmt) { /* year */
-			case 'y': case 'yy': return pad(val.y % 100,2);
-			default: return pad(val.y % 10000,4);
+		case 'b': y = val.y + 543;
+			/* falls through */
+		case 'y': switch(fmt.length) { /* year */
+			case 1: case 2: return pad(y % 100,2);
+			default: return pad(y % 10000,4);
 		}
-		case 'm': switch(fmt) { /* month */
+		case 'm': switch(fmt) {
 			case 'm': return val.m;
 			case 'mm': return pad(val.m,2);
 			case 'mmm': return months[val.m-1][1];
@@ -264,15 +267,15 @@ var write_num = function(type, fmt, val) {
 		return val < 0 ? "-" + write_num(type, fmt, -val) : commaify(String(Math.floor(val))) + "." + pad(rr,r[1].length,0);
 	}
 	if((r = fmt.match(/^#,#*,#0/))) return write_num(type,fmt.replace(/^#,#*,/,""),val);
-	if((r = fmt.match(/^([0#]+)-([0#]+)$/))) {
-		ff = write_num(type, fmt.replace(/-/,""), val);
+	if((r = fmt.match(/^([0#]+)\\?-([0#]+)$/))) {
+		ff = write_num(type, fmt.replace(/[\\-]/g,""), val);
 		return ff.substr(0,ff.length - r[2].length) + "-" + ff.substr(ff.length-r[2].length);
 	}
-	if((r = fmt.match(/^([0#]+)-([0#]+)-([0#]+)$/))) {
-		ff = write_num(type, fmt.replace(/-/g,""), val);
+	if((r = fmt.match(/^([0#]+)\\?-([0#]+)\\?-([0#]+)$/))) {
+		ff = write_num(type, fmt.replace(/[\\-]/g,""), val);
 		return ff.substr(0,ff.length - r[2].length - r[3].length) + "-" + ff.substr(ff.length-r[2].length - r[3].length, r[2].length) + "-" + ff.substr(ff.length-r[3].length);
 	}
-	if(fmt == "(###) ###-####") {
+	if(fmt.match(/\(###\) ###\\?-####/)) {
 		ff = write_num(type, "##########", val);
 		return "(" + ff.substr(0,3) + ") " + ff.substr(3, 3) + "-" + ff.substr(6);
 	}
@@ -321,7 +324,7 @@ function eval_fmt(fmt, v, opts, flen) {
 	while(i < fmt.length) {
 		switch((c = fmt[i])) {
 			case 'G': /* General */
-				if(fmt.substr(i, i+6).toLowerCase() !== "general")
+				if(fmt.substr(i, 7).toLowerCase() !== "general")
 					throw new Error('unrecognized character ' + fmt[i] + ' in ' +fmt);
 				out.push({t:'G',v:'General'}); i+=7; break;
 			case '"': /* Literal text */
@@ -332,7 +335,12 @@ function eval_fmt(fmt, v, opts, flen) {
 			case '_': out.push({t:'t', v:" "}); i+=2; break;
 			case '@': /* Text Placeholder */
 				out.push({t:'T', v:v}); ++i; break;
-			/* Dates */
+			case 'B': case 'b':
+				if(fmt[i+1] === "1" || fmt[i+1] === "2") {
+					if(!dt) dt = parse_date_code(v, opts, fmt[i+1] === "2");
+					q={t:'X', v:fmt.substr(i,2)}; out.push(q); lst = c; i+=2; break;
+				}
+				/* falls through */
 			case 'M': case 'D': case 'Y': case 'H': case 'S': case 'E':
 				c = c.toLowerCase();
 				/* falls through */
@@ -354,7 +362,7 @@ function eval_fmt(fmt, v, opts, flen) {
 				else if(fmt.substr(i,5) === "AM/PM") { q.v = dt.H >= 12 ? "PM" : "AM"; q.t = 'T'; i+=5; hr='h'; }
 				else { q.t = "t"; i++; }
 				out.push(q); lst = c; break;
-			case '[': /* TODO: Fix this -- ignore all conditionals and formatting */
+			case '[':
 				o = c;
 				while(fmt[i++] !== ']' && i < fmt.length) o += fmt[i];
 				if(o.substr(-1) !== ']') throw 'unterminated "[" block: |' + o + '|';
@@ -366,7 +374,7 @@ function eval_fmt(fmt, v, opts, flen) {
 				break;
 			/* Numbers */
 			case '0': case '#': case '.':
-				o = c; while("0#?.,E+-%".indexOf(c=fmt[++i]) > -1) o += c;
+				o = c; while("0#?.,E+-%".indexOf(c=fmt[++i]) > -1 || c=='\\' && fmt[i+1] == "-" && "0#".indexOf(fmt[i+2])>-1) o += c;
 				out.push({t:'n', v:o}); break;
 			case '?':
 				o = fmt[i]; while(fmt[++i] === c) o+=c;
@@ -378,7 +386,7 @@ function eval_fmt(fmt, v, opts, flen) {
 				out.push({t:'D', v:o}); break;
 			case ' ': out.push({t:c,v:c}); ++i; break;
 			default:
-				if(",$-+/():!^&'~{}<>=€".indexOf(c) === -1)
+				if(",$-+/():!^&'~{}<>=€acfijklopqrtuvwxz".indexOf(c) === -1)
 					throw 'unrecognized character ' + fmt[i] + ' in ' + fmt;
 				out.push({t:'t', v:c}); ++i; break;
 		}
@@ -391,6 +399,8 @@ function eval_fmt(fmt, v, opts, flen) {
 			/* falls through */
 			case 'd': case 'y': case 'M': case 'e': lst=out[i].t; break;
 			case 'm': if(lst === 's') { out[i].t = 'M'; if(bt < 2) bt = 2; } break;
+			case 'X': if(out[i].v === "B2");
+				break;
 			case 'Z':
 				if(bt < 1 && out[i].v.match(/[Hh]/)) bt = 1;
 				if(bt < 2 && out[i].v.match(/[Mm]/)) bt = 2;
@@ -413,8 +423,9 @@ function eval_fmt(fmt, v, opts, flen) {
 	for(i=0; i < out.length; ++i) {
 		switch(out[i].t) {
 			case 't': case 'T': case ' ': case 'D': break;
-			case 'd': case 'm': case 'y': case 'h': case 'H': case 'M': case 's': case 'e': case 'Z':
-				out[i].v = write_date(out[i].t, out[i].v, dt, bt);
+			case 'X': delete out[i]; break;
+			case 'd': case 'm': case 'y': case 'h': case 'H': case 'M': case 's': case 'e': case 'b': case 'Z':
+				out[i].v = write_date(out[i].t, out[i].v, dt);
 				out[i].t = 't'; break;
 			case 'n': case '(': case '?':
 				var jj = i+1;
@@ -487,7 +498,7 @@ SSF.load_table = function(tbl) { for(var i=0; i!=0x0188; ++i) if(tbl[i]) SSF.loa
 make_ssf(SSF);
 var XLSX = {};
 (function(XLSX){
-XLSX.version = '0.5.15';
+XLSX.version = '0.5.16';
 var current_codepage, current_cptable, cptable;
 if(typeof module !== "undefined" && typeof require !== 'undefined') {
 	if(typeof cptable === 'undefined') cptable = require('codepage');
@@ -533,14 +544,17 @@ if (typeof exports !== 'undefined') {
 		_fs = require('fs');
 	}
 }
-var attregexg=/(\w+)=((?:")([^"]*)(?:")|(?:')([^']*)(?:'))/g;
-var attregex=/(\w+)=((?:")(?:[^"]*)(?:")|(?:')(?:[^']*)(?:'))/;
+var attregexg=/([\w:]+)=((?:")([^"]*)(?:")|(?:')([^']*)(?:'))/g;
+var attregex=/([\w:]+)=((?:")(?:[^"]*)(?:")|(?:')(?:[^']*)(?:'))/;
 function parsexmltag(tag) {
 	var words = tag.split(/\s+/);
 	var z = {'0': words[0]};
 	if(words.length === 1) return z;
-	(tag.match(attregexg) || []).map(
-		function(x){var y=x.match(attregex); z[y[1].replace(/^[a-zA-Z]*:/,"")] = y[2].substr(1,y[2].length-2); });
+	(tag.match(attregexg) || []).map(function(x){
+		var y=x.match(attregex);
+		y[1] = y[1].replace(/xmlns:/,"xmlns");
+		z[y[1].replace(/^[a-zA-Z]*:/,"")] = y[2].substr(1,y[2].length-2);
+	});
 	return z;
 }
 
@@ -599,7 +613,7 @@ var utf8read = function(orig) {
 };
 
 // matches <foo>...</foo> extracts content
-function matchtag(f,g) {return new RegExp('<'+f+'(?: xml:space="preserve")?>([^\u2603]*)</'+f+'>',(g||"")+"m");}
+function matchtag(f,g) {return new RegExp('<(?:\\w+:)?'+f+'(?: xml:space="preserve")?>([^\u2603]*)</(?:\\w+:)?'+f+'>',(g||"")+"m");}
 
 function parseVector(data) {
 	var h = parsexmltag(data);
@@ -1178,31 +1192,162 @@ function parse_sty_bin(data, opts) {
 	});
 	return styles;
 }
-
+/* Parts enumerated in OPC spec, MS-XLSB and MS-XLSX */
+/* 12.3 Part Summary <SpreadsheetML> */
+/* 14.2 Part Summary <DrawingML> */
+/* [MS-XLSX] 2.1 Part Enumerations */
+/* [MS-XLSB] 2.1.7 Part Enumeration */
 var ct2type = {
-	"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml": "workbooks", /*XLSX*/
-	"application/vnd.ms-excel.sheet.macroEnabled.main+xml":"workbooks", /*XLSM*/
-	"application/vnd.ms-excel.sheet.binary.macroEnabled.main":"workbooks", /*XLSB*/
+	/* Workbook */
+	"application/vnd.ms-excel.main": "workbooks",
+	"application/vnd.ms-excel.sheet.macroEnabled.main+xml": "workbooks",
+	"application/vnd.ms-excel.sheet.binary.macroEnabled.main": "workbooks",
+	"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml": "workbooks",
+	"application/vnd.openxmlformats-officedocument.spreadsheetml.template.main+xml": "TODO", /* Template */
 
-	"application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml":"sheets", /*XLS[XM]*/
-	"application/vnd.ms-excel.worksheet":"sheets", /*XLSB*/
+	/* Worksheet */
+	"application/vnd.ms-excel.worksheet": "sheets",
+	"application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml": "sheets",
+	"application/vnd.ms-excel.binIndexWs": "TODO", /* Binary Index */
 
-	"application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml":"styles", /*XLS[XM]*/
-	"application/vnd.ms-excel.styles":"styles", /*XLSB*/
+	/* Chartsheet */
+	"application/vnd.ms-excel.chartsheet": "TODO",
+	"application/vnd.openxmlformats-officedocument.spreadsheetml.chartsheet+xml": "TODO",
 
-	"application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml": "strs", /*XLS[XM]*/
-	"application/vnd.ms-excel.sharedStrings": "strs", /*XLSB*/
+	/* Dialogsheet */
+	"application/vnd.ms-excel.dialogsheet": "TODO",
+	"application/vnd.openxmlformats-officedocument.spreadsheetml.dialogsheet+xml": "TODO",
 
-	"application/vnd.openxmlformats-officedocument.spreadsheetml.calcChain+xml": "calcchains", /*XLS[XM]*/
-	"application/vnd.ms-excel.calcChain": "calcchains", /*XLSB*/
+	/* Macrosheet */
+	"application/vnd.ms-excel.macrosheet": "TODO",
+	"application/vnd.ms-excel.macrosheet+xml": "TODO",
+	"application/vnd.ms-excel.intlmacrosheet": "TODO",
+	"application/vnd.ms-excel.binIndexMs": "TODO", /* Binary Index */
 
-	"application/vnd.openxmlformats-officedocument.spreadsheetml.comments+xml": "comments", /*XLS[XM]*/
-	"application/vnd.ms-excel.comments": "comments", /*XLSB*/
+	/* Shared Strings */
+	"application/vnd.ms-excel.sharedStrings": "strs",
+	"application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml": "strs",
 
+	/* Styles */
+	"application/vnd.ms-excel.styles": "styles",
+	"application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml": "styles",
+
+	/* File Properties */
 	"application/vnd.openxmlformats-package.core-properties+xml": "coreprops",
-	"application/vnd.openxmlformats-officedocument.extended-properties+xml": "extprops",
 	"application/vnd.openxmlformats-officedocument.custom-properties+xml": "custprops",
-	"application/vnd.openxmlformats-officedocument.theme+xml":"themes",
+	"application/vnd.openxmlformats-officedocument.extended-properties+xml": "extprops",
+
+	/* Custom Data Properties */
+	"application/vnd.openxmlformats-officedocument.customXmlProperties+xml": "TODO",
+
+	/* Comments */
+	"application/vnd.ms-excel.comments": "comments",
+	"application/vnd.openxmlformats-officedocument.spreadsheetml.comments+xml": "comments",
+
+	/* PivotTable */
+	"application/vnd.ms-excel.pivotTable": "TODO",
+	"application/vnd.openxmlformats-officedocument.spreadsheetml.pivotTable+xml": "TODO",
+
+	/* Calculation Chain */
+	"application/vnd.ms-excel.calcChain": "calcchains",
+	"application/vnd.openxmlformats-officedocument.spreadsheetml.calcChain+xml": "calcchains",
+
+	/* Printer Settings */
+	"application/vnd.openxmlformats-officedocument.spreadsheetml.printerSettings": "TODO",
+
+	/* ActiveX */
+	"application/vnd.ms-office.activeX": "TODO",
+	"application/vnd.ms-office.activeX+xml": "TODO",
+
+	/* Custom Toolbars */
+	"application/vnd.ms-excel.attachedToolbars": "TODO",
+
+	/* External Data Connections */
+	"application/vnd.ms-excel.connections": "TODO",
+	"application/vnd.openxmlformats-officedocument.spreadsheetml.connections+xml": "TODO",
+
+	/* External Links */
+	"application/vnd.ms-excel.externalLink": "TODO",
+	"application/vnd.openxmlformats-officedocument.spreadsheetml.externalLink+xml": "TODO",
+
+	/* Metadata */
+	"application/vnd.ms-excel.sheetMetadata": "TODO",
+	"application/vnd.openxmlformats-officedocument.spreadsheetml.sheetMetadata+xml": "TODO",
+
+	/* PivotCache */
+	"application/vnd.ms-excel.pivotCacheDefinition": "TODO",
+	"application/vnd.ms-excel.pivotCacheRecords": "TODO",
+	"application/vnd.openxmlformats-officedocument.spreadsheetml.pivotCacheDefinition+xml": "TODO",
+	"application/vnd.openxmlformats-officedocument.spreadsheetml.pivotCacheRecords+xml": "TODO",
+
+	/* Query Table */
+	"application/vnd.ms-excel.queryTable": "TODO",
+	"application/vnd.openxmlformats-officedocument.spreadsheetml.queryTable+xml": "TODO",
+
+	/* Shared Workbook */
+	"application/vnd.ms-excel.userNames": "TODO",
+	"application/vnd.ms-excel.revisionHeaders": "TODO",
+	"application/vnd.ms-excel.revisionLog": "TODO",
+	"application/vnd.openxmlformats-officedocument.spreadsheetml.revisionHeaders+xml": "TODO",
+	"application/vnd.openxmlformats-officedocument.spreadsheetml.revisionLog+xml": "TODO",
+	"application/vnd.openxmlformats-officedocument.spreadsheetml.userNames+xml": "TODO",
+
+	/* Single Cell Table */
+	"application/vnd.ms-excel.tableSingleCells": "TODO",
+	"application/vnd.openxmlformats-officedocument.spreadsheetml.tableSingleCells+xml": "TODO",
+
+	/* Slicer */
+	"application/vnd.ms-excel.slicer": "TODO",
+	"application/vnd.ms-excel.slicerCache": "TODO",
+	"application/vnd.ms-excel.slicer+xml": "TODO",
+	"application/vnd.ms-excel.slicerCache+xml": "TODO",
+
+	/* Sort Map */
+	"application/vnd.ms-excel.wsSortMap": "TODO",
+
+	/* Table */
+	"application/vnd.ms-excel.table": "TODO",
+	"application/vnd.openxmlformats-officedocument.spreadsheetml.table+xml": "TODO",
+
+	/* Themes */
+	"application/vnd.openxmlformats-officedocument.theme+xml": "themes",
+
+	/* Timeline */
+	"application/vnd.ms-excel.Timeline+xml": "TODO", /* verify */
+	"application/vnd.ms-excel.TimelineCache+xml": "TODO", /* verify */
+
+	/* VBA */
+	"application/vnd.ms-office.vbaProject": "vba",
+	"application/vnd.ms-office.vbaProjectSignature": "vba",
+
+	/* Volatile Dependencies */
+	"application/vnd.ms-office.volatileDependencies": "TODO",
+	"application/vnd.openxmlformats-officedocument.spreadsheetml.volatileDependencies+xml": "TODO",
+
+	/* Control Properties */
+	"application/vnd.ms-excel.controlproperties+xml": "TODO",
+
+	/* Data Model */
+	"application/vnd.openxmlformats-officedocument.model+data": "TODO",
+
+	/* Survey */
+	"application/vnd.ms-excel.Survey+xml": "TODO",
+
+	/* Drawing */
+	"application/vnd.openxmlformats-officedocument.drawing+xml": "TODO",
+	"application/vnd.openxmlformats-officedocument.drawingml.chart+xml": "TODO",
+	"application/vnd.openxmlformats-officedocument.drawingml.chartshapes+xml": "TODO",
+	"application/vnd.openxmlformats-officedocument.drawingml.diagramColors+xml": "TODO",
+	"application/vnd.openxmlformats-officedocument.drawingml.diagramData+xml": "TODO",
+	"application/vnd.openxmlformats-officedocument.drawingml.diagramLayout+xml": "TODO",
+	"application/vnd.openxmlformats-officedocument.drawingml.diagramStyle+xml": "TODO",
+
+	/* VML */
+	"application/vnd.openxmlformats-officedocument.vmlDrawing": "TODO",
+
+	"application/vnd.openxmlformats-package.relationships+xml": "TODO",
+	"application/vnd.openxmlformats-officedocument.oleObject": "TODO",
+
 	"foo": "bar"
 };
 
@@ -1288,10 +1433,11 @@ function parseCustomProps(data) {
 }
 
 var ctext = {};
-function parseCT(data) {
+function parseCT(data, opts) {
 	if(!data || !data.match) return data;
 	var ct = { workbooks: [], sheets: [], calcchains: [], themes: [], styles: [],
-		coreprops: [], extprops: [], custprops: [], strs:[], comments: [], xmlns: "" };
+		coreprops: [], extprops: [], custprops: [], strs:[], comments: [], vba: [],
+		TODO:[], xmlns: "" };
 	(data.match(/<[^>]*>/g)||[]).forEach(function(x) {
 		var y = parsexmltag(x);
 		switch(y[0]) {
@@ -1300,6 +1446,7 @@ function parseCT(data) {
 			case '<Default': ctext[y.Extension] = y.ContentType; break;
 			case '<Override':
 				if(y.ContentType in ct2type)ct[ct2type[y.ContentType]].push(y.PartName);
+				else if(opts.WTF) console.error(y.ContentType);
 				break;
 		}
 	});
@@ -1307,6 +1454,7 @@ function parseCT(data) {
 	ct.calcchain = ct.calcchains.length > 0 ? ct.calcchains[0] : "";
 	ct.sst = ct.strs.length > 0 ? ct.strs[0] : "";
 	ct.style = ct.styles.length > 0 ? ct.styles[0] : "";
+	ct.defaults = ctext;
 	delete ct.calcchains;
 	return ct;
 }
@@ -1398,16 +1546,16 @@ function parse_cc_bin(data, opts) {
 }
 /* 18.7.3 CT_Comment */
 function parse_comments_xml(data, opts) {
-	if(data.match(/<comments *\/>/)) return [];
+	if(data.match(/<(?:\w+:)?comments *\/>/)) return [];
 	var authors = [];
 	var commentList = [];
-	data.match(/<authors>([^\u2603]*)<\/authors>/m)[1].split('</author>').forEach(function(x) {
+	data.match(/<(?:\w+:)?authors>([^\u2603]*)<\/(?:\w+:)?authors>/m)[1].split(/<\/(?:\w+:)?author>/).forEach(function(x) {
 		if(x === "" || x.trim() === "") return;
-		authors.push(x.match(/<author[^>]*>(.*)/)[1]);
+		authors.push(x.match(/<(?:\w+:)?author[^>]*>(.*)/)[1]);
 	});
-	data.match(/<commentList>([^\u2603]*)<\/commentList>/m)[1].split('</comment>').forEach(function(x, index) {
+	(data.match(/<(?:\w+:)?commentList>([^\u2603]*)<\/(?:\w+:)?commentList>/m)||["",""])[1].split(/<\/(?:\w+:)?comment>/).forEach(function(x, index) {
 		if(x === "" || x.trim() === "") return;
-		var y = parsexmltag(x.match(/<comment[^>]*>/)[0]);
+		var y = parsexmltag(x.match(/<(?:\w+:)?comment[^>]*>/)[0]);
 		var comment = { author: y.authorId && authors[y.authorId] ? authors[y.authorId] : undefined, ref: y.ref, guid: y.guid };
 		var cell = decode_cell(y.ref);
 		if(opts.sheetRows && opts.sheetRows <= cell.r) return;
@@ -1539,17 +1687,17 @@ function parse_ws_xml(data, opts) {
 	var sidx = 0;
 
 	/* 18.3.1.80 sheetData CT_SheetData ? */
-	if(!data.match(/<sheetData *\/>/))
-	data.match(/<sheetData>([^\u2603]*)<\/sheetData>/m)[1].split("</row>").forEach(function(x) {
+	if(!data.match(/<(\w+:)?sheetData *\/>/))
+	data.match(/<(?:\w+:)?sheetData>([^\u2603]*)<\/(?:\w+:)?sheetData>/m)[1].split(/<\/(?:\w+:)?row>/).forEach(function(x) {
 		if(x === "" || x.trim() === "") return;
 
 		/* 18.3.1.73 row CT_Row */
-		var row = parsexmltag(x.match(/<row[^>]*>/)[0]);
+		var row = parsexmltag(x.match(/<(?:\w+:)?row[^>]*>/)[0]);
 		if(opts.sheetRows && opts.sheetRows < +row.r) return;
 		if(refguess.s.r > row.r - 1) refguess.s.r = row.r - 1;
 		if(refguess.e.r < row.r - 1) refguess.e.r = row.r - 1;
 		/* 18.3.1.4 c CT_Cell */
-		var cells = x.substr(x.indexOf('>')+1).split(/<c /);
+		var cells = x.substr(x.indexOf('>')+1).split(/<(?:\w+:)?c /);
 		cells.forEach(function(c, idx) { if(c === "" || c.trim() === "") return;
 			var cref = c.match(/r=["']([^"']*)["']/);
 			c = "<c " + c;
@@ -1558,7 +1706,6 @@ function parse_ws_xml(data, opts) {
 			var d = c.substr(c.indexOf('>')+1);
 			var p = {};
 			q.forEach(function(f){var x=d.match(matchtag(f));if(x)p[f]=unescapexml(x[1]);});
-
 			/* SCHEMA IS ACTUALLY INCORRECT HERE.  IF A CELL HAS NO T, EMIT "" */
 			if(cell.t === undefined && p.v === undefined) {
 				if(!opts.sheetStubs) return;
@@ -2018,14 +2165,17 @@ var XMLNS_WB = [
 /* 18.2 Workbook */
 function parse_wb_xml(data) {
 	var wb = { AppVersion:{}, WBProps:{}, WBView:[], Sheets:[], CalcPr:{}, xmlns: "" };
-	var pass = false;
+	var pass = false, xmlns = "xmlns";
 	data.match(/<[^>]*>/g).forEach(function(x) {
 		var y = parsexmltag(x);
-		switch(y[0]) {
+		switch(y[0].replace(/<\w+:/,"<")) {
 			case '<?xml': break;
 
 			/* 18.2.27 workbook CT_Workbook 1 */
-			case '<workbook': wb.xmlns = y.xmlns; break;
+			case '<workbook':
+				if(x.match(/<\w+:workbook/)) xmlns = "xmlns" + x.match(/<(\w+):/)[1];
+				wb.xmlns = y[xmlns];
+				break;
 			case '</workbook>': break;
 
 			/* 18.2.13 fileVersion CT_FileVersion ? */
@@ -3057,10 +3207,12 @@ function fixopts(opts) {
 
 		['sheetStubs', false], /* emit empty cells */
 		['sheetRows', 0, 'n'], /* read n rows (0 = read all rows) */
+
 		['bookDeps', false], /* parse calculation chains */
 		['bookSheets', false], /* only try to get sheet names (no Sheets) */
 		['bookProps', false], /* only try to get properties (no Sheets) */
 		['bookFiles', false], /* include raw file structure (keys, files) */
+		['bookVBA', false], /* include vba raw data (vbaraw) */
 
 		['WTF', false] /* WTF mode (throws errors) */
 	];
@@ -3075,12 +3227,16 @@ function parseZip(zip, opts) {
 	reset_cp();
 	var entries = Object.keys(zip.files);
 	var keys = entries.filter(function(x){return x.substr(-1) != '/';}).sort();
-	var dir = parseCT(getzipdata(zip, '[Content_Types].xml'));
+	var dir = parseCT(getzipdata(zip, '[Content_Types].xml'), opts);
 	var xlsb = false;
-	var sheets;
+	var sheets, binname;
 	if(dir.workbooks.length === 0) {
-		var binname = "xl/workbook.bin";
-		if(!getzipfile(zip,binname)) throw new Error("Could not find workbook entry");
+		binname = "xl/workbook.xml";
+		if(getzipdata(zip,binname, true)) dir.workbooks.push(binname);
+	}
+	if(dir.workbooks.length === 0) {
+		binname = "xl/workbook.bin";
+		if(!getzipfile(zip,binname,true)) throw new Error("Could not find workbook");
 		dir.workbooks.push(binname);
 		xlsb = true;
 	}
@@ -3164,6 +3320,10 @@ function parseZip(zip, opts) {
 	if(opts.bookFiles) {
 		out.keys = keys;
 		out.files = zip.files;
+	}
+	if(opts.bookVBA) {
+		if(dir.vba.length > 0) out.vbaraw = getzipdata(zip,dir.vba[0],true);
+		else if(dir.defaults.bin === 'application/vnd.ms-office.vbaProject') out.vbaraw = getzipdata(zip,'xl/vbaProject.bin',true);
 	}
 	return out;
 }

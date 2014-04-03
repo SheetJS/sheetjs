@@ -1,11 +1,14 @@
-var attregexg=/(\w+)=((?:")([^"]*)(?:")|(?:')([^']*)(?:'))/g;
-var attregex=/(\w+)=((?:")(?:[^"]*)(?:")|(?:')(?:[^']*)(?:'))/;
+var attregexg=/([\w:]+)=((?:")([^"]*)(?:")|(?:')([^']*)(?:'))/g;
+var attregex=/([\w:]+)=((?:")(?:[^"]*)(?:")|(?:')(?:[^']*)(?:'))/;
 function parsexmltag(tag) {
 	var words = tag.split(/\s+/);
 	var z = {'0': words[0]};
 	if(words.length === 1) return z;
-	(tag.match(attregexg) || []).map(
-		function(x){var y=x.match(attregex); z[y[1].replace(/^[a-zA-Z]*:/,"")] = y[2].substr(1,y[2].length-2); });
+	(tag.match(attregexg) || []).map(function(x){
+		var y=x.match(attregex);
+		y[1] = y[1].replace(/xmlns:/,"xmlns");
+		z[y[1].replace(/^[a-zA-Z]*:/,"")] = y[2].substr(1,y[2].length-2);
+	});
 	return z;
 }
 
@@ -64,7 +67,7 @@ var utf8read = function(orig) {
 };
 
 // matches <foo>...</foo> extracts content
-function matchtag(f,g) {return new RegExp('<'+f+'(?: xml:space="preserve")?>([^\u2603]*)</'+f+'>',(g||"")+"m");}
+function matchtag(f,g) {return new RegExp('<(?:\\w+:)?'+f+'(?: xml:space="preserve")?>([^\u2603]*)</(?:\\w+:)?'+f+'>',(g||"")+"m");}
 
 function parseVector(data) {
 	var h = parsexmltag(data);
