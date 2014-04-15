@@ -28,6 +28,8 @@ var paths = {
 	fst1: dir + 'formula_stress_test.xlsx',
 	fst2: dir + 'formula_stress_test.xlsb',
 	fstb: dir + 'formula_stress_test.xlsb',
+	hl1:  dir + 'hyperlink_stress_test_2011.xlsx',
+	hl2:  dir + 'hyperlink_stress_test_2011.xlsb',
 	lon1: dir + 'LONumbers.xlsx',
 	mc1:  dir + 'merge_cells.xlsx',
 	mc2:  dir + 'merge_cells.xlsb',
@@ -73,7 +75,7 @@ function parsetest(x, wb, full) {
 			});
 		});
 	});
-  if(!full) return;
+	if(!full) return;
 	describe(x + ' should generate correct output', function() {
 		wb.SheetNames.forEach(function(ws, i) {
 			var name = (dir + x + '.' + i + '.csv');
@@ -105,7 +107,7 @@ describe('should parse test files', function() {
 			parsetest(x, wb, true);
 		});
 	});
-  fileA.forEach(function(x) {
+	fileA.forEach(function(x) {
 		it(x, x.substr(-8) == ".pending" ? null : function() {
 			var wb = X.readFile(dir + x, {WTF:opts.wtf, sheetRows:10});
 			parsetest(x, wb, false);
@@ -370,6 +372,29 @@ describe('features', function() {
 			var m = [wb1, wb2].map(function(x) { return x.Sheets.Merge['!merges'].map(function(y) { return X.utils.encode_range(y); });});
 			assert.deepEqual(m[0].sort(),m[1].sort());
 		});
+	});
+
+	describe('should find hyperlinks', function() {
+		var wb1, wb2;
+		before(function() {
+			X = require('./');
+			wb1 = X.readFile(paths.hl1);
+			wb2 = X.readFile(paths.hl2);
+		});
+
+		function hlink(wb) {
+			var ws = wb.Sheets.Sheet1;
+			assert.equal(ws.A1.l.Target, "http://www.sheetjs.com");
+			assert.equal(ws.A2.l.Target, "http://oss.sheetjs.com");
+			assert.equal(ws.A3.l.Target, "http://oss.sheetjs.com#foo");
+			assert.equal(ws.A4.l.Target, "mailto:dev@sheetjs.com");
+			assert.equal(ws.A5.l.Target, "mailto:dev@sheetjs.com?subject=hyperlink");
+			assert.equal(ws.A6.l.Target, "../../sheetjs/Documents/Test.xlsx");
+			assert.equal(ws.A7.l.Target, "http://sheetjs.com");
+		}
+
+		it(N1, function() { hlink(wb1); });
+		it(N2, function() { hlink(wb2); });
 	});
 
 	describe('should parse cells with date type (XLSX/XLSM)', function() {

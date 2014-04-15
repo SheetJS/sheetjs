@@ -76,8 +76,8 @@ function parseZip(zip, opts) {
 			path = 'xl/worksheets/sheet'+(i+1-nmode)+(xlsb?'.bin':'.xml');
 			path = path.replace(/sheet0\./,"sheet.");
 			relsPath = path.replace(/^(.*)(\/)([^\/]*)$/, "$1/_rels/$3.rels");
-			sheets[props.SheetNames[i]]=parse_ws(getzipdata(zip, path),path,opts);
 			sheetRels[props.SheetNames[i]]=parseRels(getzipdata(zip, relsPath, true), path);
+			sheets[props.SheetNames[i]]=parse_ws(getzipdata(zip, path),path,opts,sheetRels[props.SheetNames[i]]);
 		} catch(e) { if(opts.WTF) throw e; }
 	}
 

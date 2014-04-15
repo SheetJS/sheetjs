@@ -1,2 +1,0 @@
-var XLSX = {};
-(function(XLSX){

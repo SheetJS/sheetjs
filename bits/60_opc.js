@@ -274,7 +274,7 @@ function parseRels(data, currentFilePath) {
 		currentFilePath = '/'+currentFilePath;
 	}
 	var rels = {};
-
+	var hash = {};
 	var resolveRelativePathIntoAbsolute = function (to) {
 		var toksFrom = currentFilePath.split('/');
 		toksFrom.pop(); // folder path
@@ -296,11 +296,12 @@ function parseRels(data, currentFilePath) {
 		/* 9.3.2.2 OPC_Relationships */
 		if (y[0] === '<Relationship') {
 			var rel = {}; rel.Type = y.Type; rel.Target = y.Target; rel.Id = y.Id; rel.TargetMode = y.TargetMode;
-			var canonictarget = resolveRelativePathIntoAbsolute(y.Target);
+			var canonictarget = y.TargetMode === 'External' ? y.Target : resolveRelativePathIntoAbsolute(y.Target);
 			rels[canonictarget] = rel;
+			hash[y.Id] = rel;
 		}
 	});
-
+	rels["!id"] = hash;
 	return rels;
 }
 

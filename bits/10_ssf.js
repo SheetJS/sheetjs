@@ -1,4 +1,3 @@
-/* Spreadsheet Format -- jump to XLSX for the XLSX code */
 /* ssf.js (C) 2013-2014 SheetJS -- http://sheetjs.com */
 var SSF = {};
 var make_ssf = function(SSF){

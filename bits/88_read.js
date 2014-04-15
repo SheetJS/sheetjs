@@ -17,6 +17,3 @@ function readFileSync(data, options) {
 	return readSync(data, o);
 }
 
-XLSX.read = readSync;
-XLSX.readFile = readFileSync;
-XLSX.parseZip = parseZip;

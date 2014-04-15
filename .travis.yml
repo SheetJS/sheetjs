@@ -10,4 +10,4 @@ before_script:
   - "make init"
   - "cd tests/files; make all; cd -" 
 after_success:
-  - "make coveralls"
+  - "make coveralls-spin"

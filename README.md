@@ -66,6 +66,7 @@ that does not start with `!` corresponds to a cell (using `A-1` notation).
 - `.h` : an HTML rendering of the rich text (if applicable)
 - `.c` : comments associated with the cell
 - `.z` : the number format string associated with the cell (if requested)
+- `.l` : the hyperlink of the cell (.Target holds link, .tooltip is tooltip)
 
 For dates, `.v` holds the raw date code from the sheet and `.w` holds the text
 

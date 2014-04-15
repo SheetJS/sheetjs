@@ -3,10 +3,10 @@ BlankSheetTypes.xlsb
 NumberFormatCondition.xlsb
 RkNumber.xlsb
 calendar_stress_test.xlsb.pending
-calendar_stress_test.xlsx.pending
 comments_stress_test.xlsb
 custom_properties.xlsb
 formula_stress_test.xlsb
+hyperlink_stress_test_2011.xlsb
 large_strings.xlsb
 merge_cells.xlsb
 named_ranges_2011.xlsb
@@ -14,6 +14,7 @@ number_format.xlsb
 pivot_table_named_range.xlsb
 pivot_table_test.xlsb
 rich_text_stress.xlsb
+text_and_numbers.xlsb
 time_stress_test_1.xlsb
 xlsx-stream-d-date-cell.xlsb
 2013/apachepoi_29982.xls.xlsb
@@ -162,6 +163,7 @@ apachepoi_workbookProtection_workbook_structure_protected.xlsx
 apachepoi_workbookProtection_workbook_windows_protected.xlsx
 apachepoi_workbookProtection_worksheet_protected.xlsx
 apachepoi_xlsx-jdbc.xlsx
+calendar_stress_test.xlsx.pending
 comments_stress_test.xlsx
 custom_properties.xlsx
 excel-reader-xlsx_data01.xlsx
@@ -176,6 +178,7 @@ excel-reader-xlsx_error08.xlsx.pending
 excel-reader-xlsx_inline01.xlsx
 excel-reader-xlsx_libre01.xlsx
 formula_stress_test.xlsx
+hyperlink_stress_test_2011.xlsx
 interview.xlsx
 issue.xlsx
 jxls-core_formulaOneRow.xlsx
@@ -251,6 +254,7 @@ spreadsheet-parsexlsx_bug-6-2.xlsx
 spreadsheet-parsexlsx_bug-6.xlsx
 spreadsheet-parsexlsx_bug-7.xlsx
 spreadsheet-parsexlsx_bug-8.xlsx
+text_and_numbers.xlsx
 xlrd_merged_cells.xlsx
 xlrd_reveng1.xlsx
 xlrd_test_comments_excel.xlsx

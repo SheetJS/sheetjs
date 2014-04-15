@@ -67,7 +67,7 @@ var utf8read = function(orig) {
 };
 
 // matches <foo>...</foo> extracts content
-function matchtag(f,g) {return new RegExp('<(?:\\w+:)?'+f+'(?: xml:space="preserve")?>([^\u2603]*)</(?:\\w+:)?'+f+'>',(g||"")+"m");}
+function matchtag(f,g) {return new RegExp('<(?:\\w+:)?'+f+'(?: xml:space="preserve")?(?:[^>]*)>([^\u2603]*)</(?:\\w+:)?'+f+'>',(g||"")+"m");}
 
 function parseVector(data) {
 	var h = parsexmltag(data);

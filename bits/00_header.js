@@ -1,3 +1,5 @@
 /* xlsx.js (C) 2013-2014 SheetJS -- http://sheetjs.com */
 /* vim: set ts=2: */
 /*jshint eqnull:true */
+var XLSX = {};
+(function(XLSX){

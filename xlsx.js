@@ -1,7 +1,9 @@
 /* xlsx.js (C) 2013-2014 SheetJS -- http://sheetjs.com */
 /* vim: set ts=2: */
 /*jshint eqnull:true */
-/* Spreadsheet Format -- jump to XLSX for the XLSX code */
+var XLSX = {};
+(function(XLSX){
+XLSX.version = '0.6.0';
 /* ssf.js (C) 2013-2014 SheetJS -- http://sheetjs.com */
 var SSF = {};
 var make_ssf = function(SSF){
@@ -496,9 +498,6 @@ SSF.get_table = function() { return table_fmt; };
 SSF.load_table = function(tbl) { for(var i=0; i!=0x0188; ++i) if(tbl[i]) SSF.load(tbl[i], i); };
 };
 make_ssf(SSF);
-var XLSX = {};
-(function(XLSX){
-XLSX.version = '0.5.17';
 var current_codepage, current_cptable;
 if(typeof module !== "undefined" && typeof require !== 'undefined') {
 	if(typeof cptable === 'undefined') cptable = require('codepage');
@@ -613,7 +612,7 @@ var utf8read = function(orig) {
 };
 
 // matches <foo>...</foo> extracts content
-function matchtag(f,g) {return new RegExp('<(?:\\w+:)?'+f+'(?: xml:space="preserve")?>([^\u2603]*)</(?:\\w+:)?'+f+'>',(g||"")+"m");}
+function matchtag(f,g) {return new RegExp('<(?:\\w+:)?'+f+'(?: xml:space="preserve")?(?:[^>]*)>([^\u2603]*)</(?:\\w+:)?'+f+'>',(g||"")+"m");}
 
 function parseVector(data) {
 	var h = parsexmltag(data);
@@ -1468,7 +1467,7 @@ function parseRels(data, currentFilePath) {
 		currentFilePath = '/'+currentFilePath;
 	}
 	var rels = {};
-
+	var hash = {};
 	var resolveRelativePathIntoAbsolute = function (to) {
 		var toksFrom = currentFilePath.split('/');
 		toksFrom.pop(); // folder path
@@ -1490,11 +1489,12 @@ function parseRels(data, currentFilePath) {
 		/* 9.3.2.2 OPC_Relationships */
 		if (y[0] === '<Relationship') {
 			var rel = {}; rel.Type = y.Type; rel.Target = y.Target; rel.Id = y.Id; rel.TargetMode = y.TargetMode;
-			var canonictarget = resolveRelativePathIntoAbsolute(y.Target);
+			var canonictarget = y.TargetMode === 'External' ? y.Target : resolveRelativePathIntoAbsolute(y.Target);
 			rels[canonictarget] = rel;
+			hash[y.Id] = rel;
 		}
 	});
-
+	rels["!id"] = hash;
 	return rels;
 }
 
@@ -1664,7 +1664,7 @@ var strs = {}; // shared strings
 var _ssfopts = {}; // spreadsheet formatting options
 
 /* 18.3 Worksheets */
-function parse_ws_xml(data, opts) {
+function parse_ws_xml(data, opts, rels) {
 	if(!data) return data;
 	/* 18.3.1.99 worksheet CT_Worksheet */
 	var s = {};
@@ -1752,6 +1752,25 @@ function parse_ws_xml(data, opts) {
 			s[cell.r] = p;
 		});
 	});
+
+	/* 18.3.1.48 hyperlinks CT_Hyperlinks */
+	if(data.match(/<\/hyperlinks>/)) data.match(/<hyperlink[^>]*\/>/g).forEach(function(h) {
+		var val = parsexmltag(h); delete val[0];
+		if(!val.ref) return;
+		var rel = rels['!id'][val.id];
+		if(rel) {
+			val.Target = rel.Target;
+			if(val.location) val.Target += "#"+val.location;
+			val.Rel = rel;
+		}
+		var rng = decode_range(val.ref);
+		for(var R=rng.s.r;R<=rng.e.r;++R) for(var C=rng.s.c;C<=rng.e.c;++C) {
+			var addr = encode_cell({c:C,r:R});
+			if(!s[addr]) s[addr] = {t:"str",v:undefined};
+			s[addr].l = val;
+		}
+	});
+
 	if(!s["!ref"] && refguess.e.c >= refguess.s.c && refguess.e.r >= refguess.s.r) s["!ref"] = encode_range(refguess);
 	if(opts.sheetRows && s["!ref"]) {
 		var tmpref = decode_range(s["!ref"]);
@@ -1894,16 +1913,29 @@ var parse_BrtFmlaString = function(data, length, opts) {
 /* [MS-XLSB] 2.4.676 BrtMergeCell */
 var parse_BrtMergeCell = parse_UncheckedRfX;
 
+/* [MS-XLSB] 2.4.656 BrtHLink */
+var parse_BrtHLink = function(data, length, opts) {
+	var end = data.l + length;
+	var rfx = parse_UncheckedRfX(data, 16);
+	var relId = parse_XLNullableWideString(data);
+	var loc = parse_XLWideString(data);
+	var tooltip = parse_XLWideString(data);
+	var display = parse_XLWideString(data);
+	data.l = end;
+	return {rfx:rfx, relId:relId, loc:loc, tooltip:tooltip, display:display};
+};
+
 /* [MS-XLSB] 2.1.7.61 Worksheet */
-var parse_ws_bin = function(data, opts) {
+var parse_ws_bin = function(data, opts, rels) {
 	if(!data) return data;
+	if(!rels) rels = {'!id':{}};
 	var s = {};
 
 	var ref;
 	var refguess = {s: {r:1000000, c:1000000}, e: {r:0, c:0} };
 
 	var pass = false, end = false;
-	var row, p, cf;
+	var row, p, cf, R, C,addr;
 	var mergecells = [];
 	recordhopper(data, function(val, R) {
 		if(end) return;
@@ -1957,7 +1989,21 @@ var parse_ws_bin = function(data, opts) {
 			case 'BrtBeginMergeCells': break;
 			case 'BrtEndMergeCells': break;
 			case 'BrtMergeCell': mergecells.push(val); break;
-			
+
+			case 'BrtHLink':
+				var rel = rels['!id'][val.relId];
+				if(rel) {
+					val.Target = rel.Target;
+					if(val.loc) val.Target += "#"+val.loc;
+					val.Rel = rel;
+				}
+				for(R=val.rfx.s.r;R<=val.rfx.e.r;++R) for(C=val.rfx.s.c;C<=val.rfx.e.c;++C) {
+					addr = encode_cell({c:C,r:R});
+					if(!s[addr]) s[addr] = {t:"str",v:undefined};
+					s[addr].l = val;
+				}
+				break;
+
 			case 'BrtArrFmla': break; // TODO
 			case 'BrtShrFmla': break; // TODO
 			case 'BrtBeginSheet': break;
@@ -1986,7 +2032,6 @@ var parse_ws_bin = function(data, opts) {
 			case 'BrtFRTBegin': pass = true; break;
 			case 'BrtFRTEnd': pass = false; break;
 			case 'BrtEndSheet': break; // TODO
-			case 'BrtHLink': break; // TODO
 			case 'BrtDrawing': break; // TODO
 			case 'BrtLegacyDrawing': break; // TODO
 			case 'BrtLegacyDrawingHF': break; // TODO
@@ -2037,7 +2082,7 @@ var parse_ws_bin = function(data, opts) {
 			case 'BrtEndAFilter': break;
 			case 'BrtBeginFilterColumn': break;
 			case 'BrtBeginFilters': break;
-			case 'BrtFilter': break; 
+			case 'BrtFilter': break;
 			case 'BrtEndFilters': break;
 			case 'BrtEndFilterColumn': break;
 			case 'BrtDynamicFilter': break;
@@ -2357,8 +2402,8 @@ function parse_wb(data, name, opts) {
 	return name.substr(-4)===".bin" ? parse_wb_bin(data, opts) : parse_wb_xml(data, opts);
 }
 
-function parse_ws(data, name, opts) {
-	return name.substr(-4)===".bin" ? parse_ws_bin(data, opts) : parse_ws_xml(data, opts);
+function parse_ws(data, name, opts, rels) {
+	return name.substr(-4)===".bin" ? parse_ws_bin(data, opts, rels) : parse_ws_xml(data, opts, rels);
 }
 
 function parse_sty(data, name, opts) {
@@ -2801,7 +2846,7 @@ var RecordEnum = {
 	0x01EB: { n:"BrtEndMG", f:parsenoop },
 	0x01EC: { n:"BrtBeginMap", f:parsenoop },
 	0x01ED: { n:"BrtEndMap", f:parsenoop },
-	0x01EE: { n:"BrtHLink", f:parsenoop },
+	0x01EE: { n:"BrtHLink", f:parse_BrtHLink },
 	0x01EF: { n:"BrtBeginDCon", f:parsenoop },
 	0x01F0: { n:"BrtEndDCon", f:parsenoop },
 	0x01F1: { n:"BrtBeginDRefs", f:parsenoop },
@@ -3299,8 +3344,8 @@ function parseZip(zip, opts) {
 			path = 'xl/worksheets/sheet'+(i+1-nmode)+(xlsb?'.bin':'.xml');
 			path = path.replace(/sheet0\./,"sheet.");
 			relsPath = path.replace(/^(.*)(\/)([^\/]*)$/, "$1/_rels/$3.rels");
-			sheets[props.SheetNames[i]]=parse_ws(getzipdata(zip, path),path,opts);
 			sheetRels[props.SheetNames[i]]=parseRels(getzipdata(zip, relsPath, true), path);
+			sheets[props.SheetNames[i]]=parse_ws(getzipdata(zip, path),path,opts,sheetRels[props.SheetNames[i]]);
 		} catch(e) { if(opts.WTF) throw e; }
 	}
 
@@ -3345,13 +3390,6 @@ function readFileSync(data, options) {
 	var o = options||{}; o.type = 'file';
 	return readSync(data, o);
 }
-
-XLSX.read = readSync;
-XLSX.readFile = readFileSync;
-XLSX.parseZip = parseZip;
-return this;
-
-})(XLSX);
 
 var _chr = function(c) { return String.fromCharCode(c); };
 
@@ -3469,10 +3507,8 @@ XLSX.utils = {
 	get_formulae: get_formulae,
 	sheet_to_row_object_array: sheet_to_row_object_array
 };
-
-if(typeof require !== 'undefined' && typeof exports !== 'undefined') {
-	exports.read = XLSX.read;
-	exports.readFile = XLSX.readFile;
-	exports.utils = XLSX.utils;
-	exports.version = XLSX.version;
-}
+XLSX.read = readSync;
+XLSX.readFile = readFileSync;
+XLSX.parseZip = parseZip;
+XLSX.SSF = SSF;
+})(typeof exports !== 'undefined' ? exports : XLSX);

@@ -1,5 +1,5 @@
 /* 18.3 Worksheets */
-function parse_ws_xml(data, opts) {
+function parse_ws_xml(data, opts, rels) {
 	if(!data) return data;
 	/* 18.3.1.99 worksheet CT_Worksheet */
 	var s = {};
@@ -87,6 +87,25 @@ function parse_ws_xml(data, opts) {
 			s[cell.r] = p;
 		});
 	});
+
+	/* 18.3.1.48 hyperlinks CT_Hyperlinks */
+	if(data.match(/<\/hyperlinks>/)) data.match(/<hyperlink[^>]*\/>/g).forEach(function(h) {
+		var val = parsexmltag(h); delete val[0];
+		if(!val.ref) return;
+		var rel = rels['!id'][val.id];
+		if(rel) {
+			val.Target = rel.Target;
+			if(val.location) val.Target += "#"+val.location;
+			val.Rel = rel;
+		}
+		var rng = decode_range(val.ref);
+		for(var R=rng.s.r;R<=rng.e.r;++R) for(var C=rng.s.c;C<=rng.e.c;++C) {
+			var addr = encode_cell({c:C,r:R});
+			if(!s[addr]) s[addr] = {t:"str",v:undefined};
+			s[addr].l = val;
+		}
+	});
+
 	if(!s["!ref"] && refguess.e.c >= refguess.s.c && refguess.e.r >= refguess.s.r) s["!ref"] = encode_range(refguess);
 	if(opts.sheetRows && s["!ref"]) {
 		var tmpref = decode_range(s["!ref"]);

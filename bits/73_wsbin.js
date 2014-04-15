@@ -123,16 +123,29 @@ var parse_BrtFmlaString = function(data, length, opts) {
 /* [MS-XLSB] 2.4.676 BrtMergeCell */
 var parse_BrtMergeCell = parse_UncheckedRfX;
 
+/* [MS-XLSB] 2.4.656 BrtHLink */
+var parse_BrtHLink = function(data, length, opts) {
+	var end = data.l + length;
+	var rfx = parse_UncheckedRfX(data, 16);
+	var relId = parse_XLNullableWideString(data);
+	var loc = parse_XLWideString(data);
+	var tooltip = parse_XLWideString(data);
+	var display = parse_XLWideString(data);
+	data.l = end;
+	return {rfx:rfx, relId:relId, loc:loc, tooltip:tooltip, display:display};
+};
+
 /* [MS-XLSB] 2.1.7.61 Worksheet */
-var parse_ws_bin = function(data, opts) {
+var parse_ws_bin = function(data, opts, rels) {
 	if(!data) return data;
+	if(!rels) rels = {'!id':{}};
 	var s = {};
 
 	var ref;
 	var refguess = {s: {r:1000000, c:1000000}, e: {r:0, c:0} };
 
 	var pass = false, end = false;
-	var row, p, cf;
+	var row, p, cf, R, C,addr;
 	var mergecells = [];
 	recordhopper(data, function(val, R) {
 		if(end) return;
@@ -186,7 +199,21 @@ var parse_ws_bin = function(data, opts) {
 			case 'BrtBeginMergeCells': break;
 			case 'BrtEndMergeCells': break;
 			case 'BrtMergeCell': mergecells.push(val); break;
-			
+
+			case 'BrtHLink':
+				var rel = rels['!id'][val.relId];
+				if(rel) {
+					val.Target = rel.Target;
+					if(val.loc) val.Target += "#"+val.loc;
+					val.Rel = rel;
+				}
+				for(R=val.rfx.s.r;R<=val.rfx.e.r;++R) for(C=val.rfx.s.c;C<=val.rfx.e.c;++C) {
+					addr = encode_cell({c:C,r:R});
+					if(!s[addr]) s[addr] = {t:"str",v:undefined};
+					s[addr].l = val;
+				}
+				break;
+
 			case 'BrtArrFmla': break; // TODO
 			case 'BrtShrFmla': break; // TODO
 			case 'BrtBeginSheet': break;
@@ -215,7 +242,6 @@ var parse_ws_bin = function(data, opts) {
 			case 'BrtFRTBegin': pass = true; break;
 			case 'BrtFRTEnd': pass = false; break;
 			case 'BrtEndSheet': break; // TODO
-			case 'BrtHLink': break; // TODO
 			case 'BrtDrawing': break; // TODO
 			case 'BrtLegacyDrawing': break; // TODO
 			case 'BrtLegacyDrawingHF': break; // TODO
@@ -266,7 +292,7 @@ var parse_ws_bin = function(data, opts) {
 			case 'BrtEndAFilter': break;
 			case 'BrtBeginFilterColumn': break;
 			case 'BrtBeginFilters': break;
-			case 'BrtFilter': break; 
+			case 'BrtFilter': break;
 			case 'BrtEndFilters': break;
 			case 'BrtEndFilterColumn': break;
 			case 'BrtDynamicFilter': break;

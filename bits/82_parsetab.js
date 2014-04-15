@@ -423,7 +423,7 @@ var RecordEnum = {
 	0x01EB: { n:"BrtEndMG", f:parsenoop },
 	0x01EC: { n:"BrtBeginMap", f:parsenoop },
 	0x01ED: { n:"BrtEndMap", f:parsenoop },
-	0x01EE: { n:"BrtHLink", f:parsenoop },
+	0x01EE: { n:"BrtHLink", f:parse_BrtHLink },
 	0x01EF: { n:"BrtBeginDCon", f:parsenoop },
 	0x01F0: { n:"BrtEndDCon", f:parsenoop },
 	0x01F1: { n:"BrtBeginDRefs", f:parsenoop },
