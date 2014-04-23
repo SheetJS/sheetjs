@@ -182,10 +182,10 @@ formula_stress_test.xlsx
 hyperlink_stress_test_2011.xlsx
 interview.xlsx
 issue.xlsx
-jxls-core_formulaOneRow.xlsx
+jxls-core_formulaOneRow.xlsx.pending
 jxls-core_simple.xlsx
-jxls-examples_stress1.xlsx
-jxls-examples_stress2.xlsx
+jxls-examples_stress1.xlsx.pending
+jxls-examples_stress2.xlsx.pending
 jxls-reader_departmentData.xlsx
 large_strings.xlsx.pending
 libreoffice_calc_cjk-text_cell-justify-distributed-single.xlsx
