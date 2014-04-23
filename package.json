@@ -1,6 +1,6 @@
 {
 	"name": "xlsx",
-	"version": "0.6.0",
+	"version": "0.6.1",
 	"author": "sheetjs",
 	"description": "XLSB / XLSX / XLSM (Excel 2007+ Spreadsheet) parser",
 	"keywords": [ "xlsx", "xlsb", "xlsm", "office", "excel", "spreadsheet" ],
@@ -10,9 +10,9 @@
 	"main": "./xlsx",
 	"dependencies": {
 		"ssf":"~0.6.4",
-		"codepage":"",
+		"codepage":"1.x",
 		"cfb":"",
-		"jszip":"~2.1.0",
+		"jszip":"~2.2.0",
 		"commander":""
 	},
 	"devDependencies": {
@@ -23,7 +23,7 @@
 	"repository": { "type":"git", "url":"git://github.com/SheetJS/js-xlsx.git" },
 	"scripts": {
 		"pretest": "git submodule init && git submodule update",
-		"test": "make mocha",
+		"test": "make test",
 		"test-jasmine": "jasmine-node --verbose tests/"
 	},
 	"config": {

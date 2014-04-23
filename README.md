@@ -11,21 +11,45 @@ In node:
 
 In the browser:
 
+    <!-- This is the only file you need (includes xlsx.js and jszip) -->
+    <script lang="javascript" src="dist/xlsx.core.min.js"></script>
+
+In [bower](http://bower.io/):
+
+    bower install js-xlsx
+
+CDNjs automatically pulls the latest version and makes all versions available at
+<http://cdnjs.com/libraries/xlsx>
+
+Older versions of this README recommended a more explicit approach:
+
     <!-- JSZip must be included before xlsx.js -->
     <script lang="javascript" src="/path/to/jszip.js"></script>
     <script lang="javascript" src="/path/to/xlsx.js"></script>
+
+## Optional Modules
+
+The node version automatically requires modules for additional features.  Some of these modules are rather large in size and are only needed in special circumstances, so they do not ship with the core.  For browser use, they must be included directly:
+
+    <!-- international support from https://github.com/sheetjs/js-codepage -->
+    <script src="dist/cpexcel.js"></script>
+
+An appropriate version for each dependency is included in the dist/ directory.
+
+The complete single-file version is generated at `dist/xlsx.full.min.js`
 
 ## Usage
 
 Simple usage (walks through every cell of every sheet and dumps the values):
 
-    var XLSX = require('xlsx')
-    var xlsx = XLSX.readFile('test.xlsx');
+    var XLSX = require('xlsx');
+    var workbook = XLSX.readFile('test.xlsx');
     var sheet_name_list = xlsx.SheetNames;
-    xlsx.SheetNames.forEach(function(y) {
-      for (z in xlsx.Sheets[y]) {
+    sheet_name_list.forEach(function(y) {
+      var worksheet = workbook.Sheets[y];
+      for (z in worksheet) {
         if(z[0] === '!') continue;
-        console.log(y + "!" + z + "=" + JSON.stringify(xlsx.Sheets[y][z].v));
+        console.log(y + "!" + z + "=" + JSON.stringify(worksheet[z].v));
       }
     });
 

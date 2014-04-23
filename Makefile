@@ -2,6 +2,8 @@ LIB=xlsx
 DEPS=$(wildcard bits/*.js)
 TARGET=$(LIB).js
 FMT=xlsx xlsm xlsb misc
+REQS=jszip.js
+ADDONS=dist/cpexcel.js
 
 $(TARGET): $(DEPS)
 	cat $^ > $@
@@ -51,7 +53,14 @@ coveralls-spin:
 	make coveralls & bash misc/spin.sh $$!
 
 .PHONY: dist
-dist: $(TARGET)
+dist: dist-deps $(TARGET)
 	cp $(TARGET) dist/
 	cp LICENSE dist/
 	uglifyjs $(TARGET) -o dist/$(LIB).min.js --source-map dist/$(LIB).min.map --preamble "$$(head -n 1 bits/00_header.js)"
+	uglifyjs $(REQS) $(TARGET) -o dist/$(LIB).core.min.js --source-map dist/$(LIB).core.min.map --preamble "$$(head -n 1 bits/00_header.js)"
+	uglifyjs $(REQS) $(ADDONS) $(TARGET) -o dist/$(LIB).full.min.js --source-map dist/$(LIB).full.min.map --preamble "$$(head -n 1 bits/00_header.js)"
+
+.PHONY: dist-deps
+dist-deps:
+	cp node_modules/codepage/dist/cpexcel.full.js dist/cpexcel.js
+	cp jszip.js dist/jszip.js

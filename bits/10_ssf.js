@@ -105,7 +105,7 @@ var general_fmt = function(v) {
 		}
 		else {
 			o = v.toFixed(11).replace(/(\.[0-9]*[1-9])0*$/,"$1");
-				if(o.length > 11 + (v<0?1:0)) o = v.toPrecision(6);
+			if(o.length > 11 + (v<0?1:0)) o = v.toPrecision(6);
 		}
 		o = o.replace(/(\.[0-9]*[1-9])0+e/,"$1e").replace(/\.0*e/,"e");
 		return o.replace("e","E").replace(/\.0*$/,"").replace(/\.([0-9]*[^0])0*$/,".$1").replace(/(E[+-])([0-9])$/,"$1"+"0"+"$2");
@@ -217,7 +217,7 @@ var write_num = function(type, fmt, val) {
 	if(fmt.indexOf("E") > -1) {
 		var idx = fmt.indexOf("E") - fmt.indexOf(".") - 1;
 		if(fmt.match(/^#+0.0E\+0$/)) {
-		var period = fmt.indexOf("."); if(period === -1) period=fmt.indexOf('E');
+			var period = fmt.indexOf("."); if(period === -1) period=fmt.indexOf('E');
 			var ee = (Number(val.toExponential(0).substr(2+(val<0))))%period;
 			if(ee < 0) ee += period;
 			o = (val/Math.pow(10,ee)).toPrecision(idx+1+(period+ee)%period);

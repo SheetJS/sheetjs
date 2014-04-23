@@ -3,7 +3,7 @@
 /*jshint eqnull:true */
 var XLSX = {};
 (function(XLSX){
-XLSX.version = '0.6.0';
+XLSX.version = '0.6.1';
 /* ssf.js (C) 2013-2014 SheetJS -- http://sheetjs.com */
 var SSF = {};
 var make_ssf = function(SSF){
@@ -111,7 +111,7 @@ var general_fmt = function(v) {
 		}
 		else {
 			o = v.toFixed(11).replace(/(\.[0-9]*[1-9])0*$/,"$1");
-				if(o.length > 11 + (v<0?1:0)) o = v.toPrecision(6);
+			if(o.length > 11 + (v<0?1:0)) o = v.toPrecision(6);
 		}
 		o = o.replace(/(\.[0-9]*[1-9])0+e/,"$1e").replace(/\.0*e/,"e");
 		return o.replace("e","E").replace(/\.0*$/,"").replace(/\.([0-9]*[^0])0*$/,".$1").replace(/(E[+-])([0-9])$/,"$1"+"0"+"$2");
@@ -223,7 +223,7 @@ var write_num = function(type, fmt, val) {
 	if(fmt.indexOf("E") > -1) {
 		var idx = fmt.indexOf("E") - fmt.indexOf(".") - 1;
 		if(fmt.match(/^#+0.0E\+0$/)) {
-		var period = fmt.indexOf("."); if(period === -1) period=fmt.indexOf('E');
+			var period = fmt.indexOf("."); if(period === -1) period=fmt.indexOf('E');
 			var ee = (Number(val.toExponential(0).substr(2+(val<0))))%period;
 			if(ee < 0) ee += period;
 			o = (val/Math.pow(10,ee)).toPrecision(idx+1+(period+ee)%period);
@@ -841,12 +841,36 @@ function parse_FontFlags(data, length) {
 	};
 	return out;
 }
+/* 18.4.1 charset to codepage mapping */
+var CS2CP = {
+	0:    1252, /* ANSI */
+	1:   65001, /* DEFAULT */
+	2:   65001, /* SYMBOL */
+	77:  10000, /* MAC */
+	128:   932, /* SHIFTJIS */
+	129:   949, /* HANGUL */
+	130:  1361, /* JOHAB */
+	134:   936, /* GB2312 */
+	136:   950, /* CHINESEBIG5 */
+	161:  1253, /* GREEK */
+	162:  1254, /* TURKISH */
+	163:  1258, /* VIETNAMESE */
+	177:  1255, /* HEBREW */
+	178:  1256, /* ARABIC */
+	186:  1257, /* BALTIC */
+	204:  1251, /* RUSSIAN */
+	222:   874, /* THAI */
+	238:  1250, /* EASTEUROPE */
+	255:  1252, /* OEM */
+    69:   6969  /* MISC */
+};
+
 /* Parse a list of <r> tags */
 var parse_rs = (function() {
 	var tregex = matchtag("t"), rpregex = matchtag("rPr");
 	/* 18.4.7 rPr CT_RPrElt */
 	var parse_rpr = function(rpr, intro, outro) {
-		var font = {};
+		var font = {}, cp = 65001;
 		(rpr.match(/<[^>]*>/g)||[]).forEach(function(x) {
 			var y = parsexmltag(x);
 			switch(y[0]) {
@@ -863,7 +887,10 @@ var parse_rs = (function() {
 				case '<shadow/>': break;
 
 				/* 18.4.1 charset CT_IntProperty TODO */
-				case '<charset': break;
+				case '<charset':
+					if(y.val == '1') break;
+					cp = CS2CP[parseInt(y.val, 10)];
+					break;
 
 				/* 18.4.2 outline CT_BooleanProperty TODO */
 				case '<outline':
@@ -928,18 +955,20 @@ var parse_rs = (function() {
 		if(font.i) style.push("font-style: italic;");
 		intro.push('<span style="' + style.join("") + '">');
 		outro.push("</span>");
+		return cp;
 	};
 
 	/* 18.4.4 r CT_RElt */
 	function parse_r(r) {
 		var terms = [[],"",[]];
 		/* 18.4.12 t ST_Xstring */
-		var t = r.match(tregex);
+		var t = r.match(tregex), cp = 65001;
 		if(!isval(t)) return "";
 		terms[1] = t[1];
 
 		var rpr = r.match(rpregex);
-		if(isval(rpr)) parse_rpr(rpr[1], terms[0], terms[2]);
+		if(isval(rpr)) cp = parse_rpr(rpr[1], terms[0], terms[2]);
+
 		return terms[0].join("") + terms[1].replace(/\r\n/g,'<br/>') + terms[2].join("");
 	}
 	return function(rs) {
@@ -1016,7 +1045,7 @@ function parseNumFmts(t, opts) {
 		switch(y[0]) {
 			case '<numFmts': case '</numFmts>': case '<numFmts/>': break;
 			case '<numFmt': {
-				var f=unescapexml(y.formatCode), i=parseInt(y.numFmtId,10);
+				var f=utf8read(unescapexml(y.formatCode)), i=parseInt(y.numFmtId,10);
 				styles.NumberFmt[i] = f; if(i>0) SSF.load(f,i);
 			} break;
 			default: if(opts.WTF) throw 'unrecognized ' + y[0] + ' in numFmts';

@@ -298,7 +298,7 @@ describe('features', function() {
 		[wb1,wb2].map(function(wb) { return wb.Sheets[sheet]; }).forEach(function(ws, i) {
 			assert.equal(ws.B1.c.length, 1,"must have 1 comment");
 			assert.equal(ws.B1.c[0].a, "Yegor Kozlov","must have the same author");
-			assert.equal(ws.B1.c[0].t.replace(/\r\n/g,"\n"), "Yegor Kozlov:\nfirst cell", "must have the concatenated texts");
+			assert.equal(ws.B1.c[0].t.replace(/\r\n/g,"\n").replace(/\r/g,"\n"), "Yegor Kozlov:\nfirst cell", "must have the concatenated texts");
 			if(i > 0) return;
 			assert.equal(ws.B1.c[0].r, '<r><rPr><b/><sz val="8"/><color indexed="81"/><rFont val="Tahoma"/></rPr><t>Yegor Kozlov:</t></r><r><rPr><sz val="8"/><color indexed="81"/><rFont val="Tahoma"/></rPr><t xml:space="preserve">\r\nfirst cell</t></r>', "must have the rich text representation");
 			assert.equal(ws.B1.c[0].h, '<span style="font-weight: bold;">Yegor Kozlov:</span><span style=""><br/>first cell</span>', "must have the html representation");
