@@ -44,7 +44,7 @@ Simple usage (walks through every cell of every sheet and dumps the values):
 
     var XLSX = require('xlsx');
     var workbook = XLSX.readFile('test.xlsx');
-    var sheet_name_list = xlsx.SheetNames;
+    var sheet_name_list = workbook.SheetNames;
     sheet_name_list.forEach(function(y) {
       var worksheet = workbook.Sheets[y];
       for (z in worksheet) {
