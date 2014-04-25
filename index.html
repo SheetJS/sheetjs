@@ -4,7 +4,7 @@
     <script src="ssf.js"></script>
   </head>
   <body>
-<b>SSF (Spreadsheet Format) Live Demo</b><br />
+<b>SSF (Spreadsheet Number Format) Live Demo</b><br />
 <a href="https://github.com/SheetJS/ssf">Github Repo</a><br />
 <a href="https://github.com/SheetJS/ssf/issues">Issues?  Something look weird?  Click here and report an issue</a><br />
     <div>
@@ -20,11 +20,19 @@
     var N = document.getElementById('num');
     var T = document.getElementById('txt');
     function update() {
-      try { N.innerText = SSF.format(F.value, Number(V.value)); } catch(e) { N.innerText = e; }
-      try { T.innerText = SSF.format(F.value, V.value); } catch(e) { T.innerText = e; }
+      try { N.innerHTML = SSF.format(F.value, Number(V.value)); } catch(e) { N.innerHTML = e; }
+      try { T.innerHTML = SSF.format(F.value, V.value); } catch(e) { T.innerHTML = e; }
     }
-    F.oninput = update;
-    V.oninput = update;
+    if(F.addEventListener) {
+      F.addEventListener('keyup', update);
+      V.addEventListener('keyup', update);
+    } else if(F.attachEvent) {
+      F.attachEvent('onkeyup', update);
+      V.attachEvent('onkeyup', update);
+    } else {
+      F.oninput = update;
+      V.oninput = update;
+    }
     update();
   </script>
   <script type="text/javascript">

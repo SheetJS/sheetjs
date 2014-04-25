@@ -10,9 +10,7 @@ default options are described below:
 
 ```js>tmp/10_opts.js
 /* Options */
-var opts_fmt = {};
-function fixopts(o){for(var y in opts_fmt) if(o[y]===undefined) o[y]=opts_fmt[y];}
-SSF.opts = opts_fmt;
+var opts_fmt = {
 ```
 
 There are two commonly-recognized date code formats:
@@ -25,7 +23,7 @@ the 1904 date mode was only default in a few Mac variants of Excel (2011 uses
 `date1904`:
 
 ```
-opts_fmt.date1904 = 0;
+  date1904:0,
 ```
 
 The default output is a text representation (no effort to capture colors).  To
@@ -36,7 +34,16 @@ control the output, set the `output` variable:
 - `ansi`: ansi color codes (requires `colors` module)
 
 ```
-opts_fmt.output = "";
+  output:"",
+```
+
+These options are made available via the `opts` field:
+
+```
+  WTF:false
+};
+function fixopts(o){for(var y in opts_fmt) if(o[y]===undefined) o[y]=opts_fmt[y];}
+SSF.opts = opts_fmt;
 ```
 
 ## Conditional Format Codes
@@ -112,7 +119,7 @@ context-sensitive and the implementation tries to follow the format to the best
 of its abilities given the knowledge.
 
 ```js>tmp/40_general.js
-var general_fmt = function(v) {
+var general_fmt = function(v, opts) {
 ```
 
 Booleans are serialized in upper case:
@@ -134,12 +141,12 @@ For numbers, try to display up to 11 digits of the number (the original code
     else if(V >= Math.pow(10,10) && V < Math.pow(10,11)) o = v.toFixed(10).substr(0,12);
     else if(V > Math.pow(10,-9) && V < Math.pow(10,11)) {
       o = v.toFixed(12).replace(/(\.[0-9]*[1-9])0*$/,"$1").replace(/\.$/,"");
-      if(o.length > 11+(v<0?1:0)) o = v.toPrecision(10);
-      if(o.length > 11+(v<0?1:0)) o = v.toExponential(5);
+      if(o.length > (v<0?12:11)) o = v.toPrecision(10);
+      if(o.length > (v<0?12:11)) o = v.toExponential(5);
     }
     else {
       o = v.toFixed(11).replace(/(\.[0-9]*[1-9])0*$/,"$1");
-      if(o.length > 11 + (v<0?1:0)) o = v.toPrecision(6);
+      if(o.length > (v<0?12:11)) o = v.toPrecision(6);
     }
     o = o.replace(/(\.[0-9]*[1-9])0+e/,"$1e").replace(/\.0*e/,"e");
     return o.replace("e","E").replace(/\.0*$/,"").replace(/\.([0-9]*[^0])0*$/,".$1").replace(/(E[+-])([0-9])$/,"$1"+"0"+"$2");
@@ -265,7 +272,9 @@ Excel supports the alternative Hijri calendar (indicated with `b2`):
 ```js>tmp/50_date.js
 var parse_date_code = function parse_date_code(v,opts,b2) {
   var date = Math.floor(v), time = Math.floor(86400 * (v - date)+1e-6), dow=0;
-  var dout=[], out={D:date, T:time, u:86400*(v-date)-time}; fixopts(opts = (opts||{}));
+  var dout=[];
+  var out={D:date, T:time, u:86400*(v-date)-time,y:0,m:0,d:0,H:0,M:0,S:0,q:0};
+  fixopts(opts = (opts||{}));
 ```
 
 Excel help actually recommends treating the 1904 date codes as 1900 date codes
@@ -347,7 +356,7 @@ SSF.parse_date_code = parse_date_code;
 TODO: suitable hijri correction
 
 ```js>tmp/45_hijri.js
-function fix_hijri(date, o) { }
+function fix_hijri(date, o) { return 0; }
 ```
 
 ## Evaluating Number Formats
@@ -395,7 +404,7 @@ For the special case of engineering notation, "shift" the decimal:
 ```
     if(fmt.match(/^#+0.0E\+0$/)) {
       var period = fmt.indexOf("."); if(period === -1) period=fmt.indexOf('E');
-      var ee = (Number(val.toExponential(0).substr(2+(val<0))))%period;
+      var ee = (Number(val.toExponential(0).substr(2+(val<0?1:0))))%period;
       if(ee < 0) ee += period;
       o = (val/Math.pow(10,ee)).toPrecision(idx+1+(period+ee)%period);
       if(!o.match(/[Ee]/)) {
@@ -404,7 +413,7 @@ For the special case of engineering notation, "shift" the decimal:
 TODO: something reasonable
 
 ```
-        var fakee = (Number(val.toExponential(0).substr(2+(val<0))));
+        var fakee = (Number(val.toExponential(0).substr(2+(val<0?1:0))));
         if(o.indexOf(".") === -1) o = o[0] + "." + o.substr(1) + "E+" + (fakee - o.length+ee);
         else o += "E+" + (fakee - ee);
         while(o.substr(0,2) === "0.") {
@@ -434,7 +443,7 @@ Fractions with known denominator are resolved by rounding:
   if((r = fmt.match(/# (\?+)([ ]?)\/([ ]?)(\d+)/))) {
     var den = Number(r[4]), rnd = Math.round(aval * den), base = Math.floor(rnd/den);
     var myn = (rnd - base*den), myd = den;
-    return sign + (base?base:"") + " " + (myn === 0 ? fill(" ", r[1].length + 1 + r[4].length) : pad(myn,r[1].length," ") + r[2] + "/" + r[3] + pad(myd,r[4].length));
+    return sign + String(base||"") + " " + (myn === 0 ? fill(" ", r[1].length + 1 + r[4].length) : pad(myn,r[1].length," ") + r[2] + "/" + r[3] + pad(myd,r[4].length));
   }
 ```
 
@@ -470,13 +479,10 @@ The next few simplifications ignore leading optional sigils (`#`):
 The `Zip Code + 4` format needs to treat an interstitial hyphen as a character:
 
 ```
-  if((r = fmt.match(/^([0#]+)\\?-([0#]+)$/))) {
-    ff = write_num(type, fmt.replace(/[\\-]/g,""), val);
-    return ff.substr(0,ff.length - r[2].length) + "-" + ff.substr(ff.length-r[2].length);
-  }
-  if((r = fmt.match(/^([0#]+)\\?-([0#]+)\\?-([0#]+)$/))) {
-    ff = write_num(type, fmt.replace(/[\\-]/g,""), val);
-    return ff.substr(0,ff.length - r[2].length - r[3].length) + "-" + ff.substr(ff.length-r[2].length - r[3].length, r[2].length) + "-" + ff.substr(ff.length-r[3].length);
+  if((r = fmt.match(/^([0#]+)(\\?-([0#]+))+$/))) {
+    ff = _strrev(write_num(type, fmt.replace(/[\\-]/g,""), val));
+    rr = 0;
+    return _strrev(_strrev(fmt.replace(/\\/g,"")).replace(/[0#]/g,function(x){return rr<ff.length?ff[rr++]:x==='0'?'0':'';}));
   }
 ```
 
@@ -518,7 +524,7 @@ Note that this is technically incorrect
     return val < 0 ? "-" + write_num(type, fmt, -val) : commaify(String(Math.floor(val))).replace(/^\d,\d{3}$/,"0$&").replace(/^\d*$/,function($$) { return "00," + ($$.length < 3 ? pad(0,3-$$.length) : "") + $$; }) + "." + pad(rr,r[1].length,0);
   }
   switch(fmt) {
-    case "0": case "#0": return Math.round(val);
+    case "0": case "#0": return ""+Math.round(val);
     case "#,###": var x = commaify(String(Math.round(aval))); return x !== "0" ? sign + x : "";
 ```
 
@@ -535,7 +541,7 @@ For now, the default case is an error:
 
 ```js>tmp/90_main.js
 function eval_fmt(fmt, v, opts, flen) {
-  var out = [], o = "", i = 0, c = "", lst='t', q = {}, dt;
+  var out = [], o = "", i = 0, c = "", lst='t', q, dt;
   fixopts(opts = (opts || {}));
   var hr='H';
   /* Tokenize */
@@ -814,7 +820,6 @@ display minutes instead of the month.
 ```js>tmp/50_date.js
 /*jshint -W086 */
 var write_date = function(type, fmt, val) {
-  if(val < 0) return "";
   var o, ss, y = val.y;
   switch(type) {
 ```
@@ -1140,7 +1145,7 @@ coveralls:
 ```json>package.json
 {
   "name": "ssf",
-  "version": "0.6.4",
+  "version": "0.6.5",
   "author": "SheetJS",
   "description": "pure-JS library to format data using ECMA-376 spreadsheet Format Codes",
   "keywords": [ "format", "sprintf", "spreadsheet" ],
