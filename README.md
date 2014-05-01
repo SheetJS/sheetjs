@@ -5,7 +5,7 @@ ISO 29500  Office Open XML specifications, [MS-XLSB], and related documents.
 
 ## Installation
 
-In node:
+In [node](https://www.npmjs.org/package/xlsx):
 
     npm install xlsx
 
@@ -14,7 +14,7 @@ In the browser:
     <!-- This is the only file you need (includes xlsx.js and jszip) -->
     <script lang="javascript" src="dist/xlsx.core.min.js"></script>
 
-In [bower](http://bower.io/):
+In [bower](http://bower.io/search/?q=js-xlsx):
 
     bower install js-xlsx
 
@@ -29,7 +29,10 @@ Older versions of this README recommended a more explicit approach:
 
 ## Optional Modules
 
-The node version automatically requires modules for additional features.  Some of these modules are rather large in size and are only needed in special circumstances, so they do not ship with the core.  For browser use, they must be included directly:
+The node version automatically requires modules for additional features.  Some
+of these modules are rather large in size and are only needed in special
+circumstances, so they do not ship with the core.  For browser use, they must
+be included directly:
 
     <!-- international support from https://github.com/sheetjs/js-codepage -->
     <script src="dist/cpexcel.js"></script>
@@ -53,18 +56,22 @@ Simple usage (walks through every cell of every sheet and dumps the values):
       }
     });
 
-The node version installs a binary `xlsx2csv` which can read XLSX/XLSM/XLSB files and output the contents in various formats.  The source is available at `xlsx2csv.njs` in the bin directory.
+The node version installs a binary `xlsx2csv` which can read XLSX/XLSM/XLSB
+files and output the contents in various formats.  The source is available at
+`xlsx2csv.njs` in the bin directory.
 
 See <http://oss.sheetjs.com/js-xlsx/> for a browser example.
 
-Note that older versions of IE does not support HTML5 File API, so the base64 mode is provided for testing.  On OSX you can get the base64 encoding by running:
+Note that older versions of IE does not support HTML5 File API, so the base64
+mode is provided for testing.  On OSX you can get the base64 encoding with:
 
-    $ <target_file.xlsx base64 | pbcopy # the pbcopy puts the content in the clipboard
+    $ <target_file.xlsx base64 | pbcopy # pbcopy puts the content in clipboard
 
 Some helper functions in `XLSX.utils` generate different views of the sheets:
 
 - `XLSX.utils.sheet_to_csv` generates CSV
-- `XLSX.utils.sheet_to_row_object_array` interprets sheets as tables with a header column and generates an array of objects
+- `XLSX.utils.sheet_to_row_object_array` interprets sheets as tables with a
+  header column and generates an array of objects
 - `XLSX.utils.get_formulae` generates a list of formulae
 
 For more details:
@@ -84,7 +91,8 @@ that does not start with `!` corresponds to a cell (using `A-1` notation).
 
 - `.v` : the raw value of the cell
 - `.w` : the formatted text of the cell (if applicable)
-- `.t` : the type of the cell (constrained to the enumeration `ST_CellType` as documented in page 4215 of ISO/IEC 29500-1:2012(E) )
+- `.t` : the type of the cell (constrained to the enumeration `ST_CellType` as
+  documented in page 4215 of ISO/IEC 29500-1:2012(E) )
 - `.f` : the formula of the cell (if applicable)
 - `.r` : the rich text encoding of a cell text (if applicable)
 - `.h` : an HTML rendering of the rich text (if applicable)
@@ -127,7 +135,7 @@ The defaults are enumerated in bits/84_defaults.js
 
 ## Tested Environments
 
- - Node 0.8.14, 0.10.1
+ - Node 0.8, 0.10 (latest release)
  - IE 6/7/8/9/10 using Base64 mode (IE10/11 using HTML5 mode)
  - FF 18 using Base64 or HTML5 mode
  - Chrome 24 using Base64 or HTML5 mode
@@ -141,6 +149,8 @@ Tests utilize the mocha testing framework.  Travis-CI and Sauce Labs links:
 ## Test Files
 
 Test files are housed in [another repo](https://github.com/SheetJS/test_files).
+
+Running `make init` will refresh the `test_files` submodule and get the files.
 
 ## Testing
 
@@ -157,7 +167,8 @@ $ open -a Chromium.app http://localhost:8000/stress.html
 
 ## Contributing
 
-Due to the precarious nature of the Open Specifications Promise, it is very important to ensure code is cleanroom.  Consult CONTRIBUTING.md
+Due to the precarious nature of the Open Specifications Promise, it is very
+important to ensure code is cleanroom.  Consult CONTRIBUTING.md
 
 ## XLS Support
 
@@ -165,9 +176,15 @@ XLS is available in [js-xls](https://github.com/SheetJS/js-xls).
 
 ## License
 
-Please consult the attached LICENSE file for details.  All rights not explicitly granted by the Apache 2.0 license are reserved by the Original Author.
+Please consult the attached LICENSE file for details.  All rights not explicitly
+granted by the Apache 2.0 license are reserved by the Original Author.
 
-It is the opinion of the Original Author that this code conforms to the terms of the Microsoft Open Specifications Promise, falling under the same terms as OpenOffice (which is governed by the Apache License v2).  Given the vagaries of the promise, the Original Author makes no legal claim that in fact end users are protected from future actions.  It is highly recommended that, for commercial uses, you consult a lawyer before proceeding.
+It is the opinion of the Original Author that this code conforms to the terms of
+the Microsoft Open Specifications Promise, falling under the same terms as
+OpenOffice (which is governed by the Apache License v2).  Given the vagaries of
+the promise, the Original Author makes no legal claim that in fact end users are
+protected from future actions.  It is highly recommended that, for commercial
+uses, you consult a lawyer before proceeding.
 
 ## References
 
@@ -175,10 +192,10 @@ ISO/IEC 29500:2012(E) "Information technology — Document description and proce
 
 OSP-covered specifications:
 
- - [MS-XLSX]: Excel (.xlsx) Extensions to the Office Open XML SpreadsheetML File Format
  - [MS-XLSB]: Excel (.xlsb) Binary File Format
- - [MS-XLDM]: Spreadsheet Data Model File Format
+ - [MS-XLSX]: Excel (.xlsx) Extensions to the Office Open XML SpreadsheetML File Format
  - [MS-OE376]: Office Implementation Information for ECMA-376 Standards Support
+ - [MS-XLDM]: Spreadsheet Data Model File Format
 
 ## Badges
 
