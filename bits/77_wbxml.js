@@ -1,4 +1,5 @@
 var XMLNS_WB = [
+	'http://purl.oclc.org/ooxml/spreadsheetml/main',
 	'http://schemas.openxmlformats.org/spreadsheetml/2006/main',
 	'http://schemas.microsoft.com/office/excel/2006/main',
 	'http://schemas.microsoft.com/office/excel/2006/2'

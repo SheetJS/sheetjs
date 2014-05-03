@@ -1,4 +1,5 @@
+XLSX.parseZip = parseZip;
 XLSX.read = readSync;
 XLSX.readFile = readFileSync;
-XLSX.parseZip = parseZip;
+XLSX.utils = utils;
 XLSX.SSF = SSF;

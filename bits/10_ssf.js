@@ -5,13 +5,15 @@ var _strrev = function(x) { return String(x).split("").reverse().join("");};
 function fill(c,l) { return new Array(l+1).join(c); }
 function pad(v,d,c){var t=String(v);return t.length>=d?t:(fill(c||0,d-t.length)+t);}
 function rpad(v,d,c){var t=String(v);return t.length>=d?t:(t+fill(c||0,d-t.length));}
-SSF.version = '0.6.4';
+SSF.version = '0.6.5';
 /* Options */
-var opts_fmt = {};
+var opts_fmt = {
+	date1904:0,
+	output:"",
+	WTF:false
+};
 function fixopts(o){for(var y in opts_fmt) if(o[y]===undefined) o[y]=opts_fmt[y];}
 SSF.opts = opts_fmt;
-opts_fmt.date1904 = 0;
-opts_fmt.output = "";
 var table_fmt = {
 	0:  'General',
 	1:  '0',
@@ -89,7 +91,7 @@ var frac = function frac(x, D, mixed) {
 	var q = Math.floor(sgn * P/Q);
 	return [q, sgn*P - q*Q, Q];
 };
-var general_fmt = function(v) {
+var general_fmt = function(v, opts) {
 	if(typeof v === 'boolean') return v ? "TRUE" : "FALSE";
 	if(typeof v === 'number') {
 		var o, V = v < 0 ? -v : v;
@@ -100,12 +102,12 @@ var general_fmt = function(v) {
 		else if(V >= Math.pow(10,10) && V < Math.pow(10,11)) o = v.toFixed(10).substr(0,12);
 		else if(V > Math.pow(10,-9) && V < Math.pow(10,11)) {
 			o = v.toFixed(12).replace(/(\.[0-9]*[1-9])0*$/,"$1").replace(/\.$/,"");
-			if(o.length > 11+(v<0?1:0)) o = v.toPrecision(10);
-			if(o.length > 11+(v<0?1:0)) o = v.toExponential(5);
+			if(o.length > (v<0?12:11)) o = v.toPrecision(10);
+			if(o.length > (v<0?12:11)) o = v.toExponential(5);
 		}
 		else {
 			o = v.toFixed(11).replace(/(\.[0-9]*[1-9])0*$/,"$1");
-			if(o.length > 11 + (v<0?1:0)) o = v.toPrecision(6);
+			if(o.length > (v<0?12:11)) o = v.toPrecision(6);
 		}
 		o = o.replace(/(\.[0-9]*[1-9])0+e/,"$1e").replace(/\.0*e/,"e");
 		return o.replace("e","E").replace(/\.0*$/,"").replace(/\.([0-9]*[^0])0*$/,".$1").replace(/(E[+-])([0-9])$/,"$1"+"0"+"$2");
@@ -114,10 +116,12 @@ var general_fmt = function(v) {
 	throw new Error("unsupported value in General format: " + v);
 };
 SSF._general = general_fmt;
-function fix_hijri(date, o) { }
+function fix_hijri(date, o) { return 0; }
 var parse_date_code = function parse_date_code(v,opts,b2) {
 	var date = Math.floor(v), time = Math.floor(86400 * (v - date)+1e-6), dow=0;
-	var dout=[], out={D:date, T:time, u:86400*(v-date)-time}; fixopts(opts = (opts||{}));
+	var dout=[];
+	var out={D:date, T:time, u:86400*(v-date)-time,y:0,m:0,d:0,H:0,M:0,S:0,q:0};
+	fixopts(opts = (opts||{}));
 	if(opts.date1904) date += 1462;
 	if(date > 2958465) return null;
 	if(out.u > 0.999) {
@@ -146,7 +150,6 @@ var parse_date_code = function parse_date_code(v,opts,b2) {
 SSF.parse_date_code = parse_date_code;
 /*jshint -W086 */
 var write_date = function(type, fmt, val) {
-	if(val < 0) return "";
 	var o, ss, y = val.y;
 	switch(type) {
 		case 'b': y = val.y + 543;
@@ -218,11 +221,11 @@ var write_num = function(type, fmt, val) {
 		var idx = fmt.indexOf("E") - fmt.indexOf(".") - 1;
 		if(fmt.match(/^#+0.0E\+0$/)) {
 			var period = fmt.indexOf("."); if(period === -1) period=fmt.indexOf('E');
-			var ee = (Number(val.toExponential(0).substr(2+(val<0))))%period;
+			var ee = (Number(val.toExponential(0).substr(2+(val<0?1:0))))%period;
 			if(ee < 0) ee += period;
 			o = (val/Math.pow(10,ee)).toPrecision(idx+1+(period+ee)%period);
 			if(!o.match(/[Ee]/)) {
-				var fakee = (Number(val.toExponential(0).substr(2+(val<0))));
+				var fakee = (Number(val.toExponential(0).substr(2+(val<0?1:0))));
 				if(o.indexOf(".") === -1) o = o[0] + "." + o.substr(1) + "E+" + (fakee - o.length+ee);
 				else o += "E+" + (fakee - ee);
 				while(o.substr(0,2) === "0.") {
@@ -242,7 +245,7 @@ var write_num = function(type, fmt, val) {
 	if((r = fmt.match(/# (\?+)([ ]?)\/([ ]?)(\d+)/))) {
 		var den = Number(r[4]), rnd = Math.round(aval * den), base = Math.floor(rnd/den);
 		var myn = (rnd - base*den), myd = den;
-		return sign + (base?base:"") + " " + (myn === 0 ? fill(" ", r[1].length + 1 + r[4].length) : pad(myn,r[1].length," ") + r[2] + "/" + r[3] + pad(myd,r[4].length));
+		return sign + String(base||"") + " " + (myn === 0 ? fill(" ", r[1].length + 1 + r[4].length) : pad(myn,r[1].length," ") + r[2] + "/" + r[3] + pad(myd,r[4].length));
 	}
 	if(fmt.match(/^#+0+$/)) fmt = fmt.replace(/#/g,"");
 	if(fmt.match(/^00+$/)) return (val<0?"-":"")+pad(Math.round(aval),fmt.length);
@@ -263,13 +266,10 @@ var write_num = function(type, fmt, val) {
 		return val < 0 ? "-" + write_num(type, fmt, -val) : commaify(String(Math.floor(val))) + "." + pad(rr,r[1].length,0);
 	}
 	if((r = fmt.match(/^#,#*,#0/))) return write_num(type,fmt.replace(/^#,#*,/,""),val);
-	if((r = fmt.match(/^([0#]+)\\?-([0#]+)$/))) {
-		ff = write_num(type, fmt.replace(/[\\-]/g,""), val);
-		return ff.substr(0,ff.length - r[2].length) + "-" + ff.substr(ff.length-r[2].length);
-	}
-	if((r = fmt.match(/^([0#]+)\\?-([0#]+)\\?-([0#]+)$/))) {
-		ff = write_num(type, fmt.replace(/[\\-]/g,""), val);
-		return ff.substr(0,ff.length - r[2].length - r[3].length) + "-" + ff.substr(ff.length-r[2].length - r[3].length, r[2].length) + "-" + ff.substr(ff.length-r[3].length);
+	if((r = fmt.match(/^([0#]+)(\\?-([0#]+))+$/))) {
+		ff = _strrev(write_num(type, fmt.replace(/[\\-]/g,""), val));
+		rr = 0;
+		return _strrev(_strrev(fmt.replace(/\\/g,"")).replace(/[0#]/g,function(x){return rr<ff.length?ff[rr++]:x==='0'?'0':'';}));
 	}
 	if(fmt.match(/\(###\) ###\\?-####/)) {
 		ff = write_num(type, "##########", val);
@@ -290,7 +290,7 @@ var write_num = function(type, fmt, val) {
 		return val < 0 ? "-" + write_num(type, fmt, -val) : commaify(String(Math.floor(val))).replace(/^\d,\d{3}$/,"0$&").replace(/^\d*$/,function($$) { return "00," + ($$.length < 3 ? pad(0,3-$$.length) : "") + $$; }) + "." + pad(rr,r[1].length,0);
 	}
 	switch(fmt) {
-		case "0": case "#0": return Math.round(val);
+		case "0": case "#0": return ""+Math.round(val);
 		case "#,###": var x = commaify(String(Math.round(aval))); return x !== "0" ? sign + x : "";
 		default:
 	}
@@ -313,7 +313,7 @@ function split_fmt(fmt) {
 }
 SSF._split = split_fmt;
 function eval_fmt(fmt, v, opts, flen) {
-	var out = [], o = "", i = 0, c = "", lst='t', q = {}, dt;
+	var out = [], o = "", i = 0, c = "", lst='t', q, dt;
 	fixopts(opts = (opts || {}));
 	var hr='H';
 	/* Tokenize */

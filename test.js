@@ -16,7 +16,8 @@ var fileA = (fs.existsSync('testA.lst') ? fs.readFileSync('testA.lst', 'utf-8').
 /* Excel enforces 31 character sheet limit, although technical file limit is 255 */
 function fixsheetname(x) { return x.substr(0,31); }
 
-function normalizecsv(x) { return x.replace(/\t/g,",").replace(/#{255}/g,"").replace(/"/g,"").replace(/[\n\r]+/g,"\n").replace(/\n*$/,""); }
+function fixcsv(x) { return x.replace(/\t/g,",").replace(/#{255}/g,"").replace(/"/g,"").replace(/[\n\r]+/g,"\n").replace(/\n*$/,""); }
+function fixjson(x) { return x.replace(/[\r\n]+$/,""); }
 
 var dir = "./test_files/";
 
@@ -57,39 +58,60 @@ function parsetest(x, wb, full) {
 	describe(x + ' should generate CSV', function() {
 		wb.SheetNames.forEach(function(ws, i) {
 			it('#' + i + ' (' + ws + ')', function() {
-				var csv = X.utils.make_csv(wb.Sheets[ws]);
+				X.utils.make_csv(wb.Sheets[ws]);
 			});
 		});
 	});
 	describe(x + ' should generate JSON', function() {
 		wb.SheetNames.forEach(function(ws, i) {
 			it('#' + i + ' (' + ws + ')', function() {
-				var json = X.utils.sheet_to_row_object_array(wb.Sheets[ws]);
+				X.utils.sheet_to_row_object_array(wb.Sheets[ws]);
 			});
 		});
 	});
 	describe(x + ' should generate formulae', function() {
 		wb.SheetNames.forEach(function(ws, i) {
 			it('#' + i + ' (' + ws + ')', function() {
-				var json = X.utils.get_formulae(wb.Sheets[ws]);
+				X.utils.get_formulae(wb.Sheets[ws]);
 			});
 		});
 	});
 	if(!full) return;
-	describe(x + ' should generate correct output', function() {
+	var getfile = function(dir, x, i, type) {
+		var name = (dir + x + '.' + i + type);
+		if(x.substr(-5) === ".xlsb") {
+			root = x.slice(0,-5);
+			if(!fs.existsSync(name)) name=(dir + root + '.xlsx.' + i + type);
+			if(!fs.existsSync(name)) name=(dir + root + '.xlsm.' + i + type);
+			if(!fs.existsSync(name)) name=(dir + root + '.xls.'  + i + type);
+		}
+		return name;
+	};
+	describe(x + ' should generate correct CSV output', function() {
 		wb.SheetNames.forEach(function(ws, i) {
-			var name = (dir + x + '.' + i + '.csv');
-			if(x.substr(-5) === ".xlsb") {
-				root = x.slice(0,-5);
-				if(!fs.existsSync(name)) name=(dir + root + '.xlsx.'+i+'.csv');
-				if(!fs.existsSync(name)) name=(dir + root + '.xlsm.'+i+'.csv');
-				if(!fs.existsSync(name)) name=(dir + root + '.xls.'+i+'.csv');
-			}
+			var name = getfile(dir, x, i, ".csv");
 			it('#' + i + ' (' + ws + ')', fs.existsSync(name) ? function() {
 				var file = fs.readFileSync(name, 'utf-8');
 				var csv = X.utils.make_csv(wb.Sheets[ws]);
-				assert.equal(normalizecsv(csv), normalizecsv(file), "CSV badness");
+				assert.equal(fixcsv(csv), fixcsv(file), "CSV badness");
 			} : null);
+		});
+	});
+	describe(x + ' should generate correct JSON output', function() {
+		wb.SheetNames.forEach(function(ws, i) {
+			var rawjson = getfile(dir, x, i, ".rawjson");
+			if(fs.existsSync(rawjson)) it('#' + i + ' (' + ws + ')', function() {
+				var file = fs.readFileSync(rawjson, 'utf-8');
+				var json = X.utils.make_json(wb.Sheets[ws],{raw:true});
+				assert.equal(JSON.stringify(json), fixjson(file), "JSON badness");
+			});
+
+			var jsonf = getfile(dir, x, i, ".json");
+			if(fs.existsSync(jsonf)) it('#' + i + ' (' + ws + ')', function() {
+				var file = fs.readFileSync(jsonf, 'utf-8');
+				var json = X.utils.make_json(wb.Sheets[ws]);
+				assert.equal(JSON.stringify(json), fixjson(file), "JSON badness");
+			});
 		});
 	});
 	if(!fs.existsSync(dir + '2013/' + x + '.xlsb')) return;
@@ -354,7 +376,7 @@ describe('features', function() {
 			var wb2 = X.readFile(paths.cst2, opts);
 			[wb1, wb2].forEach(function(wb) {
 				assert.equal(wb.Sheets.Sheet7["!fullref"],"A1:N34");
-				assert.equal(wb.Sheets.Sheet7["!ref"],"A1:A1");
+				assert.equal(wb.Sheets.Sheet7["!ref"],"A1");
 			});
 		});
 	});

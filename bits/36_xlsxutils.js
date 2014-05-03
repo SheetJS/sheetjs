@@ -1,3 +1,4 @@
+var _chr = function(c) { return String.fromCharCode(c); };
 var attregexg=/([\w:]+)=((?:")([^"]*)(?:")|(?:')([^']*)(?:'))/g;
 var attregex=/([\w:]+)=((?:")(?:[^"]*)(?:")|(?:')(?:[^']*)(?:'))/;
 function parsexmltag(tag) {

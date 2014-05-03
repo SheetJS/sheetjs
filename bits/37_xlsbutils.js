@@ -47,8 +47,6 @@ function ReadShift(size, t) {
 		/* falls through */
 		case 16: o = this.toString('hex', this.l,this.l+size); break;
 
-		/* sbcs and dbcs support continue records in the SST way TODO codepages */
-		/* TODO: DBCS http://msdn.microsoft.com/en-us/library/cc194788.aspx */
 		case 'dbcs': size = 2*t; loc = this.l;
 			for(i = 0; i != t; ++i) {
 				oo.push(_getchar(__readUInt16LE(this, loc)));
