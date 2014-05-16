@@ -5,7 +5,7 @@ function parse_comments(zip, dirComments, sheets, sheetRels, opts) {
 		var comments=parse_cmnt(getzipdata(zip, canonicalpath.replace(/^\//,''), true), canonicalpath, opts);
 		if(!comments || !comments.length) continue;
 		// find the sheets targeted by these comments
-		var sheetNames = Object.keys(sheets);
+		var sheetNames = keys(sheets);
 		for(var j = 0; j != sheetNames.length; ++j) {
 			var sheetName = sheetNames[j];
 			var rels = sheetRels[sheetName];

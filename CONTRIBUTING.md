@@ -5,7 +5,7 @@ order to maintain that, every contributor must be vigilant.
 
 There have been many projects in the past that have been very lax regarding
 licensing, and we are of the opinion that those are ticking timebombs and that
-no corporate product should depend on them.  
+no corporate product should depend on them.
 
 
 # Required Reading
@@ -23,7 +23,7 @@ Before thinking about contributing, make sure that:
 
 - You are not, nor have ever been, an employee of Microsoft Corporation.
 
-- You have not signed any NDAs or Shared Source Agreements with Microsoft 
+- You have not signed any NDAs or Shared Source Agreements with Microsoft
   Corporation or a subsidiary
 
 - You have not consulted any existing relevant codebase (if you have, please
@@ -42,11 +42,11 @@ Keep these in mind as you work:
   consult in the process (and be extra careful not to use unlicensed code on
   the internet.
 
-- You are working on your own time.  Unless they explicitly grant permission, 
+- You are working on your own time.  Unless they explicitly grant permission,
   your employer may be the ultimate owner of your IP
 
 
-# Post-Contribution 
+# Post-Contribution
 
 Before contributions are merged, you will receive an email (at the address
 associated with the git commit) and will be asked to confirm the aforementioned

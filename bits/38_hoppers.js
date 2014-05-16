@@ -13,3 +13,8 @@ var recordhopper = function(data, cb, opts) {
 		if(cb(d, R, RT)) return;
 	}
 };
+
+/* control buffer usage for fixed-length buffers */
+var blobhopper = function() {
+	var bufs = [];
+};

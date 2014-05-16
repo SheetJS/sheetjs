@@ -20,3 +20,5 @@ var parse_sst_bin = function(data, opts) {
 	});
 	return s;
 };
+
+var write_sst_bin = function(sst, opts) { };

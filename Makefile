@@ -1,7 +1,7 @@
 LIB=xlsx
 DEPS=$(wildcard bits/*.js)
 TARGET=$(LIB).js
-FMT=xlsx xlsm xlsb misc
+FMT=xlsx xlsm xlsb misc full
 REQS=jszip.js
 ADDONS=dist/cpexcel.js
 
@@ -25,6 +25,7 @@ init:
 
 .PHONY: test mocha
 test mocha: test.js
+	mkdir -p tmp
 	mocha -R spec
 
 TESTFMT=$(patsubst %,test_%,$(FMT))
@@ -41,6 +42,11 @@ lint: $(TARGET)
 cov: misc/coverage.html
 cov-spin:
 	make cov & bash misc/spin.sh $$!
+
+COVFMT=$(patsubst %,cov_%,$(FMT))
+.PHONY: $(COVFMT)
+$(COVFMT): cov_%:
+	FMTS=$* make cov
 
 misc/coverage.html: $(TARGET) test.js
 	mocha --require blanket -R html-cov > $@

@@ -5,6 +5,7 @@ node_js:
 before_install:
   - "npm install -g mocha"
   - "npm install blanket"
+  - "npm install xlsjs"
   - "npm install coveralls mocha-lcov-reporter"
 before_script:
   - "make init"

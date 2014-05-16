@@ -3,9 +3,11 @@ var X;
 var fs = require('fs'), assert = require('assert');
 describe('source',function(){it('should load',function(){X=require('./');});});
 
-var opts = {};
+var opts = {cellNF: true};
 if(process.env.WTF) opts.WTF = true;
-var ex = [".xlsb", ".xlsm", ".xlsx"];
+var fullex = [".xlsb", ".xlsm", ".xlsx"];
+var ex = fullex;
+if(process.env.FMTS === "full") process.env.FMTS = ex.join(":");
 if(process.env.FMTS) ex=process.env.FMTS.split(":").map(function(x){return x[0]==="."?x:"."+x;});
 var exp = ex.map(function(x){ return x + ".pending"; });
 function test_file(x){return ex.indexOf(x.substr(-5))>=0||exp.indexOf(x.substr(-13))>=0;}
@@ -43,8 +45,9 @@ var paths = {
 var N1 = 'XLSX';
 var N2 = 'XLSB';
 
-function parsetest(x, wb, full) {
-	describe(x + ' should have all bits', function() {
+function parsetest(x, wb, full, ext) {
+	ext = (ext ? " [" + ext + "]": "");
+	describe(x + ext + ' should have all bits', function() {
 		var sname = dir + '2011/' + x + '.sheetnames';
 		it('should have all sheets', function() {
 			wb.SheetNames.forEach(function(y) { assert(wb.Sheets[y], 'bad sheet ' + y); });
@@ -55,21 +58,21 @@ function parsetest(x, wb, full) {
 			assert.equal(names, file);
 		} : null);
 	});
-	describe(x + ' should generate CSV', function() {
+	describe(x + ext + ' should generate CSV', function() {
 		wb.SheetNames.forEach(function(ws, i) {
 			it('#' + i + ' (' + ws + ')', function() {
 				X.utils.make_csv(wb.Sheets[ws]);
 			});
 		});
 	});
-	describe(x + ' should generate JSON', function() {
+	describe(x + ext + ' should generate JSON', function() {
 		wb.SheetNames.forEach(function(ws, i) {
 			it('#' + i + ' (' + ws + ')', function() {
 				X.utils.sheet_to_row_object_array(wb.Sheets[ws]);
 			});
 		});
 	});
-	describe(x + ' should generate formulae', function() {
+	describe(x + ext + ' should generate formulae', function() {
 		wb.SheetNames.forEach(function(ws, i) {
 			it('#' + i + ' (' + ws + ')', function() {
 				X.utils.get_formulae(wb.Sheets[ws]);
@@ -87,7 +90,7 @@ function parsetest(x, wb, full) {
 		}
 		return name;
 	};
-	describe(x + ' should generate correct CSV output', function() {
+	describe(x + ext + ' should generate correct CSV output', function() {
 		wb.SheetNames.forEach(function(ws, i) {
 			var name = getfile(dir, x, i, ".csv");
 			it('#' + i + ' (' + ws + ')', fs.existsSync(name) ? function() {
@@ -97,7 +100,7 @@ function parsetest(x, wb, full) {
 			} : null);
 		});
 	});
-	describe(x + ' should generate correct JSON output', function() {
+	describe(x + ext + ' should generate correct JSON output', function() {
 		wb.SheetNames.forEach(function(ws, i) {
 			var rawjson = getfile(dir, x, i, ".rawjson");
 			if(fs.existsSync(rawjson)) it('#' + i + ' (' + ws + ')', function() {
@@ -115,7 +118,7 @@ function parsetest(x, wb, full) {
 		});
 	});
 	if(!fs.existsSync(dir + '2013/' + x + '.xlsb')) return;
-	describe(x + '.xlsb from 2013', function() {
+	describe(x + ext + '.xlsb from 2013', function() {
 		it('should parse', function() {
 			var wb = X.readFile(dir + '2013/' + x + '.xlsb', opts);
 		});
@@ -127,6 +130,9 @@ describe('should parse test files', function() {
 		it(x, x.substr(-8) == ".pending" ? null : function() {
 			var wb = X.readFile(dir + x, opts);
 			parsetest(x, wb, true);
+			['.xlsx', '.xlsm'].forEach(function(ext, idx) {
+				parsetest(x, X.read(X.write(wb, {type:"buffer", bookType:ext.replace(/\./,""), bookSST: idx != 1})), true, ext);
+			});
 		});
 	});
 	fileA.forEach(function(x) {
@@ -137,7 +143,7 @@ describe('should parse test files', function() {
 	});
 });
 
-describe('options', function() {
+describe('parse options', function() {
 	var html_cell_types = ['s'];
 	before(function() {
 		X = require('./');
@@ -308,9 +314,76 @@ describe('input formats', function() {
 		X.read(fs.readFileSync(paths.cst1, 'base64'), {type: 'base64'});
 		X.read(fs.readFileSync(paths.cst2, 'base64'), {type: 'base64'});
 	});
+	it('should read buffers', function() {
+		X.read(fs.readFileSync(paths.cst1), {type: 'buffer'});
+		X.read(fs.readFileSync(paths.cst2), {type: 'buffer'});
+	});
+	it('should throw if format is unknown', function() {
+		assert.throws(function() { X.read(fs.readFileSync(paths.cst1), {type: 'dafuq'}); });
+		assert.throws(function() { X.read(fs.readFileSync(paths.cst2), {type: 'dafuq'}); });
+	});
+	it('should infer buffer type', function() {
+		X.read(fs.readFileSync(paths.cst1));
+		X.read(fs.readFileSync(paths.cst2));
+	});
+	it('should default to base64 type', function() {
+		assert.throws(function() { X.read(fs.readFileSync(paths.cst1, 'binary')); });
+		assert.throws(function() { X.read(fs.readFileSync(paths.cst2, 'binary')); });
+		X.read(fs.readFileSync(paths.cst1, 'base64'));
+		X.read(fs.readFileSync(paths.cst2, 'base64'));
+	});
 });
 
-describe('features', function() {
+describe('output formats', function() {
+	var wb1, wb2;
+	before(function() {
+		X = require('./');
+		wb1 = X.readFile(paths.cp1);
+		wb2 = X.readFile(paths.cp2);
+	});
+	it('should write binary strings', function() {
+		X.write(wb1, {type: 'binary'});
+		X.write(wb2, {type: 'binary'});
+		X.read(X.write(wb1, {type: 'binary'}), {type: 'binary'});
+		X.read(X.write(wb2, {type: 'binary'}), {type: 'binary'});
+	});
+	it('should write base64 strings', function() {
+		X.write(wb1, {type: 'base64'});
+		X.write(wb2, {type: 'base64'});
+		X.read(X.write(wb1, {type: 'base64'}), {type: 'base64'});
+		X.read(X.write(wb2, {type: 'base64'}), {type: 'base64'});
+	});
+	it('should write buffers', function() {
+		X.write(wb1, {type: 'buffer'});
+		X.write(wb2, {type: 'buffer'});
+		X.read(X.write(wb1, {type: 'buffer'}), {type: 'buffer'});
+		X.read(X.write(wb2, {type: 'buffer'}), {type: 'buffer'});
+	});
+	it('should throw if format is unknown', function() {
+		assert.throws(function() { X.write(wb1, {type: 'dafuq'}); });
+		assert.throws(function() { X.write(wb2, {type: 'dafuq'}); });
+	});
+});
+
+function coreprop(wb) {
+	assert.equal(wb.Props.Title, 'Example with properties');
+	assert.equal(wb.Props.Subject, 'Test it before you code it');
+	assert.equal(wb.Props.Author, 'Pony Foo');
+	assert.equal(wb.Props.Manager, 'Despicable Drew');
+	assert.equal(wb.Props.Company, 'Vector Inc');
+	assert.equal(wb.Props.Category, 'Quirky');
+	assert.equal(wb.Props.Keywords, 'example humor');
+	assert.equal(wb.Props.Comments, 'some comments');
+	assert.equal(wb.Props.LastAuthor, 'Hugues');
+}
+function custprop(wb) {
+	assert.equal(wb.Custprops['I am a boolean'], true);
+	assert.equal(wb.Custprops['Date completed'].toISOString(), '1967-03-09T16:30:00.000Z');
+	assert.equal(wb.Custprops.Status, 2);
+	assert.equal(wb.Custprops.Counter, -3.14);
+}
+
+describe('parse features', function() {
 	it('should have comment as part of cell properties', function(){
 		var X = require('./');
 		var sheet = 'Sheet1';
@@ -334,17 +407,6 @@ describe('features', function() {
 			wb1 = X.readFile(paths.cp1);
 			wb2 = X.readFile(paths.cp2);
 		});
-
-		function coreprop(wb) {
-			assert.equal(wb.Props.Company, 'Vector Inc');
-			assert.equal(wb.Props.Creator, 'Pony Foo');
-		}
-		function custprop(wb) {
-			assert.equal(wb.Custprops['I am a boolean'], true);
-			assert.equal(wb.Custprops['Date completed'], '1967-03-09T16:30:00Z');
-			assert.equal(wb.Custprops.Status, 2);
-			assert.equal(wb.Custprops.Counter, -3.14);
-		}
 
 		it(N1 + ' should parse core properties', function() { coreprop(wb1); });
 		it(N2 + ' should parse core properties', function() { coreprop(wb2); });
@@ -434,17 +496,75 @@ describe('features', function() {
 	});
 });
 
+describe('roundtrip features', function() {
+	before(function() {
+		X = require('./');
+	});
+	describe('should parse core properties and custom properties', function() {
+		var wb1, wb2, base = './tmp/cp';
+		before(function() {
+			wb1 = X.readFile(paths.cp1);
+			wb2 = X.readFile(paths.cp2);
+			fullex.forEach(function(p) {
+				X.writeFile(wb1, base + '.xlsm' + p);
+				X.writeFile(wb2, base + '.xlsb' + p);
+			});
+		});
+		fullex.forEach(function(p) { ['.xlsm','.xlsb'].forEach(function(q) {
+			it(q + p + ' should roundtrip core and custom properties', function() {
+				var wb = X.readFile(base + q + p);
+				coreprop(wb);
+				custprop(wb);
+			}); });
+		});
+	});
+	/* the XLSJS require should not cause the test suite to fail */
+	var XLSJS;
+	try {
+		XLSJS = require('xlsjs');
+		var xls = XLSJS.readFile('./test_files/formula_stress_test.xls');
+		var xml = XLSJS.readFile('./test_files/formula_stress_test.xls.xml');
+	} catch(e) { return; }
+	describe('xlsjs conversions', function() { [
+			['XLS', 'formula_stress_test.xls'],
+			['XML', 'formula_stress_test.xls.xml']
+		].forEach(function(w) {
+			it('should be able to write ' + w[0] + ' files from xlsjs', function() {
+				var xls = XLSJS.readFile('./test_files/' + w[1]);
+				X.writeFile(xls, './tmp/' + w[1] + '.xlsx');
+				X.writeFile(xls, './tmp/' + w[1] + '.xlsb');
+			});
+		});
+	});
+});
+
 describe('invalid files', function() {
-	it('should fail on passwords', function() {
-		assert.throws(function() { X.readFile(dir + 'excel-reader-xlsx_error03.xlsx'); });
+	describe('parse', function() { [
+			['passwords', 'excel-reader-xlsx_error03.xlsx'],
+			['XLS files', 'roo_type_excel.xlsx'],
+			['ODS files', 'roo_type_openoffice.xlsx'],
+			['DOC files', 'word_doc.doc']
+		].forEach(function(w) { it('should fail on ' + w[0], function() { assert.throws(function() { X.readFile(dir + w[1]); }); }); });
 	});
-	it('should fail on XLS files', function() {
-		assert.throws(function() { X.readFile(dir + 'roo_type_excel.xlsx'); });
-	});
-	it('should fail on ODS files', function() {
-		assert.throws(function() { X.readFile(dir + 'roo_type_openoffice.xlsx');});
-	});
-	it('should fail on DOC files', function() {
-		assert.throws(function() { X.readFile(dir + 'word_doc.doc');});
+	describe('write', function() {
+		it('should pass', function() { X.write(X.readFile(paths.fst1), {type:'binary'}); });
+		it('should pass if a sheet is missing', function() {
+			var wb = X.readFile(paths.fst1); delete wb.Sheets[wb.SheetNames[0]];
+			X.read(X.write(wb, {type:'binary'}), {type:'binary'});
+		});
+		it('should fail if SheetNames is missing', function() {
+			var wb = X.readFile(paths.fst1);
+			assert.throws(function() {
+				delete wb.SheetNames;
+				X.write(wb, {type:'binary'});
+			});
+		});
+		it('should fail if Sheets is missing', function() {
+			var wb = X.readFile(paths.fst1);
+			assert.throws(function() {
+				delete wb.Sheets;
+				X.write(wb, {type:'binary'});
+			});
+		});
 	});
 });

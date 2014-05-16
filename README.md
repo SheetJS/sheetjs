@@ -1,6 +1,6 @@
 # xlsx
 
-Currently a parser for XLSX/XLSM/XLSB files.  Cleanroom implementation from the
+Parser and writer for XLSX/XLSM/XLSB files.  Cleanroom implementation from the
 ISO 29500  Office Open XML specifications, [MS-XLSB], and related documents.
 
 ## Installation
@@ -45,7 +45,7 @@ The complete single-file version is generated at `dist/xlsx.full.min.js`
 
 Simple usage (walks through every cell of every sheet and dumps the values):
 
-    var XLSX = require('xlsx');
+    if(typeof require !== 'undefined') XLSX = require('xlsx');
     var workbook = XLSX.readFile('test.xlsx');
     var sheet_name_list = workbook.SheetNames;
     sheet_name_list.forEach(function(y) {
@@ -56,9 +56,9 @@ Simple usage (walks through every cell of every sheet and dumps the values):
       }
     });
 
-The node version installs a binary `xlsx2csv` which can read XLSX/XLSM/XLSB
+The node version installs a binary `xlsx` which can read XLSX/XLSM/XLSB
 files and output the contents in various formats.  The source is available at
-`xlsx2csv.njs` in the bin directory.
+`xlsx.njs` in the bin directory.
 
 See <http://oss.sheetjs.com/js-xlsx/> for a browser example.
 
@@ -76,11 +76,26 @@ Some helper functions in `XLSX.utils` generate different views of the sheets:
 
 For more details:
 
-- `bin/xlsx2csv.njs` is a tool for node
+- `bin/xlsx.njs` is a tool for node
 - `index.html` is the live demo
 - `bits/90_utils.js` contains the logic for generating CSV and JSON from sheets
 
+## Interface
+
+`XLSX` is the exposed variable in the browser and the exported variable in node
+
+
+`XLSX.read(data, read_opts)` attempts to parse `data`.
+
+`XLSX.readFile(filename, read_opts)` attempts to read `filename` and parse.
+
+`XLSX.write(wb, write_opts)` attempts to write the workbook `wb`
+
+`XLSX.writeFile(wb, filename, write_opts)` attempts to write `wb` to `filename`
+
 ## Cell Object Description
+
+js-xlsx conforms to the Common Spreadsheet Format (CSF):
 
 `.SheetNames` is an ordered list of the sheets in the workbook
 
@@ -102,7 +117,7 @@ that does not start with `!` corresponds to a cell (using `A-1` notation).
 
 For dates, `.v` holds the raw date code from the sheet and `.w` holds the text
 
-## Options
+## Parsing Options
 
 The exported `read` and `readFile` functions accept an options argument:
 
@@ -132,6 +147,21 @@ The exported `read` and `readFile` functions accept an options argument:
 - `bookVBA` merely exposes the raw vba object.  It does not parse the data.
 
 The defaults are enumerated in bits/84_defaults.js
+
+## Writing Options
+
+The exported `write` and `writeFile` functions accept an options argument:
+
+| Option Name | Default | Description |
+| :---------- | ------: | :---------- |
+| bookSST     | false   | Generate Shared String Table ** |
+| bookType    | 'xlsx'  | Type of Workbook ("xlsx" or "xlsm" or "xlsb") |
+
+- `bookSST` is slower and more memory intensive, but has better compatibility
+  with iOS Numbers
+- `bookType = 'xlsb'` is stubbed and far from complete 
+- The raw data is the only thing guaranteed to be saved.  Formulae, formatting,
+  and other niceties are not serialized (pending CSF standardization)
 
 ## Tested Environments
 
@@ -164,6 +194,8 @@ $ cd ../SheetJS.github.io
 $ simplehttpserver # or "python -mSimpleHTTPServer" or "serve"
 $ open -a Chromium.app http://localhost:8000/stress.html
 ```
+
+For a much smaller test, run `make test_misc`.
 
 ## Contributing
 

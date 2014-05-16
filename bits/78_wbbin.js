@@ -69,3 +69,7 @@ var parse_wb_bin = function(data, opts) {
 
 	return wb;
 };
+
+var write_wb_bin = function(wb, opts) {
+
+};

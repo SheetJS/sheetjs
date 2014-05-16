@@ -1,10 +1,3 @@
-var XMLNS_WB = [
-	'http://purl.oclc.org/ooxml/spreadsheetml/main',
-	'http://schemas.openxmlformats.org/spreadsheetml/2006/main',
-	'http://schemas.microsoft.com/office/excel/2006/main',
-	'http://schemas.microsoft.com/office/excel/2006/2'
-];
-
 /* 18.2 Workbook */
 function parse_wb_xml(data) {
 	var wb = { AppVersion:{}, WBProps:{}, WBView:[], Sheets:[], CalcPr:{}, xmlns: "" };
@@ -110,7 +103,7 @@ function parse_wb_xml(data) {
 			case '</mc:AlternateContent>': pass=false; break;
 		}
 	});
-	if(XMLNS_WB.indexOf(wb.xmlns) === -1) throw new Error("Unknown Namespace: " + wb.xmlns);
+	if(XMLNS.main.indexOf(wb.xmlns) === -1) throw new Error("Unknown Namespace: " + wb.xmlns);
 
 	var z;
 	/* defaults */
@@ -125,3 +118,28 @@ function parse_wb_xml(data) {
 	return wb;
 }
 
+var WB_XML_ROOT = writextag('workbook', null, {
+	'xmlns': XMLNS.main[0],
+	//'xmlns:mx': XMLNS.mx,
+	//'xmlns:s': XMLNS.main[0],
+	'xmlns:r': XMLNS.r
+});
+
+var write_wb_xml = function(wb, opts) {
+	var o = [];
+	o.push(XML_HEADER);
+	o.push(WB_XML_ROOT);
+	/* TODO: put this somewhere else */
+	var date1904 = "false";
+	try { date1904 = parsexmlbool(wb.Workbook.WBProps.date1904) ? "true" : "false"; } catch(e) { date1904 = "false"; }
+	o.push(writextag('workbookPr', null, {date1904:date1904}));
+	o.push("<sheets>");
+	var i = 1;
+	wb.SheetNames.forEach(function(s) {
+		o.push(writextag('sheet',null,{name:s, sheetId:String(i), "r:id":"rId"+i}));
+		++i;
+	});
+	o.push("</sheets>");
+	if(o.length>2){ o.push('</workbook>'); o[1]=o[1].replace("/>",">"); }
+	return o.join("");
+};

@@ -1,10 +1,10 @@
-function parseZip(zip, opts) {
+function parse_zip(zip, opts) {
+	make_ssf(SSF);
 	opts = opts || {};
-	fixopts(opts);
+	fix_read_opts(opts);
 	reset_cp();
-	var entries = Object.keys(zip.files);
-	var keys = entries.filter(function(x){return x.substr(-1) != '/';}).sort();
-	var dir = parseCT(getzipdata(zip, '[Content_Types].xml'), opts);
+	var entries = keys(zip.files).filter(function(x){return x.substr(-1) != '/';}).sort();
+	var dir = parse_ct(getzipdata(zip, '[Content_Types].xml'), opts);
 	var xlsb = false;
 	var sheets, binname;
 	if(dir.workbooks.length === 0) {
@@ -19,7 +19,7 @@ function parseZip(zip, opts) {
 	}
 
 	if(!opts.bookSheets && !opts.bookProps) {
-		strs = {};
+		strs = [];
 		if(dir.sst) strs=parse_sst(getzipdata(zip, dir.sst.replace(/^\//,'')), dir.sst, opts);
 
 		styles = {};
@@ -29,17 +29,21 @@ function parseZip(zip, opts) {
 	var wb = parse_wb(getzipdata(zip, dir.workbooks[0].replace(/^\//,'')), dir.workbooks[0], opts);
 
 	var props = {}, propdata = "";
-	try {
-		propdata = dir.coreprops.length !== 0 ? getzipdata(zip, dir.coreprops[0].replace(/^\//,'')) : "";
-		propdata += dir.extprops.length !== 0 ? getzipdata(zip, dir.extprops[0].replace(/^\//,'')) : "";
-		props = propdata !== "" ? parseProps(propdata) : {};
-	} catch(e) { }
+
+	if(dir.coreprops.length !== 0) {
+		propdata = getzipdata(zip, dir.coreprops[0].replace(/^\//,''), true);
+		if(propdata) props = parse_core_props(propdata);
+		if(dir.extprops.length !== 0) {
+			propdata = getzipdata(zip, dir.extprops[0].replace(/^\//,''), true);
+			if(propdata) parse_ext_props(propdata, props);
+		}
+	}
 
 	var custprops = {};
 	if(!opts.bookSheets || opts.bookProps) {
 		if (dir.custprops.length !== 0) {
 			propdata = getzipdata(zip, dir.custprops[0].replace(/^\//,''), true);
-			if(propdata) custprops = parseCustomProps(propdata);
+			if(propdata) custprops = parse_cust_props(propdata, opts);
 		}
 	}
 
@@ -60,7 +64,6 @@ function parseZip(zip, opts) {
 	var sheetRels = {};
 	var path, relsPath;
 	if(!props.Worksheets) {
-		/* Google Docs doesn't generate the appropriate metadata, so we impute: */
 		var wbsheets = wb.Sheets;
 		props.Worksheets = wbsheets.length;
 		props.SheetNames = [];
@@ -76,7 +79,7 @@ function parseZip(zip, opts) {
 			path = 'xl/worksheets/sheet'+(i+1-nmode)+(xlsb?'.bin':'.xml');
 			path = path.replace(/sheet0\./,"sheet.");
 			relsPath = path.replace(/^(.*)(\/)([^\/]*)$/, "$1/_rels/$3.rels");
-			sheetRels[props.SheetNames[i]]=parseRels(getzipdata(zip, relsPath, true), path);
+			sheetRels[props.SheetNames[i]]=parse_rels(getzipdata(zip, relsPath, true), path);
 			sheets[props.SheetNames[i]]=parse_ws(getzipdata(zip, path),path,opts,sheetRels[props.SheetNames[i]]);
 		} catch(e) { if(opts.WTF) throw e; }
 	}
@@ -93,9 +96,10 @@ function parseZip(zip, opts) {
 		SheetNames: props.SheetNames,
 		Strings: strs,
 		Styles: styles,
+		SSF: SSF.get_table()
 	};
 	if(opts.bookFiles) {
-		out.keys = keys;
+		out.keys = entries;
 		out.files = zip.files;
 	}
 	if(opts.bookVBA) {

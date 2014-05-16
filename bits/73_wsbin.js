@@ -317,7 +317,7 @@ var parse_ws_bin = function(data, opts, rels) {
 			default: if(!pass || opts.WTF) throw new Error("Unexpected record " + R.n);
 		}
 	}, opts);
-	if(!s["!ref"] && ref) s["!ref"] = encode_range(ref);
+	if(!s["!ref"] && (refguess.s.r < 1000000 || ref.e.r > 0 || ref.e.c > 0 || ref.s.r > 0 || ref.s.c > 0)) s["!ref"] = encode_range(ref);
 	if(opts.sheetRows && s["!ref"]) {
 		var tmpref = decode_range(s["!ref"]);
 		if(opts.sheetRows < +tmpref.e.r) {
@@ -334,3 +334,4 @@ var parse_ws_bin = function(data, opts, rels) {
 	return s;
 };
 
+var write_ws_bin = function(wb, opts, rels) {};

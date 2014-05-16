@@ -7,7 +7,6 @@ comments_stress_test.xlsb
 custom_properties.xlsb
 formula_stress_test.xlsb
 hyperlink_stress_test_2011.xlsb
-large_strings.xlsb
 merge_cells.xlsb
 named_ranges_2011.xlsb
 number_format.xlsb
@@ -15,7 +14,6 @@ pivot_table_named_range.xlsb
 pivot_table_test.xlsb
 rich_text_stress.xlsb
 text_and_numbers.xlsb
-time_stress_test_1.xlsb
 xlsx-stream-d-date-cell.xlsb
 2013/apachepoi_29982.xls.xlsb
 2013/apachepoi_43251.xls.xlsb

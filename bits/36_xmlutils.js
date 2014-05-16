@@ -1,4 +1,5 @@
 var _chr = function(c) { return String.fromCharCode(c); };
+var _ord = function(c) { return c.charCodeAt(0); };
 var attregexg=/([\w:]+)=((?:")([^"]*)(?:")|(?:')([^']*)(?:'))/g;
 var attregex=/([\w:]+)=((?:")(?:[^"]*)(?:")|(?:')(?:[^']*)(?:'))/;
 function parsexmltag(tag) {
@@ -11,12 +12,6 @@ function parsexmltag(tag) {
 		z[y[1].replace(/^[a-zA-Z]*:/,"")] = y[2].substr(1,y[2].length-2);
 	});
 	return z;
-}
-
-function evert(obj) {
-	var o = {};
-	Object.keys(obj).forEach(function(k) { if(obj.hasOwnProperty(k)) o[obj[k]] = k; });
-	return o;
 }
 
 var encodings = {
@@ -38,6 +33,7 @@ function unescapexml(text){
 function escapexml(text){
 	var s = text + '';
 	rencstr.forEach(function(y){s=s.replace(new RegExp(y,'g'), rencoding[y]);});
+	s = s.replace(/[\u0000-\u0007]/g,function(s) { return "_x" + ("0000"+_ord(s).toString(16)).substr(-4) + "_";}); /* TODO: verify range */
 	return s;
 }
 
@@ -83,4 +79,37 @@ function parseVector(data) {
 	return res;
 }
 
-function isval(x) { return typeof x !== "undefined" && x !== null; }
+function writetag(f,g) {return '<' + f + (g.match(/(^\s|\s$|\n)/)?' xml:space="preserve"' : "") + '>' + g + '</' + f + '>';}
+
+/*jshint -W041 */
+function writextag(f,g,h) { return '<' + f + (h != null ? keys(h).map(function(k) { return " " + k + '="' + h[k] + '"';}).join("") : "") + (g == null ? "/" : (g.match(/(^\s|\s$|\n)/)?' xml:space="preserve"' : "") + '>' + g + '</' + f) + '>';}
+
+function write_w3cdtf(d, t) { try { return d.toISOString().replace(/\.\d*/,""); } catch(e) { if(t) throw e; } }
+
+function write_vt(s) {
+	if(typeof s == 'string') return writextag('vt:lpwstr', s);
+	if(typeof s == 'number') return writextag((s|0)==s?'vt:i4':'vt:r8', String(s));
+	if(typeof s == 'boolean') return writextag('vt:bool', s?'true':'false');
+	if(s instanceof Date) return writextag('vt:filetime', write_w3cdtf(s));
+	throw new Error("Unable to serialize " + s);
+}
+
+var XML_HEADER = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\r\n';
+var XMLNS = {
+	'dc': 'http://purl.org/dc/elements/1.1/',
+	'dcterms': 'http://purl.org/dc/terms/',
+	'dcmitype': 'http://purl.org/dc/dcmitype/',
+	'mx': 'http://schemas.microsoft.com/office/mac/excel/2008/main',
+	'r': 'http://schemas.openxmlformats.org/officeDocument/2006/relationships',
+	'sjs': 'http://schemas.openxmlformats.org/package/2006/sheetjs/core-properties',
+	'vt': 'http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes',
+	'xsi': 'http://www.w3.org/2001/XMLSchema-instance',
+	'xsd': 'http://www.w3.org/2001/XMLSchema'
+};
+
+XMLNS.main = [
+	'http://schemas.openxmlformats.org/spreadsheetml/2006/main',
+	'http://purl.oclc.org/ooxml/spreadsheetml/main',
+	'http://schemas.microsoft.com/office/excel/2006/main',
+	'http://schemas.microsoft.com/office/excel/2006/2'
+];

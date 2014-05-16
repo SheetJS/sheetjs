@@ -12,7 +12,7 @@ function parse_ws_xml(data, opts, rels) {
 	var mergecells = [];
 	if(data.match(/<\/mergeCells>/)) {
 		var merges = data.match(/<mergeCell ref="([A-Z0-9:]+)"\s*\/>/g);
-		mergecells = merges.map(function(range) { 
+		mergecells = merges.map(function(range) {
 			return decode_range(/<mergeCell ref="([A-Z0-9:]+)"\s*\/>/.exec(range)[1]);
 		});
 	}
@@ -123,3 +123,55 @@ function parse_ws_xml(data, opts, rels) {
 	return s;
 }
 
+var WS_XML_ROOT = writextag('worksheet', null, {
+	'xmlns': XMLNS.main[0],
+	'xmlns:r': XMLNS.r
+});
+
+var write_ws_xml_cell = function(cell, ref, ws, opts, idx, wb) {
+	var v = writextag('v', escapexml(String(cell.v))), o = {r:ref};
+	if(cell.z) o.s = get_cell_style(opts.cellXfs, cell, opts); 
+	/* TODO: cell style */
+	if(typeof cell.v === 'undefined') return "";
+	switch(cell.t) {
+		case 's': case 'str': {
+			if(opts.bookSST) {
+				v = writextag('v', String(get_sst_id(opts.Strings, cell.v)));
+				o.t = "s"; return writextag('c', v, o);
+			} else { o.t = "str"; return writextag('c', v, o); }
+		} break;
+		case 'n': o.t = "n"; return writextag('c', v, o);
+		case 'b': o.t = "b"; return writextag('c', v, o);
+		case 'e': o.t = "e"; return writextag('c', v, o); 
+	}
+};
+
+var write_ws_xml_data = function(ws, opts, idx, wb) {
+	var o = [], r = [], range = utils.decode_range(ws['!ref']), cell, ref;
+	for(var R = range.s.r; R <= range.e.r; ++R) {
+		r = [];
+		for(var C = range.s.c; C <= range.e.c; ++C) {
+			ref = utils.encode_cell({c:C, r:R});
+			if(!ws[ref]) continue;
+			if((cell = write_ws_xml_cell(ws[ref], ref, ws, opts, idx, wb))) r.push(cell);
+		}
+		if(r.length) o.push(writextag('row', r.join(""), {r:encode_row(R)}));
+	}
+	return o.join("");
+};
+
+var write_ws_xml = function(idx, opts, wb) {
+	var o = [], s = wb.SheetNames[idx], ws = wb.Sheets[s] || {}, sidx = 0, rdata = "";
+	o.push(XML_HEADER);
+	o.push(WS_XML_ROOT);
+	o.push(writextag('dimension', null, {'ref': ws['!ref'] || 'A1'}));
+
+	sidx = o.length;
+	o.push(writextag('sheetData', null));
+	if(ws['!ref']) rdata = write_ws_xml_data(ws, opts, idx, wb);
+	if(rdata.length) o.push(rdata);
+	if(o.length>sidx+1){ o.push('</sheetData>'); o[sidx]=o[sidx].replace("/>",">"); }
+
+	if(o.length>2){ o.push('</worksheet>'); o[1]=o[1].replace("/>",">"); }
+	return o.join("");
+};

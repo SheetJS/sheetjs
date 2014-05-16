@@ -19,7 +19,7 @@ var CS2CP = {
 	222:   874, /* THAI */
 	238:  1250, /* EASTEUROPE */
 	255:  1252, /* OEM */
-    69:   6969  /* MISC */
+	69:   6969  /* MISC */
 };
 
 /* Parse a list of <r> tags */
@@ -169,3 +169,18 @@ var parse_sst_xml = function(data, opts) {
 	return s;
 };
 
+RELS.SST = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings";
+
+var write_sst_xml = function(sst, opts) {
+	if(!opts.bookSST) return "";
+	var o = [];
+	o.push(XML_HEADER);
+	o.push(writextag('sst', null, {
+		xmlns: XMLNS.main[0],
+		count: sst.Count,
+		uniqueCount: sst.Unique
+	}));
+	sst.forEach(function(s) { o.push("<si>" + (s.r ? s.r : "<t>" + escapexml(s.t) + "</t>") + "</si>"); });	
+	if(o.length>2){ o.push('</sst>'); o[1]=o[1].replace("/>",">"); }
+	return o.join("");
+};
