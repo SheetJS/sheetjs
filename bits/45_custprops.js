@@ -58,7 +58,7 @@ function write_cust_props(cp, opts) {
 	o.push(CUST_PROPS_XML_ROOT);
 	if(!cp) return o.join("");
 	var pid = 1;
-	keys(cp).forEach(function(k) { ++pid; 
+	keys(cp).forEach(function(k) { ++pid;
 		o.push(writextag('property', write_vt(cp[k]), {
 			'fmtid': '{D5CDD505-2E9C-101B-9397-08002B2CF9AE}',
 			'pid': pid,

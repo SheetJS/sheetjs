@@ -1,15 +1,15 @@
 {
 	"name": "xlsx",
-	"version": "0.7.0",
+	"version": "0.7.1",
 	"author": "sheetjs",
-	"description": "XLSB / XLSX / XLSM (Excel 2007+ Spreadsheet) parser",
+	"description": "XLSB/XLSX/XLSM (Excel 2007+ Spreadsheet) parser and writer",
 	"keywords": [ "xlsx", "xlsb", "xlsm", "office", "excel", "spreadsheet" ],
 	"bin": {
 		"xlsx": "./bin/xlsx.njs"
 	},
 	"main": "./xlsx",
 	"dependencies": {
-		"ssf":"~0.6.4",
+		"ssf":"~0.6.5",
 		"codepage":"1.x",
 		"cfb":"",
 		"jszip":"2.2.0",
@@ -17,6 +17,7 @@
 	},
 	"devDependencies": {
 		"mocha":"",
+		"xlsjs":"",
 		"uglify-js":"",
 		"jasmine-node": "x"
 	},

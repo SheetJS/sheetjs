@@ -2,7 +2,7 @@ function add_rels(rels, rId, f, type, relobj) {
 	if(!relobj) relobj = {};
 	if(!rels['!id']) rels['!id'] = {};
 	relobj.Id = 'rId' + rId;
-	relobj.Type = type; 
+	relobj.Type = type;
 	relobj.Target = f;
 	if(rels['!id'][relobj.Id]) throw new Error("Cannot rewrite rId " + rId);
 	rels['!id'][relobj.Id] = relobj;
@@ -65,7 +65,7 @@ function write_zip(wb, opts) {
 	}
 
 	/* TODO: something more intelligent with themes */
-	
+
 /*	f = "xl/theme/theme1.xml"
 	zip.file(f, write_theme());
 	ct.themes.push(f);

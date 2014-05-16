@@ -159,7 +159,7 @@ The exported `write` and `writeFile` functions accept an options argument:
 
 - `bookSST` is slower and more memory intensive, but has better compatibility
   with iOS Numbers
-- `bookType = 'xlsb'` is stubbed and far from complete 
+- `bookType = 'xlsb'` is stubbed and far from complete
 - The raw data is the only thing guaranteed to be saved.  Formulae, formatting,
   and other niceties are not serialized (pending CSF standardization)
 

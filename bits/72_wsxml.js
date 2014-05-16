@@ -130,7 +130,7 @@ var WS_XML_ROOT = writextag('worksheet', null, {
 
 var write_ws_xml_cell = function(cell, ref, ws, opts, idx, wb) {
 	var v = writextag('v', escapexml(String(cell.v))), o = {r:ref};
-	if(cell.z) o.s = get_cell_style(opts.cellXfs, cell, opts); 
+	if(cell.z) o.s = get_cell_style(opts.cellXfs, cell, opts);
 	/* TODO: cell style */
 	if(typeof cell.v === 'undefined') return "";
 	switch(cell.t) {
@@ -142,7 +142,7 @@ var write_ws_xml_cell = function(cell, ref, ws, opts, idx, wb) {
 		} break;
 		case 'n': o.t = "n"; return writextag('c', v, o);
 		case 'b': o.t = "b"; return writextag('c', v, o);
-		case 'e': o.t = "e"; return writextag('c', v, o); 
+		case 'e': o.t = "e"; return writextag('c', v, o);
 	}
 };
 

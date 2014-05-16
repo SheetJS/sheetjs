@@ -127,6 +127,7 @@ function parsetest(x, wb, full, ext) {
 
 describe('should parse test files', function() {
 	files.forEach(function(x) {
+		if(!fs.existsSync(dir + x)) return;
 		it(x, x.substr(-8) == ".pending" ? null : function() {
 			var wb = X.readFile(dir + x, opts);
 			parsetest(x, wb, true);
@@ -136,6 +137,7 @@ describe('should parse test files', function() {
 		});
 	});
 	fileA.forEach(function(x) {
+		if(!fs.existsSync(dir + x)) return;
 		it(x, x.substr(-8) == ".pending" ? null : function() {
 			var wb = X.readFile(dir + x, {WTF:opts.wtf, sheetRows:10});
 			parsetest(x, wb, false);

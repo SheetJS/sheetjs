@@ -19,8 +19,7 @@ function write_numFmts(NF, opts) {
 	var o = [];
 	o.push("<numFmts>");
 	[[5,8],[23,26],[41,44],[63,66],[164,392]].forEach(function(r) {
-		for(var i = r[0]; i <= r[1]; ++i) if(NF[i]) 
-		o.push(writextag('numFmt',null,{numFmtId:i,formatCode:escapexml(NF[i])}));
+		for(var i = r[0]; i <= r[1]; ++i) if(NF[i]) o.push(writextag('numFmt',null,{numFmtId:i,formatCode:escapexml(NF[i])}));
 	});
 	o.push("</numFmts>");
 	if(o.length === 2) return "";

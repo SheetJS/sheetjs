@@ -223,7 +223,7 @@ function write_ct(ct, opts) {
 			v = ct[w][0];
 			o.push(writextag('Override', null, {
 				'PartName': (v[0] == '/' ? "":"/") + v,
-				'ContentType': CT_LIST[w][opts.bookType || 'xlsx'] 
+				'ContentType': CT_LIST[w][opts.bookType || 'xlsx']
 			}));
 		}
 	};
@@ -231,7 +231,7 @@ function write_ct(ct, opts) {
 		ct[w].forEach(function(v) {
 			o.push(writextag('Override', null, {
 				'PartName': (v[0] == '/' ? "":"/") + v,
-				'ContentType': CT_LIST[w][opts.bookType || 'xlsx'] 
+				'ContentType': CT_LIST[w][opts.bookType || 'xlsx']
 			}));
 		});
 	};
@@ -245,7 +245,7 @@ function write_ct(ct, opts) {
 	};
 	f1('workbooks');
 	f2('sheets');
-	f3('themes');	
+	f3('themes');
 	['strs', 'styles'].forEach(f1);
 	['coreprops', 'extprops', 'custprops'].forEach(f3);
 	if(o.length>2){ o.push('</Types>'); o[1]=o[1].replace("/>",">"); }

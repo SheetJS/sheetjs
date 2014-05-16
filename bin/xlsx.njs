@@ -95,11 +95,12 @@ try {
 	process.exit(4);
 }
 
-if(!program.quiet) console.error(target_sheet);
 var oo = ""; 
+if(!program.quiet) console.error(target_sheet);
 if(program.formulae) oo = X.utils.get_formulae(ws).join("\n");
 else if(program.json) oo = JSON.stringify(X.utils.sheet_to_row_object_array(ws));
 else if(program.rawJs) oo = JSON.stringify(X.utils.sheet_to_row_object_array(ws,{raw:true}));
 else oo = X.utils.make_csv(ws, {FS:program.fieldSep, RS:program.rowSep});
 
 if(program.output) fs.writeFileSync(program.output, oo);
+else console.log(oo);
