@@ -2,7 +2,7 @@
 /* vim: set ts=2: */
 var XLSX = {};
 (function(XLSX){
-XLSX.version = '0.7.0';
+XLSX.version = '0.7.1';
 var current_codepage = 1252, current_cptable;
 if(typeof module !== "undefined" && typeof require !== 'undefined') {
 	if(typeof cptable === 'undefined') cptable = require('codepage');
@@ -1115,7 +1115,7 @@ function write_ct(ct, opts) {
 			v = ct[w][0];
 			o.push(writextag('Override', null, {
 				'PartName': (v[0] == '/' ? "":"/") + v,
-				'ContentType': CT_LIST[w][opts.bookType || 'xlsx'] 
+				'ContentType': CT_LIST[w][opts.bookType || 'xlsx']
 			}));
 		}
 	};
@@ -1123,7 +1123,7 @@ function write_ct(ct, opts) {
 		ct[w].forEach(function(v) {
 			o.push(writextag('Override', null, {
 				'PartName': (v[0] == '/' ? "":"/") + v,
-				'ContentType': CT_LIST[w][opts.bookType || 'xlsx'] 
+				'ContentType': CT_LIST[w][opts.bookType || 'xlsx']
 			}));
 		});
 	};
@@ -1137,7 +1137,7 @@ function write_ct(ct, opts) {
 	};
 	f1('workbooks');
 	f2('sheets');
-	f3('themes');	
+	f3('themes');
 	['strs', 'styles'].forEach(f1);
 	['coreprops', 'extprops', 'custprops'].forEach(f3);
 	if(o.length>2){ o.push('</Types>'); o[1]=o[1].replace("/>",">"); }
@@ -1405,7 +1405,7 @@ function write_cust_props(cp, opts) {
 	o.push(CUST_PROPS_XML_ROOT);
 	if(!cp) return o.join("");
 	var pid = 1;
-	keys(cp).forEach(function(k) { ++pid; 
+	keys(cp).forEach(function(k) { ++pid;
 		o.push(writextag('property', write_vt(cp[k]), {
 			'fmtid': '{D5CDD505-2E9C-101B-9397-08002B2CF9AE}',
 			'pid': pid,
@@ -1597,7 +1597,7 @@ var write_sst_xml = function(sst, opts) {
 		count: sst.Count,
 		uniqueCount: sst.Unique
 	}));
-	sst.forEach(function(s) { o.push("<si>" + (s.r ? s.r : "<t>" + escapexml(s.t) + "</t>") + "</si>"); });	
+	sst.forEach(function(s) { o.push("<si>" + (s.r ? s.r : "<t>" + escapexml(s.t) + "</t>") + "</si>"); });
 	if(o.length>2){ o.push('</sst>'); o[1]=o[1].replace("/>",">"); }
 	return o.join("");
 };
@@ -1648,8 +1648,7 @@ function write_numFmts(NF, opts) {
 	var o = [];
 	o.push("<numFmts>");
 	[[5,8],[23,26],[41,44],[63,66],[164,392]].forEach(function(r) {
-		for(var i = r[0]; i <= r[1]; ++i) if(NF[i]) 
-		o.push(writextag('numFmt',null,{numFmtId:i,formatCode:escapexml(NF[i])}));
+		for(var i = r[0]; i <= r[1]; ++i) if(NF[i]) o.push(writextag('numFmt',null,{numFmtId:i,formatCode:escapexml(NF[i])}));
 	});
 	o.push("</numFmts>");
 	if(o.length === 2) return "";
@@ -2178,7 +2177,7 @@ var WS_XML_ROOT = writextag('worksheet', null, {
 
 var write_ws_xml_cell = function(cell, ref, ws, opts, idx, wb) {
 	var v = writextag('v', escapexml(String(cell.v))), o = {r:ref};
-	if(cell.z) o.s = get_cell_style(opts.cellXfs, cell, opts); 
+	if(cell.z) o.s = get_cell_style(opts.cellXfs, cell, opts);
 	/* TODO: cell style */
 	if(typeof cell.v === 'undefined') return "";
 	switch(cell.t) {
@@ -2190,7 +2189,7 @@ var write_ws_xml_cell = function(cell, ref, ws, opts, idx, wb) {
 		} break;
 		case 'n': o.t = "n"; return writextag('c', v, o);
 		case 'b': o.t = "b"; return writextag('c', v, o);
-		case 'e': o.t = "e"; return writextag('c', v, o); 
+		case 'e': o.t = "e"; return writextag('c', v, o);
 	}
 };
 
@@ -3876,7 +3875,7 @@ function add_rels(rels, rId, f, type, relobj) {
 	if(!relobj) relobj = {};
 	if(!rels['!id']) rels['!id'] = {};
 	relobj.Id = 'rId' + rId;
-	relobj.Type = type; 
+	relobj.Type = type;
 	relobj.Target = f;
 	if(rels['!id'][relobj.Id]) throw new Error("Cannot rewrite rId " + rId);
 	rels['!id'][relobj.Id] = relobj;
@@ -3939,7 +3938,7 @@ function write_zip(wb, opts) {
 	}
 
 	/* TODO: something more intelligent with themes */
-	
+
 /*	f = "xl/theme/theme1.xml"
 	zip.file(f, write_theme());
 	ct.themes.push(f);
