@@ -118,7 +118,7 @@ function parse_FontFlags(data, length) {
 		fOutline: d & 0x10,
 		fShadow: d & 0x20,
 		fCondense: d & 0x40,
-		fExtend: d & 0x80,
+		fExtend: d & 0x80
 	};
 	return out;
 }
