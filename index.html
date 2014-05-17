@@ -33,9 +33,9 @@
 <input type="button" id="dotext" value="Click here to process the base64 text" onclick="b64it();"/>
 <pre id="out"></pre>
 <br />
+<script src="shim.js"></script>
 <script src="jszip.js"></script>
 <script src="xlsx.js"></script>
-<script src="shim.js"></script>
 <script>
 var rABS = typeof FileReader !== "undefined" && typeof FileReader.prototype !== "undefined" && typeof FileReader.prototype.readAsBinaryString !== "undefined";
 function fixdata(data) {
