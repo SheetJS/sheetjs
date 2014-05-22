@@ -511,6 +511,22 @@ The frac helper function is used for fraction formats (defined below).
   }
 ```
 
+The general class `/^[#0]+$/` treats the unconsumed '0' as literal, '#' as noop:
+
+```
+  if((r = fmt.match(/^[#0]+$/))) {
+    o = "" + Math.round(val);
+    if(fmt.length <= o.length) return o;
+    return fmt.substr(0,fmt.length - o.length).replace(/#/g,"") + o;
+  }
+  if((r = fmt.match(/^([#0]+)\.([#0]+)$/))) {
+    o = "" + val.toFixed(Math.min(r[2].length,10)).replace(/([^0])0+$/,"$1");
+    rr = o.indexOf(".");
+    var lres = fmt.indexOf(".") - rr, rres = fmt.length - o.length - lres;
+    return fmt.substr(0,lres).replace(/#/g,"") + o + fmt.substr(fmt.length-rres).replace(/#/g,"");
+  }
+```
+
 The default cases are hard-coded.  TODO: actually parse them
 
 ```js>tmp/60_number.js
@@ -524,7 +540,6 @@ Note that this is technically incorrect
     return val < 0 ? "-" + write_num(type, fmt, -val) : commaify(String(Math.floor(val))).replace(/^\d,\d{3}$/,"0$&").replace(/^\d*$/,function($$) { return "00," + ($$.length < 3 ? pad(0,3-$$.length) : "") + $$; }) + "." + pad(rr,r[1].length,0);
   }
   switch(fmt) {
-    case "0": case "#0": return ""+Math.round(val);
     case "#,###": var x = commaify(String(Math.round(aval))); return x !== "0" ? sign + x : "";
 ```
 
@@ -541,7 +556,7 @@ For now, the default case is an error:
 
 ```js>tmp/90_main.js
 function eval_fmt(fmt, v, opts, flen) {
-  var out = [], o = "", i = 0, c = "", lst='t', q, dt;
+  var out = [], o = "", i = 0, c = "", lst='t', q, dt, j;
   fixopts(opts = (opts || {}));
   var hr='H';
   /* Tokenize */
@@ -625,12 +640,6 @@ Merge strings like "mmmmm" or "hh" into one block:
         o = fmt[i]; while((fmt[++i]||"").toLowerCase() === c) o+=c;
 ```
 
-For the special case of s.00, the suffix should be swallowed with the s:
-
-```
-        if(c === 's' && fmt[i] === '.' && fmt[i+1] === '0') { o+='.'; while(fmt[++i] === '0') o+= '0'; }
-```
-
 Only the forward corrections are made here.  The reverse corrections are made later:
 
 ```
@@ -676,11 +685,19 @@ pseudo-type `Z` is used to capture absolute time blocks:
 ```
 
 Number blocks (following the general pattern `[0#?][0#?.,E+-%]*`) are grouped
-together.  Literal hyphens are swallowed as well:
+together.  Literal hyphens are swallowed as well.  Since `.000` is a valid
+term (for tenths/hundredths/thousandths of a second), it must be handled
+separately:
 
 ```
       /* Numbers */
-      case '0': case '#': case '.':
+      case '.':
+        if(dt) {
+          o = c; while((c=fmt[++i]) === "0") o += c;
+          out.push({t:'s', v:o}); break;
+        }
+        /* falls through */
+      case '0': case '#':
         o = c; while("0#?.,E+-%".indexOf(c=fmt[++i]) > -1 || c=='\\' && fmt[i+1] == "-" && "0#".indexOf(fmt[i+2])>-1) o += c;
         out.push({t:'n', v:o}); break;
 
@@ -732,14 +749,17 @@ The default magic characters are listed in subsubsections 18.8.30-31 of ECMA376:
 
 In order to identify cases like `MMSS`, where the fact that this is a minute
 appears after the minute itself, scan backwards.  At the same time, we can
-identify the smallest time unit (0 = no time, 1 = hour, 2 = minute, 3 = second):
+identify the smallest time unit (0 = no time, 1 = hour, 2 = minute, 3 = second)
+and the required number of digits for the sub-seconds:
 
 ```
-  var bt = 0;
+  var bt = 0, ss0 = 0, ssm;
   for(i=out.length-1, lst='t'; i >= 0; --i) {
     switch(out[i].t) {
       case 'h': case 'H': out[i].t = hr; lst='h'; if(bt < 1) bt = 1; break;
-      case 's': if(bt < 3) bt = 3;
+      case 's':
+        if((ssm=out[i].v.match(/\.0+$/))) ss0=Math.max(ss0,ssm[0].length-1);
+        if(bt < 3) bt = 3;
       /* falls through */
       case 'd': case 'y': case 'M': case 'e': lst=out[i].t; break;
       case 'm': if(lst === 's') { out[i].t = 'M'; if(bt < 2) bt = 2; } break;
@@ -770,41 +790,112 @@ Having determined the smallest time unit, round appropriately:
   }
 ```
 
-Finally, actually write the numbers:
+Since number groups in a string should be treated as part of the same whole,
+group them together to construct the real number string:
 
 ```
   /* replace fields */
+  var nstr = "", jj;
   for(i=0; i < out.length; ++i) {
     switch(out[i].t) {
       case 't': case 'T': case ' ': case 'D': break;
       case 'X': delete out[i]; break;
       case 'd': case 'm': case 'y': case 'h': case 'H': case 'M': case 's': case 'e': case 'b': case 'Z':
-        out[i].v = write_date(out[i].t, out[i].v, dt);
+        out[i].v = write_date(out[i].t, out[i].v, dt, ss0);
         out[i].t = 't'; break;
       case 'n': case '(': case '?':
-        var jj = i+1;
+        jj = i+1;
         while(out[jj] && ("?D".indexOf(out[jj].t) > -1 || (" t".indexOf(out[jj].t) > -1 && "?t".indexOf((out[jj+1]||{}).t)>-1 && (out[jj+1].t == '?' || out[jj+1].v == '/')) || out[i].t == '(' && (")n ".indexOf(out[jj].t) > -1) || out[jj].t == 't' && (out[jj].v == '/' || '$€'.indexOf(out[jj].v) > -1 || (out[jj].v == ' ' && (out[jj+1]||{}).t == '?')))) {
           out[i].v += out[jj].v;
           delete out[jj]; ++jj;
         }
+        nstr += out[i].v;
+        i = jj-1; break;
+      case 'G': out[i].t = 't'; out[i].v = general_fmt(v,opts); break;
+    }
+  }
+```
+
+Next, process the complete number string:
+
+```
+  if(nstr) {
+    var ostr = write_num(nstr[0]=='(' ? '(' : 'n', nstr, (v<0&&nstr[0] == "-" ? -v : v));
+    jj=ostr.length-1;
+```
+
+Find the first decimal point:
+
+```
+    var decpt = out.length;
+    for(i=0; i < out.length; ++i) if(out[i] && out[i].v.indexOf(".") > -1) { decpt = i; break; }
+    var lasti=out.length, vv;
+```
+
+If there is no decimal point or exponential, the algorithm is straightforward:
+
+```
+    if(decpt === out.length && !ostr.match(/E/)) {
+      for(i=out.length-1; i>= 0;--i) {
+        if(!out[i] || 'n?('.indexOf(out[i].t) === -1) continue;
+        vv = out[i].v.split("");
+        for(j=vv.length-1; j>=0; --j) {
+          if(jj>=0) vv[j] = ostr[jj--];
+          else vv[j] = "";
+        }
+        out[i].v = vv.join("");
+        out[i].t = 't';
+        lasti = i;
+      }
+      if(jj>=0 && lasti<out.length) out[lasti].v = ostr.substr(0,jj+1) + out[lasti].v;
+    }
+```
+Otherwise we have to do something a bit trickier:
+
+```
+    else if(decpt !== out.length && !ostr.match(/E/)) {
+      jj = ostr.indexOf(".")-1;
+      for(i=decpt; i>= 0; --i) {
+        if(!out[i] || 'n?('.indexOf(out[i].t) === -1) continue;
+        vv = out[i].v.split("");
+        for(j=out[i].v.indexOf(".")>-1&&i==decpt?out[i].v.indexOf(".")-1:vv.length-1; j>=0; --j) {
+          if(jj>=0 && "0#".indexOf(vv[j])>-1) vv[j] = ostr[jj--];
+          else vv[j] = "";
+        }
+        out[i].v = vv.join("");
+        out[i].t = 't';
+        lasti = i;
+      }
+      if(jj>=0 && lasti<out.length) out[lasti].v = ostr.substr(0,jj+1) + out[lasti].v;
+      jj = ostr.indexOf(".")+1;
+      for(i=decpt; i<out.length; ++i) {
+        if(!out[i] || 'n?('.indexOf(out[i].t) === -1 && i != decpt ) continue;
+        vv = out[i].v.split("");
+        for(j=out[i].v.indexOf(".")>-1&&i==decpt?out[i].v.indexOf(".")+1:0; j<vv.length; ++j) {
+          if(jj<ostr.length) vv[j] = ostr[jj++];
+          else vv[j] = "";
+        }
+        out[i].v = vv.join("");
+        out[i].t = 't';
+        lasti = i;
+      }
+    }
+  }
 ```
 
 The magic in the next line is to ensure that the negative number is passed as
 positive when there is an explicit hyphen before it (e.g. `#,##0.0;-#,##0.0`):
 
 ```
-        out[i].v = write_num(out[i].t, out[i].v, (flen >1 && v < 0 && i>0 && out[i-1].v == "-" ? -v:v));
-        out[i].t = 't';
-        i = jj-1; break;
-      case 'G': out[i].t = 't'; out[i].v = general_fmt(v,opts); break;
-```
-
-The default case should not be reachable.  In testing, add the line
-`default: console.error(out); throw "unrecognized type " + out[i].t;`
-
-```
-    }
+  for(i=0; i<out.length; ++i) if(out[i] && 'n(?'.indexOf(out[i].t)>-1) {
+    out[i].v = write_num(out[i].t, out[i].v, (flen >1 && v < 0 && i>0 && out[i-1].v == "-" ? -v:v));
+    out[i].t = 't';
   }
+```
+
+Now we just need to combine the elements
+
+```
   return out.map(function(x){return x.v;}).join("");
 }
 SSF._eval = eval_fmt;
@@ -819,8 +910,8 @@ display minutes instead of the month.
 
 ```js>tmp/50_date.js
 /*jshint -W086 */
-var write_date = function(type, fmt, val) {
-  var o, ss, y = val.y;
+var write_date = function(type, fmt, val, ss0) {
+  var o, ss, tt, y = val.y, sss0;
   switch(type) {
 ```
 
@@ -877,11 +968,21 @@ Strangely enough, `dddddddddddddddddddd` is treated as the full day name:
       default: throw 'bad minute format: ' + fmt;
     }
     case 's': switch(fmt) { /* seconds */
-      case 's': ss=Math.round(val.S+val.u); return ss >= 60 ? 0 : ss;
-      case 'ss': ss=Math.round(val.S+val.u); if(ss>=60) ss=0; return pad(ss,2);
-      case 'ss.0': ss=Math.round(10*(val.S+val.u)); if(ss>=600) ss = 0; o = pad(ss,3); return o.substr(0,2)+"." + o.substr(2);
-      case 'ss.00': ss=Math.round(100*(val.S+val.u)); if(ss>=6000) ss = 0; o = pad(ss,4); return o.substr(0,2)+"." + o.substr(2);
-      case 'ss.000': ss=Math.round(1000*(val.S+val.u)); if(ss>=60000) ss = 0; o = pad(ss,5); return o.substr(0,2)+"." + o.substr(2);
+```
+
+Unfortunately, the actual subsecond string is based on the presence of other
+terms.  That is passed via the `ss0` parameter:
+
+```
+      case 's': case 'ss': case '.0': case '.00': case '.000':
+        sss0 = ss0 || 0;
+        tt = Math.pow(10,sss0);
+        ss = Math.round((tt)*(val.S + val.u));
+        if(fmt === 's') return ss >= 60*tt ? 0 : ss/tt;
+        else if(fmt === 'ss') { if(ss>=60*tt) ss=0; return pad(ss,(2+sss0)).substr(0,2); }
+        if(ss >= 60*tt) ss = 0;
+        o = pad(ss,2 + sss0);
+        return "." + o.substr(2,fmt.length-1);
       default: throw 'bad second format: ' + fmt;
     }
 ```
@@ -901,7 +1002,6 @@ The `e` format behavior in excel diverges from the spec.  It claims that `ee`
 should be a two-digit year, but `ee` in excel is actually the four-digit year:
 
 ```
-    /* TODO: handle the ECMA spec format ee -> yy */
     case 'e': { return val.y; } break;
 ```
 
@@ -1145,7 +1245,7 @@ coveralls:
 ```json>package.json
 {
   "name": "ssf",
-  "version": "0.6.5",
+  "version": "0.7.0",
   "author": "SheetJS",
   "description": "pure-JS library to format data using ECMA-376 spreadsheet Format Codes",
   "keywords": [ "format", "sprintf", "spreadsheet" ],
