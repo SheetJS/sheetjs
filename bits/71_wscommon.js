@@ -9,7 +9,7 @@ function get_sst_id(sst, str) {
 }
 
 function get_cell_style(styles, cell, opts) {
-	var z = opts.revssf[cell.z];
+	var z = opts.revssf[cell.z||"General"];
 	for(var i = 0; i != styles.length; ++i) if(styles[i].numFmtId === z) return i;
 	styles[styles.length] = {
 		numFmtId:z,

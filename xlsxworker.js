@@ -1,4 +1,6 @@
 /* xlsx.js (C) 2013-2014 SheetJS -- http://sheetjs.com */
+/* uncomment the next line for encoding support */
+//importScripts('dist/cpexcel.js');
 importScripts('jszip.js');
 importScripts('xlsx.js');
 postMessage({t:"ready"});

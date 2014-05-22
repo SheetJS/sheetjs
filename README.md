@@ -56,6 +56,8 @@ Simple usage (walks through every cell of every sheet and dumps the values):
       }
     });
 
+An example of writing an array-of-arrays is available at <http://git.io/WEK88Q>
+
 The node version installs a binary `xlsx` which can read XLSX/XLSM/XLSB
 files and output the contents in various formats.  The source is available at
 `xlsx.njs` in the bin directory.

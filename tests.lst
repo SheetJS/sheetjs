@@ -1,5 +1,5 @@
 AutoFilter.xlsb
-BlankSheetTypes.xlsb
+BlankSheetTypes.xlsb.pending
 NumberFormatCondition.xlsb
 RkNumber.xlsb
 calendar_stress_test.xlsb.pending
@@ -100,8 +100,11 @@ apachepoi_55927.xlsx
 apachepoi_56011.xlsx
 apachepoi_56017.xlsx
 apachepoi_56169.xlsx
+apachepoi_56170.xlsx
+apachepoi_56274.xlsx
 apachepoi_56278.xlsx
 apachepoi_56315.xlsx
+apachepoi_56514.xlsx
 apachepoi_AverageTaxRates.xlsx
 apachepoi_Booleans.xlsx
 apachepoi_BrNotClosed.xlsx
@@ -180,10 +183,10 @@ formula_stress_test.xlsx
 hyperlink_stress_test_2011.xlsx
 interview.xlsx
 issue.xlsx
-jxls-core_formulaOneRow.xlsx.pending
+jxls-core_formulaOneRow.xlsx
 jxls-core_simple.xlsx
-jxls-examples_stress1.xlsx.pending
-jxls-examples_stress2.xlsx.pending
+jxls-examples_stress1.xlsx
+jxls-examples_stress2.xlsx
 jxls-reader_departmentData.xlsx
 large_strings.xlsx.pending
 libreoffice_calc_cjk-text_cell-justify-distributed-single.xlsx
@@ -217,7 +220,10 @@ openpyxl_g_empty_with_no_properties.xlsx
 openpyxl_g_guess_types.xlsx
 openpyxl_g_libreoffice_nrt.xlsx
 openpyxl_g_merge_range.xlsx
-openpyxl_r_bigfoot.xlsx.pending
+openpyxl_r_bigfoot.xlsx
+openpyxl_r_bug137.xlsx
+openpyxl_r_bug275.xlsx
+openpyxl_r_bug304.xlsx.pending
 openpyxl_r_comments.xlsx
 openpyxl_r_complex-styles.xlsx
 openpyxl_r_conditional-formatting.xlsx
@@ -232,11 +238,11 @@ rich_text_stress.xlsx
 roo_1900_base.xlsx
 roo_1904_base.xlsx
 roo_Bibelbund.xlsx
-roo_Pfand_from_windows_phone.xlsx.pending
+roo_Pfand_from_windows_phone.xlsx
 roo_bbu.xlsx
 roo_boolean.xlsx
 roo_borders.xlsx
-roo_bug-numbered-sheet-names.xlsx.pending
+roo_bug-numbered-sheet-names.xlsx
 roo_comments.xlsx
 roo_datetime.xlsx
 roo_emptysheets.xlsx
@@ -279,7 +285,7 @@ xlrd_test_comments_gdocs.xlsx
 xlrd_text_bar.xlsx
 xlsx-stream-d-date-cell.xlsx
 חישוב_נקודות_זיכוי.xlsx
-BlankSheetTypes.xlsm
+BlankSheetTypes.xlsm.pending
 NumberFormatCondition.xlsm
 apachepoi_45431.xlsm
 apachepoi_47026.xlsm

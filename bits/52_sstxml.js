@@ -180,7 +180,19 @@ var write_sst_xml = function(sst, opts) {
 		count: sst.Count,
 		uniqueCount: sst.Unique
 	}));
-	sst.forEach(function(s) { o.push("<si>" + (s.r ? s.r : "<t>" + escapexml(s.t) + "</t>") + "</si>"); });
+	sst.forEach(function(s) {
+		var sitag = "<si>";
+		if(s.r) sitag += s.r;
+		else {
+			sitag += "<t";
+			if(s.t.match(/^\s|\s$|[\t\n\r]/)) sitag += ' xml:space="preserve"';
+			sitag += ">";
+			sitag += escapexml(s.t);
+			sitag += "</t>";
+		}
+		sitag += "</si>";
+		o.push(sitag);
+	});
 	if(o.length>2){ o.push('</sst>'); o[1]=o[1].replace("/>",">"); }
 	return o.join("");
 };

@@ -57,8 +57,8 @@ function write_core_props(cp, opts) {
 		o.push(h ? writextag(f,g,h) : writetag(f,g));
 	};
 
-	if(typeof cp.CreatedDate !== 'undefined') doit("dcterms:created", write_w3cdtf(cp.CreatedDate, opts.WTF), {"xsi:type":"dcterms:W3CDTF"});
-	if(typeof cp.ModifiedDate !== 'undefined') doit("dcterms:modified", write_w3cdtf(cp.ModifiedDate, opts.WTF), {"xsi:type":"dcterms:W3CDTF"});
+	if(typeof cp.CreatedDate !== 'undefined') doit("dcterms:created", typeof cp.CreatedDate === "string" ? cp.CreatedDate : write_w3cdtf(cp.CreatedDate, opts.WTF), {"xsi:type":"dcterms:W3CDTF"});
+	if(typeof cp.ModifiedDate !== 'undefined') doit("dcterms:modified", typeof cp.ModifiedDate === "string" ? cp.ModifiedDate : write_w3cdtf(cp.ModifiedDate, opts.WTF), {"xsi:type":"dcterms:W3CDTF"});
 
 	CORE_PROPS.forEach(function(f) { doit(f[0], cp[f[1]]); });
 	if(o.length>2){ o.push('</cp:coreProperties>'); o[1]=o[1].replace("/>",">"); }

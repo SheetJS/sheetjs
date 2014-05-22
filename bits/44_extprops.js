@@ -53,9 +53,10 @@ var EXT_PROPS_XML_ROOT = writextag('Properties', null, {
 
 function write_ext_props(cp, opts) {
 	var o = [], p = {}, W = writextag;
+	if(!cp) cp = {};
+	cp.Application = "SheetJS";
 	o.push(XML_HEADER);
 	o.push(EXT_PROPS_XML_ROOT);
-	if(!cp) return o.join("");
 
 	EXT_PROPS.forEach(function(f) {
 		if(typeof cp[f[1]] === 'undefined') return;

@@ -1,8 +1,8 @@
 function getdata(data) {
 	if(!data) return null;
-	if(data.data) return data.name.substr(-4) !== ".bin" ? data.data : data.data.split("").map(function(x) { return x.charCodeAt(0); });
+	if(data.data) return data.name.substr(-4) !== ".bin" ? debom_xml(data.data) : data.data.split("").map(function(x) { return x.charCodeAt(0); });
 	if(data.asNodeBuffer && typeof Buffer !== 'undefined' && data.name.substr(-4)===".bin") return data.asNodeBuffer();
-	if(data.asBinary && data.name.substr(-4) !== ".bin") return data.asBinary();
+	if(data.asBinary && data.name.substr(-4) !== ".bin") return debom_xml(data.asBinary());
 	if(data._data && data._data.getContent) {
 		/* TODO: something far more intelligent */
 		if(data.name.substr(-4) === ".bin") return Array.prototype.slice.call(data._data.getContent());

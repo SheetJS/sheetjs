@@ -532,9 +532,9 @@ describe('roundtrip features', function() {
 			['XML', 'formula_stress_test.xls.xml']
 		].forEach(function(w) {
 			it('should be able to write ' + w[0] + ' files from xlsjs', function() {
-				var xls = XLSJS.readFile('./test_files/' + w[1]);
-				X.writeFile(xls, './tmp/' + w[1] + '.xlsx');
-				X.writeFile(xls, './tmp/' + w[1] + '.xlsb');
+				var xls = XLSJS.readFile('./test_files/' + w[1], {cellNF:true});
+				X.writeFile(xls, './tmp/' + w[1] + '.xlsx', {bookSST:true});
+				X.writeFile(xls, './tmp/' + w[1] + '.xlsb', {bookSST:true});
 			});
 		});
 	});
@@ -546,7 +546,10 @@ describe('invalid files', function() {
 			['XLS files', 'roo_type_excel.xlsx'],
 			['ODS files', 'roo_type_openoffice.xlsx'],
 			['DOC files', 'word_doc.doc']
-		].forEach(function(w) { it('should fail on ' + w[0], function() { assert.throws(function() { X.readFile(dir + w[1]); }); }); });
+		].forEach(function(w) { it('should fail on ' + w[0], function() {
+			assert.throws(function() { X.readFile(dir + w[1]); });
+			assert.throws(function() { X.read(fs.readFileSync(dir+w[1], 'base64'), {type:'base64'}); });
+    }); });
 	});
 	describe('write', function() {
 		it('should pass', function() { X.write(X.readFile(paths.fst1), {type:'binary'}); });
@@ -554,18 +557,22 @@ describe('invalid files', function() {
 			var wb = X.readFile(paths.fst1); delete wb.Sheets[wb.SheetNames[0]];
 			X.read(X.write(wb, {type:'binary'}), {type:'binary'});
 		});
-		it('should fail if SheetNames is missing', function() {
-			var wb = X.readFile(paths.fst1);
-			assert.throws(function() {
-				delete wb.SheetNames;
-				X.write(wb, {type:'binary'});
+		['Props', 'Custprops', 'SSF'].forEach(function(t) {
+			it('should pass if ' + t + ' is missing', function() {
+				var wb = X.readFile(paths.fst1);
+				assert.doesNotThrow(function() {
+					delete wb[t];
+					X.write(wb, {type:'binary'});
+				});
 			});
 		});
-		it('should fail if Sheets is missing', function() {
-			var wb = X.readFile(paths.fst1);
-			assert.throws(function() {
-				delete wb.Sheets;
-				X.write(wb, {type:'binary'});
+		['SheetNames', 'Sheets'].forEach(function(t) {
+			it('should fail if ' + t + ' is missing', function() {
+				var wb = X.readFile(paths.fst1);
+				assert.throws(function() {
+					delete wb[t];
+					X.write(wb, {type:'binary'});
+				});
 			});
 		});
 	});

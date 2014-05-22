@@ -2,7 +2,7 @@
 function parse_ws_xml(data, opts, rels) {
 	if(!data) return data;
 	/* 18.3.1.99 worksheet CT_Worksheet */
-	var s = {};
+	var s = {}, mtch;
 
 	/* 18.3.1.35 dimension CT_SheetDimension ? */
 	var ref = data.match(/<dimension ref="([^"]*)"\s*\/>/);
@@ -22,8 +22,7 @@ function parse_ws_xml(data, opts, rels) {
 	var sidx = 0;
 
 	/* 18.3.1.80 sheetData CT_SheetData ? */
-	if(!data.match(/<(\w+:)?sheetData *\/>/))
-	data.match(/<(?:\w+:)?sheetData>([^\u2603]*)<\/(?:\w+:)?sheetData>/m)[1].split(/<\/(?:\w+:)?row>/).forEach(function(x) {
+	if((mtch=data.match(/<(?:\w+:)?sheetData>([^\u2603]*)<\/(?:\w+:)?sheetData>/m))) mtch[1].split(/<\/(?:\w+:)?row>/).forEach(function(x) {
 		if(x === "" || x.trim() === "") return;
 
 		/* 18.3.1.73 row CT_Row */
@@ -65,9 +64,8 @@ function parse_ws_xml(data, opts, rels) {
 					p.t = 'str'; p.v = is.t;
 					break; // inline string
 				case 'b': if(typeof p.v !== 'boolean') p.v = parsexmlbool(p.v); break;
-				case 'd': /* TODO: date1904 logic */
-					var epoch = Date.parse(p.v);
-					p.v = (epoch - new Date(Date.UTC(1899, 11, 30))) / (24 * 60 * 60 * 1000);
+				case 'd':
+					p.v = datenum(p.v);
 					p.t = 'n';
 					break;
 				/* in case of error, stick value in .raw */
@@ -129,8 +127,10 @@ var WS_XML_ROOT = writextag('worksheet', null, {
 });
 
 var write_ws_xml_cell = function(cell, ref, ws, opts, idx, wb) {
-	var v = writextag('v', escapexml(String(cell.v))), o = {r:ref};
-	if(cell.z) o.s = get_cell_style(opts.cellXfs, cell, opts);
+	var vv = cell.v; if(cell.t == 'b') vv = cell.v ? "1" : "0";
+	var v = writextag('v', escapexml(String(vv))), o = {r:ref};
+	o.s = get_cell_style(opts.cellXfs, cell, opts);
+	if(o.s === 0 || o.s === "0") delete o.s;
 	/* TODO: cell style */
 	if(typeof cell.v === 'undefined') return "";
 	switch(cell.t) {
@@ -140,7 +140,7 @@ var write_ws_xml_cell = function(cell, ref, ws, opts, idx, wb) {
 				o.t = "s"; return writextag('c', v, o);
 			} else { o.t = "str"; return writextag('c', v, o); }
 		} break;
-		case 'n': o.t = "n"; return writextag('c', v, o);
+		case 'n': delete o.t; return writextag('c', v, o);
 		case 'b': o.t = "b"; return writextag('c', v, o);
 		case 'e': o.t = "e"; return writextag('c', v, o);
 	}

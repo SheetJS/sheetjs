@@ -12,3 +12,11 @@ if(typeof cptable !== 'undefined') _getchar = function(x) {
 	if (current_cptable) return current_cptable.dec[x];
 	return cptable.utils.decode(current_codepage, [x%256,x>>8])[0];
 };
+
+function char_codes(data) { return data.split("").map(function(x) { return x.charCodeAt(0); }); }
+function debom_xml(data) {
+	if(typeof cptable !== 'undefined') {
+		if(data.charCodeAt(0) === 0xFF && data.charCodeAt(1) === 0xFE) { return cptable.utils.decode(1200, char_codes(data.substr(2))); }
+	}
+	return data;
+}

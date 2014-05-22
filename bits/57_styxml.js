@@ -5,9 +5,9 @@ function parse_numFmts(t, opts) {
 	t[0].match(/<[^>]*>/g).forEach(function(x) {
 		var y = parsexmltag(x);
 		switch(y[0]) {
-			case '<numFmts': case '</numFmts>': case '<numFmts/>': break;
+			case '<numFmts': case '</numFmts>': case '<numFmts/>': case '<numFmts>': break;
 			case '<numFmt': {
-				var f=utf8read(unescapexml(y.formatCode)), i=parseInt(y.numFmtId,10);
+				var f=unescapexml(y.formatCode), i=parseInt(y.numFmtId,10);
 				styles.NumberFmt[i] = f; if(i>0) SSF.load(f,i);
 			} break;
 			default: if(opts.WTF) throw 'unrecognized ' + y[0] + ' in numFmts';
@@ -33,7 +33,7 @@ function parse_cellXfs(t, opts) {
 	t[0].match(/<[^>]*>/g).forEach(function(x) {
 		var y = parsexmltag(x);
 		switch(y[0]) {
-			case '<cellXfs': case '<cellXfs/>': case '</cellXfs>': break;
+			case '<cellXfs': case '<cellXfs>': case '<cellXfs/>': case '</cellXfs>': break;
 
 			/* 18.8.45 xf CT_Xf */
 			case '<xf': delete y[0];

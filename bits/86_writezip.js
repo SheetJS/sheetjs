@@ -10,6 +10,9 @@ function add_rels(rels, rId, f, type, relobj) {
 }
 
 function write_zip(wb, opts) {
+	if(wb && !wb.SSF) {
+		wb.SSF = SSF.get_table();
+	}
 	if(wb && wb.SSF) {
 		make_ssf(SSF); SSF.load_table(wb.SSF);
 		opts.revssf = evert(wb.SSF); opts.revssf[wb.SSF[65535]] = 0;
@@ -25,24 +28,26 @@ function write_zip(wb, opts) {
 	var f = "", rId = 0;
 
 	opts.cellXfs = [];
+	get_cell_style(opts.cellXfs, {}, {revssf:{"General":0}});
 
 	f = "docProps/core.xml";
 	zip.file(f, write_core_props(wb.Props, opts));
 	ct.coreprops.push(f);
-	add_rels(opts.rels, 3, f, RELS.CORE_PROPS);
+	add_rels(opts.rels, 2, f, RELS.CORE_PROPS);
 
 	f = "docProps/app.xml";
+	if(!wb.Props) wb.Props = {};
 	wb.Props.SheetNames = wb.SheetNames;
 	wb.Props.Worksheets = wb.SheetNames.length;
 	zip.file(f, write_ext_props(wb.Props, opts));
 	ct.extprops.push(f);
-	add_rels(opts.rels, 4, f, RELS.EXT_PROPS);
+	add_rels(opts.rels, 3, f, RELS.EXT_PROPS);
 
 	if(wb.Custprops !== wb.Props) { /* TODO: fix xlsjs */
 		f = "docProps/custom.xml";
 		zip.file(f, write_cust_props(wb.Custprops, opts));
 		ct.custprops.push(f);
-		add_rels(opts.rels, 5, f, RELS.CUST_PROPS);
+		add_rels(opts.rels, 4, f, RELS.CUST_PROPS);
 	}
 
 	f = "xl/workbook." + wbext;
@@ -66,10 +71,10 @@ function write_zip(wb, opts) {
 
 	/* TODO: something more intelligent with themes */
 
-/*	f = "xl/theme/theme1.xml"
+	f = "xl/theme/theme1.xml";
 	zip.file(f, write_theme());
 	ct.themes.push(f);
-	add_rels(opts.wbrels, ++rId, "theme/theme1.xml", RELS.THEME);*/
+	add_rels(opts.wbrels, ++rId, "theme/theme1.xml", RELS.THEME);
 
 	/* TODO: something more intelligent with styles */
 

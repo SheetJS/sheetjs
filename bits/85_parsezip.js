@@ -17,6 +17,7 @@ function parse_zip(zip, opts) {
 		dir.workbooks.push(binname);
 		xlsb = true;
 	}
+	if(xlsb) set_cp(1200);
 
 	if(!opts.bookSheets && !opts.bookProps) {
 		strs = [];
@@ -71,13 +72,21 @@ function parse_zip(zip, opts) {
 			props.SheetNames[j] = wbsheets[j].name;
 		}
 	}
-	/* Numbers iOS hack TODO: parse workbook rels to get names */
+
+	var wbrelsfile = 'xl/_rels/workbook.xml.rels';
+	var wbrels = parse_rels(getzipdata(zip, wbrelsfile, true), wbrelsfile);
+	if(wbrels) try {
+		wbrels = wb.Sheets.map(function(w) { return [w.name, wbrels['!id'][w.id].Target]; });
+	} catch(e) { wbrels = null; }
+	/* Numbers iOS hack */
 	var nmode = (getzipdata(zip,"xl/worksheets/sheet.xml",true))?1:0;
 	for(i = 0; i != props.Worksheets; ++i) {
 		try {
-			//path = dir.sheets[i].replace(/^\//,'');
-			path = 'xl/worksheets/sheet'+(i+1-nmode)+(xlsb?'.bin':'.xml');
-			path = path.replace(/sheet0\./,"sheet.");
+			if(wbrels) path = 'xl/' + (wbrels[i][1]).replace(/[\/]?xl\//, "");
+			else {
+				path = 'xl/worksheets/sheet'+(i+1-nmode)+(xlsb?'.bin':'.xml');
+				path = path.replace(/sheet0\./,"sheet.");
+			}
 			relsPath = path.replace(/^(.*)(\/)([^\/]*)$/, "$1/_rels/$3.rels");
 			sheetRels[props.SheetNames[i]]=parse_rels(getzipdata(zip, relsPath, true), path);
 			sheets[props.SheetNames[i]]=parse_ws(getzipdata(zip, path),path,opts,sheetRels[props.SheetNames[i]]);

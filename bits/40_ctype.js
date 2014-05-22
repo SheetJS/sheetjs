@@ -181,9 +181,9 @@ function parse_ct(data, opts) {
 		TODO:[], rels:[], xmlns: "" };
 	(data.match(/<[^>]*>/g)||[]).forEach(function(x) {
 		var y = parsexmltag(x);
-		switch(y[0]) {
+		switch(y[0].replace(/<\w*:/,"<")) {
 			case '<?xml': break;
-			case '<Types': ct.xmlns = y.xmlns; break;
+			case '<Types': ct.xmlns = y['xmlns' + (y[0].match(/<(\w+):/)||["",""])[1] ]; break;
 			case '<Default': ctext[y.Extension] = y.ContentType; break;
 			case '<Override':
 				if(y.ContentType in ct2type)ct[ct2type[y.ContentType]].push(y.PartName);
