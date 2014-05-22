@@ -117,7 +117,7 @@ function parsetest(x, wb, full, ext) {
 			});
 		});
 	});
-	if(!fs.existsSync(dir + '2013/' + x + '.xlsb')) return;
+	if(fs.existsSync(dir + '2013/' + x + '.xlsb'))
 	describe(x + ext + '.xlsb from 2013', function() {
 		it('should parse', function() {
 			var wb = X.readFile(dir + '2013/' + x + '.xlsb', opts);
