@@ -959,10 +959,12 @@ if (typeof module !== 'undefined' && module.exports) module.exports = cptable;
   var encache = function(cp) {
     if(typeof Buffer !== 'undefined') {
       sbcs_cache.forEach(function(s) {
+        if(!cpt[s]) return;
         cpdcache[s] = sbcs_decode(s);
         cpecache[s] = sbcs_encode(s);
       });
       dbcs_cache.forEach(function(s) {
+        if(!cpt[s]) return;
         cpdcache[s] = dbcs_decode(s);
         cpecache[s] = dbcs_encode(s);
       });

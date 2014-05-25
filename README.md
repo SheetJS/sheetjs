@@ -125,7 +125,7 @@ The exported `read` and `readFile` functions accept an options argument:
 
 | Option Name | Default | Description |
 | :---------- | ------: | :---------- |
-| cellFormula | true    | Save formulae to the .f field ** |
+| cellFormula | true    | Save formulae to the .f field |
 | cellHTML    | true    | Parse rich text and save HTML to the .h field |
 | cellNF      | false   | Save number format string to the .z field |
 | sheetStubs  | false   | Create cell objects for stub cells |
@@ -136,8 +136,6 @@ The exported `read` and `readFile` functions accept an options argument:
 | bookSheets  | false   | If true, only parse enough to get the sheet names |
 | bookVBA     | false   | If true, expose vbaProject.bin to `vbaraw` field ** |
 
-- `cellFormula` only applies to constructing XLSB formulae.  XLSX/XLSM formulae
-  are stored in plaintext, but XLSB formulae are stored in a binary format.
 - Even if `cellNF` is false, formatted text (.w) will be generated
 - In some cases, sheets may be parsed even if `bookSheets` is false.
 - `bookSheets` and `bookProps` combine to give both sets of information

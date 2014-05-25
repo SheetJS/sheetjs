@@ -20,6 +20,8 @@ program
 	.option('-F, --field-sep <sep>', 'CSV field separator', ",")
 	.option('-R, --row-sep <sep>', 'CSV row separator', "\n")
 	.option('-n, --sheet-rows <num>', 'Number of rows to process (0=all rows)')
+	.option('--no-sst', 'do not generate sst')
+	.option('--perf', 'do not generate output')
 	.option('--dev', 'development mode')
 	.option('--read', 'read but do not print out contents')
 	.option('-q, --quiet', 'quiet mode');
@@ -57,6 +59,9 @@ if(program.xlsx || program.xlsm || program.xlsb) {
 	opts.cellNF = true;
 	if(program.output) sheetname = program.output;
 }
+else if(program.formulae);
+else opts.cellFormula = false;
+
 if(program.dev) {
 	X.verbose = 2;
 	opts.WTF = true;
@@ -77,7 +82,7 @@ if(program.listSheets) {
 	process.exit(0);
 }
 
-var wopts = {WTF:opts.WTF};
+var wopts = {WTF:opts.WTF, bookSST:program.sst};
 
 if(program.xlsx) return X.writeFile(wb, sheetname || (filename + ".xlsx"), wopts);
 if(program.xlsm) return X.writeFile(wb, sheetname || (filename + ".xlsm"), wopts);
@@ -94,6 +99,8 @@ try {
 	console.error(n + ": error parsing "+filename+" "+target_sheet+": " + e);
 	process.exit(4);
 }
+
+if(program.perf) return;
 
 var oo = ""; 
 if(!program.quiet) console.error(target_sheet);

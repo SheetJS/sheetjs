@@ -18,7 +18,7 @@ function parse_ws_xml(data, opts, rels) {
 	}
 
 	var refguess = {s: {r:1000000, c:1000000}, e: {r:0, c:0} };
-	var q = ["v","f"];
+	var q = (opts.cellFormula ? ["v","f"] : ["v"]);
 	var sidx = 0;
 
 	/* 18.3.1.80 sheetData CT_SheetData ? */
