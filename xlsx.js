@@ -2,10 +2,10 @@
 /* vim: set ts=2: */
 var XLSX = {};
 (function(XLSX){
-XLSX.version = '0.7.2';
+XLSX.version = '0.7.3';
 var current_codepage = 1252, current_cptable;
 if(typeof module !== "undefined" && typeof require !== 'undefined') {
-	if(typeof cptable === 'undefined') cptable = require('codepage');
+	if(typeof cptable === 'undefined') cptable = require('./dist/cpexcel');
 	current_cptable = cptable[current_codepage];
 }
 function reset_cp() { set_cp(1252); }
@@ -675,7 +675,8 @@ var rencstr = "&<>'\"".split("");
 // TODO: CP remap (need to read file version to determine OS)
 function unescapexml(text){
 	var s = text + '';
-	for(var y in encodings) s = s.replace(new RegExp(y,'g'), encodings[y]);
+	s = s.replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/&gt;/g, ">").replace(/&lt;/g, "<").replace(/&amp;/g, "&");
+	//for(var y in encodings) s = s.replace(new RegExp(y,'g'), encodings[y]);
 	return s.replace(/_x([0-9a-fA-F]*)_/g,function(m,c) {return _chr(parseInt(c,16));});
 }
 function escapexml(text){
@@ -696,6 +697,7 @@ function parsexmlbool(value, tag) {
 
 var utf8read = function(orig) {
 	var out = [], i = 0, c = 0, c1 = 0, c2 = 0, c3 = 0;
+	if(!orig.match(/[\u0080-\uffff]/)) return orig;
 	while (i < orig.length) {
 		c = orig.charCodeAt(i++);
 		if (c < 128) out.push(_chr(c));
@@ -2165,7 +2167,7 @@ function parse_ws_xml(data, opts, rels) {
 	}
 
 	var refguess = {s: {r:1000000, c:1000000}, e: {r:0, c:0} };
-	var q = ["v","f"];
+	var q = (opts.cellFormula ? ["v","f"] : ["v"]);
 	var sidx = 0;
 
 	/* 18.3.1.80 sheetData CT_SheetData ? */
