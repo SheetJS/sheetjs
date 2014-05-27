@@ -1831,8 +1831,8 @@ function write_sty_xml(wb, opts) {
 	o.push(XML_HEADER);
 	o.push(STYLES_XML_ROOT);
 	if((w = write_numFmts(wb.SSF))) o.push(w);
-  o.push('<fonts count="1"><font><sz val="12"/><color theme="1"/><name val="Calibri"/><family val="2"/><scheme val="minor"/></font></fonts>');
-  o.push('<fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills>');
+	o.push('<fonts count="1"><font><sz val="12"/><color theme="1"/><name val="Calibri"/><family val="2"/><scheme val="minor"/></font></fonts>');
+	o.push('<fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills>');
 	o.push('<borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders>');
 	o.push('<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>');
 	if((w = write_cellXfs(opts.cellXfs))) o.push(w);
