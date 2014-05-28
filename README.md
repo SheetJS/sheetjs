@@ -5,7 +5,7 @@ ISO 29500  Office Open XML specifications, [MS-XLSB], and related documents.
 
 ## Installation
 
-In [node](https://www.npmjs.org/package/xlsx):
+In [nodejs](https://www.npmjs.org/package/xlsx):
 
     npm install xlsx
 
@@ -29,7 +29,7 @@ Older versions of this README recommended a more explicit approach:
 
 ## Optional Modules
 
-The node version automatically requires modules for additional features.  Some
+The nodejs version automatically requires modules for additional features.  Some
 of these modules are rather large in size and are only needed in special
 circumstances, so they do not ship with the core.  For browser use, they must
 be included directly:
@@ -41,50 +41,144 @@ An appropriate version for each dependency is included in the dist/ directory.
 
 The complete single-file version is generated at `dist/xlsx.full.min.js`
 
-## Usage
+## Parsing Workbooks
 
-Simple usage (walks through every cell of every sheet and dumps the values):
+For parsing, the first step is to read the file.
 
-    if(typeof require !== 'undefined') XLSX = require('xlsx');
-    var workbook = XLSX.readFile('test.xlsx');
-    var sheet_name_list = workbook.SheetNames;
-    sheet_name_list.forEach(function(y) {
-      var worksheet = workbook.Sheets[y];
-      for (z in worksheet) {
-        if(z[0] === '!') continue;
-        console.log(y + "!" + z + "=" + JSON.stringify(worksheet[z].v));
-      }
-    });
+- nodejs:
 
-An example of writing an array-of-arrays is available at <http://git.io/WEK88Q>
+```
+if(typeof require !== 'undefined') XLSX = require('xlsx');
+var workbook = XLSX.readFile('test.xlsx');
+/* DO SOMETHING WITH workbook HERE */
+```
 
-The node version installs a binary `xlsx` which can read XLSX/XLSM/XLSB
-files and output the contents in various formats.  The source is available at
-`xlsx.njs` in the bin directory.
+- ajax:
 
-See <http://oss.sheetjs.com/js-xlsx/> for a browser example.
+```
+/* set up XMLHttpRequest */
+var url = "test_files/formula_stress_test_ajax.xlsx";
+var oReq = new XMLHttpRequest();
+oReq.open("GET", url, true);
+oReq.responseType = "arraybuffer";
+
+oReq.onload = function(e) {
+  var arraybuffer = oReq.response;
+
+  /* convert data to binary string */
+  var data = new Uint8Array(arraybuffer);
+  var arr = new Array();
+  for(var i = 0; i != data.length; ++i) arr[i] = String.fromCharCode(data[i]);
+  var bstr = arr.join("");
+
+  /* Call XLSX */
+  var workbook = XLSX.read(bstr, {type:"binary"});
+
+  /* DO SOMETHING WITH workbook HERE */
+}
+
+oReq.send();
+```
+
+- html5 drag-and-drop using readAsBinaryString:
+
+```
+/* set up drag-and-drop event */
+function handleDrop(e) {
+  e.stopPropagation();
+  e.preventDefault();
+  var files = e.dataTransfer.files;
+  var i,f;
+  for (i = 0, f = files[i]; i != files.length; ++i) {
+    var reader = new FileReader();
+    var name = f.name;
+    reader.onload = function(e) {
+      var data = e.target.result;
+
+      /* if binary string, read with type 'binary' */
+      var wb = XLSX.read(data, {type: 'binary'});
+
+      /* DO SOMETHING WITH workbook HERE */
+    };
+    reader.readAsBinaryString(f);
+  }
+}
+drop_dom_element.addEventListener('drop', handleDrop, false);
+```
+
+This example walks through every cell of every sheet and dumps the values:
+
+```
+var sheet_name_list = workbook.SheetNames;
+sheet_name_list.forEach(function(y) {
+  var worksheet = workbook.Sheets[y];
+  for (z in worksheet) {
+    if(z[0] === '!') continue;
+    console.log(y + "!" + z + "=" + JSON.stringify(worksheet[z].v));
+  }
+});
+```
+
+Complete examples:
+
+- <http://oss.sheetjs.com/js-xlsx/> HTML5 File API / Base64 Text / Web Workers
 
 Note that older versions of IE does not support HTML5 File API, so the base64
 mode is provided for testing.  On OSX you can get the base64 encoding with:
 
-    $ <target_file.xlsx base64 | pbcopy # pbcopy puts the content in clipboard
+    $ <target_file.xlsx base64 | pbcopy
+
+- <http://oss.sheetjs.com/js-xlsx/ajax.html> XMLHttpRequest
+
+- <https://github.com/SheetJS/js-xlsx/blob/master/bin/xlsx.njs> nodejs
+
+The nodejs version installs a binary `xlsx` which can read XLSX/XLSM/XLSB
+files and output the contents in various formats.  The source is available at
+`xlsx.njs` in the bin directory.
 
 Some helper functions in `XLSX.utils` generate different views of the sheets:
 
 - `XLSX.utils.sheet_to_csv` generates CSV
-- `XLSX.utils.sheet_to_row_object_array` interprets sheets as tables with a
-  header column and generates an array of objects
+- `XLSX.utils.sheet_to_json` generates an array of objects
 - `XLSX.utils.get_formulae` generates a list of formulae
 
-For more details:
+## Writing Workbooks
 
-- `bin/xlsx.njs` is a tool for node
-- `index.html` is the live demo
-- `bits/90_utils.js` contains the logic for generating CSV and JSON from sheets
+Assuming `workbook` is a workbook object, just call write:
+
+- nodejs write to file:
+
+```
+/* output format determined by filename */
+XLSX.writeFile(workbook, 'out.xlsx');
+```
+
+- write to binary string (using FileSaver.js)
+
+```
+/* bookType can be 'xlsx' or 'xlsm' or 'xlsb' */
+var wopts = { bookType:'xlsx', bookSST:true, type:'binary' };
+
+var wbout = XLSX.write(workbook,wopts);
+
+function s2ab(s) {
+  var buf = new ArrayBuffer(s.length);
+  var view = new Uint8Array(buf);
+  for (var i=0; i!=s.length; ++i) view[i] = s.charCodeAt(i) & 0xFF;
+  return buf;
+}
+
+saveAs(new Blob([s2ab(wbout)],{type:""}), "test.xlsx")
+```
+
+Complete examples:
+
+- <http://sheetjs.com/demos/writexlsx.html> generates a simple file
+- <http://git.io/WEK88Q> writing an array of arrays in nodejs
 
 ## Interface
 
-`XLSX` is the exposed variable in the browser and the exported variable in node
+`XLSX` is the exposed variable in the browser and the exported nodejs variable
 
 
 `XLSX.read(data, read_opts)` attempts to parse `data`.
@@ -161,18 +255,18 @@ The exported `write` and `writeFile` functions accept an options argument:
   with iOS Numbers
 - `bookType = 'xlsb'` is stubbed and far from complete
 - The raw data is the only thing guaranteed to be saved.  Formulae, formatting,
-  and other niceties are not serialized (pending CSF standardization)
+  and other niceties may not be serialized (pending CSF standardization)
 
 ## Tested Environments
 
- - Node 0.8, 0.10 (latest release)
+ - NodeJS 0.8, 0.10 (latest release)
  - IE 6/7/8/9/10 using Base64 mode (IE10/11 using HTML5 mode)
  - FF 18 using Base64 or HTML5 mode
  - Chrome 24 using Base64 or HTML5 mode
 
 Tests utilize the mocha testing framework.  Travis-CI and Sauce Labs links:
 
- - <https://travis-ci.org/SheetJS/js-xlsx> for XLSX module in node
+ - <https://travis-ci.org/SheetJS/js-xlsx> for XLSX module in nodejs
  - <https://travis-ci.org/SheetJS/SheetJS.github.io> for XLS* modules
  - <https://saucelabs.com/u/sheetjs> for XLS* modules using Sauce Labs
 
@@ -184,7 +278,7 @@ Running `make init` will refresh the `test_files` submodule and get the files.
 
 ## Testing
 
-`make test` will run the node-based tests.  To run the in-browser tests, clone
+`make test` will run the nodejs-based tests.  To run the in-browser tests, clone
 [the oss.sheetjs.com repo](https://github.com/SheetJS/SheetJS.github.io) and
 replace the xlsx.js file (then fire up the browser and go to `stress.html`):
 
@@ -204,7 +298,7 @@ important to ensure code is cleanroom.  Consult CONTRIBUTING.md
 
 ## XLS Support
 
-XLS is available in [js-xls](https://github.com/SheetJS/js-xls).
+XLS is available in [js-xls](http://git.io/xls).
 
 ## License
 
