@@ -23,3 +23,5 @@ function parse_comments_xml(data, opts) {
 	});
 	return commentList;
 }
+
+function write_comments_xml(data, opts) { }

@@ -3,9 +3,11 @@ BlankSheetTypes.xlsb.pending
 NumberFormatCondition.xlsb
 RkNumber.xlsb
 calendar_stress_test.xlsb.pending
+cell_style_simple.xlsb
 comments_stress_test.xlsb
 custom_properties.xlsb
 formula_stress_test.xlsb
+formulae_test_simple.xlsb
 hyperlink_stress_test_2011.xlsb
 merge_cells.xlsb
 named_ranges_2011.xlsb
@@ -167,6 +169,7 @@ apachepoi_workbookProtection_workbook_windows_protected.xlsx
 apachepoi_workbookProtection_worksheet_protected.xlsx
 apachepoi_xlsx-jdbc.xlsx
 calendar_stress_test.xlsx.pending
+cell_style_simple.xlsx
 comments_stress_test.xlsx
 custom_properties.xlsx
 excel-reader-xlsx_data01.xlsx
@@ -181,6 +184,7 @@ excel-reader-xlsx_error08.xlsx.pending
 excel-reader-xlsx_inline01.xlsx
 excel-reader-xlsx_libre01.xlsx
 formula_stress_test.xlsx
+formulae_test_simple.xlsx
 hyperlink_stress_test_2011.xlsx
 interview.xlsx
 issue.xlsx

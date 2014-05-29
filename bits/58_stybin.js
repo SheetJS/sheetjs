@@ -64,8 +64,6 @@ function parse_sty_bin(data, opts) {
 				}
 				break; /* TODO */
 			case 'BrtStyle': break; /* TODO */
-			case 'BrtRowHdr': break; /* TODO */
-			case 'BrtCellMeta': break; /* ?? */
 			case 'BrtDXF': break; /* TODO */
 			case 'BrtMRUColor': break; /* TODO */
 			case 'BrtIndexedColor': break; /* TODO */
@@ -115,3 +113,5 @@ function parse_sty_bin(data, opts) {
 	});
 	return styles;
 }
+
+function write_sty_bin(data, opts) { }

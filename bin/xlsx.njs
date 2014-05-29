@@ -11,7 +11,7 @@ program
 	.option('-s, --sheet <sheet>', 'print specified sheet (default first sheet)')
 	.option('-l, --list-sheets', 'list sheet names and exit')
 	.option('-o, --output <file>', 'output to specified file')
-	/*.option('-B, --xlsb', 'emit XLSB to <sheetname> or <file>.xlsb') */
+	.option('-B, --xlsb', 'emit XLSB to <sheetname> or <file>.xlsb')
 	.option('-M, --xlsm', 'emit XLSM to <sheetname> or <file>.xlsm')
 	.option('-X, --xlsx', 'emit XLSX to <sheetname> or <file>.xlsx')
 	.option('-S, --formulae', 'print formulae')

@@ -113,7 +113,7 @@ function parse_clrScheme(t, opts) {
 	t[0].match(/<[^>]*>/g).forEach(function(x) {
 		var y = parsexmltag(x);
 		switch(y[0]) {
-			case '<a:clrScheme': case '<<a:clrScheme>': case '</<a:clrScheme>': break;
+			case '<a:clrScheme': case '</a:clrScheme>': break;
 
 			/* 20.1.2.3.32 srgbClr CT_SRgbColor */
 			case '<a:srgbClr': color.rgb = y.val; break;

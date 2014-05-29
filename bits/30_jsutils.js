@@ -6,6 +6,7 @@ function evert(obj, arr) {
 	var o = {};
 	keys(obj).forEach(function(k) {
 		if(!obj.hasOwnProperty(k)) return;
+		if(arr && typeof arr === "string") o[obj[k][arr]] = k;
 		if(!arr) o[obj[k]] = k;
 		else (o[obj[k]]=o[obj[k]]||[]).push(k);
 	});

@@ -41,8 +41,34 @@ function parse_Cell(data) {
 /* [MS-XLSB] 2.5.21 */
 var parse_CodeName = function(data, length) { return parse_XLWideString(data, length); };
 
+/* [MS-XLSB] 2.5.166 */
+var parse_XLNullableWideString = function(data) {
+	var cchCharacters = data.read_shift(4);
+	return cchCharacters === 0 || cchCharacters === 0xFFFFFFFF ? "" : data.read_shift('dbcs', cchCharacters);
+};
+var write_XLNullableWideString = function(data, o) {
+	if(!o) o = new_buf(127);
+	o.write_shift(4, data.length || 0xFFFFFFFF);
+	if(data.length > 0) o.write_shift('dbcs', data);
+	return o;
+};
+
+/* [MS-XLSB] 2.5.168 */
+var parse_XLWideString = function(data) {
+	var cchCharacters = data.read_shift(4);
+	return cchCharacters === 0 ? "" : data.read_shift('dbcs', cchCharacters);
+};
+var write_XLWideString = function(data, o) {
+	if(!o) o = new_buf(127);
+	o.write_shift(4, data.length);
+	if(data.length > 0) o.write_shift('dbcs', data);
+	return o;
+};
+
 /* [MS-XLSB] 2.5.114 */
-var parse_RelID = function(data, length) { return parse_XLNullableWideString(data, length); };
+var parse_RelID = parse_XLNullableWideString;
+var write_RelID = write_XLNullableWideString;
+
 
 /* [MS-XLSB] 2.5.122 */
 function parse_RkNumber(data) {
@@ -64,20 +90,18 @@ var parse_UncheckedRfX = function(data) {
 	return cell;
 };
 
-/* [MS-XLSB] 2.5.166 */
-var parse_XLNullableWideString = function(data) {
-	var cchCharacters = data.read_shift(4);
-	return cchCharacters === 0 || cchCharacters === 0xFFFFFFFF ? "" : data.read_shift('dbcs', cchCharacters);
-};
-
-/* [MS-XLSB] 2.5.168 */
-var parse_XLWideString = function(data) {
-	var cchCharacters = data.read_shift(4);
-	return cchCharacters === 0 ? "" : data.read_shift('dbcs', cchCharacters);
+var write_UncheckedRfX = function(r, o) {
+	if(!o) o = new_buf(16);
+	o.write_shift(4, r.s.r);
+	o.write_shift(4, r.e.r);
+	o.write_shift(4, r.s.c);
+	o.write_shift(4, r.e.c);
+	return o;
 };
 
 /* [MS-XLSB] 2.5.171 */
 function parse_Xnum(data, length) { return data.read_shift('ieee754'); }
+function write_Xnum(data, o) { return (o || new_buf(8)).write_shift('ieee754', data); }
 
 /* [MS-XLSB] 2.5.198.2 */
 var BErr = {
@@ -108,7 +132,7 @@ function parse_BrtColor(data, length) {
 	out.bAlpha = read(1);
 }
 
-/* [MS-XLSB 2.5.52 */
+/* [MS-XLSB] 2.5.52 */
 function parse_FontFlags(data, length) {
 	var d = data.read_shift(1);
 	data.l++;

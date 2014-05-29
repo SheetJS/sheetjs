@@ -26,3 +26,5 @@ function parse_cc_bin(data, opts) {
 	});
 	return out;
 }
+
+function write_cc_bin(data, opts) { }

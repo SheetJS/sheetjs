@@ -17,6 +17,7 @@ function parse_zip(zip, opts) {
 		dir.workbooks.push(binname);
 		xlsb = true;
 	}
+	if(dir.workbooks[0].substr(-3) == "bin") xlsb = true;
 	if(xlsb) set_cp(1200);
 
 	if(!opts.bookSheets && !opts.bookProps) {
@@ -27,7 +28,7 @@ function parse_zip(zip, opts) {
 		if(dir.style) styles = parse_sty(getzipdata(zip, dir.style.replace(/^\//,'')),dir.style, opts);
 
 		themes = {};
-		if(opts.cellStyles && dir.themes) themes = parse_theme(getzipdata(zip, dir.themes[0].replace(/^\//,'')),dir.themes[0], opts);
+		if(opts.cellStyles && dir.themes.length) themes = parse_theme(getzipdata(zip, dir.themes[0].replace(/^\//,'')),dir.themes[0], opts);
 	}
 
 	var wb = parse_wb(getzipdata(zip, dir.workbooks[0].replace(/^\//,'')), dir.workbooks[0], opts);
@@ -76,18 +77,20 @@ function parse_zip(zip, opts) {
 		}
 	}
 
-	var wbrelsfile = 'xl/_rels/workbook.xml.rels';
+	var wbext = xlsb ? "bin" : "xml";
+	var wbrelsfile = 'xl/_rels/workbook.' + wbext + '.rels';
 	var wbrels = parse_rels(getzipdata(zip, wbrelsfile, true), wbrelsfile);
 	if(wbrels) try {
 		wbrels = wb.Sheets.map(function(w) { return [w.name, wbrels['!id'][w.id].Target]; });
 	} catch(e) { wbrels = null; }
+	if(wbrels && wbrels.length === 0) wbrels = null;
 	/* Numbers iOS hack */
 	var nmode = (getzipdata(zip,"xl/worksheets/sheet.xml",true))?1:0;
 	for(i = 0; i != props.Worksheets; ++i) {
 		try {
 			if(wbrels) path = 'xl/' + (wbrels[i][1]).replace(/[\/]?xl\//, "");
 			else {
-				path = 'xl/worksheets/sheet'+(i+1-nmode)+(xlsb?'.bin':'.xml');
+				path = 'xl/worksheets/sheet'+(i+1-nmode)+"." + wbext;
 				path = path.replace(/sheet0\./,"sheet.");
 			}
 			relsPath = path.replace(/^(.*)(\/)([^\/]*)$/, "$1/_rels/$3.rels");

@@ -1,12 +1,12 @@
 LIB=xlsx
-DEPS=$(wildcard bits/*.js)
+DEPS=$(sort $(wildcard bits/*.js))
 TARGET=$(LIB).js
 FMT=xlsx xlsm xlsb misc full
 REQS=jszip.js
 ADDONS=dist/cpexcel.js
 
 $(TARGET): $(DEPS)
-	cat $^ > $@
+	cat $^ | tr -d '\15\32' > $@
 
 bits/01_version.js: package.json
 	echo "XLSX.version = '"`grep version package.json | awk '{gsub(/[^0-9a-z\.-]/,"",$$2); print $$2}'`"';" > $@

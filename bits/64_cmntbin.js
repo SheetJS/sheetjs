@@ -42,3 +42,5 @@ function parse_comments_bin(data, opts) {
 	});
 	return out;
 }
+
+function write_comments_bin(data, opts) { }

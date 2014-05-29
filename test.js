@@ -26,6 +26,8 @@ var dir = "./test_files/";
 var paths = {
 	cp1:  dir + 'custom_properties.xlsx',
 	cp2:  dir + 'custom_properties.xlsb',
+	css1: dir + 'cell_style_simple.xlsx',
+	css2: dir + 'cell_style_simple.xlsb',
 	cst1: dir + 'comments_stress_test.xlsx',
 	cst2: dir + 'comments_stress_test.xlsb',
 	fst1: dir + 'formula_stress_test.xlsx',
@@ -47,6 +49,7 @@ var N2 = 'XLSB';
 
 function parsetest(x, wb, full, ext) {
 	ext = (ext ? " [" + ext + "]": "");
+	if(!full && ext) return;
 	describe(x + ext + ' should have all bits', function() {
 		var sname = dir + '2011/' + x + '.sheetnames';
 		it('should have all sheets', function() {
@@ -125,14 +128,21 @@ function parsetest(x, wb, full, ext) {
 	});
 }
 
+var wbtable = {};
+
 describe('should parse test files', function() {
 	files.forEach(function(x) {
 		if(!fs.existsSync(dir + x)) return;
 		it(x, x.substr(-8) == ".pending" ? null : function() {
 			var wb = X.readFile(dir + x, opts);
+			wbtable[dir + x] = wb;
 			parsetest(x, wb, true);
-			['.xlsx', '.xlsm'].forEach(function(ext, idx) {
-				parsetest(x, X.read(X.write(wb, {type:"buffer", bookType:ext.replace(/\./,""), bookSST: idx != 1})), true, ext);
+		});
+		fullex.forEach(function(ext, idx) {
+			it(x + ' [' + ext + ']', function(){
+				var wb = wbtable[dir + x];
+				if(!wb) wb = X.readFile(dir + x, opts);
+				parsetest(x, X.read(X.write(wb, {type:"buffer", bookType:ext.replace(/\./,""), bookSST: idx != 1}), {WTF:opts.WTF}), ext.replace(/\./,"") !== "xlsb", ext);
 			});
 		});
 	});
@@ -208,6 +218,28 @@ describe('parse options', function() {
 					assert(ws[addr].t!== 'n' || typeof ws[addr].z !== 'undefined');
 				});
 			});
+		});
+		it('should not generate cell styles by default', function() {
+			var wb = X.readFile(paths.css1);
+			wb.SheetNames.forEach(function(s) {
+				var ws = wb.Sheets[s];
+				Object.keys(ws).forEach(function(addr) {
+					if(addr[0] === "!" || !ws.hasOwnProperty(addr)) return;
+					assert(typeof ws[addr].s === 'undefined');
+				});
+			});
+		});
+		it('XLSX should generate cell styles when requested', function() {
+			var wb = X.readFile(paths.css1, {cellStyles:true});
+			var found = false;
+			wb.SheetNames.forEach(function(s) {
+				var ws = wb.Sheets[s];
+				Object.keys(ws).forEach(function(addr) {
+					if(addr[0] === "!" || !ws.hasOwnProperty(addr)) return;
+					if(typeof ws[addr].s !== 'undefined') return found = true;
+				});
+			});
+			assert(found);
 		});
 	});
 	describe('sheet', function() {
@@ -385,6 +417,34 @@ function custprop(wb) {
 	assert.equal(wb.Custprops.Counter, -3.14);
 }
 
+function cmparr(x){ for(var i=1;i!=x.length;++i) assert.deepEqual(x[0], x[i]); }
+
+function deepcmp(x,y,k,m,c) {
+	var s = k.indexOf(".");
+	m = (m||"") + "|" + (s > -1 ? k.substr(0,s) : k);
+	if(s < 0) return assert[c<0?'notEqual':'equal'](x[k], y[k], m);
+	return deepcmp(x[k.substr(0,s)],y[k.substr(0,s)],k.substr(s+1),m,c)
+}
+
+var styexc = [
+	'A2|H10|bgColor.rgb',
+	'F6|H1|patternType'
+]
+var stykeys = [
+	"patternType",
+	"fgColor.rgb",
+	"bgColor.rgb"
+];
+function diffsty(ws, r1,r2) {
+	var c1 = ws[r1].s, c2 = ws[r2].s;
+	stykeys.forEach(function(m) {
+		var c = -1;
+		if(styexc.indexOf(r1+"|"+r2+"|"+m) > -1) c = 1;
+		else if(styexc.indexOf(r2+"|"+r1+"|"+m) > -1) c = 1;
+		deepcmp(c1,c2,m,r1+","+r2,c);
+	});
+}
+
 describe('parse features', function() {
 	it('should have comment as part of cell properties', function(){
 		var X = require('./');
@@ -496,6 +556,36 @@ describe('parse features', function() {
 			assert.equal(sheet[3]['てすと'], '2/14/14');
 		});
 	});
+
+	describe('should correctly handle styles', function() {
+		var ws, rn, rn2;
+		before(function() {
+			ws=X.readFile(paths.css1, {cellStyles:true}).Sheets.Sheet1;
+			rn = function(range) {
+				var r = X.utils.decode_range(range);
+				var out = [];
+				for(var R = r.s.r; R <= r.e.r; ++R) for(var C = r.s.c; C <= r.e.c; ++C)
+					out.push(X.utils.encode_cell({c:C,r:R}));
+				return out;
+			};
+			rn2 = function(r) { return [].concat.apply([], r.split(",").map(rn)); };
+		});
+		var ranges = [
+			'A1:D1,F1:G1', 'A2:D2,F2:G2', /* rows */
+			'A3:A10', 'B3:B10', 'E1:E10', 'F6:F8', /* cols */
+			'H1:J4', 'H10' /* blocks */
+		]
+		ranges.forEach(function(rng) {
+			it(rng,function(){cmparr(rn2(rng).map(function(x){ return ws[x].s; }));});
+		});
+		it('different styles', function() {
+			for(var i = 0; i != ranges.length-1; ++i) {
+				for(var j = i+1; j != ranges.length; ++j) {
+					diffsty(ws, rn2(ranges[i])[0], rn2(ranges[j])[0]);
+				}
+			}
+		});
+	});
 });
 
 describe('roundtrip features', function() {
@@ -574,6 +664,140 @@ describe('invalid files', function() {
 					X.write(wb, {type:'binary'});
 				});
 			});
+		});
+	});
+});
+
+function datenum(v, date1904) {
+	if(date1904) v+=1462;
+	var epoch = Date.parse(v);
+	return (epoch - new Date(Date.UTC(1899, 11, 30))) / (24 * 60 * 60 * 1000);
+}
+function sheet_from_array_of_arrays(data, opts) {
+	var ws = {};
+	var range = {s: {c:10000000, r:10000000}, e: {c:0, r:0 }};
+	for(var R = 0; R != data.length; ++R) {
+		for(var C = 0; C != data[R].length; ++C) {
+			if(range.s.r > R) range.s.r = R;
+			if(range.s.c > C) range.s.c = C;
+				if(range.e.r < R) range.e.r = R;
+			if(range.e.c < C) range.e.c = C;
+			var cell = {v: data[R][C] };
+			if(cell.v == null) continue;
+			var cell_ref = X.utils.encode_cell({c:C,r:R});
+			if(typeof cell.v === 'number') cell.t = 'n';
+			else if(typeof cell.v === 'boolean') cell.t = 'b';
+			else if(cell.v instanceof Date) {
+				cell.t = 'n'; cell.z = X.SSF._table[14];
+				cell.v = datenum(cell.v);
+			}
+			else cell.t = 's';
+			ws[cell_ref] = cell;
+		}
+	}
+	if(range.s.c < 10000000) ws['!ref'] = X.utils.encode_range(range);
+	return ws;
+}
+
+describe('json output', function() {
+	function seeker(json, keys, val) {
+		for(var i = 0; i != json.length; ++i) {
+			for(var j = 0; j != keys.length; ++j) {
+				if(json[i][keys[j]] === val) throw new Error("found " + val + " in row " + i + " key " + keys[j]);
+			}
+		}
+	}
+	var data, ws;
+	before(function() {
+		data = [
+			[1,2,3],
+			[true, false, null, "sheetjs"],
+			["foo","bar",new Date("2014-02-19T14:30Z"), "0.3"],
+			["baz", null, "qux"]
+		];
+		ws = sheet_from_array_of_arrays(data);
+	});
+	it('should use first-row headers and full sheet by default', function() {
+		var json = X.utils.sheet_to_json(ws);
+		assert.equal(json.length, data.length - 1);
+		assert.equal(json[0][1], true);
+		assert.equal(json[1][2], "bar");
+		assert.equal(json[2][3], "qux");
+		assert.doesNotThrow(function() { seeker(json, [1,2,3], "sheetjs"); });
+		assert.throws(function() { seeker(json, [1,2,3], "baz"); });
+	});
+	it('should create array of arrays if header == 1', function() {
+		var json = X.utils.sheet_to_json(ws, {header:1});
+		assert.equal(json.length, data.length);
+		assert.equal(json[1][0], true);
+		assert.equal(json[2][1], "bar");
+		assert.equal(json[3][2], "qux");
+		assert.doesNotThrow(function() { seeker(json, [0,1,2], "sheetjs"); });
+		assert.throws(function() { seeker(json, [0,1,2,3], "sheetjs"); });
+		assert.throws(function() { seeker(json, [0,1,2], "baz"); });
+	});
+	it('should use column names if header == "A"', function() {
+		var json = X.utils.sheet_to_json(ws, {header:'A'});
+		assert.equal(json.length, data.length);
+		assert.equal(json[1]['A'], true);
+		assert.equal(json[2]['B'], "bar");
+		assert.equal(json[3]['C'], "qux");
+		assert.doesNotThrow(function() { seeker(json, "ABC", "sheetjs"); });
+		assert.throws(function() { seeker(json, "ABCD", "sheetjs"); });
+		assert.throws(function() { seeker(json, "ABC", "baz"); });
+	});
+	it('should use column labels if specified', function() {
+		var json = X.utils.sheet_to_json(ws, {header:["O","D","I","N"]});
+		assert.equal(json.length, data.length);
+		assert.equal(json[1]['O'], true);
+		assert.equal(json[2]['D'], "bar");
+		assert.equal(json[3]['I'], "qux");
+		assert.doesNotThrow(function() { seeker(json, "ODI", "sheetjs"); });
+		assert.throws(function() { seeker(json, "ODIN", "sheetjs"); });
+		assert.throws(function() { seeker(json, "ODIN", "baz"); });
+	});
+	[["string", "A2:D4"], ["numeric", 1], ["object", {s:{r:1,c:0},e:{r:3,c:3}}]].forEach(function(w) {
+		it('should accept custom ' + w[0] + ' range', function() {
+			var json = X.utils.sheet_to_json(ws, {header:1, range:w[1]});
+			assert.equal(json.length, 3);
+			assert.equal(json[0][0], true);
+			assert.equal(json[1][1], "bar");
+			assert.equal(json[2][2], "qux");
+			assert.doesNotThrow(function() { seeker(json, [0,1,2], "sheetjs"); });
+			assert.throws(function() { seeker(json, [0,1,2,3], "sheetjs"); });
+			assert.throws(function() { seeker(json, [0,1,2], "baz"); });
+		});
+	});
+});
+
+describe('corner cases', function() {
+	it('output functions', function() {
+		var data = [
+			[1,2,3],
+			[true, false, null, "sheetjs"],
+			["foo","bar",new Date("2014-02-19T14:30Z"), "0.3"],
+			["baz", null, "q\"ux"]
+		];
+		ws = sheet_from_array_of_arrays(data);
+		ws.A1.f = ""; ws.A1.w = "";
+		delete ws.C3.w; delete ws.C3.z; ws.C3.XF = {ifmt:14};
+		ws.A4.t = "e";
+		X.utils.get_formulae(ws);
+		X.utils.make_csv(ws);
+		X.utils.make_json(ws);
+		ws.A2.t = "f";
+		assert.throws(function() { X.utils.make_json(ws); });
+	});
+	it('SSF', function() {
+		X.SSF.format("General", "dafuq");
+		assert.throws(function(x) { return X.SSF.format("General", {sheet:"js"});});
+		X.SSF.format("b e ddd hh AM/PM", 41722.4097222222);
+		X.SSF.format("b ddd hh m", 41722.4097222222);
+		["hhh","hhh A/P","hhmmm","sss","[hhh]","G eneral"].forEach(function(f) {
+			assert.throws(function(x) { return X.SSF.format(f, 12345.6789);});
+		});
+		["[m]","[s]"].forEach(function(f) {
+			assert.doesNotThrow(function(x) { return X.SSF.format(f, 12345.6789);});
 		});
 	});
 });

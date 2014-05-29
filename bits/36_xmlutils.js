@@ -34,7 +34,7 @@ function unescapexml(text){
 function escapexml(text){
 	var s = text + '';
 	rencstr.forEach(function(y){s=s.replace(new RegExp(y,'g'), rencoding[y]);});
-	s = s.replace(/[\u0000-\u0007]/g,function(s) { return "_x" + ("0000"+_ord(s).toString(16)).substr(-4) + "_";}); /* TODO: verify range */
+	s = s.replace(/[\u0000-\u0008\u000b-\u001f]/g,function(s) { return "_x" + ("0000"+_ord(s).toString(16)).substr(-4) + "_";});
 	return s;
 }
 
@@ -83,8 +83,7 @@ function parseVector(data) {
 
 function writetag(f,g) {return '<' + f + (g.match(/(^\s|\s$|\n)/)?' xml:space="preserve"' : "") + '>' + g + '</' + f + '>';}
 
-/*jshint -W041 */
-function writextag(f,g,h) { return '<' + f + (h != null ? keys(h).map(function(k) { return " " + k + '="' + h[k] + '"';}).join("") : "") + (g == null ? "/" : (g.match(/(^\s|\s$|\n)/)?' xml:space="preserve"' : "") + '>' + g + '</' + f) + '>';}
+function writextag(f,g,h) { return '<' + f + (h !== null && h !== undefined ? keys(h).map(function(k) { return " " + k + '="' + h[k] + '"';}).join("") : "") + (g === null || g === undefined ? "/" : (g.match(/(^\s|\s$|\n)/)?' xml:space="preserve"' : "") + '>' + g + '</' + f) + '>';}
 
 function write_w3cdtf(d, t) { try { return d.toISOString().replace(/\.\d*/,""); } catch(e) { if(t) throw e; } }
 

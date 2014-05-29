@@ -208,6 +208,7 @@ var CTYPE_XML_ROOT = writextag('Types', null, {
 
 var CTYPE_DEFAULTS = [
 	['xml', 'application/xml'],
+	['bin', 'application/vnd.ms-excel.sheet.binary.macroEnabled.main'],
 	['rels', type2ct.rels[0]]
 ].map(function(x) {
 	return writextag('Default', null, {'Extension':x[0], 'ContentType': x[1]});

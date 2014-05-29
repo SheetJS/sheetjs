@@ -29,22 +29,31 @@ function format_cell(cell, v) {
 	try { return (cell.w = SSF.format(cell.XF.ifmt||0, v)); } catch(e) { return v; }
 }
 
-function sheet_to_row_object_array(sheet, opts){
-	var val, row, r, hdr = {}, isempty, R, C, v;
+function sheet_to_json(sheet, opts){
+	var val, row, range, header, offset = 1, r, hdr = {}, isempty, R, C, v;
 	var out = [];
 	opts = opts || {};
 	if(!sheet || !sheet["!ref"]) return out;
-	r = decode_range(sheet["!ref"]);
+	range = opts.range || sheet["!ref"];
+	header = opts.header || "";
+	switch(typeof range) {
+		case 'string': r = decode_range(range); break;
+		case 'number': r = decode_range(sheet["!ref"]); r.s.r = range; break;
+		default: r = range;
+	}
+	if(header) offset = 0;
 	for(R=r.s.r, C = r.s.c; C <= r.e.c; ++C) {
 		val = sheet[encode_cell({c:C,r:R})];
-		if(!val) continue;
-		hdr[C] = format_cell(val);
+		if(header === "A") hdr[C] = encode_col(C);
+		else if(header === 1) hdr[C] = C;
+		else if(Array.isArray(header)) hdr[C] = header[C - r.s.c];
+		else if(!val) continue;
+		else hdr[C] = format_cell(val);
 	}
 
-	for (R = r.s.r + 1; R <= r.e.r; ++R) {
+	for (R = r.s.r + offset; R <= r.e.r; ++R) {
 		isempty = true;
-		/* row index available as __rowNum__ */
-		row = Object.create({ __rowNum__ : R });
+		row = header === 1 ? [] : Object.create({ __rowNum__ : R });
 		for (C = r.s.c; C <= r.e.c; ++C) {
 			val = sheet[encode_cell({c: C,r: R})];
 			if(!val || !val.t) continue;
@@ -64,6 +73,8 @@ function sheet_to_row_object_array(sheet, opts){
 	}
 	return out;
 }
+
+function sheet_to_row_object_array(sheet, opts) { if(!opts) opts = {}; delete opts.range; return sheet_to_json(sheet, opts); }
 
 function sheet_to_csv(sheet, opts) {
 	var out = [], txt = "";
@@ -114,8 +125,9 @@ var utils = {
 	decode_range: decode_range,
 	sheet_to_csv: sheet_to_csv,
 	make_csv: sheet_to_csv,
-	make_json: sheet_to_row_object_array,
+	make_json: sheet_to_json,
 	get_formulae: get_formulae,
 	format_cell: format_cell,
+	sheet_to_json: sheet_to_json,
 	sheet_to_row_object_array: sheet_to_row_object_array
 };

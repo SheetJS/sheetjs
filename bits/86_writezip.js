@@ -43,7 +43,7 @@ function write_zip(wb, opts) {
 	ct.extprops.push(f);
 	add_rels(opts.rels, 3, f, RELS.EXT_PROPS);
 
-	if(wb.Custprops !== wb.Props) { /* TODO: fix xlsjs */
+	if(wb.Custprops !== wb.Props && keys(wb.Custprops||{}).length > 0) {
 		f = "docProps/custom.xml";
 		zip.file(f, write_cust_props(wb.Custprops, opts));
 		ct.custprops.push(f);
@@ -78,13 +78,13 @@ function write_zip(wb, opts) {
 
 	/* TODO: something more intelligent with styles */
 
-	f = "xl/styles.xml";
+	f = "xl/styles." + wbext;
 	zip.file(f, write_sty(wb, f, opts));
 	ct.styles.push(f);
 	add_rels(opts.wbrels, ++rId, "styles." + wbext, RELS.STY);
 
 	zip.file("[Content_Types].xml", write_ct(ct, opts));
 	zip.file('_rels/.rels', write_rels(opts.rels));
-	zip.file('xl/_rels/workbook.xml.rels', write_rels(opts.wbrels));
+	zip.file('xl/_rels/workbook.' + wbext + '.rels', write_rels(opts.wbrels));
 	return zip;
 }

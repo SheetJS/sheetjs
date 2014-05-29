@@ -9,6 +9,7 @@ var parse_BrtRowHdr = function(data, length) {
 
 /* [MS-XLSB] 2.4.812 BrtWsDim */
 var parse_BrtWsDim = parse_UncheckedRfX;
+var write_BrtWsDim = write_UncheckedRfX;
 
 /* [MS-XLSB] 2.4.815 BrtWsProp */
 var parse_BrtWsProp = function(data, length) {
@@ -334,4 +335,61 @@ var parse_ws_bin = function(data, opts, rels) {
 	return s;
 };
 
-var write_ws_bin = function(wb, opts, rels) {};
+function write_CELLTABLE(ba, ws, idx, opts, wb) {
+	var r = decode_range(ws['!ref'] || "A1");
+	write_record(ba, 'BrtBeginSheetData');
+	for(var i = r.s.r; i <= r.e.r; ++i) {
+		/* [ACCELLTABLE] */
+		/* BrtRowHdr */
+
+		/* *16384CELL */
+	}
+	write_record(ba, 'BrtEndSheetData');
+}
+
+var write_ws_bin = function(idx, opts, wb) {
+	var ba = buf_array();
+	var s = wb.SheetNames[idx], ws = wb.Sheets[s] || {};
+	var r = decode_range(ws['!ref'] || "A1");
+	write_record(ba, "BrtBeginSheet");
+	/* [BrtWsProp] */
+	write_record(ba, "BrtWsDim", write_BrtWsDim(r));
+	/* [WSVIEWS2] */
+	/* [WSFMTINFO] */
+	/* *COLINFOS */
+	write_CELLTABLE(ba, ws, idx, opts, wb);
+	/* [BrtSheetCalcProp] */
+	/* [[BrtSheetProtectionIso] BrtSheetProtection] */
+	/* *([BrtRangeProtectionIso] BrtRangeProtection) */
+	/* [SCENMAN] */
+	/* [AUTOFILTER] */
+	/* [SORTSTATE] */
+	/* [DCON] */
+	/* [USERSHVIEWS] */
+	/* [MERGECELLS] */
+	/* [BrtPhoneticInfo] */
+	/* *CONDITIONALFORMATTING */
+	/* [DVALS] */
+	/* *BrtHLink */
+	/* [BrtPrintOptions] */
+	/* [BrtMargins] */
+	/* [BrtPageSetup] */
+	/* [HEADERFOOTER] */
+	/* [RWBRK] */
+	/* [COLBRK] */
+	/* *BrtBigName */
+	/* [CELLWATCHES] */
+	/* [IGNOREECS] */
+	/* [SMARTTAGS] */
+	/* [BrtDrawing] */
+	/* [BrtLegacyDrawing] */
+	/* [BrtLegacyDrawingHF] */
+	/* [BrtBkHim] */
+	/* [OLEOBJECTS] */
+	/* [ACTIVEXCONTROLS] */
+	/* [WEBPUBITEMS] */
+	/* [LISTPARTS] */
+	/* FRTWORKSHEET */
+	write_record(ba, "BrtEndSheet");
+	return ba.end();
+};

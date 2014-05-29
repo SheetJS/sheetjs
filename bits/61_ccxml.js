@@ -15,3 +15,4 @@ function parse_cc_xml(data, opts) {
 	return d;
 }
 
+function write_cc_xml(data, opts) { }

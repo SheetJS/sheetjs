@@ -12,6 +12,7 @@ var RecordEnum = {
 	0x0009: { n:"BrtFmlaNum", f:parse_BrtFmlaNum },
 	0x000A: { n:"BrtFmlaBool", f:parse_BrtFmlaBool },
 	0x000B: { n:"BrtFmlaError", f:parse_BrtFmlaError },
+	0x0010: { n:"BrtFRTArchID$", f:parse_BrtFRTArchID$ },
 	0x0013: { n:"BrtSSTItem", f:parse_RichStr },
 	0x0014: { n:"BrtPCDIMissing", f:parsenoop },
 	0x0015: { n:"BrtPCDINumber", f:parsenoop },
@@ -65,7 +66,7 @@ var RecordEnum = {
 	0x0080: { n:"BrtFileVersion", f:parsenoop },
 	0x0081: { n:"BrtBeginSheet", f:parsenoop },
 	0x0082: { n:"BrtEndSheet", f:parsenoop },
-	0x0083: { n:"BrtBeginBook", f:parsenoop },
+	0x0083: { n:"BrtBeginBook", f:parsenoop, p:0 },
 	0x0084: { n:"BrtEndBook", f:parsenoop },
 	0x0085: { n:"BrtBeginWsViews", f:parsenoop },
 	0x0086: { n:"BrtEndWsViews", f:parsenoop },
@@ -82,10 +83,10 @@ var RecordEnum = {
 	0x0091: { n:"BrtBeginSheetData", f:parsenoop },
 	0x0092: { n:"BrtEndSheetData", f:parsenoop },
 	0x0093: { n:"BrtWsProp", f:parse_BrtWsProp },
-	0x0094: { n:"BrtWsDim", f:parse_BrtWsDim },
+	0x0094: { n:"BrtWsDim", f:parse_BrtWsDim, p:16 },
 	0x0097: { n:"BrtPane", f:parsenoop },
 	0x0098: { n:"BrtSel", f:parsenoop },
-	0x0099: { n:"BrtWbProp", f:parsenoop },
+	0x0099: { n:"BrtWbProp", f:parse_BrtWbProp },
 	0x009A: { n:"BrtWbFactoid", f:parsenoop },
 	0x009B: { n:"BrtFileRecover", f:parsenoop },
 	0x009C: { n:"BrtBundleSh", f:parse_BrtBundleSh },
@@ -821,3 +822,4 @@ var RecordEnum = {
 	0xFFFF: { n:"", f:parsenoop }
 };
 
+var evert_RE = evert(RecordEnum, 'n');
