@@ -25,6 +25,9 @@ function parse_zip(zip, opts) {
 
 		styles = {};
 		if(dir.style) styles = parse_sty(getzipdata(zip, dir.style.replace(/^\//,'')),dir.style, opts);
+
+		themes = {};
+		if(opts.cellStyles && dir.themes) themes = parse_theme(getzipdata(zip, dir.themes[0].replace(/^\//,'')),dir.themes[0], opts);
 	}
 
 	var wb = parse_wb(getzipdata(zip, dir.workbooks[0].replace(/^\//,'')), dir.workbooks[0], opts);
@@ -105,6 +108,7 @@ function parse_zip(zip, opts) {
 		SheetNames: props.SheetNames,
 		Strings: strs,
 		Styles: styles,
+		Themes: themes,
 		SSF: SSF.get_table()
 	};
 	if(opts.bookFiles) {

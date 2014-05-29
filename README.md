@@ -210,6 +210,7 @@ that does not start with `!` corresponds to a cell (using `A-1` notation).
 - `.c` : comments associated with the cell
 - `.z` : the number format string associated with the cell (if requested)
 - `.l` : the hyperlink of the cell (.Target holds link, .tooltip is tooltip)
+- `.s` : the style/theme of the cell (if applicable)
 
 For dates, `.v` holds the raw date code from the sheet and `.w` holds the text
 
@@ -222,6 +223,7 @@ The exported `read` and `readFile` functions accept an options argument:
 | cellFormula | true    | Save formulae to the .f field |
 | cellHTML    | true    | Parse rich text and save HTML to the .h field |
 | cellNF      | false   | Save number format string to the .z field |
+| cellStyles  | false   | Save style/theme info to the .s field |
 | sheetStubs  | false   | Create cell objects for stub cells |
 | sheetRows   | 0       | If >0, read the first `sheetRows` rows ** |
 | bookDeps    | false   | If true, parse calculation chains |

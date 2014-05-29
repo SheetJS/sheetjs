@@ -1,3 +1,48 @@
+/* 18.8.21 fills CT_Fills */
+function parse_fills(t, opts) {
+	styles.Fills = [];
+	var fill = {};
+	t[0].match(/<[^>]*>/g).forEach(function(x) {
+		var y = parsexmltag(x);
+		switch(y[0]) {
+			case '<fills': case '<fills>': case '</fills>': break;
+
+			/* 18.8.20 fill CT_Fill */
+			case '<fill>': break;
+			case '</fill>': styles.Fills.push(fill); fill = {}; break;
+
+			/* 18.8.32 patternFill CT_PatternFill */
+			case '<patternFill':
+				if(y.patternType) fill.patternType = y.patternType;
+				break;
+			case '<patternFill/>': break;
+
+			/* 18.8.3 bgColor CT_Color */
+			case '<bgColor':
+				if(!fill.bgColor) fill.bgColor = {};
+				if(y.indexed) fill.bgColor.indexed = parseInt(y.indexed);
+				if(y.theme) fill.bgColor.theme = parseInt(y.theme);
+				if(y.tint) fill.bgColor.tint = Number(y.tint);
+				/* Excel uses 8 character RGB strings? */
+				if(y.rgb) fill.bgColor.rgb = y.rgb.substring(y.rgb.length - 6);
+				break;
+			case '</bgColor>': break;
+
+			/* 18.8.19 fgColor CT_Color */
+			case '<fgColor':
+				if(!fill.fgColor) fill.fgColor = {};
+				if(y.theme) fill.fgColor.theme = parseInt(y.theme);
+				if(y.tint) fill.fgColor.tint = Number(y.tint);
+				/* Excel uses 8 character RGB strings? */
+				if(y.rgb) fill.fgColor.rgb = y.rgb.substring(y.rgb.length - 6);
+				break;
+			case '</fgColor>': break;
+
+			default: if(opts.WTF) throw 'unrecognized ' + y[0] + ' in fills';
+		}
+	});
+}
+
 /* 18.8.31 numFmts CT_NumFmts */
 function parse_numFmts(t, opts) {
 	styles.NumberFmt = [];
@@ -38,6 +83,7 @@ function parse_cellXfs(t, opts) {
 			/* 18.8.45 xf CT_Xf */
 			case '<xf': delete y[0];
 				if(y.numFmtId) y.numFmtId = parseInt(y.numFmtId, 10);
+				if(y.fillId) y.fillId = parseInt(y.fillId, 10);
 				styles.CellXf.push(y); break;
 			case '</xf>': break;
 
@@ -73,7 +119,10 @@ function parse_sty_xml(data, opts) {
 	if((t=data.match(/<numFmts([^>]*)>.*<\/numFmts>/))) parse_numFmts(t, opts);
 
 	/* fonts CT_Fonts ? */
-	/* fills CT_Fills ? */
+
+	/* fills CT_Fills */
+	if((t=data.match(/<fills([^>]*)>.*<\/fills>/))) parse_fills(t, opts);
+
 	/* borders CT_Borders ? */
 	/* cellStyleXfs CT_CellStyleXfs ? */
 
