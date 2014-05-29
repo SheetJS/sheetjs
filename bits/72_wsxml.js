@@ -73,14 +73,24 @@ function parse_ws_xml(data, opts, rels) {
 			}
 
 			/* formatting */
-			var fmtid = 0;
+			var fmtid = 0, fillid = 0;
 			if(cell.s && styles.CellXf) {
 				var cf = styles.CellXf[cell.s];
 				if(cf && cf.numFmtId) fmtid = cf.numFmtId;
+				if(opts.cellStyles && cf && cf.fillId) fillid = cf.fillId;
 			}
 			try {
 				p.w = SSF.format(fmtid,p.v,_ssfopts);
 				if(opts.cellNF) p.z = SSF._table[fmtid];
+				if(fillid) {
+					p.s = styles.Fills[fillid];
+					if (p.s.fgColor && p.s.fgColor.theme) {
+						p.s.fgColor.rgb = rgb_tint(themes.themeElements.clrScheme[p.s.fgColor.theme].rgb, p.s.fgColor.tint || 0);
+					}
+					if (p.s.bgColor && p.s.bgColor.theme) {
+						p.s.bgColor.rgb = rgb_tint(themes.themeElements.clrScheme[p.s.bgColor.theme].rgb, p.s.bgColor.tint || 0);
+					}
+				}
 			} catch(e) { if(opts.WTF) throw e; }
 			s[cell.r] = p;
 		});

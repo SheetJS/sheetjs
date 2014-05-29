@@ -10,6 +10,10 @@ function parse_sty(data, name, opts) {
 	return (name.substr(-4)===".bin" ? parse_sty_bin : parse_sty_xml)(data, opts);
 }
 
+function parse_theme(data, name, opts) {
+	return parse_theme_xml(data, opts);
+}
+
 function parse_sst(data, name, opts) {
 	return (name.substr(-4)===".bin" ? parse_sst_bin : parse_sst_xml)(data, opts);
 }
