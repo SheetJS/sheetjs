@@ -28,7 +28,6 @@ var rencstr = "&<>'\"".split("");
 function unescapexml(text){
 	var s = text + '';
 	s = s.replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/&gt;/g, ">").replace(/&lt;/g, "<").replace(/&amp;/g, "&");
-	//for(var y in encodings) s = s.replace(new RegExp(y,'g'), encodings[y]);
 	return s.replace(/_x([0-9a-fA-F]*)_/g,function(m,c) {return _chr(parseInt(c,16));});
 }
 function escapexml(text){

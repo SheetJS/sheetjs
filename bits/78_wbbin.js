@@ -12,7 +12,7 @@ var write_BrtBundleSh = function(data, o) {
 	o.write_shift(4, data.hsState);
 	o.write_shift(4, data.iTabID);
 	write_RelID(data.strRelID, o);
-	write_XLWideString(data.name, o);
+	write_XLWideString(data.name.substr(0,31), o);
 	return o;
 };
 

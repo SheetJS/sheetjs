@@ -136,7 +136,7 @@ var write_wb_xml = function(wb, opts) {
 	o.push("<sheets>");
 	var i = 1;
 	wb.SheetNames.forEach(function(s) {
-		o.push(writextag('sheet',null,{name:s, sheetId:String(i), "r:id":"rId"+i}));
+		o.push(writextag('sheet',null,{name:s.substr(0,31), sheetId:String(i), "r:id":"rId"+i}));
 		++i;
 	});
 	o.push("</sheets>");

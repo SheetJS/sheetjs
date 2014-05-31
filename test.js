@@ -639,7 +639,7 @@ describe('invalid files', function() {
 		].forEach(function(w) { it('should fail on ' + w[0], function() {
 			assert.throws(function() { X.readFile(dir + w[1]); });
 			assert.throws(function() { X.read(fs.readFileSync(dir+w[1], 'base64'), {type:'base64'}); });
-    }); });
+		}); });
 	});
 	describe('write', function() {
 		it('should pass', function() { X.write(X.readFile(paths.fst1), {type:'binary'}); });
@@ -680,7 +680,7 @@ function sheet_from_array_of_arrays(data, opts) {
 		for(var C = 0; C != data[R].length; ++C) {
 			if(range.s.r > R) range.s.r = R;
 			if(range.s.c > C) range.s.c = C;
-				if(range.e.r < R) range.e.r = R;
+			if(range.e.r < R) range.e.r = R;
 			if(range.e.c < C) range.e.c = C;
 			var cell = {v: data[R][C] };
 			if(cell.v == null) continue;
