@@ -17,6 +17,27 @@ function parse_ws_xml(data, opts, rels) {
 		});
 	}
 
+	/* 18.3.1.17 cols CT_Cols */
+	var columns = [];
+	if(opts.cellStyles && data.match(/<\/cols>/)) {
+		/* 18.3.1.13 col CT_Col */
+		var cols = data.match(/<col[^>]*\/>/g);
+		var seencol = false;
+		for(var coli = 0; coli != cols.length; ++coli) {
+			var coll = parsexmltag(cols[coli]);
+			delete coll[0];
+			var colm=Number(coll.min)-1, colM=Number(coll.max)-1;
+			delete coll.min, coll.max;
+			if(!seencol && coll.width) { seencol = true; find_mdw(+coll.width, coll); }
+			if(coll.width) {
+				coll.wpx = width2px(+coll.width);
+				coll.wch = px2char(coll.wpx);
+				coll.MDW = MDW;
+			}
+			while(colm <= colM) columns[colm++] = coll;
+		}
+	}
+
 	var refguess = {s: {r:1000000, c:1000000}, e: {r:0, c:0} };
 	var sidx = 0;
 
@@ -34,7 +55,8 @@ function parse_ws_xml(data, opts, rels) {
 		if(refguess.e.r < row.r - 1) refguess.e.r = row.r - 1;
 		/* 18.3.1.4 c CT_Cell */
 		var cells = x.substr(x.indexOf('>')+1).split(/<(?:\w+:)?c /);
-		for(var ix = 0, c=cells[0]; ix != cells.length; ++ix,c=cells[ix]) {
+		for(var ix = 0, c=cells[0]; ix != cells.length; ++ix) {
+			c = cells[ix];
 			if(c === "" || c.trim() === "") continue;
 			var cref = c.match(/r=["']([^"']*)["']/), idx = ix;
 			c = "<c " + c;
@@ -85,21 +107,9 @@ function parse_ws_xml(data, opts, rels) {
 				if(cf && cf.numFmtId) fmtid = cf.numFmtId;
 				if(opts.cellStyles && cf && cf.fillId) fillid = cf.fillId;
 			}
-			try {
-				p.w = SSF.format(fmtid,p.v,_ssfopts);
-				if(opts.cellNF) p.z = SSF._table[fmtid];
-				if(fillid) {
-					p.s = styles.Fills[fillid];
-					if (p.s.fgColor && p.s.fgColor.theme) {
-						p.s.fgColor.rgb = rgb_tint(themes.themeElements.clrScheme[p.s.fgColor.theme].rgb, p.s.fgColor.tint || 0);
-					}
-					if (p.s.bgColor && p.s.bgColor.theme) {
-						p.s.bgColor.rgb = rgb_tint(themes.themeElements.clrScheme[p.s.bgColor.theme].rgb, p.s.bgColor.tint || 0);
-					}
-				}
-			} catch(e) { if(opts.WTF) throw e; }
+			safe_format(p, fmtid, fillid, opts);
 			s[cell.r] = p;
-		};
+		}
 	}
 
 	/* 18.3.1.48 hyperlinks CT_Hyperlinks */
@@ -134,8 +144,10 @@ function parse_ws_xml(data, opts, rels) {
 		}
 	}
 	if(mergecells.length > 0) s["!merges"] = mergecells;
+	if(columns.length > 0) s["!cols"] = columns;
 	return s;
 }
+
 
 var WS_XML_ROOT = writextag('worksheet', null, {
 	'xmlns': XMLNS.main[0],
@@ -176,12 +188,28 @@ var write_ws_xml_data = function(ws, opts, idx, wb) {
 	return o.join("");
 };
 
+var write_ws_cols = function(ws, cols) {
+	var o = ["<cols>"], col, width;
+	for(var i = 0; i != cols.length; ++i) {
+		if(!(col = cols[i])) continue;
+		var p = {min:i+1,max:i+1};
+		/* wch (chars), wpx (pixels) */
+		width = -1;
+		if(col.wpx) width = px2char(col.wpx);
+		else if(col.wch) width = col.wch;
+		if(width > -1) { p.width = char2width(width); p.customWidth= 1; }
+		o.push(writextag('col', null, p));
+	}
+	o.push("</cols>");
+	return o.join("");
+};
+
 var write_ws_xml = function(idx, opts, wb) {
 	var o = [], s = wb.SheetNames[idx], ws = wb.Sheets[s] || {}, sidx = 0, rdata = "";
 	o.push(XML_HEADER);
 	o.push(WS_XML_ROOT);
 	o.push(writextag('dimension', null, {'ref': ws['!ref'] || 'A1'}));
-
+	if((ws['!cols']||[]).length > 0) o.push(write_ws_cols(ws, ws['!cols'])); 
 	sidx = o.length;
 	o.push(writextag('sheetData', null));
 	if(ws['!ref']) rdata = write_ws_xml_data(ws, opts, idx, wb);

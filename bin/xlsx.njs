@@ -22,6 +22,7 @@ program
 	.option('-n, --sheet-rows <num>', 'Number of rows to process (0=all rows)')
 	.option('--no-sst', 'do not generate sst')
 	.option('--perf', 'do not generate output')
+	.option('--all', 'parse everything; XLS[XMB] write as much as possible')
 	.option('--dev', 'development mode')
 	.option('--read', 'read but do not print out contents')
 	.option('-q, --quiet', 'quiet mode');
@@ -61,6 +62,12 @@ if(program.xlsx || program.xlsm || program.xlsb) {
 }
 else if(program.formulae);
 else opts.cellFormula = false;
+
+if(program.all) {
+	opts.cellFormula = true;
+	opts.cellNF = true;
+	opts.cellStyles = true;
+}
 
 if(program.dev) {
 	X.verbose = 2;

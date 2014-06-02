@@ -560,7 +560,7 @@ describe('parse features', function() {
 	describe('should correctly handle styles', function() {
 		var ws, rn, rn2;
 		before(function() {
-			ws=X.readFile(paths.css1, {cellStyles:true}).Sheets.Sheet1;
+			ws=X.readFile(paths.css1, {cellStyles:true,WTF:1}).Sheets.Sheet1;
 			rn = function(range) {
 				var r = X.utils.decode_range(range);
 				var out = [];
@@ -574,7 +574,33 @@ describe('parse features', function() {
 			'A1:D1,F1:G1', 'A2:D2,F2:G2', /* rows */
 			'A3:A10', 'B3:B10', 'E1:E10', 'F6:F8', /* cols */
 			'H1:J4', 'H10' /* blocks */
-		]
+		];
+		var exp = [
+  { patternType: 'darkHorizontal',
+    fgColor: { theme: 9, raw_rgb: 'F79646' },
+    bgColor: { theme: 5, raw_rgb: 'C0504D' } },
+  { patternType: 'darkUp',
+    fgColor: { theme: 3, raw_rgb: 'EEECE1' },
+    bgColor: { theme: 7, raw_rgb: '8064A2' } },
+  { patternType: 'darkGray',
+    fgColor: { theme: 3, raw_rgb: 'EEECE1' },
+    bgColor: { theme: 1, raw_rgb: 'FFFFFF' } },
+  { patternType: 'lightGray',
+    fgColor: { theme: 6, raw_rgb: '9BBB59' },
+    bgColor: { theme: 2, raw_rgb: '1F497D' } },
+  { patternType: 'lightDown',
+    fgColor: { theme: 4, raw_rgb: '4F81BD' },
+    bgColor: { theme: 7, raw_rgb: '8064A2' } },
+  { patternType: 'lightGrid',
+    fgColor: { theme: 6, raw_rgb: '9BBB59' },
+    bgColor: { theme: 9, raw_rgb: 'F79646' } },
+  { patternType: 'lightGrid',
+    fgColor: { theme: 4, raw_rgb: '4F81BD' },
+    bgColor: { theme: 2, raw_rgb: '1F497D' } },
+  { patternType: 'lightVertical',
+    fgColor: { theme: 3, raw_rgb: 'EEECE1' },
+    bgColor: { theme: 7, raw_rgb: '8064A2' } }
+    ];
 		ranges.forEach(function(rng) {
 			it(rng,function(){cmparr(rn2(rng).map(function(x){ return ws[x].s; }));});
 		});
@@ -583,6 +609,16 @@ describe('parse features', function() {
 				for(var j = i+1; j != ranges.length; ++j) {
 					diffsty(ws, rn2(ranges[i])[0], rn2(ranges[j])[0]);
 				}
+			}
+		});
+		it('correct styles', function() {
+			var styles = ranges.map(function(r) { return rn2(r)[0]}).map(function(r) { return ws[r].s});
+			for(var i = 0; i != exp.length; ++i) {
+				[
+					"fgColor.theme","fgColor.raw_rgb",
+					"bgColor.theme","bgColor.raw_rgb",
+					"patternType"
+				].forEach(function(k) { deepcmp(exp[i], styles[i], k, i + ":"+k); });
 			}
 		});
 	});

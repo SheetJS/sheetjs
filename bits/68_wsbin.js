@@ -176,10 +176,7 @@ var parse_ws_bin = function(data, opts, rels) {
 					case 'str': p.v = utf8read(val[1]); break;
 				}
 				if(opts.cellFormula && val.length > 3) p.f = val[3];
-				if((cf = styles.CellXf[val[0].iStyleRef])) try {
-					p.w = SSF.format(cf.ifmt,p.v,_ssfopts);
-					if(opts.cellNF) p.z = SSF._table[cf.ifmt];
-				} catch(e) { if(opts.WTF) throw e; }
+				if((cf = styles.CellXf[val[0].iStyleRef])) safe_format(p,cf.ifmt,null,opts);
 				s[encode_cell({c:val[0].c,r:row.r})] = p;
 				if(refguess.s.r > row.r) refguess.s.r = row.r;
 				if(refguess.s.c > val[0].c) refguess.s.c = val[0].c;

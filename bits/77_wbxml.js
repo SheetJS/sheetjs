@@ -125,14 +125,16 @@ var WB_XML_ROOT = writextag('workbook', null, {
 	'xmlns:r': XMLNS.r
 });
 
+function safe1904(wb) {
+	/* TODO: store date1904 somewhere else */
+	try { return parsexmlbool(wb.Workbook.WBProps.date1904) ? "true" : "false"; } catch(e) { return "false"; }
+}
+
 var write_wb_xml = function(wb, opts) {
 	var o = [];
 	o.push(XML_HEADER);
 	o.push(WB_XML_ROOT);
-	/* TODO: put this somewhere else */
-	var date1904 = "false";
-	try { date1904 = parsexmlbool(wb.Workbook.WBProps.date1904) ? "true" : "false"; } catch(e) { date1904 = "false"; }
-	o.push(writextag('workbookPr', null, {date1904:date1904}));
+	o.push(writextag('workbookPr', null, {date1904:safe1904(wb)}));
 	o.push("<sheets>");
 	var i = 1;
 	wb.SheetNames.forEach(function(s) {
