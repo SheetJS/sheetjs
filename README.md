@@ -43,8 +43,8 @@ The complete single-file version is generated at `dist/xlsx.full.min.js`
 
 ## ECMAScript 5 compatibility
 
-Since xlsx.js uses ES5 functions like ```forEach()``` ```map()```, in ancient browsers [Polyfills](https://github.com/Modernizr/Modernizr/wiki/HTML5-Cross-Browser-Polyfills) such as [es5-shim](https://github.com/es-shims/es5-shim) is needed. You may add a line before use xlsx.js: 
-```<script type="text/javascript" src="/js/es5-shim.js"></script>```
+Since xlsx.js uses ES5 functions like ```forEach()``` ```map()```, in ancient browsers [Polyfills](https://github.com/Modernizr/Modernizr/wiki/HTML5-Cross-Browser-Polyfills) is needed. You may also use the [shim](https://github.com/SheetJS/js-xlsx/blob/master/shim.js) already provided by add a line before use xlsx.js:
+```<script type="text/javascript" src="/path/to/shim.js"></script>```
 
 ## Parsing Workbooks
 
