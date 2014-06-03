@@ -11,7 +11,7 @@ var EXT_PROPS = [
 	["LinksUpToDate", "LinksUpToDate", "bool"],
 	["ScaleCrop", "ScaleCrop", "bool"],
 	["HeadingPairs", "HeadingPairs", "raw"],
-	["TitlesOfParts", "TitlesOfParts", "raw"],
+	["TitlesOfParts", "TitlesOfParts", "raw"]
 ];
 
 XMLNS.EXT_PROPS = "http://schemas.openxmlformats.org/officeDocument/2006/extended-properties";

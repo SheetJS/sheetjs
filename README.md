@@ -41,6 +41,11 @@ An appropriate version for each dependency is included in the dist/ directory.
 
 The complete single-file version is generated at `dist/xlsx.full.min.js`
 
+## ECMAScript 5 compatibility
+
+Since xlsx.js uses ES5 functions like ```forEach()``` ```map()```, in ancient browsers [Polyfills](https://github.com/Modernizr/Modernizr/wiki/HTML5-Cross-Browser-Polyfills) is needed. You may also use the [shim](https://github.com/SheetJS/js-xlsx/blob/master/shim.js) already provided by add a line before use xlsx.js:
+```<script type="text/javascript" src="/path/to/shim.js"></script>```
+
 ## Parsing Workbooks
 
 For parsing, the first step is to read the file.
@@ -175,7 +180,7 @@ Complete examples:
 
 - <http://sheetjs.com/demos/writexlsx.html> generates a simple file
 - <http://git.io/WEK88Q> writing an array of arrays in nodejs
-
+  
 ## Interface
 
 `XLSX` is the exposed variable in the browser and the exported nodejs variable
