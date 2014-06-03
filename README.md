@@ -41,6 +41,16 @@ An appropriate version for each dependency is included in the dist/ directory.
 
 The complete single-file version is generated at `dist/xlsx.full.min.js`
 
+## ECMAScript 5 compatibility
+
+Since xlsx.js uses ES5 functions like `Array#forEach`, older browsers require
+[Polyfills](http://git.io/QVh77g).  This repo and the gh-pages branch include
+[a shim](https://github.com/SheetJS/js-xlsx/blob/master/shim.js)
+
+To use the shim, add the shim before the script tag that loads xlsx.js:
+
+    <script type="text/javascript" src="/path/to/shim.js"></script>
+
 ## Parsing Workbooks
 
 For parsing, the first step is to read the file.
