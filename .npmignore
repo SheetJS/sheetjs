@@ -1,6 +1,7 @@
 test_files/
 tests/files/
 index.html
-misc/coverage.html
+misc/
 node_modules
 tmp
+*.xlsx
