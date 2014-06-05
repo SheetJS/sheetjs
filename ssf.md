@@ -452,7 +452,10 @@ A few special general cases can be handled in a very dumb manner:
 ```
   if(fmt.match(/^#+0+$/)) fmt = fmt.replace(/#/g,"");
   if(fmt.match(/^00+$/)) return (val<0?"-":"")+pad(Math.round(aval),fmt.length);
-  if(fmt.match(/^[#?]+$/)) return String(Math.round(val)).replace(/^0$/,"");
+  if(fmt.match(/^[#?]+$/)) {
+    o = String(Math.round(val)).replace(/^0$/,"");
+    return o.length > fmt.length ? o : fmt.substr(0,fmt.length-o.length).replace(/#/g,"").replace(/[?]/g," ") + o;
+  }
   if((r = fmt.match(/^#*0*\.(0+)/))) {
     o = Math.round(val * Math.pow(10,r[1].length));
     rr = String(o/Math.pow(10,r[1].length)).replace(/^([^\.]+)$/,"$1."+r[1]).replace(/\.$/,"."+r[1]).replace(/\.([0-9]*)$/,function($$, $1) { return "." + $1 + fill("0", r[1].length-$1.length); });
@@ -499,25 +502,37 @@ of first drawing the digits, but this selection allows for more nuance:
 The frac helper function is used for fraction formats (defined below).
 
 ```
-  if((r = fmt.match(/^([?]+)([ ]?)\/([ ]?)([?]+)/))) {
-    rr = Math.min(Math.max(r[1].length, r[4].length),7);
+  var oa = "";
+  if((r = fmt.match(/^([#0?]+)([ ]?)\/([ ]?)([#0?]+)/))) {
+    o="";
+    rr = Math.min(r[4].length,7);
     ff = frac(aval, Math.pow(10,rr)-1, false);
-    return sign + (ff[0]||(ff[1] ? "" : "0")) + (ff[1] ? pad(ff[1],rr," ") + r[2] + "/" + r[3] + rpad(ff[2],rr," "): fill(" ", 2*rr+1 + r[2].length + r[3].length));
+    o += sign;
+    oa = write_num("n", r[1], ff[1]);
+    if(oa[oa.length-1] == " ") oa = oa.substr(0,oa.length-1) + "0";
+    o += oa;
+    o += r[2];
+    o += "/";
+    o += r[3];
+    oa = rpad(ff[2],rr," ");
+    if(oa.length < r[4].length) oa = r[4].substr(r[4].length-oa.length).replace(/[?]/g," ").replace(/#/g,"") + oa;
+    o += oa;
+    return o;
   }
-  if((r = fmt.match(/^# ([?]+)([ ]?)\/([ ]?)([?]+)/))) {
+  if((r = fmt.match(/^# ([#0?]+)([ ]?)\/([ ]?)([#0?]+)/))) {
     rr = Math.min(Math.max(r[1].length, r[4].length),7);
     ff = frac(aval, Math.pow(10,rr)-1, true);
     return sign + (ff[0]||(ff[1] ? "" : "0")) + " " + (ff[1] ? pad(ff[1],rr," ") + r[2] + "/" + r[3] + rpad(ff[2],rr," "): fill(" ", 2*rr+1 + r[2].length + r[3].length));
   }
 ```
 
-The general class `/^[#0]+$/` treats the unconsumed '0' as literal, '#' as noop:
+The general class `/^[#0?]+$/` treats the '0' as literal, '#' as noop, '?' as space:
 
 ```
-  if((r = fmt.match(/^[#0]+$/))) {
+  if((r = fmt.match(/^[#0?]+$/))) {
     o = "" + Math.round(val);
     if(fmt.length <= o.length) return o;
-    return fmt.substr(0,fmt.length - o.length).replace(/#/g,"") + o;
+    return fmt.substr(0,fmt.length-o.length).replace(/#/g,"").replace(/\?/g," ") + o;
   }
   if((r = fmt.match(/^([#0]+)\.([#0]+)$/))) {
     o = "" + val.toFixed(Math.min(r[2].length,10)).replace(/([^0])0+$/,"$1");
@@ -896,7 +911,9 @@ positive when there is an explicit hyphen before it (e.g. `#,##0.0;-#,##0.0`):
 Now we just need to combine the elements
 
 ```
-  return out.map(function(x){return x.v;}).join("");
+  var retval = "";
+  for(i=0; i != out.length; ++i) if(out[i]) retval += out[i].v;
+  return retval;
 }
 SSF._eval = eval_fmt;
 ```
@@ -1212,6 +1229,7 @@ test_min:
 .PHONY: lint
 lint:
         jshint ssf.js test/
+        jscs ssf.js
 ```
 
 Coverage tests use [blanket](http://npm.im/blanket):
@@ -1245,7 +1263,7 @@ coveralls:
 ```json>package.json
 {
   "name": "ssf",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "author": "SheetJS",
   "description": "pure-JS library to format data using ECMA-376 spreadsheet Format Codes",
   "keywords": [ "format", "sprintf", "spreadsheet" ],

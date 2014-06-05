@@ -11,6 +11,7 @@ test_min:
 .PHONY: lint
 lint:
 	jshint ssf.js test/
+	jscs ssf.js
 
 .PHONY: cov
 cov: tmp/coverage.html
