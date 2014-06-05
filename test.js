@@ -4,7 +4,10 @@ var fs = require('fs'), assert = require('assert');
 describe('source',function(){it('should load',function(){X=require('./');});});
 
 var opts = {cellNF: true};
-if(process.env.WTF) opts.WTF = true;
+if(process.env.WTF) {
+	opts.WTF = true;
+	opts.cellStyles = true;
+}
 var fullex = [".xlsb", ".xlsm", ".xlsx"];
 var ex = fullex;
 if(process.env.FMTS === "full") process.env.FMTS = ex.join(":");
@@ -821,6 +824,12 @@ describe('corner cases', function() {
 		X.utils.get_formulae(ws);
 		X.utils.make_csv(ws);
 		X.utils.make_json(ws);
+		ws['!cols'] = [ {wch:6}, {wch:7}, {wch:10}, {wch:20} ];
+
+		var wb = {SheetNames:['sheetjs'], Sheets:{sheetjs:ws}};
+		X.write(wb, {type: "binary", bookType: 'xlsx'});
+		X.write(wb, {type: "buffer", bookType: 'xlsm'});
+		X.write(wb, {type: "base64", bookType: 'xlsb'});
 		ws.A2.t = "f";
 		assert.throws(function() { X.utils.make_json(ws); });
 	});
@@ -836,4 +845,15 @@ describe('corner cases', function() {
 			assert.doesNotThrow(function(x) { return X.SSF.format(f, 12345.6789);});
 		});
 	});
+  it('SSF oddities', function() {
+    var ssfdata = require('./misc/ssf.json');
+    ssfdata.forEach(function(d) {
+      for(j=1;j<d.length;++j) {
+        if(d[j].length == 2) {
+          var expected = d[j][1], actual = X.SSF.format(d[0], d[j][0], {});
+          assert.equal(actual, expected);
+        } else if(d[j][2] !== "#") assert.throws(function() { SSF.format(d[0], d[j][0]); });
+      }
+    });
+  });
 });

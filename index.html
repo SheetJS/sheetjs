@@ -33,6 +33,7 @@
 <br />
 <!-- uncomment the next line here and in xlsxworker.js for encoding support -->
 <!--<script src="dist/cpexcel.js"></script>-->
+<script src="shim.js"></script>
 <script src="jszip.js"></script>
 <script src="xlsx.js"></script>
 <script>
@@ -106,6 +107,7 @@ function to_formulae(workbook) {
 
 var tarea = document.getElementById('b64data');
 function b64it() {
+	if(typeof console !== 'undefined') console.log("onload", new Date());
 	var wb = XLSX.read(tarea.value, {type: 'base64'});
 	process_wb(wb);
 }
@@ -124,6 +126,7 @@ function process_wb(wb) {
 	}
 	if(out.innerText === undefined) out.textContent = output;
 	else out.innerText = output;
+	if(typeof console !== 'undefined') console.log("output", new Date());
 }
 
 var drop = document.getElementById('drop');
@@ -136,6 +139,7 @@ function handleDrop(e) {
 		var reader = new FileReader();
 		var name = f.name;
 		reader.onload = function(e) {
+			if(typeof console !== 'undefined') console.log("onload", new Date());
 			var data = e.target.result;
 			if(typeof Worker !== 'undefined') {
 				xlsxworker(data, process_wb);

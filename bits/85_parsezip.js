@@ -1,3 +1,18 @@
+function safe_parse_wbrels(wbrels, sheets) {
+	if(!wbrels) return 0;
+	try {
+		wbrels = sheets.map(function(w) { return [w.name, wbrels['!id'][w.id].Target]; });
+	} catch(e) { return null; }
+	return !wbrels || wbrels.length === 0 ? null : wbrels;
+}
+
+function safe_parse_ws(zip, path, relsPath, sheet, sheetRels, sheets, opts) {
+	try {
+		sheetRels[sheet]=parse_rels(getzipdata(zip, relsPath, true), path);
+		sheets[sheet]=parse_ws(getzipdata(zip, path),path,opts,sheetRels[sheet]);
+	} catch(e) { if(opts.WTF) throw e; }
+}
+
 function parse_zip(zip, opts) {
 	make_ssf(SSF);
 	opts = opts || {};
@@ -28,7 +43,7 @@ function parse_zip(zip, opts) {
 		if(dir.style) styles = parse_sty(getzipdata(zip, dir.style.replace(/^\//,'')),dir.style, opts);
 
 		themes = {};
-		if(opts.cellStyles && dir.themes.length) themes = parse_theme(getzipdata(zip, dir.themes[0].replace(/^\//,'')),dir.themes[0], opts);
+		if(opts.cellStyles && dir.themes.length) themes = parse_theme(getzipdata(zip, dir.themes[0].replace(/^\//,''), true),dir.themes[0], opts);
 	}
 
 	var wb = parse_wb(getzipdata(zip, dir.workbooks[0].replace(/^\//,'')), dir.workbooks[0], opts);
@@ -80,23 +95,17 @@ function parse_zip(zip, opts) {
 	var wbext = xlsb ? "bin" : "xml";
 	var wbrelsfile = 'xl/_rels/workbook.' + wbext + '.rels';
 	var wbrels = parse_rels(getzipdata(zip, wbrelsfile, true), wbrelsfile);
-	if(wbrels) try {
-		wbrels = wb.Sheets.map(function(w) { return [w.name, wbrels['!id'][w.id].Target]; });
-	} catch(e) { wbrels = null; }
-	if(wbrels && wbrels.length === 0) wbrels = null;
+	if(wbrels) wbrels = safe_parse_wbrels(wbrels, wb.Sheets);
 	/* Numbers iOS hack */
 	var nmode = (getzipdata(zip,"xl/worksheets/sheet.xml",true))?1:0;
 	for(i = 0; i != props.Worksheets; ++i) {
-		try {
-			if(wbrels) path = 'xl/' + (wbrels[i][1]).replace(/[\/]?xl\//, "");
-			else {
-				path = 'xl/worksheets/sheet'+(i+1-nmode)+"." + wbext;
-				path = path.replace(/sheet0\./,"sheet.");
-			}
-			relsPath = path.replace(/^(.*)(\/)([^\/]*)$/, "$1/_rels/$3.rels");
-			sheetRels[props.SheetNames[i]]=parse_rels(getzipdata(zip, relsPath, true), path);
-			sheets[props.SheetNames[i]]=parse_ws(getzipdata(zip, path),path,opts,sheetRels[props.SheetNames[i]]);
-		} catch(e) { if(opts.WTF) throw e; }
+		if(wbrels) path = 'xl/' + (wbrels[i][1]).replace(/[\/]?xl\//, "");
+		else {
+			path = 'xl/worksheets/sheet'+(i+1-nmode)+"." + wbext;
+			path = path.replace(/sheet0\./,"sheet.");
+		}
+		relsPath = path.replace(/^(.*)(\/)([^\/]*)$/, "$1/_rels/$3.rels");
+		safe_parse_ws(zip, path, relsPath, props.SheetNames[i], sheetRels, sheets, opts);
 	}
 
 	if(dir.comments) parse_comments(zip, dir.comments, sheets, sheetRels, opts);

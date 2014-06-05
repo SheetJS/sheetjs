@@ -140,7 +140,7 @@ var parse_si = function(x, opts) {
 	if(!x) return null;
 	var y;
 	/* 18.4.12 t ST_Xstring (Plaintext String) */
-	if(x[1] === 't') {
+	if(x.charCodeAt(1) === 116) {
 		z.t = utf8read(unescapexml(x.substr(x.indexOf(">")+1).split(/<\/t>/)[0]));
 		z.r = x;
 		if(html) z.h = z.t;

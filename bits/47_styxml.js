@@ -20,23 +20,23 @@ function parse_fills(t, opts) {
 			/* 18.8.3 bgColor CT_Color */
 			case '<bgColor':
 				if(!fill.bgColor) fill.bgColor = {};
-				if(y.indexed) fill.bgColor.indexed = parseInt(y.indexed);
-				if(y.theme) fill.bgColor.theme = parseInt(y.theme);
+				if(y.indexed) fill.bgColor.indexed = Number(y.indexed);
+				if(y.theme) fill.bgColor.theme = Number(y.theme);
 				if(y.tint) fill.bgColor.tint = Number(y.tint);
 				/* Excel uses ARGB strings */
 				if(y.rgb) fill.bgColor.rgb = y.rgb.substring(y.rgb.length - 6);
 				break;
-			case '</bgColor>': break;
+			case '<bgColor/>': case '</bgColor>': break;
 
 			/* 18.8.19 fgColor CT_Color */
 			case '<fgColor':
 				if(!fill.fgColor) fill.fgColor = {};
-				if(y.theme) fill.fgColor.theme = parseInt(y.theme);
+				if(y.theme) fill.fgColor.theme = Number(y.theme);
 				if(y.tint) fill.fgColor.tint = Number(y.tint);
 				/* Excel uses ARGB strings */
 				if(y.rgb) fill.fgColor.rgb = y.rgb.substring(y.rgb.length - 6);
 				break;
-			case '</fgColor>': break;
+			case '<bgColor/>': case '</fgColor>': break;
 
 			default: if(opts.WTF) throw 'unrecognized ' + y[0] + ' in fills';
 		}

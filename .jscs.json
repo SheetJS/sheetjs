@@ -1,0 +1,6 @@
+{
+  "requireCommaBeforeLineBreak": true,
+  "disallowTrailingWhitespace": true,
+  "disallowTrailingComma": true
+}
+

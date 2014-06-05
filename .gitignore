@@ -1,3 +1,4 @@
 node_modules
 misc/coverage.html
 tmp
+*.xlsx

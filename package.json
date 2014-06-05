@@ -1,15 +1,15 @@
 {
 	"name": "xlsx",
-	"version": "0.7.5",
+	"version": "0.7.6",
 	"author": "sheetjs",
-	"description": "XLSB/XLSX/XLSM (Excel 2007+ Spreadsheet) parser and writer",
-	"keywords": [ "xlsx", "xlsb", "xlsm", "office", "excel", "spreadsheet" ],
+	"description": "Excel 2007+ spreadsheet (XLSB/XLSX/XLSM) parser and writer",
+	"keywords": [ "excel", "xlsx", "xlsb", "xlsm", "office", "spreadsheet" ],
 	"bin": {
 		"xlsx": "./bin/xlsx.njs"
 	},
 	"main": "./xlsx",
 	"dependencies": {
-		"ssf":"~0.7.0",
+		"ssf":"~0.7.1",
 		"codepage":"~1.2.0",
 		"cfb":">=0.9.1",
 		"jszip":"2.2.2",

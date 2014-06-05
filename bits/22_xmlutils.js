@@ -2,9 +2,9 @@ var _chr = function(c) { return String.fromCharCode(c); };
 var _ord = function(c) { return c.charCodeAt(0); };
 var attregexg=/([\w:]+)=((?:")([^"]*)(?:")|(?:')([^']*)(?:'))/g;
 var attregex=/([\w:]+)=((?:")(?:[^"]*)(?:")|(?:')(?:[^']*)(?:'))/;
-function parsexmltag(tag) {
+function parsexmltag(tag, skip_root) {
 	var words = tag.split(/\s+/);
-	var z = {'0': words[0]};
+	var z = []; if(!skip_root) z[0] = words[0];
 	if(words.length === 1) return z;
 	var m = tag.match(attregexg), y, j, w, i;
 	if(m) for(i = 0; i != m.length; ++i) {

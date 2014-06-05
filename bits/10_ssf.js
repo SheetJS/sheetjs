@@ -5,7 +5,7 @@ var _strrev = function(x) { return String(x).split("").reverse().join("");};
 function fill(c,l) { return new Array(l+1).join(c); }
 function pad(v,d,c){var t=String(v);return t.length>=d?t:(fill(c||0,d-t.length)+t);}
 function rpad(v,d,c){var t=String(v);return t.length>=d?t:(t+fill(c||0,d-t.length));}
-SSF.version = '0.7.0';
+SSF.version = '0.7.1';
 /* Options */
 var opts_fmt = {
 	date1904:0,
@@ -252,7 +252,10 @@ var write_num = function(type, fmt, val) {
 	}
 	if(fmt.match(/^#+0+$/)) fmt = fmt.replace(/#/g,"");
 	if(fmt.match(/^00+$/)) return (val<0?"-":"")+pad(Math.round(aval),fmt.length);
-	if(fmt.match(/^[#?]+$/)) return String(Math.round(val)).replace(/^0$/,"");
+	if(fmt.match(/^[#?]+$/)) {
+		o = String(Math.round(val)).replace(/^0$/,"");
+		return o.length > fmt.length ? o : fmt.substr(0,fmt.length-o.length).replace(/#/g,"").replace(/[?]/g," ") + o;
+	}
 	if((r = fmt.match(/^#*0*\.(0+)/))) {
 		o = Math.round(val * Math.pow(10,r[1].length));
 		rr = String(o/Math.pow(10,r[1].length)).replace(/^([^\.]+)$/,"$1."+r[1]).replace(/\.$/,"."+r[1]).replace(/\.([0-9]*)$/,function($$, $1) { return "." + $1 + fill("0", r[1].length-$1.length); });
@@ -278,20 +281,32 @@ var write_num = function(type, fmt, val) {
 		ff = write_num(type, "##########", val);
 		return "(" + ff.substr(0,3) + ") " + ff.substr(3, 3) + "-" + ff.substr(6);
 	}
-	if((r = fmt.match(/^([?]+)([ ]?)\/([ ]?)([?]+)/))) {
-		rr = Math.min(Math.max(r[1].length, r[4].length),7);
+	var oa = "";
+	if((r = fmt.match(/^([#0?]+)([ ]?)\/([ ]?)([#0?]+)/))) {
+		o="";
+		rr = Math.min(r[4].length,7);
 		ff = frac(aval, Math.pow(10,rr)-1, false);
-		return sign + (ff[0]||(ff[1] ? "" : "0")) + (ff[1] ? pad(ff[1],rr," ") + r[2] + "/" + r[3] + rpad(ff[2],rr," "): fill(" ", 2*rr+1 + r[2].length + r[3].length));
+		o += sign;
+		oa = write_num("n", r[1], ff[1]);
+		if(oa[oa.length-1] == " ") oa = oa.substr(0,oa.length-1) + "0";
+		o += oa;
+		o += r[2];
+		o += "/";
+		o += r[3];
+		oa = rpad(ff[2],rr," ");
+		if(oa.length < r[4].length) oa = r[4].substr(r[4].length-oa.length).replace(/[?]/g," ").replace(/#/g,"") + oa;
+		o += oa;
+		return o;
 	}
-	if((r = fmt.match(/^# ([?]+)([ ]?)\/([ ]?)([?]+)/))) {
+	if((r = fmt.match(/^# ([#0?]+)([ ]?)\/([ ]?)([#0?]+)/))) {
 		rr = Math.min(Math.max(r[1].length, r[4].length),7);
 		ff = frac(aval, Math.pow(10,rr)-1, true);
 		return sign + (ff[0]||(ff[1] ? "" : "0")) + " " + (ff[1] ? pad(ff[1],rr," ") + r[2] + "/" + r[3] + rpad(ff[2],rr," "): fill(" ", 2*rr+1 + r[2].length + r[3].length));
 	}
-	if((r = fmt.match(/^[#0]+$/))) {
+	if((r = fmt.match(/^[#0?]+$/))) {
 		o = "" + Math.round(val);
 		if(fmt.length <= o.length) return o;
-		return fmt.substr(0,fmt.length - o.length).replace(/#/g,"") + o;
+		return fmt.substr(0,fmt.length-o.length).replace(/#/g,"").replace(/\?/g," ") + o;
 	}
 	if((r = fmt.match(/^([#0]+)\.([#0]+)$/))) {
 		o = "" + val.toFixed(Math.min(r[2].length,10)).replace(/([^0])0+$/,"$1");
@@ -507,7 +522,9 @@ function eval_fmt(fmt, v, opts, flen) {
 		out[i].v = write_num(out[i].t, out[i].v, (flen >1 && v < 0 && i>0 && out[i-1].v == "-" ? -v:v));
 		out[i].t = 't';
 	}
-	return out.map(function(x){return x.v;}).join("");
+	var retval = "";
+	for(i=0; i != out.length; ++i) if(out[i]) retval += out[i].v;
+	return retval;
 }
 SSF._eval = eval_fmt;
 function choose_fmt(fmt, v, o) {

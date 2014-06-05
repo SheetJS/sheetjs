@@ -66,6 +66,7 @@ function parse_clrScheme(t, opts) {
 
 /* 14.2.7 Theme Part */
 function parse_theme_xml(data, opts) {
+	if(!data || data.length === 0) return themes;
 	themes.themeElements = {};
 
 	var t;

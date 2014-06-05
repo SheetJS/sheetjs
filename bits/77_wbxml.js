@@ -1,10 +1,10 @@
 /* 18.2 Workbook */
-function parse_wb_xml(data) {
+function parse_wb_xml(data, opts) {
 	var wb = { AppVersion:{}, WBProps:{}, WBView:[], Sheets:[], CalcPr:{}, xmlns: "" };
 	var pass = false, xmlns = "xmlns";
 	data.match(/<[^>]*>/g).forEach(function(x) {
 		var y = parsexmltag(x);
-		switch(y[0].replace(/<\w+:/,"<")) {
+		switch(y[0].replace(/<(\/?)\w+:/,"<$1")) {
 			case '<?xml': break;
 
 			/* 18.2.27 workbook CT_Workbook 1 */
@@ -26,6 +26,7 @@ function parse_wb_xml(data) {
 			case '<workbookPr/>': delete y[0]; wb.WBProps = y; break;
 
 			/* 18.2.29 workbookProtection CT_WorkbookProtection ? */
+			case '<workbookProtection': break;
 			case '<workbookProtection/>': break;
 
 			/* 18.2.1  bookViews CT_BookViews ? */
@@ -44,13 +45,13 @@ function parse_wb_xml(data) {
 			case '<functionGroup': break;
 
 			/* 18.2.9  externalReferences CT_ExternalReferences ? */
-			case '<externalReferences': case '</externalReferences>': break;
+			case '<externalReferences': case '</externalReferences>': case '<externalReferences>': break;
 			/* 18.2.8    externalReference CT_ExternalReference + */
 			case '<externalReference': break;
 
 			/* 18.2.6  definedNames CT_DefinedNames ? */
 			case '<definedNames/>': break;
-			case '<definedNames>': pass=true; break;
+			case '<definedNames>': case '<definedNames': pass=true; break;
 			case '</definedNames>': pass=false; break;
 			/* 18.2.5    definedName CT_DefinedName + */
 			case '<definedName': case '<definedName/>': case '</definedName>': break;
@@ -98,9 +99,11 @@ function parse_wb_xml(data) {
 			case '</ext>': pass=false; break;
 
 			/* Others */
-			case '<mx:ArchID': break;
-			case '<mc:AlternateContent': pass=true; break;
-			case '</mc:AlternateContent>': pass=false; break;
+			case '<ArchID': break;
+			case '<AlternateContent': pass=true; break;
+			case '</AlternateContent>': pass=false; break;
+
+			default: if(!pass && opts.WTF) throw 'unrecognized ' + y[0] + ' in workbook';
 		}
 	});
 	if(XMLNS.main.indexOf(wb.xmlns) === -1) throw new Error("Unknown Namespace: " + wb.xmlns);
