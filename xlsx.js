@@ -2509,6 +2509,7 @@ function parse_ws_xml(data, opts, rels) {
 	}
 
 	var refguess = {s: {r:1000000, c:1000000}, e: {r:0, c:0} };
+	var refFormula = {};
 	var sidx = 0;
 
 	var match_v = matchtag("v"), match_f = matchtag("f");
@@ -2548,6 +2549,30 @@ function parse_ws_xml(data, opts, rels) {
 
 			var x=d.match(match_v);if(x)p.v=unescapexml(x[1]);
 			if(opts.cellFormula) {x=d.match(match_f);if(x)p.f=unescapexml(x[1]);}
+			// Parse the tag value
+			var x = d.match(matchtag("v"));
+			if(x) { p.v = unescapexml(x[1]); }
+
+			/* 18.3.1.40 f (Formula) */
+			if (opts.cellFormula) {
+				var x = d.match(matchtag("f"));
+				if(x) {
+					p.f = unescapexml(x[1]);
+					var formulaTag = parsexmltag(x[0]);
+					if (formulaTag.t === 'shared' && formulaTag) {
+						formulaTag.f = p.f;
+						refFormula[formulaTag.si] = formulaTag;
+					}
+				} else if (d.indexOf("<f") > -1) {
+					var formulaRefTag = d.match(/<f[^>]*>/);
+					if (formulaRefTag) {
+						formulaRefTag = parsexmltag(formulaRefTag[0]);
+						if (formulaRefTag && formulaRefTag.t === 'shared' && refFormula[formulaRefTag.si]) {
+							p.f = refFormula[formulaRefTag.si].f;
+						}
+					}
+				}
+			}
 
 			/* SCHEMA IS ACTUALLY INCORRECT HERE.  IF A CELL HAS NO T, EMIT "" */
 			if(cell.t === undefined && p.v === undefined) {
