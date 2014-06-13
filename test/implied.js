@@ -3,7 +3,7 @@ var fs = require('fs'), assert = require('assert');
 var data = JSON.parse(fs.readFileSync('./test/implied.json','utf8'));
 var skip = [];
 function doit(d) {
-  d[1].forEach(function(r){if(!r[2])assert.equal(SSF.format(r[0],d[0]),r[1]);});
+  d[1].forEach(function(r){if(r.length === 2)assert.equal(SSF.format(r[0],d[0]),r[1]);});
 }
 describe('implied formats', function() {
   data.forEach(function(d) {

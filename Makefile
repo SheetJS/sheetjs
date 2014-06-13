@@ -13,6 +13,10 @@ lint:
 	jshint ssf.js test/
 	jscs ssf.js
 
+.PHONY: perf
+perf:
+	bash misc/perf.sh
+
 .PHONY: cov
 cov: tmp/coverage.html
 

@@ -3,3 +3,5 @@ node_modules/
 tmp/
 .gitignore
 .vocrc
+v8.log
+perf.log
