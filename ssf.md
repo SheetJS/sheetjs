@@ -669,7 +669,7 @@ The general class `/^[#0?]+$/` treats the '0' as literal, '#' as noop, '?' as sp
     if(fmt.length <= o.length) return o;
     return hashq(fmt.substr(0,fmt.length-o.length)) + o;
   }
-  if((r = fmt.match(/^([#0]+)\.([#0]+)$/)) !== null) {
+  if((r = fmt.match(/^([#0?]+)\.([#0]+)$/)) !== null) {
     o = "" + val.toFixed(Math.min(r[2].length,10)).replace(/([^0])0+$/,"$1");
     ri = o.indexOf(".");
     var lres = fmt.indexOf(".") - ri, rres = fmt.length - o.length - lres;
@@ -881,7 +881,7 @@ acts just like `y` except the year is shifted:
 ```
       case 'B': case 'b':
         if(fmt[i+1] === "1" || fmt[i+1] === "2") {
-          if(dt == null) dt = parse_date_code(v, opts, fmt[i+1] === "2");
+          if(dt==null) { dt=parse_date_code(v, opts, fmt[i+1] === "2"); if(dt==null) return ""; }
           out[out.length] = {t:'X', v:fmt.substr(i,2)}; lst = c; i+=2; break;
         }
         /* falls through */
@@ -930,8 +930,8 @@ the HH/hh jazz.  TODO: investigate this further.
       case 'A':
         q={t:c, v:"A"};
         if(dt==null) dt=parse_date_code(v, opts);
-        if(fmt.substr(i, 3) === "A/P") {q.v = dt.H >= 12 ? "P" : "A"; q.t = 'T'; hr='h';i+=3;}
-        else if(fmt.substr(i,5) === "AM/PM") { q.v = dt.H >= 12 ? "PM" : "AM"; q.t = 'T'; i+=5; hr='h'; }
+        if(fmt.substr(i, 3) === "A/P") { if(dt!=null) q.v = dt.H >= 12 ? "P" : "A"; q.t = 'T'; hr='h';i+=3;}
+        else if(fmt.substr(i,5) === "AM/PM") { if(dt!=null) q.v = dt.H >= 12 ? "PM" : "AM"; q.t = 'T'; i+=5; hr='h'; }
         else { q.t = "t"; ++i; }
         if(dt==null && q.t === 'T') return "";
         out[out.length] = q; lst = c; break;
@@ -1487,9 +1487,8 @@ cat tmp/*.js > ssf.js
 ```
 
 ```>.gitignore
-.gitignore
-tmp/
 node_modules/
+tmp/
 .vocrc
 v8.log
 perf.log
@@ -1557,7 +1556,7 @@ coveralls:
 ```json>package.json
 {
   "name": "ssf",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "author": "SheetJS",
   "description": "Format data using ECMA-376 spreadsheet Format Codes",
   "keywords": [ "format", "sprintf", "spreadsheet" ],

@@ -1,0 +1,5 @@
+node_modules/
+tmp/
+.vocrc
+v8.log
+perf.log

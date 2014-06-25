@@ -2,7 +2,7 @@
 /*jshint -W041 */
 var SSF = {};
 var make_ssf = function make_ssf(SSF){
-SSF.version = '0.8.0';
+SSF.version = '0.8.1';
 function _strrev(x) { var o = "", i = x.length-1; while(i>=0) o += x.charAt(i--); return o; }
 function fill(c,l) { var o = ""; while(o.length < l) o+=c; return o; }
 function pad0(v,d){var t=""+v; return t.length>=d?t:fill('0',d-t.length)+t;}
@@ -375,7 +375,7 @@ function write_num_flt(type, fmt, val) {
     if(fmt.length <= o.length) return o;
     return hashq(fmt.substr(0,fmt.length-o.length)) + o;
   }
-  if((r = fmt.match(/^([#0]+)\.([#0]+)$/)) !== null) {
+  if((r = fmt.match(/^([#0?]+)\.([#0]+)$/)) !== null) {
     o = "" + val.toFixed(Math.min(r[2].length,10)).replace(/([^0])0+$/,"$1");
     ri = o.indexOf(".");
     var lres = fmt.indexOf(".") - ri, rres = fmt.length - o.length - lres;
@@ -539,7 +539,7 @@ function eval_fmt(fmt, v, opts, flen) {
         out[out.length] = {t:'T', v:v}; ++i; break;
       case 'B': case 'b':
         if(fmt[i+1] === "1" || fmt[i+1] === "2") {
-          if(dt == null) dt = parse_date_code(v, opts, fmt[i+1] === "2");
+          if(dt==null) { dt=parse_date_code(v, opts, fmt[i+1] === "2"); if(dt==null) return ""; }
           out[out.length] = {t:'X', v:fmt.substr(i,2)}; lst = c; i+=2; break;
         }
         /* falls through */
@@ -556,8 +556,8 @@ function eval_fmt(fmt, v, opts, flen) {
       case 'A':
         q={t:c, v:"A"};
         if(dt==null) dt=parse_date_code(v, opts);
-        if(fmt.substr(i, 3) === "A/P") {q.v = dt.H >= 12 ? "P" : "A"; q.t = 'T'; hr='h';i+=3;}
-        else if(fmt.substr(i,5) === "AM/PM") { q.v = dt.H >= 12 ? "PM" : "AM"; q.t = 'T'; i+=5; hr='h'; }
+        if(fmt.substr(i, 3) === "A/P") { if(dt!=null) q.v = dt.H >= 12 ? "P" : "A"; q.t = 'T'; hr='h';i+=3;}
+        else if(fmt.substr(i,5) === "AM/PM") { if(dt!=null) q.v = dt.H >= 12 ? "PM" : "AM"; q.t = 'T'; i+=5; hr='h'; }
         else { q.t = "t"; ++i; }
         if(dt==null && q.t === 'T') return "";
         out[out.length] = q; lst = c; break;
