@@ -2,7 +2,7 @@
 /* vim: set ts=2: */
 var XLSX = {};
 (function(XLSX){
-XLSX.version = '0.7.6-h';
+XLSX.version = '0.7.6-i';
 var current_codepage = 1252, current_cptable;
 if(typeof module !== "undefined" && typeof require !== 'undefined') {
 	if(typeof cptable === 'undefined') cptable = require('./dist/cpexcel');
@@ -659,8 +659,8 @@ var _fs, jszip;
 if(typeof JSZip !== 'undefined') jszip = JSZip;
 if (typeof exports !== 'undefined') {
 	if (typeof module !== 'undefined' && module.exports) {
-		if(typeof Buffer !== 'undefined' && typeof jszip === 'undefined') jszip = require('jszip');
-		if(typeof jszip === 'undefined') jszip = require('./jszip').JSZip;
+		if(typeof Buffer !== 'undefined' && typeof jszip === 'undefined') jszip = require('js'+'zip');
+		if(typeof jszip === 'undefined') jszip = require('./js'+'zip').JSZip;
 		_fs = require('fs');
 	}
 }

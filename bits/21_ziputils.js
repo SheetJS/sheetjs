@@ -28,8 +28,8 @@ var _fs, jszip;
 if(typeof JSZip !== 'undefined') jszip = JSZip;
 if (typeof exports !== 'undefined') {
 	if (typeof module !== 'undefined' && module.exports) {
-		if(typeof Buffer !== 'undefined' && typeof jszip === 'undefined') jszip = require('jszip');
-		if(typeof jszip === 'undefined') jszip = require('./jszip').JSZip;
+		if(typeof Buffer !== 'undefined' && typeof jszip === 'undefined') jszip = require('js'+'zip');
+		if(typeof jszip === 'undefined') jszip = require('./js'+'zip').JSZip;
 		_fs = require('fs');
 	}
 }
