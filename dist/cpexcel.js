@@ -1,7 +1,7 @@
 /* cpexcel.js (C) 2013-2014 SheetJS -- http://sheetjs.com */
 /*jshint -W100 */
 var cptable = {};
-cptable[874] = (function(){ var d = "\u0000\u0001\u0002\u0003\u0004\u0005\u0006\u0007\b\t\n\u000b\f\r\u000e\u000f\u0010\u0011\u0012\u0013\u0014\u0015\u0016\u0017\u0018\u0019\u001a\u001b\u001c\u001d\u001e\u001f !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~€����…�����������‘’“”•–—�������� กขฃคฅฆงจฉชซฌญฎฏฐฑฒณดตถทธนบปผฝพฟภมยรฤลฦวศษสหฬอฮฯะัาำิีึืฺุู����฿เแโใไๅๆ็่้๊๋์ํ๎๏๐๑๒๓๔๕๖๗๘๙๚๛����", e = {}; for(var i=0;i!=d.length;++i) if(d.charCodeAt(i) !== 0xFFFD)e[d[i]] = i; return {"enc": e, "dec": d.split("") }; })();
+cptable[874] = (function(){ var d = "\u0000\u0001\u0002\u0003\u0004\u0005\u0006\u0007\b\t\n\u000b\f\r\u000e\u000f\u0010\u0011\u0012\u0013\u0014\u0015\u0016\u0017\u0018\u0019\u001a\u001b\u001c\u001d\u001e\u001f !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~€����…�����������‘’“”•–—�������� กขฃคฅฆงจฉชซฌญฎฏฐฑฒณดตถทธนบปผฝพฟภมยรฤลฦวศษสหฬอฮฯะัาำิีึืฺุู����฿เแโใไๅๆ็่้๊๋์ํ๎๏๐๑๒๓๔๕๖๗๘๙๚๛����", D = [], e = {}; for(var i=0;i!=d.length;++i) { if(d.charCodeAt(i) !== 0xFFFD) e[d[i]] = i; D[i] = d.charAt(i); } return {"enc": e, "dec": D }; })();
 cptable[932] = (function(){ var d = [], e = {}, D = [], j;
 D[0] = "\u0000\u0001\u0002\u0003\u0004\u0005\u0006\u0007\b\t\n\u000b\f\r\u000e\u000f\u0010\u0011\u0012\u0013\u0014\u0015\u0016\u0017\u0018\u0019\u001a\u001b\u001c\u001d\u001e\u001f !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~���������������������������������｡｢｣､･ｦｧｨｩｪｫｬｭｮｯｰｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜﾝﾞﾟ��������������������������������".split("");
 for(j = 0; j != D[0].length; ++j) if(D[0][j].charCodeAt(0) !== 0xFFFD) { e[D[0][j]] = 0 + j; d[0 + j] = D[0][j];}
@@ -782,19 +782,19 @@ for(j = 0; j != D[248].length; ++j) if(D[248][j].charCodeAt(0) !== 0xFFFD) { e[D
 D[249] = "����������������������������������������������������������������纘纛纙臠臡虆虇虈襹襺襼襻觿讘讙躥躤躣鑮鑭鑯鑱鑳靉顲饟鱨鱮鱭鸋鸍鸐鸏鸒鸑麡黵鼉齇齸齻齺齹圞灦籯蠼趲躦釃鑴鑸鑶鑵驠鱴鱳鱱鱵鸔鸓黶鼊����������������������������������龤灨灥糷虪蠾蠽蠿讞貜躩軉靋顳顴飌饡馫驤驦驧鬤鸕鸗齈戇欞爧虌躨钂钀钁驩驨鬮鸙爩虋讟钃鱹麷癵驫鱺鸝灩灪麤齾齉龘碁銹裏墻恒粧嫺╔╦╗╠╬╣╚╩╝╒╤╕╞╪╡╘╧╛╓╥╖╟╫╢╙╨╜║═╭╮╰╯▓�".split("");
 for(j = 0; j != D[249].length; ++j) if(D[249][j].charCodeAt(0) !== 0xFFFD) { e[D[249][j]] = 63744 + j; d[63744 + j] = D[249][j];}
 return {"enc": e, "dec": d }; })();
-cptable[1250] = (function(){ var d = "\u0000\u0001\u0002\u0003\u0004\u0005\u0006\u0007\b\t\n\u000b\f\r\u000e\u000f\u0010\u0011\u0012\u0013\u0014\u0015\u0016\u0017\u0018\u0019\u001a\u001b\u001c\u001d\u001e\u001f !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~€�‚�„…†‡�‰Š‹ŚŤŽŹ�‘’“”•–—�™š›śťžź ˇ˘Ł¤Ą¦§¨©Ş«¬­®Ż°±˛ł´µ¶·¸ąş»Ľ˝ľżŔÁÂĂÄĹĆÇČÉĘËĚÍÎĎĐŃŇÓÔŐÖ×ŘŮÚŰÜÝŢßŕáâăäĺćçčéęëěíîďđńňóôőö÷řůúűüýţ˙", e = {}; for(var i=0;i!=d.length;++i) if(d.charCodeAt(i) !== 0xFFFD)e[d[i]] = i; return {"enc": e, "dec": d.split("") }; })();
-cptable[1251] = (function(){ var d = "\u0000\u0001\u0002\u0003\u0004\u0005\u0006\u0007\b\t\n\u000b\f\r\u000e\u000f\u0010\u0011\u0012\u0013\u0014\u0015\u0016\u0017\u0018\u0019\u001a\u001b\u001c\u001d\u001e\u001f !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~ЂЃ‚ѓ„…†‡€‰Љ‹ЊЌЋЏђ‘’“”•–—�™љ›њќћџ ЎўЈ¤Ґ¦§Ё©Є«¬­®Ї°±Ііґµ¶·ё№є»јЅѕїАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдежзийклмнопрстуфхцчшщъыьэюя", e = {}; for(var i=0;i!=d.length;++i) if(d.charCodeAt(i) !== 0xFFFD)e[d[i]] = i; return {"enc": e, "dec": d.split("") }; })();
-cptable[1252] = (function(){ var d = "\u0000\u0001\u0002\u0003\u0004\u0005\u0006\u0007\b\t\n\u000b\f\r\u000e\u000f\u0010\u0011\u0012\u0013\u0014\u0015\u0016\u0017\u0018\u0019\u001a\u001b\u001c\u001d\u001e\u001f !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~€�‚ƒ„…†‡ˆ‰Š‹Œ�Ž��‘’“”•–—˜™š›œ�žŸ ¡¢£¤¥¦§¨©ª«¬­®¯°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿ", e = {}; for(var i=0;i!=d.length;++i) if(d.charCodeAt(i) !== 0xFFFD)e[d[i]] = i; return {"enc": e, "dec": d.split("") }; })();
-cptable[1253] = (function(){ var d = "\u0000\u0001\u0002\u0003\u0004\u0005\u0006\u0007\b\t\n\u000b\f\r\u000e\u000f\u0010\u0011\u0012\u0013\u0014\u0015\u0016\u0017\u0018\u0019\u001a\u001b\u001c\u001d\u001e\u001f !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~€�‚ƒ„…†‡�‰�‹�����‘’“”•–—�™�›���� ΅Ά£¤¥¦§¨©�«¬­®―°±²³΄µ¶·ΈΉΊ»Ό½ΎΏΐΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡ�ΣΤΥΦΧΨΩΪΫάέήίΰαβγδεζηθικλμνξοπρςστυφχψωϊϋόύώ�", e = {}; for(var i=0;i!=d.length;++i) if(d.charCodeAt(i) !== 0xFFFD)e[d[i]] = i; return {"enc": e, "dec": d.split("") }; })();
-cptable[1254] = (function(){ var d = "\u0000\u0001\u0002\u0003\u0004\u0005\u0006\u0007\b\t\n\u000b\f\r\u000e\u000f\u0010\u0011\u0012\u0013\u0014\u0015\u0016\u0017\u0018\u0019\u001a\u001b\u001c\u001d\u001e\u001f !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~€�‚ƒ„…†‡ˆ‰Š‹Œ����‘’“”•–—˜™š›œ��Ÿ ¡¢£¤¥¦§¨©ª«¬­®¯°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏĞÑÒÓÔÕÖ×ØÙÚÛÜİŞßàáâãäåæçèéêëìíîïğñòóôõö÷øùúûüışÿ", e = {}; for(var i=0;i!=d.length;++i) if(d.charCodeAt(i) !== 0xFFFD)e[d[i]] = i; return {"enc": e, "dec": d.split("") }; })();
-cptable[1255] = (function(){ var d = "\u0000\u0001\u0002\u0003\u0004\u0005\u0006\u0007\b\t\n\u000b\f\r\u000e\u000f\u0010\u0011\u0012\u0013\u0014\u0015\u0016\u0017\u0018\u0019\u001a\u001b\u001c\u001d\u001e\u001f !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~€�‚ƒ„…†‡ˆ‰�‹�����‘’“”•–—˜™�›���� ¡¢£₪¥¦§¨©×«¬­®¯°±²³´µ¶·¸¹÷»¼½¾¿ְֱֲֳִֵֶַָֹ�ֻּֽ־ֿ׀ׁׂ׃װױײ׳״�������אבגדהוזחטיךכלםמןנסעףפץצקרשת��‎‏�", e = {}; for(var i=0;i!=d.length;++i) if(d.charCodeAt(i) !== 0xFFFD)e[d[i]] = i; return {"enc": e, "dec": d.split("") }; })();
-cptable[1256] = (function(){ var d = "\u0000\u0001\u0002\u0003\u0004\u0005\u0006\u0007\b\t\n\u000b\f\r\u000e\u000f\u0010\u0011\u0012\u0013\u0014\u0015\u0016\u0017\u0018\u0019\u001a\u001b\u001c\u001d\u001e\u001f !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~€پ‚ƒ„…†‡ˆ‰ٹ‹Œچژڈگ‘’“”•–—ک™ڑ›œ‌‍ں ،¢£¤¥¦§¨©ھ«¬­®¯°±²³´µ¶·¸¹؛»¼½¾؟ہءآأؤإئابةتثجحخدذرزسشصض×طظعغـفقكàلâمنهوçèéêëىيîïًٌٍَôُِ÷ّùْûü‎‏ے", e = {}; for(var i=0;i!=d.length;++i) if(d.charCodeAt(i) !== 0xFFFD)e[d[i]] = i; return {"enc": e, "dec": d.split("") }; })();
-cptable[10000] = (function(){ var d = "\u0000\u0001\u0002\u0003\u0004\u0005\u0006\u0007\b\t\n\u000b\f\r\u000e\u000f\u0010\u0011\u0012\u0013\u0014\u0015\u0016\u0017\u0018\u0019\u001a\u001b\u001c\u001d\u001e\u001f !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~ÄÅÇÉÑÖÜáàâäãåçéèêëíìîïñóòôöõúùûü†°¢£§•¶ß®©™´¨≠ÆØ∞±≤≥¥µ∂∑∏π∫ªºΩæø¿¡¬√ƒ≈∆«»… ÀÃÕŒœ–—“”‘’÷◊ÿŸ⁄¤‹›ﬁﬂ‡·‚„‰ÂÊÁËÈÍÎÏÌÓÔ�ÒÚÛÙıˆ˜¯˘˙˚¸˝˛ˇ", e = {}; for(var i=0;i!=d.length;++i) if(d.charCodeAt(i) !== 0xFFFD)e[d[i]] = i; return {"enc": e, "dec": d.split("") }; })();
-cptable[10006] = (function(){ var d = "\u0000\u0001\u0002\u0003\u0004\u0005\u0006\u0007\b\t\n\u000b\f\r\u000e\u000f\u0010\u0011\u0012\u0013\u0014\u0015\u0016\u0017\u0018\u0019\u001a\u001b\u001c\u001d\u001e\u001f !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~Ä¹²É³ÖÜ΅àâä΄¨çéèêë£™îï•½‰ôö¦­ùûü†ΓΔΘΛΞΠß®©ΣΪ§≠°·Α±≤≥¥ΒΕΖΗΙΚΜΦΫΨΩάΝ¬ΟΡ≈Τ«»… ΥΧΆΈœ–―“”‘’÷ΉΊΌΎέήίόΏύαβψδεφγηιξκλμνοπώρστθωςχυζϊϋΐΰ�", e = {}; for(var i=0;i!=d.length;++i) if(d.charCodeAt(i) !== 0xFFFD)e[d[i]] = i; return {"enc": e, "dec": d.split("") }; })();
-cptable[10007] = (function(){ var d = "\u0000\u0001\u0002\u0003\u0004\u0005\u0006\u0007\b\t\n\u000b\f\r\u000e\u000f\u0010\u0011\u0012\u0013\u0014\u0015\u0016\u0017\u0018\u0019\u001a\u001b\u001c\u001d\u001e\u001f !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ†°¢£§•¶І®©™Ђђ≠Ѓѓ∞±≤≥іµ∂ЈЄєЇїЉљЊњјЅ¬√ƒ≈∆«»… ЋћЌќѕ–—“”‘’÷„ЎўЏџ№Ёёяабвгдежзийклмнопрстуфхцчшщъыьэю¤", e = {}; for(var i=0;i!=d.length;++i) if(d.charCodeAt(i) !== 0xFFFD)e[d[i]] = i; return {"enc": e, "dec": d.split("") }; })();
-cptable[10029] = (function(){ var d = "\u0000\u0001\u0002\u0003\u0004\u0005\u0006\u0007\b\t\n\u000b\f\r\u000e\u000f\u0010\u0011\u0012\u0013\u0014\u0015\u0016\u0017\u0018\u0019\u001a\u001b\u001c\u001d\u001e\u001f !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~ÄĀāÉĄÖÜáąČäčĆćéŹźĎíďĒēĖóėôöõúĚěü†°Ę£§•¶ß®©™ę¨≠ģĮįĪ≤≥īĶ∂∑łĻļĽľĹĺŅņŃ¬√ńŇ∆«»… ňŐÕőŌ–—“”‘’÷◊ōŔŕŘ‹›řŖŗŠ‚„šŚśÁŤťÍŽžŪÓÔūŮÚůŰűŲųÝýķŻŁżĢˇ", e = {}; for(var i=0;i!=d.length;++i) if(d.charCodeAt(i) !== 0xFFFD)e[d[i]] = i; return {"enc": e, "dec": d.split("") }; })();
-cptable[10079] = (function(){ var d = "\u0000\u0001\u0002\u0003\u0004\u0005\u0006\u0007\b\t\n\u000b\f\r\u000e\u000f\u0010\u0011\u0012\u0013\u0014\u0015\u0016\u0017\u0018\u0019\u001a\u001b\u001c\u001d\u001e\u001f !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~ÄÅÇÉÑÖÜáàâäãåçéèêëíìîïñóòôöõúùûüÝ°¢£§•¶ß®©™´¨≠ÆØ∞±≤≥¥µ∂∑∏π∫ªºΩæø¿¡¬√ƒ≈∆«»… ÀÃÕŒœ–—“”‘’÷◊ÿŸ⁄¤ÐðÞþý·‚„‰ÂÊÁËÈÍÎÏÌÓÔ�ÒÚÛÙıˆ˜¯˘˙˚¸˝˛ˇ", e = {}; for(var i=0;i!=d.length;++i) if(d.charCodeAt(i) !== 0xFFFD)e[d[i]] = i; return {"enc": e, "dec": d.split("") }; })();
-cptable[10081] = (function(){ var d = "\u0000\u0001\u0002\u0003\u0004\u0005\u0006\u0007\b\t\n\u000b\f\r\u000e\u000f\u0010\u0011\u0012\u0013\u0014\u0015\u0016\u0017\u0018\u0019\u001a\u001b\u001c\u001d\u001e\u001f !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~ÄÅÇÉÑÖÜáàâäãåçéèêëíìîïñóòôöõúùûü†°¢£§•¶ß®©™´¨≠ÆØ∞±≤≥¥µ∂∑∏π∫ªºΩæø¿¡¬√ƒ≈∆«»… ÀÃÕŒœ–—“”‘’÷◊ÿŸĞğİıŞş‡·‚„‰ÂÊÁËÈÍÎÏÌÓÔ�ÒÚÛÙ�ˆ˜¯˘˙˚¸˝˛ˇ", e = {}; for(var i=0;i!=d.length;++i) if(d.charCodeAt(i) !== 0xFFFD)e[d[i]] = i; return {"enc": e, "dec": d.split("") }; })();
+cptable[1250] = (function(){ var d = "\u0000\u0001\u0002\u0003\u0004\u0005\u0006\u0007\b\t\n\u000b\f\r\u000e\u000f\u0010\u0011\u0012\u0013\u0014\u0015\u0016\u0017\u0018\u0019\u001a\u001b\u001c\u001d\u001e\u001f !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~€�‚�„…†‡�‰Š‹ŚŤŽŹ�‘’“”•–—�™š›śťžź ˇ˘Ł¤Ą¦§¨©Ş«¬­®Ż°±˛ł´µ¶·¸ąş»Ľ˝ľżŔÁÂĂÄĹĆÇČÉĘËĚÍÎĎĐŃŇÓÔŐÖ×ŘŮÚŰÜÝŢßŕáâăäĺćçčéęëěíîďđńňóôőö÷řůúűüýţ˙", D = [], e = {}; for(var i=0;i!=d.length;++i) { if(d.charCodeAt(i) !== 0xFFFD) e[d[i]] = i; D[i] = d.charAt(i); } return {"enc": e, "dec": D }; })();
+cptable[1251] = (function(){ var d = "\u0000\u0001\u0002\u0003\u0004\u0005\u0006\u0007\b\t\n\u000b\f\r\u000e\u000f\u0010\u0011\u0012\u0013\u0014\u0015\u0016\u0017\u0018\u0019\u001a\u001b\u001c\u001d\u001e\u001f !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~ЂЃ‚ѓ„…†‡€‰Љ‹ЊЌЋЏђ‘’“”•–—�™љ›њќћџ ЎўЈ¤Ґ¦§Ё©Є«¬­®Ї°±Ііґµ¶·ё№є»јЅѕїАБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдежзийклмнопрстуфхцчшщъыьэюя", D = [], e = {}; for(var i=0;i!=d.length;++i) { if(d.charCodeAt(i) !== 0xFFFD) e[d[i]] = i; D[i] = d.charAt(i); } return {"enc": e, "dec": D }; })();
+cptable[1252] = (function(){ var d = "\u0000\u0001\u0002\u0003\u0004\u0005\u0006\u0007\b\t\n\u000b\f\r\u000e\u000f\u0010\u0011\u0012\u0013\u0014\u0015\u0016\u0017\u0018\u0019\u001a\u001b\u001c\u001d\u001e\u001f !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~€�‚ƒ„…†‡ˆ‰Š‹Œ�Ž��‘’“”•–—˜™š›œ�žŸ ¡¢£¤¥¦§¨©ª«¬­®¯°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿ", D = [], e = {}; for(var i=0;i!=d.length;++i) { if(d.charCodeAt(i) !== 0xFFFD) e[d[i]] = i; D[i] = d.charAt(i); } return {"enc": e, "dec": D }; })();
+cptable[1253] = (function(){ var d = "\u0000\u0001\u0002\u0003\u0004\u0005\u0006\u0007\b\t\n\u000b\f\r\u000e\u000f\u0010\u0011\u0012\u0013\u0014\u0015\u0016\u0017\u0018\u0019\u001a\u001b\u001c\u001d\u001e\u001f !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~€�‚ƒ„…†‡�‰�‹�����‘’“”•–—�™�›���� ΅Ά£¤¥¦§¨©�«¬­®―°±²³΄µ¶·ΈΉΊ»Ό½ΎΏΐΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡ�ΣΤΥΦΧΨΩΪΫάέήίΰαβγδεζηθικλμνξοπρςστυφχψωϊϋόύώ�", D = [], e = {}; for(var i=0;i!=d.length;++i) { if(d.charCodeAt(i) !== 0xFFFD) e[d[i]] = i; D[i] = d.charAt(i); } return {"enc": e, "dec": D }; })();
+cptable[1254] = (function(){ var d = "\u0000\u0001\u0002\u0003\u0004\u0005\u0006\u0007\b\t\n\u000b\f\r\u000e\u000f\u0010\u0011\u0012\u0013\u0014\u0015\u0016\u0017\u0018\u0019\u001a\u001b\u001c\u001d\u001e\u001f !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~€�‚ƒ„…†‡ˆ‰Š‹Œ����‘’“”•–—˜™š›œ��Ÿ ¡¢£¤¥¦§¨©ª«¬­®¯°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏĞÑÒÓÔÕÖ×ØÙÚÛÜİŞßàáâãäåæçèéêëìíîïğñòóôõö÷øùúûüışÿ", D = [], e = {}; for(var i=0;i!=d.length;++i) { if(d.charCodeAt(i) !== 0xFFFD) e[d[i]] = i; D[i] = d.charAt(i); } return {"enc": e, "dec": D }; })();
+cptable[1255] = (function(){ var d = "\u0000\u0001\u0002\u0003\u0004\u0005\u0006\u0007\b\t\n\u000b\f\r\u000e\u000f\u0010\u0011\u0012\u0013\u0014\u0015\u0016\u0017\u0018\u0019\u001a\u001b\u001c\u001d\u001e\u001f !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~€�‚ƒ„…†‡ˆ‰�‹�����‘’“”•–—˜™�›���� ¡¢£₪¥¦§¨©×«¬­®¯°±²³´µ¶·¸¹÷»¼½¾¿ְֱֲֳִֵֶַָֹ�ֻּֽ־ֿ׀ׁׂ׃װױײ׳״�������אבגדהוזחטיךכלםמןנסעףפץצקרשת��‎‏�", D = [], e = {}; for(var i=0;i!=d.length;++i) { if(d.charCodeAt(i) !== 0xFFFD) e[d[i]] = i; D[i] = d.charAt(i); } return {"enc": e, "dec": D }; })();
+cptable[1256] = (function(){ var d = "\u0000\u0001\u0002\u0003\u0004\u0005\u0006\u0007\b\t\n\u000b\f\r\u000e\u000f\u0010\u0011\u0012\u0013\u0014\u0015\u0016\u0017\u0018\u0019\u001a\u001b\u001c\u001d\u001e\u001f !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~€پ‚ƒ„…†‡ˆ‰ٹ‹Œچژڈگ‘’“”•–—ک™ڑ›œ‌‍ں ،¢£¤¥¦§¨©ھ«¬­®¯°±²³´µ¶·¸¹؛»¼½¾؟ہءآأؤإئابةتثجحخدذرزسشصض×طظعغـفقكàلâمنهوçèéêëىيîïًٌٍَôُِ÷ّùْûü‎‏ے", D = [], e = {}; for(var i=0;i!=d.length;++i) { if(d.charCodeAt(i) !== 0xFFFD) e[d[i]] = i; D[i] = d.charAt(i); } return {"enc": e, "dec": D }; })();
+cptable[10000] = (function(){ var d = "\u0000\u0001\u0002\u0003\u0004\u0005\u0006\u0007\b\t\n\u000b\f\r\u000e\u000f\u0010\u0011\u0012\u0013\u0014\u0015\u0016\u0017\u0018\u0019\u001a\u001b\u001c\u001d\u001e\u001f !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~ÄÅÇÉÑÖÜáàâäãåçéèêëíìîïñóòôöõúùûü†°¢£§•¶ß®©™´¨≠ÆØ∞±≤≥¥µ∂∑∏π∫ªºΩæø¿¡¬√ƒ≈∆«»… ÀÃÕŒœ–—“”‘’÷◊ÿŸ⁄¤‹›ﬁﬂ‡·‚„‰ÂÊÁËÈÍÎÏÌÓÔ�ÒÚÛÙıˆ˜¯˘˙˚¸˝˛ˇ", D = [], e = {}; for(var i=0;i!=d.length;++i) { if(d.charCodeAt(i) !== 0xFFFD) e[d[i]] = i; D[i] = d.charAt(i); } return {"enc": e, "dec": D }; })();
+cptable[10006] = (function(){ var d = "\u0000\u0001\u0002\u0003\u0004\u0005\u0006\u0007\b\t\n\u000b\f\r\u000e\u000f\u0010\u0011\u0012\u0013\u0014\u0015\u0016\u0017\u0018\u0019\u001a\u001b\u001c\u001d\u001e\u001f !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~Ä¹²É³ÖÜ΅àâä΄¨çéèêë£™îï•½‰ôö¦­ùûü†ΓΔΘΛΞΠß®©ΣΪ§≠°·Α±≤≥¥ΒΕΖΗΙΚΜΦΫΨΩάΝ¬ΟΡ≈Τ«»… ΥΧΆΈœ–―“”‘’÷ΉΊΌΎέήίόΏύαβψδεφγηιξκλμνοπώρστθωςχυζϊϋΐΰ�", D = [], e = {}; for(var i=0;i!=d.length;++i) { if(d.charCodeAt(i) !== 0xFFFD) e[d[i]] = i; D[i] = d.charAt(i); } return {"enc": e, "dec": D }; })();
+cptable[10007] = (function(){ var d = "\u0000\u0001\u0002\u0003\u0004\u0005\u0006\u0007\b\t\n\u000b\f\r\u000e\u000f\u0010\u0011\u0012\u0013\u0014\u0015\u0016\u0017\u0018\u0019\u001a\u001b\u001c\u001d\u001e\u001f !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ†°¢£§•¶І®©™Ђђ≠Ѓѓ∞±≤≥іµ∂ЈЄєЇїЉљЊњјЅ¬√ƒ≈∆«»… ЋћЌќѕ–—“”‘’÷„ЎўЏџ№Ёёяабвгдежзийклмнопрстуфхцчшщъыьэю¤", D = [], e = {}; for(var i=0;i!=d.length;++i) { if(d.charCodeAt(i) !== 0xFFFD) e[d[i]] = i; D[i] = d.charAt(i); } return {"enc": e, "dec": D }; })();
+cptable[10029] = (function(){ var d = "\u0000\u0001\u0002\u0003\u0004\u0005\u0006\u0007\b\t\n\u000b\f\r\u000e\u000f\u0010\u0011\u0012\u0013\u0014\u0015\u0016\u0017\u0018\u0019\u001a\u001b\u001c\u001d\u001e\u001f !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~ÄĀāÉĄÖÜáąČäčĆćéŹźĎíďĒēĖóėôöõúĚěü†°Ę£§•¶ß®©™ę¨≠ģĮįĪ≤≥īĶ∂∑łĻļĽľĹĺŅņŃ¬√ńŇ∆«»… ňŐÕőŌ–—“”‘’÷◊ōŔŕŘ‹›řŖŗŠ‚„šŚśÁŤťÍŽžŪÓÔūŮÚůŰűŲųÝýķŻŁżĢˇ", D = [], e = {}; for(var i=0;i!=d.length;++i) { if(d.charCodeAt(i) !== 0xFFFD) e[d[i]] = i; D[i] = d.charAt(i); } return {"enc": e, "dec": D }; })();
+cptable[10079] = (function(){ var d = "\u0000\u0001\u0002\u0003\u0004\u0005\u0006\u0007\b\t\n\u000b\f\r\u000e\u000f\u0010\u0011\u0012\u0013\u0014\u0015\u0016\u0017\u0018\u0019\u001a\u001b\u001c\u001d\u001e\u001f !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~ÄÅÇÉÑÖÜáàâäãåçéèêëíìîïñóòôöõúùûüÝ°¢£§•¶ß®©™´¨≠ÆØ∞±≤≥¥µ∂∑∏π∫ªºΩæø¿¡¬√ƒ≈∆«»… ÀÃÕŒœ–—“”‘’÷◊ÿŸ⁄¤ÐðÞþý·‚„‰ÂÊÁËÈÍÎÏÌÓÔ�ÒÚÛÙıˆ˜¯˘˙˚¸˝˛ˇ", D = [], e = {}; for(var i=0;i!=d.length;++i) { if(d.charCodeAt(i) !== 0xFFFD) e[d[i]] = i; D[i] = d.charAt(i); } return {"enc": e, "dec": D }; })();
+cptable[10081] = (function(){ var d = "\u0000\u0001\u0002\u0003\u0004\u0005\u0006\u0007\b\t\n\u000b\f\r\u000e\u000f\u0010\u0011\u0012\u0013\u0014\u0015\u0016\u0017\u0018\u0019\u001a\u001b\u001c\u001d\u001e\u001f !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~ÄÅÇÉÑÖÜáàâäãåçéèêëíìîïñóòôöõúùûü†°¢£§•¶ß®©™´¨≠ÆØ∞±≤≥¥µ∂∑∏π∫ªºΩæø¿¡¬√ƒ≈∆«»… ÀÃÕŒœ–—“”‘’÷◊ÿŸĞğİıŞş‡·‚„‰ÂÊÁËÈÍÎÏÌÓÔ�ÒÚÛÙ�ˆ˜¯˘˙˚¸˝˛ˇ", D = [], e = {}; for(var i=0;i!=d.length;++i) { if(d.charCodeAt(i) !== 0xFFFD) e[d[i]] = i; D[i] = d.charAt(i); } return {"enc": e, "dec": D }; })();
 if (typeof module !== 'undefined' && module.exports) module.exports = cptable;
 /* cputils.js (C) 2013-2014 SheetJS -- http://sheetjs.com */
 /*jshint newcap: false */
@@ -802,7 +802,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = cptable;
   "use strict";
   if(typeof cptable === "undefined") {
     if(typeof require !== "undefined"){
-      var cpt = require('./cptable');
+      var cpt = require('./cpt' + 'able');
       if (typeof module !== 'undefined' && module.exports) module.exports = factory(cpt);
       else root.cptable = factory(cpt);
     } else throw new Error("cptable not found");
@@ -828,120 +828,154 @@ if (typeof module !== 'undefined' && module.exports) module.exports = cptable;
   var cpecache = {};
   var cpdcache = {};
 
+  var sfcc = function sfcc(x) { return String.fromCharCode(x); };
+  var cca = function cca(x){ return x.charCodeAt(0); };
   if(typeof Buffer !== 'undefined') {
-    var sbcs_encode = function(cp) {
-      var E = cpt[cp].enc;
+    var mdl = 1024, mdb = new Buffer(mdl);
+    var make_EE = function make_EE(E){
       var EE = new Buffer(65536);
-      for(var i = 0; i != 65536;++i) EE[i] = 0;
+      for(var i = 0; i < 65536;++i) EE[i] = 0;
       var keys = Object.keys(E), len = keys.length;
-      for(var ee = 0, e = keys[ee]; ee != len; ++ee) {
+      for(var ee = 0, e = keys[ee]; ee < len; ++ee) {
         if(!(e = keys[ee])) continue;
         EE[e.charCodeAt(0)] = E[e];
-      };
-      return function(data, ofmt) {
-        if(data instanceof Buffer) data = data.toString('utf8');
-        var out = new Buffer(data.length), i;
+      }
+      return EE;
+    };
+    var sbcs_encode = function make_sbcs_encode(cp) {
+      var EE = make_EE(cpt[cp].enc);
+      return function sbcs_e(data, ofmt) {
+        var len = data.length;
+        var out, i, j, D, w;
         if(typeof data === 'string') {
-          for(i = 0; i != data.length; ++i) out[i] = EE[data.charCodeAt(i)];
+          out = Buffer(len);
+          for(i = 0; i < len; ++i) out[i] = EE[data.charCodeAt(i)];
+        } else if(Buffer.isBuffer(data)) {
+          out = Buffer(2*len);
+          j = 0;
+          for(i = 0; i < len; ++i) {
+            D = data[i];
+            if(D < 128) out[j++] = EE[D];
+            else if(D < 224) { out[j++] = EE[((D&31)<<6)+(data[i+1]&63)]; ++i; }
+            else if(D < 240) { out[j++] = EE[((D&15)<<12)+((data[i+1]&63)<<6)+(data[i+2]&63)]; i+=2; }
+            else {
+              w = ((D&7)<<18)+((data[i+1]&63)<<12)+((data[i+2]&63)<<6)+(data[i+3]&63); i+=3;
+              if(w < 65536) out[j++] = EE[w];
+              else { w -= 65536; out[j++] = EE[0xD800 + ((w>>10)&1023)]; out[j++] = EE[0xDC00 + (w&1023)]; }
+            }
+          }
+          out.length = j;
         } else {
-          for(i = 0; i != data.length; ++i) out[i] = EE[data[i].charCodeAt(0)];
+          out = Buffer(len);
+          for(i = 0; i < len; ++i) out[i] = EE[data[i].charCodeAt(0)];
         }
-        if(!ofmt) return out;
-        if(ofmt === 'buf') return out;
-        var arr = [].slice.call(out);
-        if(ofmt === 'arr') return arr;
-        return arr.map(function(x) { return String.fromCharCode(x); }).join("");
+        if(ofmt === undefined || ofmt === 'buf') return out;
+        if(ofmt !== 'arr') return out.toString('binary');
+        return [].slice.call(out);
       };
     };
-    var sbcs_decode = function(cp) {
+    var sbcs_decode = function make_sbcs_decode(cp) {
       var D = cpt[cp].dec;
       var DD = new Buffer(131072), d=0, c;
-      for(d=0;d!=D.length;++d) {
+      for(d=0;d<D.length;++d) {
         if(!(c=D[d])) continue;
         var w = c.charCodeAt(0);
-        DD[2*d] = w%256; DD[2*d+1] = w>>8;
+        DD[2*d] = w&255; DD[2*d+1] = w>>8;
       }
-      return function(data) {
-        var out = new Buffer(2*data.length), w, i=0, j;
-        if(data instanceof Buffer) {
-          for(i = 0; i < data.length; i++) {
+      return function sbcs_d(data) {
+        var len = data.length, i=0, j;
+        if(2 * len > mdl) { mdl = 2 * len; mdb = new Buffer(mdl); }
+        if(Buffer.isBuffer(data)) {
+          for(i = 0; i < len; i++) {
             j = 2*data[i];
-            out[2*i] = DD[j]; out[2*i+1] = DD[j+1];
+            mdb[2*i] = DD[j]; mdb[2*i+1] = DD[j+1];
           }
         } else if(typeof data === "string") {
-          for(i = 0; i < data.length; i++) {
+          for(i = 0; i < len; i++) {
             j = 2*data.charCodeAt(i);
-            out[2*i] = DD[j]; out[2*i+1] = DD[j+1];
+            mdb[2*i] = DD[j]; mdb[2*i+1] = DD[j+1];
           }
         } else {
-          for(i = 0; i < data.length; i++) {
+          for(i = 0; i < len; i++) {
             j = 2*data[i];
-            out[2*i] = DD[j]; out[2*i+1] = DD[j+1];
+            mdb[2*i] = DD[j]; mdb[2*i+1] = DD[j+1];
           }
         }
-        return out.toString('ucs2');
+        mdb.length = 2 * len;
+        return mdb.toString('ucs2');
       };
     };
-    var dbcs_encode = function(cp) {
+    var dbcs_encode = function make_dbcs_encode(cp) {
       var E = cpt[cp].enc;
       var EE = new Buffer(131072);
-      for(var i = 0; i != 131072; ++i) EE[i] = 0;
+      for(var i = 0; i < 131072; ++i) EE[i] = 0;
       var keys = Object.keys(E);
-      for(var ee = 0, e = keys[ee]; ee != keys.length; ++ee) {
+      for(var ee = 0, e = keys[ee]; ee < keys.length; ++ee) {
         if(!(e = keys[ee])) continue;
         var f = e.charCodeAt(0);
         EE[2*f] = E[e] & 255; EE[2*f+1] = E[e]>>8;
-      };
-      return function(data, ofmt) {
-        if(data instanceof Buffer) data = data.toString('utf8');
-        var out = new Buffer(2*data.length), i, j, k;
+      }
+      return function dbcs_e(data, ofmt) {
+        var len = data.length, out = new Buffer(2*len), i, j, jj, k, D;
         if(typeof data === 'string') {
-          for(i = k = 0; i != data.length; ++i) {
+          for(i = k = 0; i < len; ++i) {
             j = data.charCodeAt(i)*2;
             out[k++] = EE[j+1] || EE[j]; if(EE[j+1] > 0) out[k++] = EE[j];
           }
           out.length = k;
+        } else if(Buffer.isBuffer(data)) {
+          for(i = k = 0; i < len; ++i) {
+            D = data[i];
+            if(D < 128) j = D;
+            else if(D < 224) { j = ((D&31)<<6)+(data[i+1]&63); ++i; }
+            else if(D < 240) { j = ((D&15)<<12)+((data[i+1]&63)<<6)+(data[i+2]&63); i+=2; }
+            else { j = ((D&7)<<18)+((data[i+1]&63)<<12)+((data[i+2]&63)<<6)+(data[i+3]&63); i+=3; }
+            if(j<65536) { j*=2; out[k++] = EE[j+1] || EE[j]; if(EE[j+1] > 0) out[k++] = EE[j]; }
+            else { jj = j-65536;
+              j=2*(0xD800 + ((jj>>10)&1023)); out[k++] = EE[j+1] || EE[j]; if(EE[j+1] > 0) out[k++] = EE[j];
+              j=2*(0xDC00 + (jj&1023)); out[k++] = EE[j+1] || EE[j]; if(EE[j+1] > 0) out[k++] = EE[j];
+            }
+          }
+          out.length = k;
         } else {
-          for(i = k = 0; i != data.length; i++) {
+          for(i = k = 0; i < len; i++) {
             j = data[i].charCodeAt(0)*2;
             out[k++] = EE[j+1] || EE[j]; if(EE[j+1] > 0) out[k++] = EE[j];
           }
         }
-        if(!ofmt) return out;
-        if(ofmt === 'buf') return out;
-        var arr = [].slice.call(out);
-        if(ofmt === 'arr') return arr;
-        return arr.map(function(x) { return String.fromCharCode(x); }).join("");
+        if(ofmt === undefined || ofmt === 'buf') return out;
+        if(ofmt !== 'arr') return out.toString('binary');
+        return [].slice.call(out);
       };
     };
-    var dbcs_decode = function(cp) {
+    var dbcs_decode = function make_dbcs_decode(cp) {
       var D = cpt[cp].dec;
-      var DD = new Buffer(131072), d=0, c, w=0, j=0, dd=0, i=0;
-      for(i = 0; i != 65536; ++i) { DD[2*i] = 0xFF; DD[2*i+1] = 0xFD;}
-      for(d=0;d!=D.length;++d) {
+      var DD = new Buffer(131072), d=0, c, w=0, j=0, i=0;
+      for(i = 0; i < 65536; ++i) { DD[2*i] = 0xFF; DD[2*i+1] = 0xFD;}
+      for(d = 0; d < D.length; ++d) {
         if(!(c=D[d])) continue;
         w = c.charCodeAt(0);
         j = 2*d;
-        DD[j] = w%256; DD[j+1] = w>>8;
-      };
-      return function(data) {
-        var out = new Buffer(2*data.length), w, i, j, k=0;
-        if(data instanceof Buffer) {
-          for(i = 0; i < data.length; i++) {
+        DD[j] = w&255; DD[j+1] = w>>8;
+      }
+      return function dbcs_d(data) {
+        var len = data.length, out = new Buffer(2*len), i, j, k=0;
+        if(Buffer.isBuffer(data)) {
+          for(i = 0; i < len; i++) {
             j = 2*data[i];
-            if(DD[j]===0xFF && DD[j+1]===0xFD) { j=2*(256*data[i]+data[i+1]); ++i; }
+            if(DD[j]===0xFF && DD[j+1]===0xFD) { j=2*((data[i]<<8)+data[i+1]); ++i; }
             out[k++] = DD[j]; out[k++] = DD[j+1];
           }
         } else if(typeof data === "string") {
-          for(i = 0; i < data.length; i++) {
+          for(i = 0; i < len; i++) {
             j = 2*data.charCodeAt(i);
-            if(DD[j]===0xFF && DD[j+1]===0xFD) { j=2*(256*data.charCodeAt(i)+data.charCodeAt(i+1)); ++i; }
+            if(DD[j]===0xFF && DD[j+1]===0xFD) { j=2*((data.charCodeAt(i)<<8)+data.charCodeAt(i+1)); ++i; }
             out[k++] = DD[j]; out[k++] = DD[j+1];
           }
         } else {
-          for(i = 0; i < data.length; i++) {
+          for(i = 0; i < len; i++) {
             j = 2*data[i];
-            if(DD[j]===0xFF && DD[j+1]===0xFD) { j=2*(256*data[i]+data[i+1]); ++i; }
+            if(DD[j]===0xFF && DD[j+1]===0xFD) { j=2*((data[i]<<8)+data[i+1]); ++i; }
             out[k++] = DD[j]; out[k++] = DD[j+1];
           }
         }
@@ -949,47 +983,89 @@ if (typeof module !== 'undefined' && module.exports) module.exports = cptable;
         return out.toString('ucs2');
       };
     };
-    magic_decode[65001] = function(data) {
-      var out = new Buffer(2*data.length), w, i, j = 1, k = 0, ww;
-      for(i = 0; i < data.length; i+=j) {
-        j = 1;
-        if(data[i] < 128) w = data[i];
-        else if(data[i] < 224) { w = (data[i]&31)*64+(data[i+1]&63); j=2; }
-        else { w=(data[i]&15)*4096+(data[i+1]&63)*64+(data[i+2]&63); j=3; }
-        out[k++] = w%256; out[k++] = w>>8;
+    magic_decode[65001] = function utf8_d(data) {
+      var len = data.length, w = 0, ww = 0;
+      if(4 * len > mdl) { mdl = 4 * len; mdb = new Buffer(mdl); }
+      mdb.length = 0;
+      for(var i = 0, j = 1, k = 0, D = 0; i < len; i+=j) {
+        j = 1; D = data[i];
+        if(D < 128) w = D;
+        else if(D < 224) { w=(D&31)*64+(data[i+1]&63); j=2; }
+        else if(D < 240) { w=((D&15)<<12)+(data[i+1]&63)*64+(data[i+2]&63); j=3; }
+        else { w=(D&7)*262144+((data[i+1]&63)<<12)+(data[i+2]&63)*64+(data[i+3]&63); j=4; }
+        if(w < 65536) { mdb[k++] = w&255; mdb[k++] = w>>8; }
+        else {
+          w -= 65536; ww = 0xD800 + ((w>>10)&1023); w = 0xDC00 + (w&1023);
+          mdb[k++] = ww&255; mdb[k++] = ww>>>8; mdb[k++] = w&255; mdb[k++] = (w>>>8)&255;
+        }
       }
-      out.length = k;
-      return out.toString('ucs2');
+      mdb.length = k;
+      return mdb.toString('ucs2');
+    };
+    magic_encode[65001] = function utf8_e(data, ofmt) {
+      var len = data.length, w = 0, ww = 0, j = 0;
+      var direct = typeof data === "string";
+      if(4 * len > mdl) { mdl = 4 * len; mdb = new Buffer(mdl); }
+      for(var i = 0; i < len; ++i) {
+        w = direct ? data.charCodeAt(i) : data[i].charCodeAt(0);
+        if(w <= 0x007F) mdb[j++] = w;
+        else if(w <= 0x07FF) {
+          mdb[j++] = 192 + (w >> 6);
+          mdb[j++] = 128 + (w&63);
+        } else if(w >= 0xD800 && w <= 0xDFFF) {
+          w -= 0xD800; ++i;
+          ww = (direct ? data.charCodeAt(i) : data[i].charCodeAt(0)) - 0xDC00 + (w << 10);
+          mdb[j++] = 240 + ((ww>>>18) & 0x07);
+          mdb[j++] = 144 + ((ww>>>12) & 0x3F);
+          mdb[j++] = 128 + ((ww>>>6) & 0x3F);
+          mdb[j++] = 128 + (ww & 0x3F);
+        } else {
+          mdb[j++] = 224 + (w >> 12);
+          mdb[j++] = 128 + ((w >> 6)&63);
+          mdb[j++] = 128 + (w&63);
+        }
+      }
+      mdb.length = j;
+      if(ofmt === undefined || ofmt === 'buf') return mdb;
+      if(ofmt !== 'arr') return mdb.toString('binary');
+      return [].slice.call(mdb);
     };
   }
 
-  var encache = function(cp) {
+  var encache = function encache() {
     if(typeof Buffer !== 'undefined') {
       if(cpdcache[sbcs_cache[0]]) return;
-      sbcs_cache.forEach(function(s) {
-        if(!cpt[s]) return;
-        cpdcache[s] = sbcs_decode(s);
-        cpecache[s] = sbcs_encode(s);
-      });
-      dbcs_cache.forEach(function(s) {
-        if(!cpt[s]) return;
-        cpdcache[s] = dbcs_decode(s);
-        cpecache[s] = dbcs_encode(s);
-      });
-      magic_cache.forEach(function(s) {
+      var i, s;
+      for(i = 0; i < sbcs_cache.length; ++i) {
+        s = sbcs_cache[i];
+        if(cpt[s]) {
+          cpdcache[s] = sbcs_decode(s);
+          cpecache[s] = sbcs_encode(s);
+        }
+      }
+      for(i = 0; i < dbcs_cache.length; ++i) {
+        s = dbcs_cache[i];
+        if(cpt[s]) {
+          cpdcache[s] = dbcs_decode(s);
+          cpecache[s] = dbcs_encode(s);
+        }
+      }
+      for(i = 0; i < magic_cache.length; ++i) {
+        s = magic_cache[i];
         if(magic_decode[s]) cpdcache[s] = magic_decode[s];
         if(magic_encode[s]) cpecache[s] = magic_encode[s];
-      });
+      }
     }
   };
-  var cp_decache = function(cp) { delete cpdcache[cp]; delete cpecache[cp]; };
-  var decache = function() {
+  var cp_decache = function cp_decache(cp) { cpdcache[cp] = cpecache[cp] = undefined; };
+  var decache = function decache() {
     if(typeof Buffer !== 'undefined') {
       if(!cpdcache[sbcs_cache[0]]) return;
       sbcs_cache.forEach(cp_decache);
       dbcs_cache.forEach(cp_decache);
       magic_cache.forEach(cp_decache);
     }
+    last_enc = last_cp = undefined;
   };
   var cache = {
     encache: encache,
@@ -1002,79 +1078,91 @@ if (typeof module !== 'undefined' && module.exports) module.exports = cptable;
 
   var BM = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
   var SetD = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'(),-./:?";
-  var encode = function(cp, data, ofmt) {
-    var F; if((F=cpecache[cp])) return F(data, ofmt);
-    if(typeof Buffer !== 'undefined' && data instanceof Buffer) data = data.toString('utf8');
-    var out = typeof Buffer !== 'undefined' ? new Buffer(4*data.length) : [], w, i, j = 0, c, tt;
+  var last_enc, last_cp;
+  var encode = function encode(cp, data, ofmt) {
+    if(cp === last_cp) { return last_enc(data, ofmt); }
+    if(cpecache[cp] !== undefined) { last_enc = cpecache[last_cp=cp]; return last_enc(data, ofmt); }
+    if(typeof Buffer !== 'undefined' && Buffer.isBuffer(data)) data = data.toString('utf8');
+    var len = data.length;
+    var out = typeof Buffer !== 'undefined' ? new Buffer(4*len) : [], w, i, j = 0, c, tt, ww;
     var C = cpt[cp], E, M;
-    if(C && (E=C.enc)) for(i = 0; i != data.length; ++i, ++j) {
+    if(C && (E=C.enc)) for(i = 0; i < len; ++i, ++j) {
       w = E[data[i]];
-      out[j] = w % 256;
+      out[j] = w&255;
       if(w > 255) {
-        out[j] = (w/256)|0;
-        out[++j] = w%256;
+        out[j] = w>>8;
+        out[++j] = w&255;
       }
     }
     else if((M=magic[cp])) switch(M) {
       case "utf8":
         if(typeof Buffer !== 'undefined' && typeof data === "string") { out = new Buffer(data, M); j = out.length; break; }
-        for(i = 0; i != data.length; ++i, ++j) {
+        for(i = 0; i < len; ++i, ++j) {
           w = data[i].charCodeAt(0);
           if(w <= 0x007F) out[j] = w;
           else if(w <= 0x07FF) {
             out[j]   = 192 + (w >> 6);
-            out[++j] = 128 + (w % 64);
+            out[++j] = 128 + (w&63);
+          } else if(w >= 0xD800 && w <= 0xDFFF) {
+            w -= 0xD800;
+            ww = data[++i].charCodeAt(0) - 0xDC00 + (w << 10);
+            out[j]   = 240 + ((ww>>>18) & 0x07);
+            out[++j] = 144 + ((ww>>>12) & 0x3F);
+            out[++j] = 128 + ((ww>>>6) & 0x3F);
+            out[++j] = 128 + (ww & 0x3F);
           } else {
             out[j]   = 224 + (w >> 12);
-            out[++j] = 128 + ((w >> 6) % 64);
-            out[++j] = 128 + (w % 64);
+            out[++j] = 128 + ((w >> 6)&63);
+            out[++j] = 128 + (w&63);
           }
         }
         break;
       case "ascii":
         if(typeof Buffer !== 'undefined' && typeof data === "string") { out = new Buffer(data, M); j = out.length; break; }
-        for(i = 0; i != data.length; ++i, ++j) {
+        for(i = 0; i < len; ++i, ++j) {
           w = data[i].charCodeAt(0);
           if(w <= 0x007F) out[j] = w;
           else throw new Error("bad ascii " + w);
         }
         break;
-      case "utf16le": /* TODO: surrogate pairs */
+      case "utf16le":
         if(typeof Buffer !== 'undefined' && typeof data === "string") { out = new Buffer(data, M); j = out.length; break; }
-        for(i = 0; i != data.length; ++i) {
+        for(i = 0; i < len; ++i) {
           w = data[i].charCodeAt(0);
-          out[j++] = w % 256;
+          out[j++] = w&255;
           out[j++] = w>>8;
         }
         break;
       case "utf16be":
-        for(i = 0; i != data.length; ++i) {
+        for(i = 0; i < len; ++i) {
           w = data[i].charCodeAt(0);
           out[j++] = w>>8;
-          out[j++] = w % 256;
+          out[j++] = w&255;
         }
         break;
       case "utf32le":
-        for(i = 0; i != data.length; ++i) {
+        for(i = 0; i < len; ++i) {
           w = data[i].charCodeAt(0);
-          out[j++] = w % 256; w >>= 8;
-          out[j++] = w % 256; w >>= 8;
-          out[j++] = w % 256; w >>= 8;
-          out[j++] = w % 256;
+          if(w >= 0xD800 && w <= 0xDFFF) w = 0x10000 + ((w - 0xD800) << 10) + (data[++i].charCodeAt(0) - 0xDC00);
+          out[j++] = w&255; w >>= 8;
+          out[j++] = w&255; w >>= 8;
+          out[j++] = w&255; w >>= 8;
+          out[j++] = w&255;
         }
         break;
       case "utf32be":
-        for(i = 0; i != data.length; ++i) {
+        for(i = 0; i < len; ++i) {
           w = data[i].charCodeAt(0);
-          out[j+3] = w % 256; w >>= 8;
-          out[j+2] = w % 256; w >>= 8;
-          out[j+1] = w % 256; w >>= 8;
-          out[j] = w % 256; w >>= 8;
+          if(w >= 0xD800 && w <= 0xDFFF) w = 0x10000 + ((w - 0xD800) << 10) + (data[++i].charCodeAt(0) - 0xDC00);
+          out[j+3] = w&255; w >>= 8;
+          out[j+2] = w&255; w >>= 8;
+          out[j+1] = w&255; w >>= 8;
+          out[j] = w&255; w >>= 8;
           j+=4;
         }
         break;
       case "utf7":
-        for(i = 0; i != data.length; i++) {
+        for(i = 0; i < len; i++) {
           c = data[i];
           if(c === "+") { out[j++] = 0x2b; out[j++] = 0x2d; continue; }
           if(SetD.indexOf(c) > -1) { out[j++] = c.charCodeAt(0); continue; }
@@ -1090,22 +1178,20 @@ if (typeof module !== 'undefined' && module.exports) module.exports = cptable;
     }
     else throw new Error("Unrecognized CP: " + cp);
     out.length = j;
-    if(typeof Buffer === 'undefined') return (ofmt == 'str') ? out.map(function(x) { return String.fromCharCode(x); }).join("") : out;
-    if(!ofmt) return out;
-    if(ofmt === 'buf') return out;
-    var arr = [].slice.call(out);
-    if(ofmt === 'arr') return arr;
-    return arr.map(function(x) { return String.fromCharCode(x); }).join("");
+    if(typeof Buffer === 'undefined') return (ofmt == 'str') ? out.map(sfcc).join("") : out;
+    if(ofmt === undefined || ofmt === 'buf') return out;
+    if(ofmt !== 'arr') return out.toString('binary');
+    return [].slice.call(out);
   };
-  var decode = function(cp, data) {
+  var decode = function decode(cp, data) {
     var F; if((F=cpdcache[cp])) return F(data);
-    var out = new Array(data.length), w, i, j = 1, k = 0;
+    var len = data.length, out = new Array(len), w, i, j = 1, k = 0, ww;
     var C = cpt[cp], D, M;
     if(C && (D=C.dec)) {
-      if(typeof data === "string") data = data.split("").map(function(x){ return x.charCodeAt(0); });
-      for(i = 0; i < data.length; i+=j) {
+      if(typeof data === "string") data = data.split("").map(cca);
+      for(i = 0; i < len; i+=j) {
         j = 2;
-        w = D[data[i]*256 + data[i+1]];
+        w = D[(data[i]<<8)+ data[i+1]];
         if(!w) {
           j = 1;
           w = D[data[i]];
@@ -1116,45 +1202,62 @@ if (typeof module !== 'undefined' && module.exports) module.exports = cptable;
     }
     else if((M=magic[cp])) switch(M) {
       case "utf8":
-        for(i = 0; i < data.length; i+=j) {
+        for(i = 0; i < len; i+=j) {
           j = 1;
           if(data[i] < 128) w = data[i];
-          else if(data[i] < 224) { w = (data[i]&31)*64+(data[i+1]&63); j=2; }
-          else { w=(data[i]&15)*4096+(data[i+1]&63)*64+(data[i+2]&63); j=3; }
-          out[k++] = String.fromCharCode(w);
+          else if(data[i] < 224) { w=(data[i]&31)*64+(data[i+1]&63); j=2; }
+          else if(data[i] < 240) { w=((data[i]&15)<<12)+(data[i+1]&63)*64+(data[i+2]&63); j=3; }
+          else { w=(data[i]&7)*262144+((data[i+1]&63)<<12)+(data[i+2]&63)*64+(data[i+3]&63); j=4; }
+          if(w < 65536) { out[k++] = String.fromCharCode(w); }
+          else {
+            w -= 65536; ww = 0xD800 + ((w>>10)&1023); w = 0xDC00 + (w&1023);
+            out[k++] = String.fromCharCode(ww); out[k++] = String.fromCharCode(w);
+          }
         }
         break;
       case "ascii":
-        if(typeof Buffer !== 'undefined' && data instanceof Buffer) return data.toString(M);
-        for(i = 0; i < data.length; i++) out[i] = String.fromCharCode(data[i]);
-        k = data.length; break;
+        if(typeof Buffer !== 'undefined' && Buffer.isBuffer(data)) return data.toString(M);
+        for(i = 0; i < len; i++) out[i] = String.fromCharCode(data[i]);
+        k = len; break;
       case "utf16le":
-        if(typeof Buffer !== 'undefined' && data instanceof Buffer) return data.toString(M);
+        if(typeof Buffer !== 'undefined' && Buffer.isBuffer(data)) return data.toString(M);
         j = 2;
-        for(i = 0; i < data.length; i+=j) {
-          out[k++] = String.fromCharCode(256*data[i+1] + data[i]);
+        for(i = 0; i < len; i+=j) {
+          out[k++] = String.fromCharCode((data[i+1]<<8) + data[i]);
         }
         break;
       case "utf16be":
         j = 2;
-        for(i = 0; i < data.length; i+=j) {
-          out[k++] = String.fromCharCode(256*data[i] + data[i+1]);
+        for(i = 0; i < len; i+=j) {
+          out[k++] = String.fromCharCode((data[i]<<8) + data[i+1]);
         }
         break;
       case "utf32le":
         j = 4;
-        for(i = 0; i < data.length; i+=j) {
-          out[k++] = String.fromCharCode((data[i+3]<<24) + (data[i+2]<<16) + (data[i+1]<<8) + (data[i]));
+        for(i = 0; i < len; i+=j) {
+          w = (data[i+3]<<24) + (data[i+2]<<16) + (data[i+1]<<8) + (data[i]);
+          if(w > 0xFFFF) {
+            w -= 0x10000;
+            out[k++] = String.fromCharCode(0xD800 + ((w >> 10) & 0x3FF));
+            out[k++] = String.fromCharCode(0xDC00 + (w & 0x3FF));
+          }
+          else out[k++] = String.fromCharCode(w);
         }
         break;
       case "utf32be":
         j = 4;
-        for(i = 0; i < data.length; i+=j) {
-          out[k++] = String.fromCharCode((data[i]<<24) + (data[i+1]<<16) + (data[i+2]<<8) + (data[i+3]));
+        for(i = 0; i < len; i+=j) {
+          w = (data[i]<<24) + (data[i+1]<<16) + (data[i+2]<<8) + (data[i+3]);
+          if(w > 0xFFFF) {
+            w -= 0x10000;
+            out[k++] = String.fromCharCode(0xD800 + ((w >> 10) & 0x3FF));
+            out[k++] = String.fromCharCode(0xDC00 + (w & 0x3FF));
+          }
+          else out[k++] = String.fromCharCode(w);
         }
         break;
       case "utf7":
-        for(i = 0; i < data.length; i+=j) {
+        for(i = 0; i < len; i+=j) {
           if(data[i] !== 0x2b) { j=1; out[k++] = String.fromCharCode(data[i]); continue; }
           j=1;
           if(data[i+1] === 0x2d) { j = 2; out[k++] = "+"; continue; }
@@ -1177,9 +1280,9 @@ if (typeof module !== 'undefined' && module.exports) module.exports = cptable;
             e4 = BM.indexOf(String.fromCharCode(data[i+l++]));
             if(e4 === -1) break;
             c3 = (e3 & 3) << 6 | e4;
-            if(e4 != 64) tt.push(c3);
+            if(e4 < 64) tt.push(c3);
           }
-          if(tt.length % 2 == 1) tt.length--;
+          if((tt.length & 1) === 1) tt.length--;
           o64 = decode(1201, tt);
           for(l = 0; l < o64.length; ++l) out[k++] = o64[l];
         }
@@ -1190,7 +1293,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = cptable;
     out.length = k;
     return out.join("");
   };
-  var hascp = function(cp) { return cpt[cp] || magic[cp]; };
+  var hascp = function hascp(cp) { return cpt[cp] || magic[cp]; };
   cpt.utils = { decode: decode, encode: encode, hascp: hascp, magic: magic, cache:cache };
   return cpt;
 }));
