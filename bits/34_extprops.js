@@ -55,8 +55,8 @@ function write_ext_props(cp, opts) {
 	var o = [], p = {}, W = writextag;
 	if(!cp) cp = {};
 	cp.Application = "SheetJS";
-	o.push(XML_HEADER);
-	o.push(EXT_PROPS_XML_ROOT);
+	o[o.length] = (XML_HEADER);
+	o[o.length] = (EXT_PROPS_XML_ROOT);
 
 	EXT_PROPS.forEach(function(f) {
 		if(typeof cp[f[1]] === 'undefined') return;
@@ -65,12 +65,12 @@ function write_ext_props(cp, opts) {
 			case 'string': v = cp[f[1]]; break;
 			case 'bool': v = cp[f[1]] ? 'true' : 'false'; break;
 		}
-		if(typeof v !== 'undefined') o.push(W(f[0], v));
+		if(typeof v !== 'undefined') o[o.length] = (W(f[0], v));
 	});
 
 	/* TODO: HeadingPairs, TitlesOfParts */
-	o.push(W('HeadingPairs', W('vt:vector', W('vt:variant', '<vt:lpstr>Worksheets</vt:lpstr>')+W('vt:variant', W('vt:i4', String(cp.Worksheets))), {size:2, baseType:"variant"})));
-	o.push(W('TitlesOfParts', W('vt:vector', cp.SheetNames.map(function(s) { return "<vt:lpstr>" + s + "</vt:lpstr>"; }).join(""), {size: cp.Worksheets, baseType:"lpstr"})));
-	if(o.length>2){ o.push('</Properties>'); o[1]=o[1].replace("/>",">"); }
+	o[o.length] = (W('HeadingPairs', W('vt:vector', W('vt:variant', '<vt:lpstr>Worksheets</vt:lpstr>')+W('vt:variant', W('vt:i4', String(cp.Worksheets))), {size:2, baseType:"variant"})));
+	o[o.length] = (W('TitlesOfParts', W('vt:vector', cp.SheetNames.map(function(s) { return "<vt:lpstr>" + s + "</vt:lpstr>"; }).join(""), {size: cp.Worksheets, baseType:"lpstr"})));
+	if(o.length>2){ o[o.length] = ('</Properties>'); o[1]=o[1].replace("/>",">"); }
 	return o.join("");
 }

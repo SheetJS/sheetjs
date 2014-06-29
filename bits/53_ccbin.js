@@ -1,5 +1,5 @@
 /* [MS-XLSB] 2.6.4.1 */
-var parse_BrtCalcChainItem$ = function(data, length) {
+function parse_BrtCalcChainItem$(data, length) {
 	var out = {};
 	out.i = data.read_shift(4);
 	var cell = {};
@@ -10,13 +10,13 @@ var parse_BrtCalcChainItem$ = function(data, length) {
 	if(flags & 0x2) out.l = '1';
 	if(flags & 0x8) out.a = '1';
 	return out;
-};
+}
 
 /* 18.6 Calculation Chain */
 function parse_cc_bin(data, opts) {
 	var out = [];
 	var pass = false;
-	recordhopper(data, function(val, R, RT) {
+	recordhopper(data, function hopper_cc(val, R, RT) {
 		switch(R.n) {
 			case 'BrtCalcChainItem$': out.push(val); break;
 			case 'BrtBeginCalcChain$': break;

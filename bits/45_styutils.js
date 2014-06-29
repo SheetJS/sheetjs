@@ -1,10 +1,13 @@
-var hex2RGB = function(h) {return h.substr(h[0]==="#"?1:0,6).match(/../g).map(function(x) { return parseInt(x,16); });};
-var rgb2Hex = function(rgb) {
+function hex2RGB(h) {
+	var o = h.substr(h[0]==="#"?1:0,6);
+	return [parseInt(o.substr(0,2),16),parseInt(o.substr(0,2),16),parseInt(o.substr(0,2),16)];
+}
+function rgb2Hex(rgb) {
 	for(var i=0,o=1; i!=3; ++i) o = o*256 + (rgb[i]>255?255:rgb[i]<0?0:rgb[i]);
 	return o.toString(16).toUpperCase().substr(1);
-};
+}
 
-var rgb2HSL = function(rgb) {
+function rgb2HSL(rgb) {
 	var R = rgb[0]/255, G = rgb[1]/255, B=rgb[2]/255;
 	var M = Math.max(R, G, B), m = Math.min(R, G, B), C = M - m;
 	if(C === 0) return [0, 0, R];
@@ -17,9 +20,9 @@ var rgb2HSL = function(rgb) {
 		case B: H6 = ((R - G) / C + 4); break;
 	}
 	return [H6 / 6, S, L2 / 2];
-};
+}
 
-var hsl2RGB = function(hsl){
+function hsl2RGB(hsl){
 	var H = hsl[0], S = hsl[1], L = hsl[2];
 	var C = S * 2 * (L < 0.5 ? L : 1 - L), m = L - C/2;
 	var rgb = [m,m,m], h6 = 6*H;
@@ -35,7 +38,7 @@ var hsl2RGB = function(hsl){
 	}
 	for(var i = 0; i != 3; ++i) rgb[i] = Math.round(rgb[i]*255);
 	return rgb;
-};
+}
 
 /* 18.8.3 bgColor tint algorithm */
 function rgb_tint(hex, tint) {

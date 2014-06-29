@@ -1,7 +1,7 @@
 # xlsx
 
-Parser and writer for XLSX/XLSM/XLSB files.  Cleanroom implementation from the
-ISO 29500  Office Open XML specifications, [MS-XLSB], and related documents.
+Parser and writer for Excel 2007+ (XLSX/XLSM/XLSB) files.  Pure-JS cleanroom
+implementation from the Office Open XML spec, [MS-XLSB], and related documents.
 
 ## Installation
 
@@ -271,8 +271,8 @@ The exported `write` and `writeFile` functions accept an options argument:
 
 ## Tested Environments
 
- - NodeJS 0.8, 0.10 (latest release)
- - IE 6/7/8/9/10 using Base64 mode (IE10/11 using HTML5 mode)
+ - NodeJS 0.8, 0.10 (latest release), 0.11 (unstable)
+ - IE 6/7/8/9/10/11 using Base64 mode (IE10/11 using HTML5 mode)
  - FF 18 using Base64 or HTML5 mode
  - Chrome 24 using Base64 or HTML5 mode
 
@@ -337,9 +337,8 @@ OSP-covered specifications:
 
 ## Badges
 
-[![Build Status](https://travis-ci.org/SheetJS/js-xlsx.png?branch=master)](https://travis-ci.org/SheetJS/js-xlsx)
+[![Build Status](https://travis-ci.org/SheetJS/js-xlsx.svg?branch=master)](https://travis-ci.org/SheetJS/js-xlsx)
 
-[![Coverage Status](https://coveralls.io/repos/SheetJS/js-xlsx/badge.png?branch=master)](https://coveralls.io/r/SheetJS/js-xlsx?branch=master)
+[![Coverage Status](http://img.shields.io/coveralls/SheetJS/js-xlsx/master.svg)](https://coveralls.io/r/SheetJS/js-xlsx?branch=master)
 
 [![githalytics.com alpha](https://cruel-carlota.pagodabox.com/ed5bb2c4c4346a474fef270f847f3f78 "githalytics.com")](http://githalytics.com/SheetJS/js-xlsx)
-

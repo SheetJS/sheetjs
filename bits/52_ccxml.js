@@ -2,7 +2,7 @@
 function parse_cc_xml(data, opts) {
 	var d = [];
 	var l = 0, i = 1;
-	(data.match(/<[^>]*>/g)||[]).forEach(function(x) {
+	(data.match(tagregex)||[]).forEach(function(x) {
 		var y = parsexmltag(x);
 		switch(y[0]) {
 			case '<?xml': break;

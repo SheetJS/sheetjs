@@ -2,9 +2,9 @@
 function parse_wb_xml(data, opts) {
 	var wb = { AppVersion:{}, WBProps:{}, WBView:[], Sheets:[], CalcPr:{}, xmlns: "" };
 	var pass = false, xmlns = "xmlns";
-	data.match(/<[^>]*>/g).forEach(function(x) {
+	data.match(tagregex).forEach(function xml_wb(x) {
 		var y = parsexmltag(x);
-		switch(y[0].replace(/<(\/?)\w+:/,"<$1")) {
+		switch(strip_ns(y[0])) {
 			case '<?xml': break;
 
 			/* 18.2.27 workbook CT_Workbook 1 */
@@ -108,15 +108,7 @@ function parse_wb_xml(data, opts) {
 	});
 	if(XMLNS.main.indexOf(wb.xmlns) === -1) throw new Error("Unknown Namespace: " + wb.xmlns);
 
-	var z;
-	/* defaults */
-	for(z in WBPropsDef) if(typeof wb.WBProps[z] === 'undefined') wb.WBProps[z] = WBPropsDef[z];
-	for(z in CalcPrDef) if(typeof wb.CalcPr[z] === 'undefined') wb.CalcPr[z] = CalcPrDef[z];
-
-	wb.WBView.forEach(function(w){for(var z in WBViewDef) if(typeof w[z] === 'undefined') w[z]=WBViewDef[z]; });
-	wb.Sheets.forEach(function(w){for(var z in SheetDef) if(typeof w[z] === 'undefined') w[z]=SheetDef[z]; });
-
-	_ssfopts.date1904 = parsexmlbool(wb.WBProps.date1904, 'date1904');
+	parse_wb_defaults(wb);
 
 	return wb;
 }
@@ -133,18 +125,14 @@ function safe1904(wb) {
 	try { return parsexmlbool(wb.Workbook.WBProps.date1904) ? "true" : "false"; } catch(e) { return "false"; }
 }
 
-var write_wb_xml = function(wb, opts) {
-	var o = [];
-	o.push(XML_HEADER);
-	o.push(WB_XML_ROOT);
-	o.push(writextag('workbookPr', null, {date1904:safe1904(wb)}));
-	o.push("<sheets>");
-	var i = 1;
-	wb.SheetNames.forEach(function(s) {
-		o.push(writextag('sheet',null,{name:s.substr(0,31), sheetId:String(i), "r:id":"rId"+i}));
-		++i;
-	});
-	o.push("</sheets>");
-	if(o.length>2){ o.push('</workbook>'); o[1]=o[1].replace("/>",">"); }
+function write_wb_xml(wb, opts) {
+	var o = [XML_HEADER];
+	o[o.length] = WB_XML_ROOT;
+	o[o.length] = (writextag('workbookPr', null, {date1904:safe1904(wb)}));
+	o[o.length] = "<sheets>";
+	for(var i = 0; i != wb.SheetNames.length; ++i)
+		o[o.length] = (writextag('sheet',null,{name:wb.SheetNames[i].substr(0,31), sheetId:""+(i+1), "r:id":"rId"+(i+1)}));
+	o[o.length] = "</sheets>";
+	if(o.length>2){ o[o.length] = '</workbook>'; o[1]=o[1].replace("/>",">"); }
 	return o.join("");
-};
+}

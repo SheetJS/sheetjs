@@ -23,13 +23,14 @@ var CS2CP = {
 };
 
 /* Parse a list of <r> tags */
-var parse_rs = (function() {
-	var tregex = matchtag("t"), rpregex = matchtag("rPr");
+var parse_rs = (function parse_rs_factory() {
+	var tregex = matchtag("t"), rpregex = matchtag("rPr"), rregex = /<r>/g, rend = /<\/r>/, nlregex = /\r\n/g;
 	/* 18.4.7 rPr CT_RPrElt */
-	var parse_rpr = function(rpr, intro, outro) {
+	var parse_rpr = function parse_rpr(rpr, intro, outro) {
 		var font = {}, cp = 65001;
-		(rpr.match(/<[^>]*>/g)||[]).forEach(function(x) {
-			var y = parsexmltag(x);
+		var m = rpr.match(tagregex), i = 0;
+		if(m) for(;i!=m.length; ++i) {
+			var y = parsexmltag(m[i]);
 			switch(y[0]) {
 				/* 18.8.12 condense CT_BooleanProperty */
 				/* ** not required . */
@@ -103,9 +104,9 @@ var parse_rs = (function() {
 				case '<scheme': break;
 
 				default:
-					if(y[0][2] !== '/') throw 'Unrecognized rich format ' + y[0];
+					if(y[0].charCodeAt(1) !== 47) throw 'Unrecognized rich format ' + y[0];
 			}
-		});
+		}
 		/* TODO: These should be generated styles, not inline */
 		var style = [];
 		if(font.b) style.push("font-weight: bold;");
@@ -126,15 +127,16 @@ var parse_rs = (function() {
 		var rpr = r.match(rpregex);
 		if(isval(rpr)) cp = parse_rpr(rpr[1], terms[0], terms[2]);
 
-		return terms[0].join("") + terms[1].replace(/\r\n/g,'<br/>') + terms[2].join("");
+		return terms[0].join("") + terms[1].replace(nlregex,'<br/>') + terms[2].join("");
 	}
-	return function(rs) {
-		return rs.replace(/<r>/g,"").split(/<\/r>/).map(parse_r).join("");
+	return function parse_rs(rs) {
+		return rs.replace(rregex,"").split(rend).map(parse_r).join("");
 	};
 })();
 
 /* 18.4.8 si CT_Rst */
-var parse_si = function(x, opts) {
+var sitregex = /<t[^>]*>([^<]*)<\/t>/g, sirregex = /<r>/;
+function parse_si(x, opts) {
 	var html = opts ? opts.cellHTML : true;
 	var z = {};
 	if(!x) return null;
@@ -146,53 +148,57 @@ var parse_si = function(x, opts) {
 		if(html) z.h = z.t;
 	}
 	/* 18.4.4 r CT_RElt (Rich Text Run) */
-	else if((y = x.match(/<r>/))) {
+	else if((y = x.match(sirregex))) {
 		z.r = x;
-		/* TODO: properly parse (note: no other valid child can have body text) */
-		z.t = utf8read(unescapexml(x.replace(/<[^>]*>/gm,"")));
+		z.t = utf8read(unescapexml(x.match(sitregex).join("").replace(tagregex,"")));
 		if(html) z.h = parse_rs(x);
 	}
 	/* 18.4.3 phoneticPr CT_PhoneticPr (TODO: needed for Asian support) */
 	/* 18.4.6 rPh CT_PhoneticRun (TODO: needed for Asian support) */
 	return z;
-};
+}
 
 /* 18.4 Shared String Table */
-var parse_sst_xml = function(data, opts) {
-	var s = [];
+var sstr0 = /<sst([^>]*)>([\s\S]*)<\/sst>/;
+var sstr1 = /<(?:si|sstItem)>/g;
+var sstr2 = /<\/(?:si|sstItem)>/;
+function parse_sst_xml(data, opts) {
+	var s = [], ss;
 	/* 18.4.9 sst CT_Sst */
-	var sst = data.match(new RegExp("<sst([^>]*)>([\\s\\S]*)<\/sst>","m"));
+	var sst = data.match(sstr0);
 	if(isval(sst)) {
-		s = sst[2].replace(/<(?:si|sstItem)>/g,"").split(/<\/(?:si|sstItem)>/).map(function(x) { return parse_si(x, opts); }).filter(function(x) { return x; });
+		ss = sst[2].replace(sstr1,"").split(sstr2);
+		for(var i = 0; i != ss.length; ++i) {
+			var o = parse_si(ss[i], opts);
+			if(o != null) s[s.length] = o;
+		}
 		sst = parsexmltag(sst[1]); s.Count = sst.count; s.Unique = sst.uniqueCount;
 	}
 	return s;
-};
+}
 
 RELS.SST = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings";
 
-var write_sst_xml = function(sst, opts) {
+function write_sst_xml(sst, opts) {
 	if(!opts.bookSST) return "";
-	var o = [];
-	o.push(XML_HEADER);
-	o.push(writextag('sst', null, {
+	var o = [XML_HEADER];
+	o[o.length] = (writextag('sst', null, {
 		xmlns: XMLNS.main[0],
 		count: sst.Count,
 		uniqueCount: sst.Unique
 	}));
-	sst.forEach(function(s) {
+	for(var i = 0; i != sst.length; ++i) { if(sst[i] == null) continue;
+		var s = sst[i];
 		var sitag = "<si>";
 		if(s.r) sitag += s.r;
 		else {
 			sitag += "<t";
 			if(s.t.match(/^\s|\s$|[\t\n\r]/)) sitag += ' xml:space="preserve"';
-			sitag += ">";
-			sitag += escapexml(s.t);
-			sitag += "</t>";
+			sitag += ">" + escapexml(s.t) + "</t>";
 		}
 		sitag += "</si>";
-		o.push(sitag);
-	});
-	if(o.length>2){ o.push('</sst>'); o[1]=o[1].replace("/>",">"); }
+		o[o.length] = (sitag);
+	}
+	if(o.length>2){ o[o.length] = ('</sst>'); o[1]=o[1].replace("/>",">"); }
 	return o.join("");
-};
+}

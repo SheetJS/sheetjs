@@ -1,75 +1,75 @@
 
 /* [MS-XLSB] 2.4.718 BrtRowHdr */
-var parse_BrtRowHdr = function(data, length) {
-	var z = {};
+function parse_BrtRowHdr(data, length) {
+	var z = [];
 	z.r = data.read_shift(4);
 	data.l += length-4;
 	return z;
-};
+}
 
 /* [MS-XLSB] 2.4.812 BrtWsDim */
 var parse_BrtWsDim = parse_UncheckedRfX;
 var write_BrtWsDim = write_UncheckedRfX;
 
 /* [MS-XLSB] 2.4.815 BrtWsProp */
-var parse_BrtWsProp = function(data, length) {
+function parse_BrtWsProp(data, length) {
 	var z = {};
 	/* TODO: pull flags */
 	data.l += 19;
 	z.name = parse_CodeName(data, length - 19);
 	return z;
-};
+}
 
 /* [MS-XLSB] 2.4.303 BrtCellBlank */
-var parse_BrtCellBlank = function(data, length) {
+function parse_BrtCellBlank(data, length) {
 	var cell = parse_Cell(data);
 	return [cell];
-};
+}
 
 /* [MS-XLSB] 2.4.304 BrtCellBool */
-var parse_BrtCellBool = function(data, length) {
+function parse_BrtCellBool(data, length) {
 	var cell = parse_Cell(data);
 	var fBool = data.read_shift(1);
 	return [cell, fBool, 'b'];
-};
+}
 
 /* [MS-XLSB] 2.4.305 BrtCellError */
-var parse_BrtCellError = function(data, length) {
+function parse_BrtCellError(data, length) {
 	var cell = parse_Cell(data);
 	var fBool = data.read_shift(1);
 	return [cell, fBool, 'e'];
-};
+}
 
 /* [MS-XLSB] 2.4.308 BrtCellIsst */
-var parse_BrtCellIsst = function(data, length) {
+function parse_BrtCellIsst(data, length) {
 	var cell = parse_Cell(data);
 	var isst = data.read_shift(4);
 	return [cell, isst, 's'];
-};
+}
 
 /* [MS-XLSB] 2.4.310 BrtCellReal */
-var parse_BrtCellReal = function(data, length) {
+function parse_BrtCellReal(data, length) {
 	var cell = parse_Cell(data);
 	var value = parse_Xnum(data);
 	return [cell, value, 'n'];
-};
+}
 
 /* [MS-XLSB] 2.4.311 BrtCellRk */
-var parse_BrtCellRk = function(data, length) {
+function parse_BrtCellRk(data, length) {
 	var cell = parse_Cell(data);
 	var value = parse_RkNumber(data);
 	return [cell, value, 'n'];
-};
+}
 
 /* [MS-XLSB] 2.4.314 BrtCellSt */
-var parse_BrtCellSt = function(data, length) {
+function parse_BrtCellSt(data, length) {
 	var cell = parse_Cell(data);
 	var value = parse_XLWideString(data);
 	return [cell, value, 'str'];
-};
+}
 
 /* [MS-XLSB] 2.4.647 BrtFmlaBool */
-var parse_BrtFmlaBool = function(data, length, opts) {
+function parse_BrtFmlaBool(data, length, opts) {
 	var cell = parse_Cell(data);
 	var value = data.read_shift(1);
 	var o = [cell, value, 'b'];
@@ -79,10 +79,10 @@ var parse_BrtFmlaBool = function(data, length, opts) {
 	}
 	else data.l += length-9;
 	return o;
-};
+}
 
 /* [MS-XLSB] 2.4.648 BrtFmlaError */
-var parse_BrtFmlaError = function(data, length, opts) {
+function parse_BrtFmlaError(data, length, opts) {
 	var cell = parse_Cell(data);
 	var value = data.read_shift(1);
 	var o = [cell, value, 'e'];
@@ -92,10 +92,10 @@ var parse_BrtFmlaError = function(data, length, opts) {
 	}
 	else data.l += length-9;
 	return o;
-};
+}
 
 /* [MS-XLSB] 2.4.649 BrtFmlaNum */
-var parse_BrtFmlaNum = function(data, length, opts) {
+function parse_BrtFmlaNum(data, length, opts) {
 	var cell = parse_Cell(data);
 	var value = parse_Xnum(data);
 	var o = [cell, value, 'n'];
@@ -105,27 +105,26 @@ var parse_BrtFmlaNum = function(data, length, opts) {
 	}
 	else data.l += length-16;
 	return o;
-};
+}
 
 /* [MS-XLSB] 2.4.650 BrtFmlaString */
-var parse_BrtFmlaString = function(data, length, opts) {
+function parse_BrtFmlaString(data, length, opts) {
 	var start = data.l;
 	var cell = parse_Cell(data);
 	var value = parse_XLWideString(data);
 	var o = [cell, value, 'str'];
 	if(opts.cellFormula) {
 		var formula = parse_CellParsedFormula(data, start + length - data.l);
-		o[3] = ""; /* TODO */
 	}
 	else data.l = start + length;
 	return o;
-};
+}
 
 /* [MS-XLSB] 2.4.676 BrtMergeCell */
 var parse_BrtMergeCell = parse_UncheckedRfX;
 
 /* [MS-XLSB] 2.4.656 BrtHLink */
-var parse_BrtHLink = function(data, length, opts) {
+function parse_BrtHLink(data, length, opts) {
 	var end = data.l + length;
 	var rfx = parse_UncheckedRfX(data, 16);
 	var relId = parse_XLNullableWideString(data);
@@ -134,10 +133,10 @@ var parse_BrtHLink = function(data, length, opts) {
 	var display = parse_XLWideString(data);
 	data.l = end;
 	return {rfx:rfx, relId:relId, loc:loc, tooltip:tooltip, display:display};
-};
+}
 
 /* [MS-XLSB] 2.1.7.61 Worksheet */
-var parse_ws_bin = function(data, opts, rels) {
+function parse_ws_bin(data, opts, rels) {
 	if(!data) return data;
 	if(!rels) rels = {'!id':{}};
 	var s = {};
@@ -146,15 +145,16 @@ var parse_ws_bin = function(data, opts, rels) {
 	var refguess = {s: {r:1000000, c:1000000}, e: {r:0, c:0} };
 
 	var pass = false, end = false;
-	var row, p, cf, R, C,addr;
+	var row, p, cf, R, C, addr, sstr, rr;
 	var mergecells = [];
-	recordhopper(data, function(val, R) {
+	recordhopper(data, function ws_parse(val, R) {
 		if(end) return;
 		switch(R.n) {
 			case 'BrtWsDim': ref = val; break;
 			case 'BrtRowHdr':
 				row = val;
 				if(opts.sheetRows && opts.sheetRows <= row.r) end=true;
+				rr = encode_row(row.r);
 				break;
 
 			case 'BrtFmlaBool':
@@ -170,27 +170,27 @@ var parse_ws_bin = function(data, opts, rels) {
 				p = {t:val[2]};
 				switch(val[2]) {
 					case 'n': p.v = val[1]; break;
-					case 's': p.v = strs[val[1]].t; p.r = strs[val[1]].r; break;
+					case 's': sstr = strs[val[1]]; p.v = sstr.t; p.r = sstr.r; break;
 					case 'b': p.v = val[1] ? true : false; break;
 					case 'e': p.raw = val[1]; p.v = BErr[p.raw]; break;
 					case 'str': p.v = utf8read(val[1]); break;
 				}
 				if(opts.cellFormula && val.length > 3) p.f = val[3];
 				if((cf = styles.CellXf[val[0].iStyleRef])) safe_format(p,cf.ifmt,null,opts);
-				s[encode_cell({c:val[0].c,r:row.r})] = p;
+				s[encode_col(C=val[0].c) + rr] = p;
 				if(refguess.s.r > row.r) refguess.s.r = row.r;
-				if(refguess.s.c > val[0].c) refguess.s.c = val[0].c;
+				if(refguess.s.c > C) refguess.s.c = C;
 				if(refguess.e.r < row.r) refguess.e.r = row.r;
-				if(refguess.e.c < val[0].c) refguess.e.c = val[0].c;
+				if(refguess.e.c < C) refguess.e.c = C;
 				break;
 
 			case 'BrtCellBlank': if(!opts.sheetStubs) break;
 				p = {t:'str',v:undefined};
-				s[encode_cell({c:val[0].c,r:row.r})] = p;
+				s[encode_col(C=val[0].c) + rr] = p;
 				if(refguess.s.r > row.r) refguess.s.r = row.r;
-				if(refguess.s.c > val[0].c) refguess.s.c = val[0].c;
+				if(refguess.s.c > C) refguess.s.c = C;
 				if(refguess.e.r < row.r) refguess.e.r = row.r;
-				if(refguess.e.c < val[0].c) refguess.e.c = val[0].c;
+				if(refguess.e.c < C) refguess.e.c = C;
 				break;
 
 			/* Merge Cells */
@@ -317,7 +317,7 @@ var parse_ws_bin = function(data, opts, rels) {
 	}, opts);
 	if(!s["!ref"] && (refguess.s.r < 1000000 || ref.e.r > 0 || ref.e.c > 0 || ref.s.r > 0 || ref.s.c > 0)) s["!ref"] = encode_range(ref);
 	if(opts.sheetRows && s["!ref"]) {
-		var tmpref = decode_range(s["!ref"]);
+		var tmpref = safe_decode_range(s["!ref"]);
 		if(opts.sheetRows < +tmpref.e.r) {
 			tmpref.e.r = opts.sheetRows - 1;
 			if(tmpref.e.r > refguess.e.r) tmpref.e.r = refguess.e.r;
@@ -330,10 +330,10 @@ var parse_ws_bin = function(data, opts, rels) {
 	}
 	if(mergecells.length > 0) s["!merges"] = mergecells;
 	return s;
-};
+}
 
 function write_CELLTABLE(ba, ws, idx, opts, wb) {
-	var r = decode_range(ws['!ref'] || "A1");
+	var r = safe_decode_range(ws['!ref'] || "A1");
 	write_record(ba, 'BrtBeginSheetData');
 	for(var i = r.s.r; i <= r.e.r; ++i) {
 		/* [ACCELLTABLE] */
@@ -344,10 +344,10 @@ function write_CELLTABLE(ba, ws, idx, opts, wb) {
 	write_record(ba, 'BrtEndSheetData');
 }
 
-var write_ws_bin = function(idx, opts, wb) {
+function write_ws_bin(idx, opts, wb) {
 	var ba = buf_array();
 	var s = wb.SheetNames[idx], ws = wb.Sheets[s] || {};
-	var r = decode_range(ws['!ref'] || "A1");
+	var r = safe_decode_range(ws['!ref'] || "A1");
 	write_record(ba, "BrtBeginSheet");
 	/* [BrtWsProp] */
 	write_record(ba, "BrtWsDim", write_BrtWsDim(r));
@@ -389,4 +389,4 @@ var write_ws_bin = function(idx, opts, wb) {
 	/* FRTWORKSHEET */
 	write_record(ba, "BrtEndSheet");
 	return ba.end();
-};
+}

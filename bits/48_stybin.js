@@ -7,18 +7,17 @@ function parse_BrtFmt(data, length) {
 
 /* [MS-XLSB] 2.4.653 BrtFont TODO */
 function parse_BrtFont(data, length) {
-	var read = data.read_shift.bind(data);
 	var out = {flags:{}};
-	out.dyHeight = read(2);
+	out.dyHeight = data.read_shift(2);
 	out.grbit = parse_FontFlags(data, 2);
-	out.bls = read(2);
-	out.sss = read(2);
-	out.uls = read(1);
-	out.bFamily = read(1);
-	out.bCharSet = read(1);
+	out.bls = data.read_shift(2);
+	out.sss = data.read_shift(2);
+	out.uls = data.read_shift(1);
+	out.bFamily = data.read_shift(1);
+	out.bCharSet = data.read_shift(1);
 	data.l++;
 	out.brtColor = parse_BrtColor(data, 8);
-	out.bFontScheme = read(1);
+	out.bFontScheme = data.read_shift(1);
 	out.name = parse_XLWideString(data, length - 21);
 
 	out.flags.Bold = out.bls === 0x02BC;
@@ -49,7 +48,7 @@ function parse_sty_bin(data, opts) {
 	styles.CellXf = [];
 	var state = ""; /* TODO: this should be a stack */
 	var pass = false;
-	recordhopper(data, function(val, R, RT) {
+	recordhopper(data, function hopper_sty(val, R, RT) {
 		switch(R.n) {
 			case 'BrtFmt':
 				styles.NumberFmt[val[0]] = val[1]; SSF.load(val[1], val[0]);

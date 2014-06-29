@@ -2,10 +2,12 @@
 XMLNS.CUST_PROPS = "http://schemas.openxmlformats.org/officeDocument/2006/custom-properties";
 RELS.CUST_PROPS  = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/custom-properties';
 
+var custregex = /<[^>]+>[^<]*/g;
 function parse_cust_props(data, opts) {
 	var p = {}, name;
-	data.match(/<[^>]+>([^<]*)/g).forEach(function(x) {
-		var y = parsexmltag(x);
+	var m = data.match(custregex);
+	if(m) for(var i = 0; i != m.length; ++i) {
+		var x = m[i], y = parsexmltag(x);
 		switch(y[0]) {
 			case '<?xml': break;
 			case '<Properties':
@@ -38,12 +40,12 @@ function parse_cust_props(data, opts) {
 						p[name] = unescapexml(text);
 						break;
 					default:
-						console.warn('Unexpected', x, type, toks);
+						if(typeof console !== 'undefined') console.warn('Unexpected', x, type, toks);
 				}
 			} else if(x.substr(0,2) === "</") {
 			} else if(opts.WTF) throw new Error(x);
 		}
-	});
+	}
 	return p;
 }
 
@@ -53,18 +55,16 @@ var CUST_PROPS_XML_ROOT = writextag('Properties', null, {
 });
 
 function write_cust_props(cp, opts) {
-	var o = [], p = {};
-	o.push(XML_HEADER);
-	o.push(CUST_PROPS_XML_ROOT);
+	var o = [XML_HEADER, CUST_PROPS_XML_ROOT];
 	if(!cp) return o.join("");
 	var pid = 1;
-	keys(cp).forEach(function(k) { ++pid;
-		o.push(writextag('property', write_vt(cp[k]), {
+	keys(cp).forEach(function custprop(k) { ++pid;
+		o[o.length] = (writextag('property', write_vt(cp[k]), {
 			'fmtid': '{D5CDD505-2E9C-101B-9397-08002B2CF9AE}',
 			'pid': pid,
 			'name': k
 		}));
 	});
-	if(o.length>2){ o.push('</Properties>'); o[1]=o[1].replace("/>",">"); }
+	if(o.length>2){ o[o.length] = '</Properties>'; o[1]=o[1].replace("/>",">"); }
 	return o.join("");
 }

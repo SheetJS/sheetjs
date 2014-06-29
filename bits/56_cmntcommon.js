@@ -23,7 +23,7 @@ function insertCommentsIntoSheet(sheetName, sheet, comments) {
 		if (!cell) {
 			cell = {};
 			sheet[comment.ref] = cell;
-			var range = decode_range(sheet["!ref"]||"BDWGO1000001:A1");
+			var range = safe_decode_range(sheet["!ref"]||"BDWGO1000001:A1");
 			var thisCell = decode_cell(comment.ref);
 			if(range.s.r > thisCell.r) range.s.r = thisCell.r;
 			if(range.e.r < thisCell.r) range.e.r = thisCell.r;

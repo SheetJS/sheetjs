@@ -169,7 +169,7 @@ var CT_LIST = (function(){
 	return o;
 })();
 
-var type2ct = evert(ct2type, true);
+var type2ct = evert_arr(ct2type);
 
 XMLNS.CT = 'http://schemas.openxmlformats.org/package/2006/content-types';
 
@@ -179,14 +179,14 @@ function parse_ct(data, opts) {
 	var ct = { workbooks: [], sheets: [], calcchains: [], themes: [], styles: [],
 		coreprops: [], extprops: [], custprops: [], strs:[], comments: [], vba: [],
 		TODO:[], rels:[], xmlns: "" };
-	(data.match(/<[^>]*>/g)||[]).forEach(function(x) {
+	(data.match(tagregex)||[]).forEach(function(x) {
 		var y = parsexmltag(x);
-		switch(y[0].replace(/<\w*:/,"<")) {
+		switch(y[0].replace(nsregex,"<")) {
 			case '<?xml': break;
 			case '<Types': ct.xmlns = y['xmlns' + (y[0].match(/<(\w+):/)||["",""])[1] ]; break;
 			case '<Default': ctext[y.Extension] = y.ContentType; break;
 			case '<Override':
-				if(y.ContentType in ct2type)ct[ct2type[y.ContentType]].push(y.PartName);
+				if(ct[ct2type[y.ContentType]] !== undefined) ct[ct2type[y.ContentType]].push(y.PartName);
 				else if(opts.WTF) console.error(y);
 				break;
 		}
@@ -216,13 +216,13 @@ var CTYPE_DEFAULTS = [
 
 function write_ct(ct, opts) {
 	var o = [], v;
-	o.push(XML_HEADER);
-	o.push(CTYPE_XML_ROOT);
+	o[o.length] = (XML_HEADER);
+	o[o.length] = (CTYPE_XML_ROOT);
 	o = o.concat(CTYPE_DEFAULTS);
 	var f1 = function(w) {
 		if(ct[w] && ct[w].length > 0) {
 			v = ct[w][0];
-			o.push(writextag('Override', null, {
+			o[o.length] = (writextag('Override', null, {
 				'PartName': (v[0] == '/' ? "":"/") + v,
 				'ContentType': CT_LIST[w][opts.bookType || 'xlsx']
 			}));
@@ -230,7 +230,7 @@ function write_ct(ct, opts) {
 	};
 	var f2 = function(w) {
 		ct[w].forEach(function(v) {
-			o.push(writextag('Override', null, {
+			o[o.length] = (writextag('Override', null, {
 				'PartName': (v[0] == '/' ? "":"/") + v,
 				'ContentType': CT_LIST[w][opts.bookType || 'xlsx']
 			}));
@@ -238,7 +238,7 @@ function write_ct(ct, opts) {
 	};
 	var f3 = function(t) {
 		(ct[t]||[]).forEach(function(v) {
-			o.push(writextag('Override', null, {
+			o[o.length] = (writextag('Override', null, {
 				'PartName': (v[0] == '/' ? "":"/") + v,
 				'ContentType': type2ct[t][0]
 			}));
@@ -249,6 +249,6 @@ function write_ct(ct, opts) {
 	f3('themes');
 	['strs', 'styles'].forEach(f1);
 	['coreprops', 'extprops', 'custprops'].forEach(f3);
-	if(o.length>2){ o.push('</Types>'); o[1]=o[1].replace("/>",">"); }
+	if(o.length>2){ o[o.length] = ('</Types>'); o[1]=o[1].replace("/>",">"); }
 	return o.join("");
 }

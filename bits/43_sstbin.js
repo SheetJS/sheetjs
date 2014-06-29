@@ -1,13 +1,13 @@
 /* [MS-XLSB] 2.4.219 BrtBeginSst */
-var parse_BrtBeginSst = function(data, length) {
+function parse_BrtBeginSst(data, length) {
 	return [data.read_shift(4), data.read_shift(4)];
-};
+}
 
 /* [MS-XLSB] 2.1.7.45 Shared Strings */
-var parse_sst_bin = function(data, opts) {
+function parse_sst_bin(data, opts) {
 	var s = [];
 	var pass = false;
-	recordhopper(data, function(val, R, RT) {
+	recordhopper(data, function hopper_sst(val, R, RT) {
 		switch(R.n) {
 			case 'BrtBeginSst': s.Count = val[0]; s.Unique = val[1]; break;
 			case 'BrtSSTItem': s.push(val); break;
@@ -19,6 +19,6 @@ var parse_sst_bin = function(data, opts) {
 		}
 	});
 	return s;
-};
+}
 
-var write_sst_bin = function(sst, opts) { };
+function write_sst_bin(sst, opts) { }

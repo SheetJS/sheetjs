@@ -32,6 +32,11 @@ test mocha: test.js
 	mkdir -p tmp
 	mocha -R spec
 
+.PHONY: prof
+prof:
+	cat misc/prof.js test.js > prof.js
+	node --prof prof.js
+
 TESTFMT=$(patsubst %,test_%,$(FMT))
 .PHONY: $(TESTFMT)
 $(TESTFMT): test_%:

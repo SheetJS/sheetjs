@@ -1,71 +1,115 @@
-function decode_row(rowstr) { return Number(unfix_row(rowstr)) - 1; }
+function decode_row(rowstr) { return parseInt(unfix_row(rowstr),10) - 1; }
 function encode_row(row) { return "" + (row + 1); }
-function fix_row(cstr) { return cstr.replace(/([A-Z]|^)([0-9]+)$/,"$1$$$2"); }
-function unfix_row(cstr) { return cstr.replace(/\$([0-9]+)$/,"$1"); }
+function fix_row(cstr) { return cstr.replace(/([A-Z]|^)(\d+)$/,"$1$$$2"); }
+function unfix_row(cstr) { return cstr.replace(/\$(\d+)$/,"$1"); }
 
 function decode_col(colstr) { var c = unfix_col(colstr), d = 0, i = 0; for(; i !== c.length; ++i) d = 26*d + c.charCodeAt(i) - 64; return d - 1; }
-function encode_col(col) { var s=""; for(++col; col; col=Math.floor((col-1)/26)) s = _chr(((col-1)%26) + 65) + s; return s; }
+function encode_col(col) { var s=""; for(++col; col; col=Math.floor((col-1)/26)) s = String.fromCharCode(((col-1)%26) + 65) + s; return s; }
 function fix_col(cstr) { return cstr.replace(/^([A-Z])/,"$$$1"); }
 function unfix_col(cstr) { return cstr.replace(/^\$([A-Z])/,"$1"); }
 
-function split_cell(cstr) { return cstr.replace(/(\$?[A-Z]*)(\$?[0-9]*)/,"$1,$2").split(","); }
+function split_cell(cstr) { return cstr.replace(/(\$?[A-Z]*)(\$?\d*)/,"$1,$2").split(","); }
 function decode_cell(cstr) { var splt = split_cell(cstr); return { c:decode_col(splt[0]), r:decode_row(splt[1]) }; }
 function encode_cell(cell) { return encode_col(cell.c) + encode_row(cell.r); }
 function fix_cell(cstr) { return fix_col(fix_row(cstr)); }
 function unfix_cell(cstr) { return unfix_col(unfix_row(cstr)); }
 function decode_range(range) { var x =range.split(":").map(decode_cell); return {s:x[0],e:x[x.length-1]}; }
 function encode_range(cs,ce) {
-	if(typeof ce === 'undefined' || typeof ce === 'number') return encode_range(cs.s, cs.e);
+	if(ce === undefined || typeof ce === 'number') return encode_range(cs.s, cs.e);
 	if(typeof cs !== 'string') cs = encode_cell(cs); if(typeof ce !== 'string') ce = encode_cell(ce);
 	return cs == ce ? cs : cs + ":" + ce;
 }
 
-function format_cell(cell, v) {
-	if(!cell || !cell.t) return "";
-	if(typeof cell.w !== 'undefined') return cell.w;
-	if(typeof v === 'undefined') v = cell.v;
-	if(typeof cell.z !== 'undefined') try { return (cell.w = SSF.format(cell.z, v)); } catch(e) { }
+function safe_decode_range(range) {
+	var o = {s:{c:0,r:0},e:{c:0,r:0}};
+	var idx = 0, i = 0, cc = 0;
+	for(idx = 0; i != range.length; ++i) {
+		if((cc=range.charCodeAt(i)-64) < 1 || cc > 26) break;
+		idx = 26*idx + cc;
+	}
+	o.s.c = --idx;
+
+	for(idx = 0; i != range.length; ++i) {
+		if((cc=range.charCodeAt(i)-48) < 0 || cc > 9) break;
+		idx = 10*idx + cc;
+	}
+	o.s.r = --idx;
+
+	if(i === range.length || range.charCodeAt(++i) === 58) { o.e.c=o.s.c; o.e.r=o.s.r; return o; }
+
+	for(idx = 0; i != range.length; ++i) {
+		if((cc=range.charCodeAt(i)-64) < 1 || cc > 26) break;
+		idx = 26*idx + cc;
+	}
+	o.e.c = --idx;
+
+	for(idx = 0; i != range.length; ++i) {
+		if((cc=range.charCodeAt(i)-48) < 0 || cc > 9) break;
+		idx = 10*idx + cc;
+	}
+	o.e.r = --idx;
+	return o;
+}
+
+function safe_format_cell(cell, v) {
+	if(cell.z !== undefined) try { return (cell.w = SSF.format(cell.z, v)); } catch(e) { }
 	if(!cell.XF) return v;
-	try { return (cell.w = SSF.format(cell.XF.ifmt||0, v)); } catch(e) { return v; }
+	try { return (cell.w = SSF.format(cell.XF.ifmt||0, v)); } catch(e) { return ''+v; }
+}
+
+function format_cell(cell, v) {
+	if(cell == null || cell.t == null) return "";
+	if(cell.w !== undefined) return cell.w;
+	if(v === undefined) return safe_format_cell(cell, cell.v);
+	return safe_format_cell(cell, v);
 }
 
 function sheet_to_json(sheet, opts){
-	var val, row, range, header, offset = 1, r, hdr = {}, isempty, R, C, v;
+	var val, row, range, header = 0, offset = 1, r, hdr = [], isempty, R, C, v;
 	var out = [];
-	opts = opts || {};
+	var o = opts != null ? opts : {};
 	if(!sheet || !sheet["!ref"]) return out;
-	range = opts.range || sheet["!ref"];
-	header = opts.header || "";
+	range = o.range !== undefined ? o.range : sheet["!ref"];
+	if(o.header === 1) header = 1;
+	else if(o.header === "A") header = 2;
+	else if(Array.isArray(o.header)) header = 3;
 	switch(typeof range) {
-		case 'string': r = decode_range(range); break;
-		case 'number': r = decode_range(sheet["!ref"]); r.s.r = range; break;
+		case 'string': r = safe_decode_range(range); break;
+		case 'number': r = safe_decode_range(sheet["!ref"]); r.s.r = range; break;
 		default: r = range;
 	}
-	if(header) offset = 0;
-	for(R=r.s.r, C = r.s.c; C <= r.e.c; ++C) {
-		val = sheet[encode_cell({c:C,r:R})];
-		if(header === "A") hdr[C] = encode_col(C);
-		else if(header === 1) hdr[C] = C;
-		else if(Array.isArray(header)) hdr[C] = header[C - r.s.c];
-		else if(!val) continue;
-		else hdr[C] = format_cell(val);
+	if(header > 0) offset = 0;
+	var rr = encode_row(r.s.r);
+	var cols = [];
+	for(C = r.s.c; C <= r.e.c; ++C) {
+		cols[C] = encode_col(C);
+		val = sheet[cols[C] + rr];
+		switch(header) {
+			case 1: hdr[C] = C; break;
+			case 2: hdr[C] = cols[C]; break;
+			case 3: hdr[C] = o.header[C - r.s.c]; break;
+			default:
+				if(!val) continue;
+				hdr[C] = format_cell(val);
+		}
 	}
 
 	for (R = r.s.r + offset; R <= r.e.r; ++R) {
+		rr = encode_row(R);
 		isempty = true;
 		row = header === 1 ? [] : Object.create({ __rowNum__ : R });
 		for (C = r.s.c; C <= r.e.c; ++C) {
-			val = sheet[encode_cell({c: C,r: R})];
+			val = sheet[cols[C] + rr];
 			if(!val || !val.t) continue;
-			v = (val || {}).v;
+			v = val.v;
 			switch(val.t){
 				case 'e': continue;
 				case 's': case 'str': break;
 				case 'b': case 'n': break;
 				default: throw 'unrecognized type ' + val.t;
 			}
-			if(typeof v !== 'undefined') {
-				row[hdr[C]] = opts.raw ? v||val.v : format_cell(val,v);
+			if(v !== undefined) {
+				row[hdr[C]] = o.raw ? v : format_cell(val,v);
 				isempty = false;
 			}
 		}
@@ -74,42 +118,57 @@ function sheet_to_json(sheet, opts){
 	return out;
 }
 
-function sheet_to_row_object_array(sheet, opts) { if(!opts) opts = {}; delete opts.range; return sheet_to_json(sheet, opts); }
+function sheet_to_row_object_array(sheet, opts) { return sheet_to_json(sheet, opts == null ? opts : {}); }
 
 function sheet_to_csv(sheet, opts) {
-	var out = [], txt = "";
-	opts = opts || {};
-	if(!sheet || !sheet["!ref"]) return "";
-	var r = decode_range(sheet["!ref"]);
-	var fs = opts.FS||",", rs = opts.RS||"\n";
-
-	for(var R = r.s.r; R <= r.e.r; ++R) {
-		var row = [];
-		for(var C = r.s.c; C <= r.e.c; ++C) {
-			var val = sheet[encode_cell({c:C,r:R})];
-			if(!val) { row.push(""); continue; }
-			txt = String(format_cell(val));
-			if(txt.indexOf(fs)!==-1 || txt.indexOf(rs)!==-1 || txt.indexOf('"')!==-1)
-				txt = "\"" + txt.replace(/"/g, '""') + "\"";
-			row.push(txt);
+	var out = "", txt = "", qreg = /"/g;
+	var o = opts == null ? {} : opts;
+	if(sheet == null || sheet["!ref"] == null) return "";
+	var r = safe_decode_range(sheet["!ref"]);
+	var FS = o.FS !== undefined ? o.FS : ",", fs = FS.charCodeAt(0);
+	var RS = o.RS !== undefined ? o.RS : "\n", rs = RS.charCodeAt(0);
+	var row = "", rr = "", cols = [];
+	var i = 0, cc = 0, val;
+	var R = 0, C = 0;
+	for(R = r.s.r; R <= r.e.r; ++R) {
+		row = "";
+		rr = encode_row(R);
+		for(C = r.s.c; C <= r.e.c; ++C) {
+			if(R === r.s.r) cols[C] = encode_col(C);
+			val = sheet[cols[C] + rr];
+			txt = val !== undefined ? ''+format_cell(val) : "";
+			for(i = 0, cc = 0; i !== txt.length; ++i) if((cc = txt.charCodeAt(i)) === fs || cc === rs || cc === 34) {
+				txt = "\"" + txt.replace(qreg, '""') + "\""; break; }
+			row += (C === r.s.c ? "" : FS) + txt;
 		}
-		out.push(row.join(fs));
+		out += row + RS;
 	}
-	return out.join(rs) + (out.length ? rs : "");
+	return out;
 }
 var make_csv = sheet_to_csv;
 
-function get_formulae(ws) {
-	var cmds = [];
-	for(var y in ws) if(y[0] !=='!' && ws.hasOwnProperty(y)) {
-		var x = ws[y];
-		var val = "";
-		if(x.f) val = x.f;
-		else if(typeof x.w !== 'undefined') val = "'" + x.w;
-		else if(typeof x.v === 'undefined') continue;
-		else val = x.v;
-		cmds.push(y + "=" + val);
+function sheet_to_formulae(sheet) {
+	var cmds, y = "", x, val="";
+	if(sheet == null || sheet["!ref"] == null) return "";
+	var r = safe_decode_range(sheet['!ref']), rr = "", cols = [];
+	cmds = new Array((r.e.r-r.s.r+1)*(r.e.c-r.s.c+1));
+	var i = 0;
+	for(var R = r.s.r; R <= r.e.r; ++R) {
+		rr = encode_row(R);
+		for(var C = r.s.c; C <= r.e.c; ++C) {
+			if(R === r.s.r) cols[C] = encode_col(C);
+			y = cols[C] + rr;
+			x = sheet[y];
+			val = "";
+			if(x === undefined) continue;
+			if(x.f != null) val = x.f;
+			else if(x.w !== undefined) val = "'" + x.w;
+			else if(x.v === undefined) continue;
+			else val = ""+x.v;
+			cmds[i++] = y + "=" + val;
+		}
 	}
+	cmds.length = i;
 	return cmds;
 }
 
@@ -123,11 +182,13 @@ var utils = {
 	split_cell: split_cell,
 	decode_cell: decode_cell,
 	decode_range: decode_range,
-	sheet_to_csv: sheet_to_csv,
+	format_cell: format_cell,
+	get_formulae: sheet_to_formulae,
 	make_csv: sheet_to_csv,
 	make_json: sheet_to_json,
-	get_formulae: get_formulae,
-	format_cell: format_cell,
+	make_formulae: sheet_to_formulae,
+	sheet_to_csv: sheet_to_csv,
 	sheet_to_json: sheet_to_json,
+	sheet_to_formulae: sheet_to_formulae,
 	sheet_to_row_object_array: sheet_to_row_object_array
 };

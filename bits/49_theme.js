@@ -4,7 +4,7 @@ RELS.THEME = "http://schemas.openxmlformats.org/officeDocument/2006/relationship
 function parse_clrScheme(t, opts) {
 	themes.themeElements.clrScheme = [];
 	var color = {};
-	t[0].match(/<[^>]*>/g).forEach(function(x) {
+	t[0].match(tagregex).forEach(function(x) {
 		var y = parsexmltag(x);
 		switch(y[0]) {
 			case '<a:clrScheme': case '</a:clrScheme>': break;
@@ -64,6 +64,7 @@ function parse_clrScheme(t, opts) {
 	});
 }
 
+var clrsregex = /<a:clrScheme([^>]*)>.*<\/a:clrScheme>/;
 /* 14.2.7 Theme Part */
 function parse_theme_xml(data, opts) {
 	if(!data || data.length === 0) return themes;
@@ -72,7 +73,7 @@ function parse_theme_xml(data, opts) {
 	var t;
 
 	/* clrScheme CT_ColorScheme */
-	if((t=data.match(/<a:clrScheme([^>]*)>.*<\/a:clrScheme>/))) parse_clrScheme(t, opts);
+	if((t=data.match(clrsregex))) parse_clrScheme(t, opts);
 
 	return themes;
 }

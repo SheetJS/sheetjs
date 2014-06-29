@@ -27,7 +27,7 @@ function parse_rels(data, currentFilePath) {
 		return toksFrom.join('/');
 	};
 
-	data.match(/<[^>]*>/g).forEach(function(x) {
+	data.match(tagregex).forEach(function(x) {
 		var y = parsexmltag(x);
 		/* 9.3.2.2 OPC_Relationships */
 		if (y[0] === '<Relationship') {
@@ -51,11 +51,11 @@ var RELS_ROOT = writextag('Relationships', null, {
 /* TODO */
 function write_rels(rels) {
 	var o = [];
-	o.push(XML_HEADER);
-	o.push(RELS_ROOT);
+	o[o.length] = (XML_HEADER);
+	o[o.length] = (RELS_ROOT);
 	keys(rels['!id']).forEach(function(rid) { var rel = rels['!id'][rid];
-		o.push(writextag('Relationship', null, rel));
+		o[o.length] = (writextag('Relationship', null, rel));
 	});
-	if(o.length>2){ o.push('</Relationships>'); o[1]=o[1].replace("/>",">"); }
+	if(o.length>2){ o[o.length] = ('</Relationships>'); o[1]=o[1].replace("/>",">"); }
 	return o.join("");
 }

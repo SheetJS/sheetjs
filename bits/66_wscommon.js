@@ -9,7 +9,7 @@ function get_sst_id(sst, str) {
 }
 
 function get_cell_style(styles, cell, opts) {
-	var z = opts.revssf[cell.z||"General"];
+	var z = opts.revssf[cell.z != null ? cell.z : "General"];
 	for(var i = 0; i != styles.length; ++i) if(styles[i].numFmtId === z) return i;
 	styles[styles.length] = {
 		numFmtId:z,
@@ -24,7 +24,15 @@ function get_cell_style(styles, cell, opts) {
 
 function safe_format(p, fmtid, fillid, opts) {
 	try {
-		p.w = SSF.format(fmtid,p.v,_ssfopts);
+		if(fmtid === 0) {
+			if(p.t === 'n') {
+				if((p.v|0) === p.v) p.w = SSF._general_int(p.v,_ssfopts);
+				else p.w = SSF._general_num(p.v,_ssfopts);
+			}
+			else if(p.v === undefined) return "";
+			else p.w = SSF._general(p.v,_ssfopts);
+		}
+		else p.w = SSF.format(fmtid,p.v,_ssfopts);
 		if(opts.cellNF) p.z = SSF._table[fmtid];
 	} catch(e) { if(opts.WTF) throw e; }
 	if(fillid) try {

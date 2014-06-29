@@ -1,49 +1,49 @@
 /* [MS-XLSB] 2.4.301 BrtBundleSh */
-var parse_BrtBundleSh = function(data, length) {
+function parse_BrtBundleSh(data, length) {
 	var z = {};
 	z.hsState = data.read_shift(4); //ST_SheetState
 	z.iTabID = data.read_shift(4);
 	z.strRelID = parse_RelID(data,length-8);
 	z.name = parse_XLWideString(data);
 	return z;
-};
-var write_BrtBundleSh = function(data, o) {
+}
+function write_BrtBundleSh(data, o) {
 	if(!o) o = new_buf(127);
 	o.write_shift(4, data.hsState);
 	o.write_shift(4, data.iTabID);
 	write_RelID(data.strRelID, o);
 	write_XLWideString(data.name.substr(0,31), o);
 	return o;
-};
+}
 
 /* [MS-XLSB] 2.4.807 BrtWbProp */
-var parse_BrtWbProp = function(data, length) {
+function parse_BrtWbProp(data, length) {
 	data.read_shift(4);
 	var dwThemeVersion = data.read_shift(4);
 	var strName = (length > 8) ? parse_XLWideString(data) : "";
 	return [dwThemeVersion, strName];
-};
-var write_BrtWbProp = function(data, o) {
+}
+function write_BrtWbProp(data, o) {
 	if(!o) o = new_buf(8);
 	o.write_shift(4, 0);
 	o.write_shift(4, 0);
 	return o;
-};
+}
 
-var parse_BrtFRTArchID$ = function(data, length) {
+function parse_BrtFRTArchID$(data, length) {
 	var o = {};
 	data.read_shift(4);
 	o.ArchID = data.read_shift(4);
 	data.l += length - 8;
 	return o;
-};
+}
 
 /* [MS-XLSB] 2.1.7.60 Workbook */
-var parse_wb_bin = function(data, opts) {
+function parse_wb_bin(data, opts) {
 	var wb = { AppVersion:{}, WBProps:{}, WBView:[], Sheets:[], CalcPr:{}, xmlns: "" };
 	var pass = false, z;
 
-	recordhopper(data, function(val, R) {
+	recordhopper(data, function hopper_wb(val, R) {
 		switch(R.n) {
 			case 'BrtBundleSh': wb.Sheets.push(val); break;
 
@@ -89,25 +89,18 @@ var parse_wb_bin = function(data, opts) {
 		}
 	});
 
-	/* defaults */
-	for(z in WBPropsDef) if(typeof wb.WBProps[z] === 'undefined') wb.WBProps[z] = WBPropsDef[z];
-	for(z in CalcPrDef) if(typeof wb.CalcPr[z] === 'undefined') wb.CalcPr[z] = CalcPrDef[z];
-
-	wb.WBView.forEach(function(w){for(var z in WBViewDef) if(typeof w[z] === 'undefined') w[z]=WBViewDef[z]; });
-	wb.Sheets.forEach(function(w){for(var z in SheetDef) if(typeof w[z] === 'undefined') w[z]=SheetDef[z]; });
-
-	_ssfopts.date1904 = parsexmlbool(wb.WBProps.date1904, 'date1904');
+	parse_wb_defaults(wb);
 
 	return wb;
-};
+}
 
 /* [MS-XLSB] 2.1.7.60 Workbook */
 function write_BUNDLESHS(ba, wb, opts) {
 	write_record(ba, "BrtBeginBundleShs");
-	wb.SheetNames.forEach(function(s, idx) {
-		var d = { hsState: 0, iTabID: idx+1, strRelID: 'rId' + (idx+1), name: s };
+	for(var idx = 0; idx != wb.SheetNames.length; ++idx) {
+		var d = { hsState: 0, iTabID: idx+1, strRelID: 'rId' + (idx+1), name: wb.SheetNames[idx] };
 		write_record(ba, "BrtBundleSh", write_BrtBundleSh(d));
-	});
+	}
 	write_record(ba, "BrtEndBundleShs");
 }
 
@@ -150,7 +143,7 @@ function write_BrtFileRecover(data, o) {
 }
 
 /* [MS-XLSB] 2.1.7.60 Workbook */
-var write_wb_bin = function(wb, opts) {
+function write_wb_bin(wb, opts) {
 	var ba = buf_array();
 	write_record(ba, "BrtBeginBook");
 	write_record(ba, "BrtFileVersion", write_BrtFileVersion());
@@ -177,4 +170,4 @@ var write_wb_bin = function(wb, opts) {
 	write_record(ba, "BrtEndBook");
 
 	return ba.end();
-};
+}

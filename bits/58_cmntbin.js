@@ -1,5 +1,5 @@
 /* [MS-XLSB] 2.4.28 BrtBeginComment */
-var parse_BrtBeginComment = function(data, length) {
+function parse_BrtBeginComment(data, length) {
 	var out = {};
 	out.iauthor = data.read_shift(4);
 	var rfx = parse_UncheckedRfX(data, 16);
@@ -7,7 +7,7 @@ var parse_BrtBeginComment = function(data, length) {
 	out.ref = encode_cell(rfx.s);
 	data.l += 16; /*var guid = parse_GUID(data); */
 	return out;
-};
+}
 
 /* [MS-XLSB] 2.4.324 BrtCommentAuthor */
 var parse_BrtCommentAuthor = parse_XLWideString;
@@ -21,7 +21,7 @@ function parse_comments_bin(data, opts) {
 	var authors = [];
 	var c = {};
 	var pass = false;
-	recordhopper(data, function(val, R, RT) {
+	recordhopper(data, function hopper_cmnt(val, R, RT) {
 		switch(R.n) {
 			case 'BrtCommentAuthor': authors.push(val); break;
 			case 'BrtBeginComment': c = val; break;

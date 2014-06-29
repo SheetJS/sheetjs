@@ -822,4 +822,4 @@ var RecordEnum = {
 	0xFFFF: { n:"", f:parsenoop }
 };
 
-var evert_RE = evert(RecordEnum, 'n');
+var evert_RE = evert_key(RecordEnum, 'n');

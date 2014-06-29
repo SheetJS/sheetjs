@@ -1,5 +1,5 @@
 /* [MS-XLSB] 2.1.4 Record */
-var recordhopper = function(data, cb, opts) {
+function recordhopper(data, cb, opts) {
 	var tmpbyte, cntbyte, length;
 	prep_blob(data, data.l || 0);
 	while(data.l < data.length) {
@@ -12,42 +12,42 @@ var recordhopper = function(data, cb, opts) {
 		var d = R.f(data, length, opts);
 		if(cb(d, R, RT)) return;
 	}
-};
+}
 
 /* control buffer usage for fixed-length buffers */
-var buf_array = function() {
+function buf_array() {
 	var bufs = [], blksz = 2048;
-	var newblk = function(sz) {
-		var o = new_buf(sz || blksz);
-		prep_blob(o, 0, true);
+	var newblk = function ba_newblk(sz) {
+		var o = new_buf(sz);
+		prep_blob(o, 0);
 		return o;
 	};
 
-	var curbuf = newblk();
+	var curbuf = newblk(blksz);
 
-	var endbuf = function() {
+	var endbuf = function ba_endbuf() {
 		curbuf.length = curbuf.l;
 		if(curbuf.length > 0) bufs.push(curbuf);
 		curbuf = null;
 	};
 
-	var next = function(sz) {
+	var next = function ba_next(sz) {
 		if(sz < curbuf.length - curbuf.l) return curbuf;
 		endbuf();
 		return (curbuf = newblk(Math.max(sz+1, blksz)));
 	};
 
-	var end = function() {
+	var end = function ba_end() {
 		endbuf();
 		return __toBuffer([bufs]);
 	};
 
-	var push = function(buf) { endbuf(); curbuf = buf; next(); };
+	var push = function ba_push(buf) { endbuf(); curbuf = buf; next(blksz); };
 
 	return { next:next, push:push, end:end, _bufs:bufs };
-};
+}
 
-var write_record = function(ba, type, payload, length) {
+function write_record(ba, type, payload, length) {
 	var t = evert_RE[type], l;
 	if(!length) length = RecordEnum[t].p || (payload||[]).length || 0;
 	l = 1 + (t >= 0x80 ? 1 : 0) + 1 + length;
@@ -63,4 +63,4 @@ var write_record = function(ba, type, payload, length) {
 		else { o.write_shift(1, length); break; }
 	}
 	if(length > 0 && is_buf(payload)) ba.push(payload);
-};
+}

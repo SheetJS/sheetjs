@@ -2,7 +2,7 @@
 function parse_fills(t, opts) {
 	styles.Fills = [];
 	var fill = {};
-	t[0].match(/<[^>]*>/g).forEach(function(x) {
+	t[0].match(tagregex).forEach(function(x) {
 		var y = parsexmltag(x);
 		switch(y[0]) {
 			case '<fills': case '<fills>': case '</fills>': break;
@@ -20,9 +20,9 @@ function parse_fills(t, opts) {
 			/* 18.8.3 bgColor CT_Color */
 			case '<bgColor':
 				if(!fill.bgColor) fill.bgColor = {};
-				if(y.indexed) fill.bgColor.indexed = Number(y.indexed);
-				if(y.theme) fill.bgColor.theme = Number(y.theme);
-				if(y.tint) fill.bgColor.tint = Number(y.tint);
+				if(y.indexed) fill.bgColor.indexed = parseInt(y.indexed, 10);
+				if(y.theme) fill.bgColor.theme = parseInt(y.theme, 10);
+				if(y.tint) fill.bgColor.tint = parseFloat(y.tint);
 				/* Excel uses ARGB strings */
 				if(y.rgb) fill.bgColor.rgb = y.rgb.substring(y.rgb.length - 6);
 				break;
@@ -31,8 +31,8 @@ function parse_fills(t, opts) {
 			/* 18.8.19 fgColor CT_Color */
 			case '<fgColor':
 				if(!fill.fgColor) fill.fgColor = {};
-				if(y.theme) fill.fgColor.theme = Number(y.theme);
-				if(y.tint) fill.fgColor.tint = Number(y.tint);
+				if(y.theme) fill.fgColor.theme = parseInt(y.theme, 10);
+				if(y.tint) fill.fgColor.tint = parseFloat(y.tint);
 				/* Excel uses ARGB strings */
 				if(y.rgb) fill.fgColor.rgb = y.rgb.substring(y.rgb.length - 6);
 				break;
@@ -46,27 +46,28 @@ function parse_fills(t, opts) {
 /* 18.8.31 numFmts CT_NumFmts */
 function parse_numFmts(t, opts) {
 	styles.NumberFmt = [];
-	for(var y in SSF._table) styles.NumberFmt[y] = SSF._table[y];
-	t[0].match(/<[^>]*>/g).forEach(function(x) {
-		var y = parsexmltag(x);
+	var k = keys(SSF._table);
+	for(var i=0; i != k.length; ++i) styles.NumberFmt[k[i]] = SSF._table[k[i]];
+	var m = t[0].match(tagregex);
+	for(i=0; i != m.length; ++i) {
+		var y = parsexmltag(m[i]);
 		switch(y[0]) {
 			case '<numFmts': case '</numFmts>': case '<numFmts/>': case '<numFmts>': break;
 			case '<numFmt': {
-				var f=unescapexml(y.formatCode), i=parseInt(y.numFmtId,10);
-				styles.NumberFmt[i] = f; if(i>0) SSF.load(f,i);
+				var f=unescapexml(y.formatCode), j=parseInt(y.numFmtId,10);
+				styles.NumberFmt[j] = f; if(j>0) SSF.load(f,j);
 			} break;
 			default: if(opts.WTF) throw 'unrecognized ' + y[0] + ' in numFmts';
 		}
-	});
+	}
 }
 
 function write_numFmts(NF, opts) {
-	var o = [];
-	o.push("<numFmts>");
+	var o = ["<numFmts>"];
 	[[5,8],[23,26],[41,44],[63,66],[164,392]].forEach(function(r) {
-		for(var i = r[0]; i <= r[1]; ++i) if(NF[i]) o.push(writextag('numFmt',null,{numFmtId:i,formatCode:escapexml(NF[i])}));
+		for(var i = r[0]; i <= r[1]; ++i) if(NF[i] !== undefined) o[o.length] = (writextag('numFmt',null,{numFmtId:i,formatCode:escapexml(NF[i])}));
 	});
-	o.push("</numFmts>");
+	o[o.length] = ("</numFmts>");
 	if(o.length === 2) return "";
 	o[0] = writextag('numFmts', null, { count:o.length-2 }).replace("/>", ">");
 	return o.join("");
@@ -75,7 +76,7 @@ function write_numFmts(NF, opts) {
 /* 18.8.10 cellXfs CT_CellXfs */
 function parse_cellXfs(t, opts) {
 	styles.CellXf = [];
-	t[0].match(/<[^>]*>/g).forEach(function(x) {
+	t[0].match(tagregex).forEach(function(x) {
 		var y = parsexmltag(x);
 		switch(y[0]) {
 			case '<cellXfs': case '<cellXfs>': case '<cellXfs/>': case '</cellXfs>': break;
@@ -102,9 +103,9 @@ function parse_cellXfs(t, opts) {
 
 function write_cellXfs(cellXfs) {
 	var o = [];
-	o.push(writextag('cellXfs',null));
-	cellXfs.forEach(function(c) { o.push(writextag('xf', null, c)); });
-	o.push("</cellXfs>");
+	o[o.length] = (writextag('cellXfs',null));
+	cellXfs.forEach(function(c) { o[o.length] = (writextag('xf', null, c)); });
+	o[o.length] = ("</cellXfs>");
 	if(o.length === 2) return "";
 	o[0] = writextag('cellXfs',null, {count:o.length-2}).replace("/>",">");
 	return o.join("");
@@ -145,19 +146,19 @@ var STYLES_XML_ROOT = writextag('styleSheet', null, {
 RELS.STY = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles";
 
 function write_sty_xml(wb, opts) {
-	var o = [], p = {}, W = writextag, w;
-	o.push(XML_HEADER);
-	o.push(STYLES_XML_ROOT);
-	if((w = write_numFmts(wb.SSF))) o.push(w);
-	o.push('<fonts count="1"><font><sz val="12"/><color theme="1"/><name val="Calibri"/><family val="2"/><scheme val="minor"/></font></fonts>');
-	o.push('<fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills>');
-	o.push('<borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders>');
-	o.push('<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>');
-	if((w = write_cellXfs(opts.cellXfs))) o.push(w);
-	o.push('<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>');
-	o.push('<dxfs count="0"/>');
-	o.push('<tableStyles count="0" defaultTableStyle="TableStyleMedium9" defaultPivotStyle="PivotStyleMedium4"/>');
+	var o = [], p = {}, w;
+	o[o.length] = (XML_HEADER);
+	o[o.length] = (STYLES_XML_ROOT);
+	if((w = write_numFmts(wb.SSF))) o[o.length] = (w);
+	o[o.length] = ('<fonts count="1"><font><sz val="12"/><color theme="1"/><name val="Calibri"/><family val="2"/><scheme val="minor"/></font></fonts>');
+	o[o.length] = ('<fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills>');
+	o[o.length] = ('<borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders>');
+	o[o.length] = ('<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>');
+	if((w = write_cellXfs(opts.cellXfs))) o[o.length] = (w);
+	o[o.length] = ('<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>');
+	o[o.length] = ('<dxfs count="0"/>');
+	o[o.length] = ('<tableStyles count="0" defaultTableStyle="TableStyleMedium9" defaultPivotStyle="PivotStyleMedium4"/>');
 
-	if(o.length>2){ o.push('</styleSheet>'); o[1]=o[1].replace("/>",">"); }
+	if(o.length>2){ o[o.length] = ('</styleSheet>'); o[1]=o[1].replace("/>",">"); }
 	return o.join("");
 }

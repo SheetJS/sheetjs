@@ -1,13 +1,14 @@
-function fix_opts(defaults) {
-	return function(opts) {
-		defaults.forEach(function(d) {
+function fix_opts_func(defaults) {
+	return function fix_opts(opts) {
+		for(var i = 0; i != defaults.length; ++i) {
+			var d = defaults[i];
 			if(typeof opts[d[0]] === 'undefined') opts[d[0]] = d[1];
 			if(d[2] === 'n') opts[d[0]] = Number(opts[d[0]]);
-		});
+		}
 	};
 }
 
-var fix_read_opts = fix_opts([
+var fix_read_opts = fix_opts_func([
 	['cellNF', false], /* emit cell number format string as .z */
 	['cellHTML', true], /* emit html string as .h */
 	['cellFormula', true], /* emit formulae as .f */
@@ -26,7 +27,7 @@ var fix_read_opts = fix_opts([
 ]);
 
 
-var fix_write_opts = fix_opts([
+var fix_write_opts = fix_opts_func([
 	['bookSST', false], /* Generate Shared String Table */
 
 	['bookType', 'xlsx'], /* Type of workbook (xlsx/m/b) */

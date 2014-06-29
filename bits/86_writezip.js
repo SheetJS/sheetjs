@@ -15,7 +15,7 @@ function write_zip(wb, opts) {
 	}
 	if(wb && wb.SSF) {
 		make_ssf(SSF); SSF.load_table(wb.SSF);
-		opts.revssf = evert(wb.SSF); opts.revssf[wb.SSF[65535]] = 0;
+		opts.revssf = evert_num(wb.SSF); opts.revssf[wb.SSF[65535]] = 0;
 	}
 	opts.rels = {}; opts.wbrels = {};
 	opts.Strings = []; opts.Strings.Count = 0; opts.Strings.Unique = 0;
@@ -55,14 +55,14 @@ function write_zip(wb, opts) {
 	ct.workbooks.push(f);
 	add_rels(opts.rels, 1, f, RELS.WB);
 
-	wb.SheetNames.forEach(function(s, i) {
-		rId = i+1; f = "xl/worksheets/sheet" + rId + "." + wbext;
-		zip.file(f, write_ws(i, f, opts, wb));
+	for(rId=1;rId <= wb.SheetNames.length; ++rId) {
+		f = "xl/worksheets/sheet" + rId + "." + wbext;
+		zip.file(f, write_ws(rId-1, f, opts, wb));
 		ct.sheets.push(f);
 		add_rels(opts.wbrels, rId, "worksheets/sheet" + rId + "." + wbext, RELS.WS);
-	});
+	}
 
-	if((opts.Strings||[]).length > 0) {
+	if(opts.Strings != null && opts.Strings.length > 0) {
 		f = "xl/sharedStrings." + wbext;
 		zip.file(f, write_sst(opts.Strings, f, opts));
 		ct.strs.push(f);

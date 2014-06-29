@@ -1,7 +1,7 @@
 function safe_parse_wbrels(wbrels, sheets) {
 	if(!wbrels) return 0;
 	try {
-		wbrels = sheets.map(function(w) { return [w.name, wbrels['!id'][w.id].Target]; });
+		wbrels = sheets.map(function pwbr(w) { return [w.name, wbrels['!id'][w.id].Target]; });
 	} catch(e) { return null; }
 	return !wbrels || wbrels.length === 0 ? null : wbrels;
 }
@@ -13,12 +13,13 @@ function safe_parse_ws(zip, path, relsPath, sheet, sheetRels, sheets, opts) {
 	} catch(e) { if(opts.WTF) throw e; }
 }
 
+var nodirs = function nodirs(x){return x.substr(-1) != '/';};
 function parse_zip(zip, opts) {
 	make_ssf(SSF);
 	opts = opts || {};
 	fix_read_opts(opts);
 	reset_cp();
-	var entries = keys(zip.files).filter(function(x){return x.substr(-1) != '/';}).sort();
+	var entries = keys(zip.files).filter(nodirs).sort();
 	var dir = parse_ct(getzipdata(zip, '[Content_Types].xml'), opts);
 	var xlsb = false;
 	var sheets, binname;
@@ -70,7 +71,7 @@ function parse_zip(zip, opts) {
 	var out = {};
 	if(opts.bookSheets || opts.bookProps) {
 		if(props.Worksheets && props.SheetNames.length > 0) sheets=props.SheetNames;
-		else if(wb.Sheets) sheets = wb.Sheets.map(function(x){ return x.name; });
+		else if(wb.Sheets) sheets = wb.Sheets.map(function pluck(x){ return x.name; });
 		if(opts.bookProps) { out.Props = props; out.Custprops = custprops; }
 		if(typeof sheets !== 'undefined') out.SheetNames = sheets;
 		if(opts.bookSheets ? out.SheetNames : opts.bookProps) return out;
