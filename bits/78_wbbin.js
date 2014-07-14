@@ -53,6 +53,7 @@ function parse_wb_bin(data, opts) {
 			case 'BrtACBegin': break;
 			case 'BrtAbsPath15': break;
 			case 'BrtACEnd': break;
+			case 'BrtWbFactoid': break;
 			/*case 'BrtBookProtectionIso': break;*/
 			case 'BrtBookProtection': break;
 			case 'BrtBeginBookViews': break;
