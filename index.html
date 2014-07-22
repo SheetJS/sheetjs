@@ -22,6 +22,8 @@
 </head>
 <body>
 <b>JS-XLSX (XLSX/XLSB/XLSM) Live Demo</b><br />
+<a href="https://github.com/SheetJS/js-xlsx">Github Repo</a><br />
+<a href="https://github.com/SheetJS/js-xlsx/issues">Issues?  Something look weird?  Click here and report an issue</a><br />
 Output Format:
 <select name="format">
 <option value="csv" selected> CSV</option>
@@ -59,11 +61,13 @@ if(!use_worker) {
 	document.getElementsByName("useworker")[0].checked = false;
 }
 
-var transferable = true;
+var transferable = use_worker;
 if(!transferable) {
 	document.getElementsByName("xferable")[0].disabled = true;
 	document.getElementsByName("xferable")[0].checked = false;
 }
+
+var wtf_mode = false;
 
 function fixdata(data) {
 	var o = "", l = 0, w = 10240;
@@ -170,7 +174,7 @@ function to_formulae(workbook) {
 var tarea = document.getElementById('b64data');
 function b64it() {
 	if(typeof console !== 'undefined') console.log("onload", new Date());
-	var wb = XLSX.read(tarea.value, {type: 'base64'});
+	var wb = XLSX.read(tarea.value, {type: 'base64',WTF:wtf_mode});
 	process_wb(wb);
 }
 
