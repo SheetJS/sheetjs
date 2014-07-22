@@ -1,4 +1,6 @@
 <!DOCTYPE html>
+<!-- xlsx.js (C) 2013-2014 SheetJS http://sheetjs.com -->
+<!-- vim: set ts=2: -->
 <style>
 #drop{
 	border:2px dashed #bbb;
@@ -41,17 +43,33 @@ function process_wb(wb) {
 
 var url = "test_files/formula_stress_test_ajax.xlsx";
 
-var oReq = new XMLHttpRequest();
+var oReq;
+if(window.XMLHttpRequest) oReq = new XMLHttpRequest();
+else if(window.ActiveXObject) oReq = new ActiveXObject('MSXML2.XMLHTTP.3.0');
+else throw "XHR unavailable for your browser";
+
 oReq.open("GET", url, true);
-oReq.responseType = "arraybuffer";
-oReq.onload = function(e) {
-	var arraybuffer = oReq.response;
-	var data = new Uint8Array(arraybuffer);
-	var arr = new Array();
-	for(var i = 0; i != data.length; ++i) arr[i] = String.fromCharCode(data[i]);
-	var wb = XLSX.read(arr.join(""), {type:"binary"});
-	process_wb(wb);
+
+if(typeof Uint8Array !== 'undefined') {
+	oReq.responseType = "arraybuffer";
+	oReq.onload = function(e) {
+		var arraybuffer = oReq.response;
+		var data = new Uint8Array(arraybuffer);
+		var arr = new Array();
+		for(var i = 0; i != data.length; ++i) arr[i] = String.fromCharCode(data[i]);
+		var wb = XLSX.read(arr.join(""), {type:"binary"});
+		process_wb(wb);
+	};
+} else {
+	oReq.onreadystatechange = function() { if(oReq.readyState == 4 && oReq.status == 200) {
+		var data = new VBArray(oReq.responseBody).toArray();
+		var arr = new Array();
+		for(var i = 0, len = data.length; i != len; ++i) arr[i] = String.fromCharCode(data[i]);
+		var wb = XLSX.read(arr.join(""), {type:"binary"});
+		process_wb(wb);
+	} };
 }
+
 oReq.send();
 
 </script>
