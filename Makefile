@@ -30,7 +30,7 @@ init:
 .PHONY: test mocha
 test mocha: test.js
 	mkdir -p tmp
-	mocha -R spec
+	mocha -R spec -t 20000
 
 .PHONY: prof
 prof:
