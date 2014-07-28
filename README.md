@@ -63,7 +63,8 @@ var workbook = XLSX.readFile('test.xlsx');
 /* DO SOMETHING WITH workbook HERE */
 ```
 
-- ajax:
+- ajax (for a more complete example that works in older versions of IE, check the
+  demo at <http://oss.sheetjs.com/js-xlsx/ajax.html>):
 
 ```
 /* set up XMLHttpRequest */
