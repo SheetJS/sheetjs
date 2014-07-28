@@ -18,6 +18,7 @@
 <b>JS-XLSX AJAX Demo</b><br />
 <pre id="out"></pre>
 <br />
+<script src="iemagic.js"></script>
 <script src="shim.js"></script>
 <script src="jszip.js"></script>
 <script src="xlsx.js"></script>
@@ -61,11 +62,10 @@ if(typeof Uint8Array !== 'undefined') {
 		process_wb(wb);
 	};
 } else {
+	oReq.setRequestHeader("Accept-Charset", "x-user-defined");	
 	oReq.onreadystatechange = function() { if(oReq.readyState == 4 && oReq.status == 200) {
-		var data = new VBArray(oReq.responseBody).toArray();
-		var arr = new Array();
-		for(var i = 0, len = data.length; i != len; ++i) arr[i] = String.fromCharCode(data[i]);
-		var wb = XLSX.read(arr.join(""), {type:"binary"});
+		var ff = convertResponseBodyToText(oReq.responseBody);
+		var wb = XLSX.read(ff, {type:"binary"});
 		process_wb(wb);
 	} };
 }
