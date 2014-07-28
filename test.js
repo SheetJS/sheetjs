@@ -149,7 +149,7 @@ describe('should parse test files', function() {
 			it(x + ' [' + ext + ']', function(){
 				var wb = wbtable[dir + x];
 				if(!wb) wb = X.readFile(dir + x, opts);
-				parsetest(x, X.read(X.write(wb, {type:"buffer", bookType:ext.replace(/\./,""), bookSST: idx != 1}), {WTF:opts.WTF}), ext.replace(/\./,"") !== "xlsb", ext);
+				parsetest(x, X.read(X.write(wb, {type:"buffer", bookType:ext.replace(/\./,"")}), {WTF:opts.WTF}), ext.replace(/\./,"") !== "xlsb", ext);
 			});
 		});
 	});

@@ -47,14 +47,14 @@ function parse_fills(t, opts) {
 function parse_numFmts(t, opts) {
 	styles.NumberFmt = [];
 	var k = keys(SSF._table);
-	for(var i=0; i != k.length; ++i) styles.NumberFmt[k[i]] = SSF._table[k[i]];
+	for(var i=0; i < k.length; ++i) styles.NumberFmt[k[i]] = SSF._table[k[i]];
 	var m = t[0].match(tagregex);
-	for(i=0; i != m.length; ++i) {
+	for(i=0; i < m.length; ++i) {
 		var y = parsexmltag(m[i]);
 		switch(y[0]) {
 			case '<numFmts': case '</numFmts>': case '<numFmts/>': case '<numFmts>': break;
 			case '<numFmt': {
-				var f=unescapexml(y.formatCode), j=parseInt(y.numFmtId,10);
+				var f=unescapexml(utf8read(y.formatCode)), j=parseInt(y.numFmtId,10);
 				styles.NumberFmt[j] = f; if(j>0) SSF.load(f,j);
 			} break;
 			default: if(opts.WTF) throw 'unrecognized ' + y[0] + ' in numFmts';
@@ -67,8 +67,8 @@ function write_numFmts(NF, opts) {
 	[[5,8],[23,26],[41,44],[63,66],[164,392]].forEach(function(r) {
 		for(var i = r[0]; i <= r[1]; ++i) if(NF[i] !== undefined) o[o.length] = (writextag('numFmt',null,{numFmtId:i,formatCode:escapexml(NF[i])}));
 	});
+	if(o.length === 1) return "";
 	o[o.length] = ("</numFmts>");
-	if(o.length === 2) return "";
 	o[0] = writextag('numFmts', null, { count:o.length-2 }).replace("/>", ">");
 	return o.join("");
 }
@@ -112,23 +112,29 @@ function write_cellXfs(cellXfs) {
 }
 
 /* 18.8 Styles CT_Stylesheet*/
-function parse_sty_xml(data, opts) {
+var parse_sty_xml= (function make_pstyx() {
+var numFmtRegex = /<numFmts([^>]*)>.*<\/numFmts>/;
+var cellXfRegex = /<cellXfs([^>]*)>.*<\/cellXfs>/;
+var fillsRegex = /<fills([^>]*)>.*<\/fills>/;
+
+return function parse_sty_xml(data, opts) {
 	/* 18.8.39 styleSheet CT_Stylesheet */
 	var t;
 
 	/* numFmts CT_NumFmts ? */
-	if((t=data.match(/<numFmts([^>]*)>.*<\/numFmts>/))) parse_numFmts(t, opts);
+	if((t=data.match(numFmtRegex))) parse_numFmts(t, opts);
 
 	/* fonts CT_Fonts ? */
+//	if((t=data.match(/<fonts([^>]*)>.*<\/fonts>/))) parse_fonts(t, opts);
 
 	/* fills CT_Fills */
-	if((t=data.match(/<fills([^>]*)>.*<\/fills>/))) parse_fills(t, opts);
+	if((t=data.match(fillsRegex))) parse_fills(t, opts);
 
 	/* borders CT_Borders ? */
 	/* cellStyleXfs CT_CellStyleXfs ? */
 
 	/* cellXfs CT_CellXfs ? */
-	if((t=data.match(/<cellXfs([^>]*)>.*<\/cellXfs>/))) parse_cellXfs(t, opts);
+	if((t=data.match(cellXfRegex))) parse_cellXfs(t, opts);
 
 	/* dxfs CT_Dxfs ? */
 	/* tableStyles CT_TableStyles ? */
@@ -136,7 +142,8 @@ function parse_sty_xml(data, opts) {
 	/* extLst CT_ExtensionList ? */
 
 	return styles;
-}
+};
+})();
 
 var STYLES_XML_ROOT = writextag('styleSheet', null, {
 	'xmlns': XMLNS.main[0],
@@ -146,10 +153,8 @@ var STYLES_XML_ROOT = writextag('styleSheet', null, {
 RELS.STY = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles";
 
 function write_sty_xml(wb, opts) {
-	var o = [], p = {}, w;
-	o[o.length] = (XML_HEADER);
-	o[o.length] = (STYLES_XML_ROOT);
-	if((w = write_numFmts(wb.SSF))) o[o.length] = (w);
+	var o = [XML_HEADER, STYLES_XML_ROOT], w;
+	if((w = write_numFmts(wb.SSF)) != null) o[o.length] = w;
 	o[o.length] = ('<fonts count="1"><font><sz val="12"/><color theme="1"/><name val="Calibri"/><family val="2"/><scheme val="minor"/></font></fonts>');
 	o[o.length] = ('<fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills>');
 	o[o.length] = ('<borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders>');

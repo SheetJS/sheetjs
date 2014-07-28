@@ -113,4 +113,21 @@ function parse_sty_bin(data, opts) {
 	return styles;
 }
 
-function write_sty_bin(data, opts) { }
+/* [MS-XLSB] 2.1.7.50 Styles */
+function write_sty_bin(data, opts) {
+	var ba = buf_array();
+	write_record(ba, "BrtBeginStyleSheet");
+	/* [FMTS] */
+	/* [FONTS] */
+	/* [FILLS] */
+	/* [BORDERS] */
+	/* CELLSTYLEXFS */
+	/* CELLXFS*/
+	/* STYLES */
+	/* DXFS */
+	/* TABLESTYLES */
+	/* [COLORPALETTE] */
+	/* FRTSTYLESHEET*/
+	write_record(ba, "BrtEndStyleSheet");
+	return ba.end();
+}

@@ -82,11 +82,18 @@ function parse_wb_bin(data, opts) {
 			case 'BrtBeginWebPubItem': break;
 			case 'BrtEndWebPubItem': break;
 			case 'BrtEndWebPubItems': break;*/
+
+			/* Smart Tags */
+			case 'BrtBeginSmartTagTypes': break;
+			case 'BrtSmartTagType': break;
+			case 'BrtEndSmartTagTypes': break;
+
 			case 'BrtFRTBegin': pass = true; break;
 			case 'BrtFRTArchID$': break;
+			case 'BrtWorkBookPr15': break;
 			case 'BrtFRTEnd': pass = false; break;
 			case 'BrtEndBook': break;
-			default: if(!pass) throw new Error("Unexpected record " + R.n);
+			default: if(!pass || opts.WTF) throw new Error("Unexpected record " + R.n);
 		}
 	});
 

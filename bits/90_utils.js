@@ -23,27 +23,28 @@ function encode_range(cs,ce) {
 function safe_decode_range(range) {
 	var o = {s:{c:0,r:0},e:{c:0,r:0}};
 	var idx = 0, i = 0, cc = 0;
-	for(idx = 0; i != range.length; ++i) {
+	var len = range.length;
+	for(idx = 0; i < len; ++i) {
 		if((cc=range.charCodeAt(i)-64) < 1 || cc > 26) break;
 		idx = 26*idx + cc;
 	}
 	o.s.c = --idx;
 
-	for(idx = 0; i != range.length; ++i) {
+	for(idx = 0; i < len; ++i) {
 		if((cc=range.charCodeAt(i)-48) < 0 || cc > 9) break;
 		idx = 10*idx + cc;
 	}
 	o.s.r = --idx;
 
-	if(i === range.length || range.charCodeAt(++i) === 58) { o.e.c=o.s.c; o.e.r=o.s.r; return o; }
+	if(i === len || range.charCodeAt(++i) === 58) { o.e.c=o.s.c; o.e.r=o.s.r; return o; }
 
-	for(idx = 0; i != range.length; ++i) {
+	for(idx = 0; i != len; ++i) {
 		if((cc=range.charCodeAt(i)-64) < 1 || cc > 26) break;
 		idx = 26*idx + cc;
 	}
 	o.e.c = --idx;
 
-	for(idx = 0; i != range.length; ++i) {
+	for(idx = 0; i != len; ++i) {
 		if((cc=range.charCodeAt(i)-48) < 0 || cc > 9) break;
 		idx = 10*idx + cc;
 	}
@@ -66,9 +67,9 @@ function format_cell(cell, v) {
 
 function sheet_to_json(sheet, opts){
 	var val, row, range, header = 0, offset = 1, r, hdr = [], isempty, R, C, v;
-	var out = [];
 	var o = opts != null ? opts : {};
-	if(!sheet || !sheet["!ref"]) return out;
+	var raw = o.raw;
+	if(sheet == null || sheet["!ref"] == null) return [];
 	range = o.range !== undefined ? o.range : sheet["!ref"];
 	if(o.header === 1) header = 1;
 	else if(o.header === "A") header = 2;
@@ -80,7 +81,9 @@ function sheet_to_json(sheet, opts){
 	}
 	if(header > 0) offset = 0;
 	var rr = encode_row(r.s.r);
-	var cols = [];
+	var cols = new Array(r.e.c-r.s.c+1);
+	var out = new Array(r.e.r-r.s.r-offset+1);
+	var outi = 0;
 	for(C = r.s.c; C <= r.e.c; ++C) {
 		cols[C] = encode_col(C);
 		val = sheet[cols[C] + rr];
@@ -89,7 +92,7 @@ function sheet_to_json(sheet, opts){
 			case 2: hdr[C] = cols[C]; break;
 			case 3: hdr[C] = o.header[C - r.s.c]; break;
 			default:
-				if(!val) continue;
+				if(val === undefined) continue;
 				hdr[C] = format_cell(val);
 		}
 	}
@@ -100,7 +103,7 @@ function sheet_to_json(sheet, opts){
 		row = header === 1 ? [] : Object.create({ __rowNum__ : R });
 		for (C = r.s.c; C <= r.e.c; ++C) {
 			val = sheet[cols[C] + rr];
-			if(!val || !val.t) continue;
+			if(val === undefined || val.t === undefined) continue;
 			v = val.v;
 			switch(val.t){
 				case 'e': continue;
@@ -109,16 +112,17 @@ function sheet_to_json(sheet, opts){
 				default: throw 'unrecognized type ' + val.t;
 			}
 			if(v !== undefined) {
-				row[hdr[C]] = o.raw ? v : format_cell(val,v);
+				row[hdr[C]] = raw ? v : format_cell(val,v);
 				isempty = false;
 			}
 		}
-		if(!isempty) out.push(row);
+		if(isempty === false) out[outi++] = row;
 	}
+	out.length = outi;
 	return out;
 }
 
-function sheet_to_row_object_array(sheet, opts) { return sheet_to_json(sheet, opts == null ? opts : {}); }
+function sheet_to_row_object_array(sheet, opts) { return sheet_to_json(sheet, opts != null ? opts : {}); }
 
 function sheet_to_csv(sheet, opts) {
 	var out = "", txt = "", qreg = /"/g;
@@ -130,11 +134,11 @@ function sheet_to_csv(sheet, opts) {
 	var row = "", rr = "", cols = [];
 	var i = 0, cc = 0, val;
 	var R = 0, C = 0;
+	for(C = r.s.c; C <= r.e.c; ++C) cols[C] = encode_col(C);
 	for(R = r.s.r; R <= r.e.r; ++R) {
 		row = "";
 		rr = encode_row(R);
 		for(C = r.s.c; C <= r.e.c; ++C) {
-			if(R === r.s.r) cols[C] = encode_col(C);
 			val = sheet[cols[C] + rr];
 			txt = val !== undefined ? ''+format_cell(val) : "";
 			for(i = 0, cc = 0; i !== txt.length; ++i) if((cc = txt.charCodeAt(i)) === fs || cc === rs || cc === 34) {
@@ -150,13 +154,13 @@ var make_csv = sheet_to_csv;
 function sheet_to_formulae(sheet) {
 	var cmds, y = "", x, val="";
 	if(sheet == null || sheet["!ref"] == null) return "";
-	var r = safe_decode_range(sheet['!ref']), rr = "", cols = [];
+	var r = safe_decode_range(sheet['!ref']), rr = "", cols = [], C;
 	cmds = new Array((r.e.r-r.s.r+1)*(r.e.c-r.s.c+1));
 	var i = 0;
+	for(C = r.s.c; C <= r.e.c; ++C) cols[C] = encode_col(C);
 	for(var R = r.s.r; R <= r.e.r; ++R) {
 		rr = encode_row(R);
-		for(var C = r.s.c; C <= r.e.c; ++C) {
-			if(R === r.s.r) cols[C] = encode_col(C);
+		for(C = r.s.c; C <= r.e.c; ++C) {
 			y = cols[C] + rr;
 			x = sheet[y];
 			val = "";

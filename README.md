@@ -90,7 +90,7 @@ oReq.onload = function(e) {
 oReq.send();
 ```
 
-- html5 drag-and-drop using readAsBinaryString:
+- HTML5 drag-and-drop using readAsBinaryString:
 
 ```
 /* set up drag-and-drop event */
@@ -106,7 +106,7 @@ function handleDrop(e) {
       var data = e.target.result;
 
       /* if binary string, read with type 'binary' */
-      var wb = XLSX.read(data, {type: 'binary'});
+      var workbook = XLSX.read(data, {type: 'binary'});
 
       /* DO SOMETHING WITH workbook HERE */
     };
@@ -114,6 +114,28 @@ function handleDrop(e) {
   }
 }
 drop_dom_element.addEventListener('drop', handleDrop, false);
+```
+
+- HTML5 input file element using readAsBinaryString:
+
+```
+function handleFile(e) {
+  var files = e.target.files;
+  var i,f;
+  for (i = 0, f = files[i]; i != files.length; ++i) {
+    var reader = new FileReader();
+    var name = f.name;
+    reader.onload = function(e) {
+      var data = e.target.result;
+
+      var workbook = XLSX.read(data, {type: 'binary'});
+
+      /* DO SOMETHING WITH workbook HERE */
+    };
+    reader.readAsBinaryString(f);
+  }
+}
+input_dom_element.addEventListener('change', handleFile, false);
 ```
 
 This example walks through every cell of every sheet and dumps the values:
@@ -150,7 +172,7 @@ Some helper functions in `XLSX.utils` generate different views of the sheets:
 
 - `XLSX.utils.sheet_to_csv` generates CSV
 - `XLSX.utils.sheet_to_json` generates an array of objects
-- `XLSX.utils.get_formulae` generates a list of formulae
+- `XLSX.utils.sheet_to_formulae` generates a list of formulae
 
 ## Writing Workbooks
 
@@ -167,7 +189,7 @@ XLSX.writeFile(workbook, 'out.xlsx');
 
 ```
 /* bookType can be 'xlsx' or 'xlsm' or 'xlsb' */
-var wopts = { bookType:'xlsx', bookSST:true, type:'binary' };
+var wopts = { bookType:'xlsx', bookSST:false, type:'binary' };
 
 var wbout = XLSX.write(workbook,wopts);
 
@@ -185,44 +207,127 @@ Complete examples:
 
 - <http://sheetjs.com/demos/writexlsx.html> generates a simple file
 - <http://git.io/WEK88Q> writing an array of arrays in nodejs
+- <http://sheetjs.com/demos/table.html> exporting an HTML table
 
 ## Interface
 
 `XLSX` is the exposed variable in the browser and the exported nodejs variable
 
+`XLSX.version` is the version of the library (added by the build script).
+
+`XLSX.SSF` is an embedded version of the [format library](http://git.io/ssf).
+
+### Parsing functions
 
 `XLSX.read(data, read_opts)` attempts to parse `data`.
 
 `XLSX.readFile(filename, read_opts)` attempts to read `filename` and parse.
 
+### Writing functions
+
 `XLSX.write(wb, write_opts)` attempts to write the workbook `wb`
 
 `XLSX.writeFile(wb, filename, write_opts)` attempts to write `wb` to `filename`
 
-## Cell Object Description
+### Utilities
+
+Utilities are available in the `XLSX.utils` object:
+
+Exporting:
+
+- `sheet_to_json` converts a workbook object to an array of JSON objects.
+- `sheet_to_csv` generates delimiter-separated-values output
+- `sheet_to_formulae` generates a list of the formulae (with value fallbacks)
+
+Cell and cell address manipulation:
+
+- `format_cell` generates the text value for a cell (using number formats)
+- `{en,de}code_{row,col}` convert between 0-indexed rows/cols and A1 forms.
+- `{en,de}code_cell` converts cell addresses
+- `{en,de}code_range` converts cell ranges
+
+## Workbook / Worksheet / Cell Object Description
 
 js-xlsx conforms to the Common Spreadsheet Format (CSF):
 
-`.SheetNames` is an ordered list of the sheets in the workbook
+### General Structures
 
-`.Sheets[sheetname]` returns a data structure representing the sheet.  Each key
-that does not start with `!` corresponds to a cell (using `A-1` notation).
+Cell address objects are stored as `{c:C, r:R}` where `C` and `R` are 0-indexed
+column and row numbers, respectively.  For example, the cell address `B5` is
+represented by the object `{c:1, r:4}`.
 
-`.Sheets[sheetname][address]` returns the specified cell:
+Cell range objects are stored as `{s:S, e:E}` where `S` is the first cell and
+`E` is the last cell in the range.  The ranges are inclusive.  For example, the
+range `A3:B7` is represented by the object `{s:{c:0, r:2}, e:{c:1, r:6}}`. Utils
+use the following pattern to walk each of the cells in a range:
 
-- `.v` : the raw value of the cell
-- `.w` : the formatted text of the cell (if applicable)
-- `.t` : the type of the cell (constrained to the enumeration `ST_CellType` as
-  documented in page 4215 of ISO/IEC 29500-1:2012(E) )
-- `.f` : the formula of the cell (if applicable)
-- `.r` : the rich text encoding of a cell text (if applicable)
-- `.h` : an HTML rendering of the rich text (if applicable)
-- `.c` : comments associated with the cell
-- `.z` : the number format string associated with the cell (if requested)
-- `.l` : the hyperlink of the cell (.Target holds link, .tooltip is tooltip)
-- `.s` : the style/theme of the cell (if applicable)
+```
+for(var R = range.s.r; R <= range.e.r; ++R) {
+  for(var C = range.s.c; C <= range.e.c; ++C) {
+    var cell_address = {c:C, r:R};
+  }
+}
+```
 
-For dates, `.v` holds the raw date code from the sheet and `.w` holds the text
+### Cell Object
+
+| Key | Description |
+| --- | ----------- |
+| `v` | raw value ** |
+| `w` | formatted text (if applicable) |
+| `t` | cell type: `b` Boolean, `n` Number, `e` error, `s/str` String |
+| `f` | cell formula (if applicable) |
+| `r` | rich text encoding (if applicable) |
+| `h` | HTML rendering of the rich text (if applicable) |
+| `c` | comments associated with the cell ** |
+| `z` | number format string associated with the cell (if requested) |
+| `l` | cell hyperlink object (.Target holds link, .tooltip is tooltip) |
+| `s` | the style/theme of the cell (if applicable) |
+
+- For dates, `.v` holds the raw date code from the sheet and `.w` holds the text
+
+Built-in export utilities (such as the CSV exporter) will use the `w` text if it
+is available.  To change a value, be sure to delete `cell.w` (or set it to
+`undefined`) before attempting to export.  The utilities will regenerate the `w`
+text from the number format (`cell.z`) and the raw value if possible.
+
+### Worksheet Object
+
+Each key that does not start with `!` maps to a cell (using `A-1` notation)
+
+`worksheet[address]` returns the cell object for the specified address.
+
+Special worksheet keys (accessible as `worksheet[key]`, each starting with `!`):
+
+- `ws['!ref']`: A-1 based range representing the worksheet range. Functions that
+  work with sheets should use this parameter to determine the range.  Cells that
+  are assigned outside of the range are not processed.  In particular, when
+  writing a worksheet by hand, be sure to update the range.  For a longer
+  discussion, see <http://git.io/KIaNKQ>
+
+  When reading a worksheet with the `sheetRows` property set, the ref parameter
+  will use the restricted range.  The original range is set at `ws['!fullref']`
+
+- `ws['!cols']`: array of column properties objects.  Column widths are actually
+  stored in files in a normalized manner, measured in terms of the "Maximum
+  Digit Width" (the largest width of the rendered digits 0-9, in pixels).  When
+  parsed, the column objects store the pixel width in the `wpx` field, character
+  width in the `wch` field, and the maximum digit width in the `MDW` field.
+
+- `ws['!merges']`: array of range objects corresponding to the merged cells in
+  the worksheet.  Plaintext utilities are unaware of merge cells.  CSV export
+  will write all cells in the merge range if they exist, so be sure that only
+  the first cell (upper-left) in the range is set.
+
+### Workbook Object
+
+`workbook.SheetNames` is an ordered list of the sheets in the workbook
+
+`wb.Sheets[sheetname]` returns an object representing the worksheet.
+
+`wb.Props` is an object storing the standard properties.  `wb.Custprops` stores
+custom properties.
+
 
 ## Parsing Options
 
@@ -264,7 +369,7 @@ The exported `write` and `writeFile` functions accept an options argument:
 | bookType    | 'xlsx'  | Type of Workbook ("xlsx" or "xlsm" or "xlsb") |
 
 - `bookSST` is slower and more memory intensive, but has better compatibility
-  with iOS Numbers
+  with older versions of iOS Numbers
 - `bookType = 'xlsb'` is stubbed and far from complete
 - The raw data is the only thing guaranteed to be saved.  Formulae, formatting,
   and other niceties may not be serialized (pending CSF standardization)
@@ -307,6 +412,17 @@ For a much smaller test, run `make test_misc`.
 
 Due to the precarious nature of the Open Specifications Promise, it is very
 important to ensure code is cleanroom.  Consult CONTRIBUTING.md
+
+The xlsx.js file is constructed from the files in the `bits` subdirectory. The
+build script (run `make`) will concatenate the individual bits to produce the
+script.  Before submitting a contribution, ensure that running make will produce
+the xlsx.js file exactly.  The simplest way to test is to move the script:
+
+```
+$ mv xlsx.js xlsx.new.js
+$ make
+$ diff xlsx.js xlsx.new.js
+```
 
 ## XLS Support
 

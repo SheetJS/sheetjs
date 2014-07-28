@@ -21,14 +21,21 @@ var CORE_PROPS = [
 XMLNS.CORE_PROPS = "http://schemas.openxmlformats.org/package/2006/metadata/core-properties";
 RELS.CORE_PROPS  = 'http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties';
 
+var CORE_PROPS_REGEX = (function() {
+	var r = new Array(CORE_PROPS.length);
+	for(var i = 0; i < CORE_PROPS.length; ++i) {
+		var f = CORE_PROPS[i];
+		var g = "(?:"+ f[0].substr(0,f[0].indexOf(":")) +":)"+ f[0].substr(f[0].indexOf(":")+1);
+		r[i] = new RegExp("<" + g + "[^>]*>(.*)<\/" + g + ">");
+	}
+	return r;
+})();
 
 function parse_core_props(data) {
 	var p = {};
 
-	for(var i = 0; i != CORE_PROPS.length; ++i) {
-		var f = CORE_PROPS[i];
-		var g = "(?:"+ f[0].substr(0,f[0].indexOf(":")) +":)"+ f[0].substr(f[0].indexOf(":")+1);
-		var cur = data.match(new RegExp("<" + g + "[^>]*>(.*)<\/" + g + ">"));
+	for(var i = 0; i < CORE_PROPS.length; ++i) {
+		var f = CORE_PROPS[i], cur = data.match(CORE_PROPS_REGEX[i]);
 		if(cur != null && cur.length > 0) p[f[1]] = cur[1];
 		if(f[2] === 'date' && p[f[1]]) p[f[1]] = new Date(p[f[1]]);
 	}
@@ -47,7 +54,6 @@ var CORE_PROPS_XML_ROOT = writextag('cp:coreProperties', null, {
 
 function cp_doit(f, g, h, o, p) {
 	if(p[f] != null || g == null || g === "") return;
-	if(typeof g !== 'string') g = String(g); /* TODO: remove */
 	p[f] = g;
 	o[o.length] = (h ? writextag(f,g,h) : writetag(f,g));
 }

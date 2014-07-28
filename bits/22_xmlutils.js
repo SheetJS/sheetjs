@@ -1,4 +1,3 @@
-var _chr = function(c) { return String.fromCharCode(c); };
 var attregexg=/\b[\w:]+=["'][^"]*['"]/g;
 var tagregex=/<[^>]*>/g;
 var nsregex=/<\w*:/, nsregex2 = /<(\/?)\w+:/;
@@ -32,10 +31,10 @@ var rencoding = evert(encodings);
 var rencstr = "&<>'\"".split("");
 
 // TODO: CP remap (need to read file version to determine OS)
-var encregex = /&[a-z]*;/g, coderegex = /_x([0-9a-fA-F]+)_/g;
+var encregex = /&[a-z]*;/g, coderegex = /_x([\da-fA-F]+)_/g;
 function unescapexml(text){
 	var s = text + '';
-	return s.replace(encregex, function($$) { return encodings[$$]; }).replace(coderegex,function(m,c) {return _chr(parseInt(c,16));});
+	return s.replace(encregex, function($$) { return encodings[$$]; }).replace(coderegex,function(m,c) {return String.fromCharCode(parseInt(c,16));});
 }
 var decregex=/[&<>'"]/g, charegex = /[\u0000-\u0008\u000b-\u001f]/g;
 function escapexml(text){
@@ -69,7 +68,7 @@ var utf8read = function utf8reada(orig) {
 };
 
 
-if(typeof Buffer !== "undefined") {
+if(has_buf) {
 	var utf8readb = function utf8readb(data) {
 		var out = new Buffer(2*data.length), w, i, j = 1, k = 0, ww=0, c;
 		for(i = 0; i < data.length; i+=j) {

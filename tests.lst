@@ -6,15 +6,19 @@ calendar_stress_test.xlsb.pending
 cell_style_simple.xlsb
 comments_stress_test.xlsb
 custom_properties.xlsb
+defined_names_simple.xlsb
 formula_stress_test.xlsb
 formulae_test_simple.xlsb
 hyperlink_stress_test_2011.xlsb
 merge_cells.xlsb
 named_ranges_2011.xlsb
 number_format.xlsb
+number_format_russian.xlsb
 pivot_table_named_range.xlsb
 pivot_table_test.xlsb
 rich_text_stress.xlsb
+smart_tags_2007.xlsb
+sushi.xlsb
 text_and_numbers.xlsb
 xlsx-stream-d-date-cell.xlsb
 2013/apachepoi_29982.xls.xlsb
@@ -96,6 +100,7 @@ apachepoi_54607.xlsx
 apachepoi_55640.xlsx
 apachepoi_55745.xlsx
 apachepoi_55850.xlsx
+apachepoi_55906-MultiSheetRefs.xlsx
 apachepoi_55923.xlsx
 apachepoi_55924.xlsx
 apachepoi_55926.xlsx
@@ -107,7 +112,14 @@ apachepoi_56170.xlsx
 apachepoi_56274.xlsx
 apachepoi_56278.xlsx
 apachepoi_56315.xlsx
+apachepoi_56420.xlsx
 apachepoi_56514.xlsx
+apachepoi_56688_1.xlsx
+apachepoi_56688_2.xlsx
+apachepoi_56688_3.xlsx
+apachepoi_56688_4.xlsx
+apachepoi_56702.xlsx
+apachepoi_56737.xlsx
 apachepoi_AverageTaxRates.xlsx
 apachepoi_Booleans.xlsx
 apachepoi_BrNotClosed.xlsx
@@ -123,6 +135,7 @@ apachepoi_FormatChoiceTests.xlsx
 apachepoi_FormatConditionTests.xlsx
 apachepoi_Formatting.xlsx
 apachepoi_FormulaEvalTestData_Copy.xlsx
+apachepoi_FormulaSheetRange.xlsx
 apachepoi_GeneralFormatTests.xlsx
 apachepoi_GroupTest.xlsx
 apachepoi_InlineStrings.xlsx
@@ -152,9 +165,12 @@ apachepoi_WithTwoCharts.xlsx
 apachepoi_WithVariousData.xlsx
 apachepoi_atp.xlsx
 apachepoi_chart_sheet.xlsx.pending
+apachepoi_commentTest.xlsx
 apachepoi_comments.xlsx
 apachepoi_headerFooterTest.xlsx
 apachepoi_picture.xlsx
+apachepoi_ref-56737.xlsx
+apachepoi_ref2-56737.xlsx
 apachepoi_reordered_sheets.xlsx
 apachepoi_sample-beta.xlsx
 apachepoi_sample.xlsx
@@ -172,6 +188,7 @@ calendar_stress_test.xlsx.pending
 cell_style_simple.xlsx
 comments_stress_test.xlsx
 custom_properties.xlsx
+defined_names_simple.xlsx
 excel-reader-xlsx_data01.xlsx
 excel-reader-xlsx_data02.xlsx
 excel-reader-xlsx_error02.xlsx.pending
@@ -267,6 +284,7 @@ roo_time-test.xlsx
 roo_type_excel.xlsx.pending
 roo_type_openoffice.xlsx.pending
 roo_whitespace.xlsx
+smart_tags_2007.xlsx
 spreadsheet-parsexlsx_Test.xlsx
 spreadsheet-parsexlsx_bug-10.xlsx
 spreadsheet-parsexlsx_bug-11.xlsx
@@ -282,6 +300,10 @@ spreadsheet-parsexlsx_bug-6-2.xlsx
 spreadsheet-parsexlsx_bug-6.xlsx
 spreadsheet-parsexlsx_bug-7.xlsx
 spreadsheet-parsexlsx_bug-8.xlsx
+spreadsheet-parsexlsx_bug-lock.xlsx
+spreadsheet-parsexlsx_column-formats.xlsx
+spreadsheet-parsexlsx_tab-color.xlsx
+sushi.xlsx
 text_and_numbers.xlsx
 xlrd_merged_cells.xlsx
 xlrd_reveng1.xlsx
@@ -297,5 +319,6 @@ apachepoi_47026.xlsm
 apachepoi_47089.xlsm
 apachepoi_ExcelWithAttachments.xlsm
 number_format.xlsm
+number_format_russian.xlsm
 openpyxl_r_vba-test.xlsm
 pivot_table_test.xlsm

@@ -1,4 +1,8 @@
 node_modules
 misc/coverage.html
+misc/prof.js
+v8.log
 tmp
 *.xlsx
+*.xlsm
+*.xlsb

@@ -2,7 +2,7 @@ function fix_opts_func(defaults) {
 	return function fix_opts(opts) {
 		for(var i = 0; i != defaults.length; ++i) {
 			var d = defaults[i];
-			if(typeof opts[d[0]] === 'undefined') opts[d[0]] = d[1];
+			if(opts[d[0]] === undefined) opts[d[0]] = d[1];
 			if(d[2] === 'n') opts[d[0]] = Number(opts[d[0]]);
 		}
 	};

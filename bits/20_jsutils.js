@@ -41,3 +41,5 @@ function cc2str(arr) {
 	for(var i = 0; i != arr.length; ++i) o += String.fromCharCode(arr[i]);
 	return o;
 }
+
+var has_buf = (typeof Buffer !== 'undefined');

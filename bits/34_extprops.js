@@ -59,13 +59,13 @@ function write_ext_props(cp, opts) {
 	o[o.length] = (EXT_PROPS_XML_ROOT);
 
 	EXT_PROPS.forEach(function(f) {
-		if(typeof cp[f[1]] === 'undefined') return;
+		if(cp[f[1]] === undefined) return;
 		var v;
 		switch(f[2]) {
 			case 'string': v = cp[f[1]]; break;
 			case 'bool': v = cp[f[1]] ? 'true' : 'false'; break;
 		}
-		if(typeof v !== 'undefined') o[o.length] = (W(f[0], v));
+		if(v !== undefined) o[o.length] = (W(f[0], v));
 	});
 
 	/* TODO: HeadingPairs, TitlesOfParts */

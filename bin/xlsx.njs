@@ -20,7 +20,7 @@ program
 	.option('-F, --field-sep <sep>', 'CSV field separator', ",")
 	.option('-R, --row-sep <sep>', 'CSV row separator', "\n")
 	.option('-n, --sheet-rows <num>', 'Number of rows to process (0=all rows)')
-	.option('--no-sst', 'do not generate sst')
+	.option('--sst', 'generate sst')
 	.option('--perf', 'do not generate output')
 	.option('--all', 'parse everything; XLS[XMB] write as much as possible')
 	.option('--dev', 'development mode')
@@ -109,7 +109,7 @@ try {
 
 if(program.perf) return;
 
-var oo = ""; 
+var oo = "";
 if(!program.quiet) console.error(target_sheet);
 if(program.formulae) oo = X.utils.get_formulae(ws).join("\n");
 else if(program.json) oo = JSON.stringify(X.utils.sheet_to_row_object_array(ws));

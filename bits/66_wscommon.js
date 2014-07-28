@@ -4,14 +4,14 @@ var _ssfopts = {}; // spreadsheet formatting options
 RELS.WS = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet";
 
 function get_sst_id(sst, str) {
-	for(var i = 0; i != sst.length; ++i) if(sst[i].t === str) { sst.Count ++; return i; }
-	sst[sst.length] = {t:str}; sst.Count ++; sst.Unique ++; return sst.length-1;
+	for(var i = 0, len = sst.length; i < len; ++i) if(sst[i].t === str) { sst.Count ++; return i; }
+	sst[len] = {t:str}; sst.Count ++; sst.Unique ++; return len;
 }
 
 function get_cell_style(styles, cell, opts) {
 	var z = opts.revssf[cell.z != null ? cell.z : "General"];
-	for(var i = 0; i != styles.length; ++i) if(styles[i].numFmtId === z) return i;
-	styles[styles.length] = {
+	for(var i = 0, len = styles.length; i != len; ++i) if(styles[i].numFmtId === z) return i;
+	styles[len] = {
 		numFmtId:z,
 		fontId:0,
 		fillId:0,
@@ -19,7 +19,7 @@ function get_cell_style(styles, cell, opts) {
 		xfId:0,
 		applyNumberFormat:1
 	};
-	return styles.length-1;
+	return len;
 }
 
 function safe_format(p, fmtid, fillid, opts) {

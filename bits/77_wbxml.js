@@ -1,4 +1,5 @@
 /* 18.2 Workbook */
+var wbnsregex = /<\w+:workbook/;
 function parse_wb_xml(data, opts) {
 	var wb = { AppVersion:{}, WBProps:{}, WBView:[], Sheets:[], CalcPr:{}, xmlns: "" };
 	var pass = false, xmlns = "xmlns";
@@ -9,7 +10,7 @@ function parse_wb_xml(data, opts) {
 
 			/* 18.2.27 workbook CT_Workbook 1 */
 			case '<workbook':
-				if(x.match(/<\w+:workbook/)) xmlns = "xmlns" + x.match(/<(\w+):/)[1];
+				if(x.match(wbnsregex)) xmlns = "xmlns" + x.match(/<(\w+):/)[1];
 				wb.xmlns = y[xmlns];
 				break;
 			case '</workbook>': break;

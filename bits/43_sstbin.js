@@ -21,4 +21,19 @@ function parse_sst_bin(data, opts) {
 	return s;
 }
 
-function write_sst_bin(sst, opts) { }
+function write_BrtBeginSst(sst, o) {
+	if(!o) o = new_buf(8);
+	o.write_shift(4, sst.Count);
+	o.write_shift(4, sst.Unique);
+	return o;
+}
+
+var write_BrtSSTItem = write_RichStr;
+
+function write_sst_bin(sst, opts) {
+	var ba = buf_array();
+	write_record(ba, "BrtBeginSst", write_BrtBeginSst(sst));
+	for(var i = 0; i < sst.length; ++i) write_record(ba, "BrtSSTItem", write_BrtSSTItem(sst[i]));
+	write_record(ba, "BrtEndSst");
+	return ba.end();
+}

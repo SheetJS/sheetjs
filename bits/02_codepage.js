@@ -4,12 +4,15 @@ if(typeof module !== "undefined" && typeof require !== 'undefined') {
 	current_cptable = cptable[current_codepage];
 }
 function reset_cp() { set_cp(1252); }
-function set_cp(cp) { current_codepage = cp; if(typeof cptable !== 'undefined') current_cptable = cptable[cp]; }
+var set_cp = function(cp) { current_codepage = cp; };
 
-function char_codes(data) { var o = []; for(var i = 0; i != data.length; ++i) o[i] = data.charCodeAt(i); return o; }
-function debom_xml(data) {
-	if(typeof cptable !== 'undefined') {
+function char_codes(data) { var o = []; for(var i = 0, len = data.length; i < len; ++i) o[i] = data.charCodeAt(i); return o; }
+var debom_xml = function(data) { return data; };
+
+if(typeof cptable !== 'undefined') {
+	set_cp = function(cp) { current_codepage = cp; current_cptable = cptable[cp]; };
+	debom_xml = function(data) {
 		if(data.charCodeAt(0) === 0xFF && data.charCodeAt(1) === 0xFE) { return cptable.utils.decode(1200, char_codes(data.substr(2))); }
-	}
-	return data;
+		return data;
+	};
 }

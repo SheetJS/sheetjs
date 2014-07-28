@@ -1,10 +1,12 @@
 function parse_ws_xml_dim(ws, s) {
 	var d = safe_decode_range(s);
-	if(d.s.r<=d.e.r && d.s.c<=d.e.c && d.s.r>=0 && d.e.r>=0) ws["!ref"] = encode_range(d);
+	if(d.s.r<=d.e.r && d.s.c<=d.e.c && d.s.r>=0 && d.s.c>=0) ws["!ref"] = encode_range(d);
 }
 var mergecregex = /<mergeCell ref="[A-Z0-9:]+"\s*\/>/g;
 var sheetdataregex = /<(?:\w+:)?sheetData>([^\u2603]*)<\/(?:\w+:)?sheetData>/;
 var hlinkregex = /<hyperlink[^>]*\/>/g;
+var dimregex = /"(\w*:\w*)"/;
+var colregex = /<col[^>]*\/>/g;
 /* 18.3 Worksheets */
 function parse_ws_xml(data, opts, rels) {
 	if(!data) return data;
@@ -14,7 +16,7 @@ function parse_ws_xml(data, opts, rels) {
 	/* 18.3.1.35 dimension CT_SheetDimension ? */
 	var ridx = data.indexOf("<dimension");
 	if(ridx > 0) {
-		var ref = data.substr(ridx,50).match(/"(\w*:\w*)"/);
+		var ref = data.substr(ridx,50).match(dimregex);
 		if(ref != null) parse_ws_xml_dim(s, ref[1]);
 	}
 
@@ -30,7 +32,7 @@ function parse_ws_xml(data, opts, rels) {
 	var columns = [];
 	if(opts.cellStyles && data.indexOf("</cols>")!==-1) {
 		/* 18.3.1.13 col CT_Col */
-		var cols = data.match(/<col[^>]*\/>/g);
+		var cols = data.match(colregex);
 		parse_ws_xml_cols(columns, cols);
 	}
 
@@ -126,15 +128,15 @@ function write_ws_xml_cell(cell, ref, ws, opts, idx, wb) {
 	var os = get_cell_style(opts.cellXfs, cell, opts);
 	if(os !== 0) o.s = os;
 	switch(cell.t) {
-		case 's': case 'str':
+		case 'n': break;
+		case 'b': o.t = "b"; break;
+		case 'e': o.t = "e"; break;
+		default:
 			if(opts.bookSST) {
 				v = writetag('v', ''+get_sst_id(opts.Strings, cell.v));
 				o.t = "s"; break;
 			}
 			o.t = "str"; break;
-		case 'n': break;
-		case 'b': o.t = "b"; break;
-		case 'e': o.t = "e"; break;
 	}
 	return writextag('c', v, o);
 }
@@ -149,20 +151,22 @@ return function parse_ws_xml_data(sdata, s, opts, guess) {
 	var tag;
 	var sstr;
 	var fmtid = 0, fillid = 0, do_format = Array.isArray(styles.CellXf), cf;
-	for(var marr = sdata.split(rowregex), mt = 0; mt != marr.length; ++mt) {
+	for(var marr = sdata.split(rowregex), mt = 0, marrlen = marr.length; mt != marrlen; ++mt) {
 		x = marr[mt].trim();
-		if(x.length === 0) continue;
+		var xlen = x.length;
+		if(xlen === 0) continue;
 
 		/* 18.3.1.73 row CT_Row */
-		for(ri = 0; ri != x.length; ++ri) if(x.charCodeAt(ri) === 62) break; ++ri;
+		for(ri = 0; ri < xlen; ++ri) if(x.charCodeAt(ri) === 62) break; ++ri;
 		tag = parsexmltag(x.substr(0,ri), true);
-		if(opts.sheetRows && opts.sheetRows < +tag.r) continue;
-		if(guess.s.r > tag.r - 1) guess.s.r = tag.r - 1;
-		if(guess.e.r < tag.r - 1) guess.e.r = tag.r - 1;
+		var tagr = parseInt(tag.r, 10);
+		if(opts.sheetRows && opts.sheetRows < tagr) continue;
+		if(guess.s.r > tagr - 1) guess.s.r = tagr - 1;
+		if(guess.e.r < tagr - 1) guess.e.r = tagr - 1;
 
 		/* 18.3.1.4 c CT_Cell */
 		cells = x.substr(ri).split(cellregex);
-		for(ri = 0; ri != cells.length; ++ri) {
+		for(ri = 1, cellen = cells.length; ri != cellen; ++ri) {
 			x = cells[ri].trim();
 			if(x.length === 0) continue;
 			cref = x.match(rregex); idx = ri; i=0; cc=0;
@@ -221,7 +225,7 @@ return function parse_ws_xml_data(sdata, s, opts, guess) {
 				cf = styles.CellXf[tag.s];
 				if(cf != null) {
 					if(cf.numFmtId != null) fmtid = cf.numFmtId;
-					if(opts.cellStyles && cf.fillId != undefined) fillid = cf.fillId;
+					if(opts.cellStyles && cf.fillId != null) fillid = cf.fillId;
 				}
 			}
 			safe_format(p, fmtid, fillid, opts);
@@ -231,17 +235,17 @@ return function parse_ws_xml_data(sdata, s, opts, guess) {
 }; })();
 
 function write_ws_xml_data(ws, opts, idx, wb) {
-	var o = [], r = [], range = safe_decode_range(ws['!ref']), cell, ref, rr = "", cols = [];
-	for(var R = range.s.r; R <= range.e.r; ++R) {
+	var o = [], r = [], range = safe_decode_range(ws['!ref']), cell, ref, rr = "", cols = [], R, C;
+	for(C = range.s.c; C <= range.e.c; ++C) cols[C] = encode_col(C);
+	for(R = range.s.r; R <= range.e.r; ++R) {
 		r = [];
 		rr = encode_row(R);
-		for(var C = range.s.c; C <= range.e.c; ++C) {
-			if(R === range.s.r) cols[C] = encode_col(C);
+		for(C = range.s.c; C <= range.e.c; ++C) {
 			ref = cols[C] + rr;
-			if(!ws[ref]) continue;
-			if((cell = write_ws_xml_cell(ws[ref], ref, ws, opts, idx, wb))) r.push(cell);
+			if(ws[ref] === undefined) continue;
+			if((cell = write_ws_xml_cell(ws[ref], ref, ws, opts, idx, wb)) != null) r.push(cell);
 		}
-		if(r.length) o[o.length] = (writextag('row', r.join(""), {r:rr}));
+		if(r.length > 0) o[o.length] = (writextag('row', r.join(""), {r:rr}));
 	}
 	return o.join("");
 }
@@ -253,13 +257,18 @@ var WS_XML_ROOT = writextag('worksheet', null, {
 
 function write_ws_xml(idx, opts, wb) {
 	var o = [XML_HEADER, WS_XML_ROOT];
-	var s = wb.SheetNames[idx], ws = wb.Sheets[s] || {}, sidx = 0, rdata = "";
-	o[o.length] = (writextag('dimension', null, {'ref': ws['!ref'] || 'A1'}));
-	if((ws['!cols']||[]).length > 0) o[o.length] = (write_ws_xml_cols(ws, ws['!cols']));
-	sidx = o.length;
-	o[o.length] = (writextag('sheetData', null));
-	if(ws['!ref']) rdata = write_ws_xml_data(ws, opts, idx, wb);
-	if(rdata.length) o[o.length] = (rdata);
+	var s = wb.SheetNames[idx], sidx = 0, rdata = "";
+	var ws = wb.Sheets[s];
+	if(ws === undefined) ws = {};
+	var ref = ws['!ref']; if(ref === undefined) ref = 'A1';
+	o[o.length] = (writextag('dimension', null, {'ref': ref}));
+
+	if(ws['!cols'] !== undefined && ws['!cols'].length > 0) o[o.length] = (write_ws_xml_cols(ws, ws['!cols']));
+	o[sidx = o.length] = '<sheetData/>';
+	if(ws['!ref'] !== undefined) {
+		rdata = write_ws_xml_data(ws, opts, idx, wb);
+		if(rdata.length > 0) o[o.length] = (rdata);
+	}
 	if(o.length>sidx+1) { o[o.length] = ('</sheetData>'); o[sidx]=o[sidx].replace("/>",">"); }
 
 	if(o.length>2) { o[o.length] = ('</worksheet>'); o[1]=o[1].replace("/>",">"); }

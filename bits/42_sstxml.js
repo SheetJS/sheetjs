@@ -178,7 +178,7 @@ function parse_sst_xml(data, opts) {
 }
 
 RELS.SST = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings";
-
+var straywsregex = /^\s|\s$|[\t\n\r]/;
 function write_sst_xml(sst, opts) {
 	if(!opts.bookSST) return "";
 	var o = [XML_HEADER];
@@ -193,7 +193,7 @@ function write_sst_xml(sst, opts) {
 		if(s.r) sitag += s.r;
 		else {
 			sitag += "<t";
-			if(s.t.match(/^\s|\s$|[\t\n\r]/)) sitag += ' xml:space="preserve"';
+			if(s.t.match(straywsregex)) sitag += ' xml:space="preserve"';
 			sitag += ">" + escapexml(s.t) + "</t>";
 		}
 		sitag += "</si>";

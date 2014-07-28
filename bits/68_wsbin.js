@@ -25,6 +25,11 @@ function parse_BrtCellBlank(data, length) {
 	var cell = parse_Cell(data);
 	return [cell];
 }
+function write_BrtCellBlank(cell, val, o) {
+	if(o == null) o = new_buf(8);
+	return write_Cell(val, o);
+}
+
 
 /* [MS-XLSB] 2.4.304 BrtCellBool */
 function parse_BrtCellBool(data, length) {
@@ -299,6 +304,15 @@ function parse_ws_bin(data, opts, rels) {
 			case 'BrtCustomFilter': break;
 			case 'BrtEndCustomFilters': break;
 
+			/* Smart Tags */
+			case 'BrtBeginSmartTags': break;
+			case 'BrtBeginCellSmartTags': break;
+			case 'BrtBeginCellSmartTag': break;
+			case 'BrtCellSmartTagProperty': break;
+			case 'BrtEndCellSmartTag': break;
+			case 'BrtEndCellSmartTags': break;
+			case 'BrtEndSmartTags': break;
+
 			/* Cell Watch */
 			case 'BrtBeginCellWatches': break;
 			case 'BrtCellWatch': break;
@@ -332,14 +346,47 @@ function parse_ws_bin(data, opts, rels) {
 	return s;
 }
 
+/* TODO: something useful -- this is a stub */
+function write_ws_bin_cell(ba, cell, R, C, opts) {
+	if(cell.v === undefined) return "";
+	var vv = "";
+	switch(cell.t) {
+		case 'b': vv = cell.v ? "1" : "0"; break;
+		case 'n': case 'e': vv = ''+cell.v; break;
+		default: vv = cell.v; break;
+	}
+	var o = {r:R, c:C};
+	/* TODO: cell style */
+	o.s = get_cell_style(opts.cellXfs, cell, opts);
+	switch(cell.t) {
+		case 's': case 'str':
+			if(opts.bookSST) {
+				vv = get_sst_id(opts.Strings, cell.v);
+				o.t = "s"; break;
+			}
+			o.t = "str"; break;
+		case 'n': break;
+		case 'b': o.t = "b"; break;
+		case 'e': o.t = "e"; break;
+	}
+	write_record(ba, "BrtCellBlank", write_BrtCellBlank(cell, o));
+}
+
 function write_CELLTABLE(ba, ws, idx, opts, wb) {
-	var r = safe_decode_range(ws['!ref'] || "A1");
+	var range = safe_decode_range(ws['!ref'] || "A1"), ref, rr = "", cols = [];
 	write_record(ba, 'BrtBeginSheetData');
-	for(var i = r.s.r; i <= r.e.r; ++i) {
+	for(var R = range.s.r; R <= range.e.r; ++R) {
+		rr = encode_row(R);
 		/* [ACCELLTABLE] */
 		/* BrtRowHdr */
-
-		/* *16384CELL */
+		for(var C = range.s.c; C <= range.e.c; ++C) {
+			/* *16384CELL */
+			if(R === range.s.r) cols[C] = encode_col(C);
+			ref = cols[C] + rr;
+			if(!ws[ref]) continue;
+			/* write cell */
+			write_ws_bin_cell(ba, ws[ref], R, C, opts);
+		}
 	}
 	write_record(ba, 'BrtEndSheetData');
 }

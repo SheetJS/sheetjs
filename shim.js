@@ -200,7 +200,13 @@ if (!Array.prototype.indexOf) {
     return -1;
   };
 }
+// Based on https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/isArray
 
+if (! Array.isArray) {
+    Array.isArray = function(obj) {
+        return Object.prototype.toString.call(obj) === "[object Array]";
+    };
+}
 
 // https://github.com/ttaubert/node-arraybuffer-slice
 // (c) 2013 Tim Taubert <tim@timtaubert.de>

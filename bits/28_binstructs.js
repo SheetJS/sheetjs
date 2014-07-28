@@ -24,6 +24,13 @@ function parse_RichStr(data, length) {
 	data.l = start + length;
 	return z;
 }
+function write_RichStr(str, o) {
+	/* TODO: formatted string */
+	if(o == null) o = new_buf(5+2*str.t.length);
+	o.write_shift(1,0);
+	write_XLWideString(str.t, o);
+	return o;
+}
 
 /* [MS-XLSB] 2.5.9 */
 function parse_Cell(data) {
@@ -33,6 +40,14 @@ function parse_Cell(data) {
 	var fPhShow = data.read_shift(1);
 	return { c:col, iStyleRef: iStyleRef };
 }
+function write_Cell(cell, o) {
+	if(o == null) o = new_buf(8);
+	o.write_shift(-4, cell.c);
+	o.write_shift(3, cell.iStyleRef === undefined ? cell.iStyleRef : cell.s);
+	o.write_shift(1, 0); /* fPhShow */
+	return o;
+}
+
 
 /* [MS-XLSB] 2.5.21 */
 function parse_CodeName (data, length) { return parse_XLWideString(data, length); }
@@ -55,7 +70,7 @@ function parse_XLWideString(data) {
 	return cchCharacters === 0 ? "" : data.read_shift(cchCharacters, 'dbcs');
 }
 function write_XLWideString(data, o) {
-	if(o == null) o = new_buf(127);
+	if(o == null) o = new_buf(4+2*data.length);
 	o.write_shift(4, data.length);
 	if(data.length > 0) o.write_shift(0, data, 'dbcs');
 	return o;
@@ -72,7 +87,7 @@ function parse_RkNumber(data) {
 	var fX100 = b[0] & 1, fInt = b[0] & 2;
 	data.l+=4;
 	b[0] &= 0xFC;
-	var RK = fInt === 0 ? __readDoubleLE([0,0,0,0,b[0],b[1],b[2],b[3]],0) : __readInt32LE(b,0)>>2;
+	var RK = fInt === 0 ? __double([0,0,0,0,b[0],b[1],b[2],b[3]],0) : __readInt32LE(b,0)>>2;
 	return fX100 ? RK/100 : RK;
 }
 
