@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <!-- xlsx.js (C) 2013-2014 SheetJS http://sheetjs.com -->
 <!-- vim: set ts=2: -->
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>JS-XLSX AJAX Live Demo</title>
 <style>
 #drop{
 	border:2px dashed #bbb;
@@ -15,9 +19,16 @@
 	width:100%;
 }
 </style>
-<b>JS-XLSX AJAX Demo</b><br />
+</head>
+<body>
+<b>JS-XLSX (XLSX/XLSB/XLSM) AJAX Live Demo</b><br />
+<a href="https://github.com/SheetJS/js-xlsx">Github Repo</a><br />
+<a href="https://github.com/SheetJS/js-xlsx/issues">Issues?  Something look weird?  Click here and report an issue</a><br />
+<br/><div id="fileurl"></div>
 <pre id="out"></pre>
 <br />
+<!-- uncomment the next line here for encoding support -->
+<!--<script src="dist/cpexcel.js"></script>-->
 <script src="iemagic.js"></script>
 <script src="shim.js"></script>
 <script src="jszip.js"></script>
@@ -26,7 +37,7 @@
 function to_csv(workbook) {
 	var result = [];
 	workbook.SheetNames.forEach(function(sheetName) {
-		var csv = XLSX.utils.make_csv(workbook.Sheets[sheetName]);
+		var csv = XLSX.utils.sheet_to_csv(workbook.Sheets[sheetName]);
 		if(csv.length > 0){
 			result.push("SHEET: " + sheetName);
 			result.push("");
@@ -40,6 +51,7 @@ function process_wb(wb) {
 	var output = to_csv(wb);
 	if(out.innerText === undefined) out.textContent = output;
 	else out.innerText = output;
+	if(typeof console !== 'undefined') console.log("output", new Date());
 }
 
 var url = "test_files/formula_stress_test_ajax.xlsx";
@@ -49,11 +61,14 @@ if(window.XMLHttpRequest) oReq = new XMLHttpRequest();
 else if(window.ActiveXObject) oReq = new ActiveXObject('MSXML2.XMLHTTP.3.0');
 else throw "XHR unavailable for your browser";
 
+document.getElementById('fileurl').innerHTML = '<a href="' + url + '">Download file</a>';
+
 oReq.open("GET", url, true);
 
 if(typeof Uint8Array !== 'undefined') {
 	oReq.responseType = "arraybuffer";
 	oReq.onload = function(e) {
+		if(typeof console !== 'undefined') console.log("onload", new Date());
 		var arraybuffer = oReq.response;
 		var data = new Uint8Array(arraybuffer);
 		var arr = new Array();
@@ -65,6 +80,7 @@ if(typeof Uint8Array !== 'undefined') {
 	oReq.setRequestHeader("Accept-Charset", "x-user-defined");	
 	oReq.onreadystatechange = function() { if(oReq.readyState == 4 && oReq.status == 200) {
 		var ff = convertResponseBodyToText(oReq.responseBody);
+		if(typeof console !== 'undefined') console.log("onload", new Date());
 		var wb = XLSX.read(ff, {type:"binary"});
 		process_wb(wb);
 	} };
@@ -84,3 +100,5 @@ oReq.send();
 		var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
 	})();
 </script>
+</body>
+</html>
