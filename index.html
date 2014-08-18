@@ -32,7 +32,8 @@ Output Format:
 <input type="radio" name="format" value="json"> JSON<br>
 <input type="radio" name="format" value="form"> FORMULAE<br> -->
 
-<div id="drop">Drop an XLSX or XLSM or XLSB file here to see sheet data.</div>
+<div id="drop">Drop an XLSX or XLSM or XLSB file here to see sheet data</div>
+<p><input type="file" name="xlfile" id="xlf" /> ... or click here to select a file</p>
 <textarea id="b64data">... or paste a base64-encoding here</textarea>
 <input type="button" id="dotext" value="Click here to process the base64 text" onclick="b64it();"/><br />
 Advanced Demo Options: <br />
@@ -59,11 +60,13 @@ if(!use_worker) {
 	document.getElementsByName("useworker")[0].checked = false;
 }
 
-var transferable = true;
+var transferable = use_worker;
 if(!transferable) {
 	document.getElementsByName("xferable")[0].disabled = true;
 	document.getElementsByName("xferable")[0].checked = false;
 }
+
+var wtf_mode = false;
 
 function fixdata(data) {
 	var o = "", l = 0, w = 10240;
@@ -170,7 +173,7 @@ function to_formulae(workbook) {
 var tarea = document.getElementById('b64data');
 function b64it() {
 	if(typeof console !== 'undefined') console.log("onload", new Date());
-	var wb = XLSX.read(tarea.value, {type: 'base64'});
+	var wb = XLSX.read(tarea.value, {type: 'base64',WTF:wtf_mode});
 	process_wb(wb);
 }
 
@@ -234,6 +237,40 @@ if(drop.addEventListener) {
 	drop.addEventListener('dragover', handleDragover, false);
 	drop.addEventListener('drop', handleDrop, false);
 }
+
+
+var xlf = document.getElementById('xlf');
+function handleFile(e) {
+	rABS = document.getElementsByName("userabs")[0].checked;
+	use_worker = document.getElementsByName("useworker")[0].checked;
+	var files = e.target.files;
+	var i,f;
+	for (i = 0, f = files[i]; i != files.length; ++i) {
+		var reader = new FileReader();
+		var name = f.name;
+		reader.onload = function(e) {
+			if(typeof console !== 'undefined') console.log("onload", new Date(), rABS, use_worker);
+			var data = e.target.result;
+			if(use_worker) {
+				xlsxworker(data, process_wb);
+			} else {
+				var wb;
+				if(rABS) {
+					wb = XLSX.read(data, {type: 'binary'});
+				} else {
+				var arr = fixdata(data);
+					wb = XLSX.read(btoa(arr), {type: 'base64'});
+				}
+				process_wb(wb);
+			}
+		};
+		if(rABS) reader.readAsBinaryString(f);
+		else reader.readAsArrayBuffer(f);
+	}
+}
+
+if(xlf.addEventListener) xlf.addEventListener('change', handleFile, false);
+</script>
 </script>
 </body>
 </html>
