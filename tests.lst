@@ -13,6 +13,7 @@ hyperlink_stress_test_2011.xlsb
 merge_cells.xlsb
 named_ranges_2011.xlsb
 number_format.xlsb
+number_format_entities.xlsb
 number_format_russian.xlsb
 pivot_table_named_range.xlsb
 pivot_table_test.xlsb
@@ -80,6 +81,7 @@ apachepoi_51710.xlsx
 apachepoi_51850.xlsx
 apachepoi_51963.xlsx
 apachepoi_52348.xlsx
+apachepoi_52575_main.xlsx
 apachepoi_52716.xlsx
 apachepoi_53101.xlsx
 apachepoi_53282.xlsx
@@ -97,6 +99,8 @@ apachepoi_54288.xlsx
 apachepoi_54436.xlsx
 apachepoi_54524.xlsx
 apachepoi_54607.xlsx
+apachepoi_54764-2.xlsx
+apachepoi_54764.xlsx
 apachepoi_55640.xlsx
 apachepoi_55745.xlsx
 apachepoi_55850.xlsx
@@ -113,6 +117,7 @@ apachepoi_56274.xlsx
 apachepoi_56278.xlsx
 apachepoi_56315.xlsx
 apachepoi_56420.xlsx
+apachepoi_56502.xlsx
 apachepoi_56514.xlsx
 apachepoi_56688_1.xlsx
 apachepoi_56688_2.xlsx
@@ -232,6 +237,7 @@ libreoffice_calc_xlsx-import_shared-formula_1.xlsx
 merge_cells.xlsx
 mixed_sheets.xlsx
 named_ranges_2011.xlsx
+number_format_entities.xlsx
 openpyxl_g_NameWithValueBug.xlsx
 openpyxl_g_empty-no-string.xlsx
 openpyxl_g_empty-with-styles.xlsx
@@ -320,5 +326,6 @@ apachepoi_47089.xlsm
 apachepoi_ExcelWithAttachments.xlsm
 number_format.xlsm
 number_format_russian.xlsm
+numfmt_1_russian.xlsm
 openpyxl_r_vba-test.xlsm
 pivot_table_test.xlsm

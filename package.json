@@ -1,6 +1,6 @@
 {
 	"name": "xlsx",
-	"version": "0.7.9",
+	"version": "0.7.10",
 	"author": "sheetjs",
 	"description": "Excel 2007+ spreadsheet (XLSB/XLSX/XLSM) parser and writer",
 	"keywords": [ "excel", "xlsx", "xlsb", "xlsm", "office", "spreadsheet" ],

@@ -498,7 +498,7 @@ Usage:
 function JSZip(data, options) {
     // if this constructor is used without `new`, it adds `new` before itself:
     if(!(this instanceof JSZip)) return new JSZip(data, options);
-    
+
     // object containing the files :
     // {
     //   "folder/" : {...},
@@ -588,7 +588,7 @@ module.exports = function(data, options) {
 (function (Buffer){
 'use strict';
 module.exports = function(data, encoding){
-    return new Buffer(data, encoding);   
+    return new Buffer(data, encoding);
 };
 module.exports.test = function(b){
     return Buffer.isBuffer(b);
@@ -898,7 +898,7 @@ var parentFolder = function (path) {
  * Add a (sub) folder in the current folder.
  * @private
  * @param {string} name the folder's name
- * @param {boolean=} [createFolders] If true, automatically create sub 
+ * @param {boolean=} [createFolders] If true, automatically create sub
  *  folders. Defaults to false.
  * @return {Object} the new folder.
  */
@@ -1357,7 +1357,7 @@ var out = {
             default : // case "string" :
                return zip;
          }
-      
+
     },
 
     /**
@@ -5554,7 +5554,7 @@ function GZheader() {
                        // but leave for few code modifications
 
   //
-  // Setup limits is not necessary because in js we should not preallocate memory 
+  // Setup limits is not necessary because in js we should not preallocate memory
   // for inflate use constant limit in 65536 bytes
   //
 

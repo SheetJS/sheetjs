@@ -306,6 +306,12 @@ Special worksheet keys (accessible as `worksheet[key]`, each starting with `!`):
   writing a worksheet by hand, be sure to update the range.  For a longer
   discussion, see <http://git.io/KIaNKQ>
 
+  Functions that handle worksheets should test for the presence of `!ref` field.
+  If the `!ref` is omitted or is not a valid range, functions are free to treat
+  the sheet as empty or attempt to guess the range.  The standard utilities that
+  ship with this library treat sheets as empty (for example, the CSV output is an
+  empty string).
+
   When reading a worksheet with the `sheetRows` property set, the ref parameter
   will use the restricted range.  The original range is set at `ws['!fullref']`
 

@@ -653,6 +653,18 @@ describe('roundtrip features', function() {
 			}); });
 		});
 	});
+
+	describe('should preserve features', function() {
+		it('merge cells', function() {
+			var wb1 = X.readFile(paths.mc1);
+			var wb2 = X.read(X.write(wb1, {type:'binary'}), {type:'binary'});
+			var m1 = wb1.Sheets.Merge['!merges'].map(X.utils.encode_range);
+			var m2 = wb2.Sheets.Merge['!merges'].map(X.utils.encode_range);
+			assert.equal(m1.length, m2.length);
+			for(var i = 0; i < m1.length; ++i) assert.equal(m1[i], m2[i]);
+		});
+	});
+
 	/* the XLSJS require should not cause the test suite to fail */
 	var XLSJS;
 	try {

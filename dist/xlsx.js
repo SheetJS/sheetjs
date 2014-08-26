@@ -3,7 +3,7 @@
 /*jshint -W041 */
 var XLSX = {};
 (function(XLSX){
-XLSX.version = '0.7.9';
+XLSX.version = '0.7.10';
 var current_codepage = 1252, current_cptable;
 if(typeof module !== "undefined" && typeof require !== 'undefined') {
 	if(typeof cptable === 'undefined') cptable = require('./dist/cpexcel');
@@ -2849,6 +2849,12 @@ function parse_ws_xml(data, opts, rels) {
 	return s;
 }
 
+function write_ws_xml_merges(merges) {
+	if(merges.length == 0) return "";
+	var o = '<mergeCells count="' + merges.length + '">';
+	for(var i = 0; i != merges.length; ++i) o += '<mergeCell ref="' + encode_range(merges[i]) + '"/>';
+	return o + '</mergeCells>';
+}
 
 function parse_ws_xml_hlinks(s, data, rels) {
 	for(var i = 0; i != data.length; ++i) {
@@ -2971,7 +2977,7 @@ return function parse_ws_xml_data(sdata, s, opts, guess) {
 			d = x.substr(i);
 			p = {t:""};
 
-			if((cref=d.match(match_v))!== null) p.v=unescapexml(cref[1]);
+			if((cref=d.match(match_v))!== null && cref[1] !== '') p.v=unescapexml(cref[1]);
 			if(opts.cellFormula && (cref=d.match(match_f))!== null) p.f=unescapexml(cref[1]);
 
 			/* SCHEMA IS ACTUALLY INCORRECT HERE.  IF A CELL HAS NO T, EMIT "" */
@@ -3056,6 +3062,8 @@ function write_ws_xml(idx, opts, wb) {
 		if(rdata.length > 0) o[o.length] = (rdata);
 	}
 	if(o.length>sidx+1) { o[o.length] = ('</sheetData>'); o[sidx]=o[sidx].replace("/>",">"); }
+
+	if(ws['!merges'] !== undefined && ws['!merges'].length > 0) o[o.length] = (write_ws_xml_merges(ws['!merges']));
 
 	if(o.length>2) { o[o.length] = ('</worksheet>'); o[1]=o[1].replace("/>",">"); }
 	return o.join("");

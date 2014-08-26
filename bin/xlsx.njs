@@ -35,6 +35,17 @@ program.on('--help', function() {
 
 program.parse(process.argv);
 
+/* see https://github.com/SheetJS/j/issues/4 */
+if(process.version === 'v0.10.31') {
+	var msgs = [
+		"node v0.10.31 is known to crash on OSX and Linux, refusing to proceed.",
+		"see https://github.com/SheetJS/j/issues/4 for the relevant discussion.",
+		"see https://github.com/joyent/node/issues/8208 for the relevant node issue"
+	];
+	msgs.forEach(function(m) { console.error(m); });
+	process.exit(1);
+}
+
 var filename, sheetname = '';
 if(program.args[0]) {
 	filename = program.args[0];
