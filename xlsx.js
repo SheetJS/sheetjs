@@ -4,7 +4,7 @@
 var XLSX = {};
 (function(XLSX){
 XLSX.version = '0.7.9';
-var current_codepage = 1252, current_cptable;
+var current_codepage = 1252, current_cptable, cptable;
 if(typeof module !== "undefined" && typeof require !== 'undefined') {
 	if(typeof cptable === 'undefined') cptable = require('./dist/cpexcel');
 	current_cptable = cptable[current_codepage];
@@ -2931,9 +2931,10 @@ var parse_ws_xml_data = (function parse_ws_xml_data_factory() {
 	var cellregex = /<(?:\w+:)?c /, rowregex = /<\/(?:\w+:)?row>/;
 	var rregex = /r=["']([^"']*)["']/, isregex = /<is>([\S\s]*?)<\/is>/;
 	var match_v = matchtag("v"), match_f = matchtag("f");
+	var refFormula = {};
 
 return function parse_ws_xml_data(sdata, s, opts, guess) {
-	var ri = 0, x = "", cells = [], cref = [], idx = 0, i=0, cc=0, d="", p;
+	var ri = 0, x = "", cells = [], cref = [], idx = 0, i=0, cc=0, d="", p, cellen;
 	var tag;
 	var sstr;
 	var fmtid = 0, fillid = 0, do_format = Array.isArray(styles.CellXf), cf;
@@ -2972,7 +2973,26 @@ return function parse_ws_xml_data(sdata, s, opts, guess) {
 			p = {t:""};
 
 			if((cref=d.match(match_v))!== null) p.v=unescapexml(cref[1]);
-			if(opts.cellFormula && (cref=d.match(match_f))!== null) p.f=unescapexml(cref[1]);
+			/* 18.3.1.40 f (Formula) */
+			if(opts.cellFormula) {
+				cref = d.match(match_f);
+				if(cref !== null) {
+					p.f = unescapexml(cref[1]);
+					var formulaTag = parsexmltag(cref[0]);
+					if (formulaTag.t === 'shared' && formulaTag) {
+						formulaTag.f = p.f;
+						refFormula[formulaTag.si] = formulaTag;
+					}
+				} else if (d.indexOf("<f") > -1) {
+					var formulaRefTag = d.match(/<f[^>]*>/);
+					if (formulaRefTag) {
+						formulaRefTag = parsexmltag(formulaRefTag[0]);
+						if (formulaRefTag && formulaRefTag.t === 'shared' && refFormula[formulaRefTag.si]) {
+							p.f = refFormula[formulaRefTag.si].f;
+						}
+					}
+				}
+			}
 
 			/* SCHEMA IS ACTUALLY INCORRECT HERE.  IF A CELL HAS NO T, EMIT "" */
 			if(tag.t === undefined && p.v === undefined) {
