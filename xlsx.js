@@ -2908,14 +2908,16 @@ function write_ws_xml_cols(ws, cols) {
 }
 
 function write_ws_xml_cell(cell, ref, ws, opts, idx, wb) {
-	if(cell.v === undefined) return "";
+	if(cell.v === undefined && cell.f === undefined) return "";
 	var vv = "";
 	switch(cell.t) {
 		case 'b': vv = cell.v ? "1" : "0"; break;
 		case 'n': case 'e': vv = ''+cell.v; break;
 		default: vv = cell.v; break;
 	}
-	var v = writetag('v', escapexml(vv)), o = {r:ref};
+	var v = (cell.f) ? writetag('f', escapexml(cell.f)) : writetag('v', escapexml(vv)),
+		o = {r:ref};
+
 	/* TODO: cell style */
 	var os = get_cell_style(opts.cellXfs, cell, opts);
 	if(os !== 0) o.s = os;
