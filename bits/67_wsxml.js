@@ -172,7 +172,7 @@ return function parse_ws_xml_data(sdata, s, opts, guess) {
 
 		/* 18.3.1.4 c CT_Cell */
 		cells = x.substr(ri).split(cellregex);
-		for(ri = 1, cellen = cells.length; ri != cellen; ++ri) {
+		for(ri = 1; ri != cells.length; ++ri) {
 			x = cells[ri].trim();
 			if(x.length === 0) continue;
 			cref = x.match(rregex); idx = ri; i=0; cc=0;
