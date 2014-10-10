@@ -287,7 +287,11 @@ for(var R = range.s.r; R <= range.e.r; ++R) {
 | `l` | cell hyperlink object (.Target holds link, .tooltip is tooltip) |
 | `s` | the style/theme of the cell (if applicable) |
 
-- For dates, `.v` holds the raw date code from the sheet and `.w` holds the text
+**Notes regarding date cells**
+
+- `.v` holds the raw date code from the sheet (number of days from epoch) and `.w` holds the text.
+- Excel supports two epochs (January 1 1900 and January 1 1904), see [The 1900 Date System vs. the 1904 Date System](http://support2.microsoft.com/kb/180162). The workbook's epoch can be determined by examining the workbook's `Workbook.WBProps.date1904` property.
+- SSF assists in parsing raw date codes: `XLSX.SSF.parse_date_code(cell.v, { date1904: false })`, see [the documentation](https://github.com/SheetJS/ssf/#usage).
 
 Built-in export utilities (such as the CSV exporter) will use the `w` text if it
 is available.  To change a value, be sure to delete `cell.w` (or set it to
