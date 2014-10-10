@@ -19,6 +19,10 @@ function parse_zip(zip, opts) {
 	opts = opts || {};
 	fix_read_opts(opts);
 	reset_cp();
+
+	/* OpenDocument Part 3 Section 2.2.1 OpenDocument Package */
+	if(safegetzipfile(zip, 'META-INF/manifest.xml')) return parse_ods(zip, opts);
+
 	var entries = keys(zip.files).filter(nodirs).sort();
 	var dir = parse_ct(getzipdata(zip, '[Content_Types].xml'), opts);
 	var xlsb = false;

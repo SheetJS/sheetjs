@@ -21,3 +21,5 @@ test.js
 .jscs.json
 .gitmodules
 .travis.yml
+bits/
+odsbits/

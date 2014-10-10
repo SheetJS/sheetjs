@@ -1,15 +1,21 @@
 LIB=xlsx
-DEPS=$(sort $(wildcard bits/*.js))
-TARGET=$(LIB).js
-FMT=xlsx xlsm xlsb misc full
+FMT=xlsx xlsm xlsb ods misc full
 REQS=jszip.js
 ADDONS=dist/cpexcel.js
+AUXTARGETS=ods.js
+
+ULIB=$(shell echo $(LIB) | tr a-z A-Z)
+DEPS=$(sort $(wildcard bits/*.js))
+TARGET=$(LIB).js
+
+.PHONY: all
+all: $(TARGET) $(AUXTARGETS)
 
 $(TARGET): $(DEPS)
 	cat $^ | tr -d '\15\32' > $@
 
 bits/01_version.js: package.json
-	echo "XLSX.version = '"`grep version package.json | awk '{gsub(/[^0-9a-z\.-]/,"",$$2); print $$2}'`"';" > $@
+	echo "$(ULIB).version = '"`grep version package.json | awk '{gsub(/[^0-9a-z\.-]/,"",$$2); print $$2}'`"';" > $@
 
 .PHONY: clean
 clean:
@@ -45,8 +51,8 @@ $(TESTFMT): test_%:
 
 .PHONY: lint
 lint: $(TARGET)
-	jshint --show-non-errors $(TARGET)
-	jscs $(TARGET)
+	jshint --show-non-errors $(TARGET) $(AUXTARGETS)
+	jscs $(TARGET) $(AUXTARGETS)
 
 .PHONY: test-osx
 test-osx:
@@ -85,7 +91,19 @@ dist: dist-deps $(TARGET) bower.json
 	uglifyjs $(REQS) $(TARGET) -o dist/$(LIB).core.min.js --source-map dist/$(LIB).core.min.map --preamble "$$(head -n 1 bits/00_header.js)"
 	uglifyjs $(REQS) $(ADDONS) $(TARGET) -o dist/$(LIB).full.min.js --source-map dist/$(LIB).full.min.map --preamble "$$(head -n 1 bits/00_header.js)"
 
+.PHONY: aux
+aux: $(AUXTARGETS)
+
+.PHONY: ods
+ods: ods.js
+
+ODSDEPS=$(sort $(wildcard odsbits/*.js))
+ods.js: $(ODSDEPS)
+	cat $(ODSDEPS) | tr -d '\15\32' > $@
+	cp ods.js dist/ods.js
+
 .PHONY: dist-deps
-dist-deps:
+dist-deps: ods.js
 	cp node_modules/codepage/dist/cpexcel.full.js dist/cpexcel.js
 	cp jszip.js dist/jszip.js
+	cp ods.js dist/ods.js

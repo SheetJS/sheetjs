@@ -148,13 +148,13 @@ function write_ws_xml_cell(cell, ref, ws, opts, idx, wb) {
 }
 
 var parse_ws_xml_data = (function parse_ws_xml_data_factory() {
-	var cellregex = /<(?:\w+:)?c /, rowregex = /<\/(?:\w+:)?row>/;
+	var cellregex = /<(?:\w+:)?c[ >]/, rowregex = /<\/(?:\w+:)?row>/;
 	var rregex = /r=["']([^"']*)["']/, isregex = /<is>([\S\s]*?)<\/is>/;
 	var match_v = matchtag("v"), match_f = matchtag("f");
 
 return function parse_ws_xml_data(sdata, s, opts, guess) {
 	var ri = 0, x = "", cells = [], cref = [], idx = 0, i=0, cc=0, d="", p;
-	var tag;
+	var tag, tagr = 0, tagc = 0;
 	var sstr;
 	var fmtid = 0, fillid = 0, do_format = Array.isArray(styles.CellXf), cf;
 	for(var marr = sdata.split(rowregex), mt = 0, marrlen = marr.length; mt != marrlen; ++mt) {
@@ -165,18 +165,19 @@ return function parse_ws_xml_data(sdata, s, opts, guess) {
 		/* 18.3.1.73 row CT_Row */
 		for(ri = 0; ri < xlen; ++ri) if(x.charCodeAt(ri) === 62) break; ++ri;
 		tag = parsexmltag(x.substr(0,ri), true);
-		var tagr = parseInt(tag.r, 10);
+		/* SpreadSheetGear uses implicit r/c */
+		tagr = typeof tag.r !== 'undefined' ? parseInt(tag.r, 10) : tagr+1; tagc = -1;
 		if(opts.sheetRows && opts.sheetRows < tagr) continue;
 		if(guess.s.r > tagr - 1) guess.s.r = tagr - 1;
 		if(guess.e.r < tagr - 1) guess.e.r = tagr - 1;
 
 		/* 18.3.1.4 c CT_Cell */
 		cells = x.substr(ri).split(cellregex);
-		for(ri = 1; ri != cells.length; ++ri) {
+		for(ri = typeof tag.r === 'undefined' ? 0 : 1; ri != cells.length; ++ri) {
 			x = cells[ri].trim();
 			if(x.length === 0) continue;
 			cref = x.match(rregex); idx = ri; i=0; cc=0;
-			x = "<c " + x;
+			x = "<c " + (x.substr(0,1)=="<"?">":"") + x;
 			if(cref !== null && cref.length === 2) {
 				idx = 0; d=cref[1];
 				for(i=0; i != d.length; ++i) {
@@ -184,10 +185,11 @@ return function parse_ws_xml_data(sdata, s, opts, guess) {
 					idx = 26*idx + cc;
 				}
 				--idx;
-			}
-
+				tagc = idx;
+			} else ++tagc;
 			for(i = 0; i != x.length; ++i) if(x.charCodeAt(i) === 62) break; ++i;
 			tag = parsexmltag(x.substr(0,i), true);
+			if(!tag.r) tag.r = utils.encode_cell({r:tagr-1, c:tagc});
 			d = x.substr(i);
 			p = {t:""};
 

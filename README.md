@@ -1,7 +1,7 @@
 # xlsx
 
-Parser and writer for Excel 2007+ (XLSX/XLSM/XLSB) files.  Pure-JS cleanroom
-implementation from the Office Open XML spec, [MS-XLSB], and related documents.
+Parser and writer for Excel 2007+ (XLSX/XLSM/XLSB) files and parser for ODS files.
+Pure-JS cleanroom implementation from the Office Open XML spec, [MS-XLSB], and related documents.
 
 ## Installation
 
@@ -36,6 +36,8 @@ be included directly:
 
     <!-- international support from https://github.com/sheetjs/js-codepage -->
     <script src="dist/cpexcel.js"></script>
+    <!-- ODS support -->
+    <script src="dist/ods.js"></script>
 
 An appropriate version for each dependency is included in the dist/ directory.
 
@@ -457,6 +459,9 @@ OSP-covered specifications:
  - [MS-XLSX]: Excel (.xlsx) Extensions to the Office Open XML SpreadsheetML File Format
  - [MS-OE376]: Office Implementation Information for ECMA-376 Standards Support
  - [MS-XLDM]: Spreadsheet Data Model File Format
+
+Open Document Format for Office Applications Version 1.2 (29 September 2011)
+
 
 ## Badges
 

@@ -15,8 +15,7 @@ var ex = fullex;
 if(process.env.FMTS === "full") process.env.FMTS = ex.join(":");
 if(process.env.FMTS) ex=process.env.FMTS.split(":").map(function(x){return x[0]==="."?x:"."+x;});
 var exp = ex.map(function(x){ return x + ".pending"; });
-var ow = 5;
-function test_file(x){return ex.indexOf(x.substr(-ow))>=0||exp.indexOf(x.substr(-8-ow))>=0;}
+function test_file(x){ return ex.indexOf(x.substr(-5))>=0||exp.indexOf(x.substr(-13))>=0 || ex.indexOf(x.substr(-4))>=0||exp.indexOf(x.substr(-12))>=0; }
 
 var files = (fs.existsSync('tests.lst') ? fs.readFileSync('tests.lst', 'utf-8').split("\n") : fs.readdirSync('test_files')).filter(test_file);
 var fileA = (fs.existsSync('testA.lst') ? fs.readFileSync('testA.lst', 'utf-8').split("\n") : []).filter(test_file);
@@ -92,8 +91,8 @@ function parsetest(x, wb, full, ext) {
 	if(!full) return;
 	var getfile = function(dir, x, i, type) {
 		var name = (dir + x + '.' + i + type);
-		if(x.substr(-ow) === ".xlsb") {
-			root = x.slice(0,-ow);
+		if(x.substr(-5) === ".xlsb") {
+			root = x.slice(0,-5);
 			if(!fs.existsSync(name)) name=(dir + root + '.xlsx.' + i + type);
 			if(!fs.existsSync(name)) name=(dir + root + '.xlsm.' + i + type);
 			if(!fs.existsSync(name)) name=(dir + root + '.xls.'  + i + type);
@@ -689,7 +688,6 @@ describe('invalid files', function() {
 	describe('parse', function() { [
 			['passwords', 'excel-reader-xlsx_error03.xlsx'],
 			['XLS files', 'roo_type_excel.xlsx'],
-			['ODS files', 'roo_type_openoffice.xlsx'],
 			['DOC files', 'word_doc.doc']
 		].forEach(function(w) { it('should fail on ' + w[0], function() {
 			assert.throws(function() { X.readFile(dir + w[1]); });

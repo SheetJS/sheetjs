@@ -1,9 +1,9 @@
 {
 	"name": "xlsx",
-	"version": "0.7.10",
+	"version": "0.7.11",
 	"author": "sheetjs",
-	"description": "Excel 2007+ spreadsheet (XLSB/XLSX/XLSM) parser and writer",
-	"keywords": [ "excel", "xlsx", "xlsb", "xlsm", "office", "spreadsheet" ],
+	"description": "Excel 2007+ spreadsheet (XLSB/XLSX/XLSM) and ODS parser and writer",
+	"keywords": [ "excel", "xlsx", "xlsb", "xlsm", "ods", "office", "spreadsheet" ],
 	"bin": {
 		"xlsx": "./bin/xlsx.njs"
 	},

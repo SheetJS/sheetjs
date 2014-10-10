@@ -32,7 +32,7 @@ Output Format:
 <input type="radio" name="format" value="json"> JSON<br>
 <input type="radio" name="format" value="form"> FORMULAE<br> -->
 
-<div id="drop">Drop an XLSX or XLSM or XLSB file here to see sheet data</div>
+<div id="drop">Drop an XLSX / XLSM / XLSB / ODS file here to see sheet data</div>
 <p><input type="file" name="xlfile" id="xlf" /> ... or click here to select a file</p>
 <textarea id="b64data">... or paste a base64-encoding here</textarea>
 <input type="button" id="dotext" value="Click here to process the base64 text" onclick="b64it();"/><br />
@@ -47,6 +47,8 @@ Use readAsBinaryString: (when available) <input type="checkbox" name="userabs" c
 <script src="shim.js"></script>
 <script src="jszip.js"></script>
 <script src="xlsx.js"></script>
+<!-- uncomment the next line here and in xlsxworker.js for ODS support -->
+<script src="dist/ods.js"></script>
 <script>
 var rABS = typeof FileReader !== "undefined" && typeof FileReader.prototype !== "undefined" && typeof FileReader.prototype.readAsBinaryString !== "undefined";
 if(!rABS) {
