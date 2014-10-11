@@ -2936,6 +2936,9 @@ function write_ws_xml_cell(cell, ref, ws, opts, idx, wb) {
 			}
 			o.t = "str"; break;
 	}
+	if (cell.f) {
+		v = writetag('f',escapexml(cell.f)) + v;
+	}
 	return writextag('c', v, o);
 }
 
