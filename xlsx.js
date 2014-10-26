@@ -3,7 +3,7 @@
 /*jshint -W041 */
 var XLSX = {};
 (function(XLSX){
-XLSX.version = '0.7.11';
+XLSX.version = '0.7.12';
 var current_codepage = 1252, current_cptable;
 if(typeof module !== "undefined" && typeof require !== 'undefined') {
 	if(typeof cptable === 'undefined') cptable = require('./dist/cpexcel');
@@ -2228,7 +2228,7 @@ function parse_fills(t, opts) {
 				/* Excel uses ARGB strings */
 				if(y.rgb) fill.fgColor.rgb = y.rgb.substring(y.rgb.length - 6);
 				break;
-			case '<bgColor/>': case '</fgColor>': break;
+			case '<fgColor/>': case '</fgColor>': break;
 
 			default: if(opts.WTF) throw 'unrecognized ' + y[0] + ' in fills';
 		}
@@ -2317,7 +2317,7 @@ return function parse_sty_xml(data, opts) {
 	if((t=data.match(numFmtRegex))) parse_numFmts(t, opts);
 
 	/* fonts CT_Fonts ? */
-//	if((t=data.match(/<fonts([^>]*)>.*<\/fonts>/))) parse_fonts(t, opts);
+	/*if((t=data.match(/<fonts([^>]*)>.*<\/fonts>/))) parse_fonts(t, opts);*/
 
 	/* fills CT_Fills */
 	if((t=data.match(fillsRegex))) parse_fills(t, opts);
@@ -2558,16 +2558,47 @@ function parse_clrScheme(t, opts) {
 	});
 }
 
-var clrsregex = /<a:clrScheme([^>]*)>.*<\/a:clrScheme>/;
-/* 14.2.7 Theme Part */
-function parse_theme_xml(data, opts) {
-	if(!data || data.length === 0) return themes;
+/* 20.1.4.1.18 fontScheme CT_FontScheme */
+function parse_fontScheme(t, opts) { }
+
+/* 20.1.4.1.15 fmtScheme CT_StyleMatrix */
+function parse_fmtScheme(t, opts) { }
+
+var clrsregex = /<a:clrScheme([^>]*)>[^\u2603]*<\/a:clrScheme>/;
+var fntsregex = /<a:fontScheme([^>]*)>[^\u2603]*<\/a:fontScheme>/;
+var fmtsregex = /<a:fmtScheme([^>]*)>[^\u2603]*<\/a:fmtScheme>/;
+
+/* 20.1.6.10 themeElements CT_BaseStyles */
+function parse_themeElements(data, opts) {
 	themes.themeElements = {};
 
 	var t;
 
-	/* clrScheme CT_ColorScheme */
-	if((t=data.match(clrsregex))) parse_clrScheme(t, opts);
+	[
+		/* clrScheme CT_ColorScheme */
+		['clrScheme', clrsregex, parse_clrScheme],
+		/* fontScheme CT_FontScheme */
+		['fontScheme', fntsregex, parse_fontScheme],
+		/* fmtScheme CT_StyleMatrix */
+		['fmtScheme', fmtsregex, parse_fmtScheme]
+	].forEach(function(m) {
+		if(!(t=data.match(m[1]))) throw m[0] + ' not found in themeElements';
+		m[2](t, opts);
+	});
+}
+
+var themeltregex = /<a:themeElements([^>]*)>[^\u2603]*<\/a:themeElements>/;
+
+/* 14.2.7 Theme Part */
+function parse_theme_xml(data, opts) {
+	/* 20.1.6.9 theme CT_OfficeStyleSheet */
+	if(!data || data.length === 0) return themes;
+
+	var t;
+
+	/* themeElements CT_BaseStyles */
+	if(!(t=data.match(themeltregex))) throw 'themeElements not found in theme';
+	parse_themeElements(t[0], opts);
 
 	return themes;
 }
@@ -2767,14 +2798,21 @@ function get_cell_style(styles, cell, opts) {
 
 function safe_format(p, fmtid, fillid, opts) {
 	try {
-		if(fmtid === 0) {
+		if(p.t === 'e') p.w = p.w || BErr[p.v];
+		else if(fmtid === 0) {
 			if(p.t === 'n') {
 				if((p.v|0) === p.v) p.w = SSF._general_int(p.v,_ssfopts);
 				else p.w = SSF._general_num(p.v,_ssfopts);
 			}
+			else if(p.t === 'd') {
+				var dd = datenum(p.v);
+				if((dd|0) === dd) p.w = SSF._general_int(dd,_ssfopts);
+				else p.w = SSF._general_num(dd,_ssfopts);
+			}
 			else if(p.v === undefined) return "";
 			else p.w = SSF._general(p.v,_ssfopts);
 		}
+		else if(p.t === 'd') p.w = SSF.format(fmtid,datenum(p.v),_ssfopts);
 		else p.w = SSF.format(fmtid,p.v,_ssfopts);
 		if(opts.cellNF) p.z = SSF._table[fmtid];
 	} catch(e) { if(opts.WTF) throw e; }
@@ -2875,7 +2913,7 @@ function parse_ws_xml_hlinks(s, data, rels) {
 		var rng = safe_decode_range(val.ref);
 		for(var R=rng.s.r;R<=rng.e.r;++R) for(var C=rng.s.c;C<=rng.e.c;++C) {
 			var addr = encode_cell({c:C,r:R});
-			if(!s[addr]) s[addr] = {t:"str",v:undefined};
+			if(!s[addr]) s[addr] = {t:"stub",v:undefined};
 			s[addr].l = val;
 		}
 	}
@@ -2916,9 +2954,19 @@ function write_ws_xml_cols(ws, cols) {
 function write_ws_xml_cell(cell, ref, ws, opts, idx, wb) {
 	if(cell.v === undefined) return "";
 	var vv = "";
+	var oldt = cell.t, oldv = cell.v;
 	switch(cell.t) {
 		case 'b': vv = cell.v ? "1" : "0"; break;
-		case 'n': case 'e': vv = ''+cell.v; break;
+		case 'n': vv = ''+cell.v; break;
+		case 'e': vv = BErr[cell.v]; break;
+		case 'd':
+			if(opts.cellDates) vv = new Date(cell.v).toISOString();
+			else {
+				cell.t = 'n';
+				vv = ''+(cell.v = datenum(cell.v));
+				if(typeof cell.z === 'undefined') cell.z = SSF._table[14];
+			}
+			break;
 		default: vv = cell.v; break;
 	}
 	var v = writetag('v', escapexml(vv)), o = {r:ref};
@@ -2927,6 +2975,7 @@ function write_ws_xml_cell(cell, ref, ws, opts, idx, wb) {
 	if(os !== 0) o.s = os;
 	switch(cell.t) {
 		case 'n': break;
+		case 'd': o.t = "d"; break;
 		case 'b': o.t = "b"; break;
 		case 'e': o.t = "e"; break;
 		default:
@@ -2936,6 +2985,7 @@ function write_ws_xml_cell(cell, ref, ws, opts, idx, wb) {
 			}
 			o.t = "str"; break;
 	}
+	if(cell.t != oldt) { cell.t = oldt; cell.v = oldv; }
 	return writextag('c', v, o);
 }
 
@@ -2991,7 +3041,7 @@ return function parse_ws_xml_data(sdata, s, opts, guess) {
 			/* SCHEMA IS ACTUALLY INCORRECT HERE.  IF A CELL HAS NO T, EMIT "" */
 			if(tag.t === undefined && p.v === undefined) {
 				if(!opts.sheetStubs) continue;
-				p.t = "str";
+				p.t = "stub";
 			}
 			else p.t = tag.t || "n";
 			if(guess.s.c > idx) guess.s.c = idx;
@@ -3005,19 +3055,22 @@ return function parse_ws_xml_data(sdata, s, opts, guess) {
 					p.r = sstr.r;
 					if(opts.cellHTML) p.h = sstr.h;
 					break;
-				case 'str': if(p.v != null) p.v = utf8read(p.v); else p.v = ""; break;
+				case 'str':
+					p.t = "s";
+					p.v = (p.v!=null) ? utf8read(p.v) : '';
+					if(opts.cellHTML) p.h = p.v;
+					break;
 				case 'inlineStr':
 					cref = d.match(isregex);
-					p.t = 'str';
+					p.t = 's';
 					if(cref !== null) { sstr = parse_si(cref[1]); p.v = sstr.t; } else p.v = "";
 					break; // inline string
 				case 'b': p.v = parsexmlbool(p.v); break;
 				case 'd':
-					p.v = datenum(p.v);
-					p.t = 'n';
+					if(!opts.cellDates) { p.v = datenum(p.v); p.t = 'n'; }
 					break;
-				/* in case of error, stick value in .raw */
-				case 'e': p.raw = RBErr[p.v]; break;
+				/* error string in .v, number in .v */
+				case 'e': p.w = p.v; p.v = RBErr[p.v]; break;
 			}
 			/* formatting */
 			fmtid = fillid = 0;
@@ -3255,8 +3308,8 @@ function parse_ws_bin(data, opts, rels) {
 					case 'n': p.v = val[1]; break;
 					case 's': sstr = strs[val[1]]; p.v = sstr.t; p.r = sstr.r; break;
 					case 'b': p.v = val[1] ? true : false; break;
-					case 'e': p.raw = val[1]; p.v = BErr[p.raw]; break;
-					case 'str': p.v = utf8read(val[1]); break;
+					case 'e': p.v = val[1]; p.w = BErr[p.v]; break;
+					case 'str': p.t = 's'; p.v = utf8read(val[1]); break;
 				}
 				if(opts.cellFormula && val.length > 3) p.f = val[3];
 				if((cf = styles.CellXf[val[0].iStyleRef])) safe_format(p,cf.ifmt,null,opts);
@@ -3268,7 +3321,7 @@ function parse_ws_bin(data, opts, rels) {
 				break;
 
 			case 'BrtCellBlank': if(!opts.sheetStubs) break;
-				p = {t:'str',v:undefined};
+				p = {t:'s',v:undefined};
 				s[encode_col(C=val[0].c) + rr] = p;
 				if(refguess.s.r > row.r) refguess.s.r = row.r;
 				if(refguess.s.c > C) refguess.s.c = C;
@@ -3290,7 +3343,7 @@ function parse_ws_bin(data, opts, rels) {
 				}
 				for(R=val.rfx.s.r;R<=val.rfx.e.r;++R) for(C=val.rfx.s.c;C<=val.rfx.e.c;++C) {
 					addr = encode_cell({c:C,r:R});
-					if(!s[addr]) s[addr] = {t:"str",v:undefined};
+					if(!s[addr]) s[addr] = {t:'s',v:undefined};
 					s[addr].l = val;
 				}
 				break;
@@ -4814,7 +4867,7 @@ var RecordEnum = {
 var evert_RE = evert_key(RecordEnum, 'n');
 /* Helper function to call out to ODS parser */
 function parse_ods(zip, opts) {
-	if(typeof module !== "undefined" && typeof require !== 'undefined' && typeof ODS === 'undefined') ODS = require('./dist/od' + 's');
+	if(typeof module !== "undefined" && typeof require !== 'undefined' && typeof ODS === 'undefined') ODS = require('./od' + 's');
 	if(typeof ODS === 'undefined' || !ODS.parse_ods) throw new Error("Unsupported ODS");
 	return ODS.parse_ods(zip, opts);
 }
@@ -4833,6 +4886,7 @@ var fix_read_opts = fix_opts_func([
 	['cellHTML', true], /* emit html string as .h */
 	['cellFormula', true], /* emit formulae as .f */
 	['cellStyles', false], /* emits style/theme as .s */
+	['cellDates', false], /* emit date cells with type `d` */
 
 	['sheetStubs', false], /* emit empty cells */
 	['sheetRows', 0, 'n'], /* read n rows (0 = read all rows) */
@@ -4848,6 +4902,8 @@ var fix_read_opts = fix_opts_func([
 
 
 var fix_write_opts = fix_opts_func([
+	['cellDates', false], /* write date cells with type `d` */
+
 	['bookSST', false], /* Generate Shared String Table */
 
 	['bookType', 'xlsx'], /* Type of workbook (xlsx/m/b) */
@@ -5234,7 +5290,7 @@ function sheet_to_json(sheet, opts){
 			v = val.v;
 			switch(val.t){
 				case 'e': continue;
-				case 's': case 'str': break;
+				case 's': break;
 				case 'b': case 'n': break;
 				default: throw 'unrecognized type ' + val.t;
 			}

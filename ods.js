@@ -6,7 +6,12 @@ var ODS = {};
 /* Open Document Format for Office Applications (OpenDocument) Version 1.2 */
 var get_utils = function() {
 	if(typeof XLSX !== 'undefined') return XLSX.utils;
-	if(typeof module !== "undefined" && typeof require !== 'undefined') return require('xl' + 'sx').utils;
+	if(typeof module !== "undefined" && typeof require !== 'undefined') try {
+		return require('../' + 'xlsx').utils;
+	} catch(e) {
+		try { return require('./' + 'xlsx').utils; }
+		catch(ee) { return require('xl' + 'sx').utils; }
+	}
 	throw new Error("Cannot find XLSX utils");
 };
 var has_buf = (typeof Buffer !== 'undefined');
@@ -165,7 +170,24 @@ var parse_manifest = function(d, opts) {
 	}
 };
 var parse_text_p = function(text, tag) {
-	return text;
+	return utf8read(text.replace(/<text:s\/>/g," ").replace(/<[^>]*>/g,""));
+};
+
+var utf8read = function utf8reada(orig) {
+	var out = "", i = 0, c = 0, d = 0, e = 0, f = 0, w = 0;
+	while (i < orig.length) {
+		c = orig.charCodeAt(i++);
+		if (c < 128) { out += String.fromCharCode(c); continue; }
+		d = orig.charCodeAt(i++);
+		if (c>191 && c<224) { out += String.fromCharCode(((c & 31) << 6) | (d & 63)); continue; }
+		e = orig.charCodeAt(i++);
+		if (c < 240) { out += String.fromCharCode(((c & 15) << 12) | ((d & 63) << 6) | (e & 63)); continue; }
+		f = orig.charCodeAt(i++);
+		w = (((c & 7) << 18) | ((d & 63) << 12) | ((e & 63) << 6) | (f & 63))-65536;
+		out += String.fromCharCode(0xD800 + ((w>>>10)&1023));
+		out += String.fromCharCode(0xDC00 + (w&1023));
+	}
+	return out;
 };
 var parse_content_xml = (function() {
 
@@ -193,12 +215,14 @@ var parse_content_xml = (function() {
 		var textp, textpidx, textptag;
 		var R, C, range = {s: {r:1000000,c:10000000}, e: {r:0, c:0}};
 		var number_format_map = {};
+		var merges = [], mrange = {}, mR = 0, mC = 0;
 
 		while((Rn = xlmlregex.exec(str))) switch(Rn[3]) {
 
 			case 'table': // 9.1.2 <table:table>
 				if(Rn[1]==='/') {
 					if(range.e.c >= range.s.c && range.e.r >= range.s.r) ws['!ref'] = get_utils().encode_range(range);
+					if(merges.length) ws['!merges'] = merges;
 					SheetNames.push(sheetag.name);
 					Sheets[sheetag.name] = ws;
 				}
@@ -206,16 +230,22 @@ var parse_content_xml = (function() {
 					sheetag = parsexmltag(Rn[0]);
 					R = C = -1;
 					range.s.r = range.s.c = 10000000; range.e.r = range.e.c = 0;
-					ws = {};
+					ws = {}; merges = [];
 				}
 				break;
 
-			case 'table-row':
+			case 'table-row': // 9.1.3 <table:table-row>
 				if(Rn[1] === '/') break;
-				++R; C = -1; break; // 9.1.3 <table:table-row>
+				++R; C = -1; break;
+			case 'covered-table-cell': // 9.1.5 table:covered-table-cell
+				++C; break; /* stub */
 			case 'table-cell':
-				if(Rn[0].charAt(Rn[0].length-2) === '/') { ++C; break; } /* stub */
-				if(Rn[1]!=='/') {
+				if(Rn[0].charAt(Rn[0].length-2) === '/') {
+					ctag = parsexmltag(Rn[0]);
+					if(ctag['number-columns-repeated']) C+= parseInt(ctag['number-columns-repeated'], 10);
+					else ++C;
+				}
+				else if(Rn[1]!=='/') {
 					++C;
 					if(C > range.e.c) range.e.c = C;
 					if(R > range.e.r) range.e.r = R;
@@ -223,30 +253,45 @@ var parse_content_xml = (function() {
 					if(R < range.s.r) range.s.r = R;
 					ctag = parsexmltag(Rn[0]);
 					q = {t:ctag['value-type'], v:null};
+					if(ctag['number-columns-spanned'] || ctag['number-rows-spanned']) {
+						mR = parseInt(ctag['number-rows-spanned'],10) || 0;
+						mC = parseInt(ctag['number-columns-spanned'],10) || 0;
+						mrange = {s: {r:R,c:C}, e:{r:R + mR-1,c:C + mC-1}};
+						merges.push(mrange);
+					}
 					/* 19.385 office:value-type */
 					switch(q.t) {
 						case 'boolean': q.t = 'b'; q.v = parsexmlbool(ctag['boolean-value']); break;
 						case 'float': q.t = 'n'; q.v = parseFloat(ctag.value); break;
 						case 'percentage': q.t = 'n'; q.v = parseFloat(ctag.value); break;
+						case 'currency': q.t = 'n'; q.v = parseFloat(ctag.value); break;
 						case 'date': q.t = 'n'; q.v = datenum(ctag['date-value']); q.z = 'm/d/yy'; break;
 						case 'time': q.t = 'n'; q.v = parse_isodur(ctag['time-value'])/86400; break;
-						case 'string': q.t = 'str'; break;
+						case 'string': q.t = 's'; break;
 						default: throw new Error('Unsupported value type ' + q.t);
 					}
 				} else {
-					if(q.t === 'str') q.v = textp;
+					if(q.t === 's') q.v = textp;
 					if(textp) q.w = textp;
-					ws[get_utils().encode_cell({r:R,c:C})] = q;
+					if(!(opts.sheetRows && opts.sheetRows < R)) ws[get_utils().encode_cell({r:R,c:C})] = q;
 					q = null;
 				}
 				break; // 9.1.4 <table:table-cell>
 
+			/* pure state */
 			case 'document-content': // 3.1.3.2 <office:document-content>
 			case 'spreadsheet': // 3.7 <office:spreadsheet>
 			case 'scripts': // 3.12 <office:scripts>
 			case 'font-face-decls': // 3.14 <office:font-face-decls>
 				if(Rn[1]==='/'){if((tmp=state.pop())[0]!==Rn[3]) throw "Bad state: "+tmp;}
 				else if(Rn[0].charAt(Rn[0].length-2) !== '/') state.push([Rn[3], true]);
+				break;
+
+			/* ignore state */
+			case 'shapes': // 9.2.8 <table:shapes>
+			case 'frame': // 10.4.2 <draw:frame>
+				if(Rn[1]==='/'){if((tmp=state.pop())[0]!==Rn[3]) throw "Bad state: "+tmp;}
+				else if(Rn[0].charAt(Rn[0].length-2) !== '/') state.push([Rn[3], false]);
 				break;
 
 			case 'number-style': // 16.27.2 <number:number-style>
@@ -334,7 +379,18 @@ var parse_content_xml = (function() {
 			case 's': break; // <text:s>
 			case 'date': break; // <*:date>
 			case 'annotation': break;
-			default: throw Rn;
+
+			case 'object': break; // 10.4.6.2 <draw:object>
+			case 'title': break; // <*:title>
+			case 'desc': break; // <*:desc>
+
+			case 'database-ranges': break; // 9.4.14 <table:database-ranges>
+			case 'database-range': break; // 9.4.15 <table:database-range>
+			case 'filter': break; // 9.5.2 <table:filter>
+			case 'filter-and': break; // 9.5.3 <table:filter-and>
+			case 'filter-or': break; // 9.5.4 <table:filter-or>
+			case 'filter-condition': break; // 9.5.5 <table:filter-condition>
+			default: if(opts.WTF) throw Rn;
 		}
 		var out = {
 			Sheets: Sheets,
@@ -346,7 +402,7 @@ var parse_content_xml = (function() {
 /* Part 3: Packages */
 var parse_ods = function(zip, opts) {
 	//var manifest = parse_manifest(getzipdata(zip, 'META-INF/manifest.xml'));
-	return parse_content_xml(getzipdata(zip, 'content.xml'));
+	return parse_content_xml(getzipdata(zip, 'content.xml'), opts);
 };
 ODS.parse_ods = parse_ods;
 })(typeof exports !== 'undefined' ? exports : ODS);
