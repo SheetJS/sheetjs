@@ -1,5 +1,6 @@
 AutoFilter.xlsb
 BlankSheetTypes.xlsb.pending
+ErrorTypes.xlsb
 NumberFormatCondition.xlsb
 RkNumber.xlsb
 calendar_stress_test.xlsb.pending
@@ -34,6 +35,7 @@ xlsx-stream-d-date-cell.xlsb
 2013/apachepoi_ReadOnlyRecommended.xls.xlsb
 2013/apachepoi_testArraysAndTables.xls.xlsb
 AutoFilter.xlsx
+ErrorTypes.xlsx
 LONumbers-2010.xlsx
 LONumbers-2011.xlsx
 LONumbers.xlsx
@@ -104,6 +106,7 @@ apachepoi_54764.xlsx
 apachepoi_55640.xlsx
 apachepoi_55745.xlsx
 apachepoi_55850.xlsx
+apachepoi_55864.xlsx
 apachepoi_55906-MultiSheetRefs.xlsx
 apachepoi_55923.xlsx
 apachepoi_55924.xlsx
@@ -124,6 +127,7 @@ apachepoi_56688_2.xlsx
 apachepoi_56688_3.xlsx
 apachepoi_56688_4.xlsx
 apachepoi_56702.xlsx
+apachepoi_56730.xlsx
 apachepoi_56737.xlsx
 apachepoi_AverageTaxRates.xlsx
 apachepoi_Booleans.xlsx
@@ -154,6 +158,7 @@ apachepoi_SimpleMultiCell.xlsx
 apachepoi_SimpleWithComments.xlsx
 apachepoi_Tables.xlsx
 apachepoi_TextFormatTests.xlsx
+apachepoi_Themes.xlsx
 apachepoi_TwoSheetsNoneHidden.xlsx
 apachepoi_TwoSheetsOneHidden.xlsx
 apachepoi_WithChart.xlsx
@@ -183,6 +188,9 @@ apachepoi_shared_formulas.xlsx
 apachepoi_sheetProtection_allLocked.xlsx
 apachepoi_sheetProtection_not_protected.xlsx
 apachepoi_styles.xlsx
+apachepoi_workbookProtection-sheet_password-2013.xlsx
+apachepoi_workbookProtection-workbook_password-2013.xlsx
+apachepoi_workbookProtection-workbook_password_user_range-2010.xlsx
 apachepoi_workbookProtection_not_protected.xlsx
 apachepoi_workbookProtection_workbook_revision_protected.xlsx
 apachepoi_workbookProtection_workbook_structure_protected.xlsx
@@ -311,6 +319,7 @@ spreadsheet-parsexlsx_column-formats.xlsx
 spreadsheet-parsexlsx_tab-color.xlsx
 sushi.xlsx
 text_and_numbers.xlsx
+write.xlsx
 xlrd_merged_cells.xlsx
 xlrd_reveng1.xlsx
 xlrd_test_comments_excel.xlsx
@@ -329,6 +338,13 @@ number_format_russian.xlsm
 numfmt_1_russian.xlsm
 openpyxl_r_vba-test.xlsm
 pivot_table_test.xlsm
+AutoFilter.ods
+BlankSheetTypes.ods
+cell_style_simple.ods
+formula_stress_test.ods
+merge_cells.ods
+number_format.ods
+rich_text_stress.ods
 roo_Bibelbund.ods
 roo_Bibelbund1.ods
 roo_bbu.ods
@@ -353,3 +369,4 @@ roo_time-test.ods
 roo_type_excel.ods.pending
 roo_type_excelx.ods
 roo_whitespace.ods
+sushi.ods

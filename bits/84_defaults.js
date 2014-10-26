@@ -13,6 +13,7 @@ var fix_read_opts = fix_opts_func([
 	['cellHTML', true], /* emit html string as .h */
 	['cellFormula', true], /* emit formulae as .f */
 	['cellStyles', false], /* emits style/theme as .s */
+	['cellDates', false], /* emit date cells with type `d` */
 
 	['sheetStubs', false], /* emit empty cells */
 	['sheetRows', 0, 'n'], /* read n rows (0 = read all rows) */
@@ -28,6 +29,8 @@ var fix_read_opts = fix_opts_func([
 
 
 var fix_write_opts = fix_opts_func([
+	['cellDates', false], /* write date cells with type `d` */
+
 	['bookSST', false], /* Generate Shared String Table */
 
 	['bookType', 'xlsx'], /* Type of workbook (xlsx/m/b) */

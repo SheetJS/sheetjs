@@ -177,8 +177,8 @@ function parse_ws_bin(data, opts, rels) {
 					case 'n': p.v = val[1]; break;
 					case 's': sstr = strs[val[1]]; p.v = sstr.t; p.r = sstr.r; break;
 					case 'b': p.v = val[1] ? true : false; break;
-					case 'e': p.raw = val[1]; p.v = BErr[p.raw]; break;
-					case 'str': p.v = utf8read(val[1]); break;
+					case 'e': p.v = val[1]; p.w = BErr[p.v]; break;
+					case 'str': p.t = 's'; p.v = utf8read(val[1]); break;
 				}
 				if(opts.cellFormula && val.length > 3) p.f = val[3];
 				if((cf = styles.CellXf[val[0].iStyleRef])) safe_format(p,cf.ifmt,null,opts);
@@ -190,7 +190,7 @@ function parse_ws_bin(data, opts, rels) {
 				break;
 
 			case 'BrtCellBlank': if(!opts.sheetStubs) break;
-				p = {t:'str',v:undefined};
+				p = {t:'s',v:undefined};
 				s[encode_col(C=val[0].c) + rr] = p;
 				if(refguess.s.r > row.r) refguess.s.r = row.r;
 				if(refguess.s.c > C) refguess.s.c = C;
@@ -212,7 +212,7 @@ function parse_ws_bin(data, opts, rels) {
 				}
 				for(R=val.rfx.s.r;R<=val.rfx.e.r;++R) for(C=val.rfx.s.c;C<=val.rfx.e.c;++C) {
 					addr = encode_cell({c:C,r:R});
-					if(!s[addr]) s[addr] = {t:"str",v:undefined};
+					if(!s[addr]) s[addr] = {t:'s',v:undefined};
 					s[addr].l = val;
 				}
 				break;

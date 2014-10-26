@@ -24,14 +24,21 @@ function get_cell_style(styles, cell, opts) {
 
 function safe_format(p, fmtid, fillid, opts) {
 	try {
-		if(fmtid === 0) {
+		if(p.t === 'e') p.w = p.w || BErr[p.v];
+		else if(fmtid === 0) {
 			if(p.t === 'n') {
 				if((p.v|0) === p.v) p.w = SSF._general_int(p.v,_ssfopts);
 				else p.w = SSF._general_num(p.v,_ssfopts);
 			}
+			else if(p.t === 'd') {
+				var dd = datenum(p.v);
+				if((dd|0) === dd) p.w = SSF._general_int(dd,_ssfopts);
+				else p.w = SSF._general_num(dd,_ssfopts);
+			}
 			else if(p.v === undefined) return "";
 			else p.w = SSF._general(p.v,_ssfopts);
 		}
+		else if(p.t === 'd') p.w = SSF.format(fmtid,datenum(p.v),_ssfopts);
 		else p.w = SSF.format(fmtid,p.v,_ssfopts);
 		if(opts.cellNF) p.z = SSF._table[fmtid];
 	} catch(e) { if(opts.WTF) throw e; }

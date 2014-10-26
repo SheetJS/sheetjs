@@ -64,16 +64,47 @@ function parse_clrScheme(t, opts) {
 	});
 }
 
-var clrsregex = /<a:clrScheme([^>]*)>.*<\/a:clrScheme>/;
-/* 14.2.7 Theme Part */
-function parse_theme_xml(data, opts) {
-	if(!data || data.length === 0) return themes;
+/* 20.1.4.1.18 fontScheme CT_FontScheme */
+function parse_fontScheme(t, opts) { }
+
+/* 20.1.4.1.15 fmtScheme CT_StyleMatrix */
+function parse_fmtScheme(t, opts) { }
+
+var clrsregex = /<a:clrScheme([^>]*)>[^\u2603]*<\/a:clrScheme>/;
+var fntsregex = /<a:fontScheme([^>]*)>[^\u2603]*<\/a:fontScheme>/;
+var fmtsregex = /<a:fmtScheme([^>]*)>[^\u2603]*<\/a:fmtScheme>/;
+
+/* 20.1.6.10 themeElements CT_BaseStyles */
+function parse_themeElements(data, opts) {
 	themes.themeElements = {};
 
 	var t;
 
-	/* clrScheme CT_ColorScheme */
-	if((t=data.match(clrsregex))) parse_clrScheme(t, opts);
+	[
+		/* clrScheme CT_ColorScheme */
+		['clrScheme', clrsregex, parse_clrScheme],
+		/* fontScheme CT_FontScheme */
+		['fontScheme', fntsregex, parse_fontScheme],
+		/* fmtScheme CT_StyleMatrix */
+		['fmtScheme', fmtsregex, parse_fmtScheme]
+	].forEach(function(m) {
+		if(!(t=data.match(m[1]))) throw m[0] + ' not found in themeElements';
+		m[2](t, opts);
+	});
+}
+
+var themeltregex = /<a:themeElements([^>]*)>[^\u2603]*<\/a:themeElements>/;
+
+/* 14.2.7 Theme Part */
+function parse_theme_xml(data, opts) {
+	/* 20.1.6.9 theme CT_OfficeStyleSheet */
+	if(!data || data.length === 0) return themes;
+
+	var t;
+
+	/* themeElements CT_BaseStyles */
+	if(!(t=data.match(themeltregex))) throw 'themeElements not found in theme';
+	parse_themeElements(t[0], opts);
 
 	return themes;
 }

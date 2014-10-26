@@ -11,7 +11,7 @@ if(process.env.WTF) {
 	opts.cellStyles = true;
 }
 var fullex = [".xlsb", ".xlsm", ".xlsx"];
-var ex = fullex;
+var ex = fullex.slice(); ex.push(".ods");
 if(process.env.FMTS === "full") process.env.FMTS = ex.join(":");
 if(process.env.FMTS) ex=process.env.FMTS.split(":").map(function(x){return x[0]==="."?x:"."+x;});
 var exp = ex.map(function(x){ return x + ".pending"; });
@@ -38,14 +38,18 @@ var paths = {
 	cst2: dir + 'comments_stress_test.xlsb',
 	fst1: dir + 'formula_stress_test.xlsx',
 	fst2: dir + 'formula_stress_test.xlsb',
+	fst3: dir + 'formula_stress_test.ods',
 	fstb: dir + 'formula_stress_test.xlsb',
 	hl1:  dir + 'hyperlink_stress_test_2011.xlsx',
 	hl2:  dir + 'hyperlink_stress_test_2011.xlsb',
 	lon1: dir + 'LONumbers.xlsx',
 	mc1:  dir + 'merge_cells.xlsx',
 	mc2:  dir + 'merge_cells.xlsb',
+	mc3:  dir + 'merge_cells.ods',
 	nf1:  dir + 'number_format.xlsm',
 	nf2:  dir + 'number_format.xlsb',
+	dt1:  dir + 'xlsx-stream-d-date-cell.xlsx',
+	dt2:  dir + 'xlsx-stream-d-date-cell.xlsb',
 	swc1: dir + 'apachepoi_SimpleWithComments.xlsx',
 	swc2: dir + '2013/apachepoi_SimpleWithComments.xlsx.xlsb'
 };
@@ -247,6 +251,38 @@ describe('parse options', function() {
 			});
 			assert(found);
 		});
+		it('should not generate cell dates by default', function() {
+			var wb = X.readFile(paths.dt1);
+			wb.SheetNames.forEach(function(s) {
+				var ws = wb.Sheets[s];
+				Object.keys(ws).forEach(function(addr) {
+					if(addr[0] === "!" || !ws.hasOwnProperty(addr)) return;
+					assert(ws[addr].t !== 'd');
+				});
+			});
+		});
+		it('XLSB should not generate cell dates', function() {
+			var wb = X.readFile(paths.dt2, {cellDates: true});
+			wb.SheetNames.forEach(function(s) {
+				var ws = wb.Sheets[s];
+				Object.keys(ws).forEach(function(addr) {
+					if(addr[0] === "!" || !ws.hasOwnProperty(addr)) return;
+					assert(ws[addr].t !== 'd');
+				});
+			});
+		});
+		it('XLSX should generate cell dates when requested', function() {
+			var wb = X.readFile(paths.dt1, {cellDates: true});
+			var found = false;
+			wb.SheetNames.forEach(function(s) {
+				var ws = wb.Sheets[s];
+				Object.keys(ws).forEach(function(addr) {
+					if(addr[0] === "!" || !ws.hasOwnProperty(addr)) return;
+					if(ws[addr].t === 'd') return found = true;
+				});
+			});
+			assert(found);
+		});
 	});
 	describe('sheet', function() {
 		it('should not generate sheet stubs by default', function() {
@@ -254,12 +290,15 @@ describe('parse options', function() {
 			assert.throws(function() { wb.Sheets.Merge.A2.v; });
 			wb = X.readFile(paths.mc2);
 			assert.throws(function() { wb.Sheets.Merge.A2.v; });
+			wb = X.readFile(paths.mc3);
+			assert.throws(function() { wb.Sheets.Merge.A2.v; });
 		});
 		it('should generate sheet stubs when requested', function() {
 			var wb = X.readFile(paths.mc1, {sheetStubs:true});
 			assert(typeof wb.Sheets.Merge.A2.t !== 'undefined');
 			wb = X.readFile(paths.mc2, {sheetStubs:true});
 			assert(typeof wb.Sheets.Merge.A2.t !== 'undefined');
+			/* TODO: ODS */
 		});
 		function checkcells(wb, A46, B26, C16, D2) {
 			assert((typeof wb.Sheets.Text.A46 !== 'undefined') == A46);
@@ -272,17 +311,23 @@ describe('parse options', function() {
 			checkcells(wb, true, true, true, true);
 			wb = X.readFile(paths.fst2);
 			checkcells(wb, true, true, true, true);
+			wb = X.readFile(paths.fst3);
+			checkcells(wb, true, true, true, true);
 		});
 		it('sheetRows n=20', function() {
 			var wb = X.readFile(paths.fst1, {sheetRows:20});
 			checkcells(wb, false, false, true, true);
 			wb = X.readFile(paths.fst2, {sheetRows:20});
 			checkcells(wb, false, false, true, true);
+			wb = X.readFile(paths.fst3, {sheetRows:20});
+			checkcells(wb, false, false, true, true);
 		});
 		it('sheetRows n=10', function() {
 			var wb = X.readFile(paths.fst1, {sheetRows:10});
 			checkcells(wb, false, false, false, true);
 			wb = X.readFile(paths.fst2, {sheetRows:10});
+			checkcells(wb, false, false, false, true);
+			wb = X.readFile(paths.fst3, {sheetRows:10});
 			checkcells(wb, false, false, false, true);
 		});
 	});
@@ -377,7 +422,7 @@ describe('input formats', function() {
 describe('output formats', function() {
 	var wb1, wb2;
 	before(function() {
-		X = require('./');
+		X = require(modp);
 		wb1 = X.readFile(paths.cp1);
 		wb2 = X.readFile(paths.cp2);
 	});
@@ -517,12 +562,15 @@ describe('parse features', function() {
 			X = require(modp);
 			wb1 = X.readFile(paths.mc1);
 			wb2 = X.readFile(paths.mc2);
+			wb3 = X.readFile(paths.mc3);
 		});
 		it('should have !merges', function() {
 			assert(wb1.Sheets.Merge['!merges']);
 			assert(wb2.Sheets.Merge['!merges']);
-			var m = [wb1, wb2].map(function(x) { return x.Sheets.Merge['!merges'].map(function(y) { return X.utils.encode_range(y); });});
+			assert(wb3.Sheets.Merge['!merges']);
+			var m = [wb1, wb2, wb3].map(function(x) { return x.Sheets.Merge['!merges'].map(function(y) { return X.utils.encode_range(y); });});
 			assert.deepEqual(m[0].sort(),m[1].sort());
+			assert.deepEqual(m[0].sort(),m[2].sort());
 		});
 	});
 
@@ -550,16 +598,24 @@ describe('parse features', function() {
 	});
 
 	describe('should parse cells with date type (XLSX/XLSM)', function() {
-		var wb, ws;
-		before(function() {
-			X = require('./');
-			wb = X.readFile(dir+'xlsx-stream-d-date-cell.xlsx');
+		it('Must have read the date', function() {
+			var wb, ws;
+			X = require(modp);
+			wb = X.readFile(paths.dt1);
 			var sheetName = 'Sheet1';
 			ws = wb.Sheets[sheetName];
-		});
-		it('Must have read the date', function() {
 			var sheet = X.utils.sheet_to_row_object_array(ws);
 			assert.equal(sheet[3]['てすと'], '2/14/14');
+		});
+		it('cellDates should not affect formatted text', function() {
+			var wb1, ws1, wb2, ws2;
+			var sheetName = 'Sheet1';
+			X = require(modp);
+			wb1 = X.readFile(paths.dt1);
+			ws1 = wb1.Sheets[sheetName];
+			wb2 = X.readFile(paths.dt2);
+			ws2 = wb2.Sheets[sheetName];
+			assert.equal(X.utils.sheet_to_csv(ws1),X.utils.sheet_to_csv(ws2));
 		});
 	});
 
@@ -630,6 +686,13 @@ describe('parse features', function() {
 	});
 });
 
+function seq(end, start) {
+	var s = start || 0;
+	var o = new Array(end - s);
+	for(var i = 0; i != o.length; ++i) o[i] = s + i;
+	return o;
+}
+
 describe('roundtrip features', function() {
 	before(function() {
 		X = require(modp);
@@ -661,6 +724,36 @@ describe('roundtrip features', function() {
 			var m2 = wb2.Sheets.Merge['!merges'].map(X.utils.encode_range);
 			assert.equal(m1.length, m2.length);
 			for(var i = 0; i < m1.length; ++i) assert.equal(m1[i], m2[i]);
+		});
+	});
+
+	describe('should preserve dates', function() {
+		seq(16).forEach(function(n) {
+			var d = (n & 1) ? 'd' : 'n', dk = d === 'd';
+			var c = (n & 2) ? 'd' : 'n', dj = c === 'd';
+			var b = (n & 4) ? 'd' : 'n', di = b === 'd';
+			var a = (n & 8) ? 'd' : 'n', dh = a === 'd';
+			var f, sheet, addr;
+			if(dh) { f = paths.dt1; sheet = 'Sheet1'; addr = 'B5'; }
+			else { f = paths.nf1; sheet = '2011'; addr = 'J36'; }
+			it('[' + a + '] -> (' + b + ') -> [' + c + '] -> (' + d + ')', function() {
+				var wb1 = X.readFile(f, {cellNF: true, cellDates: di, WTF: opts.WTF});
+				var wb2 = X.read(X.write(wb1, {type:'binary', cellDates:dj, WTF:opts.WTF}), {type:'binary', cellDates: dk, WTF: opts.WTF});
+				var m = [wb1,wb2].map(function(x) { return x.Sheets[sheet][addr]; });
+				assert.equal(m[0].w, m[1].w);
+
+				/* wb1 cellDates */
+				if(dh && di) assert.equal(m[0].t, 'd');
+				//else if(a !== 'd' && di) assert.equal(m[0].t, 'd'); /* TODO */
+				else assert.equal(m[0].t, 'n');
+				/* wb2 cellDates */
+				if(dh && di && dj && dk) assert.equal(m[1].t, 'd');
+				else if(dj && dk && !di); /* TODO: convert to date */
+				else assert.equal(m[1].t, 'n');
+
+				if(m[0].t === m[1].t) assert.equal(m[0].v, m[1].v);
+				else if(m[0].t === 'd') assert(Math.abs(datenum(new Date(m[0].v)) - m[1].v)) < .01; /* TODO: 1sec adjustment */
+			});
 		});
 	});
 

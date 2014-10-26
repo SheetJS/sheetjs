@@ -36,7 +36,7 @@ function parse_fills(t, opts) {
 				/* Excel uses ARGB strings */
 				if(y.rgb) fill.fgColor.rgb = y.rgb.substring(y.rgb.length - 6);
 				break;
-			case '<bgColor/>': case '</fgColor>': break;
+			case '<fgColor/>': case '</fgColor>': break;
 
 			default: if(opts.WTF) throw 'unrecognized ' + y[0] + ' in fills';
 		}
@@ -125,7 +125,7 @@ return function parse_sty_xml(data, opts) {
 	if((t=data.match(numFmtRegex))) parse_numFmts(t, opts);
 
 	/* fonts CT_Fonts ? */
-//	if((t=data.match(/<fonts([^>]*)>.*<\/fonts>/))) parse_fonts(t, opts);
+	/*if((t=data.match(/<fonts([^>]*)>.*<\/fonts>/))) parse_fonts(t, opts);*/
 
 	/* fills CT_Fills */
 	if((t=data.match(fillsRegex))) parse_fills(t, opts);

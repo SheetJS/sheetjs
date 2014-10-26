@@ -107,7 +107,7 @@ function sheet_to_json(sheet, opts){
 			v = val.v;
 			switch(val.t){
 				case 'e': continue;
-				case 's': case 'str': break;
+				case 's': break;
 				case 'b': case 'n': break;
 				default: throw 'unrecognized type ' + val.t;
 			}

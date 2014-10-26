@@ -1,7 +1,12 @@
 # xlsx
 
-Parser and writer for Excel 2007+ (XLSX/XLSM/XLSB) files and parser for ODS files.
-Pure-JS cleanroom implementation from the Office Open XML spec, [MS-XLSB], and related documents.
+Parser and writer for Excel 2007+ (XLSX/XLSM/XLSB) files and parser for ODS.
+Pure-JS cleanroom implementation from the Office Open XML spec, [MS-XLSB], ODF
+specifications and related documents.
+
+Demo: <http://oss.sheetjs.com/js-xlsx>
+
+Source: <http://git.io/xlsx>
 
 ## Installation
 
@@ -11,7 +16,6 @@ In [nodejs](https://www.npmjs.org/package/xlsx):
 
 In the browser:
 
-    <!-- This is the only file you need (includes xlsx.js and jszip) -->
     <script lang="javascript" src="dist/xlsx.core.min.js"></script>
 
 In [bower](http://bower.io/search/?q=js-xlsx):
@@ -20,12 +24,6 @@ In [bower](http://bower.io/search/?q=js-xlsx):
 
 CDNjs automatically pulls the latest version and makes all versions available at
 <http://cdnjs.com/libraries/xlsx>
-
-Older versions of this README recommended a more explicit approach:
-
-    <!-- JSZip must be included before xlsx.js -->
-    <script lang="javascript" src="/path/to/jszip.js"></script>
-    <script lang="javascript" src="/path/to/xlsx.js"></script>
 
 ## Optional Modules
 
@@ -43,7 +41,7 @@ An appropriate version for each dependency is included in the dist/ directory.
 
 The complete single-file version is generated at `dist/xlsx.full.min.js`
 
-## ECMAScript 5 compatibility
+## ECMAScript 5 Compatibility
 
 Since xlsx.js uses ES5 functions like `Array#forEach`, older browsers require
 [Polyfills](http://git.io/QVh77g).  This repo and the gh-pages branch include
@@ -55,9 +53,10 @@ To use the shim, add the shim before the script tag that loads xlsx.js:
 
 ## Parsing Workbooks
 
-For parsing, the first step is to read the file.
+For parsing, the first step is to read the file.  This involves acquiring the
+data and feeding it into the library.  Here are a few common scenarios:
 
-- nodejs:
+- nodejs readFile:
 
 ```
 if(typeof require !== 'undefined') XLSX = require('xlsx');
@@ -65,8 +64,8 @@ var workbook = XLSX.readFile('test.xlsx');
 /* DO SOMETHING WITH workbook HERE */
 ```
 
-- ajax (for a more complete example that works in older versions of IE, check the
-  demo at <http://oss.sheetjs.com/js-xlsx/ajax.html>):
+- ajax (for a more complete example that works in older browsers, check the demo
+  at <http://oss.sheetjs.com/js-xlsx/ajax.html>):
 
 ```
 /* set up XMLHttpRequest */
@@ -141,6 +140,8 @@ function handleFile(e) {
 input_dom_element.addEventListener('change', handleFile, false);
 ```
 
+## Working with the Workbook
+
 This example walks through every cell of every sheet and dumps the values:
 
 ```
@@ -179,16 +180,20 @@ Some helper functions in `XLSX.utils` generate different views of the sheets:
 
 ## Writing Workbooks
 
-Assuming `workbook` is a workbook object, just call write:
+For writing, the first step is to generate output data.  The helper functions
+`write` and `writeFile` will produce the data in various formats suitable for
+dissemination.  The second step is to actual share the data with the end point.
+Assuming `workbook` is a workbook object:
 
 - nodejs write to file:
 
 ```
 /* output format determined by filename */
 XLSX.writeFile(workbook, 'out.xlsx');
+/* at this point, out.xlsx is a file that you can distribute */
 ```
 
-- write to binary string (using FileSaver.js)
+- write to binary string (using FileSaver.js):
 
 ```
 /* bookType can be 'xlsx' or 'xlsm' or 'xlsb' */
@@ -203,6 +208,7 @@ function s2ab(s) {
   return buf;
 }
 
+/* the saveAs call downloads a file on the local machine */
 saveAs(new Blob([s2ab(wbout)],{type:""}), "test.xlsx")
 ```
 
@@ -276,9 +282,9 @@ for(var R = range.s.r; R <= range.e.r; ++R) {
 
 | Key | Description |
 | --- | ----------- |
-| `v` | raw value ** |
+| `v` | raw value (see Data Types section for more info) |
 | `w` | formatted text (if applicable) |
-| `t` | cell type: `b` Boolean, `n` Number, `e` error, `s/str` String |
+| `t` | cell type: `b` Boolean, `n` Number, `e` error, `s` String, `d` Date |
 | `f` | cell formula (if applicable) |
 | `r` | rich text encoding (if applicable) |
 | `h` | HTML rendering of the rich text (if applicable) |
@@ -287,12 +293,45 @@ for(var R = range.s.r; R <= range.e.r; ++R) {
 | `l` | cell hyperlink object (.Target holds link, .tooltip is tooltip) |
 | `s` | the style/theme of the cell (if applicable) |
 
-- For dates, `.v` holds the raw date code from the sheet and `.w` holds the text
-
 Built-in export utilities (such as the CSV exporter) will use the `w` text if it
 is available.  To change a value, be sure to delete `cell.w` (or set it to
 `undefined`) before attempting to export.  The utilities will regenerate the `w`
 text from the number format (`cell.z`) and the raw value if possible.
+
+### Data Types
+
+The raw value is stored in the `v` field, interpreted based on the `t` field.
+
+Type `b` is the Boolean type.  `v` is interpreted according to JS truth tables
+
+Type `e` is the Error type. `v` holds the number and `w` holds the common name:
+
+| Value | Error Meaning |
+| ----: | :------------ |
+|  0x00 | #NULL!        |
+|  0x07 | #DIV/0!       |
+|  0x0F | #VALUE!       |
+|  0x17 | #REF!         |
+|  0x1D | #NAME?        |
+|  0x24 | #NUM!         |
+|  0x2A | #N/A          |
+|  0x2B | #GETTING_DATA |
+
+Type `n` is the Number type. This includes all forms of data that Excel stores
+as numbers, such as dates/times and Boolean fields.  Excel exclusively uses data
+that can be fit in an IEEE754 floating point number, just like JS Number, so the
+`v` field holds the raw number.  The `w` field holds formatted text.
+
+Type `d` is the Date type, generated only when the option `cellDates` is passed.
+Since JSON does not have a natural Date type, parsers are generally expected to
+store ISO 8601 Date strings like you would get from `date.toISOString()`.  On
+the other hand, writers and exporters should be able to handle date strings and
+JS Date objects.  Note that Excel disregards the timezone modifier and treats all
+dates in the local timezone.  js-xlsx does not correct for this error.
+
+Type `s` is the String type.  `v` should be explicitly stored as a string to
+avoid possible confusion.
+
 
 ### Worksheet Object
 
@@ -348,6 +387,7 @@ The exported `read` and `readFile` functions accept an options argument:
 | cellHTML    | true    | Parse rich text and save HTML to the .h field |
 | cellNF      | false   | Save number format string to the .z field |
 | cellStyles  | false   | Save style/theme info to the .s field |
+| cellDates   | false   | Store dates as type `d` (default is `n`) ** |
 | sheetStubs  | false   | Create cell objects for stub cells |
 | sheetRows   | 0       | If >0, read the first `sheetRows` rows ** |
 | bookDeps    | false   | If true, parse calculation chains |
@@ -356,7 +396,7 @@ The exported `read` and `readFile` functions accept an options argument:
 | bookSheets  | false   | If true, only parse enough to get the sheet names |
 | bookVBA     | false   | If true, expose vbaProject.bin to `vbaraw` field ** |
 
-- Even if `cellNF` is false, formatted text (.w) will be generated
+- Even if `cellNF` is false, formatted text will be generated and saved to `.w`
 - In some cases, sheets may be parsed even if `bookSheets` is false.
 - `bookSheets` and `bookProps` combine to give both sets of information
 - `Deps` will be an empty object if `bookDeps` is falsy
@@ -365,6 +405,7 @@ The exported `read` and `readFile` functions accept an options argument:
 - `sheetRows-1` rows will be generated when looking at the JSON object output
   (since the header row is counted as a row when parsing the data)
 - `bookVBA` merely exposes the raw vba object.  It does not parse the data.
+- `cellDates` currently does not convert numerical dates to JS dates.
 
 The defaults are enumerated in bits/84_defaults.js
 
@@ -374,6 +415,7 @@ The exported `write` and `writeFile` functions accept an options argument:
 
 | Option Name | Default | Description |
 | :---------- | ------: | :---------- |
+| cellDates   | false   | Store dates as type `d` (default is `n`) |
 | bookSST     | false   | Generate Shared String Table ** |
 | bookType    | 'xlsx'  | Type of Workbook ("xlsx" or "xlsm" or "xlsb") |
 
@@ -382,6 +424,9 @@ The exported `write` and `writeFile` functions accept an options argument:
 - `bookType = 'xlsb'` is stubbed and far from complete
 - The raw data is the only thing guaranteed to be saved.  Formulae, formatting,
   and other niceties may not be serialized (pending CSF standardization)
+- `cellDates` only applies to XLSX output and is not guaranteed to work with
+  third-party readers.  Excel itself does not usually write cells with type `d`
+  so non-Excel tools may ignore the data or blow up in the presence of dates.
 
 ## Tested Environments
 
@@ -432,6 +477,9 @@ $ mv xlsx.js xlsx.new.js
 $ make
 $ diff xlsx.js xlsx.new.js
 ```
+
+To produce the dist files, run `make dist`.  The dist files are updated in each
+version release and should not be committed between versions.
 
 ## XLS Support
 

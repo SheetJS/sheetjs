@@ -83,7 +83,7 @@ function parse_ws_xml_hlinks(s, data, rels) {
 		var rng = safe_decode_range(val.ref);
 		for(var R=rng.s.r;R<=rng.e.r;++R) for(var C=rng.s.c;C<=rng.e.c;++C) {
 			var addr = encode_cell({c:C,r:R});
-			if(!s[addr]) s[addr] = {t:"str",v:undefined};
+			if(!s[addr]) s[addr] = {t:"stub",v:undefined};
 			s[addr].l = val;
 		}
 	}
@@ -124,9 +124,19 @@ function write_ws_xml_cols(ws, cols) {
 function write_ws_xml_cell(cell, ref, ws, opts, idx, wb) {
 	if(cell.v === undefined) return "";
 	var vv = "";
+	var oldt = cell.t, oldv = cell.v;
 	switch(cell.t) {
 		case 'b': vv = cell.v ? "1" : "0"; break;
-		case 'n': case 'e': vv = ''+cell.v; break;
+		case 'n': vv = ''+cell.v; break;
+		case 'e': vv = BErr[cell.v]; break;
+		case 'd':
+			if(opts.cellDates) vv = new Date(cell.v).toISOString();
+			else {
+				cell.t = 'n';
+				vv = ''+(cell.v = datenum(cell.v));
+				if(typeof cell.z === 'undefined') cell.z = SSF._table[14];
+			}
+			break;
 		default: vv = cell.v; break;
 	}
 	var v = writetag('v', escapexml(vv)), o = {r:ref};
@@ -135,6 +145,7 @@ function write_ws_xml_cell(cell, ref, ws, opts, idx, wb) {
 	if(os !== 0) o.s = os;
 	switch(cell.t) {
 		case 'n': break;
+		case 'd': o.t = "d"; break;
 		case 'b': o.t = "b"; break;
 		case 'e': o.t = "e"; break;
 		default:
@@ -144,6 +155,7 @@ function write_ws_xml_cell(cell, ref, ws, opts, idx, wb) {
 			}
 			o.t = "str"; break;
 	}
+	if(cell.t != oldt) { cell.t = oldt; cell.v = oldv; }
 	return writextag('c', v, o);
 }
 
@@ -199,7 +211,7 @@ return function parse_ws_xml_data(sdata, s, opts, guess) {
 			/* SCHEMA IS ACTUALLY INCORRECT HERE.  IF A CELL HAS NO T, EMIT "" */
 			if(tag.t === undefined && p.v === undefined) {
 				if(!opts.sheetStubs) continue;
-				p.t = "str";
+				p.t = "stub";
 			}
 			else p.t = tag.t || "n";
 			if(guess.s.c > idx) guess.s.c = idx;
@@ -213,19 +225,22 @@ return function parse_ws_xml_data(sdata, s, opts, guess) {
 					p.r = sstr.r;
 					if(opts.cellHTML) p.h = sstr.h;
 					break;
-				case 'str': if(p.v != null) p.v = utf8read(p.v); else p.v = ""; break;
+				case 'str':
+					p.t = "s";
+					p.v = (p.v!=null) ? utf8read(p.v) : '';
+					if(opts.cellHTML) p.h = p.v;
+					break;
 				case 'inlineStr':
 					cref = d.match(isregex);
-					p.t = 'str';
+					p.t = 's';
 					if(cref !== null) { sstr = parse_si(cref[1]); p.v = sstr.t; } else p.v = "";
 					break; // inline string
 				case 'b': p.v = parsexmlbool(p.v); break;
 				case 'd':
-					p.v = datenum(p.v);
-					p.t = 'n';
+					if(!opts.cellDates) { p.v = datenum(p.v); p.t = 'n'; }
 					break;
-				/* in case of error, stick value in .raw */
-				case 'e': p.raw = RBErr[p.v]; break;
+				/* error string in .v, number in .v */
+				case 'e': p.w = p.v; p.v = RBErr[p.v]; break;
 			}
 			/* formatting */
 			fmtid = fillid = 0;
