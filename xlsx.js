@@ -2904,10 +2904,14 @@ function parse_ws_xml_hlinks(s, data, rels) {
 	for(var i = 0; i != data.length; ++i) {
 		var val = parsexmltag(data[i], true);
 		if(!val.ref) return;
-		var rel = rels['!id'][val.id];
+		var rel = rels ? rels['!id'][val.id] : null;
 		if(rel) {
 			val.Target = rel.Target;
 			if(val.location) val.Target += "#"+val.location;
+			val.Rel = rel;
+		} else {
+			val.Target = val.location;
+			rel = {Target: val.location, TargetMode: 'Internal'};
 			val.Rel = rel;
 		}
 		var rng = safe_decode_range(val.ref);
