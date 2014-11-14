@@ -5080,7 +5080,7 @@ function write_zip(wb, opts) {
 		coreprops: [], extprops: [], custprops: [], strs:[], comments: [], vba: [],
 		TODO:[], rels:[], xmlns: "" };
 	fix_write_opts(opts = opts || {});
-	var zip = new jszip();
+	var zip = new JSZip();
 	var f = "", rId = 0;
 
 	opts.cellXfs = [];
@@ -5149,10 +5149,10 @@ function readSync(data, opts) {
 	var o = opts||{};
 	if(!o.type) o.type = (has_buf && Buffer.isBuffer(data)) ? "buffer" : "base64";
 	switch(o.type) {
-		case "base64": zip = new jszip(d, { base64:true }); break;
-		case "binary": zip = new jszip(d, { base64:false }); break;
-		case "buffer": zip = new jszip(d); break;
-		case "file": zip=new jszip(d=_fs.readFileSync(data)); break;
+		case "base64": zip = new JSZip(d, { base64:true }); break;
+		case "binary": zip = new JSZip(d, { base64:false }); break;
+		case "buffer": zip = new JSZip(d); break;
+		case "file": zip=new JSZip(d=_fs.readFileSync(data)); break;
 		default: throw new Error("Unrecognized type " + o.type);
 	}
 	return parse_zip(zip, o);
