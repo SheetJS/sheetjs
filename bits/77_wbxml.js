@@ -16,7 +16,7 @@ function parse_wb_xml(data, opts) {
 		return r;
 	}
 
-	// discover defined names
+	// Discover defined names
 	wb.DefinedNames = [];
 	var e = null, definedNamesRefExp = /<definedName((?:\s+[a-z][a-z0-9\-]+(?:=(?:(?:['"]?[^>'"]*['"]?)))?)*)>([\w#\!\$\:]+)<\/definedName>/g;
 	while ((e = definedNamesRefExp.exec(data))) {
