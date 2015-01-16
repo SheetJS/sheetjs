@@ -20,6 +20,55 @@ function parsexmltag(tag, skip_root) {
 }
 function strip_ns(x) { return x.replace(nsregex2, "<$1"); }
 
+
+// Parses list of text tags: (<tag (attr1="value1") ...>text</tag>) ...
+// @param str input string to be parsed
+// @param tag tag name
+// @param textAttrName name of atribute for inner text. 'text' by default.
+// @return array of objects each contains attributes and text of refered tag: [ {textAttrName: text (, attr1: value1) ...}, ...]
+var parseXmlTextTagList = (function() {
+
+	// parse tag attributes
+	var parseAttrs = function(reAttrs, s, r) {
+		var e, v;
+		if (s) {
+			while ((e = reAttrs.exec(s))) {
+				v = e[2] || '';
+				r[e[1]] = utf8read( v[0] === '"' ? v.slice(1, -1)  : v );
+			}
+		}
+		return r;
+	};
+
+	return function(str, tag, textAttrName) {
+
+		// resulting array
+		var result = [];
+
+		// name of atribute for inner text. 'text' by default.
+		if (!textAttrName) {
+			textAttrName = 'text';
+		}
+
+		// tag regExp. it will be modified by its .exec(), this why it is instantiated here
+		var TAG_RE = new RegExp('<'+tag+'((?:\\s+[a-z][a-z0-9\\-]+(?:=(?:(?:[\'"]?[^>\'"]*[\'"]?)))?)*)>([^<]+)<\/'+tag+'>','g');
+
+		// attributes RegExp. Although this regExp will be modified by its .exec() inside parseAttrs(), it is possible to be reused.
+		var ATTRS_RE = /\s+([a-z][a-z0-9\-]+)(?:=(['"]?[^>"]*['"]?))?/gi;
+
+		var e = null;
+		while ((e = TAG_RE.exec(str))) {
+			var item = {};
+			item[textAttrName] = e[2];
+			parseAttrs(ATTRS_RE, e[1], item);
+			result.push(item);
+		}
+
+		return result;
+	};
+
+})();
+
 var encodings = {
 	'&quot;': '"',
 	'&apos;': "'",

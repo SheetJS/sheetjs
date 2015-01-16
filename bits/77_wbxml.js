@@ -2,6 +2,10 @@
 var wbnsregex = /<\w+:workbook/;
 function parse_wb_xml(data, opts) {
 	var wb = { AppVersion:{}, WBProps:{}, WBView:[], Sheets:[], CalcPr:{}, xmlns: "" };
+
+	// parse defined names from tags named 'definedName' and use 'reference' as attribute name
+	wb.DefinedNames = parseXmlTextTagList(data, 'definedName', 'reference');
+
 	var pass = false, xmlns = "xmlns";
 	data.match(tagregex).forEach(function xml_wb(x) {
 		var y = parsexmltag(x);
