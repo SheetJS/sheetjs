@@ -12,6 +12,14 @@ function writeSync(wb, opts) {
 
 function writeFileSync(wb, filename, opts) {
 	var o = opts||{}; o.type = 'file';
+
+  if (typeof module != 'undefined' && typeof 'require' != 'undefined') {
+    style_builder  = new StyleBuilder(opts);
+  }
+  else if  (typeof $ != 'undefined' || typeof 'jQuery' != 'undefined') {
+    style_builder  = new StyleBuilder(opts);
+  }
+
 	o.file = filename;
 	switch(o.file.substr(-5).toLowerCase()) {
 		case '.xlsm': o.bookType = 'xlsm'; break;
