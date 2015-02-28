@@ -383,6 +383,15 @@ if ((typeof 'module' != 'undefined'  && typeof require != 'undefined') || (typeo
           $xf.attr('applyNumberFormat', "1");
         }
 
+        if (attributes.alignment) {
+          var $alignment = createElement('<alignment></alignment>');
+          if (attributes.alignment.horizontal) { $alignment.attr('horizontal', attributes.alignment.horizontal);}
+          if (attributes.alignment.vertical)  { $alignment.attr('vertical', attributes.alignment.vertical);}
+          if (attributes.alignment.indent)  { $alignment.attr('indent', attributes.alignment.indent);}
+          if (attributes.alignment.wrapText)  { $alignment.attr('wrapText', attributes.alignment.wrapText);}
+          $xf.append($alignment).attr('applyAlignment',1)
+
+        }
 
         var $cellXfs = this.$styles.find('cellXfs');
 
