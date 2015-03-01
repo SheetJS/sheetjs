@@ -205,10 +205,12 @@ if ((typeof 'module' != 'undefined'  && typeof require != 'undefined') || (typeo
       createElement = function(str) { return cheerio(cheerio(str, null, null, {xmlMode: true})); };
     }
     else if (typeof jQuery !== 'undefined' || typeof $ !== 'undefined') {
-      createElement = function(str) { return $(str); }
+      createElement = function(str) {
+        return $($.parseXML(str).documentElement);
+      } //http://stackoverflow.com/a/11719466
     }
     else {
-      createElement = function() { }
+      createElement = function() { } // this class should never have been instantiated
     }
 
 
@@ -287,7 +289,7 @@ if ((typeof 'module' != 'undefined'  && typeof require != 'undefined') || (typeo
           this.$styles.find = function(q) { return this(q)}
         }
         else {
-          this.$styles = $(baseXml);
+          this.$styles = $($.parseXML(baseXml).documentElement);
         }
 
 
@@ -539,7 +541,10 @@ if ((typeof 'module' != 'undefined'  && typeof require != 'undefined') || (typeo
           this.$styles.find('numFmts').remove();
         }
         if (this.$styles.xml) { return this.$styles.xml(); }
-        else { return baseXmlprefix + this.$styles.html(); }
+        else {
+          var s = new XMLSerializer(); //http://stackoverflow.com/a/5744268
+          return baseXmlprefix + s.serializeToString(this.$styles[0]);;
+        }
       }
     }.initialize(options||{});
   }
