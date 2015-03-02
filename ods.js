@@ -217,6 +217,22 @@ var parse_content_xml = (function() {
 		var columnRepeatCount;
 		var number_format_map = {};
 		var merges = [], mrange = {}, mR = 0, mC = 0;
+		
+		var simpleCloneOf = function _simpleCloneOf(obj) {
+			if (obj == null || typeof(obj) != 'object') {
+				return obj;
+			}
+
+			var temp = obj.constructor();
+			
+			for (var key in obj) {
+				if(obj.hasOwnProperty(key)) {
+					temp[key] = simpleCloneOf(obj[key]);
+				}
+			}
+			
+			return temp;
+		}
 
 		while((Rn = xlmlregex.exec(str))) switch(Rn[3]) {
 
@@ -291,6 +307,9 @@ var parse_content_xml = (function() {
 					if(textp) q.w = textp;
 					if(!(opts.sheetRows && opts.sheetRows < R)) {
 						for (var i = 0; i < columnRepeatCount; i++) {
+							if (i > 0) {
+								q = simpleCloneOf(q);
+							}
 							ws[get_utils().encode_cell({r:R,c:C - columnRepeatCount + i + 1})] = q;
 						}
 					}
