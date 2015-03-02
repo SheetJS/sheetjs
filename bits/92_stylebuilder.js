@@ -252,7 +252,8 @@ if ((typeof 'module' != 'undefined'  && typeof require != 'undefined') || (typeo
           return numFmt; // we're matching an integer against some known code
         }
 
-        var $numFmt = XmlNode(numFmt)
+
+        var $numFmt = XmlNode('numFmt')
             .attr('numFmtId', (++customNumFmtId))
             .attr('formatCode', numFmt);
 
@@ -261,7 +262,7 @@ if ((typeof 'module' != 'undefined'  && typeof require != 'undefined') || (typeo
 
         var count = this.$numFmts.children().length;
         this.$numFmts.attr('count', count);
-        return customNumFmtId;
+        return customNumFmtId ;
       },
 
       _addFill: function (attributes) {

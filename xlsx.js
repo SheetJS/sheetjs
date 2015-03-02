@@ -2795,7 +2795,7 @@ function get_cell_style(styles, cell, opts) {
 
     if (cell.s && (cell.s == +cell.s)) { return cell.s}  // if its already an integer index, let it be
     if (!cell.s) cell.s = {}
-    if (cell.z) cell.s.numFmtId = cell.z;
+    if (cell.z) cell.s.numFmt = cell.z;
     cell.s = style_builder.addStyle(cell.s);
 
     return cell.s;
@@ -5743,7 +5743,8 @@ if ((typeof 'module' != 'undefined'  && typeof require != 'undefined') || (typeo
           return numFmt; // we're matching an integer against some known code
         }
 
-        var $numFmt = XmlNode(numFmt)
+
+        var $numFmt = XmlNode('numFmt')
             .attr('numFmtId', (++customNumFmtId))
             .attr('formatCode', numFmt);
 
@@ -5752,7 +5753,7 @@ if ((typeof 'module' != 'undefined'  && typeof require != 'undefined') || (typeo
 
         var count = this.$numFmts.children().length;
         this.$numFmts.attr('count', count);
-        return customNumFmtId;
+        return customNumFmtId ;
       },
 
       _addFill: function (attributes) {
