@@ -5412,24 +5412,91 @@ var utils = {
 	sheet_to_row_object_array: sheet_to_row_object_array
 };
 
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+var XmlNode = (function () {
+  function XmlNode(tagName, attributes, children) {
+
+    if (!(this instanceof XmlNode)) {
+      return new XmlNode(tagName, attributes, children);
+    }
+    this.tagName = tagName;
+    this._attributes = attributes || {};
+    this._children = children || [];
+    this._prefix = '';
+    return this;
+  }
+
+  XmlNode.prototype.createElement = function () {
+    return new XmlNode(arguments)
+  }
+
+  XmlNode.prototype.children = function() {
+    return this._children;
+  }
+
+  XmlNode.prototype.append = function (node) {
+    this._children.push(node);
+    return this;
+  }
+
+  XmlNode.prototype.prefix = function (prefix) {
+    if (arguments.length==0) { return this._prefix;}
+    this._prefix = prefix;
+    return this;
+  }
+
+  XmlNode.prototype.attr = function (attr, value) {
+    if (arguments.length == 0) {
+      return this._attributes;
+    }
+    else if (typeof attr == 'string' && arguments.length == 1) {
+      return this._attributes.attr[attr];
+    }
+    if (typeof attr == 'object' && arguments.length == 1) {
+      for (var key in attr) {
+        this._attributes[key] = attr[key];
+      }
+    }
+    else if (arguments.length == 2 && typeof attr == 'string') {
+      this._attributes[attr] = value;
+    }
+    return this;
+  }
+
+
+
+  XmlNode.prototype.toXml = function (node) {
+    if (!node) node = this;
+    var xml = node._prefix;
+    xml += '<' + node.tagName;
+    if (node._attributes) {
+      for (var key in node._attributes) {
+        xml += ' ' + key + '="' + node._attributes[key] + '"'
+      }
+    }
+    if (node._children && node._children.length > 0) {
+      xml += ">";
+      for (var i = 0; i < node._children.length; i++) {
+        xml += this.toXml(node._children[i]);
+      }
+      xml += '</' + node.tagName + '>';
+    }
+    else {
+      xml += '/>';
+    }
+    return xml;
+  }
+  return XmlNode;
+})();
+/////////////////////////////////////////////////////////////////////////////////////////////////////
 if ((typeof 'module' != 'undefined'  && typeof require != 'undefined') || (typeof $ != 'undefined')) {
   var StyleBuilder = function (options) {
 
-    if(typeof module !== "undefined" && typeof require !== 'undefined' ) {
-      var cheerio = require('cheerio');
-      createElement = function(str) { return cheerio(cheerio(str, null, null, {xmlMode: true})); };
-    }
-    else if (typeof jQuery !== 'undefined' || typeof $ !== 'undefined') {
-      createElement = function(str) {
-        return $($.parseXML(str).documentElement);
-      } //http://stackoverflow.com/a/11719466
-    }
-    else {
-      createElement = function() { } // this class should never have been instantiated
-    }
-
-
     var customNumFmtId = 164;
+
 
 
     var table_fmt = {
@@ -5468,57 +5535,98 @@ if ((typeof 'module' != 'undefined'  && typeof require != 'undefined') || (typeo
 
     for (var idx in table_fmt) {
       fmt_table[table_fmt[idx]] = idx;
-
     }
 
 
-    var baseXmlprefix = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
-    var baseXml =
-        '<styleSheet xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:x14ac="http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac"\
-        xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" mc:Ignorable="x14ac">\
-            <numFmts count="1">\
-              <numFmt numFmtId="164" formatCode="0.00%"/>\
-            </numFmts>\
-            <fonts count="0" x14ac:knownFonts="1"></fonts>\
-            <fills count="0"></fills>\
-            <borders count="0"></borders>\
-            <cellStyleXfs count="1">\
-            <xf numFmtId="0" fontId="0" fillId="0" borderId="0"/>\
-            </cellStyleXfs>\
-            <cellXfs count="0"></cellXfs>\
-            <cellStyles count="1">\
-              <cellStyle name="Normal" xfId="0" builtinId="0"/>\
-            </cellStyles>\
-            <dxfs count="0"/>\
-            <tableStyles count="0" defaultTableStyle="TableStyleMedium9" defaultPivotStyle="PivotStyleMedium4"/>\
-        </styleSheet>';
 
+
+
+    // cache style specs to avoid excessive duplication
     _hashIndex = {};
     _listIndex = [];
+
+
+//    console.log(this.$styles.toXml());
+//    process.exit()
+//    var baseXmlprefix = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
+//    var baseXml =
+//        '<styleSheet xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:x14ac="http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac"\
+//        xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" mc:Ignorable="x14ac">\
+//            <numFmts count="1">\
+//              <numFmt numFmtId="164" formatCode="0.00%"/>\
+//            </numFmts>\
+//            <fonts count="0" x14ac:knownFonts="1"></fonts>\
+//            <fills count="0"></fills>\
+//            <borders count="0"></borders>\
+//            <cellStyleXfs count="1">\
+//            <xf numFmtId="0" fontId="0" fillId="0" borderId="0"/>\
+//            </cellStyleXfs>\
+//            <cellXfs count="0"></cellXfs>\
+//            <cellStyles count="1">\
+//              <cellStyle name="Normal" xfId="0" builtinId="0"/>\
+//            </cellStyles>\
+//            <dxfs count="0"/>\
+//            <tableStyles count="0" defaultTableStyle="TableStyleMedium9" defaultPivotStyle="PivotStyleMedium4"/>\
+//        </styleSheet>';
 
     return {
 
       initialize: function (options) {
-        if (typeof cheerio !== 'undefined') {
-          this.$styles = cheerio.load(baseXml, {xmlMode: true});
-          this.$styles.find = function(q) { return this(q)}
-        }
-        else {
-          this.$styles = $($.parseXML(baseXml).documentElement);
-        }
+
+        this.$fonts = XmlNode('fonts').attr('count',0).attr("x14ac:knownFonts","1");
+        this.$fills = XmlNode('fills').attr('count',0);
+        this.$borders = XmlNode('borders').attr('count',0);
+        this.$numFmts = XmlNode('numFmts').attr('count',0);
+        this.$cellStyleXfs = XmlNode('cellStyleXfs');
+        this.$xf = XmlNode('xf')
+            .attr('numFmtId', 0)
+            .attr('fontId', 0)
+            .attr('fillId', 0)
+            .attr('borderId', 0);
+
+        this.$cellXfs = XmlNode('cellXfs').attr('count',0);
+        this.$cellStyles = XmlNode('cellStyles')
+            .append(XmlNode('cellStyle')
+                .attr('name', 'Normal')
+                .attr('xfId',0)
+                .attr('builtinId',0)
+            );
+        this.$dxfs = XmlNode('dxfs').attr('count', "0");
+        this.$tableStyles = XmlNode('tableStyles')
+            .attr('count','0')
+            .attr('defaultTableStyle','TableStyleMedium9')
+            .attr('defaultPivotStyle','PivotStyleMedium4')
+
+
+        this.$styles = XmlNode('styleSheet')
+            .attr('xmlns:mc','http://schemas.openxmlformats.org/markup-compatibility/2006')
+            .attr('xmlns:x14ac','http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac')
+            .attr('xmlns','http://schemas.openxmlformats.org/spreadsheetml/2006/main')
+            .attr('mc:Ignorable','x14ac')
+            .prefix('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>')
+            .append(this.$numFmts)
+            .append(this.$fonts)
+            .append(this.$fills)
+            .append(this.$borders)
+            .append(this.$cellStyleXfs.append(this.$xf))
+            .append(this.$cellXfs)
+            .append(this.$cellStyles)
+            .append(this.$dxfs)
+            .append(this.$tableStyles);
 
 
         // need to specify styles at index 0 and 1.
         // the second style MUST be gray125 for some reason
 
-        var defaultStyle = options.defaultCellStyle;
-        if (!defaultStyle) defaultStyle = {
-          font: {name: 'Calibri', sz: '11'},
-          fill: { fgColor: { patternType: "none"}},
-          border: {},
-          numFmt: null
-        };
-        if (!defaultStyle.border) { defaultStyle.border = {}}
+        var defaultStyle = options.defaultCellStyle || {};
+        if (!defaultStyle.font) defaultStyle.font = {name: 'Calibri', sz: '11'};
+        if (!defaultStyle.font.name) defaultStyle.font.name = 'Calibri';
+        if (!defaultStyle.font.sz) defaultStyle.font.sz = 11;
+        if (!defaultStyle.fill) defaultStyle.fill = { fgColor: { patternType: "none"}};
+        if (!defaultStyle.border) defaultStyle.border = {};
+        if (!defaultStyle.numFmt) defaultStyle.numFmt = 0;
+
+        this.defaultStyle = defaultStyle;
 
         var gray125Style = JSON.parse(JSON.stringify(defaultStyle));
         gray125Style.fill = { fgColor: { patternType: "gray125"}}
@@ -5530,17 +5638,18 @@ if ((typeof 'module' != 'undefined'  && typeof require != 'undefined') || (typeo
       // create a style entry and returns an integer index that can be used in the cell .s property
       // these format of this object follows the emerging Common Spreadsheet Format
       addStyle: function (attributes) {
-        var attributes = this._duckTypeStyle(attributes);
+
         var hashKey = JSON.stringify(attributes);
         var index = _hashIndex[hashKey];
         if (index == undefined) {
-          index = this._addXf(attributes || {});
-          _hashIndex[hashKey] = index;
 
+          index = this._addXf(attributes); //_listIndex.push(attributes) -1;
+          _hashIndex[hashKey] = index;
         }
         else {
           index = _hashIndex[hashKey];
         }
+        console.log(index, hashKey.substr(0,20))
         return index;
       },
 
@@ -5580,7 +5689,7 @@ if ((typeof 'module' != 'undefined'  && typeof require != 'undefined') || (typeo
         var borderId = this._addBorder(attributes.border);
         var numFmtId = this._addNumFmt(attributes.numFmt);
 
-        var $xf = createElement('<xf></xf>')
+        var $xf = XmlNode('xf')
             .attr("numFmtId", numFmtId)
             .attr("fontId", fontId)
             .attr("fillId", fillId)
@@ -5601,7 +5710,7 @@ if ((typeof 'module' != 'undefined'  && typeof require != 'undefined') || (typeo
         }
 
         if (attributes.alignment) {
-          var $alignment = createElement('<alignment></alignment>');
+          var $alignment = XmlNode('alignment');
           if (attributes.alignment.horizontal) { $alignment.attr('horizontal', attributes.alignment.horizontal);}
           if (attributes.alignment.vertical)  { $alignment.attr('vertical', attributes.alignment.vertical);}
           if (attributes.alignment.indent)  { $alignment.attr('indent', attributes.alignment.indent);}
@@ -5610,53 +5719,48 @@ if ((typeof 'module' != 'undefined'  && typeof require != 'undefined') || (typeo
 
         }
 
-        var $cellXfs = this.$styles.find('cellXfs');
+        this.$cellXfs.append($xf);
+        var count = +this.$cellXfs.children().length;
 
-        $cellXfs.append($xf);
-        var count = +$cellXfs.attr('count') + 1;
-
-        $cellXfs.attr('count', count);
+        this.$cellXfs.attr('count', count);
         return count - 1;
       },
 
       _addFont: function (attributes) {
-        if (!attributes) {
-          return 0;
-        }
 
-        var $font = createElement('<font/>', null, null, {xmlMode: true});
+        if (!attributes) {  return 0; }
 
-        $font.append(createElement('<sz/>').attr('val', attributes.sz))
-            .append(createElement('<color/>').attr('theme', '1'))
-            .append(createElement('<name/>').attr('val', attributes.name))
-//              .append(createElement('<family/>').attr('val', '2'))
-//              .append(createElement('<scheme/>').attr('val', 'minor'));
+        var $font = XmlNode('font')
+            .append(XmlNode('sz').attr('val', attributes.sz || this.defaultStyle.font.sz))
+            .append(XmlNode('name').attr('val', attributes.name || this.defaultStyle.font.name))
 
-        if (attributes.bold) $font.append('<b/>');
-        if (attributes.underline) $font.append('<u/>');
-        if (attributes.italic) $font.append('<i/>');
+        if (attributes.bold) $font.append(XmlNode('b'));
+        if (attributes.underline)  $font.append(XmlNode('u'));
+        if (attributes.italic)  $font.append(XmlNode('i'));
+
 
         if (attributes.color) {
           if (attributes.color.theme) {
-            $font.append(createElement('<color/>').attr('theme', attributes.color.theme));
-          } else if (attributes.color.rgb) {
-            $font.append(createElement('<color/>').attr('rgb', attributes.color.rgb));
+            $font.append(XmlNode('color').attr('theme', attributes.color.theme))
+
+            if (attributes.color.tint) { //tint only if theme
+              $font.append(XmlNode('tint').attr('theme', attributes.color.tint))
+            }
+
+          } else if (attributes.color.rgb) { // not both rgb and theme
+            $font.append(XmlNode('rgb').attr('theme', attributes.color.rgb))
           }
         }
 
+        this.$fonts.append($font);
 
-        var $fonts = this.$styles.find('fonts');
-        $fonts.append($font);
-
-        var count = $fonts.children().length;
-        $fonts.attr('count', count);
+        var count = this.$fonts.children().length;
+        this.$fonts.attr('count', count);
         return count - 1;
       },
 
       _addNumFmt: function (numFmt) {
-        if (!numFmt) {
-          return 0;
-        }
+        if (!numFmt) { return 0; }
 
         if (typeof numFmt == 'string') {
           var numFmtIdx = fmt_table[numFmt];
@@ -5669,27 +5773,28 @@ if ((typeof 'module' != 'undefined'  && typeof require != 'undefined') || (typeo
           return numFmt; // we're matching an integer against some known code
         }
 
-        var $numFmt = createElement('<numFmt/>', null, null, {xmlMode: true})
-            .attr("numFmtId", ++customNumFmtId )
-            .attr("formatCode", numFmt);
+        var $numFmt = XmlNode(numFmt)
+            .attr('numFmtId', (++customNumFmtId))
+            .attr('formatCode', numFmt);
 
-        var $numFmts = this.$styles.find('numFmts');
-        $numFmts.append($numFmt);
 
-        var count = $numFmts.children().length;
-        $numFmts.attr('count', count);
+        this.$numFmts.append($numFmt);
+
+        var count = this.$numFmts.children().length;
+        this.$numFmts.attr('count', count);
         return customNumFmtId;
       },
 
       _addFill: function (attributes) {
 
-        if (!attributes) {
-          return 0;
-        }
-        var $patternFill = createElement('<patternFill></patternFill>', null, null, {xmlMode: true})
+        if (!attributes) { return 0; }
+
+        var $patternFill = XmlNode('patternFill')
             .attr('patternType', attributes.patternType || 'solid');
 
         if (attributes.fgColor) {
+          var $fgColor = XmlNode('fgColor');
+
           //Excel doesn't like it when we set both rgb and theme+tint, but xlsx.parseFile() sets both
           //var $fgColor = createElement('<fgColor/>', null, null, {xmlMode: true}).attr(attributes.fgColor)
           if (attributes.fgColor.rgb) {
@@ -5697,12 +5802,11 @@ if ((typeof 'module' != 'undefined'  && typeof require != 'undefined') || (typeo
             if (attributes.fgColor.rgb.length == 6) {
               attributes.fgColor.rgb = "FF" + attributes.fgColor.rgb /// add alpha to an RGB as Excel expects aRGB
             }
-            var $fgColor = createElement('<fgColor/>', null, null, {xmlMode: true}).
-                attr('rgb', attributes.fgColor.rgb);
+
+            $fgColor.attr('rgb', attributes.fgColor.rgb);
             $patternFill.append($fgColor);
           }
           else if (attributes.fgColor.theme) {
-            var $fgColor = createElement('<fgColor/>', null, null, {xmlMode: true});
             $fgColor.attr('theme', attributes.fgColor.theme);
             if (attributes.fgColor.tint) {
               $fgColor.attr('tint', attributes.fgColor.tint);
@@ -5716,19 +5820,17 @@ if ((typeof 'module' != 'undefined'  && typeof require != 'undefined') || (typeo
         }
 
         if (attributes.bgColor) {
-          var $bgColor = createElement('<bgColor/>', null, null, {xmlMode: true}).attr(attributes.bgColor);
+          var $bgColor = XmlNode('bgColor').attr(attributes.bgColor);
           $patternFill.append($bgColor);
         }
 
-        var $fill = createElement('<fill></fill>')
+        var $fill = XmlNode('fill')
             .append($patternFill);
 
-        this.$styles.find('fills').append($fill);
-        var $fills = this.$styles.find('fills')
-        $fills.append($fill);
+        this.$fills.append($fill);
 
-        var count = $fills.children().length;
-        $fills.attr('count', count);
+        var count = this.$fills.children().length;
+        this.$fills.attr('count', count);
         return count - 1;
       },
 
@@ -5736,34 +5838,29 @@ if ((typeof 'module' != 'undefined'  && typeof require != 'undefined') || (typeo
         if (!attributes) {
           return 0;
         }
-        var $border = createElement('<border></border>')
-            .append('<left></left>')
-            .append('<right></right>')
-            .append('<top></top>')
-            .append('<bottom></bottom>')
-            .append('<diagonal></diagonal>');
+        var $border = XmlNode('border')
+            .append(new XmlNode('left'))
+            .append(new XmlNode('right'))
+            .append(new XmlNode('top'))
+            .append(new XmlNode('bottom'))
+            .append(new XmlNode('diagonal'));
 
-        var $borders = this.$styles.find('borders');
-        $borders.append($border);
+        this.$borders.append($border);
 
-        var count = $borders.children().length;
-        $borders.attr('count', count);
+        var count = this.$borders.children().length;
+        this.$borders.attr('count', count);
         return count;
       },
 
       toXml: function () {
-        if (this.$styles.find('numFmts').children().length == 0) {
-          this.$styles.find('numFmts').remove();
-        }
-        if (this.$styles.xml) { return this.$styles.xml(); }
-        else {
-          var s = new XMLSerializer(); //http://stackoverflow.com/a/5744268
-          return baseXmlprefix + s.serializeToString(this.$styles[0]);;
-        }
+        var xml =this.$styles.toXml();
+        console.log(xml);
+        return xml;
       }
     }.initialize(options||{});
   }
 }
+
 XLSX.parseZip = parse_zip;
 XLSX.read = readSync;
 XLSX.readFile = readFileSync;
