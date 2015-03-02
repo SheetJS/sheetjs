@@ -5466,8 +5466,6 @@ var XmlNode = (function () {
     return this;
   }
 
-
-
   XmlNode.prototype.toXml = function (node) {
     if (!node) node = this;
     var xml = node._prefix;
@@ -5538,36 +5536,9 @@ if ((typeof 'module' != 'undefined'  && typeof require != 'undefined') || (typeo
     }
 
 
-
-
-
     // cache style specs to avoid excessive duplication
     _hashIndex = {};
     _listIndex = [];
-
-
-//    console.log(this.$styles.toXml());
-//    process.exit()
-//    var baseXmlprefix = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
-//    var baseXml =
-//        '<styleSheet xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" xmlns:x14ac="http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac"\
-//        xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" mc:Ignorable="x14ac">\
-//            <numFmts count="1">\
-//              <numFmt numFmtId="164" formatCode="0.00%"/>\
-//            </numFmts>\
-//            <fonts count="0" x14ac:knownFonts="1"></fonts>\
-//            <fills count="0"></fills>\
-//            <borders count="0"></borders>\
-//            <cellStyleXfs count="1">\
-//            <xf numFmtId="0" fontId="0" fillId="0" borderId="0"/>\
-//            </cellStyleXfs>\
-//            <cellXfs count="0"></cellXfs>\
-//            <cellStyles count="1">\
-//              <cellStyle name="Normal" xfId="0" builtinId="0"/>\
-//            </cellStyles>\
-//            <dxfs count="0"/>\
-//            <tableStyles count="0" defaultTableStyle="TableStyleMedium9" defaultPivotStyle="PivotStyleMedium4"/>\
-//        </styleSheet>';
 
     return {
 
@@ -5649,7 +5620,6 @@ if ((typeof 'module' != 'undefined'  && typeof require != 'undefined') || (typeo
         else {
           index = _hashIndex[hashKey];
         }
-        console.log(index, hashKey.substr(0,20))
         return index;
       },
 
@@ -5853,9 +5823,7 @@ if ((typeof 'module' != 'undefined'  && typeof require != 'undefined') || (typeo
       },
 
       toXml: function () {
-        var xml =this.$styles.toXml();
-        console.log(xml);
-        return xml;
+        return this.$styles.toXml();
       }
     }.initialize(options||{});
   }
