@@ -107,9 +107,18 @@ function parsetest(x, wb, full, ext) {
 		wb.SheetNames.forEach(function(ws, i) {
 			var name = getfile(dir, x, i, ".csv");
 			it('#' + i + ' (' + ws + ')', fs.existsSync(name) ? function() {
-				var file = fs.readFileSync(name, 'utf-8');
-				var csv = X.utils.make_csv(wb.Sheets[ws]);
-				assert.equal(fixcsv(csv), fixcsv(file), "CSV badness");
+        var file = fixcsv(fs.readFileSync(name, 'utf-8'));
+        var csv = fixcsv(X.utils.make_csv(wb.Sheets[ws]));
+        var result = (file == csv);
+        if (!result) {
+          console.error(dir + x);
+          console.error("========== actual =============")
+          console.error(csv);
+          console.error("---------- expected -----------")
+          console.error(file);
+          console.error("LENGTHS: "+[csv.length, file.length])
+        }
+        assert.equal(result, true, "CSV badness");
 			} : null);
 		});
 	});
@@ -152,7 +161,9 @@ describe('should parse test files', function() {
 			it(x + ' [' + ext + ']', function(){
 				var wb = wbtable[dir + x];
 				if(!wb) wb = X.readFile(dir + x, opts);
-				parsetest(x, X.read(X.write(wb, {type:"buffer", bookType:ext.replace(/\./,"")}), {WTF:opts.WTF}), ext.replace(/\./,"") !== "xlsb", ext);
+        //wb = X.read(X.write(wb, {type:"buffer", bookType:ext.replace(/\./,"")}), {WTF:opts.WTF})
+//        wb = X.read(X.write(wb, {type:"buffer", bookType:'xlsx'}));
+				parsetest(x, wb, ext.replace(/\./,"") !== "xlsb", ext);
 			});
 		});
 	});

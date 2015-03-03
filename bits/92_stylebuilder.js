@@ -35,9 +35,7 @@ if ((typeof 'module' != 'undefined'  && typeof require != 'undefined') || (typeo
       47: 'mmss.0',
       48: '##0.0E+0',
       49: '@',
-      56: '"上午/下午 "hh"時"mm"分"ss"秒 "',
-      65535: 'General'
-    };
+      56: '"上午/下午 "hh"時"mm"分"ss"秒 "'    };
     var fmt_table = {};
 
     for (var idx in table_fmt) {
@@ -99,7 +97,7 @@ if ((typeof 'module' != 'undefined'  && typeof require != 'undefined') || (typeo
         // the second style MUST be gray125 for some reason
 
         var defaultStyle = options.defaultCellStyle || {};
-        if (!defaultStyle.font) defaultStyle.font = {name: 'Calibri', sz: '11'};
+        if (!defaultStyle.font) defaultStyle.font = {name: 'Calibri', sz: '12'};
         if (!defaultStyle.font.name) defaultStyle.font.name = 'Calibri';
         if (!defaultStyle.font.sz) defaultStyle.font.sz = 11;
         if (!defaultStyle.fill) defaultStyle.fill = { fgColor: { patternType: "none"}};

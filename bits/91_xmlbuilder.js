@@ -49,13 +49,17 @@ var XmlNode = (function () {
     return this;
   }
 
+  XmlNode.prototype.escapeString = function(str) {
+    return str.replace(/\"/g,'&quot;') // TODO Extend with four other codes
+  }
+
   XmlNode.prototype.toXml = function (node) {
     if (!node) node = this;
     var xml = node._prefix;
     xml += '<' + node.tagName;
     if (node._attributes) {
       for (var key in node._attributes) {
-        xml += ' ' + key + '="' + node._attributes[key] + '"'
+        xml += ' ' + key + '="' + this.escapeString(''+node._attributes[key]) + '"'
       }
     }
     if (node._children && node._children.length > 0) {
