@@ -300,20 +300,24 @@ var parse_content_xml = (function() {
 						case 'date': q.t = 'n'; q.v = datenum(ctag['date-value']); q.z = 'm/d/yy'; break;
 						case 'time': q.t = 'n'; q.v = parse_isodur(ctag['time-value'])/86400; break;
 						case 'string': q.t = 's'; break;
-						default: throw new Error('Unsupported value type ' + q.t);
+						case undefined: q = null; break;
+						default : throw new Error('Unsupported value type ' + q.t);
 					}
 				} else {
-					if(q.t === 's') q.v = textp;
-					if(textp) q.w = textp;
-					if(!(opts.sheetRows && opts.sheetRows < R)) {
-						for (var i = 0; i < columnRepeatCount; i++) {
-							if (i > 0) {
-								q = simpleCloneOf(q);
+					if (q) {
+						if(q.t === 's') q.v = textp;
+						if(textp) q.w = textp;
+						if(!(opts.sheetRows && opts.sheetRows < R)) {
+							for (var i = 0; i < columnRepeatCount; i++) {
+								if (i > 0) {
+									q = simpleCloneOf(q);
+								}
+								ws[get_utils().encode_cell({r:R,c:C - columnRepeatCount + i + 1})] = q;
 							}
-							ws[get_utils().encode_cell({r:R,c:C - columnRepeatCount + i + 1})] = q;
 						}
 					}
 					q = null;
+					textp = null;
 				}
 				break; // 9.1.4 <table:table-cell>
 
