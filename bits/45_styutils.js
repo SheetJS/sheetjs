@@ -62,3 +62,5 @@ function find_mdw(collw, coll) {
 		if(MDW === MAX_MDW) MDW = DEF_MDW;
 	}
 }
+
+function px2pt(px) { return px * 72 / 96; }
