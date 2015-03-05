@@ -49,8 +49,14 @@ var XmlNode = (function () {
     return this;
   }
 
-  XmlNode.prototype.escapeString = function(str) {
-    return str.replace(/\"/g,'&quot;') // TODO Extend with four other codes
+  var APOS = "'"; QUOTE = '"'
+  var ESCAPED_QUOTE = {  }
+  ESCAPED_QUOTE[QUOTE] = '&quot;'
+  ESCAPED_QUOTE[APOS] = '&apos;'
+
+  XmlNode.prototype.escapeAttributeValue = function(att_value) {
+    return '"' + att_value.replace(/\"/g,'&quot;') + '"';// TODO Extend with four other codes
+
   }
 
   XmlNode.prototype.toXml = function (node) {
@@ -59,7 +65,7 @@ var XmlNode = (function () {
     xml += '<' + node.tagName;
     if (node._attributes) {
       for (var key in node._attributes) {
-        xml += ' ' + key + '="' + this.escapeString(''+node._attributes[key]) + '"'
+        xml += ' ' + key + '=' + this.escapeAttributeValue(''+node._attributes[key]) + ''
       }
     }
     if (node._children && node._children.length > 0) {

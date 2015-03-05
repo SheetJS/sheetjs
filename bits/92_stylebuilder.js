@@ -246,7 +246,7 @@ if ((typeof 'module' != 'undefined'  && typeof require != 'undefined') || (typeo
           }
         }
 
-        if (numFmt == +numFmt) {
+        if (/^[0-9]+$/.exec(numFmt)) {
           return numFmt; // we're matching an integer against some known code
         }
 

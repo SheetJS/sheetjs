@@ -1,6 +1,5 @@
 function writeSync(wb, opts) {
 	var o = opts||{};
-  console.log("Creating stylebuilder")
   style_builder  = new StyleBuilder(opts);
 
   var z = write_zip(wb, o);

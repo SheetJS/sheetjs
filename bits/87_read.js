@@ -13,7 +13,9 @@ function readSync(data, opts) {
 }
 
 function readFileSync(data, opts) {
-	var o = opts||{}; o.type = 'file';
-	return readSync(data, o);
+	var o = opts||{}; o.type = 'file'
+  var wb = readSync(data, o);
+  wb.FILENAME = data;
+	return wb;
 }
 

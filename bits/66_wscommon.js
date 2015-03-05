@@ -10,7 +10,7 @@ function get_sst_id(sst, str) {
 
 function get_cell_style(styles, cell, opts) {
   if (typeof style_builder != 'undefined') {
-
+    if (/^\d+$/.exec(cell.s)) { return cell.s}  // if its already an integer index, let it be
     if (cell.s && (cell.s == +cell.s)) { return cell.s}  // if its already an integer index, let it be
     if (!cell.s) cell.s = {}
     if (cell.z) cell.s.numFmt = cell.z;

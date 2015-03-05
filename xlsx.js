@@ -2792,7 +2792,7 @@ function get_sst_id(sst, str) {
 
 function get_cell_style(styles, cell, opts) {
   if (typeof style_builder != 'undefined') {
-
+    if (/^\d+$/.exec(cell.s)) { return cell.s}  // if its already an integer index, let it be
     if (cell.s && (cell.s == +cell.s)) { return cell.s}  // if its already an integer index, let it be
     if (!cell.s) cell.s = {}
     if (cell.z) cell.s.numFmt = cell.z;
@@ -5178,13 +5178,14 @@ function readSync(data, opts) {
 }
 
 function readFileSync(data, opts) {
-	var o = opts||{}; o.type = 'file';
-	return readSync(data, o);
+	var o = opts||{}; o.type = 'file'
+  var wb = readSync(data, o);
+  wb.FILENAME = data;
+	return wb;
 }
 
 function writeSync(wb, opts) {
 	var o = opts||{};
-  console.log("Creating stylebuilder")
   style_builder  = new StyleBuilder(opts);
 
   var z = write_zip(wb, o);
@@ -5461,8 +5462,14 @@ var XmlNode = (function () {
     return this;
   }
 
-  XmlNode.prototype.escapeString = function(str) {
-    return str.replace(/\"/g,'&quot;') // TODO Extend with four other codes
+  var APOS = "'"; QUOTE = '"'
+  var ESCAPED_QUOTE = {  }
+  ESCAPED_QUOTE[QUOTE] = '&quot;'
+  ESCAPED_QUOTE[APOS] = '&apos;'
+
+  XmlNode.prototype.escapeAttributeValue = function(att_value) {
+    return '"' + att_value.replace(/\"/g,'&quot;') + '"';// TODO Extend with four other codes
+
   }
 
   XmlNode.prototype.toXml = function (node) {
@@ -5471,7 +5478,7 @@ var XmlNode = (function () {
     xml += '<' + node.tagName;
     if (node._attributes) {
       for (var key in node._attributes) {
-        xml += ' ' + key + '="' + this.escapeString(''+node._attributes[key]) + '"'
+        xml += ' ' + key + '=' + this.escapeAttributeValue(''+node._attributes[key]) + ''
       }
     }
     if (node._children && node._children.length > 0) {
@@ -5736,7 +5743,7 @@ if ((typeof 'module' != 'undefined'  && typeof require != 'undefined') || (typeo
           }
         }
 
-        if (numFmt == +numFmt) {
+        if (/^[0-9]+$/.exec(numFmt)) {
           return numFmt; // we're matching an integer against some known code
         }
 
