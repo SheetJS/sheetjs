@@ -32,10 +32,12 @@ of these modules are rather large in size and are only needed in special
 circumstances, so they do not ship with the core.  For browser use, they must
 be included directly:
 
-    <!-- international support from https://github.com/sheetjs/js-codepage -->
-    <script src="dist/cpexcel.js"></script>
-    <!-- ODS support -->
-    <script src="dist/ods.js"></script>
+```html
+<!-- international support from https://github.com/sheetjs/js-codepage -->
+<script src="dist/cpexcel.js"></script>
+<!-- ODS support -->
+<script src="dist/ods.js"></script>
+```
 
 An appropriate version for each dependency is included in the dist/ directory.
 
@@ -49,7 +51,9 @@ Since xlsx.js uses ES5 functions like `Array#forEach`, older browsers require
 
 To use the shim, add the shim before the script tag that loads xlsx.js:
 
-    <script type="text/javascript" src="/path/to/shim.js"></script>
+```html
+<script type="text/javascript" src="/path/to/shim.js"></script>
+```
 
 ## Parsing Workbooks
 
@@ -58,85 +62,96 @@ data and feeding it into the library.  Here are a few common scenarios:
 
 - nodejs readFile:
 
-```
+```js
 if(typeof require !== 'undefined') XLSX = require('xlsx');
 var workbook = XLSX.readFile('test.xlsx');
+
 /* DO SOMETHING WITH workbook HERE */
 ```
 
 - ajax (for a more complete example that works in older browsers, check the demo
   at <http://oss.sheetjs.com/js-xlsx/ajax.html>):
 
-```
-/* set up XMLHttpRequest */
+```js
+// set up XMLHttpRequest
 var url = "test_files/formula_stress_test_ajax.xlsx";
 var oReq = new XMLHttpRequest();
+
 oReq.open("GET", url, true);
 oReq.responseType = "arraybuffer";
 
 oReq.onload = function(e) {
   var arraybuffer = oReq.response;
 
-  /* convert data to binary string */
+  // convert data to binary string
   var data = new Uint8Array(arraybuffer);
   var arr = new Array();
   for(var i = 0; i != data.length; ++i) arr[i] = String.fromCharCode(data[i]);
   var bstr = arr.join("");
 
-  /* Call XLSX */
+  // Call XLSX
   var workbook = XLSX.read(bstr, {type:"binary"});
 
-  /* DO SOMETHING WITH workbook HERE */
-}
+  // DO SOMETHING WITH workbook HERE
+};
 
 oReq.send();
 ```
 
 - HTML5 drag-and-drop using readAsBinaryString:
 
-```
-/* set up drag-and-drop event */
+```js
+// set up drag-and-drop event
 function handleDrop(e) {
   e.stopPropagation();
   e.preventDefault();
+  
   var files = e.dataTransfer.files;
-  var i,f;
+  var i, f;
+  
   for (i = 0, f = files[i]; i != files.length; ++i) {
     var reader = new FileReader();
     var name = f.name;
+    
     reader.onload = function(e) {
       var data = e.target.result;
 
-      /* if binary string, read with type 'binary' */
+      // if binary string, read with type 'binary'
       var workbook = XLSX.read(data, {type: 'binary'});
 
-      /* DO SOMETHING WITH workbook HERE */
+      // DO SOMETHING WITH workbook HERE
     };
+    
     reader.readAsBinaryString(f);
   }
 }
+
 drop_dom_element.addEventListener('drop', handleDrop, false);
 ```
 
 - HTML5 input file element using readAsBinaryString:
 
-```
+```js
 function handleFile(e) {
   var files = e.target.files;
   var i,f;
+  
   for (i = 0, f = files[i]; i != files.length; ++i) {
     var reader = new FileReader();
     var name = f.name;
+    
     reader.onload = function(e) {
       var data = e.target.result;
 
       var workbook = XLSX.read(data, {type: 'binary'});
 
-      /* DO SOMETHING WITH workbook HERE */
+      // DO SOMETHING WITH workbook HERE
     };
+    
     reader.readAsBinaryString(f);
   }
 }
+
 input_dom_element.addEventListener('change', handleFile, false);
 ```
 
@@ -144,10 +159,12 @@ input_dom_element.addEventListener('change', handleFile, false);
 
 This example walks through every cell of every sheet and dumps the values:
 
-```
+```js
 var sheet_name_list = workbook.SheetNames;
+
 sheet_name_list.forEach(function(y) {
   var worksheet = workbook.Sheets[y];
+  
   for (z in worksheet) {
     if(z[0] === '!') continue;
     console.log(y + "!" + z + "=" + JSON.stringify(worksheet[z].v));
@@ -187,16 +204,16 @@ Assuming `workbook` is a workbook object:
 
 - nodejs write to file:
 
-```
-/* output format determined by filename */
+```js
+// output format determined by filename
 XLSX.writeFile(workbook, 'out.xlsx');
-/* at this point, out.xlsx is a file that you can distribute */
+// at this point, out.xlsx is a file that you can distribute
 ```
 
 - write to binary string (using FileSaver.js):
 
-```
-/* bookType can be 'xlsx' or 'xlsm' or 'xlsb' */
+```js
+// bookType can be 'xlsx' or 'xlsm' or 'xlsb'
 var wopts = { bookType:'xlsx', bookSST:false, type:'binary' };
 
 var wbout = XLSX.write(workbook,wopts);
@@ -270,7 +287,7 @@ Cell range objects are stored as `{s:S, e:E}` where `S` is the first cell and
 range `A3:B7` is represented by the object `{s:{c:0, r:2}, e:{c:1, r:6}}`. Utils
 use the following pattern to walk each of the cells in a range:
 
-```
+```js
 for(var R = range.s.r; R <= range.e.r; ++R) {
   for(var C = range.s.c; C <= range.e.c; ++C) {
     var cell_address = {c:C, r:R};
@@ -453,7 +470,7 @@ Running `make init` will refresh the `test_files` submodule and get the files.
 [the oss.sheetjs.com repo](https://github.com/SheetJS/SheetJS.github.io) and
 replace the xlsx.js file (then fire up the browser and go to `stress.html`):
 
-```
+```sh
 $ cp xlsx.js ../SheetJS.github.io
 $ cd ../SheetJS.github.io
 $ simplehttpserver # or "python -mSimpleHTTPServer" or "serve"
@@ -472,7 +489,7 @@ build script (run `make`) will concatenate the individual bits to produce the
 script.  Before submitting a contribution, ensure that running make will produce
 the xlsx.js file exactly.  The simplest way to test is to move the script:
 
-```
+```sh
 $ mv xlsx.js xlsx.new.js
 $ make
 $ diff xlsx.js xlsx.new.js
