@@ -200,8 +200,6 @@ if ((typeof 'module' != 'undefined'  && typeof require != 'undefined') || (typeo
         var count = +this.$cellXfs.children().length;
 
         this.$cellXfs.attr('count', count);
-
-        console.log($xf);
         return count - 1;
       },
 
@@ -351,16 +349,10 @@ if ((typeof 'module' != 'undefined'  && typeof require != 'undefined') || (typeo
         directions.forEach(function(direction) {
           $border.append(self._getSubBorder(direction, attributes[direction]))
         });
-
-//        if (!attributes.left && !attributes.right && !attributes.top && !attributes.bottom && !attributes.diagonal) { return 0;}
-
-        console.log($border.toXml());
-
         this.$borders.append($border);
 
         var count = this.$borders.children().length;
         this.$borders.attr('count', count);
-        console.log(count);
         return count -1;
       },
 
