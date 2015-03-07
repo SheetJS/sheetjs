@@ -32,6 +32,10 @@ var XmlNode = (function () {
   }
 
   XmlNode.prototype.attr = function (attr, value) {
+    if (value == undefined) {
+      delete this._attributes[attr];
+      return this;
+    }
     if (arguments.length == 0) {
       return this._attributes;
     }

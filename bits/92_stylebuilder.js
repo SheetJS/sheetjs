@@ -170,7 +170,7 @@ if ((typeof 'module' != 'undefined'  && typeof require != 'undefined') || (typeo
             .attr("numFmtId", numFmtId)
             .attr("fontId", fontId)
             .attr("fillId", fillId)
-            .attr("borderId", 0)
+            .attr("borderId", borderId)
             .attr("xfId", "0");
 
         if (fontId > 0) {
@@ -200,6 +200,8 @@ if ((typeof 'module' != 'undefined'  && typeof require != 'undefined') || (typeo
         var count = +this.$cellXfs.children().length;
 
         this.$cellXfs.attr('count', count);
+
+        console.log($xf);
         return count - 1;
       },
 
@@ -312,22 +314,54 @@ if ((typeof 'module' != 'undefined'  && typeof require != 'undefined') || (typeo
         return count - 1;
       },
 
-      _addBorder: function (attributes) {
-        if (!attributes) {
-          return 0;
+      _getSubBorder: function(direction, spec) {
+
+        var $direction = XmlNode(direction);
+        if (spec){
+          if (spec.style) $direction.attr('style', spec.style);
+          if (spec.color) {
+            var $color = XmlNode('color');
+            if (spec.color.auto) {
+              $color.attr('auto', spec.color.auto);
+            }
+            else if (spec.color.rgb) {
+              $color.attr('rgb', spec.color.rgb);
+            }
+            else if (spec.color.theme || spec.color.tint) {
+              $color.attr('theme', spec.color.theme || "1");
+              $color.attr('tint', spec.color.tint || "0");
+            }
+            $direction.append($color)
+          }
         }
+        return $direction;
+      },
+
+      _addBorder: function (attributes) {
+        if (!attributes) { return 0; }
+
+        var self = this;
+
         var $border = XmlNode('border')
-            .append(new XmlNode('left'))
-            .append(new XmlNode('right'))
-            .append(new XmlNode('top'))
-            .append(new XmlNode('bottom'))
-            .append(new XmlNode('diagonal'));
+            .attr("diagonalUp",attributes.diagonalUp)
+            .attr("diagonalDown",attributes.diagonalDown);
+
+        var directions = ["left","right","top","bottom","diagonal"];
+
+        directions.forEach(function(direction) {
+          $border.append(self._getSubBorder(direction, attributes[direction]))
+        });
+
+//        if (!attributes.left && !attributes.right && !attributes.top && !attributes.bottom && !attributes.diagonal) { return 0;}
+
+        console.log($border.toXml());
 
         this.$borders.append($border);
 
         var count = this.$borders.children().length;
         this.$borders.attr('count', count);
-        return count;
+        console.log(count);
+        return count -1;
       },
 
       toXml: function () {
