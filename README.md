@@ -438,11 +438,11 @@ top-level attributes: `fill`, `font`, `numFmt`, `alignment`, and `border`.
 | Style Attribute | Sub Attributes | Values |
 | :-------------- | :------------- | :------------- | :----- |
 | fill            | patternType    |  `"solid"` or `"none"` |
-|                 | fgColor        |  COLOR_SPEC
-|                 | bgColor        |  COLOR_SPEC
+|                 | fgColor        |  `COLOR_SPEC`
+|                 | bgColor        |  `COLOR_SPEC`
 | font            | name           |  `"Calibri"` // default
 |                 | sz             |  `"11"` // font size in points
-|                 | color          |  COLOR_SPEC
+|                 | color          |  `COLOR_SPEC`
 | numFmt          |                |  `"0"`  // integer index to built in formats, see StyleBuilder.SSF property
 |                 |                |  `"0.00%"` // string matching a built-in format, see StyleBuilder.SSF
 |                 |                |  `"0.0%"`  // string specifying a custom format
