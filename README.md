@@ -428,6 +428,111 @@ The exported `write` and `writeFile` functions accept an options argument:
   third-party readers.  Excel itself does not usually write cells with type `d`
   so non-Excel tools may ignore the data or blow up in the presence of dates.
 
+
+## Cell Styles
+
+Cell styles are specified by a style object that roughly parallels the OpenXML structure.  The style object has five
+top-level attributes: `fill`, `font`, `numFmt`, `alignment`, and `border`.
+
+
+| Style Attribute | Sub Attributes | Values |
+| :-------------- | :------------- | :------------- | :----- |
+| fill            | patternType    |  'solid' or 'none' |
+|                 | fgColor        |  COLOR_SPEC
+|                 | bgColor        |  COLOR_SPEC
+| font            | name           |  "Calibri" // default
+|                 | sz             |  "11" // font size in points
+|                 | color          |  COLOR_SPEC
+| numFmt          |                |  "0"  // integer index to built in formats, see StyleBuilder.SSF property
+|                 |                |  "0.00%" // string matching a built-in format, see StyleBuilder.SSF
+|                 |                |  "0.0%"  // string specifying a custom format
+|                 |                |  "0.00%;\\(0.00%\\);\\-;@" // string specifying a custom format, escaping special characters
+| alignment       | vertical       | "bottom"||"center"||"top"
+|                 | horizontal     | "bottom"||"center"||"top"
+| border          | top            | { style: BORDER_STYLE, color: COLOR_SPEC }
+|                 | bottom         | { style: BORDER_STYLE, color: COLOR_SPEC }
+|                 | left         | { style: BORDER_STYLE, color: COLOR_SPEC }
+|                 | right         | { style: BORDER_STYLE, color: COLOR_SPEC }
+|                 | diagonal         | { style: BORDER_STYLE, color: COLOR_SPEC }
+|                 | diagonalUp         | true||false
+|                 | diagonalDown         | true||false
+
+
+
+**COLOR_SPEC** Colors for `fill`, `font`, and `border` are specified as objects, either:
+* `{ rgb: "FFFFAA00" }` specifying a hex ARGB value
+* `{ theme: "1", tint: "-0.25"}` specifying an integer index to a theme color and a tint value (default 0)
+* `{indexed: 64}` default value for `fill.bgColor`
+
+** BORDER_STYLE** are piped directly to XML and may take on one of the following values:
+ * `thin`
+ *`medium`
+ *`thick`
+ *`dotted`
+ * `hair`
+ * `dashed`
+ * `mediumDashed`
+ * `dashDot`
+ * `mediumDashDot`
+ * `dashDotDot`
+ * `mediumDashDotDot`
+ * `slantDashDot`
+
+
+
+```js
+  {
+     fill: {
+         patternType: "solid", // default is "none"
+         fgColor: {
+             rgb: "FFFFAA00", // specify either rgb OR theme/tint not both
+             //theme: "1",
+             //tint:  -0.25,
+         },
+         bgColor: {
+            indexed: "64"  // this is the default value for bgColor
+         }
+     },
+     font: {
+        name: "Calibri",
+        sz: "1" // pts
+        bold: false,
+        italic: false,
+        underline: false,
+        color: {
+            rgb: "FFFFAA00", // specify either rgb OR theme/tint not both
+            theme: "1",
+            tint:  -0.25,
+        }
+     },
+     numFmt: 1, // or "0.00%" or "0.00%;\\-0.00%;\\-\\-;@",
+     alignment: {
+        vertical: "top" // or "center" or "bottom",
+        horizontal: "left" // or "center" or "right",
+        indent: "0" // or "1" or "2" or "3"...
+     },
+     border: {
+        diagonalUp: false,
+        diagonalDown: false,
+        top: {
+            style: "thin", // "thin","medium","thick","hair","dash","dot","dashDot","dashDotDot","mediumDashDot","mediumDashDotDot","slantDashDot"
+            color: {
+                auto: 1,
+                rgb: "FFFFAA00", // specify either rgb OR theme/tint not both
+                theme: "1",
+                tint:  -0.25,
+            }
+        },
+        right: {},
+        bottom: {},
+        left: {},
+        diagonal: {}
+     }
+  }
+
+```
+
+
 ## Tested Environments
 
  - NodeJS 0.8, 0.10 (latest release), 0.11 (unstable)
