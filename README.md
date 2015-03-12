@@ -449,20 +449,27 @@ top-level attributes: `fill`, `font`, `numFmt`, `alignment`, and `border`.
 |                 |                |  "0.00%;\\(0.00%\\);\\-;@" // string specifying a custom format, escaping special characters
 | alignment       | vertical       | "bottom"||"center"||"top"
 |                 | horizontal     | "bottom"||"center"||"top"
+|                 | textRotation   | Number from 0 to 180 or 255 (default is 0)
+|                 |                |   "90" is rotated up 90 degrees
+|                 |                |   "45" is rotated up 45 degrees
+|                 |                |  "135" is rotated down 45 degrees
+|                 |                | "180" is rotated down 180 degrees
+|                 |                | "255" is special,  aligned vertically
 | border          | top            | { style: BORDER_STYLE, color: COLOR_SPEC }
 |                 | bottom         | { style: BORDER_STYLE, color: COLOR_SPEC }
-|                 | left         | { style: BORDER_STYLE, color: COLOR_SPEC }
-|                 | right         | { style: BORDER_STYLE, color: COLOR_SPEC }
-|                 | diagonal         | { style: BORDER_STYLE, color: COLOR_SPEC }
-|                 | diagonalUp         | true||false
-|                 | diagonalDown         | true||false
+|                 | left           | { style: BORDER_STYLE, color: COLOR_SPEC }
+|                 | right          | { style: BORDER_STYLE, color: COLOR_SPEC }
+|                 | diagonal       | { style: BORDER_STYLE, color: COLOR_SPEC }
+|                 | diagonalUp     | true||false
+|                 | diagonalDown   | true||false
 
 
 
 **COLOR_SPEC** Colors for `fill`, `font`, and `border` are specified as objects, either:
+* `{ auto: 1}` specifying automatic values
 * `{ rgb: "FFFFAA00" }` specifying a hex ARGB value
 * `{ theme: "1", tint: "-0.25"}` specifying an integer index to a theme color and a tint value (default 0)
-* `{indexed: 64}` default value for `fill.bgColor`
+* `{ indexed: 64}` default value for `fill.bgColor`
 
 ** BORDER_STYLE** are piped directly to XML and may take on one of the following values:
  * `thin`
