@@ -464,15 +464,13 @@ top-level attributes: `fill`, `font`, `numFmt`, `alignment`, and `border`.
 |                 | diagonalDown   | `true||false`
 
 
-
-
-**COLOR_SPEC** Colors for `fill`, `font`, and `border` are specified as objects, either:
+**COLOR_SPEC**: Colors for `fill`, `font`, and `border` are specified as objects, either:
 * `{ auto: 1}` specifying automatic values
 * `{ rgb: "FFFFAA00" }` specifying a hex ARGB value
 * `{ theme: "1", tint: "-0.25"}` specifying an integer index to a theme color and a tint value (default 0)
 * `{ indexed: 64}` default value for `fill.bgColor`
 
-**BORDER_STYLE** is a string value which may take on one of the following values:
+**BORDER_STYLE**: Border style is a string value which may take on one of the following values:
  * `thin`
  * `medium`
  * `thick`
@@ -485,6 +483,14 @@ top-level attributes: `fill`, `font`, `numFmt`, `alignment`, and `border`.
  * `dashDotDot`
  * `mediumDashDotDot`
  * `slantDashDot`
+
+
+Borders for merged areas are specified for each cell within the merged area.  So to apply a box border to a merged area of 3x3 cells, border styles would need to be specified for eight different cells:
+* left borders for the three cells on the left,
+* right borders for the cells on the right
+* top borders for the cells on the top
+* bottom borders for the cells on the left
+
 
 
 ## Tested Environments
