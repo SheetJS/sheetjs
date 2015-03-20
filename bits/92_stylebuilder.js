@@ -226,7 +226,7 @@ if ((typeof 'module' != 'undefined'  && typeof require != 'undefined') || (typeo
             }
 
           } else if (attributes.color.rgb) { // not both rgb and theme
-            $font.append(XmlNode('rgb').attr('theme', attributes.color.rgb))
+            $font.append(XmlNode('color').attr('rgb', attributes.color.rgb))
           }
         }
 
