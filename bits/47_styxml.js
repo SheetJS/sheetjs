@@ -53,7 +53,7 @@ function parse_fonts(t, opts) {
       case '<fonts': case  '<fonts>': case '</fonts>': break;
       case '<font':
         break;
-      case '</font>': styles.Fonts.push(font); console.log(font);font = {}; break;
+      case '</font>': styles.Fonts.push(font); ;font = {}; break;
 
       case '<name':
         if(y.val) font.name = y.val;
