@@ -215,6 +215,13 @@ if ((typeof 'module' != 'undefined'  && typeof require != 'undefined') || (typeo
         if (attributes.bold) $font.append(XmlNode('b'));
         if (attributes.underline)  $font.append(XmlNode('u'));
         if (attributes.italic)  $font.append(XmlNode('i'));
+        if (attributes.strike)  $font.append(XmlNode('strike'));
+        if (attributes.outline)  $font.append(XmlNode('outline'));
+        if (attributes.shadow)  $font.append(XmlNode('shadow'));
+
+        if (attributes.vertAlign) {
+          $font.append(XmlNode('vertAlign').attr('val', attributes.vertAlign))
+        }
 
 
         if (attributes.color) {

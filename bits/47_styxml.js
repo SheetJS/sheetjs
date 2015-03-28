@@ -49,19 +49,35 @@ function parse_fonts(t, opts) {
   t[0].match(tagregex).forEach(function(x) {
     var y = parsexmltag(x);
     switch(y[0]) {
+
       case '<fonts': case  '<fonts>': case '</fonts>': break;
-      case '<font>': break;
-      case '</font>': styles.Fonts.push(font); font = {}; break;
+      case '<font':
+        break;
+      case '</font>': styles.Fonts.push(font); console.log(font);font = {}; break;
 
       case '<name':
         if(y.val) font.name = y.val;
         break;
       case '<name/>': case '</name>': break;
 
+
+      case '<b/>': font.bold = true;break;
+      case '<u/>':  font.underline = true;break;
+      case '<i/>':  font.italic = true;break;
+      case '<strike/>':  font.strike = true;break;
+      case '<outline/>':  font.outline = true;break;
+      case '<shadow/>':  font.shadow = true;break;
+
+
       case '<sz':
         if(y.val) font.sz = y.val;
         break;
       case '<sz/>': case '</sz>': break;
+
+      case '<vertAlign':
+        if(y.val) font.vertAlign = y.val;
+        break;
+      case '<vertAlign/>': case '</vertAlign>': break;
 
 
       case '<color':
