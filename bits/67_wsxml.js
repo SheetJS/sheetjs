@@ -246,18 +246,19 @@ return function parse_ws_xml_data(sdata, s, opts, guess) {
 				/* error string in .v, number in .v */
 				case 'e': p.w = p.v; p.v = RBErr[p.v]; break;
 			}
-			/* formatting */
-			fmtid = fillid = 0;
-			if(do_format && tag.s !== undefined) {
-				cf = styles.CellXf[tag.s];
-				if(cf != null) {
-					if(cf.numFmtId != null) fmtid = cf.numFmtId;
-					if(opts.cellStyles && cf.fillId != null) fillid = cf.fillId;
-				}
-			}
-			safe_format(p, fmtid, fillid, opts);
-			s[tag.r] = p;
-		}
+            /* formatting */
+            fmtid = fillid = 0;
+            if(do_format && tag.s !== undefined) {
+              cf = styles.CellXf[tag.s];
+              if (opts.cellStyles) p.s = get_cell_style_csf(cf)
+              if(cf != null) {
+                if(cf.numFmtId != null) fmtid = cf.numFmtId;
+                if(opts.cellStyles && cf.fillId != null) fillid = cf.fillId;
+              }
+            }
+            safe_format(p, fmtid, fillid, opts);
+            s[tag.r] = p;
+      }
 	}
 }; })();
 

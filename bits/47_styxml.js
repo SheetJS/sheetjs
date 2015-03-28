@@ -20,11 +20,11 @@ function parse_fills(t, opts) {
 			/* 18.8.3 bgColor CT_Color */
 			case '<bgColor':
 				if(!fill.bgColor) fill.bgColor = {};
-				if(y.indexed) fill.bgColor.indexed = parseInt(y.indexed, 10);
-				if(y.theme) fill.bgColor.theme = parseInt(y.theme, 10);
-				if(y.tint) fill.bgColor.tint = parseFloat(y.tint);
-				/* Excel uses ARGB strings */
-				if(y.rgb) fill.bgColor.rgb = y.rgb.substring(y.rgb.length - 6);
+        if(y.indexed) fill.bgColor.indexed = parseInt(y.indexed, 10);
+        if(y.theme) fill.bgColor.theme = parseInt(y.theme, 10);
+        if(y.tint) fill.bgColor.tint = parseFloat(y.tint);
+        /* Excel uses ARGB strings */
+        if(y.rgb) fill.bgColor.rgb = y.rgb;//.substring(y.rgb.length - 6);
 				break;
 			case '<bgColor/>': case '</bgColor>': break;
 
@@ -34,13 +34,71 @@ function parse_fills(t, opts) {
 				if(y.theme) fill.fgColor.theme = parseInt(y.theme, 10);
 				if(y.tint) fill.fgColor.tint = parseFloat(y.tint);
 				/* Excel uses ARGB strings */
-				if(y.rgb) fill.fgColor.rgb = y.rgb.substring(y.rgb.length - 6);
+				if(y.rgb) fill.fgColor.rgb = y.rgb;//.substring(y.rgb.length - 6);
 				break;
 			case '<fgColor/>': case '</fgColor>': break;
 
 			default: if(opts.WTF) throw 'unrecognized ' + y[0] + ' in fills';
 		}
 	});
+}
+
+function parse_fonts(t, opts) {
+  styles.Fonts = [];
+  var font = {};
+  t[0].match(tagregex).forEach(function(x) {
+    var y = parsexmltag(x);
+    switch(y[0]) {
+      case '<fonts': case  '<fonts>': case '</fonts>': break;
+      case '<font>': break;
+      case '</font>': styles.Fonts.push(font); font = {}; break;
+
+      case '<name':
+        if(y.val) font.name = y.val;
+        break;
+      case '<name/>': case '</name>': break;
+
+      case '<sz':
+        if(y.val) font.sz = y.val;
+        break;
+      case '<sz/>': case '</sz>': break;
+
+
+      case '<color':
+        if (!font.color) font.color = {};
+        if (y.theme) font.color.theme = y.theme;
+        if (y.tint) font.color.tint = y.tint;
+        if (y.rgb) font.color.rgb = y.rgb;
+        break;
+      case '<color/>':case '</color>': break;
+    }
+  });
+}
+
+function parse_borders(t, opts) {
+  styles.Borders = [];
+  var border = {};
+  t[0].match(tagregex).forEach(function(x) {
+    var y = parsexmltag(x);
+    switch(y[0]) {
+      case '<borders': case  '<borders>': case '</borders>': break;
+      case '<border>': break;
+      case '</border>':
+        styles.Fonts.push(border);
+        border = {}; break;
+
+      case '<color':
+        if(y.style) border.style = y.style;
+        break;
+      case '<name/>': case '</name>': break;
+
+      case '<sz':
+        if(y.val) font.sz = y.val;
+        break;
+      case '<sz/>': case '</sz>': break;
+    }
+  });
+
 }
 
 /* 18.8.31 numFmts CT_NumFmts */
@@ -116,6 +174,7 @@ var parse_sty_xml= (function make_pstyx() {
 var numFmtRegex = /<numFmts([^>]*)>.*<\/numFmts>/;
 var cellXfRegex = /<cellXfs([^>]*)>.*<\/cellXfs>/;
 var fillsRegex = /<fills([^>]*)>.*<\/fills>/;
+var bordersRegex = /<borders([^>]*)>.*<\/borders>/;
 
 return function parse_sty_xml(data, opts) {
 	/* 18.8.39 styleSheet CT_Stylesheet */
@@ -125,12 +184,13 @@ return function parse_sty_xml(data, opts) {
 	if((t=data.match(numFmtRegex))) parse_numFmts(t, opts);
 
 	/* fonts CT_Fonts ? */
-	/*if((t=data.match(/<fonts([^>]*)>.*<\/fonts>/))) parse_fonts(t, opts);*/
+	if((t=data.match(/<fonts([^>]*)>.*<\/fonts>/))) parse_fonts(t, opts)
 
 	/* fills CT_Fills */
 	if((t=data.match(fillsRegex))) parse_fills(t, opts);
 
 	/* borders CT_Borders ? */
+//  if ((t=data.match(bordersRegex))) parse_borders(t, opts);
 	/* cellStyleXfs CT_CellStyleXfs ? */
 
 	/* cellXfs CT_CellXfs ? */
