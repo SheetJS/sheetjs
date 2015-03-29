@@ -6734,7 +6734,7 @@ function stringify_formula(formula, range, cell, supbooks, opts) {
 				break;
 
 			/* 2.5.198.29 */
-			case 'PtgAreaErr': stack.push("#REF!");
+			case 'PtgAreaErr': stack.push("#REF!"); break;
 
 			/* 2.5.198.72 TODO */
 			case 'PtgMemFunc': break;
@@ -13342,7 +13342,7 @@ function format_cell(cell/*:Cell*/, v/*:any*/) {
 }
 
 function sheet_to_json(sheet/*:Worksheet*/, opts/*:?Sheet2JSONOpts*/){
-	var val, row, range, header = 0, offset = 1, r, hdr = [], isempty, R, C, v;
+	var val, row, range, header = 0, offset = 1, r, hdr = [], isempty, R, C, v, vv;
 	var o = opts != null ? opts : {};
 	var raw = o.raw;
 	if(sheet == null || sheet["!ref"] == null) return [];
@@ -13369,7 +13369,10 @@ function sheet_to_json(sheet/*:Worksheet*/, opts/*:?Sheet2JSONOpts*/){
 			case 3: hdr[C] = o.header[C - r.s.c]; break;
 			default:
 				if(val === undefined) continue;
-				hdr[C] = format_cell(val);
+				vv = v = format_cell(val);
+				var counter = 0;
+				for(var CC = 0; CC < hdr.length; ++CC) if(hdr[CC] == vv) vv = v + "_" + (++counter);
+				hdr[C] = vv;
 		}
 	}
 

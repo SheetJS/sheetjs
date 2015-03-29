@@ -922,7 +922,7 @@ function stringify_formula(formula, range, cell, supbooks, opts) {
 				break;
 
 			/* 2.5.198.29 */
-			case 'PtgAreaErr': stack.push("#REF!");
+			case 'PtgAreaErr': stack.push("#REF!"); break;
 
 			/* 2.5.198.72 TODO */
 			case 'PtgMemFunc': break;
