@@ -244,7 +244,7 @@ if ((typeof 'module' != 'undefined'  && typeof require != 'undefined') || (typeo
         return count - 1;
       },
 
-      _addNumFmt: function (numFmt) {
+        _addNumFmt: function (numFmt) {
         if (!numFmt) { return 0; }
 
         if (typeof numFmt == 'string') {
@@ -257,6 +257,12 @@ if ((typeof 'module' != 'undefined'  && typeof require != 'undefined') || (typeo
         if (/^[0-9]+$/.exec(numFmt)) {
           return numFmt; // we're matching an integer against some known code
         }
+        numFmt = numFmt
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&apos;');
 
 
         var $numFmt = XmlNode('numFmt')
