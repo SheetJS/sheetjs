@@ -5,7 +5,7 @@ function recordhopper(data, cb, opts) {
 	while(data.l < data.length) {
 		var RT = data.read_shift(1);
 		if(RT & 0x80) RT = (RT & 0x7F) + ((data.read_shift(1) & 0x7F)<<7);
-		var R = RecordEnum[RT] || RecordEnum[0xFFFF];
+		var R = XLSBRecordEnum[RT] || XLSBRecordEnum[0xFFFF];
 		tmpbyte = data.read_shift(1);
 		length = tmpbyte & 0x7F;
 		for(cntbyte = 1; cntbyte <4 && (tmpbyte & 0x80); ++cntbyte) length += ((tmpbyte = data.read_shift(1)) & 0x7F)<<(7*cntbyte);
@@ -49,7 +49,7 @@ function buf_array() {
 
 function write_record(ba, type, payload, length) {
 	var t = evert_RE[type], l;
-	if(!length) length = RecordEnum[t].p || (payload||[]).length || 0;
+	if(!length) length = XLSBRecordEnum[t].p || (payload||[]).length || 0;
 	l = 1 + (t >= 0x80 ? 1 : 0) + 1 + length;
 	if(length >= 0x80) ++l; if(length >= 0x4000) ++l; if(length >= 0x200000) ++l;
 	var o = ba.next(l);

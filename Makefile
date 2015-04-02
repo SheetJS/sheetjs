@@ -1,5 +1,5 @@
 LIB=xlsx
-FMT=xlsx xlsm xlsb ods misc full
+FMT=xlsx xlsm xlsb ods xls xml misc full
 REQS=jszip.js
 ADDONS=dist/cpexcel.js
 AUXTARGETS=ods.js
@@ -16,6 +16,9 @@ $(TARGET): $(DEPS)
 
 bits/01_version.js: package.json
 	echo "$(ULIB).version = '"`grep version package.json | awk '{gsub(/[^0-9a-z\.-]/,"",$$2); print $$2}'`"';" > $@
+
+bits/18_cfb.js: node_modules/cfb/dist/xlscfb.js
+	cp $^ $@
 
 .PHONY: clean
 clean:
@@ -88,8 +91,11 @@ dist: dist-deps $(TARGET) bower.json
 	cp $(TARGET) dist/
 	cp LICENSE dist/
 	uglifyjs $(TARGET) -o dist/$(LIB).min.js --source-map dist/$(LIB).min.map --preamble "$$(head -n 1 bits/00_header.js)"
+	misc/strip_sourcemap.sh dist/$(LIB).min.js
 	uglifyjs $(REQS) $(TARGET) -o dist/$(LIB).core.min.js --source-map dist/$(LIB).core.min.map --preamble "$$(head -n 1 bits/00_header.js)"
+	misc/strip_sourcemap.sh dist/$(LIB).core.min.js
 	uglifyjs $(REQS) $(ADDONS) $(TARGET) -o dist/$(LIB).full.min.js --source-map dist/$(LIB).full.min.map --preamble "$$(head -n 1 bits/00_header.js)"
+	misc/strip_sourcemap.sh dist/$(LIB).full.min.js
 
 .PHONY: aux
 aux: $(AUXTARGETS)

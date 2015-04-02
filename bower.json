@@ -2,7 +2,7 @@
   "name": "js-xlsx",
   "homepage": "https://github.com/SheetJS/js-xlsx",
   "main": "dist/xlsx.js",
-  "version": "0.7.12",
+  "version": "0.8.0",
   "ignore": [
     "bin",
     "bits",
@@ -11,10 +11,13 @@
   ],
   "keywords": [
     "excel",
+    "xls",
+    "xml",
     "xlsx",
     "xlsm",
     "xlsb",
     "ods",
+    "js-xls"
     "js-xlsx"
   ]
 }

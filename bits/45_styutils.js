@@ -62,3 +62,23 @@ function find_mdw(collw, coll) {
 		if(MDW === MAX_MDW) MDW = DEF_MDW;
 	}
 }
+
+/* [MS-EXSPXML3] 2.4.54 ST_enmPattern */
+var XLMLPatternTypeMap = {
+	"None": "none",
+	"Solid": "solid",
+	"Gray50": "mediumGray",
+	"Gray75": "darkGray",
+	"Gray25": "lightGray",
+	"HorzStripe": "darkHorizontal",
+	"VertStripe": "darkVertical",
+	"ReverseDiagStripe": "darkDown",
+	"DiagStripe": "darkUp",
+	"DiagCross": "darkGrid",
+	"ThickDiagCross": "darkTrellis",
+	"ThinHorzStripe": "lightHorizontal",
+	"ThinVertStripe": "lightVertical",
+	"ThinReverseDiagStripe": "lightDown",
+	"ThinHorzCross": "lightGrid"
+};
+

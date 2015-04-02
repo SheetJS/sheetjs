@@ -11,10 +11,13 @@
   ],
   "keywords": [
     "excel",
+    "xls",
+    "xml",
     "xlsx",
     "xlsm",
     "xlsb",
     "ods",
+    "js-xls"
     "js-xlsx"
   ]
 }
