@@ -3,7 +3,7 @@ node_js:
   - "iojs"
   - "0.11.14"
   - "0.10"
-  - "0.8"
+#  - "0.8" # commented because of npm issue with camelcase
 before_install:
   - "npm install -g mocha"
   - "npm install blanket"
