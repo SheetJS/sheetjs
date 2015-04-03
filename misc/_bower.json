@@ -17,7 +17,7 @@
     "xlsm",
     "xlsb",
     "ods",
-    "js-xls"
+    "js-xls",
     "js-xlsx"
   ]
 }

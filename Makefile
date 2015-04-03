@@ -55,6 +55,7 @@ $(TESTFMT): test_%:
 .PHONY: lint
 lint: $(TARGET)
 	jshint --show-non-errors $(TARGET) $(AUXTARGETS)
+	jshint --show-non-errors package.json bower.json
 	jscs $(TARGET) $(AUXTARGETS)
 
 .PHONY: test-osx
