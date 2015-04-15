@@ -6,3 +6,5 @@ tmp
 *.xlsx
 *.xlsm
 *.xlsb
+lab/
+.idea/

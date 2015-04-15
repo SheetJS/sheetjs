@@ -343,7 +343,7 @@ describe("Export styles", function () {
             "t": "s"
           },
           "B7": {
-            "v": "left",
+            "v": "center",
             "s": {
               "alignment": {
                 "horizontal": "center"
@@ -352,7 +352,7 @@ describe("Export styles", function () {
             "t": "s"
           },
           "C7": {
-            "v": "left",
+            "v": "right",
             "s": {
               "alignment": {
                 "horizontal": "right"
@@ -650,6 +650,7 @@ describe("Export styles", function () {
 
   it('can write to a buffer and read the file back', function () {
     var wb2 = XLSX.read(XLSX.write(workbook, {type:"buffer", bookType: 'xlsx'}), {cellStyles: true, cellNF: true})
+    XLSX.writeFile(wb2, '/tmp/wb2.xlsx',  { defaultCellStyle: defaultCellStyle });
     assert(basicallyEquals(workbook.Sheets.Main,wb2.Sheets.Main));
   });
 
