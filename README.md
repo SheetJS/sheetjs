@@ -443,6 +443,13 @@ top-level attributes: `fill`, `font`, `numFmt`, `alignment`, and `border`.
 | font            | name           |  `"Calibri"` // default
 |                 | sz             |  `"11"` // font size in points
 |                 | color          |  `COLOR_SPEC`
+|                 | bold           |  `true || false`
+|                 | underline      |  `true || false`
+|                 | italic         |  `true || false`
+|                 | strike         |  `true || false`
+|                 | outline        |  `true || false`
+|                 | shadow         |  `true || false`
+|                 | vertAlign      |  `true || false`
 | numFmt          |                |  `"0"`  // integer index to built in formats, see StyleBuilder.SSF property
 |                 |                |  `"0.00%"` // string matching a built-in format, see StyleBuilder.SSF
 |                 |                |  `"0.0%"`  // string specifying a custom format
