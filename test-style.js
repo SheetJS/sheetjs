@@ -12,6 +12,8 @@ function JSDateToExcelDate(inDate) {
 
 var defaultCellStyle = { font: { name: "Verdana", sz: 11, color: "FF00FF88"}, fill: {fgColor: {rgb: "FFFFAA00"}}};
 
+// test to see if everything on the left equals its counterpart on the right
+// but the right hand object may have other attributes which we might not care about
 function basicallyEquals(left, right) {
   if (Array.isArray(left) && Array.isArray(right)) {
     for (var i=0; i<left.length; i++) {
@@ -23,8 +25,10 @@ function basicallyEquals(left, right) {
   }
   else if (typeof left == 'object' && typeof right == 'object') {
     for (var key in left) {
-      if (key != 'border' && key!='alignment' && key != 'bgColor') {
+      if (key != 'bgColor') {
         if (!basicallyEquals(left[key], right[key] )) {
+          if (JSON.stringify(left[key])=="{}" && right[key] == undefined) return true;
+          if (JSON.stringify(right[key])=="{}" && left[key] == undefined) return true;
           return false;
         }
       }
@@ -419,7 +423,7 @@ describe("Export styles", function () {
             "s": {
               "alignment": {
                 "wrapText": 1,
-                "alignment": "right",
+                "horizontal": "right",
                 "vertical": "center",
                 "indent": 1
               }

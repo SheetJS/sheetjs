@@ -190,6 +190,7 @@ function parse_borders(t, opts) {
         if (y.theme) sub_border.color.theme = y.theme;
         if (y.tint) sub_border.color.tint = y.tint;
         if (y.rgb) sub_border.color.rgb = y.rgb;
+        if (y.auto) sub_border.color.auto = y.auto;
         break;
       case '<name/>':
       case '</name>':
@@ -275,7 +276,8 @@ function parse_cellXfs(t, opts) {
       case '<alignment/>':
         var alignment = {}
           if (y.vertical) { alignment.vertical = y.vertical;}
-        if (y.horizontal) { alignment.horizontal = y.horizontal;}
+          if (y.horizontal) { alignment.horizontal = y.horizontal;}
+          if (y.textRotation != undefined) { alignment.textRotation = y.textRotation; }
           if (y.indent) { alignment.indent = y.indent; }
           if (y.wrapText) { alignment.wrapText = y.wrapText; }
           xf.alignment = alignment;
