@@ -308,7 +308,7 @@ describe('parse options', function() {
 		});
 		it('should generate cell styles when requested', function() {
 			/* TODO: XLS / XLML */
-			[paths.cssxlsx, /*paths.cssxls, paths.cssxml*/].forEach(function(p) {
+			[paths.cssxlsx /*,paths.cssxls, paths.cssxml*/].forEach(function(p) {
 			var wb = X.readFile(p, {cellStyles:true});
 			var found = false;
 			wb.SheetNames.forEach(function(s) {
@@ -577,6 +577,12 @@ function cmparr(x){ for(var i=1;i!=x.length;++i) assert.deepEqual(x[0], x[i]); }
 function deepcmp(x,y,k,m,c) {
 	var s = k.indexOf(".");
 	m = (m||"") + "|" + (s > -1 ? k.substr(0,s) : k);
+  console.log("======================================")
+  console.log(k)
+  console.log(JSON.stringify(x))
+  console.log(JSON.stringify(y))
+  console.log(x[k]);
+  console.log(y[k])
 	if(s < 0) return assert[c<0?'notEqual':'equal'](x[k], y[k], m);
 	return deepcmp(x[k.substr(0,s)],y[k.substr(0,s)],k.substr(s+1),m,c);
 }
@@ -587,11 +593,11 @@ var styexc = [
 ];
 var stykeys = [
 	"patternType",
-	"fgColor.rgb",
-	"bgColor.rgb"
+	"fgColor",
+	"bgColor"
 ];
 function diffsty(ws, r1,r2) {
-	var c1 = ws[r1].s, c2 = ws[r2].s;
+	var c1 = ws[r1].s.fill, c2 = ws[r2].s.fill;
 	stykeys.forEach(function(m) {
 		var c = -1;
 		if(styexc.indexOf(r1+"|"+r2+"|"+m) > -1) c = 1;
@@ -745,75 +751,82 @@ describe('parse features', function() {
 			assert.equal(X.utils.sheet_to_csv(ws1),X.utils.sheet_to_csv(ws2));
 		});
 	});
-
-//	describe('should correctly handle styles', function() {
-//		var ws, rn, rn2;
-//		before(function() {
-//			ws=X.readFile(paths.css1, {cellStyles:true,WTF:1}).Sheets.Sheet1;
-//			rn = function(range) {
-//				var r = X.utils.decode_range(range);
-//				var out = [];
-//				for(var R = r.s.r; R <= r.e.r; ++R) for(var C = r.s.c; C <= r.e.c; ++C)
-//					out.push(X.utils.encode_cell({c:C,r:R}));
-//				return out;
-//			};
-//			rn2 = function(r) { return [].concat.apply([], r.split(",").map(rn)); };
-//		});
-//		var ranges = [
-//			'A1:D1,F1:G1', 'A2:D2,F2:G2', /* rows */
-//			'A3:A10', 'B3:B10', 'E1:E10', 'F6:F8', /* cols */
-//			'H1:J4', 'H10' /* blocks */
-//		];
-//		var exp = [
-//  { patternType: 'darkHorizontal',
-//    fgColor: { theme: 9, raw_rgb: 'FFF79646' },
-//    bgColor: { theme: 5, raw_rgb: 'FFC0504D' } },
-//  { patternType: 'darkUp',
-//    fgColor: { theme: 3, raw_rgb: 'FFEEECE1' },
-//    bgColor: { theme: 7, raw_rgb: 'FF8064A2' } },
-//  { patternType: 'darkGray',
-//    fgColor: { theme: 3, raw_rgb: 'FFEEECE1' },
-//    bgColor: { theme: 1, raw_rgb: 'FFFFFFFF' } },
-//  { patternType: 'lightGray',
-//    fgColor: { theme: 6, raw_rgb: 'FF9BBB59' },
-//    bgColor: { theme: 2, raw_rgb: 'FF1F497D' } },
-//  { patternType: 'lightDown',
-//    fgColor: { theme: 4, raw_rgb: 'FF4F81BD' },
-//    bgColor: { theme: 7, raw_rgb: 'FF8064A2' } },
-//  { patternType: 'lightGrid',
-//    fgColor: { theme: 6, raw_rgb: 'FF9BBB59' },
-//    bgColor: { theme: 9, raw_rgb: 'FFF79646' } },
-//  { patternType: 'lightGrid',
-//    fgColor: { theme: 4, raw_rgb: 'FF4F81BD' },
-//    bgColor: { theme: 2, raw_rgb: 'FF1F497D' } },
-//  { patternType: 'lightVertical',
-//    fgColor: { theme: 3, raw_rgb: 'FFEEECE1' },
-//    bgColor: { theme: 7, raw_rgb: 'FF8064A2' } }
-//    ];
-//		ranges.forEach(function(rng) {
-//			it(rng,function(){cmparr(rn2(rng).map(function(x){ return ws[x].s; }));});
-//		});
-//		it('different styles', function() {
-//			for(var i = 0; i != ranges.length-1; ++i) {
-//				for(var j = i+1; j != ranges.length; ++j) {
-//					diffsty(ws, rn2(ranges[i])[0], rn2(ranges[j])[0]);
-//				}
-//			}
-//		});
-//		it('correct styles', function() {
-//			var styles = ranges.map(function(r) { return rn2(r)[0]}).map(function(r) { return ws[r].s});
-//      console.log(styles);
-//			for(var i = 0; i != exp.length; ++i) {
-//				[
-//					"fgColor.theme","fgColor.raw_rgb",
-//					"bgColor.theme","bgColor.raw_rgb",
-//					"patternType"
-//				].forEach(function(k) { console.log(k); console.log(styles[i]); deepcmp(exp[i], styles[i].fill, k, i + ":"+k); });
-//			}
-//		});
-//	});
-	
 });
+describe('should correctly handle styles', function() {
+  var wsxls, wsxlsx, rn, rn2;
+  before(function() {
+    wsxls=X.readFile(paths.cssxls, {cellStyles:true,WTF:1}).Sheets.Sheet1;
+    wsxlsx=X.readFile(paths.cssxlsx, {cellStyles:true,WTF:1}).Sheets.Sheet1;
+    rn = function(range) {
+      var r = X.utils.decode_range(range);
+      var out = [];
+      for(var R = r.s.r; R <= r.e.r; ++R) for(var C = r.s.c; C <= r.e.c; ++C)
+        out.push(X.utils.encode_cell({c:C,r:R}));
+      return out;
+    };
+    rn2 = function(r) { return [].concat.apply([], r.split(",").map(rn)); };
+  });
+  var ranges = [
+    'A1:D1,F1:G1', 'A2:D2,F2:G2', /* rows */
+    'A3:A10', 'B3:B10', 'E1:E10', 'F6:F8', /* cols */
+    'H1:J4', 'H10' /* blocks */
+  ];
+  var exp = [
+    { patternType: 'darkHorizontal',
+      fgColor: { theme: 9},
+      bgColor: { theme: 5 } },
+    { patternType: 'darkUp',
+      fgColor: { theme: 3},
+      bgColor: { theme: 7} },
+    { patternType: 'darkGray',
+      fgColor: { theme: 3},
+      bgColor: { theme: 1} },
+    { patternType: 'lightGray',
+      fgColor: { theme: 6},
+      bgColor: { theme: 2} },
+    { patternType: 'lightDown',
+      fgColor: { theme: 4},
+      bgColor: { theme: 7} },
+    { patternType: 'lightGrid',
+      fgColor: { theme: 6},
+      bgColor: { theme: 9} },
+    { patternType: 'lightGrid',
+      fgColor: { theme: 4},
+      bgColor: { theme: 2} },
+    { patternType: 'lightVertical',
+      fgColor: { theme: 3},
+      bgColor: { theme: 7} }
+  ];
+  ranges.forEach(function(rng) {
+    it('XLS  | ' + rng,function(){cmparr(rn2(rng).map(function(x){ return wsxls[x].s; }));});
+    it('XLSX | ' + rng,function(){cmparr(rn2(rng).map(function(x){ return wsxlsx[x].s; }));});
+  });
+  it('different styles', function() {
+    for(var i = 0; i != ranges.length-1; ++i) {
+      for(var j = i+1; j != ranges.length; ++j) {
+        diffsty(wsxlsx, rn2(ranges[i])[0], rn2(ranges[j])[0]);
+        /* TODO */
+        //diffsty(wsxls, rn2(ranges[i])[0], rn2(ranges[j])[0]);
+      }
+    }
+  });
+  it('correct styles', function() {
+    var stylesxls = ranges.map(function(r) { return rn2(r)[0]; }).map(function(r) { return wsxls[r].s; });
+    var stylesxlsx = ranges.map(function(r) { return rn2(r)[0]; }).map(function(r) { return wsxlsx[r].s; });
+    for(var i = 0; i != exp.length; ++i) {
+      [
+        "fgColor.theme","fgColor.raw_rgb",
+        "bgColor.theme","bgColor.raw_rgb",
+        "patternType"
+      ].forEach(function(k) {
+            deepcmp(exp[i], stylesxlsx[i].fill, k, i + ":"+k);
+            /* TODO */
+            //deepcmp(exp[i], stylesxls[i], k, i + ":"+k);
+          });
+    }
+  });
+});
+
 
 function seq(end, start) {
 	var s = start || 0;
