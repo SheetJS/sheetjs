@@ -4548,7 +4548,7 @@ function parse_FilePass(blob, length, opts) {
 
 function hex2RGB(h) {
 	var o = h.substr(h[0]==="#"?1:0,6);
-	return [parseInt(o.substr(0,2),16),parseInt(o.substr(0,2),16),parseInt(o.substr(0,2),16)];
+	return [parseInt(o.substr(0,2),16),parseInt(o.substr(2,2),16),parseInt(o.substr(4,2),16)];
 }
 function rgb2Hex(rgb) {
 	for(var i=0,o=1; i!=3; ++i) o = o*256 + (rgb[i]>255?255:rgb[i]<0?0:rgb[i]);
@@ -4590,11 +4590,12 @@ function hsl2RGB(hsl){
 
 /* 18.8.3 bgColor tint algorithm */
 function rgb_tint(hex, tint) {
-	if(tint === 0) return hex;
+	if(tint == 0) return hex;
 	var hsl = rgb2HSL(hex2RGB(hex));
 	if (tint < 0) hsl[2] = hsl[2] * (1 + tint);
 	else hsl[2] = 1 - (1 - hsl[2]) * (1 - tint);
-	return rgb2Hex(hsl2RGB(hsl));
+  var rev =rgb2Hex(hsl2RGB(hsl))
+	return rev;
 }
 
 /* 18.3.1.13 width calculations */
@@ -4671,8 +4672,8 @@ function parse_fills(t, opts) {
 
 
         if (y.theme && themes.themeElements && themes.themeElements.clrScheme) {
-          fill.bgColor.rgb = rgb_tint(themes.themeElements.clrScheme[fill.bgColor.theme].rgb, 0) ; //fill.fgColor.tint || 0);
-          if (opts.WTF) fill.bgColor.raw_rgb = fill.bgColor.rgb;
+          fill.bgColor.rgb = rgb_tint(themes.themeElements.clrScheme[fill.bgColor.theme].rgb, fill.bgColor.tint || 0);
+          if (opts.WTF) fill.bgColor.raw_rgb = rgb_tint(themes.themeElements.clrScheme[fill.bgColor.theme].rgb,0);
         }
         /* Excel uses ARGB strings */
         if (y.rgb) fill.bgColor.rgb = y.rgb;//.substring(y.rgb.length - 6);
@@ -4688,8 +4689,8 @@ function parse_fills(t, opts) {
         if (y.tint) fill.fgColor.tint = parseFloat(y.tint);
 
         if (y.theme && themes.themeElements && themes.themeElements.clrScheme) {
-          fill.fgColor.rgb = rgb_tint(themes.themeElements.clrScheme[fill.fgColor.theme].rgb, 0); //fill.fgColor.tint || 0);
-          if (opts.WTF) fill.fgColor.raw_rgb = fill.fgColor.rgb;
+          fill.fgColor.rgb = rgb_tint(themes.themeElements.clrScheme[fill.fgColor.theme].rgb, fill.fgColor.tint || 0);
+          if (opts.WTF) fill.fgColor.raw_rgb = rgb_tint(themes.themeElements.clrScheme[fill.fgColor.theme].rgb,0);
         }
 
         /* Excel uses ARGB strings */
