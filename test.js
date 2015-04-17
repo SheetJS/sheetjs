@@ -765,31 +765,33 @@ describe('parse features', function() {
       'A3:A10', 'B3:B10', 'E1:E10', 'F6:F8', /* cols */
       'H1:J4', 'H10' /* blocks */
     ];
+
+
     var exp = [
       { patternType: 'darkHorizontal',
-        fgColor: { theme: 9, "tint":-0.249977111117893, raw_rgb: 'B9B9B9' },
-        bgColor: { theme: 5, "tint":0.3999755851924192, raw_rgb: '909090' } },
+        fgColor: { theme: 9, "tint":-0.249977111117893, rgb: 'F79646' },
+        bgColor: { theme: 5, "tint":0.3999755851924192, rgb: 'C0504D' } },
       { patternType: 'darkUp',
-        fgColor: { theme: 3, "tint":-0.249977111117893,raw_rgb: 'B3B3B3' },
-        bgColor: { theme: 7, "tint":0.3999755851924192,raw_rgb: '606060' } },
+        fgColor: { theme: 3, "tint":-0.249977111117893, rgb: 'EEECE1' },
+        bgColor: { theme: 7, "tint":0.3999755851924192, rgb: '8064A2' } },
       { patternType: 'darkGray',
-        fgColor: { theme: 3, raw_rgb: 'EEECE1' },
-        bgColor: { theme: 1, raw_rgb: 'FFFFFF' } },
+        fgColor: { theme: 3, rgb: 'EEECE1' },
+        bgColor: { theme: 1, rgb: 'FFFFFF' } },
       { patternType: 'lightGray',
-        fgColor: { theme: 6, "tint":0.3999755851924192, raw_rgb: 'C3C3C3' },
-        bgColor: { theme: 2, "tint":-0.499984740745262, raw_rgb: '797979' } },
+        fgColor: { theme: 6, "tint":0.3999755851924192, rgb: '9BBB59' },
+        bgColor: { theme: 2, "tint":-0.499984740745262, rgb: '1F497D' } },
       { patternType: 'lightDown',
-        fgColor: { theme: 4, raw_rgb: '3B3B3B' },
-        bgColor: { theme: 7, raw_rgb: '606060' } },
+        fgColor: { theme: 4, rgb: '4F81BD' },
+        bgColor: { theme: 7, rgb: '8064A2' } },
       { patternType: 'lightGrid',
-        fgColor: { theme: 6, "tint":-0.249977111117893, raw_rgb: '747474' },
-        bgColor: { theme: 9, "tint":-0.249977111117893, raw_rgb: 'B9B9B9' } },
+        fgColor: { theme: 6, "tint":-0.249977111117893, rgb: '9BBB59' },
+        bgColor: { theme: 9, "tint":-0.249977111117893, rgb: 'F79646' } },
       { patternType: 'lightGrid',
-        fgColor: { theme: 4, raw_rgb: '4F81BD' },
-        bgColor: { theme: 2, "tint":-0.749992370372631, raw_rgb: '1F497D' } },
+        fgColor: { theme: 4, rgb: '4F81BD' },
+        bgColor: { theme: 2, "tint":-0.749992370372631, rgb: '1F497D' } },
       { patternType: 'lightVertical',
-        fgColor: { theme: 3, "tint":0.3999755851924192, raw_rgb: 'F5F5F5' },
-        bgColor: { theme: 7, "tint":0.3999755851924192, raw_rgb: 'B3B3B3' } }
+        fgColor: { theme: 3, "tint":0.3999755851924192, rgb: 'EEECE1' },
+        bgColor: { theme: 7, "tint":0.3999755851924192, rgb: '8064A2' } }
     ];
     ranges.forEach(function(rng) {
       it('XLS  | ' + rng,function(){cmparr(rn2(rng).map(function(x){ return wsxls[x].s; }));});
@@ -809,8 +811,8 @@ describe('parse features', function() {
       var stylesxlsx = ranges.map(function(r) { return rn2(r)[0]; }).map(function(r) { return wsxlsx[r].s; });
       for(var i = 0; i != exp.length; ++i) {
         var props = [
-          "fgColor.theme","fgColor.raw_rgb",
-          "bgColor.theme","bgColor.raw_rgb",
+          "fgColor.theme","fgColor.rgb",
+          "bgColor.theme","bgColor.rgb",
           "patternType"
         ];
 
