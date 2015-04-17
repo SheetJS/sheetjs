@@ -32,6 +32,11 @@ function parse_fills(t, opts) {
         if (y.indexed) fill.bgColor.indexed = parseInt(y.indexed, 10);
         if (y.theme) fill.bgColor.theme = parseInt(y.theme, 10);
         if (y.tint) fill.bgColor.tint = parseFloat(y.tint);
+
+
+        if (y.theme && themes.themeElements && themes.themeElements.clrScheme) {
+          fill.bgColor.raw_rgb = rgb_tint(themes.themeElements.clrScheme[fill.bgColor.theme].rgb, fill.fgColor.tint || 0);
+        }
         /* Excel uses ARGB strings */
         if (y.rgb) fill.bgColor.rgb = y.rgb;//.substring(y.rgb.length - 6);
         break;
@@ -44,6 +49,11 @@ function parse_fills(t, opts) {
         if (!fill.fgColor) fill.fgColor = {};
         if (y.theme) fill.fgColor.theme = parseInt(y.theme, 10);
         if (y.tint) fill.fgColor.tint = parseFloat(y.tint);
+
+        if (y.theme && themes.themeElements && themes.themeElements.clrScheme) {
+          fill.fgColor.raw_rgb = rgb_tint(themes.themeElements.clrScheme[fill.fgColor.theme].rgb, fill.fgColor.tint || 0);
+        }
+
         /* Excel uses ARGB strings */
         if (y.rgb) fill.fgColor.rgb = y.rgb;//.substring(y.rgb.length - 6);
         break;
@@ -123,6 +133,9 @@ function parse_fonts(t, opts) {
         if (!font.color) font.color = {};
         if (y.theme) font.color.theme = y.theme;
         if (y.tint) font.color.tint = y.tint;
+        if (y.theme && themes.themeElements && themes.themeElements.clrScheme) {
+          font.color.raw_rgb = rgb_tint(themes.themeElements.clrScheme[font.color.theme].rgb, font.color.tint || 0);
+        }
         if (y.rgb) font.color.rgb = y.rgb;
         break;
       case '<color/>':
@@ -188,6 +201,10 @@ function parse_borders(t, opts) {
       case '<color':
         sub_border.color = {};
         if (y.theme) sub_border.color.theme = y.theme;
+        if (y.theme && themes.themeElements && themes.themeElements.clrScheme) {
+          sub_border.color.raw_rgb = rgb_tint(themes.themeElements.clrScheme[sub_border.color.theme].rgb, sub_border.color.tint || 0);
+        }
+
         if (y.tint) sub_border.color.tint = y.tint;
         if (y.rgb) sub_border.color.rgb = y.rgb;
         if (y.auto) sub_border.color.auto = y.auto;

@@ -577,12 +577,6 @@ function cmparr(x){ for(var i=1;i!=x.length;++i) assert.deepEqual(x[0], x[i]); }
 function deepcmp(x,y,k,m,c) {
 	var s = k.indexOf(".");
 	m = (m||"") + "|" + (s > -1 ? k.substr(0,s) : k);
-  console.log("======================================")
-  console.log(k)
-  console.log(JSON.stringify(x))
-  console.log(JSON.stringify(y))
-  console.log(x[k]);
-  console.log(y[k])
 	if(s < 0) return assert[c<0?'notEqual':'equal'](x[k], y[k], m);
 	return deepcmp(x[k.substr(0,s)],y[k.substr(0,s)],k.substr(s+1),m,c);
 }
@@ -751,82 +745,85 @@ describe('parse features', function() {
 			assert.equal(X.utils.sheet_to_csv(ws1),X.utils.sheet_to_csv(ws2));
 		});
 	});
-});
-describe('should correctly handle styles', function() {
-  var wsxls, wsxlsx, rn, rn2;
-  before(function() {
-    wsxls=X.readFile(paths.cssxls, {cellStyles:true,WTF:1}).Sheets.Sheet1;
-    wsxlsx=X.readFile(paths.cssxlsx, {cellStyles:true,WTF:1}).Sheets.Sheet1;
-    rn = function(range) {
-      var r = X.utils.decode_range(range);
-      var out = [];
-      for(var R = r.s.r; R <= r.e.r; ++R) for(var C = r.s.c; C <= r.e.c; ++C)
-        out.push(X.utils.encode_cell({c:C,r:R}));
-      return out;
-    };
-    rn2 = function(r) { return [].concat.apply([], r.split(",").map(rn)); };
-  });
-  var ranges = [
-    'A1:D1,F1:G1', 'A2:D2,F2:G2', /* rows */
-    'A3:A10', 'B3:B10', 'E1:E10', 'F6:F8', /* cols */
-    'H1:J4', 'H10' /* blocks */
-  ];
-  var exp = [
-    { patternType: 'darkHorizontal',
-      fgColor: { theme: 9},
-      bgColor: { theme: 5 } },
-    { patternType: 'darkUp',
-      fgColor: { theme: 3},
-      bgColor: { theme: 7} },
-    { patternType: 'darkGray',
-      fgColor: { theme: 3},
-      bgColor: { theme: 1} },
-    { patternType: 'lightGray',
-      fgColor: { theme: 6},
-      bgColor: { theme: 2} },
-    { patternType: 'lightDown',
-      fgColor: { theme: 4},
-      bgColor: { theme: 7} },
-    { patternType: 'lightGrid',
-      fgColor: { theme: 6},
-      bgColor: { theme: 9} },
-    { patternType: 'lightGrid',
-      fgColor: { theme: 4},
-      bgColor: { theme: 2} },
-    { patternType: 'lightVertical',
-      fgColor: { theme: 3},
-      bgColor: { theme: 7} }
-  ];
-  ranges.forEach(function(rng) {
-    it('XLS  | ' + rng,function(){cmparr(rn2(rng).map(function(x){ return wsxls[x].s; }));});
-    it('XLSX | ' + rng,function(){cmparr(rn2(rng).map(function(x){ return wsxlsx[x].s; }));});
-  });
-  it('different styles', function() {
-    for(var i = 0; i != ranges.length-1; ++i) {
-      for(var j = i+1; j != ranges.length; ++j) {
-        diffsty(wsxlsx, rn2(ranges[i])[0], rn2(ranges[j])[0]);
-        /* TODO */
-        //diffsty(wsxls, rn2(ranges[i])[0], rn2(ranges[j])[0]);
-      }
-    }
-  });
-  it('correct styles', function() {
-    var stylesxls = ranges.map(function(r) { return rn2(r)[0]; }).map(function(r) { return wsxls[r].s; });
-    var stylesxlsx = ranges.map(function(r) { return rn2(r)[0]; }).map(function(r) { return wsxlsx[r].s; });
-    for(var i = 0; i != exp.length; ++i) {
-      [
-        "fgColor.theme","fgColor.raw_rgb",
-        "bgColor.theme","bgColor.raw_rgb",
-        "patternType"
-      ].forEach(function(k) {
-            deepcmp(exp[i], stylesxlsx[i].fill, k, i + ":"+k);
-            /* TODO */
-            //deepcmp(exp[i], stylesxls[i], k, i + ":"+k);
-          });
-    }
-  });
-});
 
+  describe('should correctly handle styles', function() {
+    var wsxls, wsxlsx, rn, rn2;
+    before(function() {
+      wsxls=X.readFile(paths.cssxls, {cellStyles:true,WTF:1}).Sheets.Sheet1;
+      wsxlsx=X.readFile(paths.cssxlsx, {cellStyles:true,WTF:1}).Sheets.Sheet1;
+      rn = function(range) {
+        var r = X.utils.decode_range(range);
+        var out = [];
+        for(var R = r.s.r; R <= r.e.r; ++R) for(var C = r.s.c; C <= r.e.c; ++C)
+          out.push(X.utils.encode_cell({c:C,r:R}));
+        return out;
+      };
+      rn2 = function(r) { return [].concat.apply([], r.split(",").map(rn)); };
+    });
+    var ranges = [
+      'A1:D1,F1:G1', 'A2:D2,F2:G2', /* rows */
+      'A3:A10', 'B3:B10', 'E1:E10', 'F6:F8', /* cols */
+      'H1:J4', 'H10' /* blocks */
+    ];
+    var exp = [
+      { patternType: 'darkHorizontal',
+        fgColor: { theme: 9, "tint":-0.249977111117893, raw_rgb: 'B9B9B9' },
+        bgColor: { theme: 5, "tint":0.3999755851924192, raw_rgb: '909090' } },
+      { patternType: 'darkUp',
+        fgColor: { theme: 3, "tint":-0.249977111117893,raw_rgb: 'B3B3B3' },
+        bgColor: { theme: 7, "tint":0.3999755851924192,raw_rgb: '606060' } },
+      { patternType: 'darkGray',
+        fgColor: { theme: 3, raw_rgb: 'EEECE1' },
+        bgColor: { theme: 1, raw_rgb: 'FFFFFF' } },
+      { patternType: 'lightGray',
+        fgColor: { theme: 6, "tint":0.3999755851924192, raw_rgb: 'C3C3C3' },
+        bgColor: { theme: 2, "tint":-0.499984740745262, raw_rgb: '797979' } },
+      { patternType: 'lightDown',
+        fgColor: { theme: 4, raw_rgb: '3B3B3B' },
+        bgColor: { theme: 7, raw_rgb: '606060' } },
+      { patternType: 'lightGrid',
+        fgColor: { theme: 6, "tint":-0.249977111117893, raw_rgb: '747474' },
+        bgColor: { theme: 9, "tint":-0.249977111117893, raw_rgb: 'B9B9B9' } },
+      { patternType: 'lightGrid',
+        fgColor: { theme: 4, raw_rgb: '4F81BD' },
+        bgColor: { theme: 2, "tint":-0.749992370372631, raw_rgb: '1F497D' } },
+      { patternType: 'lightVertical',
+        fgColor: { theme: 3, "tint":0.3999755851924192, raw_rgb: 'F5F5F5' },
+        bgColor: { theme: 7, "tint":0.3999755851924192, raw_rgb: 'B3B3B3' } }
+    ];
+    ranges.forEach(function(rng) {
+      it('XLS  | ' + rng,function(){cmparr(rn2(rng).map(function(x){ return wsxls[x].s; }));});
+      it('XLSX | ' + rng,function(){cmparr(rn2(rng).map(function(x){ return wsxlsx[x].s; }));});
+    });
+    it('different styles', function() {
+      for(var i = 0; i != ranges.length-1; ++i) {
+        for(var j = i+1; j != ranges.length; ++j) {
+          diffsty(wsxlsx, rn2(ranges[i])[0], rn2(ranges[j])[0]);
+          /* TODO */
+          //diffsty(wsxls, rn2(ranges[i])[0], rn2(ranges[j])[0]);
+        }
+      }
+    });
+    it('correct styles', function() {
+      var stylesxls = ranges.map(function(r) { return rn2(r)[0]; }).map(function(r) { return wsxls[r].s; });
+      var stylesxlsx = ranges.map(function(r) { return rn2(r)[0]; }).map(function(r) { return wsxlsx[r].s; });
+      for(var i = 0; i != exp.length; ++i) {
+        var props = [
+          "fgColor.theme","fgColor.raw_rgb",
+          "bgColor.theme","bgColor.raw_rgb",
+          "patternType"
+        ];
+
+        props.forEach(function(k) {
+          deepcmp(exp[i], stylesxlsx[i].fill, k, i + ":"+k);
+
+        });
+      }
+    });
+  });
+
+
+});
 
 function seq(end, start) {
 	var s = start || 0;
