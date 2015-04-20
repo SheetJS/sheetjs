@@ -26,15 +26,21 @@ Source: <http://git.io/xlsx>
 
 With [npm](https://www.npmjs.org/package/xlsx):
 
-    npm install xlsx
+```sh
+npm install xlsx --save
+```
 
 In the browser:
 
-    <script lang="javascript" src="dist/xlsx.core.min.js"></script>
+```html
+<script lang="javascript" src="dist/xlsx.core.min.js"></script>
+```
 
 With [bower](http://bower.io/search/?q=js-xlsx):
 
-    bower install js-xlsx
+```sh
+bower install js-xlsx
+```
 
 CDNjs automatically pulls the latest version and makes all versions available at
 <http://cdnjs.com/libraries/xlsx>
@@ -46,10 +52,12 @@ of these modules are rather large in size and are only needed in special
 circumstances, so they do not ship with the core.  For browser use, they must
 be included directly:
 
-    <!-- international support from https://github.com/sheetjs/js-codepage -->
-    <script src="dist/cpexcel.js"></script>
-    <!-- ODS support -->
-    <script src="dist/ods.js"></script>
+```html
+<!-- international support from https://github.com/sheetjs/js-codepage -->
+<script src="dist/cpexcel.js"></script>
+<!-- ODS support -->
+<script src="dist/ods.js"></script>
+```
 
 An appropriate version for each dependency is included in the dist/ directory.
 
@@ -63,7 +71,9 @@ Since xlsx.js uses ES5 functions like `Array#forEach`, older browsers require
 
 To use the shim, add the shim before the script tag that loads xlsx.js:
 
-    <script type="text/javascript" src="/path/to/shim.js"></script>
+```html
+<script type="text/javascript" src="/path/to/shim.js"></script>
+```
 
 ## Parsing Workbooks
 
@@ -72,7 +82,7 @@ data and feeding it into the library.  Here are a few common scenarios:
 
 - node readFile:
 
-```
+```js
 if(typeof require !== 'undefined') XLSX = require('xlsx');
 var workbook = XLSX.readFile('test.xlsx');
 /* DO SOMETHING WITH workbook HERE */
@@ -81,10 +91,11 @@ var workbook = XLSX.readFile('test.xlsx');
 - ajax (for a more complete example that works in older browsers, check the demo
   at <http://oss.sheetjs.com/js-xlsx/ajax.html>):
 
-```
+```js
 /* set up XMLHttpRequest */
 var url = "test_files/formula_stress_test_ajax.xlsx";
 var oReq = new XMLHttpRequest();
+
 oReq.open("GET", url, true);
 oReq.responseType = "arraybuffer";
 
@@ -108,13 +119,14 @@ oReq.send();
 
 - HTML5 drag-and-drop using readAsBinaryString:
 
-```
+```js
 /* set up drag-and-drop event */
 function handleDrop(e) {
   e.stopPropagation();
   e.preventDefault();
   var files = e.dataTransfer.files;
-  var i,f;
+  var i, f;
+  
   for (i = 0, f = files[i]; i != files.length; ++i) {
     var reader = new FileReader();
     var name = f.name;
@@ -134,10 +146,11 @@ drop_dom_element.addEventListener('drop', handleDrop, false);
 
 - HTML5 input file element using readAsBinaryString:
 
-```
+```js
 function handleFile(e) {
   var files = e.target.files;
-  var i,f;
+  var i, f;
+  
   for (i = 0, f = files[i]; i != files.length; ++i) {
     var reader = new FileReader();
     var name = f.name;
@@ -160,7 +173,7 @@ The full object format is described later in this README.
 
 This example extracts the value stored in cell A1 from the first worksheet:
 
-```
+```js
 var first_sheet_name = workbook.SheetNames[0];
 var address_of_cell = 'A1';
 
@@ -176,8 +189,9 @@ var desired_value = desired_cell.v;
 
 This example iterates through every nonempty of every sheet and dumps values:
 
-```
+```js
 var sheet_name_list = workbook.SheetNames;
+
 sheet_name_list.forEach(function(y) { /* iterate through sheets */
   var worksheet = workbook.Sheets[y];
   for (z in worksheet) {
@@ -195,7 +209,9 @@ Complete examples:
 Note that older versions of IE does not support HTML5 File API, so the base64
 mode is provided for testing.  On OSX you can get the base64 encoding with:
 
-    $ <target_file.xlsx base64 | pbcopy
+```sh
+$ <target_file.xlsx base64 | pbcopy
+```
 
 - <http://oss.sheetjs.com/js-xlsx/ajax.html> XMLHttpRequest
 
@@ -220,7 +236,7 @@ Assuming `workbook` is a workbook object:
 
 - nodejs write to file:
 
-```
+```js
 /* output format determined by filename */
 XLSX.writeFile(workbook, 'out.xlsx');
 /* at this point, out.xlsx is a file that you can distribute */
@@ -228,7 +244,7 @@ XLSX.writeFile(workbook, 'out.xlsx');
 
 - write to binary string (using FileSaver.js):
 
-```
+```js
 /* bookType can be 'xlsx' or 'xlsm' or 'xlsb' */
 var wopts = { bookType:'xlsx', bookSST:false, type:'binary' };
 
@@ -303,7 +319,7 @@ Cell range objects are stored as `{s:S, e:E}` where `S` is the first cell and
 range `A3:B7` is represented by the object `{s:{c:0, r:2}, e:{c:1, r:6}}`. Utils
 use the following pattern to walk each of the cells in a range:
 
-```
+```js
 for(var R = range.s.r; R <= range.e.r; ++R) {
   for(var C = range.s.c; C <= range.e.c; ++C) {
     var cell_address = {c:C, r:R};
@@ -566,7 +582,7 @@ Running `make init` will refresh the `test_files` submodule and get the files.
 [the oss.sheetjs.com repo](https://github.com/SheetJS/SheetJS.github.io) and
 replace the xlsx.js file (then fire up the browser and go to `stress.html`):
 
-```
+```sh
 $ cp xlsx.js ../SheetJS.github.io
 $ cd ../SheetJS.github.io
 $ simplehttpserver # or "python -mSimpleHTTPServer" or "serve"
@@ -585,7 +601,7 @@ build script (run `make`) will concatenate the individual bits to produce the
 script.  Before submitting a contribution, ensure that running make will produce
 the xlsx.js file exactly.  The simplest way to test is to move the script:
 
-```
+```sh
 $ mv xlsx.js xlsx.new.js
 $ make
 $ diff xlsx.js xlsx.new.js
