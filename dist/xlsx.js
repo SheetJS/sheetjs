@@ -11507,6 +11507,9 @@ function sheet_to_json(sheet, opts){
 	var val, row, range, header = 0, offset = 1, r, hdr = [], isempty, R, C, v;
 	var o = opts != null ? opts : {};
 	var raw = o.raw;
+  /* empty string value */
+  var emptyVal = {t: 's', v: '', r: '<t></t>', h: '', w: ''};
+
 	if(sheet == null || sheet["!ref"] == null) return [];
 	range = o.range !== undefined ? o.range : sheet["!ref"];
 	if(o.header === 1) header = 1;
@@ -11545,7 +11548,8 @@ function sheet_to_json(sheet, opts){
 			else row.__rowNum__ = R;
 		}
 		for (C = r.s.c; C <= r.e.c; ++C) {
-			val = sheet[cols[C] + rr];
+      /* replace cell with empty string if undefined */
+			val = sheet[cols[C] + rr] || emptyVal;
 			if(val === undefined || val.t === undefined) continue;
 			v = val.v;
 			switch(val.t){
