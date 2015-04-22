@@ -11507,9 +11507,9 @@ function sheet_to_json(sheet, opts){
 	var val, row, range, header = 0, offset = 1, r, hdr = [], isempty, R, C, v;
 	var o = opts != null ? opts : {};
 	var raw = o.raw;
-  var emptyString = o.emptyString;
-  /* empty string value */
-  var emptyVal = {t: 's', v: '', r: '<t></t>', h: '', w: ''};
+      var emptyString = o.emptyString;
+      /* empty string value */
+      var emptyVal = {t: 's', v: '', r: '<t></t>', h: '', w: ''};
 
 	if(sheet == null || sheet["!ref"] == null) return [];
 	range = o.range !== undefined ? o.range : sheet["!ref"];
