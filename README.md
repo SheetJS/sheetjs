@@ -115,7 +115,8 @@ function handleDrop(e) {
   e.preventDefault();
   var files = e.dataTransfer.files;
   var i,f;
-  for (i = 0, f = files[i]; i != files.length; ++i) {
+  for (i = 0; i != files.length; ++i) {
+    f = files[i]
     var reader = new FileReader();
     var name = f.name;
     reader.onload = function(e) {
@@ -138,7 +139,8 @@ drop_dom_element.addEventListener('drop', handleDrop, false);
 function handleFile(e) {
   var files = e.target.files;
   var i,f;
-  for (i = 0, f = files[i]; i != files.length; ++i) {
+  for (i = 0; i != files.length; ++i) {
+    f = files[i];
     var reader = new FileReader();
     var name = f.name;
     reader.onload = function(e) {
