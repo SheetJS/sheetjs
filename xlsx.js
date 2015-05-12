@@ -12005,7 +12005,7 @@ var XmlNode = (function () {
   return XmlNode;
 })();
 /////////////////////////////////////////////////////////////////////////////////////////////////////
-if ((typeof 'module' != 'undefined'  && typeof require != 'undefined') || (typeof $ != 'undefined')) {
+
   var StyleBuilder = function (options) {
 
     var customNumFmtId = 164;
@@ -12381,7 +12381,7 @@ if ((typeof 'module' != 'undefined'  && typeof require != 'undefined') || (typeo
       }
     }.initialize(options||{});
   }
-}
+
 
 XLSX.parse_xlscfb = parse_xlscfb;
 XLSX.parse_zip = parse_zip;
