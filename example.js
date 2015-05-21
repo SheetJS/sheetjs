@@ -137,7 +137,8 @@ var workbook = new Workbook(XLSX)
           {v: "Vertical", s: {alignment: {textRotation: 255}}}
         ],
       [
-        {v: "Font color test", s: { font: {fgColor: {rgb: "FFC6EFCE"}}}}
+        {v: "Font color test", s: { font: {fgColor: {rgb: "FFC6EFCE"}}}},
+        {v: "right to left", s: {alignment: {readingOrder: 2}}}
       ]
     ]).mergeCells("Main", {
       "s": {"c": 0, "r": 0 },
