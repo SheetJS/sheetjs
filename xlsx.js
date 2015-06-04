@@ -12106,14 +12106,14 @@ var XmlNode = (function () {
         if (!defaultStyle.font) defaultStyle.font = {name: 'Calibri', sz: '12'};
         if (!defaultStyle.font.name) defaultStyle.font.name = 'Calibri';
         if (!defaultStyle.font.sz) defaultStyle.font.sz = 11;
-        if (!defaultStyle.fill) defaultStyle.fill = { fgColor: { patternType: "none"}};
+        if (!defaultStyle.fill) defaultStyle.fill = {  patternType: "none", fgColor: {}};
         if (!defaultStyle.border) defaultStyle.border = {};
         if (!defaultStyle.numFmt) defaultStyle.numFmt = 0;
 
         this.defaultStyle = defaultStyle;
 
         var gray125Style = JSON.parse(JSON.stringify(defaultStyle));
-        gray125Style.fill = { fgColor: { patternType: "gray125"}}
+        gray125Style.fill = {patternType: "gray125", fgColor: { }}
 
         this.addStyles([defaultStyle, gray125Style]);
         return this;
