@@ -3,6 +3,12 @@
 Parser and writer for various spreadsheet formats.  Pure-JS cleanroom
 implementation from official specifications and related documents.
 
+**NOTE:** This project is a fork of the original (and awesome) [SheetJS/xlsx](https://github.com/SheetJS/js-xlsx) project.
+It is extended to enable cell formats to be read from and written to .xlsx workbooks.
+The intent is to provide a temporary means of using these features in practice, and ultimately to merge this into the primary project.
+Report any issues to https://github.com/protobi/js-xlsx/issues.
+
+
 Supported read formats:
 
 - Excel 2007+ XML Formats (XLSX/XLSM)
@@ -24,10 +30,10 @@ Source: <http://git.io/xlsx>
 
 ## Installation
 
-With [npm](https://www.npmjs.org/package/xlsx):
+With [npm](https://www.npmjs.org/package/xlsx-style):
 
 ```sh
-npm install xlsx --save
+npm install xlsx-style --save
 ```
 
 In the browser:

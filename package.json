@@ -2,14 +2,14 @@
 	"name": "xlsx-style",
 	"version": "0.8.0",
 	"author": "sheetjs",
-	"description": "Excel (XLSB/XLSX/XLSM/XLS/XML) and ODS spreadsheet parser and writer",
+	"description": "Excel (XLSB/XLSX/XLSM/XLS/XML) and ODS spreadsheet parser and writer (extended to enable read/write of cell formats with xlsx files)",
 	"keywords": [ "excel", "xls", "xlsx", "xlsb", "xlsm", "ods", "office", "spreadsheet" ],
 	"bin": {
 		"xlsx": "./bin/xlsx.njs"
 	},
 	"main": "./xlsx",
 	"dependencies": {
-		"ssf":"~0.8.1",
+		"ssf":"~0.8.2",
 		"codepage":"~1.3.6",
 		"cfb":">=0.10.0",
 		"jszip":"2.4.0",
@@ -22,7 +22,7 @@
 		"xlsjs":"",
 		"uglify-js":""
 	},
-	"repository": { "type":"git", "url":"git://github.com/SheetJS/js-xlsx.git" },
+	"repository": { "type":"git", "url":"git://github.com/protobi/js-xlsx.git" },
 	"scripts": {
 		"pretest": "git submodule init && git submodule update",
 		"test": "make test"
@@ -32,7 +32,7 @@
 			"pattern": "xlsx.js"
 		}
 	},
-	"bugs": { "url": "https://github.com/SheetJS/js-xlsx/issues" },
+	"bugs": { "url": "https://github.com/protobi/js-xlsx/issues" },
 	"license": "Apache-2.0",
 	"engines": { "node": ">=0.8" }
 }
