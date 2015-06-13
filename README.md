@@ -49,7 +49,7 @@ In the browser:
 With [bower](http://bower.io/search/?q=js-xlsx):
 
 ```sh
-bower install js-xlsx
+bower install js-xlsx-style#beta
 ```
 
 CDNjs automatically pulls the latest version and makes all versions available at
