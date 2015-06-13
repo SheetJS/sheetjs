@@ -22,7 +22,7 @@
 		"xlsjs":"",
 		"uglify-js":""
 	},
-	"repository": { "type":"git", "url":"git://github.com/protobi/js-xlsx.git" },
+	"repository": { "type":"git", "url":"git://github.com/protobi/js-xlsx.git#beta" },
 	"scripts": {
 		"pretest": "git submodule init && git submodule update",
 		"test": "make test"
