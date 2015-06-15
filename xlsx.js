@@ -11299,12 +11299,12 @@ function write_zip(wb, opts) {
 	get_cell_style(opts.cellXfs, {}, {revssf:{"General":0}});
 
 	f = "docProps/core.xml";
+	if(!wb.Props) wb.Props = {};
 	zip.file(f, write_core_props(wb.Props, opts));
 	ct.coreprops.push(f);
 	add_rels(opts.rels, 2, f, RELS.CORE_PROPS);
 
 	f = "docProps/app.xml";
-	if(!wb.Props) wb.Props = {};
 	wb.Props.SheetNames = wb.SheetNames;
 	wb.Props.Worksheets = wb.SheetNames.length;
 	zip.file(f, write_ext_props(wb.Props, opts));
