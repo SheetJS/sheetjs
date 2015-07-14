@@ -310,7 +310,18 @@ function hashq(str/*:string*/)/*:string*/ {
   return o;
 }
 function rnd(val/*:number*/, d/*:number*/)/*:string*/ { var dd = Math.pow(10,d); return ""+(Math.round(val * dd)/dd); }
-function dec(val/*:number*/, d/*:number*/)/*:number*/ { return Math.round((val-Math.floor(val))*Math.pow(10,d)); }
+function dec(val/*:number*/, d/*:number*/)/*:number*/ {
+    if (d < ('' + Math.round((val-Math.floor(val))*Math.pow(10,d))).length) {
+        return 0;
+    }
+    return Math.round((val-Math.floor(val))*Math.pow(10,d));
+}
+function carry(val/*:number*/, d/*:number*/)/*:number*/ {
+    if (d < ('' + Math.round((val-Math.floor(val))*Math.pow(10,d))).length) {
+        return 1;
+    }
+    return 0;
+}
 function flr(val/*:number*/)/*:string*/ { if(val < 2147483647 && val > -2147483648) return ""+(val >= 0 ? (val|0) : (val-1|0)); return ""+Math.floor(val); }
 function write_num_flt(type/*:string*/, fmt/*:string*/, val/*:number*/)/*:string*/ {
   if(type.charCodeAt(0) === 40 && !fmt.match(closeparen)) {
@@ -342,7 +353,7 @@ function write_num_flt(type/*:string*/, fmt/*:string*/, val/*:number*/)/*:string
   }
   if((r = fmt.match(/^#,##0(\.?)$/))) return sign + commaify(pad0r(aval,0));
   if((r = fmt.match(/^#,##0\.([#0]*0)$/))) {
-    return val < 0 ? "-" + write_num_flt(type, fmt, -val) : commaify(""+(Math.floor(val))) + "." + pad0(dec(val, r[1].length),r[1].length);
+    return val < 0 ? "-" + write_num_flt(type, fmt, -val) : commaify(""+(Math.floor(val) + carry(val, r[1].length))) + "." + pad0(dec(val, r[1].length),r[1].length);
   }
   if((r = fmt.match(/^#,#*,#0/))) return write_num_flt(type,fmt.replace(/^#,#*,/,""),val);
   if((r = fmt.match(/^([0#]+)(\\?-([0#]+))+$/))) {

@@ -537,7 +537,18 @@ V8 has an annoying habit of deoptimizing round and floor
 
 ```
 function rnd(val/*:number*/, d/*:number*/)/*:string*/ { var dd = Math.pow(10,d); return ""+(Math.round(val * dd)/dd); }
-function dec(val/*:number*/, d/*:number*/)/*:number*/ { return Math.round((val-Math.floor(val))*Math.pow(10,d)); }
+function dec(val/*:number*/, d/*:number*/)/*:number*/ {
+	if (d < ('' + Math.round((val-Math.floor(val))*Math.pow(10,d))).length) {
+		return 0;
+	}
+	return Math.round((val-Math.floor(val))*Math.pow(10,d));
+}
+function carry(val/*:number*/, d/*:number*/)/*:number*/ {
+	if (d < ('' + Math.round((val-Math.floor(val))*Math.pow(10,d))).length) {
+		return 1;
+	}
+	return 0;
+}
 function flr(val/*:number*/)/*:string*/ { if(val < 2147483647 && val > -2147483648) return ""+(val >= 0 ? (val|0) : (val-1|0)); return ""+Math.floor(val); }
 ```
 
@@ -614,7 +625,7 @@ The next few simplifications ignore leading optional sigils (`#`):
   }
   if((r = fmt.match(/^#,##0(\.?)$/))) return sign + commaify(pad0r(aval,0));
   if((r = fmt.match(/^#,##0\.([#0]*0)$/))) {
-    return val < 0 ? "-" + write_num_flt(type, fmt, -val) : commaify(""+(Math.floor(val))) + "." + pad0(dec(val, r[1].length),r[1].length);
+    return val < 0 ? "-" + write_num_flt(type, fmt, -val) : commaify(""+(Math.floor(val) + carry(val, r[1].length))) + "." + pad0(dec(val, r[1].length),r[1].length);
   }
   if((r = fmt.match(/^#,#*,#0/))) return write_num_flt(type,fmt.replace(/^#,#*,/,""),val);
 ```
