@@ -222,7 +222,8 @@ Assuming `workbook` is a workbook object:
 
 ```
 /* output format determined by filename */
-XLSX.writeFile(workbook, 'out.xlsx');
+/* adding compression option DEFLATE can significantly reduce your outputed file's size  */
+XLSX.writeFile(workbook, 'out.xlsx', {compression: 'DEFLATE'});
 /* at this point, out.xlsx is a file that you can distribute */
 ```
 
@@ -230,7 +231,7 @@ XLSX.writeFile(workbook, 'out.xlsx');
 
 ```
 /* bookType can be 'xlsx' or 'xlsm' or 'xlsb' */
-var wopts = { bookType:'xlsx', bookSST:false, type:'binary' };
+var wopts = { bookType:'xlsx', bookSST:false, type:'binary', compression: 'DEFLATE' };
 
 var wbout = XLSX.write(workbook,wopts);
 
