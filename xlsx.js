@@ -11403,14 +11403,21 @@ function readFileSync(data, opts) {
 	return readSync(data, o);
 }
 function write_zip_type(wb, opts) {
-	var o = opts||{};
-	var z = write_zip(wb, o);
-	switch(o.type) {
-		case "base64": return z.generate({type:"base64"});
-		case "binary": return z.generate({type:"string"});
-		case "buffer": return z.generate({type:"nodebuffer"});
-		case "file": return _fs.writeFileSync(o.file, z.generate({type:"nodebuffer"}));
-		default: throw new Error("Unrecognized type " + o.type);
+	var o = {}, z;
+	opts = opts||{};
+	z = write_zip(wb, opts);
+	
+	switch(opts.type) {
+		case "base64": o.type = "base64"; if (typeof opts.compression === 'string') {o.compression = opts.compression;} break;
+		case "binary": o.type = "string"; if (typeof opts.compression === 'string') {o.compression = opts.compression;} break;
+		case "buffer": o.type = "nodebuffer"; if (typeof opts.compression === 'string') {o.compression = opts.compression;} break;
+		case "file": o.type = "nodebuffer"; if (typeof opts.compression === 'string') {o.compression = opts.compression;} break;
+		default: throw new Error("Unrecognized type " + opts.type);
+	}
+	
+	switch(opts.type) {
+		case "file": return _fs.writeFileSync(opts.file, z.generate(o));
+		default: return z.generate(o);
 	}
 }
 
