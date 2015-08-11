@@ -2,7 +2,7 @@
   "name": "js-xlsx-style",
   "homepage": "https://github.com/protobi/js-xlsx",
   "main": "dist/xlsx.js",
-  "version": "0.8.2",
+  "version": "0.8.5",
   "ignore": [
     "bin",
     "bits",
