@@ -1,4 +1,4 @@
-var XLSX = require('./');
+var XLSX = require('../.');
 
 var JSZip = require('jszip');
 var fs = require('fs');
@@ -42,6 +42,38 @@ function basicallyEquals(left, right) {
     return true;
   }
 }
+
+
+describe('styles with blank cells', function () {
+  it ('retains styles with blank cells', function() {
+
+
+    var OUTFILE = '/tmp/ex1.xlsx';
+    var OUTFILE2 = '/tmp/ex1a.xlsx';
+
+    var workbook = {
+      SheetNames : ["Sheet1"],
+      Sheets: {
+        "Sheet1": {
+          "B2": {v: "Top left", s: { border: { top: { style: 'medium', color: { rgb: "FFFFAA00"}}, left: { style: 'medium', color: { rgb: "FFFFAA00"}} }}},
+          "C2": {v: "Top right", s: { border: { top: { style: 'medium', color: { rgb: "FFFFAA00"}}, right: { style: 'medium', color: { rgb: "FFFFAA00"}} }}},
+          "B3": {v: "Bottom left", s: { border: { bottom: { style: 'medium', color: { rgb: "FFFFAA00"}}, left: { style: 'medium', color: { rgb: "FFFFAA00"}} }}},
+          "C3": {v: "", s: { border: { bottom: { style: 'medium', color: { rgb: "FFFFAA00"}}, right: { style: 'medium', color: { rgb: "FFFFAA00"}} }}},
+          "!ref":"B2:C3"
+        }
+      }
+    };
+
+    // write the file and read it back...
+    XLSX.writeFile(workbook, OUTFILE, {bookType: 'xlsx', bookSST: false});
+    var workbook2 = XLSX.readFile(OUTFILE, {cellStyles: true});
+    assert(basicallyEquals(workbook.Sheets, workbook2.Sheets));
+
+    XLSX.writeFile(workbook2, OUTFILE2, {bookType: 'xlsx', bookSST: false});
+    var workbook3 = XLSX.readFile(OUTFILE2, {cellStyles: true});
+    assert(basicallyEquals(workbook.Sheets, workbook3.Sheets))
+  });
+});
 
 describe("Export styles", function () {
   var workbook, wbout, wbin;
@@ -659,3 +691,4 @@ describe("Export styles", function () {
   });
 
 });
+

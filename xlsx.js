@@ -7651,7 +7651,7 @@ function write_ws_xml_cols(ws, cols) {
 }
 
 function write_ws_xml_cell(cell, ref, ws, opts, idx, wb) {
-	if(cell.v === undefined) return "";
+	if(cell.v === undefined && cell.s === undefined) return "";
 	var vv = "";
 	var oldt = cell.t, oldv = cell.v;
 	switch(cell.t) {
@@ -7738,7 +7738,7 @@ return function parse_ws_xml_data(sdata, s, opts, guess) {
 			if(opts.cellFormula && (cref=d.match(match_f))!== null) p.f=unescapexml(cref[1]);
 
 			/* SCHEMA IS ACTUALLY INCORRECT HERE.  IF A CELL HAS NO T, EMIT "" */
-			if(tag.t === undefined && p.v === undefined) {
+			if(tag.t === undefined && tag.s === undefined && p.v === undefined) {
 				if(!opts.sheetStubs) continue;
 				p.t = "stub";
 			}
@@ -7747,7 +7747,10 @@ return function parse_ws_xml_data(sdata, s, opts, guess) {
 			if(guess.e.c < idx) guess.e.c = idx;
 			/* 18.18.11 t ST_CellType */
 			switch(p.t) {
-				case 'n': p.v = parseFloat(p.v); break;
+				case 'n':
+          p.v = parseFloat(p.v);
+          if(isNaN(p.v)) p.v = "" // we don't want NaN if p.v is null
+          break;
 				case 's':
 					sstr = strs[parseInt(p.v, 10)];
 					p.v = sstr.t;
