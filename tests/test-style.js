@@ -690,5 +690,26 @@ describe("Export styles", function () {
     assert(basicallyEquals(workbook.Sheets.Main,wb2.Sheets.Main));
   });
 
+  it('should edit style of one cell without applie modification on other cell', function () {
+    var wb2 = XLSX.read(XLSX.write(workbook, {type:"buffer", bookType: 'xlsx'}), {cellStyles: true, cellNF: true})
+
+    var A6s = wb2.Sheets.Main.A6.s;
+    var B6s = wb2.Sheets.Main.B6.s;
+
+    Object.keys(A6s).forEach(function(key) {
+      if(A6s[key])
+        assert(A6s[key] !== B6s[key]);
+    });
+
+    assert(A6s.border.top === undefined);
+    assert(B6s.border.top === undefined);
+
+    A6s.border.top = {};
+    assert(B6s.border.top === undefined);
+
+    XLSX.writeFile(wb2, '/tmp/wb2.xlsx',  { defaultCellStyle: defaultCellStyle });
+    assert(basicallyEquals(workbook.Sheets.Main,wb2.Sheets.Main));
+  });
+
 });
 
