@@ -4363,6 +4363,7 @@ var parse_rs = (function parse_rs_factory() {
 				/* ** not required . */
 				case '<shadow':
 					/* falls through */
+				case '<shadow>':
 				case '<shadow/>': break;
 
 				/* 18.4.1 charset CT_IntProperty TODO */
@@ -4374,6 +4375,7 @@ var parse_rs = (function parse_rs_factory() {
 				/* 18.4.2 outline CT_BooleanProperty TODO */
 				case '<outline':
 					/* falls through */
+				case '<outline>':
 				case '<outline/>': break;
 
 				/* 18.4.5 rFont CT_FontName */
@@ -4386,6 +4388,7 @@ var parse_rs = (function parse_rs_factory() {
 				case '<strike':
 					if(!y.val) break;
 					/* falls through */
+				case '<strike>':
 				case '<strike/>': font.strike = 1; break;
 				case '</strike>': break;
 
@@ -4393,6 +4396,7 @@ var parse_rs = (function parse_rs_factory() {
 				case '<u':
 					if(y.val == '0') break;
 					/* falls through */
+				case '<u>':
 				case '<u/>': font.u = 1; break;
 				case '</u>': break;
 
@@ -4400,6 +4404,7 @@ var parse_rs = (function parse_rs_factory() {
 				case '<b':
 					if(y.val == '0') break;
 					/* falls through */
+				case '<b>':
 				case '<b/>': font.b = 1; break;
 				case '</b>': break;
 
@@ -4407,6 +4412,7 @@ var parse_rs = (function parse_rs_factory() {
 				case '<i':
 					if(y.val == '0') break;
 					/* falls through */
+				case '<i>':
 				case '<i/>': font.i = 1; break;
 				case '</i>': break;
 
