@@ -4194,6 +4194,7 @@ var parse_rs = (function parse_rs_factory() {
 				case '</strike>': break;
 
 				/* 18.4.13 u CT_UnderlineProperty */
+				case '<u>':
 				case '<u':
 					if(!y.val) break;
 					/* falls through */
@@ -4201,6 +4202,7 @@ var parse_rs = (function parse_rs_factory() {
 				case '</u>': break;
 
 				/* 18.8.2 b */
+				case '<b>':
 				case '<b':
 					if(!y.val) break;
 					/* falls through */
