@@ -5020,7 +5020,7 @@ function write_sty_xml(wb, opts) {
 
   var o = [XML_HEADER, STYLES_XML_ROOT], w;
   if ((w = write_numFmts(wb.SSF)) != null) o[o.length] = w;
-  o[o.length] = ('<fonts count="1"><font><sz val="12"/><color theme="1"/><name val="Calibri"/><family val="2"/><scheme val="minor"/></font></fonts>');
+  o[o.length] = ('<fonts count="1"><font><sz val="8"/><color theme="1"/><name val="Tahoma"/><family val="2"/><scheme val="minor"/></font></fonts>');
   o[o.length] = ('<fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills>');
   o[o.length] = ('<borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders>');
   o[o.length] = ('<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>');
@@ -7668,8 +7668,7 @@ function write_ws_xml_cell(cell, ref, ws, opts, idx, wb) {
 			break;
 		default: vv = cell.v; break;
 	}
-	var v = writetag('v', escapexml(vv)), o = {r:ref};
-	/* TODO: cell style */
+	var v = writetag(cell.v.toString().charAt(0) === '=' ? 'f' : 'v', escapexml(vv)), o = {r:ref};
 	var os = get_cell_style(opts.cellXfs, cell, opts);
 	if(os !== 0) o.s = os;
 	switch(cell.t) {
@@ -12106,9 +12105,9 @@ var XmlNode = (function () {
         // the second style MUST be gray125 for some reason
 
         var defaultStyle = options.defaultCellStyle || {};
-        if (!defaultStyle.font) defaultStyle.font = {name: 'Calibri', sz: '12'};
-        if (!defaultStyle.font.name) defaultStyle.font.name = 'Calibri';
-        if (!defaultStyle.font.sz) defaultStyle.font.sz = 11;
+        if (!defaultStyle.font) defaultStyle.font = {name: 'Tahoma', sz: '8'};
+        if (!defaultStyle.font.name) defaultStyle.font.name = 'Tahoma';
+        if (!defaultStyle.font.sz) defaultStyle.font.sz = 8;
         if (!defaultStyle.fill) defaultStyle.fill = {  patternType: "none", fgColor: {}};
         if (!defaultStyle.border) defaultStyle.border = {};
         if (!defaultStyle.numFmt) defaultStyle.numFmt = 0;
