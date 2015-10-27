@@ -341,30 +341,29 @@ for(var R = range.s.r; R <= range.e.r; ++R) {
 
 | Key | Description |
 | --- | ----------- |
-| `v` | raw value (see Data Types section for more info) |
+| `v` | raw value; see Data Types section below |
 | `w` | formatted text (if applicable) |
-| `t` | cell type: `b` Boolean, `n` Number, `e` error, `s` String, `d` Date |
-| `f` | cell formula (if applicable) |
+| `t` | cell type: `b` Boolean, `n` number, `e` error, `s` string and `d` date-time |
+| `f` | cell formula (read only) |
 | `r` | rich text encoding (if applicable) |
 | `h` | HTML rendering of the rich text (if applicable) |
-| `c` | comments associated with the cell ** |
-| `z` | number format string associated with the cell (if requested) |
+| `c` | comments associated with the cell |
 | `l` | cell hyperlink object (.Target holds link, .tooltip is tooltip) |
-| `s` | the style/theme of the cell (if applicable) |
+| `s` | the style/theme of the cell; see Cell Styles section below |
 
 Built-in export utilities (such as the CSV exporter) will use the `w` text if it
 is available.  To change a value, be sure to delete `cell.w` (or set it to
-`undefined`) before attempting to export.  The utilities will regenerate the `w`
-text from the number format (`cell.z`) and the raw value if possible.
+`undefined`) before attempting to export.
 
-**Note**: The .z attribute is now deprecated.  Use the `.s` attribute to specify cell styles including number formats.
-To specify a number format, use `s.numFmt`, e.g. `{v: 42145.822, s: { numFmt: "m/dd/yy"}}` described below.
+To specify a format, put a string into `s.numFmt`, e.g. `{ v: 42145.822, t: "d", s: { numFmt: "m/dd/yy" } }`. `t` must be specified as either `n` or `d` as well.
+
+To write a formula, put a string into `v` where the first character must be an equal sign (`=`).
 
 ### Data Types
 
 The raw value is stored in the `v` field, interpreted based on the `t` field.
 
-Type `b` is the Boolean type.  `v` is interpreted according to JS truth tables
+Type `b` is the Boolean type. `v` is interpreted according to JS truth tables
 
 Type `e` is the Error type. `v` holds the number and `w` holds the common name:
 
@@ -394,6 +393,75 @@ dates in the local timezone.  js-xlsx does not correct for this error.
 Type `s` is the String type.  `v` should be explicitly stored as a string to
 avoid possible confusion.
 
+## Cell Styles
+
+Cell styles are specified by a style object that roughly parallels the OpenXML structure.  The style object has five
+top-level attributes: `fill`, `font`, `numFmt`, `alignment`, and `border`.
+
+
+| Style Attribute | Sub Attributes | Values |
+| :-------------- | :------------- | :------------- | :----- |
+| fill            | patternType    |  `"solid"` or `"none"` |
+|                 | fgColor        |  `COLOR_SPEC`
+|                 | bgColor        |  `COLOR_SPEC`
+| font            | name           |  `"Calibri"` // default
+|                 | sz             |  `"11"` // font size in points
+|                 | color          |  `COLOR_SPEC`
+|                 | bold           |  `true || false`
+|                 | underline      |  `true || false`
+|                 | italic         |  `true || false`
+|                 | strike         |  `true || false`
+|                 | outline        |  `true || false`
+|                 | shadow         |  `true || false`
+|                 | vertAlign      |  `true || false`
+| numFmt          |                |  `"0"`  // integer index to built in formats, see StyleBuilder.SSF property
+|                 |                |  `"0.00%"` // string matching a built-in format, see StyleBuilder.SSF
+|                 |                |  `"0.0%"`  // string specifying a custom format
+|                 |                |  `"0.00%;\\(0.00%\\);\\-;@"` // string specifying a custom format, escaping special characters
+|                 |                |  `"m/dd/yy"` // string a date format using Excel's format notation
+| alignment       | vertical       | `"bottom"||"center"||"top"`
+|                 | horizontal     | `"left"||"center"||"right"`
+|                 | wrapText       |  `true || false`
+|                 | readingOrder   |  `2` // for right-to-left
+|                 | textRotation   | Number from `0` to `180` or `255` (default is `0`)
+|                 |                |  `90` is rotated up 90 degrees
+|                 |                |  `45` is rotated up 45 degrees
+|                 |                | `135` is rotated down 45 degrees 
+|                 |                | `180` is rotated down 180 degrees
+|                 |                | `255` is special,  aligned vertically
+| border          | top            | `{ style: BORDER_STYLE, color: COLOR_SPEC }`
+|                 | bottom         | `{ style: BORDER_STYLE, color: COLOR_SPEC }`
+|                 | left           | `{ style: BORDER_STYLE, color: COLOR_SPEC }`
+|                 | right          | `{ style: BORDER_STYLE, color: COLOR_SPEC }`
+|                 | diagonal       | `{ style: BORDER_STYLE, color: COLOR_SPEC }`
+|                 | diagonalUp     | `true||false`
+|                 | diagonalDown   | `true||false`
+
+**BORDER_STYLE**: Border style is a string value which may take on one of the following values:
+ * `thin`
+ * `medium`
+ * `thick`
+ * `dotted`
+ * `hair`
+ * `dashed`
+ * `mediumDashed`
+ * `dashDot`
+ * `mediumDashDot`
+ * `dashDotDot`
+ * `mediumDashDotDot`
+ * `slantDashDot`
+
+**COLOR_SPEC**: Colors for `fill`, `font`, and `border` are specified as objects, either:
+* `{ auto: 1 }` specifying automatic values
+* `{ rgb: "FFFFAA00" }` specifying a hex ARGB value
+* `{ theme: "1", tint: "-0.25"}` specifying an integer index to a theme color and a tint value (default 0)
+* `{ indexed: 64}` default value for `fill.bgColor`
+
+Borders for merged areas are specified for each cell within the merged area.  So to apply a box border to a merged area of 3x3 cells, border styles would need to be specified for eight different cells:
+* left borders for the three cells on the left,
+* right borders for the cells on the right
+* top borders for the cells on the top
+* bottom borders for the cells on the left
 
 ### Worksheet Object
 
@@ -438,7 +506,6 @@ Special worksheet keys (accessible as `worksheet[key]`, each starting with `!`):
 `wb.Props` is an object storing the standard properties.  `wb.Custprops` stores
 custom properties.  Since the XLS standard properties deviate from the XLSX
 standard, XLS parsing stores core properties in both places.  .
-
 
 ## Parsing Options
 
@@ -497,81 +564,6 @@ The exported `write` and `writeFile` functions accept an options argument:
 - `cellDates` only applies to XLSX output and is not guaranteed to work with
   third-party readers.  Excel itself does not usually write cells with type `d`
   so non-Excel tools may ignore the data or blow up in the presence of dates.
-
-
-## Cell Styles
-
-Cell styles are specified by a style object that roughly parallels the OpenXML structure.  The style object has five
-top-level attributes: `fill`, `font`, `numFmt`, `alignment`, and `border`.
-
-
-| Style Attribute | Sub Attributes | Values |
-| :-------------- | :------------- | :------------- | :----- |
-| fill            | patternType    |  `"solid"` or `"none"` |
-|                 | fgColor        |  `COLOR_SPEC`
-|                 | bgColor        |  `COLOR_SPEC`
-| font            | name           |  `"Calibri"` // default
-|                 | sz             |  `"11"` // font size in points
-|                 | color          |  `COLOR_SPEC`
-|                 | bold           |  `true || false`
-|                 | underline      |  `true || false`
-|                 | italic         |  `true || false`
-|                 | strike         |  `true || false`
-|                 | outline        |  `true || false`
-|                 | shadow         |  `true || false`
-|                 | vertAlign      |  `true || false`
-| numFmt          |                |  `"0"`  // integer index to built in formats, see StyleBuilder.SSF property
-|                 |                |  `"0.00%"` // string matching a built-in format, see StyleBuilder.SSF
-|                 |                |  `"0.0%"`  // string specifying a custom format
-|                 |                |  `"0.00%;\\(0.00%\\);\\-;@"` // string specifying a custom format, escaping special characters
-|                 |                |  `"m/dd/yy"` // string a date format using Excel's format notation
-| alignment       | vertical       | `"bottom"||"center"||"top"`
-|                 | horizontal     | `"bottom"||"center"||"top"`
-|                 | wrapText       |  `true || false`
-|                 | readingOrder   |  `2` // for right-to-left
-|                 | textRotation   | Number from `0` to `180` or `255` (default is `0`)
-|                 |                |  `90` is rotated up 90 degrees
-|                 |                |  `45` is rotated up 45 degrees
-|                 |                | `135` is rotated down 45 degrees 
-|                 |                | `180` is rotated down 180 degrees
-|                 |                | `255` is special,  aligned vertically
-| border          | top            | `{ style: BORDER_STYLE, color: COLOR_SPEC }`
-|                 | bottom         | `{ style: BORDER_STYLE, color: COLOR_SPEC }`
-|                 | left           | `{ style: BORDER_STYLE, color: COLOR_SPEC }`
-|                 | right          | `{ style: BORDER_STYLE, color: COLOR_SPEC }`
-|                 | diagonal       | `{ style: BORDER_STYLE, color: COLOR_SPEC }`
-|                 | diagonalUp     | `true||false`
-|                 | diagonalDown   | `true||false`
-
-
-**COLOR_SPEC**: Colors for `fill`, `font`, and `border` are specified as objects, either:
-* `{ auto: 1}` specifying automatic values
-* `{ rgb: "FFFFAA00" }` specifying a hex ARGB value
-* `{ theme: "1", tint: "-0.25"}` specifying an integer index to a theme color and a tint value (default 0)
-* `{ indexed: 64}` default value for `fill.bgColor`
-
-**BORDER_STYLE**: Border style is a string value which may take on one of the following values:
- * `thin`
- * `medium`
- * `thick`
- * `dotted`
- * `hair`
- * `dashed`
- * `mediumDashed`
- * `dashDot`
- * `mediumDashDot`
- * `dashDotDot`
- * `mediumDashDotDot`
- * `slantDashDot`
-
-
-Borders for merged areas are specified for each cell within the merged area.  So to apply a box border to a merged area of 3x3 cells, border styles would need to be specified for eight different cells:
-* left borders for the three cells on the left,
-* right borders for the cells on the right
-* top borders for the cells on the top
-* bottom borders for the cells on the left
-
-
 
 ## Tested Environments
 
