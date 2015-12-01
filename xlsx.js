@@ -7659,12 +7659,11 @@ function write_ws_xml_cell(cell, ref, ws, opts, idx, wb) {
 		case 'n': vv = ''+cell.v; break;
 		case 'e': vv = BErr[cell.v]; break;
 		case 'd':
-			if(opts.cellDates) vv = new Date(cell.v).toISOString();
-			else {
-				cell.t = 'n';
-				vv = ''+(cell.v = datenum(cell.v));
-				if(typeof cell.z === 'undefined') cell.z = SSF._table[14];
-			}
+			cell.t = 'n';
+			vv = ''+(cell.v = datenum(cell.v));
+			if(cell.z === undefined)
+				if(cell.s && cell.s.numFmt) cell.z = cell.s.numFmt;
+				else cell.z = SSF._table[14];
 			break;
 		default: vv = cell.v; break;
 	}
@@ -7757,18 +7756,19 @@ return function parse_ws_xml_data(sdata, s, opts, guess) {
 					if(opts.cellHTML) p.h = sstr.h;
 					break;
 				case 'str':
-					p.t = "s";
+					p.t = 's';
 					p.v = (p.v!=null) ? utf8read(p.v) : '';
 					if(opts.cellHTML) p.h = p.v;
 					break;
 				case 'inlineStr':
 					cref = d.match(isregex);
 					p.t = 's';
-					if(cref !== null) { sstr = parse_si(cref[1]); p.v = sstr.t; } else p.v = "";
+					if(cref !== null) { sstr = parse_si(cref[1]); p.v = sstr.t; } else p.v = '';
 					break; // inline string
 				case 'b': p.v = parsexmlbool(p.v); break;
 				case 'd':
-					if(!opts.cellDates) { p.v = datenum(p.v); p.t = 'n'; }
+					p.t = 'n';
+					p.v = datenum(p.v);
 					break;
 				/* error string in .v, number in .v */
 				case 'e': p.w = p.v; p.v = RBErr[p.v]; break;
@@ -11369,7 +11369,6 @@ var fix_read_opts = fix_opts_func([
 	['cellHTML', true], /* emit html string as .h */
 	['cellFormula', true], /* emit formulae as .f */
 	['cellStyles', false], /* emits style/theme as .s */
-	['cellDates', false], /* emit date cells with type `d` */
 
 	['sheetStubs', false], /* emit empty cells */
 	['sheetRows', 0, 'n'], /* read n rows (0 = read all rows) */
@@ -11386,8 +11385,6 @@ var fix_read_opts = fix_opts_func([
 
 
 var fix_write_opts = fix_opts_func([
-	['cellDates', false], /* write date cells with type `d` */
-
 	['bookSST', false], /* Generate Shared String Table */
 
 	['bookType', 'xlsx'], /* Type of workbook (xlsx/m/b) */

@@ -383,12 +383,12 @@ as numbers, such as dates/times and Boolean fields.  Excel exclusively uses data
 that can be fit in an IEEE754 floating point number, just like JS Number, so the
 `v` field holds the raw number.  The `w` field holds formatted text.
 
-Type `d` is the Date type, generated only when the option `cellDates` is passed.
-Since JSON does not have a natural Date type, parsers are generally expected to
-store ISO 8601 Date strings like you would get from `date.toISOString()`.  On
-the other hand, writers and exporters should be able to handle date strings and
-JS Date objects.  Note that Excel disregards the timezone modifier and treats all
-dates in the local timezone.  js-xlsx does not correct for this error.
+Type `d` is the Date type, Since JSON does not have a natural Date type,
+parsers are generally expected to store ISO 8601 Date strings like you would get
+from `date.toISOString()`.  On the other hand, writers and exporters should be
+able to handle date strings and JS Date objects.  Note that Excel disregards
+the timezone modifier and treats all dates in the local timezone.  js-xlsx
+does not correct for this error.
 
 Type `s` is the String type.  `v` should be explicitly stored as a string to
 avoid possible confusion.
@@ -517,7 +517,6 @@ The exported `read` and `readFile` functions accept an options argument:
 | cellHTML    | true    | Parse rich text and save HTML to the .h field |
 | cellNF      | false   | Save number format string to the .z field |
 | cellStyles  | false   | Save style/theme info to the .s field |
-| cellDates   | false   | Store dates as type `d` (default is `n`) ** |
 | sheetStubs  | false   | Create cell objects for stub cells |
 | sheetRows   | 0       | If >0, read the first `sheetRows` rows ** |
 | bookDeps    | false   | If true, parse calculation chains |
@@ -540,7 +539,6 @@ The exported `read` and `readFile` functions accept an options argument:
 - `sheetRows-1` rows will be generated when looking at the JSON object output
   (since the header row is counted as a row when parsing the data)
 - `bookVBA` merely exposes the raw vba object.  It does not parse the data.
-- `cellDates` currently does not convert numerical dates to JS dates.
 - Currently only XOR encryption is supported.  Unsupported error will be thrown
   for files employing other encryption methods.
 
@@ -552,7 +550,6 @@ The exported `write` and `writeFile` functions accept an options argument:
 
 | Option Name | Default | Description |
 | :---------- | ------: | :---------- |
-| cellDates   | false   | Store dates as type `d` (default is `n`) |
 | bookSST     | false   | Generate Shared String Table ** |
 | bookType    | 'xlsx'  | Type of Workbook ("xlsx" or "xlsm" or "xlsb") |
 
@@ -561,9 +558,6 @@ The exported `write` and `writeFile` functions accept an options argument:
 - `bookType = 'xlsb'` is stubbed and far from complete
 - The raw data is the only thing guaranteed to be saved.  Formulae, formatting,
   and other niceties may not be serialized (pending CSF standardization)
-- `cellDates` only applies to XLSX output and is not guaranteed to work with
-  third-party readers.  Excel itself does not usually write cells with type `d`
-  so non-Excel tools may ignore the data or blow up in the presence of dates.
 
 ## Tested Environments
 
