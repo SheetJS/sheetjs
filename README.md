@@ -488,6 +488,8 @@ The exported `write` and `writeFile` functions accept an options argument:
 | cellDates   | false   | Store dates as type `d` (default is `n`) |
 | bookSST     | false   | Generate Shared String Table ** |
 | bookType    | 'xlsx'  | Type of Workbook ("xlsx" or "xlsm" or "xlsb") |
+| showGridLines | true | Show gridlines on all pages |
+| tabSelected | '1' | Initial tab selected |
 
 - `bookSST` is slower and more memory intensive, but has better compatibility
   with older versions of iOS Numbers
