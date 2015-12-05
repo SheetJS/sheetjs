@@ -7595,6 +7595,15 @@ function write_ws_xml_merges(merges) {
 	return o + '</mergeCells>';
 }
 
+function write_ws_xml_pagesetup(setup) {
+  return writextag('pageSetup', {
+    scale: setup.scale || 'scale',
+    orientation: setup.orientation || 'portrait',
+    horizontalDpi : setup.horizontalDpi || '4294967292',
+    verticalDpi : setup.verticalDpi || '4294967292'
+  })
+}
+
 //<pageSetup scale="90" orientation="portrait" horizontalDpi="4294967292" verticalDpi="4294967292"/>
 //<rowBreaks count="1" manualBreakCount="1">
 // <brk id="8" max="16383" man="1"/>
@@ -7851,6 +7860,7 @@ function write_ws_xml(idx, opts, wb) {
 
   if (ws['!rowBreaks'] !== undefined) o[o.length] =  write_ws_xml_row_breaks(ws['!rowBreaks'])
   if (ws['!colBreaks'] !== undefined) o[o.length] =  write_ws_xml_col_breaks(ws['!colBreaks'])
+  if (ws['!pageSetup'] !== undefined) o[o.length] =  write_ws_xml_pagesetup(ws['!pageSetup'])
 
 	if(o.length>2) { o[o.length] = ('</worksheet>'); o[1]=o[1].replace("/>",">"); }
 	return o.join("");
