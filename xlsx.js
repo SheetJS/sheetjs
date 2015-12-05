@@ -4,7 +4,7 @@
 /*jshint funcscope:true, eqnull:true */
 var XLSX = {};
 (function make_xlsx(XLSX){
-XLSX.version = '0.8.6';
+XLSX.version = '0.8.8';
 var current_codepage = 1200, current_cptable;
 if(typeof module !== "undefined" && typeof require !== 'undefined') {
 	if(typeof cptable === 'undefined') cptable = require('./dist/cpexcel');
@@ -2602,15 +2602,22 @@ function cp_doit(f, g, h, o, p) {
 
 function write_core_props(cp, opts) {
 	var o = [XML_HEADER, CORE_PROPS_XML_ROOT], p = {};
-	if(!cp) return o.join("");
+  if (opts && opts.Props) {
+    if (opts.Props.title) o[o.length]       = '<dc:title>'       + opts.Props.title        + '</dc:title>';
+    if (opts.Props.subject) o[o.length]     = '<dc:subject>'     + opts.Props.subject      + '</dc:subject>';
+    if (opts.Props.creator) o[o.length]     = '<dc:creator>'     + opts.Props.creator      + '</dc:creator>';
+    if (opts.Props.keywords) o[o.length]    = '<cp:keywords>'    + opts.Props.keywords      + '</cp:keywords>';
+    if (opts.Props.description) o[o.length] = '<dc:description>' + opts.Props.description  + '</dc:description>';
+  }
+  if(cp) {
 
+    if(cp.CreatedDate != null) cp_doit("dcterms:created", typeof cp.CreatedDate === "string" ? cp.CreatedDate : write_w3cdtf(cp.CreatedDate, opts.WTF), {"xsi:type":"dcterms:W3CDTF"}, o, p);
+    if(cp.ModifiedDate != null) cp_doit("dcterms:modified", typeof cp.ModifiedDate === "string" ? cp.ModifiedDate : write_w3cdtf(cp.ModifiedDate, opts.WTF), {"xsi:type":"dcterms:W3CDTF"}, o, p);
 
-	if(cp.CreatedDate != null) cp_doit("dcterms:created", typeof cp.CreatedDate === "string" ? cp.CreatedDate : write_w3cdtf(cp.CreatedDate, opts.WTF), {"xsi:type":"dcterms:W3CDTF"}, o, p);
-	if(cp.ModifiedDate != null) cp_doit("dcterms:modified", typeof cp.ModifiedDate === "string" ? cp.ModifiedDate : write_w3cdtf(cp.ModifiedDate, opts.WTF), {"xsi:type":"dcterms:W3CDTF"}, o, p);
-
-	for(var i = 0; i != CORE_PROPS.length; ++i) { var f = CORE_PROPS[i]; cp_doit(f[0], cp[f[1]], null, o, p); }
-	if(o.length>2){ o[o.length] = ('</cp:coreProperties>'); o[1]=o[1].replace("/>",">"); }
-	return o.join("");
+  	for(var i = 0; i != CORE_PROPS.length; ++i) { var f = CORE_PROPS[i]; cp_doit(f[0], cp[f[1]], null, o, p); }
+  }
+  if(o.length>2){ o[o.length] = ('</cp:coreProperties>'); o[1]=o[1].replace("/>",">"); }
+  return o.join("");
 }
 /* 15.2.12.3 Extended File Properties Part */
 /* [MS-OSHARED] 2.3.3.2.[1-2].1 (PIDSI/PIDDSI) */
@@ -7595,15 +7602,16 @@ function write_ws_xml_merges(merges) {
 	return o + '</mergeCells>';
 }
 
-//<pageSetup scale="90" orientation="portrait" horizontalDpi="4294967292" verticalDpi="4294967292"/>
-//<rowBreaks count="1" manualBreakCount="1">
-// <brk id="8" max="16383" man="1"/>
-//</rowBreaks>
-//<colBreaks count="1" manualBreakCount="1">
-//    <brk id="8" max="1048575" man="1"/>
-//</colBreaks>
-
-
+function write_ws_xml_pagesetup(setup) {
+  var pageSetup =  writextag('pageSetup', null, {
+    scale: setup.scale || '100',
+    orientation: setup.orientation || 'portrait',
+    horizontalDpi : setup.horizontalDpi || '4294967292',
+    verticalDpi : setup.verticalDpi || '4294967292'
+  })
+  console.log(pageSetup);
+  return pageSetup;
+}
 
 
 function parse_ws_xml_hlinks(s, data, rels) {
@@ -7849,6 +7857,7 @@ function write_ws_xml(idx, opts, wb) {
 
 	if(ws['!merges'] !== undefined && ws['!merges'].length > 0) o[o.length] = (write_ws_xml_merges(ws['!merges']));
 
+  if (ws['!pageSetup'] !== undefined) o[o.length] =  write_ws_xml_pagesetup(ws['!pageSetup'])
   if (ws['!rowBreaks'] !== undefined) o[o.length] =  write_ws_xml_row_breaks(ws['!rowBreaks'])
   if (ws['!colBreaks'] !== undefined) o[o.length] =  write_ws_xml_col_breaks(ws['!colBreaks'])
 
@@ -7871,11 +7880,12 @@ function write_ws_xml_col_breaks(breaks) {
   var brk = [];
   for (var i=0; i<breaks.length; i++) {
     var thisBreak = ''+ (breaks[i]);
-    var nextBreak = '' + (breaks[i+1] || '16383');
+    var nextBreak = '' + (breaks[i+1] || '1048575');
     brk.push(writextag('brk', null, {id: thisBreak, max: nextBreak, man: '1'}))
   }
   return writextag('colBreaks', brk.join(' '), {count: brk.length, manualBreakCount: brk.length})
 }
+
 /* [MS-XLSB] 2.4.718 BrtRowHdr */
 function parse_BrtRowHdr(data, length) {
 	var z = [];

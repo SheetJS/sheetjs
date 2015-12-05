@@ -429,8 +429,11 @@ Special worksheet keys (accessible as `worksheet[key]`, each starting with `!`):
   will write all cells in the merge range if they exist, so be sure that only
   the first cell (upper-left) in the range is set.
 
+The following properties are currently used when generating an XLSX file, but not yet parsed:
+
 - `ws['!rowBreaks']`: array of row break points, e.g. `[16,32]`
 - `ws['!colBreaks']`: array of col break points, e.g. `[8,16]`
+- `ws['!pageSetup']`: `{scale: '100', orientation: 'portrait'||'landscape'}
 
 
 ### Workbook Object
@@ -439,8 +442,15 @@ Special worksheet keys (accessible as `worksheet[key]`, each starting with `!`):
 
 `wb.Sheets[sheetname]` returns an object representing the worksheet.
 
-`wb.Props` is an object storing the standard properties.  `wb.Custprops` stores
-custom properties.  Since the XLS standard properties deviate from the XLSX
+`wb.Props` is an object storing the standard properties.  The following properties are currently used when
+generating an XLSX file, but not yet parsed:
+    - `title`
+    - `subject`
+    - `description`
+    - `keywords`
+    - `creator`
+
+`wb.Custprops` stores custom properties.  Since the XLS standard properties deviate from the XLSX
 standard, XLS parsing stores core properties in both places.  .
 
 
@@ -492,7 +502,7 @@ The exported `write` and `writeFile` functions accept an options argument:
 | cellDates   | false   | Store dates as type `d` (default is `n`) |
 | bookSST     | false   | Generate Shared String Table ** |
 | bookType    | 'xlsx'  | Type of Workbook ("xlsx" or "xlsm" or "xlsb") |
-| showGridLines | true | Show gridlines on all pages |
+| showGridLines | true | Show gridlines on all pages  |
 | tabSelected | '1' | Initial tab selected |
 
 - `bookSST` is slower and more memory intensive, but has better compatibility
@@ -503,6 +513,7 @@ The exported `write` and `writeFile` functions accept an options argument:
 - `cellDates` only applies to XLSX output and is not guaranteed to work with
   third-party readers.  Excel itself does not usually write cells with type `d`
   so non-Excel tools may ignore the data or blow up in the presence of dates.
+- showGridLines and tabSelected are currently used when generating an XLSX file but not yet parse.
 
 
 ## Cell Styles

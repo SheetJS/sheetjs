@@ -70,15 +70,16 @@ function write_ws_xml_merges(merges) {
 	return o + '</mergeCells>';
 }
 
-//<pageSetup scale="90" orientation="portrait" horizontalDpi="4294967292" verticalDpi="4294967292"/>
-//<rowBreaks count="1" manualBreakCount="1">
-// <brk id="8" max="16383" man="1"/>
-//</rowBreaks>
-//<colBreaks count="1" manualBreakCount="1">
-//    <brk id="8" max="1048575" man="1"/>
-//</colBreaks>
-
-
+function write_ws_xml_pagesetup(setup) {
+  var pageSetup =  writextag('pageSetup', null, {
+    scale: setup.scale || '100',
+    orientation: setup.orientation || 'portrait',
+    horizontalDpi : setup.horizontalDpi || '4294967292',
+    verticalDpi : setup.verticalDpi || '4294967292'
+  })
+  console.log(pageSetup);
+  return pageSetup;
+}
 
 
 function parse_ws_xml_hlinks(s, data, rels) {
@@ -324,6 +325,7 @@ function write_ws_xml(idx, opts, wb) {
 
 	if(ws['!merges'] !== undefined && ws['!merges'].length > 0) o[o.length] = (write_ws_xml_merges(ws['!merges']));
 
+  if (ws['!pageSetup'] !== undefined) o[o.length] =  write_ws_xml_pagesetup(ws['!pageSetup'])
   if (ws['!rowBreaks'] !== undefined) o[o.length] =  write_ws_xml_row_breaks(ws['!rowBreaks'])
   if (ws['!colBreaks'] !== undefined) o[o.length] =  write_ws_xml_col_breaks(ws['!colBreaks'])
 
@@ -346,7 +348,7 @@ function write_ws_xml_col_breaks(breaks) {
   var brk = [];
   for (var i=0; i<breaks.length; i++) {
     var thisBreak = ''+ (breaks[i]);
-    var nextBreak = '' + (breaks[i+1] || '16383');
+    var nextBreak = '' + (breaks[i+1] || '1048575');
     brk.push(writextag('brk', null, {id: thisBreak, max: nextBreak, man: '1'}))
   }
   return writextag('colBreaks', brk.join(' '), {count: brk.length, manualBreakCount: brk.length})
