@@ -426,8 +426,14 @@ Special worksheet keys (accessible as `worksheet[key]`, each starting with `!`):
 
 `wb.Sheets[sheetname]` returns an object representing the worksheet.
 
-`wb.Props` is an object storing the standard properties.  `wb.Custprops` stores
-custom properties.  Since the XLS standard properties deviate from the XLSX
+`wb.Props` is an object storing the standard properties.   The following properties are written but not parsed:
+    - `title`
+    - `subject`
+    - `description`
+    - `keywords`
+    - `creator`
+
+`wb.Custprops` stores custom properties.  Since the XLS standard properties deviate from the XLSX
 standard, XLS parsing stores core properties in both places.  .
 
 
