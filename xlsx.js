@@ -7596,12 +7596,14 @@ function write_ws_xml_merges(merges) {
 }
 
 function write_ws_xml_pagesetup(setup) {
-  return writextag('pageSetup', {
-    scale: setup.scale || 'scale',
+  var pageSetup =  writextag('pageSetup', null, {
+    scale: setup.scale || '100',
     orientation: setup.orientation || 'portrait',
     horizontalDpi : setup.horizontalDpi || '4294967292',
     verticalDpi : setup.verticalDpi || '4294967292'
   })
+  console.log(pageSetup);
+  return pageSetup;
 }
 
 //<pageSetup scale="90" orientation="portrait" horizontalDpi="4294967292" verticalDpi="4294967292"/>
@@ -7858,9 +7860,10 @@ function write_ws_xml(idx, opts, wb) {
 
 	if(ws['!merges'] !== undefined && ws['!merges'].length > 0) o[o.length] = (write_ws_xml_merges(ws['!merges']));
 
+  if (ws['!pageSetup'] !== undefined) o[o.length] =  write_ws_xml_pagesetup(ws['!pageSetup'])
   if (ws['!rowBreaks'] !== undefined) o[o.length] =  write_ws_xml_row_breaks(ws['!rowBreaks'])
   if (ws['!colBreaks'] !== undefined) o[o.length] =  write_ws_xml_col_breaks(ws['!colBreaks'])
-  if (ws['!pageSetup'] !== undefined) o[o.length] =  write_ws_xml_pagesetup(ws['!pageSetup'])
+
 
 	if(o.length>2) { o[o.length] = ('</worksheet>'); o[1]=o[1].replace("/>",">"); }
 	return o.join("");
@@ -7881,7 +7884,7 @@ function write_ws_xml_col_breaks(breaks) {
   var brk = [];
   for (var i=0; i<breaks.length; i++) {
     var thisBreak = ''+ (breaks[i]);
-    var nextBreak = '' + (breaks[i+1] || '16383');
+    var nextBreak = '' + (breaks[i+1] || '1048575');
     brk.push(writextag('brk', null, {id: thisBreak, max: nextBreak, man: '1'}))
   }
   return writextag('colBreaks', brk.join(' '), {count: brk.length, manualBreakCount: brk.length})
