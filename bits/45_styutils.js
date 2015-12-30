@@ -1,6 +1,6 @@
 function hex2RGB(h) {
 	var o = h.substr(h[0]==="#"?1:0,6);
-	return [parseInt(o.substr(0,2),16),parseInt(o.substr(0,2),16),parseInt(o.substr(0,2),16)];
+	return [parseInt(o.substr(0,2),16),parseInt(o.substr(2,2),16),parseInt(o.substr(4,2),16)];
 }
 function rgb2Hex(rgb) {
 	for(var i=0,o=1; i!=3; ++i) o = o*256 + (rgb[i]>255?255:rgb[i]<0?0:rgb[i]);
@@ -42,11 +42,12 @@ function hsl2RGB(hsl){
 
 /* 18.8.3 bgColor tint algorithm */
 function rgb_tint(hex, tint) {
-	if(tint === 0) return hex;
+	if(tint == 0) return hex;
 	var hsl = rgb2HSL(hex2RGB(hex));
 	if (tint < 0) hsl[2] = hsl[2] * (1 + tint);
 	else hsl[2] = 1 - (1 - hsl[2]) * (1 - tint);
-	return rgb2Hex(hsl2RGB(hsl));
+  var rev =rgb2Hex(hsl2RGB(hsl))
+	return rev;
 }
 
 /* 18.3.1.13 width calculations */

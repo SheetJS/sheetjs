@@ -1332,6 +1332,7 @@ function getzipdata(zip, file, safe) {
 }
 
 var _fs, jszip;
+jszip = require('jszip');
 if(typeof JSZip !== 'undefined') jszip = JSZip;
 if (typeof exports !== 'undefined') {
 	if (typeof module !== 'undefined' && module.exports) {
@@ -11577,6 +11578,8 @@ function sheet_to_csv(sheet, opts) {
 	var row = "", rr = "", cols = [];
 	var i = 0, cc = 0, val;
 	var R = 0, C = 0;
+	var pattern = /[^\",\n\r\s]/;
+	var tst;
 	for(C = r.s.c; C <= r.e.c; ++C) cols[C] = encode_col(C);
 	for(R = r.s.r; R <= r.e.r; ++R) {
 		row = "";
@@ -11588,6 +11591,8 @@ function sheet_to_csv(sheet, opts) {
 				txt = "\"" + txt.replace(qreg, '""') + "\""; break; }
 			row += (C === r.s.c ? "" : FS) + txt;
 		}
+		tst = !pattern.test(row);
+		if(opts.ignoreBlankRows && !pattern.test(row)) continue;
 		out += row + RS;
 	}
 	return out;
