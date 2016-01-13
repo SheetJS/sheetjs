@@ -7247,6 +7247,10 @@ function safe_format(p, fmtid, fillid, opts) {
 		else if(p.t === 'd') p.w = SSF.format(fmtid,datenum(p.v),_ssfopts);
 		else p.w = SSF.format(fmtid,p.v,_ssfopts);
 		if(opts.cellNF) p.z = SSF._table[fmtid];
+		// we want to save fmt and fmtid into the object for later use on the user hand
+		p.fmt = SSF._table[fmtid];
+		p.fmtid = fmtid;
+
 	} catch(e) { if(opts.WTF) throw e; }
 	if(fillid) try {
 		p.s = styles.Fills[fillid];
@@ -11357,6 +11361,16 @@ function write_zip(wb, opts) {
 	return zip;
 }
 function firstbyte(f,o) {
+	// if f is ArrayBuffer then do the below (source: http://stackoverflow.com/questions/18582643/alternative-to-readasbinarystring-for-ie10)
+	if (f instanceof ArrayBuffer) {
+	  var binary = "";
+	  var bytes = new Uint8Array(f);
+	  var length = bytes.byteLength;
+	  for (var i = 0; i < length; i++) {
+	    binary += String.fromCharCode(bytes[i]);
+	  }
+	  f=binary;
+	}
 	switch((o||{}).type || "base64") {
 		case 'buffer': return f[0];
 		case 'base64': return Base64.decode(f.substr(0,12)).charCodeAt(0);
