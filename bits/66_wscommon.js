@@ -35,8 +35,7 @@ function safe_format(p, fmtid, fillid, opts) {
 				if((dd|0) === dd) p.w = SSF._general_int(dd,_ssfopts);
 				else p.w = SSF._general_num(dd,_ssfopts);
 			}
-			else if(p.v === undefined) return "";
-			else p.w = SSF._general(p.v,_ssfopts);
+			else if(p.v !== undefined) p.w = SSF._general(p.v,_ssfopts);
 		}
 		else if(p.t === 'd') p.w = SSF.format(fmtid,datenum(p.v),_ssfopts);
 		else p.w = SSF.format(fmtid,p.v,_ssfopts);
