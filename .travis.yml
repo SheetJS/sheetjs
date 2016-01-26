@@ -1,16 +1,19 @@
 language: node_js
 node_js:
-  - "iojs"
+  - "5.0"
+  - "4.2"
+  - "0.12"
   - "0.11.14"
   - "0.10"
 #  - "0.8" # commented because of npm issue with camelcase
 before_install:
+  - "npm install -g npm@next"
   - "npm install -g mocha"
   - "npm install blanket"
   - "npm install xlsjs"
   - "npm install coveralls mocha-lcov-reporter"
 before_script:
   - "make init"
-  - "cd test_files; make all; cd -" 
+  - "cd test_files; make all; cd -"
 after_success:
   - "make coveralls-spin"
