@@ -521,6 +521,7 @@ The exported `write` and `writeFile` functions accept an options argument:
 
 The `xlsx.js` file is constructed from the files in the `bits` subdirectory. The
 `Makefile` will concatenate the individual bits to produce the files. In order to produce the files, you have to own a Linux-based operating system, such as Mac Book, then follow the steps below.
+
 1. Install **[Node.js](https://nodejs.org)**.
 2. Install **[Git](https://git-scm.com/download)**.
 3. Open a _Terminal_ window.
