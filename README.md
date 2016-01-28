@@ -1,7 +1,7 @@
-# xlsx-style
+# XLSX
 
-Parser and writer for various spreadsheet formats.  Pure-JS cleanroom
-implementation from official specifications and related documents.
+Parser and writer for various spreadsheet formats.
+
 ---
 **NOTE:** [This project](https://github.com/SheetJS/js-xlsx/tree/beta) is a fork of the original (and awesome) [SheetJS/xlsx](https://github.com/SheetJS/js-xlsx) project.
 It is extended to enable cell formats to be read from and written to .xlsx workbooks.
@@ -11,6 +11,7 @@ Report any issues to https://github.com/protobi/js-xlsx/issues.
 For those contributing to this fork:
 * `master` is the main branch, which follows the original repo to enable a future pull request.
 * `beta` branch is published to npm and bower to make this fork available for use.
+
 ---
 
 Supported read formats:
@@ -28,52 +29,9 @@ Supported write formats:
 - CSV (and general DSV)
 - JSON and JS objects (various styles)
 
-Demo: <http://oss.sheetjs.com/js-xlsx>
+## Installation guide
 
-Source: <http://git.io/xlsx>
-
-## Installation
-
-With [npm](https://www.npmjs.org/package/xlsx-style):
-
-```sh
-npm install xlsx-style --save
-```
-
-In the browser:
-
-```html
-<script lang="javascript" src="dist/xlsx.core.min.js"></script>
-```
-
-With [bower](http://bower.io/search/?q=js-xlsx):
-
-```sh
-bower install js-xlsx-style#beta
-```
-
-CDNjs automatically pulls the latest version and makes all versions available at
-<http://cdnjs.com/libraries/xlsx>
-
-## Optional Modules
-
-The node version automatically requires modules for additional features.  Some
-of these modules are rather large in size and are only needed in special
-circumstances, so they do not ship with the core.  For browser use, they must
-be included directly:
-
-```html
-<!-- international support from https://github.com/sheetjs/js-codepage -->
-<script src="dist/cpexcel.js"></script>
-<!-- ODS support -->
-<script src="dist/ods.js"></script>
-```
-
-An appropriate version for each dependency is included in the dist/ directory.
-
-The complete single-file version is generated at `dist/xlsx.full.min.js`
-
-## ECMAScript 5 Compatibility
+You will be fine using `xlsx.full.min.js` file in `dist` folder.
 
 Since xlsx.js uses ES5 functions like `Array#forEach`, older browsers require
 [Polyfills](http://git.io/QVh77g).  This repo and the gh-pages branch include
@@ -85,7 +43,7 @@ To use the shim, add the shim before the script tag that loads xlsx.js:
 <script type="text/javascript" src="/path/to/shim.js"></script>
 ```
 
-## Parsing Workbooks
+## Reading workbooks
 
 For parsing, the first step is to read the file.  This involves acquiring the
 data and feeding it into the library.  Here are a few common scenarios:
@@ -177,7 +135,7 @@ function handleFile(e) {
 input_dom_element.addEventListener('change', handleFile, false);
 ```
 
-## Working with the Workbook
+## Working with the workbook
 
 The full object format is described later in this README.
 
@@ -237,14 +195,14 @@ Some helper functions in `XLSX.utils` generate different views of the sheets:
 - `XLSX.utils.sheet_to_json` generates an array of objects
 - `XLSX.utils.sheet_to_formulae` generates a list of formulae
 
-## Writing Workbooks
+## Writing workbooks
 
 For writing, the first step is to generate output data.  The helper functions
 `write` and `writeFile` will produce the data in various formats suitable for
 dissemination.  The second step is to actual share the data with the end point.
 Assuming `workbook` is a workbook object:
 
-- nodejs write to file:
+- Nodejs write to file:
 
 ```js
 /* output format determined by filename */
@@ -252,7 +210,7 @@ XLSX.writeFile(workbook, 'out.xlsx');
 /* at this point, out.xlsx is a file that you can distribute */
 ```
 
-- write to binary string (using FileSaver.js):
+- Download a file from a web browser (using [FileSaver.js](http://purl.eligrey.com/github/FileSaver.js/blob/master/FileSaver.js)):
 
 ```js
 /* bookType can be 'xlsx' or 'xlsm' or 'xlsb' */
@@ -277,7 +235,7 @@ Complete examples:
 - <http://git.io/WEK88Q> writing an array of arrays in nodejs
 - <http://sheetjs.com/demos/table.html> exporting an HTML table
 
-## Interface
+## Interfaces
 
 `XLSX` is the exposed variable in the browser and the exported node variable
 
@@ -304,21 +262,21 @@ Utilities are available in the `XLSX.utils` object:
 Exporting:
 
 - `sheet_to_json` converts a workbook object to an array of JSON objects.
-- `sheet_to_csv` generates delimiter-separated-values output
-- `sheet_to_formulae` generates a list of the formulae (with value fallbacks)
+- `sheet_to_csv` generates delimiter-separated-values output.
+- `sheet_to_formulae` generates a list of the formulae (with value fallbacks).
 
 Cell and cell address manipulation:
 
-- `format_cell` generates the text value for a cell (using number formats)
-- `{en,de}code_{row,col}` convert between 0-indexed rows/cols and A1 forms.
-- `{en,de}code_cell` converts cell addresses
-- `{en,de}code_range` converts cell ranges
+- `format_cell` generates the text value for a cell (using number formats).
+- `encode_row`, `decode_row`, `encode_col` and `decode_col` convert between 0-indexed rows/cols and A1 forms.
+- `encode_cell` and `decode_cell` converts cell addresses.
+- `encode_range` and `decode_range` converts cell ranges.
 
 ## Workbook / Worksheet / Cell Object Description
 
 js-xlsx conforms to the Common Spreadsheet Format (CSF):
 
-### General Structures
+### General structures
 
 Cell address objects are stored as `{c:C, r:R}` where `C` and `R` are 0-indexed
 column and row numbers, respectively.  For example, the cell address `B5` is
@@ -337,11 +295,11 @@ for(var R = range.s.r; R <= range.e.r; ++R) {
 }
 ```
 
-### Cell Object
+### Cell object
 
 | Key | Description |
 | --- | ----------- |
-| `v` | raw value; see Data Types section below |
+| `v` | raw value; see [Data types][#data-types] section below |
 | `w` | formatted text (if applicable) |
 | `t` | cell type: `b` Boolean, `n` number, `e` error, `s` string and `d` date-time |
 | `f` | cell formula (read only) |
@@ -359,7 +317,7 @@ To specify a format, put a string into `s.numFmt`, e.g. `{ v: 42145.822, t: "d",
 
 To write a formula, put a string into `v` where the first character must be an equal sign (`=`).
 
-### Data Types
+### Data types
 
 The raw value is stored in the `v` field, interpreted based on the `t` field.
 
@@ -393,7 +351,7 @@ does not correct for this error.
 Type `s` is the String type.  `v` should be explicitly stored as a string to
 avoid possible confusion.
 
-## Cell Styles
+## Cell styles
 
 Cell styles are specified by a style object that roughly parallels the OpenXML structure.  The style object has five
 top-level attributes: `fill`, `font`, `numFmt`, `alignment`, and `border`.
@@ -463,7 +421,7 @@ Borders for merged areas are specified for each cell within the merged area.  So
 * top borders for the cells on the top
 * bottom borders for the cells on the left
 
-### Worksheet Object
+### Worksheet object
 
 Each key that does not start with `!` maps to a cell (using `A-1` notation)
 
@@ -497,7 +455,7 @@ Special worksheet keys (accessible as `worksheet[key]`, each starting with `!`):
   will write all cells in the merge range if they exist, so be sure that only
   the first cell (upper-left) in the range is set.
 
-### Workbook Object
+### Workbook object
 
 `workbook.SheetNames` is an ordered list of the sheets in the workbook
 
@@ -544,7 +502,7 @@ The exported `read` and `readFile` functions accept an options argument:
 
 The defaults are enumerated in bits/84_defaults.js
 
-## Writing Options
+## Writing options
 
 The exported `write` and `writeFile` functions accept an options argument:
 
@@ -559,58 +517,19 @@ The exported `write` and `writeFile` functions accept an options argument:
 - The raw data is the only thing guaranteed to be saved.  Formulae, formatting,
   and other niceties may not be serialized (pending CSF standardization)
 
-## Tested Environments
+## Creating a package for distribution
 
- - NodeJS 0.8, 0.10 (latest release), 0.11.14 (unstable), io.js
- - IE 6/7/8/9/10/11 using Base64 mode (IE10/11 using HTML5 mode)
- - FF 18 using Base64 or HTML5 mode
- - Chrome 24 using Base64 or HTML5 mode
+The `xlsx.js` file is constructed from the files in the `bits` subdirectory. The
+`Makefile` will concatenate the individual bits to produce the files. In order to produce the files, you have to own a Linux-based operating system, such as Mac Book, then follow the steps below.
+1. Install **[Node.js](https://nodejs.org)**.
+2. Install **[Git](https://git-scm.com/download)**.
+3. Open a _Terminal_ window.
+4. Run `git clone https://github.com/ThisIsManta/XLSX.git`.
+5. Run `git checkout beta` since the latest code is on _beta_ branch.
+6. Run `sudo npm install -g uglifyjs` to install **UglifyJS** which will be used later in `Makefile`.
+7. Run `make dist`.
 
-Tests utilize the mocha testing framework.  Travis-CI and Sauce Labs links:
-
- - <https://travis-ci.org/SheetJS/js-xlsx> for XLSX module in nodejs
- - <https://travis-ci.org/SheetJS/SheetJS.github.io> for XLS* modules
- - <https://saucelabs.com/u/sheetjs> for XLS* modules using Sauce Labs
-
-## Test Files
-
-Test files are housed in [another repo](https://github.com/SheetJS/test_files).
-
-Running `make init` will refresh the `test_files` submodule and get the files.
-
-## Testing
-
-`make test` will run the node-based tests.  To run the in-browser tests, clone
-[the oss.sheetjs.com repo](https://github.com/SheetJS/SheetJS.github.io) and
-replace the xlsx.js file (then fire up the browser and go to `stress.html`):
-
-```sh
-$ cp xlsx.js ../SheetJS.github.io
-$ cd ../SheetJS.github.io
-$ simplehttpserver # or "python -mSimpleHTTPServer" or "serve"
-$ open -a Chromium.app http://localhost:8000/stress.html
-```
-
-For a much smaller test, run `make test_misc`.
-
-## Contributing
-
-Due to the precarious nature of the Open Specifications Promise, it is very
-important to ensure code is cleanroom.  Consult CONTRIBUTING.md
-
-The xlsx.js file is constructed from the files in the `bits` subdirectory. The
-build script (run `make`) will concatenate the individual bits to produce the
-script.  Before submitting a contribution, ensure that running make will produce
-the xlsx.js file exactly.  The simplest way to test is to move the script:
-
-```sh
-$ mv xlsx.js xlsx.new.js
-$ make
-$ diff xlsx.js xlsx.new.js
-```
-
-To produce the dist files, run `make dist`.  The dist files are updated in each
-version release and should not be committed between versions.
+The files will be located in `dist` folder.
 
 ## License
 
@@ -647,10 +566,3 @@ OSP-covered specifications:
  - [XLS]: Microsoft Office Excel 97-2007 Binary File Format Specification
 
 Open Document Format for Office Applications Version 1.2 (29 September 2011)
-
-
-## Badges
-
-[![Build Status](https://travis-ci.org/SheetJS/js-xlsx.svg?branch=master)](https://travis-ci.org/SheetJS/js-xlsx)
-
-[![Coverage Status](http://img.shields.io/coveralls/SheetJS/js-xlsx/master.svg)](https://coveralls.io/r/SheetJS/js-xlsx?branch=master)
