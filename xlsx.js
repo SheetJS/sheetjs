@@ -7392,6 +7392,13 @@ function write_ws_xml_merges(merges) {
 	return o + '</mergeCells>';
 }
 
+/**
+ * It adds write protection attribute to sheet if required.
+ * password hash is generated according to specification:
+ * http://www.openoffice.org/sc/excelfileformat.pdf 4.18 -> 4.18.4
+ * @param sheetProtection properties
+ * @return {string}
+ */
 function write_ws_xml_sheet_protection(sheetProtection){
 	var out;
 

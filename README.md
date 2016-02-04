@@ -400,6 +400,12 @@ Special worksheet keys (accessible as `worksheet[key]`, each starting with `!`):
   will write all cells in the merge range if they exist, so be sure that only
   the first cell (upper-left) in the range is set.
 
+- `ws['sheetProtection']`: object of write sheet protection properties. One of
+  [autoFilter, deleteColumns, deleteRows, formatCells, formatColumns, formatRows,
+  insertColumns, insertHyperlinks, insertRows, objects, pivotTables, scenarios,
+  selectLockedCells, selectUnlockedCells, sheet, sort, password]. Where most
+  most important is password which creates password hash to write protect sheet.
+
 ### Workbook Object
 
 `workbook.SheetNames` is an ordered list of the sheets in the workbook
