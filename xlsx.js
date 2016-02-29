@@ -11393,7 +11393,7 @@ function readSync(data, opts) {
 		case 0x3C: return parse_xlml(d, o);
 		case 0x50:
 			if(isfile) o.type = "file";
-			return read_zip(data, opts);
+			return read_zip(data, o);
 		default: throw new Error("Unsupported file " + n);
 	}
 }
