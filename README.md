@@ -504,6 +504,10 @@ The exported `write` and `writeFile` functions accept an options argument:
 | bookType    | 'xlsx'  | Type of Workbook ("xlsx" or "xlsm" or "xlsb") |
 | showGridLines | true | Show gridlines on all pages  |
 | tabSelected | '1' | Initial tab selected |
+| Props       | null | Workbook properties |
+
+
+
 
 - `bookSST` is slower and more memory intensive, but has better compatibility
   with older versions of iOS Numbers
@@ -514,6 +518,9 @@ The exported `write` and `writeFile` functions accept an options argument:
   third-party readers.  Excel itself does not usually write cells with type `d`
   so non-Excel tools may ignore the data or blow up in the presence of dates.
 - showGridLines and tabSelected are currently used when generating an XLSX file but not yet parse.
+- Props specifies workbook properties
+   
+
 
 
 ## Cell Styles
