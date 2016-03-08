@@ -1,7 +1,7 @@
 # xlsx-style
 
-Parser and writer for various spreadsheet formats.  Pure-JS cleanroom
-implementation from official specifications and related documents.
+Parser and writer for various spreadsheet formats.  Pure-JS cleanroom implementation from official specifications and related documents.
+
 ---
 **NOTE:** [This project](https://github.com/SheetJS/js-xlsx/tree/beta) is a fork of the original (and awesome) [SheetJS/xlsx](https://github.com/SheetJS/js-xlsx) project.
 It is extended to enable cell formats to be read from and written to .xlsx workbooks.
