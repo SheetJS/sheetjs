@@ -77,7 +77,6 @@ function write_ws_xml_pagesetup(setup) {
     horizontalDpi : setup.horizontalDpi || '4294967292',
     verticalDpi : setup.verticalDpi || '4294967292'
   })
-  console.log(pageSetup);
   return pageSetup;
 }
 
@@ -310,7 +309,7 @@ function write_ws_xml(idx, opts, wb) {
 
   var sheetView = writextag('sheetView', null,  {
     showGridLines: opts.showGridLines == false ? '0' : '1',
-    tabSelected: opts.tabSelected === undefined ? '1' :  opts.tabSelected,
+    tabSelected: opts.tabSelected === undefined ? '0' :  opts.tabSelected,
     workbookViewId: opts.workbookViewId === undefined ? '0' : opts.workbookViewId
   });
   o[o.length] = writextag('sheetViews', sheetView);
