@@ -103,14 +103,14 @@ function parse_zip(zip, opts) {
 	if(wbrels) wbrels = safe_parse_wbrels(wbrels, wb.Sheets);
 	/* Numbers iOS hack */
 	var nmode = (getzipdata(zip,"xl/worksheets/sheet.xml",true))?1:0;
-	for(i = 0; i != props.Worksheets; ++i) {
+	for(i = 0; i != wbrels.length; ++i) {
 		if(wbrels) path = 'xl/' + (wbrels[i][1]).replace(/[\/]?xl\//, "");
 		else {
 			path = 'xl/worksheets/sheet'+(i+1-nmode)+"." + wbext;
 			path = path.replace(/sheet0\./,"sheet.");
 		}
 		relsPath = path.replace(/^(.*)(\/)([^\/]*)$/, "$1/_rels/$3.rels");
-		safe_parse_ws(zip, path, relsPath, props.SheetNames[i], sheetRels, sheets, opts);
+		safe_parse_ws(zip, path, relsPath, wbrels[i][0], sheetRels, sheets, opts);
 	}
 
 	if(dir.comments) parse_comments(zip, dir.comments, sheets, sheetRels, opts);

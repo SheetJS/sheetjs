@@ -4366,6 +4366,66 @@ function write_sst_bin(sst, opts) {
 	write_record(ba, "BrtEndSst");
 	return ba.end();
 }
+
+/* Start of sheet write-protection helpers */
+//  http://www.openoffice.org/sc/excelfileformat.pdf section 4.18.4
+function getHashOfPassword(str) {
+	var curHash = '0000';
+	for (var i = str.length - 1; i >= 0; i--) {
+		curHash = _getHashForChar(str[i], curHash);
+	}
+	var curHashBin = parseInt(curHash, 16).toString(2);
+	var charCountBin = parseInt(str.length, 10).toString(2);
+	var saltBin = parseInt('CE4B', 16).toString(2);
+
+	var firstXOR = _bitXOR(curHashBin, charCountBin);
+	var finalHashBin = _bitXOR(firstXOR, saltBin);
+	var finalHash = String('0000' + parseInt(finalHashBin, 2).toString(16).toUpperCase()).slice(-4);
+
+	return finalHash;
+}
+
+/*
+ * Helper Functions
+ */
+
+function _rotateBinary(bin) {
+	return bin.substr(1, bin.length - 1) + bin.substr(0, 1);
+}
+
+function _getHashForChar(char, hash) {
+	hash = hash ? hash : '0000';
+	var charCode = char.charCodeAt(0);
+	var hashBin = parseInt(hash, 16).toString(2);
+	var charBin = parseInt(charCode, 10).toString(2);
+	hashBin = String('000000000000000' + hashBin).substr(-15);
+	charBin = String('000000000000000' + charBin).substr(-15);
+	var nextHash = _bitXOR(hashBin, charBin);
+	nextHash = _rotateBinary(nextHash);
+	nextHash = parseInt(nextHash, 2).toString(16);
+
+	return nextHash;
+}
+
+function _bitXOR(a, b) {
+	var maxLength = a.length > b.length ? a.length : b.length;
+
+	var padString = '';
+	for (var i = 0; i < maxLength; i++) {
+		padString += '0';
+	}
+
+	a = String(padString + a).substr(-maxLength);
+	b = String(padString + b).substr(-maxLength);
+
+	var response = '';
+	for(var i = 0; i < a.length; i++) {
+		response += a[i] === b[i] ? 0 : 1;
+	}
+	return response;
+}
+/* End of sheet write-protection helpers */
+
 function _JS2ANSI(str) { if(typeof cptable !== 'undefined') return cptable.utils.encode(1252, str); return str.split("").map(function(x) { return x.charCodeAt(0); }); }
 
 /* [MS-OFFCRYPTO] 2.1.4 Version */
@@ -7332,6 +7392,70 @@ function write_ws_xml_merges(merges) {
 	return o + '</mergeCells>';
 }
 
+/**
+ * It adds write protection attribute to sheet if required.
+ * password hash is generated according to specification:
+ * http://www.openoffice.org/sc/excelfileformat.pdf 4.18 -> 4.18.4
+ * @param sheetProtection properties
+ * @return {string}
+ */
+function write_ws_xml_sheet_protection(sheetProtection){
+	var out;
+
+	/**
+	 * autoFilter
+	 * deleteColumns
+	 * deleteRows
+	 * formatCells
+	 * formatColumns
+	 * formatRows
+	 * insertColumns
+	 * insertHyperlinks
+	 * insertRows
+	 * objects
+	 * pivotTables
+	 * scenarios
+	 * selectLockedCells
+	 * selectUnlockedCells
+	 * sheet
+	 * sort
+	 * password
+	 */
+	out = '<sheetProtection ';
+
+	var obj = {
+		'autoFilter': (sheetProtection.autoFilter ? sheetProtection.autoFilter : false),
+		'deleteColumns': (sheetProtection.deleteColumns ? sheetProtection.deleteColumns : false),
+		'deleteRows': (sheetProtection.deleteRows ? sheetProtection.deleteRows : false),
+		'formatCells': (sheetProtection.formatCells ? sheetProtection.formatCells : false),
+		'formatColumns': (sheetProtection.formatColumns ? sheetProtection.formatColumns : false),
+		'formatRows': (sheetProtection.formatRows ? sheetProtection.formatRows : false),
+		'insertColumns': (sheetProtection.insertColumns ? sheetProtection.insertColumns : false),
+		'insertHyperlinks': (sheetProtection.insertHyperlinks ? sheetProtection.insertHyperlinks : false),
+		'insertRows': (sheetProtection.insertRows ? sheetProtection.insertRows : false),
+		'objects': (sheetProtection.objects ? sheetProtection.objects : false),
+		'pivotTables': (sheetProtection.pivotTables ? sheetProtection.pivotTables : false),
+		'scenarios': (sheetProtection.scenarios ? sheetProtection.scenarios : false),
+		'selectLockedCells': (sheetProtection.selectLockedCells ? sheetProtection.selectLockedCells : false),
+		'selectUnlockedCells': (sheetProtection.selectUnlockedCells ? sheetProtection.selectUnlockedCells : false),
+		'sheet': (sheetProtection.sheet ? sheetProtection.sheet : true),
+		'sort': (sheetProtection.sort ? sheetProtection.sort : false)
+	};
+	if (sheetProtection.password) {
+		obj.password = getHashOfPassword(sheetProtection.password);
+	}
+
+	for(var key in obj){
+		if( obj.hasOwnProperty(key) ){
+			out += key + "=\"" + obj[key] + "\" "
+		}
+	}
+
+	out += "/>";
+
+	return out;
+}
+
 function parse_ws_xml_hlinks(s, data, rels) {
 	for(var i = 0; i != data.length; ++i) {
 		var val = parsexmltag(data[i], true);
@@ -7561,6 +7685,8 @@ function write_ws_xml(idx, opts, wb) {
 	if(o.length>sidx+1) { o[o.length] = ('</sheetData>'); o[sidx]=o[sidx].replace("/>",">"); }
 
 	if(ws['!merges'] !== undefined && ws['!merges'].length > 0) o[o.length] = (write_ws_xml_merges(ws['!merges']));
+
+	if(ws["sheetProtection"] !== undefined ) o[o.length] = write_ws_xml_sheet_protection(ws['sheetProtection']);
 
 	if(o.length>2) { o[o.length] = ('</worksheet>'); o[1]=o[1].replace("/>",">"); }
 	return o.join("");
@@ -11231,14 +11357,14 @@ function parse_zip(zip, opts) {
 	if(wbrels) wbrels = safe_parse_wbrels(wbrels, wb.Sheets);
 	/* Numbers iOS hack */
 	var nmode = (getzipdata(zip,"xl/worksheets/sheet.xml",true))?1:0;
-	for(i = 0; i != props.Worksheets; ++i) {
+	for(i = 0; i != wbrels.length; ++i) {
 		if(wbrels) path = 'xl/' + (wbrels[i][1]).replace(/[\/]?xl\//, "");
 		else {
 			path = 'xl/worksheets/sheet'+(i+1-nmode)+"." + wbext;
 			path = path.replace(/sheet0\./,"sheet.");
 		}
 		relsPath = path.replace(/^(.*)(\/)([^\/]*)$/, "$1/_rels/$3.rels");
-		safe_parse_ws(zip, path, relsPath, props.SheetNames[i], sheetRels, sheets, opts);
+		safe_parse_ws(zip, path, relsPath, wbrels[i][0], sheetRels, sheets, opts);
 	}
 
 	if(dir.comments) parse_comments(zip, dir.comments, sheets, sheetRels, opts);
