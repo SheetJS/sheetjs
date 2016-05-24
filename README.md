@@ -1,8 +1,8 @@
 # xlsx-style
 
-Parser and writer for various spreadsheet formats.  Pure-JS cleanroom
-implementation from official specifications and related documents.
----
+Parser and writer for various spreadsheet formats.  Pure-JS cleanroom implementation from official specifications and related documents.
+
+# About this fork
 **NOTE:** [This project](https://github.com/SheetJS/js-xlsx/tree/beta) is a fork of the original (and awesome) [SheetJS/xlsx](https://github.com/SheetJS/js-xlsx) project.
 It is extended to enable cell formats to be read from and written to .xlsx workbooks.
 The intent is to provide a temporary means of using these features in practice, and ultimately to merge this into the primary project.
@@ -11,7 +11,8 @@ Report any issues to https://github.com/protobi/js-xlsx/issues.
 For those contributing to this fork:
 * `master` is the main branch, which follows the original repo to enable a future pull request.
 * `beta` branch is published to npm and bower to make this fork available for use.
----
+
+# Supported formats
 
 Supported read formats:
 
@@ -506,6 +507,10 @@ The exported `write` and `writeFile` functions accept an options argument:
 | bookType    | 'xlsx'  | Type of Workbook ("xlsx" or "xlsm" or "xlsb") |
 | showGridLines | true | Show gridlines on all pages  |
 | tabSelected | '1' | Initial tab selected |
+| Props       | null | Workbook properties |
+
+
+
 
 - `bookSST` is slower and more memory intensive, but has better compatibility
   with older versions of iOS Numbers
@@ -516,6 +521,9 @@ The exported `write` and `writeFile` functions accept an options argument:
   third-party readers.  Excel itself does not usually write cells with type `d`
   so non-Excel tools may ignore the data or blow up in the presence of dates.
 - showGridLines and tabSelected are currently used when generating an XLSX file but not yet parse.
+- Props specifies workbook properties
+   
+
 
 
 ## Cell Styles
