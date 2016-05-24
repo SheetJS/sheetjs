@@ -429,6 +429,8 @@ Special worksheet keys (accessible as `worksheet[key]`, each starting with `!`):
   will write all cells in the merge range if they exist, so be sure that only
   the first cell (upper-left) in the range is set.
 
+- `ws['!printHeader']`:  array of row indices for repeating row headers on print, e.g. `[1:1]` to repeat just the first row.
+
 The following properties are currently used when generating an XLSX file, but not yet parsed:
 
 - `ws['!rowBreaks']`: array of row break points, e.g. `[16,32]`
