@@ -1,6 +1,6 @@
 {
 	"name": "xlsx-style",
-	"version": "0.8.11",
+	"version": "0.8.13",
 	"author": "sheetjs",
 	"description": "Excel (XLSB/XLSX/XLSM/XLS/XML) and ODS spreadsheet parser and writer (extended to enable read/write of cell formats with xlsx files)",
 	"keywords": [ "excel", "xls", "xlsx", "xlsb", "xlsm", "ods", "office", "spreadsheet" ],

@@ -1,4 +1,4 @@
-var X = require('./');
+var X = require('../');
 var opts = { cellNF: true,
   type: 'file',
   cellHTML: true,

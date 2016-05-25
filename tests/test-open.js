@@ -1,4 +1,4 @@
-var XLSX = require('./');
+var XLSX = require('../');
 
 wbin = XLSX.readFile('/tmp/wb.xlsx', {type: "xlsx"});
 

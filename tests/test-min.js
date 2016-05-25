@@ -1,4 +1,4 @@
-var X = require('./xlsx.js');
+var X = require('../xlsx.js');
 var file = 'test_files/2013/apachepoi_44861.xls.xlsb';
 var file = 'test_files/apachepoi_44861.xls';
 var opts = {cellNF: true};

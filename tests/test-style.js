@@ -687,6 +687,7 @@ describe("Export styles", function () {
   it('can write to a buffer and read the file back', function () {
     var wb2 = XLSX.read(XLSX.write(workbook, {type:"buffer", bookType: 'xlsx'}), {cellStyles: true, cellNF: true})
     XLSX.writeFile(wb2, '/tmp/wb2.xlsx',  { defaultCellStyle: defaultCellStyle });
+    console.log("open /tmp/wb2.xlsx")
     assert(basicallyEquals(workbook.Sheets.Main,wb2.Sheets.Main));
   });
 
@@ -697,8 +698,9 @@ describe("Export styles", function () {
     var B6s = wb2.Sheets.Main.B6.s;
 
     Object.keys(A6s).forEach(function(key) {
-      if(A6s[key])
-        assert(A6s[key] !== B6s[key]);
+      if(A6s[key]) {
+        assert.deepEqual(A6s[key],B6s[key]);
+      }
     });
 
     assert(A6s.border.top === undefined);

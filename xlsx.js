@@ -7841,7 +7841,7 @@ function write_ws_xml(idx, opts, wb) {
 
   var sheetView = writextag('sheetView', null,  {
     showGridLines: opts.showGridLines == false ? '0' : '1',
-    tabSelected: opts.tabSelected === undefined ? '0' :  opts.tabSelected,
+    tabSelected: opts.tabSelected === undefined ? '0' :  opts.tabSelected,  // see issue #26, need to set WorkbookViews if this is set
     workbookViewId: opts.workbookViewId === undefined ? '0' : opts.workbookViewId
   });
   o[o.length] = writextag('sheetViews', sheetView);
@@ -8579,23 +8579,19 @@ function write_wb_xml(wb, opts) {
     for(var i = 0; i != wb.SheetNames.length; ++i) {
       var sheetName = wb.SheetNames[i];
       var sheet = wb.Sheets[sheetName]
-      if (sheet['!printHeader'])
-        var range = "'" + sheetName + "'!" + sheet['!printHeader'];
-      console.log("!!!!"+range)
+      if (sheet['!printHeader']) {
+          var printHeader = sheet['!printHeader'];
+
+        var range = "'" + sheetName + "'!$" + printHeader[0] + ":$" + printHeader[1];
+
         o[o.length] = (writextag('definedName', range, {
           "name":"_xlnm.Print_Titles",
           localSheetId : ''+i
         }))
+      }
     }
     o[o.length] = '</definedNames>';
   }
-
-
-
-//  <definedNames>
-//  <definedName name="_xlnm.Print_Titles" localSheetId="0">Sheet1!$1:$1</definedName>
-//  <definedName name="_xlnm.Print_Titles" localSheetId="1">Sheet2!$1:$2</definedName>
-//  </definedNames>
 
 	if(o.length>2){ o[o.length] = '</workbook>'; o[1]=o[1].replace("/>",">"); }
 	return o.join("");
