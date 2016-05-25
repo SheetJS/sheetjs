@@ -3761,7 +3761,7 @@ function parse_Country(blob, length) {
 function parse_ClrtClient(blob, length) {
 	var ccv = blob.read_shift(2);
 	var o = [];
-	while(ccv-->0) o.push(parse_LongRGB(blob, 8));
+	while(ccv-- > 0) o.push(parse_LongRGB(blob, 8));
 	return o;
 }
 
@@ -3769,7 +3769,7 @@ function parse_ClrtClient(blob, length) {
 function parse_Palette(blob, length) {
 	var ccv = blob.read_shift(2);
 	var o = [];
-	while(ccv-->0) o.push(parse_LongRGB(blob, 8));
+	while(ccv-- > 0) o.push(parse_LongRGB(blob, 8));
 	return o;
 }
 
