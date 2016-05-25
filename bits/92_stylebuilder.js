@@ -265,11 +265,9 @@
             .replace(/"/g, '&quot;')
             .replace(/'/g, '&apos;');
 
-
         var $numFmt = XmlNode('numFmt')
             .attr('numFmtId', (++customNumFmtId))
             .attr('formatCode', numFmt);
-
 
         this.$numFmts.append($numFmt);
 
