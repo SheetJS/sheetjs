@@ -11504,7 +11504,7 @@ function format_cell(cell, v) {
 }
 
 function sheet_to_json(sheet, opts){
-	var val, row, range, header = 0, offset = 1, r, hdr = [], isempty, R, C, v;
+	var val, row, range, header = 0, offset = 1, r, hdr = [], isempty, R, C, v, blankVal = false;
 	var o = opts != null ? opts : {};
 	var raw = o.raw;
 	if(sheet == null || sheet["!ref"] == null) return [];
@@ -11512,6 +11512,7 @@ function sheet_to_json(sheet, opts){
 	if(o.header === 1) header = 1;
 	else if(o.header === "A") header = 2;
 	else if(Array.isArray(o.header)) header = 3;
+	if(o.blankValue !== undefined) { blankVal = o.blankValue }
 	switch(typeof range) {
 		case 'string': r = safe_decode_range(range); break;
 		case 'number': r = safe_decode_range(sheet["!ref"]); r.s.r = range; break;
@@ -11546,17 +11547,22 @@ function sheet_to_json(sheet, opts){
 		}
 		for (C = r.s.c; C <= r.e.c; ++C) {
 			val = sheet[cols[C] + rr];
-			if(val === undefined || val.t === undefined) continue;
-			v = val.v;
-			switch(val.t){
-				case 'e': continue;
-				case 's': break;
-				case 'b': case 'n': break;
-				default: throw 'unrecognized type ' + val.t;
-			}
-			if(v !== undefined) {
-				row[hdr[C]] = raw ? v : format_cell(val,v);
+			if(val === undefined || val.t === undefined) {
+				if(blankVal === false) { continue; }
+				row[hdr[C]] = blankVal;
 				isempty = false;
+			} else {
+				v = val.v;
+				switch(val.t){
+					case 'e': continue;
+					case 's': break;
+					case 'b': case 'n': break;
+					default: throw 'unrecognized type ' + val.t;
+				}
+				if(v !== undefined) {
+					row[hdr[C]] = raw ? v : format_cell(val,v);
+					isempty = false;
+				}
 			}
 		}
 		if(isempty === false || header === 1) out[outi++] = row;
