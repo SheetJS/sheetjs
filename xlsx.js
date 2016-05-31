@@ -3761,7 +3761,7 @@ function parse_Country(blob, length) {
 function parse_ClrtClient(blob, length) {
 	var ccv = blob.read_shift(2);
 	var o = [];
-	while(ccv-- > 0) o.push(parse_LongRGB(blob, 8));
+	while(0 < ccv--) o.push(parse_LongRGB(blob, 8));
 	return o;
 }
 
@@ -3769,7 +3769,7 @@ function parse_ClrtClient(blob, length) {
 function parse_Palette(blob, length) {
 	var ccv = blob.read_shift(2);
 	var o = [];
-	while(ccv-- > 0) o.push(parse_LongRGB(blob, 8));
+	while(0 < ccv--) o.push(parse_LongRGB(blob, 8));
 	return o;
 }
 
@@ -5343,7 +5343,7 @@ function parse_XFExt(blob, length) {
 	blob.l += 2;
 	var cexts = blob.read_shift(2);
 	var ext = [];
-	while(cexts-- > 0) ext.push(parse_ExtProp(blob, end-blob.l));
+	while(0 < cexts--) ext.push(parse_ExtProp(blob, end-blob.l));
 	return {ixfe:ixfe, ext:ext};
 }
 
