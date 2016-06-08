@@ -11232,7 +11232,7 @@ function parse_zip(zip, opts) {
 	/* Numbers iOS hack */
 	var nmode = (getzipdata(zip,"xl/worksheets/sheet.xml",true))?1:0;
 	for(i = 0; i != props.Worksheets; ++i) {
-		if(wbrels) path = 'xl/' + (wbrels[i][1]).replace(/[\/]?xl\//, "");
+		if(wbrels && wbrels[i]) path = 'xl/' + (wbrels[i][1]).replace(/[\/]?xl\//, "");
 		else {
 			path = 'xl/worksheets/sheet'+(i+1-nmode)+"." + wbext;
 			path = path.replace(/sheet0\./,"sheet.");
