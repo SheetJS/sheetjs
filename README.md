@@ -72,7 +72,7 @@ data and feeding it into the library.  Here are a few common scenarios:
 
 - node readFile:
 
-```
+```javascript
 if(typeof require !== 'undefined') XLSX = require('xlsx');
 var workbook = XLSX.readFile('test.xlsx');
 /* DO SOMETHING WITH workbook HERE */
@@ -81,7 +81,7 @@ var workbook = XLSX.readFile('test.xlsx');
 - ajax (for a more complete example that works in older browsers, check the demo
   at <http://oss.sheetjs.com/js-xlsx/ajax.html>):
 
-```
+```javascript
 /* set up XMLHttpRequest */
 var url = "test_files/formula_stress_test_ajax.xlsx";
 var oReq = new XMLHttpRequest();
@@ -108,7 +108,7 @@ oReq.send();
 
 - HTML5 drag-and-drop using readAsBinaryString:
 
-```
+```javascript
 /* set up drag-and-drop event */
 function handleDrop(e) {
   e.stopPropagation();
@@ -134,7 +134,7 @@ drop_dom_element.addEventListener('drop', handleDrop, false);
 
 - HTML5 input file element using readAsBinaryString:
 
-```
+```javascript
 function handleFile(e) {
   var files = e.target.files;
   var i,f;
@@ -160,7 +160,7 @@ The full object format is described later in this README.
 
 This example extracts the value stored in cell A1 from the first worksheet:
 
-```
+```javascript
 var first_sheet_name = workbook.SheetNames[0];
 var address_of_cell = 'A1';
 
@@ -176,7 +176,7 @@ var desired_value = desired_cell.v;
 
 This example iterates through every nonempty of every sheet and dumps values:
 
-```
+```javascript
 var sheet_name_list = workbook.SheetNames;
 sheet_name_list.forEach(function(y) { /* iterate through sheets */
   var worksheet = workbook.Sheets[y];
@@ -220,7 +220,7 @@ Assuming `workbook` is a workbook object:
 
 - nodejs write to file:
 
-```
+```javascript
 /* output format determined by filename */
 XLSX.writeFile(workbook, 'out.xlsx');
 /* at this point, out.xlsx is a file that you can distribute */
@@ -228,7 +228,7 @@ XLSX.writeFile(workbook, 'out.xlsx');
 
 - write to binary string (using FileSaver.js):
 
-```
+```javascript
 /* bookType can be 'xlsx' or 'xlsm' or 'xlsb' */
 var wopts = { bookType:'xlsx', bookSST:false, type:'binary' };
 
@@ -303,7 +303,7 @@ Cell range objects are stored as `{s:S, e:E}` where `S` is the first cell and
 range `A3:B7` is represented by the object `{s:{c:0, r:2}, e:{c:1, r:6}}`. Utils
 use the following pattern to walk each of the cells in a range:
 
-```
+```javascript
 for(var R = range.s.r; R <= range.e.r; ++R) {
   for(var C = range.s.c; C <= range.e.c; ++C) {
     var cell_address = {c:C, r:R};
