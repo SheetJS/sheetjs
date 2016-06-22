@@ -215,6 +215,7 @@ var parse_content_xml = (function() {
 		var tag;
 		var NFtag, NF, pidx;
 		var sheetag;
+		var sheetName;
 		var Sheets = {}, SheetNames = [], ws = {};
 		var Rn, q;
 		var ctag;
@@ -229,8 +230,9 @@ var parse_content_xml = (function() {
 				if(Rn[1]==='/') {
 					if(range.e.c >= range.s.c && range.e.r >= range.s.r) ws['!ref'] = get_utils().encode_range(range);
 					if(merges.length) ws['!merges'] = merges;
-					SheetNames.push(sheetag.name);
-					Sheets[sheetag.name] = ws;
+					sheetName = utf8read(sheetag.name);
+					SheetNames.push(sheetName);
+					Sheets[sheetName] = ws;
 				}
 				else if(Rn[0].charAt(Rn[0].length-2) !== '/') {
 					sheetag = parsexmltag(Rn[0]);
