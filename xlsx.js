@@ -4612,8 +4612,6 @@ function find_mdw(collw, coll) {
 	}
 }
 
-function px2pt(px) { return px * 72 / 96; }
-
 /* [MS-EXSPXML3] 2.4.54 ST_enmPattern */
 var XLMLPatternTypeMap = {
 	"None": "none",
@@ -7809,12 +7807,9 @@ function write_ws_xml_data(ws, opts, idx, wb) {
 			if (typeof ws['!rows'] !== 'undefined' && ws['!rows'].length > R) {
 				var row = ws['!rows'][R];
 				if (row.hidden) params.hidden = 1;
-				var height = -1;
-				if (row.hpx) height = px2pt(row.hpx);
-				else if (row.hpt) height = row.hpt;
-				if (height > -1) { params.ht = height; params.customHeight = 1; }
+				if (row.height) { params.ht = height; params.customHeight = 1; }
 			}
-			o[o.length] = (writextag('row', r.join(""), {r:rr}));
+			o[o.length] = (writextag('row', r.join(""), params));
 		}
 	}
 	return o.join("");
