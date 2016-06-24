@@ -7807,7 +7807,7 @@ function write_ws_xml_data(ws, opts, idx, wb) {
 			if (typeof ws['!rows'] !== 'undefined' && ws['!rows'].length > R) {
 				var row = ws['!rows'][R];
 				if (row.hidden) params.hidden = 1;
-				if (row.height) { params.ht = height; params.customHeight = 1; }
+				if (row.height) { params.ht = row.height; params.customHeight = 1; }
 			}
 			o[o.length] = (writextag('row', r.join(""), params));
 		}
