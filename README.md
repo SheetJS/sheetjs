@@ -450,6 +450,9 @@ Special worksheet keys (accessible as `worksheet[key]`, each starting with `!`):
   parsed, the column objects store the pixel width in the `wpx` field, character
   width in the `wch` field, and the maximum digit width in the `MDW` field.
 
+- `ws['!rows']`: array of row properties objects.  Each comprises of an object
+  with `height` as a number and `hidden` as a boolean.
+
 - `ws['!merges']`: array of range objects corresponding to the merged cells in
   the worksheet.  Plaintext utilities are unaware of merge cells.  CSV export
   will write all cells in the merge range if they exist, so be sure that only
