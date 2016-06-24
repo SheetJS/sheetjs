@@ -3761,7 +3761,7 @@ function parse_Country(blob, length) {
 function parse_ClrtClient(blob, length) {
 	var ccv = blob.read_shift(2);
 	var o = [];
-	while(ccv-->0) o.push(parse_LongRGB(blob, 8));
+	while(0 < ccv--) o.push(parse_LongRGB(blob, 8));
 	return o;
 }
 
@@ -3769,7 +3769,7 @@ function parse_ClrtClient(blob, length) {
 function parse_Palette(blob, length) {
 	var ccv = blob.read_shift(2);
 	var o = [];
-	while(ccv-->0) o.push(parse_LongRGB(blob, 8));
+	while(0 < ccv--) o.push(parse_LongRGB(blob, 8));
 	return o;
 }
 
@@ -4612,6 +4612,8 @@ function find_mdw(collw, coll) {
 	}
 }
 
+function px2pt(px) { return px * 72 / 96; }
+
 /* [MS-EXSPXML3] 2.4.54 ST_enmPattern */
 var XLMLPatternTypeMap = {
 	"None": "none",
@@ -5343,7 +5345,7 @@ function parse_XFExt(blob, length) {
 	blob.l += 2;
 	var cexts = blob.read_shift(2);
 	var ext = [];
-	while(cexts-- > 0) ext.push(parse_ExtProp(blob, end-blob.l));
+	while(0 < cexts--) ext.push(parse_ExtProp(blob, end-blob.l));
 	return {ixfe:ixfe, ext:ext};
 }
 
@@ -7802,7 +7804,18 @@ function write_ws_xml_data(ws, opts, idx, wb) {
 			if(ws[ref] === undefined) continue;
 			if((cell = write_ws_xml_cell(ws[ref], ref, ws, opts, idx, wb)) != null) r.push(cell);
 		}
-		if(r.length > 0) o[o.length] = (writextag('row', r.join(""), {r:rr}));
+		if(r.length > 0) {
+			var params = { r: rr };
+			if (typeof ws['!rows'] !== 'undefined' && ws['!rows'].length > R) {
+				var row = ws['!rows'][R];
+				if (row.hidden) params.hidden = 1;
+				var height = -1;
+				if (row.hpx) height = px2pt(row.hpx);
+				else if (row.hpt) height = row.hpt;
+				if (height > -1) { params.ht = height; params.customHeight = 1; }
+			}
+			o[o.length] = (writextag('row', r.join(""), {r:rr}));
+		}
 	}
 	return o.join("");
 }
