@@ -7651,7 +7651,7 @@ function write_ws_xml_cols(ws, cols) {
 }
 
 function write_ws_xml_cell(cell, ref, ws, opts, idx, wb) {
-	if(cell.v === undefined && cell.s === undefined) return "";
+	if(cell.v === undefined && cell.s === undefined && !cell.f) return "";
 	var vv = "";
 	var oldt = cell.t, oldv = cell.v;
 	switch(cell.t) {
@@ -7667,7 +7667,13 @@ function write_ws_xml_cell(cell, ref, ws, opts, idx, wb) {
 			break;
 		default: vv = cell.v; break;
 	}
-	var v = writetag(cell.v.toString().charAt(0) === '=' ? 'f' : 'v', escapexml(vv)), o = {r:ref};
+	
+	var v;
+	if(cell.f) v = writetag('f', escapexml(cell.f));
+	else if(cell.v.toString().charAt(0) === '=') v = writetag('f', escapexml(vv));
+	else v = writetag('v', escapexml(vv));
+	
+	var o = {r:ref};
 	var os = get_cell_style(opts.cellXfs, cell, opts);
 	if(os !== 0) o.s = os;
 	switch(cell.t) {
