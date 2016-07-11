@@ -1,8 +1,8 @@
 {
-  "name": "js-xlsx",
-  "homepage": "https://github.com/SheetJS/js-xlsx",
+  "name": "js-xlsx-style",
+  "homepage": "https://github.com/protobi/js-xlsx",
   "main": "dist/xlsx.js",
-  "version": "0.8.0",
+  "version": "0.9.1",
   "ignore": [
     "bin",
     "bits",

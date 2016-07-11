@@ -114,6 +114,7 @@ function sheet_to_json(sheet, opts){
 				case 'e': continue;
 				case 's': break;
 				case 'b': case 'n': break;
+				case 'stub': break;
 				default: throw 'unrecognized type ' + val.t;
 			}
 			if(v !== undefined) {
@@ -201,3 +202,7 @@ var utils = {
 	sheet_to_formulae: sheet_to_formulae,
 	sheet_to_row_object_array: sheet_to_row_object_array
 };
+
+
+
+
