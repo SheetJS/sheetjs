@@ -42,4 +42,3 @@ function cc2str(arr) {
 	return o;
 }
 
-var has_buf = (typeof Buffer !== 'undefined');

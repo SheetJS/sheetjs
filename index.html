@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- xlsx.js (C) 2013-2014 SheetJS http://sheetjs.com -->
+<!-- xlsx.js (C) 2013-2015 SheetJS http://sheetjs.com -->
 <!-- vim: set ts=2: -->
 <html>
 <head>
@@ -21,7 +21,7 @@
 </style>
 </head>
 <body>
-<b>JS-XLSX (XLSX/XLSB/XLSM) Live Demo</b><br />
+<b>JS-XLSX (XLSX/XLSB/XLSM/XLS/XML) Live Demo</b><br />
 Output Format:
 <select name="format">
 <option value="csv" selected> CSV</option>
@@ -32,7 +32,7 @@ Output Format:
 <input type="radio" name="format" value="json"> JSON<br>
 <input type="radio" name="format" value="form"> FORMULAE<br> -->
 
-<div id="drop">Drop an XLSX / XLSM / XLSB / ODS file here to see sheet data</div>
+<div id="drop">Drop an XLSX / XLSM / XLSB / ODS / XLS / XML file here to see sheet data</div>
 <p><input type="file" name="xlfile" id="xlf" /> ... or click here to select a file</p>
 <textarea id="b64data">... or paste a base64-encoding here</textarea>
 <input type="button" id="dotext" value="Click here to process the base64 text" onclick="b64it();"/><br />
@@ -50,6 +50,16 @@ Use readAsBinaryString: (when available) <input type="checkbox" name="userabs" c
 <!-- uncomment the next line here and in xlsxworker.js for ODS support -->
 <script src="dist/ods.js"></script>
 <script>
+var X = XLSX;
+var XW = {
+	/* worker message */
+	msg: 'xlsx',
+	/* worker scripts */
+	rABS: './xlsxworker2.js',
+	norABS: './xlsxworker1.js',
+	noxfer: './xlsxworker.js'
+};
+
 var rABS = typeof FileReader !== "undefined" && typeof FileReader.prototype !== "undefined" && typeof FileReader.prototype.readAsBinaryString !== "undefined";
 if(!rABS) {
 	document.getElementsByName("userabs")[0].disabled = true;
@@ -90,21 +100,21 @@ function s2ab(s) {
 	return [v, b];
 }
 
-function xlsxworker_noxfer(data, cb) {
-	var worker = new Worker('./xlsxworker.js');
+function xw_noxfer(data, cb) {
+	var worker = new Worker(XW.noxfer);
 	worker.onmessage = function(e) {
 		switch(e.data.t) {
 			case 'ready': break;
 			case 'e': console.error(e.data.d); break;
-			case 'xlsx': cb(JSON.parse(e.data.d)); break;
+			case XW.msg: cb(JSON.parse(e.data.d)); break;
 		}
 	};
 	var arr = rABS ? data : btoa(fixdata(data));
 	worker.postMessage({d:arr,b:rABS});
 }
 
-function xlsxworker_xfer(data, cb) {
-	var worker = new Worker(rABS ? './xlsxworker2.js' : './xlsxworker1.js');
+function xw_xfer(data, cb) {
+	var worker = new Worker(rABS ? XW.rABS : XW.norABS);
 	worker.onmessage = function(e) {
 		switch(e.data.t) {
 			case 'ready': break;
@@ -120,10 +130,10 @@ function xlsxworker_xfer(data, cb) {
 	}
 }
 
-function xlsxworker(data, cb) {
+function xw(data, cb) {
 	transferable = document.getElementsByName("xferable")[0].checked;
-	if(transferable) xlsxworker_xfer(data, cb);
-	else xlsxworker_noxfer(data, cb);
+	if(transferable) xw_xfer(data, cb);
+	else xw_noxfer(data, cb);
 }
 
 function get_radio_value( radioName ) {
@@ -138,7 +148,7 @@ function get_radio_value( radioName ) {
 function to_json(workbook) {
 	var result = {};
 	workbook.SheetNames.forEach(function(sheetName) {
-		var roa = XLSX.utils.sheet_to_row_object_array(workbook.Sheets[sheetName]);
+		var roa = X.utils.sheet_to_row_object_array(workbook.Sheets[sheetName]);
 		if(roa.length > 0){
 			result[sheetName] = roa;
 		}
@@ -149,7 +159,7 @@ function to_json(workbook) {
 function to_csv(workbook) {
 	var result = [];
 	workbook.SheetNames.forEach(function(sheetName) {
-		var csv = XLSX.utils.sheet_to_csv(workbook.Sheets[sheetName]);
+		var csv = X.utils.sheet_to_csv(workbook.Sheets[sheetName]);
 		if(csv.length > 0){
 			result.push("SHEET: " + sheetName);
 			result.push("");
@@ -162,7 +172,7 @@ function to_csv(workbook) {
 function to_formulae(workbook) {
 	var result = [];
 	workbook.SheetNames.forEach(function(sheetName) {
-		var formulae = XLSX.utils.get_formulae(workbook.Sheets[sheetName]);
+		var formulae = X.utils.get_formulae(workbook.Sheets[sheetName]);
 		if(formulae.length > 0){
 			result.push("SHEET: " + sheetName);
 			result.push("");
@@ -175,7 +185,7 @@ function to_formulae(workbook) {
 var tarea = document.getElementById('b64data');
 function b64it() {
 	if(typeof console !== 'undefined') console.log("onload", new Date());
-	var wb = XLSX.read(tarea.value, {type: 'base64',WTF:wtf_mode});
+	var wb = X.read(tarea.value, {type: 'base64',WTF:wtf_mode});
 	process_wb(wb);
 }
 
@@ -203,22 +213,22 @@ function handleDrop(e) {
 	rABS = document.getElementsByName("userabs")[0].checked;
 	use_worker = document.getElementsByName("useworker")[0].checked;
 	var files = e.dataTransfer.files;
-	var i,f;
-	for (i = 0, f = files[i]; i != files.length; ++i) {
+	var f = files[0];
+	{
 		var reader = new FileReader();
 		var name = f.name;
 		reader.onload = function(e) {
 			if(typeof console !== 'undefined') console.log("onload", new Date(), rABS, use_worker);
 			var data = e.target.result;
 			if(use_worker) {
-				xlsxworker(data, process_wb);
+				xw(data, process_wb);
 			} else {
 				var wb;
 				if(rABS) {
-					wb = XLSX.read(data, {type: 'binary'});
+					wb = X.read(data, {type: 'binary'});
 				} else {
 				var arr = fixdata(data);
-					wb = XLSX.read(btoa(arr), {type: 'base64'});
+					wb = X.read(btoa(arr), {type: 'base64'});
 				}
 				process_wb(wb);
 			}
@@ -246,22 +256,22 @@ function handleFile(e) {
 	rABS = document.getElementsByName("userabs")[0].checked;
 	use_worker = document.getElementsByName("useworker")[0].checked;
 	var files = e.target.files;
-	var i,f;
-	for (i = 0, f = files[i]; i != files.length; ++i) {
+	var f = files[0];
+	{
 		var reader = new FileReader();
 		var name = f.name;
 		reader.onload = function(e) {
 			if(typeof console !== 'undefined') console.log("onload", new Date(), rABS, use_worker);
 			var data = e.target.result;
 			if(use_worker) {
-				xlsxworker(data, process_wb);
+				xw(data, process_wb);
 			} else {
 				var wb;
 				if(rABS) {
-					wb = XLSX.read(data, {type: 'binary'});
+					wb = X.read(data, {type: 'binary'});
 				} else {
 				var arr = fixdata(data);
-					wb = XLSX.read(btoa(arr), {type: 'base64'});
+					wb = X.read(btoa(arr), {type: 'base64'});
 				}
 				process_wb(wb);
 			}
@@ -272,7 +282,6 @@ function handleFile(e) {
 }
 
 if(xlf.addEventListener) xlf.addEventListener('change', handleFile, false);
-</script>
 </script>
 </body>
 </html>

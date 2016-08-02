@@ -1,4 +1,4 @@
-var attregexg=/\b[\w:]+=["'][^"]*['"]/g;
+var attregexg=/([\w:]+)=((?:")([^"]*)(?:")|(?:')([^']*)(?:'))/g;
 var tagregex=/<[^>]*>/g;
 var nsregex=/<\w*:/, nsregex2 = /<(\/?)\w+:/;
 function parsexmltag(tag, skip_root) {
@@ -31,16 +31,26 @@ var rencoding = evert(encodings);
 var rencstr = "&<>'\"".split("");
 
 // TODO: CP remap (need to read file version to determine OS)
-var encregex = /&[a-z]*;/g, coderegex = /_x([\da-fA-F]+)_/g;
-function unescapexml(text){
-	var s = text + '';
-	return s.replace(encregex, function($$) { return encodings[$$]; }).replace(coderegex,function(m,c) {return String.fromCharCode(parseInt(c,16));});
-}
+var unescapexml = (function() {
+	var encregex = /&[a-z]*;/g, coderegex = /_x([\da-fA-F]+)_/g;
+	return function unescapexml(text){
+		var s = text + '';
+		return s.replace(encregex, function($$) { return encodings[$$]; }).replace(coderegex,function(m,c) {return String.fromCharCode(parseInt(c,16));});
+	};
+})();
+
 var decregex=/[&<>'"]/g, charegex = /[\u0000-\u0008\u000b-\u001f]/g;
 function escapexml(text){
 	var s = text + '';
 	return s.replace(decregex, function(y) { return rencoding[y]; }).replace(charegex,function(s) { return "_x" + ("000"+s.charCodeAt(0).toString(16)).substr(-4) + "_";});
 }
+
+/* TODO: handle codepages */
+var xlml_fixstr = (function() {
+	var entregex = /&#(\d+);/g;
+	function entrepl($$,$1) { return String.fromCharCode(parseInt($1,10)); }
+	return function xlml_fixstr(str) { return str.replace(entregex,entrepl); };
+})();
 
 function parsexmlbool(value, tag) {
 	switch(value) {
@@ -158,3 +168,4 @@ XMLNS.main = [
 	'http://schemas.microsoft.com/office/excel/2006/main',
 	'http://schemas.microsoft.com/office/excel/2006/2'
 ];
+

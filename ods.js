@@ -15,6 +15,12 @@ var get_utils = function() {
 	throw new Error("Cannot find XLSX utils");
 };
 var has_buf = (typeof Buffer !== 'undefined');
+
+function cc2str(arr) {
+	var o = "";
+	for(var i = 0; i != arr.length; ++i) o += String.fromCharCode(arr[i]);
+	return o;
+}
 function getdata(data) {
 	if(!data) return null;
 	if(data.data) return data.data;

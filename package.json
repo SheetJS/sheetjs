@@ -1,9 +1,9 @@
 {
 	"name": "xlsx",
-	"version": "0.7.12",
+	"version": "0.8.0",
 	"author": "sheetjs",
-	"description": "Excel 2007+ spreadsheet (XLSB/XLSX/XLSM) and ODS parser and writer",
-	"keywords": [ "excel", "xlsx", "xlsb", "xlsm", "ods", "office", "spreadsheet" ],
+	"description": "Excel (XLSB/XLSX/XLSM/XLS/XML) and ODS spreadsheet parser and writer",
+	"keywords": [ "excel", "xls", "xlsx", "xlsb", "xlsm", "ods", "office", "spreadsheet" ],
 	"bin": {
 		"xlsx": "./bin/xlsx.njs"
 	},
@@ -20,14 +20,12 @@
 	"devDependencies": {
 		"mocha":"",
 		"xlsjs":"",
-		"uglify-js":"",
-		"jasmine-node": "x"
+		"uglify-js":""
 	},
 	"repository": { "type":"git", "url":"git://github.com/SheetJS/js-xlsx.git" },
 	"scripts": {
 		"pretest": "git submodule init && git submodule update",
-		"test": "make test",
-		"test-jasmine": "jasmine-node --verbose tests/"
+		"test": "make test"
 	},
 	"config": {
 		"blanket": {

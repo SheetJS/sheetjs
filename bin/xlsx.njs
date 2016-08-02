@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* xlsx.js (C) 2013-2014 SheetJS -- http://sheetjs.com */
+/* xlsx.js (C) 2013-2015 SheetJS -- http://sheetjs.com */
 var n = "xlsx";
 /* vim: set ts=2 ft=javascript: */
 var X = require('../');
@@ -9,6 +9,7 @@ program
 	.usage('[options] <file> [sheetname]')
 	.option('-f, --file <file>', 'use specified workbook')
 	.option('-s, --sheet <sheet>', 'print specified sheet (default first sheet)')
+	.option('-p, --password <pw>', 'if file is encrypted, try with specified pw')
 	.option('-l, --list-sheets', 'list sheet names and exit')
 	.option('-o, --output <file>', 'output to specified file')
 	.option('-B, --xlsb', 'emit XLSB to <sheetname> or <file>.xlsb')
@@ -67,6 +68,7 @@ if(!fs.existsSync(filename)) {
 var opts = {}, wb;
 if(program.listSheets) opts.bookSheets = true;
 if(program.sheetRows) opts.sheetRows = program.sheetRows;
+if(program.password) opts.password = program.password;
 if(program.xlsx || program.xlsm || program.xlsb) {
 	opts.cellNF = true;
 	if(program.output) sheetname = program.output;

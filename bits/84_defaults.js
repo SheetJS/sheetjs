@@ -21,9 +21,10 @@ var fix_read_opts = fix_opts_func([
 	['bookDeps', false], /* parse calculation chains */
 	['bookSheets', false], /* only try to get sheet names (no Sheets) */
 	['bookProps', false], /* only try to get properties (no Sheets) */
-	['bookFiles', false], /* include raw file structure (keys, files) */
+	['bookFiles', false], /* include raw file structure (keys, files, cfb) */
 	['bookVBA', false], /* include vba raw data (vbaraw) */
 
+	['password',''], /* password */
 	['WTF', false] /* WTF mode (throws errors) */
 ]);
 

@@ -33,14 +33,14 @@ function write_RichStr(str, o) {
 }
 
 /* [MS-XLSB] 2.5.9 */
-function parse_Cell(data) {
+function parse_XLSBCell(data) {
 	var col = data.read_shift(4);
 	var iStyleRef = data.read_shift(2);
 	iStyleRef += data.read_shift(1) <<16;
 	var fPhShow = data.read_shift(1);
 	return { c:col, iStyleRef: iStyleRef };
 }
-function write_Cell(cell, o) {
+function write_XLSBCell(cell, o) {
 	if(o == null) o = new_buf(8);
 	o.write_shift(-4, cell.c);
 	o.write_shift(3, cell.iStyleRef === undefined ? cell.iStyleRef : cell.s);
@@ -50,7 +50,7 @@ function write_Cell(cell, o) {
 
 
 /* [MS-XLSB] 2.5.21 */
-function parse_CodeName (data, length) { return parse_XLWideString(data, length); }
+function parse_XLSBCodeName (data, length) { return parse_XLWideString(data, length); }
 
 /* [MS-XLSB] 2.5.166 */
 function parse_XLNullableWideString(data) {
@@ -82,11 +82,12 @@ var write_RelID = write_XLNullableWideString;
 
 
 /* [MS-XLSB] 2.5.122 */
+/* [MS-XLS] 2.5.217 */
 function parse_RkNumber(data) {
 	var b = data.slice(data.l, data.l+4);
 	var fX100 = b[0] & 1, fInt = b[0] & 2;
 	data.l+=4;
-	b[0] &= 0xFC;
+	b[0] &= 0xFC; // b[0] &= ~3;
 	var RK = fInt === 0 ? __double([0,0,0,0,b[0],b[1],b[2],b[3]],0) : __readInt32LE(b,0)>>2;
 	return fX100 ? RK/100 : RK;
 }
@@ -111,6 +112,7 @@ function write_UncheckedRfX(r, o) {
 }
 
 /* [MS-XLSB] 2.5.171 */
+/* [MS-XLS] 2.5.342 */
 function parse_Xnum(data, length) { return data.read_shift(8, 'f'); }
 function write_Xnum(data, o) { return (o || new_buf(8)).write_shift(8, 'f', data); }
 
