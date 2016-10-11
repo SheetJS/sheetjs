@@ -417,7 +417,7 @@ spreadsheet-parsexlsx_bug-17b.xlsx
 spreadsheet-parsexlsx_bug-2.xlsx
 spreadsheet-parsexlsx_bug-29.xlsx
 spreadsheet-parsexlsx_bug-3.xlsx
-spreadsheet-parsexlsx_bug-32-2.xlsx
+# spreadsheet-parsexlsx_bug-32-2.xlsx # occasional timeout
 spreadsheet-parsexlsx_bug-32.xlsx
 spreadsheet-parsexlsx_bug-38.xlsx
 spreadsheet-parsexlsx_bug-4.xlsx

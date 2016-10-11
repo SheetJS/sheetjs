@@ -1425,12 +1425,12 @@ function parsexmltag(tag, skip_root) {
 		q = cc.substr(0,c); v = cc.substring(c+2, cc.length-1);
 		for(j=0;j!=q.length;++j) if(q.charCodeAt(j) === 58) break;
 		if(j===q.length) {
-			//if(q.indexOf("_") > 0) q = q.substr(0, q.indexOf("_")); // from ods
+			if(q.indexOf("_") > 0) q = q.substr(0, q.indexOf("_")); // from ods
 			z[q] = v;
 		}
 		else {
 			var k = (j===5 && q.substr(0,5)==="xmlns"?"xmlns":"")+q.substr(j+1);
-			//if(z[k] && q.substr(j-3,3) == "ext") continue; // from ods
+			if(z[k] && q.substr(j-3,3) == "ext") continue; // from ods
 			z[k] = v;
 		}
 	}
@@ -4524,6 +4524,7 @@ var parse_rs = (function parse_rs_factory() {
 
 /* 18.4.8 si CT_Rst */
 var sitregex = /<(?:\w+:)?t[^>]*>([^<]*)<\/(?:\w+:)?t>/g, sirregex = /<(?:\w+:)?r>/;
+var sirphregex = /<(?:\w+:)?rPh.*?>(.*?)<\/(?:\w+:)?rPh>/g;
 function parse_si(x, opts) {
 	var html = opts ? opts.cellHTML : true;
 	var z = {};
@@ -4539,7 +4540,7 @@ function parse_si(x, opts) {
 	/* 18.4.4 r CT_RElt (Rich Text Run) */
 	else if((y = x.match(sirregex))) {
 		z.r = utf8read(x);
-		z.t = utf8read(unescapexml((x.replace(/<rPh.*?>(.*?)<\/rPh>/g, '').match(sitregex)||[]).join("").replace(tagregex,"")));
+		z.t = utf8read(unescapexml((x.replace(sirphregex, '').match(sitregex)||[]).join("").replace(tagregex,"")));
 		if(html) z.h = parse_rs(z.r);
 	}
 	/* 18.4.3 phoneticPr CT_PhoneticPr (TODO: needed for Asian support) */

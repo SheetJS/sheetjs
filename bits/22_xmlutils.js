@@ -14,12 +14,12 @@ function parsexmltag(tag/*:string*/, skip_root/*:?boolean*/)/*:any*/ {
 		q = cc.substr(0,c); v = cc.substring(c+2, cc.length-1);
 		for(j=0;j!=q.length;++j) if(q.charCodeAt(j) === 58) break;
 		if(j===q.length) {
-			//if(q.indexOf("_") > 0) q = q.substr(0, q.indexOf("_")); // from ods
+			if(q.indexOf("_") > 0) q = q.substr(0, q.indexOf("_")); // from ods
 			z[q] = v;
 		}
 		else {
 			var k = (j===5 && q.substr(0,5)==="xmlns"?"xmlns":"")+q.substr(j+1);
-			//if(z[k] && q.substr(j-3,3) == "ext") continue; // from ods
+			if(z[k] && q.substr(j-3,3) == "ext") continue; // from ods
 			z[k] = v;
 		}
 	}
