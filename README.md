@@ -1,7 +1,18 @@
-# xlsx
+# xlsx-style
 
-Parser and writer for various spreadsheet formats.  Pure-JS cleanroom
-implementation from official specifications and related documents.
+Parser and writer for various spreadsheet formats.  Pure-JS cleanroom implementation from official specifications and related documents.
+
+# About this fork
+**NOTE:** [This project](https://github.com/SheetJS/js-xlsx/tree/beta) is a fork of the original (and awesome) [SheetJS/xlsx](https://github.com/SheetJS/js-xlsx) project.
+It is extended to enable cell formats to be read from and written to .xlsx workbooks.
+The intent is to provide a temporary means of using these features in practice, and ultimately to merge this into the primary project.
+Report any issues to https://github.com/protobi/js-xlsx/issues.
+
+For those contributing to this fork:
+* `master` is the main branch, which follows the original repo to enable a future pull request.
+* `beta` branch is published to npm and bower to make this fork available for use.
+
+# Supported formats
 
 Supported read formats:
 
@@ -24,17 +35,23 @@ Source: <http://git.io/xlsx>
 
 ## Installation
 
-With [npm](https://www.npmjs.org/package/xlsx):
+With [npm](https://www.npmjs.org/package/xlsx-style):
 
-    npm install xlsx
+```sh
+npm install xlsx-style --save
+```
 
 In the browser:
 
-    <script lang="javascript" src="dist/xlsx.core.min.js"></script>
+```html
+<script lang="javascript" src="dist/xlsx.core.min.js"></script>
+```
 
 With [bower](http://bower.io/search/?q=js-xlsx):
 
-    bower install js-xlsx
+```sh
+bower install js-xlsx-style#beta
+```
 
 CDNjs automatically pulls the latest version and makes all versions available at
 <http://cdnjs.com/libraries/xlsx>
@@ -46,10 +63,12 @@ of these modules are rather large in size and are only needed in special
 circumstances, so they do not ship with the core.  For browser use, they must
 be included directly:
 
-    <!-- international support from https://github.com/sheetjs/js-codepage -->
-    <script src="dist/cpexcel.js"></script>
-    <!-- ODS support -->
-    <script src="dist/ods.js"></script>
+```html
+<!-- international support from https://github.com/sheetjs/js-codepage -->
+<script src="dist/cpexcel.js"></script>
+<!-- ODS support -->
+<script src="dist/ods.js"></script>
+```
 
 An appropriate version for each dependency is included in the dist/ directory.
 
@@ -63,7 +82,9 @@ Since xlsx.js uses ES5 functions like `Array#forEach`, older browsers require
 
 To use the shim, add the shim before the script tag that loads xlsx.js:
 
-    <script type="text/javascript" src="/path/to/shim.js"></script>
+```html
+<script type="text/javascript" src="/path/to/shim.js"></script>
+```
 
 ## Parsing Workbooks
 
@@ -72,7 +93,7 @@ data and feeding it into the library.  Here are a few common scenarios:
 
 - node readFile:
 
-```
+```js
 if(typeof require !== 'undefined') XLSX = require('xlsx');
 var workbook = XLSX.readFile('test.xlsx');
 /* DO SOMETHING WITH workbook HERE */
@@ -81,10 +102,11 @@ var workbook = XLSX.readFile('test.xlsx');
 - ajax (for a more complete example that works in older browsers, check the demo
   at <http://oss.sheetjs.com/js-xlsx/ajax.html>):
 
-```
+```js
 /* set up XMLHttpRequest */
 var url = "test_files/formula_stress_test_ajax.xlsx";
 var oReq = new XMLHttpRequest();
+
 oReq.open("GET", url, true);
 oReq.responseType = "arraybuffer";
 
@@ -108,13 +130,14 @@ oReq.send();
 
 - HTML5 drag-and-drop using readAsBinaryString:
 
-```
+```js
 /* set up drag-and-drop event */
 function handleDrop(e) {
   e.stopPropagation();
   e.preventDefault();
   var files = e.dataTransfer.files;
-  var i,f;
+  var i, f;
+  
   for (i = 0, f = files[i]; i != files.length; ++i) {
     var reader = new FileReader();
     var name = f.name;
@@ -134,10 +157,11 @@ drop_dom_element.addEventListener('drop', handleDrop, false);
 
 - HTML5 input file element using readAsBinaryString:
 
-```
+```js
 function handleFile(e) {
   var files = e.target.files;
-  var i,f;
+  var i, f;
+  
   for (i = 0, f = files[i]; i != files.length; ++i) {
     var reader = new FileReader();
     var name = f.name;
@@ -160,7 +184,7 @@ The full object format is described later in this README.
 
 This example extracts the value stored in cell A1 from the first worksheet:
 
-```
+```js
 var first_sheet_name = workbook.SheetNames[0];
 var address_of_cell = 'A1';
 
@@ -176,8 +200,9 @@ var desired_value = desired_cell.v;
 
 This example iterates through every nonempty of every sheet and dumps values:
 
-```
+```js
 var sheet_name_list = workbook.SheetNames;
+
 sheet_name_list.forEach(function(y) { /* iterate through sheets */
   var worksheet = workbook.Sheets[y];
   for (z in worksheet) {
@@ -195,7 +220,9 @@ Complete examples:
 Note that older versions of IE does not support HTML5 File API, so the base64
 mode is provided for testing.  On OSX you can get the base64 encoding with:
 
-    $ <target_file.xlsx base64 | pbcopy
+```sh
+$ <target_file.xlsx base64 | pbcopy
+```
 
 - <http://oss.sheetjs.com/js-xlsx/ajax.html> XMLHttpRequest
 
@@ -220,7 +247,7 @@ Assuming `workbook` is a workbook object:
 
 - nodejs write to file:
 
-```
+```js
 /* output format determined by filename */
 XLSX.writeFile(workbook, 'out.xlsx');
 /* at this point, out.xlsx is a file that you can distribute */
@@ -228,7 +255,7 @@ XLSX.writeFile(workbook, 'out.xlsx');
 
 - write to binary string (using FileSaver.js):
 
-```
+```js
 /* bookType can be 'xlsx' or 'xlsm' or 'xlsb' */
 var wopts = { bookType:'xlsx', bookSST:false, type:'binary' };
 
@@ -303,7 +330,7 @@ Cell range objects are stored as `{s:S, e:E}` where `S` is the first cell and
 range `A3:B7` is represented by the object `{s:{c:0, r:2}, e:{c:1, r:6}}`. Utils
 use the following pattern to walk each of the cells in a range:
 
-```
+```js
 for(var R = range.s.r; R <= range.e.r; ++R) {
   for(var C = range.s.c; C <= range.e.c; ++C) {
     var cell_address = {c:C, r:R};
@@ -330,6 +357,9 @@ Built-in export utilities (such as the CSV exporter) will use the `w` text if it
 is available.  To change a value, be sure to delete `cell.w` (or set it to
 `undefined`) before attempting to export.  The utilities will regenerate the `w`
 text from the number format (`cell.z`) and the raw value if possible.
+
+**Note**: The .z attribute is now deprecated.  Use the `.s` attribute to specify cell styles including number formats.
+To specify a number format, use `s.numFmt`, e.g. `{v: 42145.822, s: { numFmt: "m/dd/yy"}}` described below.
 
 ### Data Types
 
@@ -400,14 +430,30 @@ Special worksheet keys (accessible as `worksheet[key]`, each starting with `!`):
   will write all cells in the merge range if they exist, so be sure that only
   the first cell (upper-left) in the range is set.
 
+- `ws['!printHeader']`:  array of row indices for repeating row headers on print, e.g. `[1:1]` to repeat just the first row.
+
+The following properties are currently used when generating an XLSX file, but not yet parsed:
+
+- `ws['!rowBreaks']`: array of row break points, e.g. `[16,32]`
+- `ws['!colBreaks']`: array of col break points, e.g. `[8,16]`
+- `ws['!pageSetup']`: `{scale: '100', orientation: 'portrait'||'landscape'}
+
+
 ### Workbook Object
 
 `workbook.SheetNames` is an ordered list of the sheets in the workbook
 
 `wb.Sheets[sheetname]` returns an object representing the worksheet.
 
-`wb.Props` is an object storing the standard properties.  `wb.Custprops` stores
-custom properties.  Since the XLS standard properties deviate from the XLSX
+`wb.Props` is an object storing the standard properties.  The following properties are currently used when
+generating an XLSX file, but not yet parsed:
+    - `title`
+    - `subject`
+    - `description`
+    - `keywords`
+    - `creator`
+
+`wb.Custprops` stores custom properties.  Since the XLS standard properties deviate from the XLSX
 standard, XLS parsing stores core properties in both places.  .
 
 
@@ -459,6 +505,12 @@ The exported `write` and `writeFile` functions accept an options argument:
 | cellDates   | false   | Store dates as type `d` (default is `n`) |
 | bookSST     | false   | Generate Shared String Table ** |
 | bookType    | 'xlsx'  | Type of Workbook ("xlsx" or "xlsm" or "xlsb") |
+| showGridLines | true | Show gridlines on all pages  |
+| tabSelected | '1' | Initial tab selected |
+| Props       | null | Workbook properties |
+
+
+
 
 - `bookSST` is slower and more memory intensive, but has better compatibility
   with older versions of iOS Numbers
@@ -468,6 +520,85 @@ The exported `write` and `writeFile` functions accept an options argument:
 - `cellDates` only applies to XLSX output and is not guaranteed to work with
   third-party readers.  Excel itself does not usually write cells with type `d`
   so non-Excel tools may ignore the data or blow up in the presence of dates.
+- showGridLines and tabSelected are currently used when generating an XLSX file but not yet parse.
+- Props specifies workbook properties
+   
+
+
+
+## Cell Styles
+
+Cell styles are specified by a style object that roughly parallels the OpenXML structure.  The style object has five
+top-level attributes: `fill`, `font`, `numFmt`, `alignment`, and `border`.
+
+
+| Style Attribute | Sub Attributes | Values |
+| :-------------- | :------------- | :------------- | :----- |
+| fill            | patternType    |  `"solid"` or `"none"` |
+|                 | fgColor        |  `COLOR_SPEC`
+|                 | bgColor        |  `COLOR_SPEC`
+| font            | name           |  `"Calibri"` // default
+|                 | sz             |  `"11"` // font size in points
+|                 | color          |  `COLOR_SPEC`
+|                 | bold           |  `true || false`
+|                 | underline      |  `true || false`
+|                 | italic         |  `true || false`
+|                 | strike         |  `true || false`
+|                 | outline        |  `true || false`
+|                 | shadow         |  `true || false`
+|                 | vertAlign      |  `true || false`
+| numFmt          |                |  `"0"`  // integer index to built in formats, see StyleBuilder.SSF property
+|                 |                |  `"0.00%"` // string matching a built-in format, see StyleBuilder.SSF
+|                 |                |  `"0.0%"`  // string specifying a custom format
+|                 |                |  `"0.00%;\\(0.00%\\);\\-;@"` // string specifying a custom format, escaping special characters
+|                 |                |  `"m/dd/yy"` // string a date format using Excel's format notation
+| alignment       | vertical       | `"bottom"||"center"||"top"`
+|                 | horizontal     | `"bottom"||"center"||"top"`
+|                 | wrapText       |  `true || false`
+|                 | readingOrder   |  `2` // for right-to-left
+|                 | textRotation   | Number from `0` to `180` or `255` (default is `0`)
+|                 |                |  `90` is rotated up 90 degrees
+|                 |                |  `45` is rotated up 45 degrees
+|                 |                | `135` is rotated down 45 degrees 
+|                 |                | `180` is rotated down 180 degrees
+|                 |                | `255` is special,  aligned vertically
+| border          | top            | `{ style: BORDER_STYLE, color: COLOR_SPEC }`
+|                 | bottom         | `{ style: BORDER_STYLE, color: COLOR_SPEC }`
+|                 | left           | `{ style: BORDER_STYLE, color: COLOR_SPEC }`
+|                 | right          | `{ style: BORDER_STYLE, color: COLOR_SPEC }`
+|                 | diagonal       | `{ style: BORDER_STYLE, color: COLOR_SPEC }`
+|                 | diagonalUp     | `true||false`
+|                 | diagonalDown   | `true||false`
+
+
+**COLOR_SPEC**: Colors for `fill`, `font`, and `border` are specified as objects, either:
+* `{ auto: 1}` specifying automatic values
+* `{ rgb: "FFFFAA00" }` specifying a hex ARGB value
+* `{ theme: "1", tint: "-0.25"}` specifying an integer index to a theme color and a tint value (default 0)
+* `{ indexed: 64}` default value for `fill.bgColor`
+
+**BORDER_STYLE**: Border style is a string value which may take on one of the following values:
+ * `thin`
+ * `medium`
+ * `thick`
+ * `dotted`
+ * `hair`
+ * `dashed`
+ * `mediumDashed`
+ * `dashDot`
+ * `mediumDashDot`
+ * `dashDotDot`
+ * `mediumDashDotDot`
+ * `slantDashDot`
+
+
+Borders for merged areas are specified for each cell within the merged area.  So to apply a box border to a merged area of 3x3 cells, border styles would need to be specified for eight different cells:
+* left borders for the three cells on the left,
+* right borders for the cells on the right
+* top borders for the cells on the top
+* bottom borders for the cells on the left
+
+
 
 ## Tested Environments
 
@@ -494,7 +625,7 @@ Running `make init` will refresh the `test_files` submodule and get the files.
 [the oss.sheetjs.com repo](https://github.com/SheetJS/SheetJS.github.io) and
 replace the xlsx.js file (then fire up the browser and go to `stress.html`):
 
-```
+```sh
 $ cp xlsx.js ../SheetJS.github.io
 $ cd ../SheetJS.github.io
 $ simplehttpserver # or "python -mSimpleHTTPServer" or "serve"
@@ -513,7 +644,7 @@ build script (run `make`) will concatenate the individual bits to produce the
 script.  Before submitting a contribution, ensure that running make will produce
 the xlsx.js file exactly.  The simplest way to test is to move the script:
 
-```
+```sh
 $ mv xlsx.js xlsx.new.js
 $ make
 $ diff xlsx.js xlsx.new.js
@@ -564,5 +695,3 @@ Open Document Format for Office Applications Version 1.2 (29 September 2011)
 [![Build Status](https://travis-ci.org/SheetJS/js-xlsx.svg?branch=master)](https://travis-ci.org/SheetJS/js-xlsx)
 
 [![Coverage Status](http://img.shields.io/coveralls/SheetJS/js-xlsx/master.svg)](https://coveralls.io/r/SheetJS/js-xlsx?branch=master)
-
-[![githalytics.com alpha](https://cruel-carlota.pagodabox.com/ed5bb2c4c4346a474fef270f847f3f78 "githalytics.com")](http://githalytics.com/SheetJS/js-xlsx)

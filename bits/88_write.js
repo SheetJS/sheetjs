@@ -1,6 +1,8 @@
 function write_zip_type(wb, opts) {
 	var o = opts||{};
-	var z = write_zip(wb, o);
+  style_builder  = new StyleBuilder(opts);
+
+  var z = write_zip(wb, o);
 	switch(o.type) {
 		case "base64": return z.generate({type:"base64"});
 		case "binary": return z.generate({type:"string"});
@@ -20,6 +22,7 @@ function writeSync(wb, opts) {
 
 function writeFileSync(wb, filename, opts) {
 	var o = opts||{}; o.type = 'file';
+
 	o.file = filename;
 	switch(o.file.substr(-5).toLowerCase()) {
 		case '.xlsx': o.bookType = 'xlsx'; break;
