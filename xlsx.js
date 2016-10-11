@@ -4261,11 +4261,16 @@ var parse_rs = (function parse_rs_factory() {
 
 /* 18.4.8 si CT_Rst */
 var sitregex = /<t[^>]*>([^<]*)<\/t>/g, sirregex = /<r>/;
+var sirphregex = /<\/rPh>/;
 function parse_si(x, opts) {
 	var html = opts ? opts.cellHTML : true;
 	var z = {};
 	if(!x) return null;
 	var y;
+	/* 18.4.6 rPh CT_PhoneticRun (ignored) */
+	if((y = x.match(sirphregex))) {
+		x = x.replace(/<rPh\W.*?<\/rPh>/g, "");
+	}
 	/* 18.4.12 t ST_Xstring (Plaintext String) */
 	if(x.charCodeAt(1) === 116) {
 		z.t = utf8read(unescapexml(x.substr(x.indexOf(">")+1).split(/<\/t>/)[0]));
