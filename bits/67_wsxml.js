@@ -238,6 +238,7 @@ return function parse_ws_xml_data(sdata, s, opts, guess) {
           if(isNaN(p.v)) p.v = "" // we don't want NaN if p.v is null
           break;
 				case 's':
+					if (!p.hasOwnProperty('v')) continue;
 					sstr = strs[parseInt(p.v, 10)];
 					p.v = sstr.t;
 					p.r = sstr.r;
