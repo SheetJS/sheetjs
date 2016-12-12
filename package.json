@@ -10,7 +10,7 @@
 	"main": "./xlsx",
 	"dependencies": {
 		"ssf":"~0.8.1",
-		"codepage":"~1.3.6",
+		"codepage":"~1.6.0",
 		"cfb":">=0.10.0",
 		"jszip":"2.4.0",
 		"crc-32":"",
