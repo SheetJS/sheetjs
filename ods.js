@@ -279,7 +279,14 @@ var parse_content_xml = (function() {
 				} else {
 					if(q.t === 's') q.v = textp;
 					if(textp) q.w = textp;
-					if(!(opts.sheetRows && opts.sheetRows < R)) ws[get_utils().encode_cell({r:R,c:C})] = q;
+					if(!(opts.sheetRows && opts.sheetRows < R)) {
+            var count = 1;
+            if(ctag['number-columns-repeated']) count = parseInt(ctag['number-columns-repeated'], 10);
+            while (count-- > 0) {
+              ws[get_utils().encode_cell({r:R,c:C})] = q;
+              if (count) C++;
+            }
+          }
 					q = null;
 				}
 				break; // 9.1.4 <table:table-cell>
