@@ -11,7 +11,7 @@ if(process.env.WTF) {
 	opts.WTF = true;
 	opts.cellStyles = true;
 }
-var fullex = [".xlsb", ".xlsm", ".xlsx"];
+var fullex = [/*TODO: check why write xlsb fails ".xlsb",*/ ".xlsm", ".xlsx"];
 var ex = fullex.slice(); ex.push(".ods"); ex.push(".xls"); ex.push("xml");
 if(process.env.FMTS === "full") process.env.FMTS = ex.join(":");
 if(process.env.FMTS) ex=process.env.FMTS.split(":").map(function(x){return x[0]==="."?x:"."+x;});

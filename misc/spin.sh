@@ -1,6 +1,6 @@
 #!/bin/bash
 # spin.sh -- show a spinner (for coverage test)
-# Copyright (C) 2014  SheetJS
+# Copyright (C) 2014-present  SheetJS
 
 wpid=$1
 delay=1

@@ -26,15 +26,21 @@ Source: <http://git.io/xlsx>
 
 With [npm](https://www.npmjs.org/package/xlsx):
 
-    npm install xlsx
+```bash
+$ npm install xlsx
+```
 
 In the browser:
 
-    <script lang="javascript" src="dist/xlsx.core.min.js"></script>
+```html
+<script lang="javascript" src="dist/xlsx.core.min.js"></script>
+```
 
 With [bower](http://bower.io/search/?q=js-xlsx):
 
-    bower install js-xlsx
+```bash
+$ bower install js-xlsx
+```
 
 CDNjs automatically pulls the latest version and makes all versions available at
 <http://cdnjs.com/libraries/xlsx>
@@ -46,10 +52,12 @@ of these modules are rather large in size and are only needed in special
 circumstances, so they do not ship with the core.  For browser use, they must
 be included directly:
 
-    <!-- international support from https://github.com/sheetjs/js-codepage -->
-    <script src="dist/cpexcel.js"></script>
-    <!-- ODS support -->
-    <script src="dist/ods.js"></script>
+```html
+<!-- international support from https://github.com/sheetjs/js-codepage -->
+<script src="dist/cpexcel.js"></script>
+<!-- ODS support -->
+<script src="dist/ods.js"></script>
+```
 
 An appropriate version for each dependency is included in the dist/ directory.
 
@@ -63,7 +71,9 @@ Since xlsx.js uses ES5 functions like `Array#forEach`, older browsers require
 
 To use the shim, add the shim before the script tag that loads xlsx.js:
 
-    <script type="text/javascript" src="/path/to/shim.js"></script>
+```html
+<script type="text/javascript" src="/path/to/shim.js"></script>
+```
 
 ## Parsing Workbooks
 
@@ -72,7 +82,7 @@ data and feeding it into the library.  Here are a few common scenarios:
 
 - node readFile:
 
-```
+```js
 if(typeof require !== 'undefined') XLSX = require('xlsx');
 var workbook = XLSX.readFile('test.xlsx');
 /* DO SOMETHING WITH workbook HERE */
@@ -81,7 +91,7 @@ var workbook = XLSX.readFile('test.xlsx');
 - ajax (for a more complete example that works in older browsers, check the demo
   at <http://oss.sheetjs.com/js-xlsx/ajax.html>):
 
-```
+```js
 /* set up XMLHttpRequest */
 var url = "test_files/formula_stress_test_ajax.xlsx";
 var oReq = new XMLHttpRequest();
@@ -108,7 +118,7 @@ oReq.send();
 
 - HTML5 drag-and-drop using readAsBinaryString:
 
-```
+```js
 /* set up drag-and-drop event */
 function handleDrop(e) {
   e.stopPropagation();
@@ -134,7 +144,7 @@ drop_dom_element.addEventListener('drop', handleDrop, false);
 
 - HTML5 input file element using readAsBinaryString:
 
-```
+```js
 function handleFile(e) {
   var files = e.target.files;
   var i,f;
@@ -160,7 +170,7 @@ The full object format is described later in this README.
 
 This example extracts the value stored in cell A1 from the first worksheet:
 
-```
+```js
 var first_sheet_name = workbook.SheetNames[0];
 var address_of_cell = 'A1';
 
@@ -176,7 +186,7 @@ var desired_value = desired_cell.v;
 
 This example iterates through every nonempty of every sheet and dumps values:
 
-```
+```js
 var sheet_name_list = workbook.SheetNames;
 sheet_name_list.forEach(function(y) { /* iterate through sheets */
   var worksheet = workbook.Sheets[y];
@@ -195,7 +205,9 @@ Complete examples:
 Note that older versions of IE does not support HTML5 File API, so the base64
 mode is provided for testing.  On OSX you can get the base64 encoding with:
 
-    $ <target_file.xlsx base64 | pbcopy
+```bash
+$ <target_file.xlsx base64 | pbcopy
+```
 
 - <http://oss.sheetjs.com/js-xlsx/ajax.html> XMLHttpRequest
 
@@ -220,7 +232,7 @@ Assuming `workbook` is a workbook object:
 
 - nodejs write to file:
 
-```
+```js
 /* output format determined by filename */
 XLSX.writeFile(workbook, 'out.xlsx');
 /* at this point, out.xlsx is a file that you can distribute */
@@ -228,7 +240,7 @@ XLSX.writeFile(workbook, 'out.xlsx');
 
 - write to binary string (using FileSaver.js):
 
-```
+```js
 /* bookType can be 'xlsx' or 'xlsm' or 'xlsb' */
 var wopts = { bookType:'xlsx', bookSST:false, type:'binary' };
 
@@ -303,7 +315,7 @@ Cell range objects are stored as `{s:S, e:E}` where `S` is the first cell and
 range `A3:B7` is represented by the object `{s:{c:0, r:2}, e:{c:1, r:6}}`. Utils
 use the following pattern to walk each of the cells in a range:
 
-```
+```js
 for(var R = range.s.r; R <= range.e.r; ++R) {
   for(var C = range.s.c; C <= range.e.c; ++C) {
     var cell_address = {c:C, r:R};
@@ -339,16 +351,16 @@ Type `b` is the Boolean type.  `v` is interpreted according to JS truth tables
 
 Type `e` is the Error type. `v` holds the number and `w` holds the common name:
 
-| Value | Error Meaning |
-| ----: | :------------ |
-|  0x00 | #NULL!        |
-|  0x07 | #DIV/0!       |
-|  0x0F | #VALUE!       |
-|  0x17 | #REF!         |
-|  0x1D | #NAME?        |
-|  0x24 | #NUM!         |
-|  0x2A | #N/A          |
-|  0x2B | #GETTING_DATA |
+| Value | Error Meaning  |
+| ----: | :------------- |
+|  0x00 | #NULL!         |
+|  0x07 | #DIV/0!        |
+|  0x0F | #VALUE!        |
+|  0x17 | #REF!          |
+|  0x1D | #NAME?         |
+|  0x24 | #NUM!          |
+|  0x2A | #N/A           |
+|  0x2B | #GETTING\_DATA |
 
 Type `n` is the Number type. This includes all forms of data that Excel stores
 as numbers, such as dates/times and Boolean fields.  Excel exclusively uses data
@@ -415,21 +427,21 @@ standard, XLS parsing stores core properties in both places.  .
 
 The exported `read` and `readFile` functions accept an options argument:
 
-| Option Name | Default | Description |
-| :---------- | ------: | :---------- |
-| cellFormula | true    | Save formulae to the .f field ** |
-| cellHTML    | true    | Parse rich text and save HTML to the .h field |
-| cellNF      | false   | Save number format string to the .z field |
-| cellStyles  | false   | Save style/theme info to the .s field |
-| cellDates   | false   | Store dates as type `d` (default is `n`) ** |
-| sheetStubs  | false   | Create cell objects for stub cells |
-| sheetRows   | 0       | If >0, read the first `sheetRows` rows ** |
-| bookDeps    | false   | If true, parse calculation chains |
-| bookFiles   | false   | If true, add raw files to book object ** |
-| bookProps   | false   | If true, only parse enough to get book metadata ** |
-| bookSheets  | false   | If true, only parse enough to get the sheet names |
-| bookVBA     | false   | If true, expose vbaProject.bin to `vbaraw` field ** |
-| password    | ""      | If defined and file is encrypted, use password ** |
+| Option Name | Default | Description                                          |
+| :---------- | ------: | :--------------------------------------------------- |
+| cellFormula | true    | Save formulae to the .f field **                     |
+| cellHTML    | true    | Parse rich text and save HTML to the .h field        |
+| cellNF      | false   | Save number format string to the .z field            |
+| cellStyles  | false   | Save style/theme info to the .s field                |
+| cellDates   | false   | Store dates as type `d` (default is `n`) **          |
+| sheetStubs  | false   | Create cell objects for stub cells                   |
+| sheetRows   | 0       | If >0, read the first `sheetRows` rows **            |
+| bookDeps    | false   | If true, parse calculation chains                    |
+| bookFiles   | false   | If true, add raw files to book object **             |
+| bookProps   | false   | If true, only parse enough to get book metadata **   |
+| bookSheets  | false   | If true, only parse enough to get the sheet names    |
+| bookVBA     | false   | If true, expose vbaProject.bin to `vbaraw` field **  |
+| password    | ""      | If defined and file is encrypted, use password **    |
 
 - `cellFormula` option only applies to formats that require extra processing to
   parse formulae (XLS/XLSB).
@@ -448,17 +460,17 @@ The exported `read` and `readFile` functions accept an options argument:
 - Currently only XOR encryption is supported.  Unsupported error will be thrown
   for files employing other encryption methods.
 
-The defaults are enumerated in bits/84_defaults.js
+The defaults are enumerated in bits/84\_defaults.js
 
 ## Writing Options
 
 The exported `write` and `writeFile` functions accept an options argument:
 
-| Option Name | Default | Description |
-| :---------- | ------: | :---------- |
-| cellDates   | false   | Store dates as type `d` (default is `n`) |
-| bookSST     | false   | Generate Shared String Table ** |
-| bookType    | 'xlsx'  | Type of Workbook ("xlsx" or "xlsm" or "xlsb") |
+| Option Name | Default | Description                                          |
+| :---------- | ------: | :--------------------------------------------------- |
+| cellDates   | false   | Store dates as type `d` (default is `n`)             |
+| bookSST     | false   | Generate Shared String Table **                      |
+| bookType    | 'xlsx'  | Type of Workbook ("xlsx" or "xlsm" or "xlsb")        |
 
 - `bookSST` is slower and more memory intensive, but has better compatibility
   with older versions of iOS Numbers
@@ -494,7 +506,7 @@ Running `make init` will refresh the `test_files` submodule and get the files.
 [the oss.sheetjs.com repo](https://github.com/SheetJS/SheetJS.github.io) and
 replace the xlsx.js file (then fire up the browser and go to `stress.html`):
 
-```
+```bash
 $ cp xlsx.js ../SheetJS.github.io
 $ cd ../SheetJS.github.io
 $ simplehttpserver # or "python -mSimpleHTTPServer" or "serve"
@@ -513,7 +525,7 @@ build script (run `make`) will concatenate the individual bits to produce the
 script.  Before submitting a contribution, ensure that running make will produce
 the xlsx.js file exactly.  The simplest way to test is to move the script:
 
-```
+```bash
 $ mv xlsx.js xlsx.new.js
 $ make
 $ diff xlsx.js xlsx.new.js
@@ -565,4 +577,6 @@ Open Document Format for Office Applications Version 1.2 (29 September 2011)
 
 [![Coverage Status](http://img.shields.io/coveralls/SheetJS/js-xlsx/master.svg)](https://coveralls.io/r/SheetJS/js-xlsx?branch=master)
 
-[![githalytics.com alpha](https://cruel-carlota.pagodabox.com/ed5bb2c4c4346a474fef270f847f3f78 "githalytics.com")](http://githalytics.com/SheetJS/js-xlsx)
+[![Analytics](https://ga-beacon.appspot.com/UA-36810333-1/SheetJS/js-xlsx?pixel)](https://github.com/SheetJS/js-xlsx)
+
+[![ghit.me](https://ghit.me/badge.svg?repo=sheetjs/js-xlsx)](https://ghit.me/repo/sheetjs/js-xlsx)

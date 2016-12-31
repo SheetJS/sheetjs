@@ -1,6 +1,6 @@
 {
 	"name": "xlsx",
-	"version": "0.8.0",
+	"version": "0.8.1",
 	"author": "sheetjs",
 	"description": "Excel (XLSB/XLSX/XLSM/XLS/XML) and ODS spreadsheet parser and writer",
 	"keywords": [ "excel", "xls", "xlsx", "xlsb", "xlsm", "ods", "office", "spreadsheet" ],
@@ -9,8 +9,9 @@
 	},
 	"main": "./xlsx",
 	"dependencies": {
+		"exit-on-epipe":"",
 		"ssf":"~0.8.1",
-		"codepage":"~1.3.6",
+		"codepage":"",
 		"cfb":">=0.10.0",
 		"jszip":"2.4.0",
 		"crc-32":"",

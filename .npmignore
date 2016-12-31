@@ -30,6 +30,7 @@ test.js
 .jscs.json
 .gitmodules
 .travis.yml
+.flowconfig
 bits/
 odsbits/
 tests/

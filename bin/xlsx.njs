@@ -1,8 +1,9 @@
 #!/usr/bin/env node
-/* xlsx.js (C) 2013-2015 SheetJS -- http://sheetjs.com */
+/* xlsx.js (C) 2013-present  SheetJS -- http://sheetjs.com */
 var n = "xlsx";
 /* vim: set ts=2 ft=javascript: */
 var X = require('../');
+require('exit-on-epipe');
 var fs = require('fs'), program = require('commander');
 program
 	.version(X.version)

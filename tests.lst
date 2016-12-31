@@ -249,7 +249,6 @@ number_format_entities.xlsx
 openpyxl_g_NameWithValueBug.xlsx
 openpyxl_g_empty-no-string.xlsx
 openpyxl_g_empty-with-styles.xlsx
-openpyxl_g_empty.xlsx
 openpyxl_g_empty_libre.xlsx
 openpyxl_g_empty_no_dimensions.xlsx
 openpyxl_g_empty_with_no_properties.xlsx
