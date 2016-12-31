@@ -220,8 +220,25 @@ var parse_content_xml = (function() {
 		var ctag;
 		var textp, textpidx, textptag;
 		var R, C, range = {s: {r:1000000,c:10000000}, e: {r:0, c:0}};
+		var columnRepeatCount;
 		var number_format_map = {};
 		var merges = [], mrange = {}, mR = 0, mC = 0;
+		
+		var simpleCloneOf = function _simpleCloneOf(obj) {
+			if (obj == null || typeof(obj) != 'object') {
+				return obj;
+			}
+
+			var temp = obj.constructor();
+			
+			for (var key in obj) {
+				if(obj.hasOwnProperty(key)) {
+					temp[key] = simpleCloneOf(obj[key]);
+				}
+			}
+			
+			return temp;
+		}
 
 		while((Rn = xlmlregex.exec(str))) switch(Rn[3]) {
 
@@ -244,20 +261,35 @@ var parse_content_xml = (function() {
 				if(Rn[1] === '/') break;
 				++R; C = -1; break;
 			case 'covered-table-cell': // 9.1.5 table:covered-table-cell
-				++C; break; /* stub */
+				ctag = parsexmltag(Rn[0]);
+				if(ctag['number-columns-repeated']) {
+					C+= parseInt(ctag['number-columns-repeated'], 10);
+				} else {
+					++C;
+				}
+				break; /* stub */
 			case 'table-cell':
 				if(Rn[0].charAt(Rn[0].length-2) === '/') {
 					ctag = parsexmltag(Rn[0]);
 					if(ctag['number-columns-repeated']) C+= parseInt(ctag['number-columns-repeated'], 10);
 					else ++C;
 				}
-				else if(Rn[1]!=='/') {
-					++C;
+				else if(Rn[1]!=='/') {					
+					ctag = parsexmltag(Rn[0]);
+
+					if(ctag['number-columns-repeated']) 
+						columnRepeatCount = parseInt(ctag['number-columns-repeated'], 10);
+					else
+						columnRepeatCount = 1;
+
+					var firstC = C + 1;
+					C += columnRepeatCount;
+
+					if(firstC < range.s.c) range.s.c = firstC;
+					if(R < range.s.r) range.s.r = R;					
 					if(C > range.e.c) range.e.c = C;
 					if(R > range.e.r) range.e.r = R;
-					if(C < range.s.c) range.s.c = C;
-					if(R < range.s.r) range.s.r = R;
-					ctag = parsexmltag(Rn[0]);
+
 					q = {t:ctag['value-type'], v:null};
 					if(ctag['number-columns-spanned'] || ctag['number-rows-spanned']) {
 						mR = parseInt(ctag['number-rows-spanned'],10) || 0;
@@ -279,7 +311,14 @@ var parse_content_xml = (function() {
 				} else {
 					if(q.t === 's') q.v = textp;
 					if(textp) q.w = textp;
-					if(!(opts.sheetRows && opts.sheetRows < R)) ws[get_utils().encode_cell({r:R,c:C})] = q;
+					if(!(opts.sheetRows && opts.sheetRows < R)) {
+						for (var i = 0; i < columnRepeatCount; i++) {
+							if (i > 0) {
+								q = simpleCloneOf(q);
+							}
+							ws[get_utils().encode_cell({r:R,c:C - columnRepeatCount + i + 1})] = q;
+						}
+					}
 					q = null;
 				}
 				break; // 9.1.4 <table:table-cell>
