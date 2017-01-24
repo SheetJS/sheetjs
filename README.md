@@ -238,7 +238,7 @@ XLSX.writeFile(workbook, 'out.xlsx');
 /* at this point, out.xlsx is a file that you can distribute */
 ```
 
-- write to binary string (using FileSaver.js):
+- write to binary string (using [FileSaver.js](https://github.com/eligrey/FileSaver.js/)):
 
 ```js
 /* bookType can be 'xlsx' or 'xlsm' or 'xlsb' */
