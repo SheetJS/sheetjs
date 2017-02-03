@@ -26,12 +26,13 @@ function getzipfile(zip, file) {
 	return o;
 }
 
-function getzipdata(zip, file, safe) {
+function getzipdata(zip, file, safe/*:?boolean*/) {
 	if(!safe) return getdata(getzipfile(zip, file));
 	if(!file) return null;
 	try { return getzipdata(zip, file); } catch(e) { return null; }
 }
 
+/*:: declare var JSZip:any; */
 var _fs, jszip;
 if(typeof JSZip !== 'undefined') jszip = JSZip;
 if (typeof exports !== 'undefined') {

@@ -24,7 +24,7 @@ function parse_ws_xml(data, opts, rels) {
 	var mergecells = [];
 	if(data.indexOf("</mergeCells>")!==-1) {
 		var merges = data.match(mergecregex);
-		for(ridx = 0; ridx != merges.length; ++ridx)
+		if(merges) for(ridx = 0; ridx != merges.length; ++ridx)
 			mergecells[ridx] = safe_decode_range(merges[ridx].substr(merges[ridx].indexOf("\"")+1));
 	}
 
@@ -36,7 +36,7 @@ function parse_ws_xml(data, opts, rels) {
 		parse_ws_xml_cols(columns, cols);
 	}
 
-	var refguess = {s: {r:1000000, c:1000000}, e: {r:0, c:0} };
+	var refguess = {s: {r:2000000, c:2000000}, e: {r:0, c:0} };
 
 	/* 18.3.1.80 sheetData CT_SheetData ? */
 	var mtch=data.match(sheetdataregex);
@@ -282,7 +282,7 @@ var WS_XML_ROOT = writextag('worksheet', null, {
 	'xmlns:r': XMLNS.r
 });
 
-function write_ws_xml(idx, opts, wb) {
+function write_ws_xml(idx/*:number*/, opts, wb)/*:string*/ {
 	var o = [XML_HEADER, WS_XML_ROOT];
 	var s = wb.SheetNames[idx], sidx = 0, rdata = "";
 	var ws = wb.Sheets[s];

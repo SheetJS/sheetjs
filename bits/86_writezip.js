@@ -10,6 +10,7 @@ function add_rels(rels, rId, f, type, relobj) {
 }
 
 function write_zip(wb, opts) {
+	if(opts.bookType == "ods") return write_ods(wb, opts);
 	if(wb && !wb.SSF) {
 		wb.SSF = SSF.get_table();
 	}

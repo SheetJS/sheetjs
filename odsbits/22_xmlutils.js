@@ -2,12 +2,12 @@ var attregexg=/\b[\w:-]+=["'][^"]*['"]/g;
 var tagregex=/<[^>]*>/g;
 var nsregex=/<\w*:/, nsregex2 = /<(\/?)\w+:/;
 function parsexmltag(tag, skip_root) {
-	var z = [];
+	var z/*:any*/ = [];
 	var eq = 0, c = 0;
 	for(; eq !== tag.length; ++eq) if((c = tag.charCodeAt(eq)) === 32 || c === 10 || c === 13) break;
 	if(!skip_root) z[0] = tag.substr(0, eq);
 	if(eq === tag.length) return z;
-	var m = tag.match(attregexg), j=0, w="", v="", i=0, q="", cc="";
+	var m = tag.match(attregexg), j=0, v="", i=0, q="", cc="";
 	if(m) for(i = 0; i != m.length; ++i) {
 		cc = m[i];
 		for(c=0; c != cc.length; ++c) if(cc.charCodeAt(c) === 61) break;
@@ -48,7 +48,7 @@ function escapexml(text){
 	return s.replace(decregex, function(y) { return rencoding[y]; }).replace(charegex,function(s) { return "_x" + ("000"+s.charCodeAt(0).toString(16)).substr(-4) + "_";});
 }
 
-function parsexmlbool(value, tag) {
+function parsexmlbool(value) {
 	switch(value) {
 		case '1': case 'true': case 'TRUE': return true;
 		/* case '0': case 'false': case 'FALSE':*/
@@ -87,3 +87,5 @@ function parse_isodur(s) {
 	}
 	return sec;
 }
+
+var XML_HEADER = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\r\n';

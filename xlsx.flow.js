@@ -85,6 +85,14 @@ function s2a(s) {
 var bconcat = function(bufs) { return [].concat.apply([], bufs); };
 
 var chr0 = /\u0000/g, chr1 = /[\u0001-\u0006]/;
+/*::
+declare type Block = any;
+declare type BufArray = {
+	next(sz:number):Block;
+	end():any;
+	push(buf:Block):void;
+};
+*/
 /* ssf.js (C) 2013-2014 SheetJS -- http://sheetjs.com */
 /*jshint -W041 */
 var SSF = {};
@@ -1253,7 +1261,7 @@ return exports;
 })();
 
 if(typeof require !== 'undefined' && typeof module !== 'undefined' && typeof DO_NOT_EXPORT_CFB === 'undefined') { module.exports = CFB; }
-function isval(x) { return x !== undefined && x !== null; }
+function isval(x/*:?any*/)/*:boolean*/ { return x !== undefined && x !== null; }
 
 function keys(o) { return Object.keys(o); }
 
@@ -1291,7 +1299,7 @@ function datenum(v, date1904) {
 	return (epoch + 2209161600000) / (24 * 60 * 60 * 1000);
 }
 
-function cc2str(arr) {
+function cc2str(arr/*:Array<number>*/)/*:string*/ {
 	var o = "";
 	for(var i = 0; i != arr.length; ++i) o += String.fromCharCode(arr[i]);
 	return o;
@@ -1325,12 +1333,13 @@ function getzipfile(zip, file) {
 	return o;
 }
 
-function getzipdata(zip, file, safe) {
+function getzipdata(zip, file, safe/*:?boolean*/) {
 	if(!safe) return getdata(getzipfile(zip, file));
 	if(!file) return null;
 	try { return getzipdata(zip, file); } catch(e) { return null; }
 }
 
+/*:: declare var JSZip:any; */
 var _fs, jszip;
 if(typeof JSZip !== 'undefined') jszip = JSZip;
 if (typeof exports !== 'undefined') {
@@ -1662,16 +1671,16 @@ function CheckField(hexstr, fld) {
 	this.l += hexstr.length>>1;
 }
 
-function prep_blob(blob, pos) {
+function prep_blob(blob, pos/*:number*/) {
 	blob.l = pos;
 	blob.read_shift = ReadShift;
 	blob.chk = CheckField;
 	blob.write_shift = WriteShift;
 }
 
-function parsenoop(blob, length) { blob.l += length; }
+function parsenoop(blob, length/*:number*/) { blob.l += length; }
 
-function writenoop(blob, length) { blob.l += length; }
+function writenoop(blob, length/*:number*/) { blob.l += length; }
 
 function new_buf(sz) {
 	var o = new_raw_buf(sz);
@@ -1728,7 +1737,7 @@ function buf_array() {
 	return { next:next, push:push, end:end, _bufs:bufs };
 }
 
-function write_record(ba, type, payload, length) {
+function write_record(ba/*:BufArray*/, type/*:string*/, payload, length/*:?number*/) {
 	var t = evert_RE[type], l;
 	if(!length) length = XLSBRecordEnum[t].p || (payload||[]).length || 0;
 	l = 1 + (t >= 0x80 ? 1 : 0) + 1 + length;
@@ -1743,7 +1752,7 @@ function write_record(ba, type, payload, length) {
 		if(length >= 0x80) { o.write_shift(1, (length & 0x7F)+0x80); length >>= 7; }
 		else { o.write_shift(1, length); break; }
 	}
-	if(length > 0 && is_buf(payload)) ba.push(payload);
+	if(/*:: length != null &&*/length > 0 && is_buf(payload)) ba.push(payload);
 }
 /* XLS ranges enforced */
 function shift_cell_xls(cell, tgt) {
@@ -1894,7 +1903,7 @@ function parse_RkNumber(data) {
 	var RK = fInt === 0 ? __double([0,0,0,0,b[0],b[1],b[2],b[3]],0) : __readInt32LE(b,0)>>2;
 	return fX100 ? RK/100 : RK;
 }
-function write_RkNumber(data, o) {
+function write_RkNumber(data/*:number*/, o) {
 	if(o == null) o = new_buf(4);
 	var fX100 = 0, fInt = 0, d100 = data * 100;
 	if(data == (data | 0) && data >= -(1<<29) && data < (1 << 29)) { fInt = 1; }
@@ -7555,7 +7564,7 @@ var WS_XML_ROOT = writextag('worksheet', null, {
 	'xmlns:r': XMLNS.r
 });
 
-function write_ws_xml(idx, opts, wb) {
+function write_ws_xml(idx/*:number*/, opts, wb)/*:string*/ {
 	var o = [XML_HEADER, WS_XML_ROOT];
 	var s = wb.SheetNames[idx], sidx = 0, rdata = "";
 	var ws = wb.Sheets[s];
@@ -7584,7 +7593,7 @@ function parse_BrtRowHdr(data, length) {
 	data.l += length-4;
 	return z;
 }
-function write_BrtRowHdr(R, range, ws) {
+function write_BrtRowHdr(R/*:number*/, range, ws) {
 	var o = new_buf(17+8*16);
 	o.write_shift(4, R);
 

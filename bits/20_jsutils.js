@@ -1,4 +1,4 @@
-function isval(x) { return x !== undefined && x !== null; }
+function isval(x/*:?any*/)/*:boolean*/ { return x !== undefined && x !== null; }
 
 function keys(o) { return Object.keys(o); }
 
@@ -36,7 +36,7 @@ function datenum(v, date1904) {
 	return (epoch + 2209161600000) / (24 * 60 * 60 * 1000);
 }
 
-function cc2str(arr) {
+function cc2str(arr/*:Array<number>*/)/*:string*/ {
 	var o = "";
 	for(var i = 0; i != arr.length; ++i) o += String.fromCharCode(arr[i]);
 	return o;

@@ -20,13 +20,14 @@ function getzipfile(zip, file) {
 	return o;
 }
 
-function getzipdata(zip, file, safe) {
+function getzipdata(zip, file, safe/*:?boolean*/) {
 	if(!safe) return getdata(getzipfile(zip, file));
 	if(!file) return null;
 	try { return getzipdata(zip, file); } catch(e) { return null; }
 }
 
 var _fs, jszip;
+/*:: declare var JSZip:any; */
 if(typeof JSZip !== 'undefined') jszip = JSZip;
 if (typeof exports !== 'undefined') {
 	if (typeof module !== 'undefined' && module.exports) {

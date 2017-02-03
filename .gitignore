@@ -13,8 +13,7 @@ tmp
 *.xlsb
 *.xlsm
 *.xlsx
-*.xlsm
-*.xlsb
+*.ods
 *.xml
 *.htm
 *.html

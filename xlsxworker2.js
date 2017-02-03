@@ -27,5 +27,5 @@ onmessage = function (oEvent) {
   } catch(e) { postMessage({t:"e",d:e.stack}); }
   var res = {t:"xlsx", d:JSON.stringify(v)};
   var r = s2ab(res.d)[1];
-  postMessage(r, [r]);
+postMessage(r, [r]);
 };

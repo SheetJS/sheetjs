@@ -1,3 +1,247 @@
+/* ods.js (C) 2014-present  SheetJS -- http://sheetjs.com */
+/* vim: set ts=2: */
+/*jshint -W041 */
+var ODS = {};
+(function make_ods(ODS) {
+/* Open Document Format for Office Applications (OpenDocument) Version 1.2 */
+/*:: declare var XLSX: any; */
+var get_utils = function() {
+	if(typeof XLSX !== 'undefined') return XLSX.utils;
+	if(typeof module !== "undefined" && typeof require !== 'undefined') try {
+		return require('../' + 'xlsx').utils;
+	} catch(e) {
+		try { return require('./' + 'xlsx').utils; }
+		catch(ee) { return require('xl' + 'sx').utils; }
+	}
+	throw new Error("Cannot find XLSX utils");
+};
+var has_buf = (typeof Buffer !== 'undefined');
+
+function cc2str(arr) {
+	var o = "";
+	for(var i = 0; i != arr.length; ++i) o += String.fromCharCode(arr[i]);
+	return o;
+}
+
+function dup(o/*:object*/)/*:object*/ {
+	if(typeof JSON != 'undefined') return JSON.parse(JSON.stringify(o));
+	if(typeof o != 'object' || !o) return o;
+	var out = {};
+	for(var k in o) if(o.hasOwnProperty(k)) out[k] = dup(o[k]);
+	return out;
+}
+function getdata(data) {
+	if(!data) return null;
+	if(data.data) return data.data;
+	if(data.asNodeBuffer && has_buf) return data.asNodeBuffer().toString('binary');
+	if(data.asBinary) return data.asBinary();
+	if(data._data && data._data.getContent) return cc2str(Array.prototype.slice.call(data._data.getContent(),0));
+	return null;
+}
+
+function safegetzipfile(zip, file) {
+	var f = file; if(zip.files[f]) return zip.files[f];
+	f = file.toLowerCase(); if(zip.files[f]) return zip.files[f];
+	f = f.replace(/\//g,'\\'); if(zip.files[f]) return zip.files[f];
+	return null;
+}
+
+function getzipfile(zip, file) {
+	var o = safegetzipfile(zip, file);
+	if(o == null) throw new Error("Cannot find file " + file + " in zip");
+	return o;
+}
+
+function getzipdata(zip, file, safe/*:?boolean*/) {
+	if(!safe) return getdata(getzipfile(zip, file));
+	if(!file) return null;
+	try { return getzipdata(zip, file); } catch(e) { return null; }
+}
+
+var _fs, jszip;
+/*:: declare var JSZip:any; */
+if(typeof JSZip !== 'undefined') jszip = JSZip;
+if (typeof exports !== 'undefined') {
+	if (typeof module !== 'undefined' && module.exports) {
+		if(has_buf && typeof jszip === 'undefined') jszip = require('js'+'zip');
+		if(typeof jszip === 'undefined') jszip = require('./js'+'zip').JSZip;
+		_fs = require('f'+'s');
+	}
+}
+var attregexg=/\b[\w:-]+=["'][^"]*['"]/g;
+var tagregex=/<[^>]*>/g;
+var nsregex=/<\w*:/, nsregex2 = /<(\/?)\w+:/;
+function parsexmltag(tag, skip_root) {
+	var z/*:any*/ = [];
+	var eq = 0, c = 0;
+	for(; eq !== tag.length; ++eq) if((c = tag.charCodeAt(eq)) === 32 || c === 10 || c === 13) break;
+	if(!skip_root) z[0] = tag.substr(0, eq);
+	if(eq === tag.length) return z;
+	var m = tag.match(attregexg), j=0, v="", i=0, q="", cc="";
+	if(m) for(i = 0; i != m.length; ++i) {
+		cc = m[i];
+		for(c=0; c != cc.length; ++c) if(cc.charCodeAt(c) === 61) break;
+		q = cc.substr(0,c); v = cc.substring(c+2, cc.length-1);
+		for(j=0;j!=q.length;++j) if(q.charCodeAt(j) === 58) break;
+		if(j===q.length) z[q] = v;
+		else z[(j===5 && q.substr(0,5)==="xmlns"?"xmlns":"")+q.substr(j+1)] = v;
+	}
+	return z;
+}
+function strip_ns(x) { return x.replace(nsregex2, "<$1"); }
+
+var encodings = {
+	'&quot;': '"',
+	'&apos;': "'",
+	'&gt;': '>',
+	'&lt;': '<',
+	'&amp;': '&'
+};
+var rencoding = {
+	'"': '&quot;',
+	"'": '&apos;',
+	'>': '&gt;',
+	'<': '&lt;',
+	'&': '&amp;'
+};
+var rencstr = "&<>'\"".split("");
+
+// TODO: CP remap (need to read file version to determine OS)
+var encregex = /&[a-z]*;/g, coderegex = /_x([\da-fA-F]+)_/g;
+function unescapexml(text){
+	var s = text + '';
+	return s.replace(encregex, function($$) { return encodings[$$]; }).replace(coderegex,function(m,c) {return String.fromCharCode(parseInt(c,16));});
+}
+var decregex=/[&<>'"]/g, charegex = /[\u0000-\u0008\u000b-\u001f]/g;
+function escapexml(text){
+	var s = text + '';
+	return s.replace(decregex, function(y) { return rencoding[y]; }).replace(charegex,function(s) { return "_x" + ("000"+s.charCodeAt(0).toString(16)).substr(-4) + "_";});
+}
+
+function parsexmlbool(value) {
+	switch(value) {
+		case '1': case 'true': case 'TRUE': return true;
+		/* case '0': case 'false': case 'FALSE':*/
+		default: return false;
+	}
+}
+
+function datenum(v) {
+	var epoch = Date.parse(v);
+	return (epoch + 2209161600000) / (24 * 60 * 60 * 1000);
+}
+
+/* ISO 8601 Duration */
+function parse_isodur(s) {
+	var sec = 0, mt = 0, time = false;
+	var m = s.match(/P([0-9\.]+Y)?([0-9\.]+M)?([0-9\.]+D)?T([0-9\.]+H)?([0-9\.]+M)?([0-9\.]+S)?/);
+	if(!m) throw new Error("|" + s + "| is not an ISO8601 Duration");
+	for(var i = 1; i != m.length; ++i) {
+		if(!m[i]) continue;
+		mt = 1;
+		if(i > 3) time = true;
+		switch(m[i].substr(m[i].length-1)) {
+			case 'Y':
+				throw new Error("Unsupported ISO Duration Field: " + m[i].substr(m[i].length-1));
+			case 'D': mt *= 24;
+				/* falls through */
+			case 'H': mt *= 60;
+				/* falls through */
+			case 'M':
+				if(!time) throw new Error("Unsupported ISO Duration Field: M");
+				else mt *= 60;
+				/* falls through */
+			case 'S': break;
+		}
+		sec += mt * parseInt(m[i], 10);
+	}
+	return sec;
+}
+
+var XML_HEADER = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\r\n';
+/* copied from js-xls (C) SheetJS Apache2 license */
+function xlml_normalize(d) {
+	if(has_buf &&/*::typeof Buffer !== "undefined" && d != null &&*/ Buffer.isBuffer(d)) return d.toString('utf8');
+	if(typeof d === 'string') return d;
+	throw "badf";
+}
+
+var xlmlregex = /<(\/?)([a-z0-9]*:|)([\w-]+)[^>]*>/mg;
+/* Part 3 Section 4 Manifest File */
+var CT_ODS = "application/vnd.oasis.opendocument.spreadsheet";
+function parse_manifest(d, opts) {
+	var str = xlml_normalize(d);
+	var Rn;
+	var FEtag;
+	while((Rn = xlmlregex.exec(str))) switch(Rn[3]) {
+		case 'manifest': break; // 4.2 <manifest:manifest>
+		case 'file-entry': // 4.3 <manifest:file-entry>
+			FEtag = parsexmltag(Rn[0], false);
+			if(FEtag.path == '/' && FEtag.type !== CT_ODS) throw new Error("This OpenDocument is not a spreadsheet");
+			break;
+		case 'encryption-data': // 4.4 <manifest:encryption-data>
+		case 'algorithm': // 4.5 <manifest:algorithm>
+		case 'start-key-generation': // 4.6 <manifest:start-key-generation>
+		case 'key-derivation': // 4.7 <manifest:key-derivation>
+			throw new Error("Unsupported ODS Encryption");
+		default: if(opts && opts.WTF) throw Rn;
+	}
+}
+
+function write_manifest(manifest/*:Array<Array<string> >*/, opts)/*:string*/ {
+	var o = [XML_HEADER];
+	o.push('<manifest:manifest xmlns:manifest="urn:oasis:names:tc:opendocument:xmlns:manifest:1.0" manifest:version="1.2">\n');
+	o.push('  <manifest:file-entry manifest:full-path="/" manifest:version="1.2" manifest:media-type="application/vnd.oasis.opendocument.spreadsheet"/>\n');
+	for(var i = 0; i < manifest.length; ++i) o.push('  <manifest:file-entry manifest:full-path="' + manifest[i][0] + '" manifest:media-type="' + manifest[i][1] + '"/>\n');
+	o.push('</manifest:manifest>');
+	return o.join("");
+}
+/* Part 3 Section 6 Metadata Manifest File */
+function write_rdf_type(file/*:string*/, res/*:string*/, tag/*:?string*/) {
+	return [
+		'  <rdf:Description rdf:about="' + file + '">\n',
+		'    <rdf:type rdf:resource="http://docs.oasis-open.org/ns/office/1.2/meta/' + (tag || "odf") + '#' + res + '"/>\n',
+		'  </rdf:Description>\n'
+	].join("");
+}
+function write_rdf_has(base/*:string*/, file/*:string*/) {
+	return [
+		'  <rdf:Description rdf:about="' + base + '">\n',
+		'    <ns0:hasPart xmlns:ns0="http://docs.oasis-open.org/ns/office/1.2/meta/pkg#" rdf:resource="' + file + '"/>\n',
+		'  </rdf:Description>\n'
+	].join("");
+}
+function write_rdf(rdf, opts) {
+	var o = [XML_HEADER];
+	o.push('<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">\n');
+	for(var i = 0; i != rdf.length; ++i) {
+		o.push(write_rdf_type(rdf[i][0], rdf[i][1]));
+		o.push(write_rdf_has("",rdf[i][0]));
+	}
+	o.push(write_rdf_type("","Document", "pkg"));
+	o.push('</rdf:RDF>');
+	return o.join("");
+}
+var parse_text_p = function(text, tag) {
+	return unescapexml(utf8read(text.replace(/<text:s\/>/g," ").replace(/<[^>]*>/g,"")));
+};
+
+var utf8read = function utf8reada(orig) {
+	var out = "", i = 0, c = 0, d = 0, e = 0, f = 0, w = 0;
+	while (i < orig.length) {
+		c = orig.charCodeAt(i++);
+		if (c < 128) { out += String.fromCharCode(c); continue; }
+		d = orig.charCodeAt(i++);
+		if (c>191 && c<224) { out += String.fromCharCode(((c & 31) << 6) | (d & 63)); continue; }
+		e = orig.charCodeAt(i++);
+		if (c < 240) { out += String.fromCharCode(((c & 15) << 12) | ((d & 63) << 6) | (e & 63)); continue; }
+		f = orig.charCodeAt(i++);
+		w = (((c & 7) << 18) | ((d & 63) << 12) | ((e & 63) << 6) | (f & 63))-65536;
+		out += String.fromCharCode(0xD800 + ((w>>>10)&1023));
+		out += String.fromCharCode(0xDC00 + (w&1023));
+	}
+	return out;
+};
 var parse_content_xml = (function() {
 
 	var number_formats = {
@@ -317,3 +561,82 @@ var parse_content_xml = (function() {
 		return out;
 	};
 })();
+var write_content_xml/*:{(wb:any, opts:any):string}*/ = (function() {
+	var null_cell_xml = '          <table:table-cell />\n';
+	var write_ws = function(ws, wb, i/*:number*/, opts)/*:string*/ {
+		/* Section 9 Tables */
+		var o = [];
+		o.push('      <table:table table:name="' + escapexml(wb.SheetNames[i]) + '">\n');
+		var R=0,C=0, range = get_utils().decode_range(ws['!ref']);
+		for(R = 0; R < range.s.r; ++R) o.push('        <table:table-row></table:table-row>\n');
+		for(; R <= range.e.r; ++R) {
+			o.push('        <table:table-row>\n');
+			for(C=0; C < range.s.c; ++C) o.push(null_cell_xml);
+			for(; C <= range.e.c; ++C) {
+				var ref = get_utils().encode_cell({r:R, c:C}), cell = ws[ref];
+				if(cell) switch(cell.t) {
+					case 'b': o.push('          <table:table-cell office:value-type="boolean" office:boolean-value="' + (cell.v ? 'true' : 'false') + '"><text:p>' + (cell.v ? 'TRUE' : 'FALSE') + '</text:p></table:table-cell>\n'); break;
+					case 'n': o.push('          <table:table-cell office:value-type="float" office:value="' + cell.v + '"><text:p>' + (cell.w||cell.v) + '</text:p></table:table-cell>\n'); break;
+					case 's': case 'str': o.push('          <table:table-cell office:value-type="string"><text:p>' + escapexml(cell.v) + '</text:p></table:table-cell>\n'); break;
+					//case 'd': // TODO
+					//case 'e':
+					default: o.push(null_cell_xml);
+				} else o.push(null_cell_xml);
+			}
+			o.push('        </table:table-row>\n');
+		}
+		o.push('      </table:table>\n');
+		return o.join("");
+	};
+
+	return function wcx(wb, opts) {
+		var o = [XML_HEADER];
+		/* 3.1.3.2 */
+		o.push('<office:document-content office:version="1.2" xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" xmlns:table="urn:oasis:names:tc:opendocument:xmlns:table:1.0" xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0">\n'); // TODO
+		o.push('  <office:body>\n');
+		o.push('    <office:spreadsheet>\n');
+		for(var i = 0; i != wb.SheetNames.length; ++i) o.push(write_ws(wb.Sheets[wb.SheetNames[i]], wb, i, opts));
+		o.push('    </office:spreadsheet>\n');
+		o.push('  </office:body>\n');
+		o.push('</office:document-content>');
+		return o.join("");
+	};
+})();
+/* Part 3: Packages */
+function parse_ods(zip/*:ZIPFile*/, opts/*:?ParseOpts*/) {
+	opts = opts || ({}/*:any*/);
+	var manifest = parse_manifest(getzipdata(zip, 'META-INF/manifest.xml'), opts);
+	return parse_content_xml(getzipdata(zip, 'content.xml'), opts);
+}
+function write_ods(wb/*:any*/, opts/*:any*/) {
+	/*:: if(!jszip) throw new Error("JSZip is not available"); */
+	var zip = new jszip();
+	var f = "";
+
+	var manifest/*:Array<Array<string> >*/ = [];
+	var rdf = [];
+
+	/* 3:3.3 and 2:2.2.4 */
+	f = "mimetype";
+	zip.file(f, "application/vnd.oasis.opendocument.spreadsheet");
+
+	/* Part 2 Section 2.2 Documents */
+	f = "content.xml";
+	zip.file(f, write_content_xml(wb, opts));
+	manifest.push([f, "text/xml"]);
+	rdf.push([f, "ContentFile"]);
+
+	/* Part 3 Section 6 Metadata Manifest File */
+	f = "manifest.rdf";
+	zip.file(f, write_rdf(rdf, opts));
+	manifest.push([f, "application/rdf+xml"]);
+
+	/* Part 3 Section 4 Manifest File */
+	f = "META-INF/manifest.xml";
+	zip.file(f, write_manifest(manifest, opts));
+
+	return zip;
+}
+ODS.parse_ods = parse_ods;
+ODS.write_ods = write_ods;
+})(typeof exports !== 'undefined' ? exports : ODS);

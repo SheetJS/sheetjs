@@ -14,13 +14,17 @@ Supported read formats:
 
 Supported write formats:
 
-- XLSX
+- Excel 2007+ XML Formats (XLSX/XLSM)
+- Excel 2007+ Binary Format (XLSB) nodejs only
 - CSV (and general DSV)
 - JSON and JS objects (various styles)
+- OpenDocument Spreadsheet (ODS)
 
 Demo: <http://oss.sheetjs.com/js-xlsx>
 
 Source: <http://git.io/xlsx>
+
+Paid support available through the [reinforcements program](http://sheetjs.com/reinforcements)
 
 ## Installation
 
@@ -53,7 +57,7 @@ circumstances, so they do not ship with the core.  For browser use, they must
 be included directly:
 
 ```html
-<!-- international support from https://github.com/sheetjs/js-codepage -->
+<!-- international support from js-codepage -->
 <script src="dist/cpexcel.js"></script>
 <!-- ODS support -->
 <script src="dist/ods.js"></script>
@@ -116,45 +120,75 @@ oReq.onload = function(e) {
 oReq.send();
 ```
 
-- HTML5 drag-and-drop using readAsBinaryString:
+- HTML5 drag-and-drop using readAsBinaryString or readAsArrayBuffer:
+  note: readAsBinaryString and readAsArrayBuffer may not be available in every
+  browser.  Use dynamic feature tests to determine which method to use.
 
 ```js
+/* processing array buffers, only required for readAsArrayBuffer */
+function fixdata(data) {
+	var o = "", l = 0, w = 10240;
+	for(; l<data.byteLength/w; ++l) o+=String.fromCharCode.apply(null,new Uint8Array(data.slice(l*w,l*w+w)));
+	o+=String.fromCharCode.apply(null, new Uint8Array(data.slice(l*w)));
+	return o;
+}
+
+var rABS = true; // true: readAsBinaryString ; false: readAsArrayBuffer
 /* set up drag-and-drop event */
 function handleDrop(e) {
   e.stopPropagation();
   e.preventDefault();
   var files = e.dataTransfer.files;
   var i,f;
-  for (i = 0, f = files[i]; i != files.length; ++i) {
+  for (i = 0; i != files.length; ++i) {
+    f = files[i];
     var reader = new FileReader();
     var name = f.name;
     reader.onload = function(e) {
       var data = e.target.result;
 
-      /* if binary string, read with type 'binary' */
-      var workbook = XLSX.read(data, {type: 'binary'});
+      var workbook;
+      if(rABS) {
+        /* if binary string, read with type 'binary' */
+        workbook = XLSX.read(data, {type: 'binary'});
+      } else {
+        /* if array buffer, convert to base64 */
+        var arr = fixdata(data);
+        workbook = XLSX.read(btoa(arr), {type: 'base64'});
+      }
 
       /* DO SOMETHING WITH workbook HERE */
     };
-    reader.readAsBinaryString(f);
+    if(rABS) reader.readAsBinaryString(f);
+    else reader.readAsArrayBuffer(f);
   }
 }
 drop_dom_element.addEventListener('drop', handleDrop, false);
 ```
 
-- HTML5 input file element using readAsBinaryString:
+- HTML5 input file element using readAsBinaryString or readAsArrayBuffer:
 
 ```js
+/* fixdata and rABS are defined in the drag and drop example */
 function handleFile(e) {
   var files = e.target.files;
   var i,f;
-  for (i = 0, f = files[i]; i != files.length; ++i) {
+  for (i = 0; i != files.length; ++i) {
+    f = files[i];
     var reader = new FileReader();
     var name = f.name;
     reader.onload = function(e) {
       var data = e.target.result;
 
-      var workbook = XLSX.read(data, {type: 'binary'});
+      var workbook;
+      if(rABS) {
+        /* if binary string, read with type 'binary' */
+        workbook = XLSX.read(data, {type: 'binary'});
+      } else {
+        /* if array buffer, convert to base64 */
+        var arr = fixdata(data);
+        workbook = XLSX.read(btoa(arr), {type: 'base64'});
+      }
 
       /* DO SOMETHING WITH workbook HERE */
     };
@@ -162,6 +196,11 @@ function handleFile(e) {
   }
 }
 input_dom_element.addEventListener('change', handleFile, false);
+```
+
+The readAsArrayBuffer form requires some preprocessing:
+
+```js
 ```
 
 ## Working with the Workbook
@@ -254,7 +293,7 @@ function s2ab(s) {
 }
 
 /* the saveAs call downloads a file on the local machine */
-saveAs(new Blob([s2ab(wbout)],{type:""}), "test.xlsx")
+saveAs(new Blob([s2ab(wbout)],{type:"application/octet-stream"}), "test.xlsx");
 ```
 
 Complete examples:
@@ -290,8 +329,11 @@ Utilities are available in the `XLSX.utils` object:
 Exporting:
 
 - `sheet_to_json` converts a workbook object to an array of JSON objects.
-- `sheet_to_csv` generates delimiter-separated-values output
-- `sheet_to_formulae` generates a list of the formulae (with value fallbacks)
+  `sheet_to_row_object_array` is an alias that will be removed in the future.
+- `sheet_to_csv` generates delimiter-separated-values output.
+- `sheet_to_formulae` generates a list of the formulae (with value fallbacks).
+
+The `sheet_to_*` functions accept a worksheet and an optional options object.
 
 Cell and cell address manipulation:
 
@@ -371,7 +413,7 @@ Type `d` is the Date type, generated only when the option `cellDates` is passed.
 Since JSON does not have a natural Date type, parsers are generally expected to
 store ISO 8601 Date strings like you would get from `date.toISOString()`.  On
 the other hand, writers and exporters should be able to handle date strings and
-JS Date objects.  Note that Excel disregards the timezone modifier and treats all
+JS Date objects.  Note that Excel disregards timezone modifiers and treats all
 dates in the local timezone.  js-xlsx does not correct for this error.
 
 Type `s` is the String type.  `v` should be explicitly stored as a string to
@@ -395,7 +437,7 @@ Special worksheet keys (accessible as `worksheet[key]`, each starting with `!`):
   Functions that handle worksheets should test for the presence of `!ref` field.
   If the `!ref` is omitted or is not a valid range, functions are free to treat
   the sheet as empty or attempt to guess the range.  The standard utilities that
-  ship with this library treat sheets as empty (for example, the CSV output is an
+  ship with this library treat sheets as empty (for example, the CSV output is
   empty string).
 
   When reading a worksheet with the `sheetRows` property set, the ref parameter
@@ -468,9 +510,10 @@ The exported `write` and `writeFile` functions accept an options argument:
 
 | Option Name | Default | Description                                          |
 | :---------- | ------: | :--------------------------------------------------- |
-| cellDates   | false   | Store dates as type `d` (default is `n`)             |
-| bookSST     | false   | Generate Shared String Table **                      |
+| cellDates   | `false` | Store dates as type `d` (default is `n`)             |
+| bookSST     | `false` | Generate Shared String Table **                      |
 | bookType    | 'xlsx'  | Type of Workbook ("xlsx" or "xlsm" or "xlsb")        |
+| compression | `false` | Use file compression for formats with ZIP containers |
 
 - `bookSST` is slower and more memory intensive, but has better compatibility
   with older versions of iOS Numbers
@@ -483,7 +526,7 @@ The exported `write` and `writeFile` functions accept an options argument:
 
 ## Tested Environments
 
- - NodeJS 0.8, 0.10 (latest release), 0.11.14 (unstable), io.js
+ - NodeJS 0.8, 0.9, 0.10, 0.11, 0.12, 4.x, 5.x, 6.x, 7.x
  - IE 6/7/8/9/10/11 using Base64 mode (IE10/11 using HTML5 mode)
  - FF 18 using Base64 or HTML5 mode
  - Chrome 24 using Base64 or HTML5 mode
@@ -491,8 +534,8 @@ The exported `write` and `writeFile` functions accept an options argument:
 Tests utilize the mocha testing framework.  Travis-CI and Sauce Labs links:
 
  - <https://travis-ci.org/SheetJS/js-xlsx> for XLSX module in nodejs
- - <https://travis-ci.org/SheetJS/SheetJS.github.io> for XLS* modules
- - <https://saucelabs.com/u/sheetjs> for XLS* modules using Sauce Labs
+ - <https://travis-ci.org/SheetJS/SheetJS.github.io> for XLS\* modules
+ - <https://saucelabs.com/u/sheetjs> for XLS\* modules using Sauce Labs
 
 ## Test Files
 
@@ -537,7 +580,7 @@ version release and should not be committed between versions.
 ## License
 
 Please consult the attached LICENSE file for details.  All rights not explicitly
-granted by the Apache 2.0 license are reserved by the Original Author.
+granted by the Apache 2.0 License are reserved by the Original Author.
 
 It is the opinion of the Original Author that this code conforms to the terms of
 the Microsoft Open Specifications Promise, falling under the same terms as
@@ -573,10 +616,16 @@ Open Document Format for Office Applications Version 1.2 (29 September 2011)
 
 ## Badges
 
+[![Build Status](https://saucelabs.com/browser-matrix/xlsx.svg)](https://saucelabs.com/u/xlsx)
+
 [![Build Status](https://travis-ci.org/SheetJS/js-xlsx.svg?branch=master)](https://travis-ci.org/SheetJS/js-xlsx)
 
 [![Coverage Status](http://img.shields.io/coveralls/SheetJS/js-xlsx/master.svg)](https://coveralls.io/r/SheetJS/js-xlsx?branch=master)
 
-[![Analytics](https://ga-beacon.appspot.com/UA-36810333-1/SheetJS/js-xlsx?pixel)](https://github.com/SheetJS/js-xlsx)
+[![NPM Downloads](https://img.shields.io/npm/dt/xlsx.svg)](https://npmjs.org/package/xlsx)
+
+[![Dependencies Status](https://david-dm.org/sheetjs/js-xlsx/status.svg)](https://david-dm.org/sheetjs/js-xlsx)
 
 [![ghit.me](https://ghit.me/badge.svg?repo=sheetjs/js-xlsx)](https://ghit.me/repo/sheetjs/js-xlsx)
+
+[![Analytics](https://ga-beacon.appspot.com/UA-36810333-1/SheetJS/js-xlsx?pixel)](https://github.com/SheetJS/js-xlsx)

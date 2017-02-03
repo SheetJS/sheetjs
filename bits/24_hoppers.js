@@ -26,7 +26,7 @@ function buf_array() {
 	var curbuf = newblk(blksz);
 
 	var endbuf = function ba_endbuf() {
-		curbuf.length = curbuf.l;
+		if(curbuf.length > curbuf.l) curbuf = curbuf.slice(0, curbuf.l);
 		if(curbuf.length > 0) bufs.push(curbuf);
 		curbuf = null;
 	};
@@ -47,7 +47,7 @@ function buf_array() {
 	return { next:next, push:push, end:end, _bufs:bufs };
 }
 
-function write_record(ba, type, payload, length) {
+function write_record(ba/*:BufArray*/, type/*:string*/, payload, length/*:?number*/) {
 	var t = evert_RE[type], l;
 	if(!length) length = XLSBRecordEnum[t].p || (payload||[]).length || 0;
 	l = 1 + (t >= 0x80 ? 1 : 0) + 1 + length;
@@ -62,5 +62,5 @@ function write_record(ba, type, payload, length) {
 		if(length >= 0x80) { o.write_shift(1, (length & 0x7F)+0x80); length >>= 7; }
 		else { o.write_shift(1, length); break; }
 	}
-	if(length > 0 && is_buf(payload)) ba.push(payload);
+	if(/*:: length != null &&*/length > 0 && is_buf(payload)) ba.push(payload);
 }

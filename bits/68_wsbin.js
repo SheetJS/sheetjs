@@ -6,6 +6,45 @@ function parse_BrtRowHdr(data, length) {
 	data.l += length-4;
 	return z;
 }
+function write_BrtRowHdr(R/*:number*/, range, ws) {
+	var o = new_buf(17+8*16);
+	o.write_shift(4, R);
+
+	/* TODO: flags styles */
+	o.write_shift(4, 0);
+	o.write_shift(2, 0x0140);
+	o.write_shift(2, 0);
+	o.write_shift(1, 0);
+
+	/* [MS-XLSB] 2.5.8 BrtColSpan explains the mechanism */
+	var ncolspan = 0, lcs = o.l;
+	o.l += 4;
+
+	var caddr = {r:R, c:0};
+	for(var i = 0; i < 16; ++i) {
+		if(range.s.c > ((i+1) << 10) || range.e.c < (i << 10)) continue;
+		var first = -1, last = -1;
+		for(var j = (i<<10); j < ((i+1)<<10); ++j) {
+			caddr.c = j;
+			if(ws[encode_cell(caddr)]) { if(first < 0) first = j; last = j; }
+		}
+		if(first < 0) continue;
+		++ncolspan;
+		o.write_shift(4, first);
+		o.write_shift(4, last);
+	}
+
+	var l = o.l;
+	o.l = lcs;
+	o.write_shift(4, ncolspan);
+	o.l = l;
+
+	return o.length > o.l ? o.slice(0, o.l) : o;
+}
+function write_row_header(ba, ws, range, R) {
+	var o = write_BrtRowHdr(R, range, ws);
+	if(o.length > 17) write_record(ba, 'BrtRowHdr', o);
+}
 
 /* [MS-XLSB] 2.4.812 BrtWsDim */
 var parse_BrtWsDim = parse_UncheckedRfX;
@@ -25,9 +64,9 @@ function parse_BrtCellBlank(data, length) {
 	var cell = parse_XLSBCell(data);
 	return [cell];
 }
-function write_BrtCellBlank(cell, val, o) {
+function write_BrtCellBlank(cell, ncell, o) {
 	if(o == null) o = new_buf(8);
-	return write_XLSBCell(val, o);
+	return write_XLSBCell(ncell, o);
 }
 
 
@@ -37,12 +76,18 @@ function parse_BrtCellBool(data, length) {
 	var fBool = data.read_shift(1);
 	return [cell, fBool, 'b'];
 }
+function write_BrtCellBool(cell, ncell, o) {
+	if(o == null) o = new_buf(9);
+	write_XLSBCell(ncell, o);
+	o.write_shift(1, cell.v ? 1 : 0);
+	return o;
+}
 
 /* [MS-XLSB] 2.4.305 BrtCellError */
 function parse_BrtCellError(data, length) {
 	var cell = parse_XLSBCell(data);
-	var fBool = data.read_shift(1);
-	return [cell, fBool, 'e'];
+	var bError = data.read_shift(1);
+	return [cell, bError, 'e'];
 }
 
 /* [MS-XLSB] 2.4.308 BrtCellIsst */
@@ -51,12 +96,24 @@ function parse_BrtCellIsst(data, length) {
 	var isst = data.read_shift(4);
 	return [cell, isst, 's'];
 }
+function write_BrtCellIsst(cell, ncell, o) {
+	if(o == null) o = new_buf(12);
+	write_XLSBCell(ncell, o);
+	o.write_shift(4, ncell.v);
+	return o;
+}
 
 /* [MS-XLSB] 2.4.310 BrtCellReal */
 function parse_BrtCellReal(data, length) {
 	var cell = parse_XLSBCell(data);
 	var value = parse_Xnum(data);
 	return [cell, value, 'n'];
+}
+function write_BrtCellReal(cell, ncell, o) {
+	if(o == null) o = new_buf(16);
+	write_XLSBCell(ncell, o);
+	write_Xnum(cell.v, o);
+	return o;
 }
 
 /* [MS-XLSB] 2.4.311 BrtCellRk */
@@ -65,12 +122,25 @@ function parse_BrtCellRk(data, length) {
 	var value = parse_RkNumber(data);
 	return [cell, value, 'n'];
 }
+function write_BrtCellRk(cell, ncell, o) {
+	if(o == null) o = new_buf(12);
+	write_XLSBCell(ncell, o);
+	write_RkNumber(cell.v, o);
+	return o;
+}
+
 
 /* [MS-XLSB] 2.4.314 BrtCellSt */
 function parse_BrtCellSt(data, length) {
 	var cell = parse_XLSBCell(data);
 	var value = parse_XLWideString(data);
 	return [cell, value, 'str'];
+}
+function write_BrtCellSt(cell, ncell, o) {
+	if(o == null) o = new_buf(12 + 4 * cell.v.length);
+	write_XLSBCell(ncell, o);
+	write_XLWideString(cell.v, o);
+	return o.length > o.l ? o.slice(0, o.l) : o;
 }
 
 /* [MS-XLSB] 2.4.647 BrtFmlaBool */
@@ -147,12 +217,13 @@ function parse_ws_bin(data, opts, rels) {
 	var s = {};
 
 	var ref;
-	var refguess = {s: {r:1000000, c:1000000}, e: {r:0, c:0} };
+	var refguess = {s: {r:2000000, c:2000000}, e: {r:0, c:0} };
 
 	var pass = false, end = false;
 	var row, p, cf, R, C, addr, sstr, rr;
 	var mergecells = [];
 	recordhopper(data, function ws_parse(val, R) {
+		//console.log(R);
 		if(end) return;
 		switch(R.n) {
 			case 'BrtWsDim': ref = val; break;
@@ -329,7 +400,7 @@ function parse_ws_bin(data, opts, rels) {
 			default: if(!pass || opts.WTF) throw new Error("Unexpected record " + R.n);
 		}
 	}, opts);
-	if(!s["!ref"] && (refguess.s.r < 1000000 || ref.e.r > 0 || ref.e.c > 0 || ref.s.r > 0 || ref.s.c > 0)) s["!ref"] = encode_range(ref);
+	if(!s["!ref"] && (refguess.s.r < 2000000 || ref.e.r > 0 || ref.e.c > 0 || ref.s.r > 0 || ref.s.c > 0)) s["!ref"] = encode_range(ref);
 	if(opts.sheetRows && s["!ref"]) {
 		var tmpref = safe_decode_range(s["!ref"]);
 		if(opts.sheetRows < +tmpref.e.r) {
@@ -362,12 +433,23 @@ function write_ws_bin_cell(ba, cell, R, C, opts) {
 		case 's': case 'str':
 			if(opts.bookSST) {
 				vv = get_sst_id(opts.Strings, cell.v);
-				o.t = "s"; break;
+				o.t = "s"; o.v = vv;
+				write_record(ba, "BrtCellIsst", write_BrtCellIsst(cell, o));
+			} else {
+				o.t = "str";
+				write_record(ba, "BrtCellSt", write_BrtCellSt(cell, o));
 			}
-			o.t = "str"; break;
-		case 'n': break;
-		case 'b': o.t = "b"; break;
-		case 'e': o.t = "e"; break;
+			return;
+		case 'n':
+			/* TODO: determine threshold for Real vs RK */
+			if(cell.v == (cell.v | 0) && cell.v > -1000 && cell.v < 1000) write_record(ba, "BrtCellRk", write_BrtCellRk(cell, o));
+			else write_record(ba, "BrtCellReal", write_BrtCellReal(cell, o));
+			return;
+		case 'b':
+			o.t = "b";
+			write_record(ba, "BrtCellBool", write_BrtCellBool(cell, o));
+			return;
+		case 'e': /* TODO: error */ o.t = "e"; break;
 	}
 	write_record(ba, "BrtCellBlank", write_BrtCellBlank(cell, o));
 }
@@ -379,6 +461,7 @@ function write_CELLTABLE(ba, ws, idx, opts, wb) {
 		rr = encode_row(R);
 		/* [ACCELLTABLE] */
 		/* BrtRowHdr */
+		write_row_header(ba, ws, range, R);
 		for(var C = range.s.c; C <= range.e.c; ++C) {
 			/* *16384CELL */
 			if(R === range.s.r) cols[C] = encode_col(C);

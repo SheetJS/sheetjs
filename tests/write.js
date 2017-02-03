@@ -85,3 +85,7 @@ ws['!cols'] = wscols;
 
 /* write file */
 XLSX.writeFile(wb, 'sheetjs.xlsx');
+XLSX.writeFile(wb, 'sheetjs.xlsm');
+XLSX.writeFile(wb, 'sheetjs.xlsb');
+//XLSX.writeFile(wb, 'sheetjs.xls');
+XLSX.writeFile(wb, 'sheetjs.ods');

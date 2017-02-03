@@ -147,7 +147,7 @@ function parse_xlml_xml(d, opts) {
 	var sheets = {}, sheetnames = [], cursheet = {}, sheetname = "";
 	var table = {}, cell = {}, row = {}, dtag, didx;
 	var c = 0, r = 0;
-	var refguess = {s: {r:1000000, c:1000000}, e: {r:0, c:0} };
+	var refguess = {s: {r:2000000, c:2000000}, e: {r:0, c:0} };
 	var styles = {}, stag = {};
 	var ss = "", fidx = 0;
 	var mergecells = [];
@@ -207,7 +207,7 @@ function parse_xlml_xml(d, opts) {
 				if(mergecells.length) cursheet["!merges"] = mergecells;
 				sheets[sheetname] = cursheet;
 			} else {
-				refguess = {s: {r:1000000, c:1000000}, e: {r:0, c:0} };
+				refguess = {s: {r:2000000, c:2000000}, e: {r:0, c:0} };
 				r = c = 0;
 				state.push([Rn[3], false]);
 				tmp = xlml_parsexmltag(Rn[0]);

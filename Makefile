@@ -11,13 +11,19 @@ ULIB=$(shell echo $(LIB) | tr a-z A-Z)
 DEPS=$(sort $(wildcard bits/*.js))
 TARGET=$(LIB).js
 FLOWTARGET=$(LIB).flow.js
+FLOWAUX=$(patsubst %.js,%.flow.js,$(AUXTARGETS))
+AUXSCPTS=xlsxworker1.js xlsxworker2.js xlsxworker.js
+FLOWTGTS=$(TARGET) $(AUXTARGETS) $(AUXSCPTS)
 
 ## Main Targets
 
 .PHONY: all
-all: $(TARGET) $(AUXTARGETS) ## Build library and auxiliary scripts
+all: $(TARGET) $(AUXTARGETS) $(AUXSCPTS) ## Build library and auxiliary scripts
 
-$(TARGET): $(DEPS)
+$(FLOWTGTS): %.js : %.flow.js
+	node -e 'process.stdout.write(require("fs").readFileSync("$<","utf8").replace(/^[ \t]*\/\*[:#][^*]*\*\/\s*(\n)?/gm,"").replace(/\/\*[:#][^*]*\*\//gm,""))' > $@
+
+$(FLOWTARGET): $(DEPS)
 	cat $^ | tr -d '\15\32' > $@
 
 bits/01_version.js: package.json
@@ -58,6 +64,8 @@ dist-deps: ods.js ## Copy dependencies for distribution
 	cp node_modules/codepage/dist/cpexcel.full.js dist/cpexcel.js
 	cp jszip.js dist/jszip.js
 	cp ods.js dist/ods.js
+	uglifyjs ods.js -o dist/ods.min.js --source-map dist/ods.min.map --preamble "$$(head -n 1 bits/00_header.js)"
+	misc/strip_sourcemap.sh dist/ods.min.js
 
 bower.json: misc/_bower.json package.json
 	cat $< | sed 's/_VERSION_/'`grep version package.json | awk '{gsub(/[^0-9a-z\.-]/,"",$$2); print $$2}'`'/' > $@
@@ -69,9 +77,8 @@ aux: $(AUXTARGETS)
 ods: ods.js
 
 ODSDEPS=$(sort $(wildcard odsbits/*.js))
-ods.js: $(ODSDEPS) ## Build ODS support library
+ods.flow.js: $(ODSDEPS) ## Build ODS support library
 	cat $(ODSDEPS) | tr -d '\15\32' > $@
-	cp ods.js dist/ods.js
 
 
 ## Testing
@@ -90,7 +97,7 @@ $(TESTFMT): test_%:
 ## Code Checking
 
 .PHONY: lint
-lint: $(TARGET) ## Run jshint and jscs checks
+lint: $(TARGET) $(AUXTARGETS) ## Run jshint and jscs checks
 	@jshint --show-non-errors $(TARGET) $(AUXTARGETS)
 	@jshint --show-non-errors $(CMDS)
 	@jshint --show-non-errors package.json bower.json

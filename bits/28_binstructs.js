@@ -91,6 +91,15 @@ function parse_RkNumber(data) {
 	var RK = fInt === 0 ? __double([0,0,0,0,b[0],b[1],b[2],b[3]],0) : __readInt32LE(b,0)>>2;
 	return fX100 ? RK/100 : RK;
 }
+function write_RkNumber(data/*:number*/, o) {
+	if(o == null) o = new_buf(4);
+	var fX100 = 0, fInt = 0, d100 = data * 100;
+	if(data == (data | 0) && data >= -(1<<29) && data < (1 << 29)) { fInt = 1; }
+	else if(d100 == (d100 | 0) && d100 >= -(1<<29) && d100 < (1 << 29)) { fInt = 1; fX100 = 1; }
+	if(fInt) o.write_shift(-4, ((fX100 ? d100 : data) << 2) + (fX100 + 2));
+	else throw new Error("unsupported RkNumber " + data); // TODO
+}
+
 
 /* [MS-XLSB] 2.5.153 */
 function parse_UncheckedRfX(data) {
@@ -113,8 +122,9 @@ function write_UncheckedRfX(r, o) {
 
 /* [MS-XLSB] 2.5.171 */
 /* [MS-XLS] 2.5.342 */
+/* TODO: error checking, NaN and Infinity values are not valid Xnum */
 function parse_Xnum(data, length) { return data.read_shift(8, 'f'); }
-function write_Xnum(data, o) { return (o || new_buf(8)).write_shift(8, 'f', data); }
+function write_Xnum(data, o) { return (o || new_buf(8)).write_shift(8, data, 'f'); }
 
 /* [MS-XLSB] 2.5.198.2 */
 var BErr = {

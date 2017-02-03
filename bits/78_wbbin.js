@@ -13,7 +13,7 @@ function write_BrtBundleSh(data, o) {
 	o.write_shift(4, data.iTabID);
 	write_RelID(data.strRelID, o);
 	write_XLWideString(data.name.substr(0,31), o);
-	return o;
+	return o.length > o.l ? o.slice(0, o.l) : o;
 }
 
 /* [MS-XLSB] 2.4.807 BrtWbProp */
@@ -121,7 +121,7 @@ function write_BrtFileVersion(data, o) {
 	write_XLWideString(XLSX.version, o);
 	write_XLWideString("7262", o);
 	o.length = o.l;
-	return o;
+	return o.length > o.l ? o.slice(0, o.l) : o;
 }
 
 /* [MS-XLSB] 2.1.7.60 Workbook */
@@ -144,6 +144,7 @@ function write_BrtCalcProp(data, o) {
 	return o;
 }
 
+/* [MS-XLSB] 2.4.640 BrtFileRecover */
 function write_BrtFileRecover(data, o) {
 	if(!o) o = new_buf(1);
 	o.write_shift(1,0);
@@ -156,22 +157,22 @@ function write_wb_bin(wb, opts) {
 	write_record(ba, "BrtBeginBook");
 	write_record(ba, "BrtFileVersion", write_BrtFileVersion());
 	/* [[BrtFileSharingIso] BrtFileSharing] */
-	write_record(ba, "BrtWbProp", write_BrtWbProp());
+	if(0) write_record(ba, "BrtWbProp", write_BrtWbProp());
 	/* [ACABSPATH] */
 	/* [[BrtBookProtectionIso] BrtBookProtection] */
-	write_BOOKVIEWS(ba, wb, opts);
+	if(0) write_BOOKVIEWS(ba, wb, opts);
 	write_BUNDLESHS(ba, wb, opts);
 	/* [FNGROUP] */
 	/* [EXTERNALS] */
 	/* *BrtName */
-	write_record(ba, "BrtCalcProp", write_BrtCalcProp());
+	if(0) write_record(ba, "BrtCalcProp", write_BrtCalcProp());
 	/* [BrtOleSize] */
 	/* *(BrtUserBookView *FRT) */
 	/* [PIVOTCACHEIDS] */
 	/* [BrtWbFactoid] */
 	/* [SMARTTAGTYPES] */
 	/* [BrtWebOpt] */
-	write_record(ba, "BrtFileRecover", write_BrtFileRecover());
+	if(0) write_record(ba, "BrtFileRecover", write_BrtFileRecover());
 	/* [WEBPUBITEMS] */
 	/* [CRERRS] */
 	/* FRTWORKBOOK */

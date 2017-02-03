@@ -48,7 +48,7 @@ if(process.version === 'v0.10.31') {
 	process.exit(1);
 }
 
-var filename, sheetname = '';
+var filename/*:?string*/, sheetname = '';
 if(program.args[0]) {
 	filename = program.args[0];
 	if(program.args[1]) sheetname = program.args[1];
@@ -60,13 +60,13 @@ if(!filename) {
 	console.error(n + ": must specify a filename");
 	process.exit(1);
 }
-
+/*:: if(filename) { */
 if(!fs.existsSync(filename)) {
 	console.error(n + ": " + filename + ": No such file or directory");
 	process.exit(2);
 }
 
-var opts = {}, wb;
+var opts = {}, wb/*:?Workbook*/;
 if(program.listSheets) opts.bookSheets = true;
 if(program.sheetRows) opts.sheetRows = program.sheetRows;
 if(program.password) opts.password = program.password;
@@ -98,6 +98,7 @@ else try {
 }
 if(program.read) process.exit(0);
 
+/*::   if(wb) { */
 if(program.listSheets) {
 	console.log(wb.SheetNames.join("\n"));
 	process.exit(0);
@@ -105,9 +106,9 @@ if(program.listSheets) {
 
 var wopts = {WTF:opts.WTF, bookSST:program.sst};
 
-if(program.xlsx) return X.writeFile(wb, sheetname || (filename + ".xlsx"), wopts);
-if(program.xlsm) return X.writeFile(wb, sheetname || (filename + ".xlsm"), wopts);
-if(program.xlsb) return X.writeFile(wb, sheetname || (filename + ".xlsb"), wopts);
+if(program.xlsx) { X.writeFile(wb, sheetname || (filename + ".xlsx"), wopts); process.exit(0); }
+if(program.xlsm) { X.writeFile(wb, sheetname || (filename + ".xlsm"), wopts); process.exit(0); }
+if(program.xlsb) { X.writeFile(wb, sheetname || (filename + ".xlsb"), wopts); process.exit(0); }
 
 var target_sheet = sheetname || '';
 if(target_sheet === '') target_sheet = wb.SheetNames[0];
@@ -121,7 +122,7 @@ try {
 	process.exit(4);
 }
 
-if(program.perf) return;
+if(program.perf) process.exit(0);
 
 var oo = "";
 if(!program.quiet) console.error(target_sheet);
@@ -132,3 +133,5 @@ else oo = X.utils.make_csv(ws, {FS:program.fieldSep, RS:program.rowSep});
 
 if(program.output) fs.writeFileSync(program.output, oo);
 else console.log(oo);
+/*::   } */
+/*:: } */

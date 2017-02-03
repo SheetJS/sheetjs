@@ -132,7 +132,8 @@ function WriteShift(t, val, f) {
 		size = 2 * val.length;
 	} else switch(t) {
 		case  1: size = 1; this[this.l] = val&255; break;
-		case  3: size = 3; this[this.l+2] = val & 255; val >>>= 8; this[this.l+1] = val&255; val >>>= 8; this[this.l] = val&255; break;
+		case  2: size = 2; this[this.l] = val&255; val >>>= 8; this[this.l+1] = val&255; break;
+		case  3: size = 3; this[this.l] = val&255; val >>>= 8; this[this.l+1] = val&255; val >>>= 8; this[this.l+2] = val&255; break;
 		case  4: size = 4; this.writeUInt32LE(val, this.l); break;
 		case  8: size = 8; if(f === 'f') { this.writeDoubleLE(val, this.l); break; }
 		/* falls through */
@@ -148,16 +149,16 @@ function CheckField(hexstr, fld) {
 	this.l += hexstr.length>>1;
 }
 
-function prep_blob(blob, pos) {
+function prep_blob(blob, pos/*:number*/) {
 	blob.l = pos;
 	blob.read_shift = ReadShift;
 	blob.chk = CheckField;
 	blob.write_shift = WriteShift;
 }
 
-function parsenoop(blob, length) { blob.l += length; }
+function parsenoop(blob, length/*:number*/) { blob.l += length; }
 
-function writenoop(blob, length) { blob.l += length; }
+function writenoop(blob, length/*:number*/) { blob.l += length; }
 
 function new_buf(sz) {
 	var o = new_raw_buf(sz);

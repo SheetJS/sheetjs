@@ -40,7 +40,7 @@ function parse_cust_props(data, opts) {
 						p[name] = unescapexml(text);
 						break;
 					default:
-						if(typeof console !== 'undefined') console.warn('Unexpected', x, type, toks);
+						if(opts.WTF && typeof console !== 'undefined') console.warn('Unexpected', x, type, toks);
 				}
 			} else if(x.substr(0,2) === "</") {
 			} else if(opts.WTF) throw new Error(x);

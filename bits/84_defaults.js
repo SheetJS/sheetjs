@@ -36,5 +36,7 @@ var fix_write_opts = fix_opts_func([
 
 	['bookType', 'xlsx'], /* Type of workbook (xlsx/m/b) */
 
+	['compression', false], /* Use file compression */
+
 	['WTF', false] /* WTF mode (throws errors) */
 ]);

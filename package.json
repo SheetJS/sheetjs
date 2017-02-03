@@ -1,6 +1,6 @@
 {
 	"name": "xlsx",
-	"version": "0.8.1",
+	"version": "0.8.2",
 	"author": "sheetjs",
 	"description": "Excel (XLSB/XLSX/XLSM/XLS/XML) and ODS spreadsheet parser and writer",
 	"keywords": [ "excel", "xls", "xlsx", "xlsb", "xlsm", "ods", "office", "spreadsheet" ],
@@ -33,6 +33,7 @@
 			"pattern": "xlsx.js"
 		}
 	},
+	"homepage": "https://oss.sheetjs.com/js-xlsx/",
 	"bugs": { "url": "https://github.com/SheetJS/js-xlsx/issues" },
 	"license": "Apache-2.0",
 	"engines": { "node": ">=0.8" }
