@@ -4286,7 +4286,7 @@ function parse_si(x, opts) {
 	/* 18.4.4 r CT_RElt (Rich Text Run) */
 	else if((y = x.match(sirregex))) {
 		z.r = x;
-		z.t = utf8read(unescapexml(x.match(sitregex).join("").replace(tagregex,"")));
+		z.t = utf8read(unescapexml(x.replace(/<rPh.*?>(.*?)<\/rPh>/g, '').match(sitregex).join("").replace(tagregex,"")));
 		if(html) z.h = parse_rs(x);
 	}
 	/* 18.4.3 phoneticPr CT_PhoneticPr (TODO: needed for Asian support) */
