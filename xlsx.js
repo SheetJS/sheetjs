@@ -7420,8 +7420,8 @@ function write_ws_xml_cell(cell, ref, ws, opts, idx, wb) {
 	}
 	var o = { r: ref };
 	var v = cell.f ?
-					writetag('f', escapexml(cell.f)) :
-					writetag('v', escapexml(vv));
+		writetag('f', escapexml(cell.f)) :
+		writetag('v', escapexml(vv));
 	/* TODO: cell style */
 	var os = get_cell_style(opts.cellXfs, cell, opts);
 	if(os !== 0) o.s = os;
