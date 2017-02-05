@@ -2,6 +2,29 @@
 var wbnsregex = /<\w+:workbook/;
 function parse_wb_xml(data, opts) {
 	var wb = { AppVersion:{}, WBProps:{}, WBView:[], Sheets:[], CalcPr:{}, xmlns: "" };
+
+	// parse tag attributes
+	var reAttrs = /\s+([a-z][a-z0-9\-]+)(?:=(['"]?[^>"]*['"]?))?/gi;
+	var parseAttrs = function(s, r) {
+		var e, v;
+		if (s) {
+			while ((e = reAttrs.exec(s))) {
+				v = e[2];
+				r[e[1]] = (v == null) ? true : v[0] === '"' ? v.slice(1, -1) : v;
+			}
+		}
+		return r;
+	}
+
+	// Discover defined names
+	wb.DefinedNames = [];
+	var e = null, definedNamesRefExp = /<definedName((?:\s+[a-z][a-z0-9\-]+(?:=(?:(?:['"]?[^>'"]*['"]?)))?)*)>([\w#\!\$\:]+)<\/definedName>/g;
+	while ((e = definedNamesRefExp.exec(data))) {
+		var item = {reference:e[2]}
+		parseAttrs(e[1], item);
+		wb.DefinedNames.push(item);
+	}
+
 	var pass = false, xmlns = "xmlns";
 	data.match(tagregex).forEach(function xml_wb(x) {
 		var y = parsexmltag(x);
