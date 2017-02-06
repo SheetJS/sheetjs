@@ -5127,6 +5127,7 @@ function parse_XFExt(blob, length) {
 function update_xfext(xf, xfext) {
 	xfext.forEach(function(xfe) {
 		switch(xfe[0]) { /* 2.5.108 extPropData */
+			case 0x0b: break;
 			case 0x04: break; /* foreground color */
 			case 0x05: break; /* background color */
 			case 0x07: case 0x08: case 0x09: case 0x0a: break;
