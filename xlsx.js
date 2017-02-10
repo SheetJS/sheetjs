@@ -9850,6 +9850,7 @@ function parse_workbook(blob, options) {
 				} break;
 				case 'ShrFmla': {
 					if(!cell_valid) break;
+					if(options.cellFormula) out[last_cell].f = "="+stringify_formula(val[0], range, lastcell, supbooks, opts);
 					//if(options.cellFormula) out[last_cell].f = stringify_formula(val[0], range, lastcell, supbooks, opts);
 					/* TODO: capture range */
 					if(last_formula) shared_formulae[encode_cell(last_formula.cell)]= val[0];
