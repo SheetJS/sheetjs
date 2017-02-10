@@ -222,10 +222,10 @@ function parse_ws_bin(data, opts, rels) {
 	var pass = false, end = false;
 	var row, p, cf, R, C, addr, sstr, rr;
 	var mergecells = [];
-	recordhopper(data, function ws_parse(val, R) {
-		//console.log(R);
+	recordhopper(data, function ws_parse(val, Record) {
+		//console.log(Record);
 		if(end) return;
-		switch(R.n) {
+		switch(Record.n) {
 			case 'BrtWsDim': ref = val; break;
 			case 'BrtRowHdr':
 				row = val;
@@ -243,7 +243,7 @@ function parse_ws_bin(data, opts, rels) {
 			case 'BrtCellReal':
 			case 'BrtCellRk':
 			case 'BrtCellSt':
-				p = {t:val[2]};
+				p = ({t:val[2]}/*:any*/);
 				switch(val[2]) {
 					case 'n': p.v = val[1]; break;
 					case 's': sstr = strs[val[1]]; p.v = sstr.t; p.r = sstr.r; break;
@@ -261,7 +261,7 @@ function parse_ws_bin(data, opts, rels) {
 				break;
 
 			case 'BrtCellBlank': if(!opts.sheetStubs) break;
-				p = {t:'s',v:undefined};
+				p = ({t:'s',v:undefined}/*:any*/);
 				s[encode_col(C=val[0].c) + rr] = p;
 				if(refguess.s.r > row.r) refguess.s.r = row.r;
 				if(refguess.s.c > C) refguess.s.c = C;
@@ -397,10 +397,10 @@ function parse_ws_bin(data, opts, rels) {
 			case 'BrtCellIgnoreEC': break;
 			case 'BrtEndCellIgnoreECs': break;
 
-			default: if(!pass || opts.WTF) throw new Error("Unexpected record " + R.n);
+			default: if(!pass || opts.WTF) throw new Error("Unexpected record " + Record.n);
 		}
 	}, opts);
-	if(!s["!ref"] && (refguess.s.r < 2000000 || ref.e.r > 0 || ref.e.c > 0 || ref.s.r > 0 || ref.s.c > 0)) s["!ref"] = encode_range(ref);
+	if(!s["!ref"] && (refguess.s.r < 2000000 || ref && (ref.e.r > 0 || ref.e.c > 0 || ref.s.r > 0 || ref.s.c > 0))) s["!ref"] = encode_range(ref || refguess);
 	if(opts.sheetRows && s["!ref"]) {
 		var tmpref = safe_decode_range(s["!ref"]);
 		if(opts.sheetRows < +tmpref.e.r) {
@@ -418,7 +418,7 @@ function parse_ws_bin(data, opts, rels) {
 }
 
 /* TODO: something useful -- this is a stub */
-function write_ws_bin_cell(ba, cell, R, C, opts) {
+function write_ws_bin_cell(ba/*:BufArray*/, cell/*:Cell*/, R/*:number*/, C/*:number*/, opts) {
 	if(cell.v === undefined) return "";
 	var vv = "";
 	switch(cell.t) {
@@ -426,7 +426,7 @@ function write_ws_bin_cell(ba, cell, R, C, opts) {
 		case 'n': case 'e': vv = ''+cell.v; break;
 		default: vv = cell.v; break;
 	}
-	var o = {r:R, c:C};
+	var o/*:CellAddress*/ = ({r:R, c:C}/*:any*/);
 	/* TODO: cell style */
 	o.s = get_cell_style(opts.cellXfs, cell, opts);
 	switch(cell.t) {

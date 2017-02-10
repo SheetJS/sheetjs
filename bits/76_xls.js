@@ -22,11 +22,11 @@ function parse_compobj(obj) {
 	m = __lpstr(o, l); l += m.length === 0 ? 0 : 5 + m.length; v.Reserved1 = m;
 
 	if((m = __readUInt32LE(o,l)) !== 0x71b2e9f4) return v;
-	throw "Unsupported Unicode Extension";
+	throw new Error("Unsupported Unicode Extension");
 }
 
 /* 2.4.58 Continue logic */
-function slurp(R, blob, length, opts) {
+function slurp(R, blob, length/*:number*/, opts) {
 	var l = length;
 	var bufs = [];
 	var d = blob.slice(blob.l,blob.l+l);
@@ -45,7 +45,7 @@ function slurp(R, blob, length, opts) {
 		blob.l += 4+l;
 		next = (XLSRecordEnum[__readUInt16LE(blob, blob.l)]);
 	}
-	var b = bconcat(bufs);
+	var b = (bconcat(bufs)/*:any*/);
 	prep_blob(b, 0);
 	var ll = 0; b.lens = [];
 	for(var j = 0; j < bufs.length; ++j) { b.lens.push(ll); ll += bufs[j].length; }
@@ -53,10 +53,11 @@ function slurp(R, blob, length, opts) {
 }
 
 function safe_format_xf(p, opts, date1904) {
+	if(p.t === 'e') { p.w = p.w || BErr[p.v]; }
 	if(!p.XF) return;
 	try {
 		var fmtid = p.XF.ifmt||0;
-		if(p.t === 'e') { p.w = p.w || BErr[p.v]; }
+		if(p.t === 'e');
 		else if(fmtid === 0) {
 			if(p.t === 'n') {
 				if((p.v|0) === p.v) p.w = SSF._general_int(p.v);
@@ -69,13 +70,13 @@ function safe_format_xf(p, opts, date1904) {
 	} catch(e) { if(opts.WTF) throw e; }
 }
 
-function make_cell(val, ixfe, t) {
-	return {v:val, ixfe:ixfe, t:t};
+function make_cell(val, ixfe, t)/*:any*/ {
+	return ({v:val, ixfe:ixfe, t:t}/*:any*/);
 }
 
 // 2.3.2
-function parse_workbook(blob, options) {
-	var wb = {opts:{}};
+function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
+	var wb = ({opts:{}}/*:any*/);
 	var Sheets = {};
 	var out = {};
 	var Directory = {};
@@ -123,7 +124,7 @@ function parse_workbook(blob, options) {
 		if(options.sheetRows && lastcell.r >= options.sheetRows) cell_valid = false;
 		else out[last_cell] = line;
 	};
-	var opts = {
+	var opts = ({
 		enc: false, // encrypted
 		sbcch: 0, // cch in the preceding SupBook
 		snames: [], // sheetnames
@@ -135,17 +136,18 @@ function parse_workbook(blob, options) {
 		codepage: 0, // CP from CodePage record
 		winlocked: 0, // fLockWn from WinProtect
 		wtf: false
-	};
+	}/*:any*/);
 	if(options.password) opts.password = options.password;
 	var mergecells = [];
 	var objects = [];
-	var supbooks = [[]]; // 1-indexed, will hold extern names
+	var supbooks = ([[]]/*:any*/); // 1-indexed, will hold extern names
 	var sbc = 0, sbci = 0, sbcli = 0;
 	supbooks.SheetNames = opts.snames;
 	supbooks.sharedf = opts.sharedf;
 	supbooks.arrayf = opts.arrayf;
 	var last_Rn = '';
 	var file_depth = 0; /* TODO: make a real stack */
+	var BIFF2Fmt = 0;
 
 	/* explicit override for some broken writers */
 	opts.codepage = 1200;
@@ -157,6 +159,7 @@ function parse_workbook(blob, options) {
 		if(RecordType === 0 && last_Rn === 'EOF') break;
 		var length = (blob.l === blob.length ? 0 : blob.read_shift(2)), y;
 		var R = XLSRecordEnum[RecordType];
+		//console.log(RecordType.toString(16), RecordType, R, blob.l, length, blob.length);
 		if(R && R.f) {
 			if(options.bookSheets) {
 				if(last_Rn === 'BoundSheet8' && R.n !== 'BoundSheet8') break;
@@ -172,10 +175,6 @@ function parse_workbook(blob, options) {
 			if(R.n === 'EOF') val = R.f(blob, length, opts);
 			else val = slurp(R, blob, length, opts);
 			var Rn = R.n;
-			/* BIFF5 overrides */
-			if(opts.biff === 5 || opts.biff === 2) switch(Rn) {
-				case 'Lbl': Rn = 'Label'; break;
-			}
 			/* nested switch statements to workaround V8 128 limit */
 			switch(Rn) {
 				/* Workbook Options */
@@ -253,41 +252,48 @@ function parse_workbook(blob, options) {
 					out = {};
 				} break;
 				case 'BOF': {
-					if(opts.biff !== 8);
+					if(opts.biff !== 8){}
 					else if(val.BIFFVer === 0x0500) opts.biff = 5;
 					else if(val.BIFFVer === 0x0002) opts.biff = 2;
 					else if(val.BIFFVer === 0x0007) opts.biff = 2;
+					else if(RecordType  === 0x0009) opts.biff = 2;
+					else if(RecordType  === 0x0209) opts.biff = 3;
+					else if(RecordType  === 0x0409) opts.biff = 4;
 					if(file_depth++) break;
 					cell_valid = true;
 					out = {};
-					if(opts.biff === 2) {
+					if(opts.biff < 5) {
 						if(cur_sheet === "") cur_sheet = "Sheet1";
 						range = {s:{r:0,c:0},e:{r:0,c:0}};
+						/* fake BoundSheet8 */
+						var fakebs8 = {pos: blob.l - length, name:cur_sheet};
+						Directory[fakebs8.pos] = fakebs8;
+						opts.snames.push(cur_sheet);
 					}
 					else cur_sheet = (Directory[s] || {name:""}).name;
 					mergecells = [];
 					objects = [];
 				} break;
-				case 'Number': case 'BIFF2NUM': {
+				case 'Number': case 'BIFF2NUM': case 'BIFF2INT': {
 					temp_val = {ixfe: val.ixfe, XF: XFs[val.ixfe], v:val.val, t:'n'};
-					if(temp_val.XF) safe_format_xf(temp_val, options, wb.opts.Date1904);
+					safe_format_xf(temp_val, options, wb.opts.Date1904);
 					addcell({c:val.c, r:val.r}, temp_val, options);
 				} break;
 				case 'BoolErr': {
 					temp_val = {ixfe: val.ixfe, XF: XFs[val.ixfe], v:val.val, t:val.t};
-					if(temp_val.XF) safe_format_xf(temp_val, options, wb.opts.Date1904);
+					safe_format_xf(temp_val, options, wb.opts.Date1904);
 					addcell({c:val.c, r:val.r}, temp_val, options);
 				} break;
 				case 'RK': {
 					temp_val = {ixfe: val.ixfe, XF: XFs[val.ixfe], v:val.rknum, t:'n'};
-					if(temp_val.XF) safe_format_xf(temp_val, options, wb.opts.Date1904);
+					safe_format_xf(temp_val, options, wb.opts.Date1904);
 					addcell({c:val.c, r:val.r}, temp_val, options);
 				} break;
 				case 'MulRk': {
 					for(var j = val.c; j <= val.C; ++j) {
 						var ixfe = val.rkrec[j-val.c][0];
 						temp_val= {ixfe:ixfe, XF:XFs[ixfe], v:val.rkrec[j-val.c][1], t:'n'};
-						if(temp_val.XF) safe_format_xf(temp_val, options, wb.opts.Date1904);
+						safe_format_xf(temp_val, options, wb.opts.Date1904);
 						addcell({c:j, r:val.r}, temp_val, options);
 					}
 				} break;
@@ -296,10 +302,10 @@ function parse_workbook(blob, options) {
 						case 'String': last_formula = val; break;
 						case 'Array Formula': throw "Array Formula unsupported";
 						default:
-							temp_val = {v:val.val, ixfe:val.cell.ixfe, t:val.tt};
+							temp_val = ({v:val.val, ixfe:val.cell.ixfe, t:val.tt}/*:any*/);
 							temp_val.XF = XFs[temp_val.ixfe];
 							if(options.cellFormula) temp_val.f = "="+stringify_formula(val.formula,range,val.cell,supbooks, opts);
-							if(temp_val.XF) safe_format_xf(temp_val, options, wb.opts.Date1904);
+							safe_format_xf(temp_val, options, wb.opts.Date1904);
 							addcell(val.cell, temp_val, options);
 							last_formula = val;
 					}
@@ -307,10 +313,10 @@ function parse_workbook(blob, options) {
 				case 'String': {
 					if(last_formula) {
 						last_formula.val = val;
-						temp_val = {v:last_formula.val, ixfe:last_formula.cell.ixfe, t:'s'};
+						temp_val = ({v:last_formula.val, ixfe:last_formula.cell.ixfe, t:'s'}/*:any*/);
 						temp_val.XF = XFs[temp_val.ixfe];
 						if(options.cellFormula) temp_val.f = "="+stringify_formula(last_formula.formula, range, last_formula.cell, supbooks, opts);
-						if(temp_val.XF) safe_format_xf(temp_val, options, wb.opts.Date1904);
+						safe_format_xf(temp_val, options, wb.opts.Date1904);
 						addcell(last_formula.cell, temp_val, options);
 						last_formula = null;
 					}
@@ -322,20 +328,18 @@ function parse_workbook(blob, options) {
 					if(!cell_valid) break;
 					//if(options.cellFormula) out[last_cell].f = stringify_formula(val[0], range, lastcell, supbooks, opts);
 					/* TODO: capture range */
-					shared_formulae[encode_cell(last_formula.cell)]= val[0];
+					if(last_formula) shared_formulae[encode_cell(last_formula.cell)]= val[0];
 				} break;
 				case 'LabelSst':
-					//temp_val={v:sst[val.isst].t, ixfe:val.ixfe, t:'s'};
 					temp_val=make_cell(sst[val.isst].t, val.ixfe, 's');
 					temp_val.XF = XFs[temp_val.ixfe];
-					if(temp_val.XF) safe_format_xf(temp_val, options, wb.opts.Date1904);
+					safe_format_xf(temp_val, options, wb.opts.Date1904);
 					addcell({c:val.c, r:val.r}, temp_val, options);
 					break;
 				case 'Label': case 'BIFF2STR':
-					/* Some writers erroneously write Label */
 					temp_val=make_cell(val.val, val.ixfe, 's');
 					temp_val.XF = XFs[temp_val.ixfe];
-					if(temp_val.XF) safe_format_xf(temp_val, options, wb.opts.Date1904);
+					safe_format_xf(temp_val, options, wb.opts.Date1904);
 					addcell({c:val.c, r:val.r}, temp_val, options);
 					break;
 				case 'Dimensions': {
@@ -346,6 +350,9 @@ function parse_workbook(blob, options) {
 				} break;
 				case 'Format': { /* val = [id, fmt] */
 					SSF.load(val[1], val[0]);
+				} break;
+				case 'BIFF2FORMAT': {
+					SSF.load(val, BIFF2Fmt++);
 				} break;
 
 				case 'MergeCells': mergecells = mergecells.concat(val); break;
@@ -599,12 +606,18 @@ function parse_workbook(blob, options) {
 				/* Future Records */
 				case 'FrtFontList': case 'FrtWrapper': break;
 
+				default: switch(R.n) { /* nested */
 				/* BIFF5 records */
 				case 'ExternCount': break;
 				case 'RString': break;
 				case 'TabIdConf': case 'Radar': case 'RadarArea': case 'DropBar': case 'Intl': case 'CoordList': case 'SerAuxErrBar': break;
 
-				default: switch(R.n) { /* nested */
+				/* BIFF2-4 records */
+				case 'BIFF2FONTCLR': case 'BIFF2FMTCNT': break;
+				case 'BIFF2XF': case 'BIFF3XF': case 'BIFF4XF': break;
+				case 'BIFF4FMTCNT': case 'BIFF2ROW': case 'BIFF2WINDOW2': break;
+				case 'Dimension': break;
+
 				/* Miscellaneous */
 				case 'SCENARIO': case 'DConBin': case 'PicF': case 'DataLabExt':
 				case 'Lel': case 'BopPop': case 'BopPopCustom': case 'RealTimeData':
@@ -613,7 +626,7 @@ function parse_workbook(blob, options) {
 			}}}}
 		} else blob.l += length;
 	}
-	var sheetnamesraw = opts.biff === 2 ? ['Sheet1'] : Object.keys(Directory).sort(function(a,b) { return Number(a) - Number(b); }).map(function(x){return Directory[x].name;});
+	var sheetnamesraw = Object.keys(Directory).sort(function(a,b) { return Number(a) - Number(b); }).map(function(x){return Directory[x].name;});
 	var sheetnames = sheetnamesraw.slice();
 	wb.Directory=sheetnamesraw;
 	wb.SheetNames=sheetnamesraw;
@@ -627,22 +640,22 @@ function parse_workbook(blob, options) {
 	return wb;
 }
 
-function parse_xlscfb(cfb, options) {
+function parse_xlscfb(cfb/*:any*/, options/*:?ParseOpts*/) {
 if(!options) options = {};
 fix_read_opts(options);
 reset_cp();
-var CompObj, Summary, Workbook;
-if(cfb.find) {
+var CompObj, Summary, Workbook/*:?any*/;
+if(cfb.FullPaths) {
 	CompObj = cfb.find('!CompObj');
 	Summary = cfb.find('!SummaryInformation');
 	Workbook = cfb.find('/Workbook');
 } else {
 	prep_blob(cfb, 0);
-	Workbook = {content: cfb};
+	Workbook = ({content: cfb}/*:any*/);
 }
 
 if(!Workbook) Workbook = cfb.find('/Book');
-var CompObjP, SummaryP, WorkbookP;
+var CompObjP, SummaryP, WorkbookP/*:?any*/;
 
 if(CompObj) CompObjP = parse_compobj(CompObj);
 if(options.bookProps && !options.bookSheets) WorkbookP = {};
@@ -651,7 +664,7 @@ else {
 	else throw new Error("Cannot find Workbook stream");
 }
 
-if(cfb.find) parse_props(cfb);
+if(cfb.FullPaths) parse_props(cfb);
 
 var props = {};
 for(var y in cfb.Summary) props[y] = cfb.Summary[y];

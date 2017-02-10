@@ -1,13 +1,14 @@
 var attregexg2=/([\w:]+)=((?:")([^"]*)(?:")|(?:')([^']*)(?:'))/g;
 var attregex2=/([\w:]+)=((?:")(?:[^"]*)(?:")|(?:')(?:[^']*)(?:'))/;
 var _chr = function(c) { return String.fromCharCode(c); };
-function xlml_parsexmltag(tag, skip_root) {
+function xlml_parsexmltag(tag/*:string*/, skip_root/*:?boolean*/) {
 	var words = tag.split(/\s+/);
-	var z = []; if(!skip_root) z[0] = words[0];
+	var z/*:any*/ = ([]/*:any*/); if(!skip_root) z[0] = words[0];
 	if(words.length === 1) return z;
 	var m = tag.match(attregexg2), y, j, w, i;
 	if(m) for(i = 0; i != m.length; ++i) {
 		y = m[i].match(attregex2);
+/*:: if(!y || !y[2]) continue; */
 		if((j=y[1].indexOf(":")) === -1) z[y[1]] = y[2].substr(1,y[2].length-2);
 		else {
 			if(y[1].substr(0,6) === "xmlns:") w = "xmlns"+y[1].substr(6);
@@ -17,13 +18,14 @@ function xlml_parsexmltag(tag, skip_root) {
 	}
 	return z;
 }
-function xlml_parsexmltagobj(tag) {
+function xlml_parsexmltagobj(tag/*:string*/) {
 	var words = tag.split(/\s+/);
 	var z = {};
 	if(words.length === 1) return z;
 	var m = tag.match(attregexg2), y, j, w, i;
 	if(m) for(i = 0; i != m.length; ++i) {
 		y = m[i].match(attregex2);
+/*:: if(!y || !y[2]) continue; */
 		if((j=y[1].indexOf(":")) === -1) z[y[1]] = y[2].substr(1,y[2].length-2);
 		else {
 			if(y[1].substr(0,6) === "xmlns:") w = "xmlns"+y[1].substr(6);
@@ -36,7 +38,7 @@ function xlml_parsexmltagobj(tag) {
 
 // ----
 
-function xlml_format(format, value) {
+function xlml_format(format, value)/*:string*/ {
 	var fmt = XLMLFormatMap[format] || unescapexml(format);
 	if(fmt === "General") return SSF._general(value);
 	return SSF.format(fmt, value);
@@ -54,7 +56,7 @@ function xlml_set_custprop(Custprops, Rn, cp, val) {
 	Custprops[unescapexml(Rn[3])] = val;
 }
 
-function safe_format_xlml(cell, nf, o) {
+function safe_format_xlml(cell/*:Cell*/, nf, o) {
 	try {
 		if(cell.t === 'e') { cell.w = cell.w || BErr[cell.v]; }
 		else if(nf === "General") {
@@ -80,7 +82,7 @@ function process_style_xlml(styles, stag, opts) {
 }
 
 /* TODO: there must exist some form of OSP-blessed spec */
-function parse_xlml_data(xml, ss, data, cell, base, styles, csty, row, o) {
+function parse_xlml_data(xml, ss, data, cell/*:any*/, base, styles, csty, row, o)/*:Workbook*/ {
 	var nf = "General", sid = cell.StyleID, S = {}; o = o || {};
 	var interiors = [];
 	if(sid === undefined && row) sid = row.StyleID;
@@ -127,15 +129,15 @@ function parse_xlml_data(xml, ss, data, cell, base, styles, csty, row, o) {
 	cell.ixfe = cell.StyleID !== undefined ? cell.StyleID : 'Default';
 }
 
-function xlml_clean_comment(comment) {
+function xlml_clean_comment(comment/*:any*/) {
 	comment.t = comment.v;
 	comment.v = comment.w = comment.ixfe = undefined;
 }
 
-function xlml_normalize(d) {
+function xlml_normalize(d)/*:string*/ {
 	if(has_buf && Buffer.isBuffer(d)) return d.toString('utf8');
 	if(typeof d === 'string') return d;
-	throw "badf";
+	throw new Error("Bad input format: expected Buffer or string");
 }
 
 /* TODO: Everything */
@@ -145,7 +147,8 @@ function parse_xlml_xml(d, opts) {
 	var Rn;
 	var state = [], tmp;
 	var sheets = {}, sheetnames = [], cursheet = {}, sheetname = "";
-	var table = {}, cell = {}, row = {}, dtag, didx;
+	var table = {}, cell = ({}/*:any*/), row = {};
+	var dtag = xlml_parsexmltag('<Data ss:Type="String">'), didx = 0;
 	var c = 0, r = 0;
 	var refguess = {s: {r:2000000, c:2000000}, e: {r:0, c:0} };
 	var styles = {}, stag = {};
@@ -677,7 +680,7 @@ function parse_xlml_xml(d, opts) {
 			}
 			if(opts.WTF) throw 'Unrecognized tag: ' + Rn[3] + "|" + state.join("|");
 	}
-	var out = {};
+	var out = ({}/*:Any*/);
 	if(!opts.bookSheets && !opts.bookProps) out.Sheets = sheets;
 	out.SheetNames = sheetnames;
 	out.SSF = SSF.get_table();
@@ -695,5 +698,7 @@ function parse_xlml(data, opts) {
 	}
 }
 
-function write_xlml(wb, opts) { }
-
+function write_xlml(wb, opts)/*:string*/ {
+	var o = [XML_HEADER];
+	return o.join("");
+}

@@ -14,6 +14,7 @@ FLOWTARGET=$(LIB).flow.js
 FLOWAUX=$(patsubst %.js,%.flow.js,$(AUXTARGETS))
 AUXSCPTS=xlsxworker1.js xlsxworker2.js xlsxworker.js
 FLOWTGTS=$(TARGET) $(AUXTARGETS) $(AUXSCPTS)
+UGLIFYOPTS=--support-ie8
 
 ## Main Targets
 
@@ -34,7 +35,7 @@ bits/18_cfb.js: node_modules/cfb/dist/xlscfb.js
 
 .PHONY: clean
 clean: ## Remove targets and build artifacts
-	rm -f $(TARGET)
+	rm -f $(TARGET) $(FLOWTARGET)
 
 .PHONY: clean-data
 clean-data:
@@ -52,11 +53,11 @@ init: ## Initial setup for development
 dist: dist-deps $(TARGET) bower.json ## Prepare JS files for distribution
 	cp $(TARGET) dist/
 	cp LICENSE dist/
-	uglifyjs $(TARGET) -o dist/$(LIB).min.js --source-map dist/$(LIB).min.map --preamble "$$(head -n 1 bits/00_header.js)"
+	uglifyjs $(UGLIFYOPTS) $(TARGET) -o dist/$(LIB).min.js --source-map dist/$(LIB).min.map --preamble "$$(head -n 1 bits/00_header.js)"
 	misc/strip_sourcemap.sh dist/$(LIB).min.js
-	uglifyjs $(REQS) $(TARGET) -o dist/$(LIB).core.min.js --source-map dist/$(LIB).core.min.map --preamble "$$(head -n 1 bits/00_header.js)"
+	uglifyjs $(UGLIFYOPTS) $(REQS) $(TARGET) -o dist/$(LIB).core.min.js --source-map dist/$(LIB).core.min.map --preamble "$$(head -n 1 bits/00_header.js)"
 	misc/strip_sourcemap.sh dist/$(LIB).core.min.js
-	uglifyjs $(REQS) $(ADDONS) $(TARGET) -o dist/$(LIB).full.min.js --source-map dist/$(LIB).full.min.map --preamble "$$(head -n 1 bits/00_header.js)"
+	uglifyjs $(UGLIFYOPTS) $(REQS) $(ADDONS) $(TARGET) -o dist/$(LIB).full.min.js --source-map dist/$(LIB).full.min.map --preamble "$$(head -n 1 bits/00_header.js)"
 	misc/strip_sourcemap.sh dist/$(LIB).full.min.js
 
 .PHONY: dist-deps
@@ -64,11 +65,8 @@ dist-deps: ods.js ## Copy dependencies for distribution
 	cp node_modules/codepage/dist/cpexcel.full.js dist/cpexcel.js
 	cp jszip.js dist/jszip.js
 	cp ods.js dist/ods.js
-	uglifyjs ods.js -o dist/ods.min.js --source-map dist/ods.min.map --preamble "$$(head -n 1 bits/00_header.js)"
+	uglifyjs $(UGLIFYOPTS) ods.js -o dist/ods.min.js --source-map dist/ods.min.map --preamble "$$(head -n 1 bits/00_header.js)"
 	misc/strip_sourcemap.sh dist/ods.min.js
-
-bower.json: misc/_bower.json package.json
-	cat $< | sed 's/_VERSION_/'`grep version package.json | awk '{gsub(/[^0-9a-z\.-]/,"",$$2); print $$2}'`'/' > $@
 
 .PHONY: aux
 aux: $(AUXTARGETS)
@@ -108,7 +106,7 @@ lint: $(TARGET) $(AUXTARGETS) ## Run jshint and jscs checks
 flow: lint ## Run flow checker
 	@flow check --all --show-all-errors
 
-.PHONY: cov cov-spin
+.PHONY: cov
 cov: misc/coverage.html ## Run coverage test
 
 #*                      To run coverage tests for one format, make cov_<fmt>
@@ -120,7 +118,7 @@ $(COVFMT): cov_%:
 misc/coverage.html: $(TARGET) test.js
 	mocha --require blanket -R html-cov -t 20000 > $@
 
-.PHONY: coveralls coveralls-spin
+.PHONY: coveralls
 coveralls: ## Coverage Test + Send to coveralls.io
 	mocha --require blanket --reporter mocha-lcov-reporter -t 20000 | node ./node_modules/coveralls/bin/coveralls.js
 

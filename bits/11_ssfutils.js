@@ -1,5 +1,5 @@
 /* map from xlml named formats to SSF TODO: localize */
-var XLMLFormatMap = {
+var XLMLFormatMap/*{[string]:string}*/ = ({
 	"General Number": "General",
 	"General Date": SSF._table[22],
 	"Long Date": "dddd, mmmm dd, yyyy",
@@ -16,5 +16,5 @@ var XLMLFormatMap = {
 	"Yes/No": '"Yes";"Yes";"No";@',
 	"True/False": '"True";"True";"False";@',
 	"On/Off": '"Yes";"Yes";"No";@'
-};
+}/*:any*/);
 

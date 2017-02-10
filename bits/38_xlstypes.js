@@ -68,7 +68,7 @@ function parse_VtVecHeadingPair(blob) {
 /* [MS-OLEPS] 2.18.1 Dictionary (uses 2.17, 2.16) */
 function parse_dictionary(blob,CodePage) {
 	var cnt = blob.read_shift(4);
-	var dict = {};
+	var dict/*{[number]:string}*/ = ({}/*:any*/);
 	for(var j = 0; j != cnt; ++j) {
 		var pid = blob.read_shift(4);
 		var len = blob.read_shift(4);
@@ -82,7 +82,7 @@ function parse_dictionary(blob,CodePage) {
 function parse_BLOB(blob) {
 	var size = blob.read_shift(4);
 	var bytes = blob.slice(blob.l,blob.l+size);
-	if(size & 3 > 0) blob.l += (4 - (size & 3)) & 3;
+	if((size & 3) > 0) blob.l += (4 - (size & 3)) & 3;
 	return bytes;
 }
 
@@ -149,7 +149,7 @@ function parse_PropertySet(blob, PIDSI) {
 	var NumProps = blob.read_shift(4);
 	var Props = [], i = 0;
 	var CodePage = 0;
-	var Dictionary = -1, DictObj;
+	var Dictionary = -1, DictObj/*{[number]:string}*/ = ({}/*:any*/);
 	for(i = 0; i != NumProps; ++i) {
 		var PropID = blob.read_shift(4);
 		var Offset = blob.read_shift(4);
@@ -240,7 +240,7 @@ function parse_PropertySetStream(file, PIDSI) {
 	var blob = file.content;
 	prep_blob(blob, 0);
 
-	var NumSets, FMTID0, FMTID1, Offset0, Offset1;
+	var NumSets, FMTID0, FMTID1, Offset0, Offset1 = 0;
 	blob.chk('feff', 'Byte Order: ');
 
 	var vers = blob.read_shift(2); // TODO: check version
@@ -254,13 +254,13 @@ function parse_PropertySetStream(file, PIDSI) {
 	else if(NumSets === 2) { FMTID1 = blob.read_shift(16); Offset1 = blob.read_shift(4); }
 	var PSet0 = parse_PropertySet(blob, PIDSI);
 
-	var rval = { SystemIdentifier: SystemIdentifier };
+	var rval = ({ SystemIdentifier: SystemIdentifier }/*:any*/);
 	for(var y in PSet0) rval[y] = PSet0[y];
 	//rval.blob = blob;
 	rval.FMTID = FMTID0;
 	//rval.PSet0 = PSet0;
 	if(NumSets === 1) return rval;
-	if(blob.l !== Offset1) throw "Length mismatch 2: " + blob.l + " !== " + Offset1;
+	if(blob.l !== Offset1) throw new Error("Length mismatch 2: " + blob.l + " !== " + Offset1);
 	var PSet1;
 	try { PSet1 = parse_PropertySet(blob, null); } catch(e) { }
 	for(y in PSet1) rval[y] = PSet1[y];
@@ -323,7 +323,7 @@ function parse_XLUnicodeRichExtendedString(blob) {
 	var cch = blob.read_shift(2), flags = blob.read_shift(1);
 	var fHighByte = flags & 0x1, fExtSt = flags & 0x4, fRichSt = flags & 0x8;
 	var width = 1 + (flags & 0x1); // 0x0 -> utf8, 0x1 -> dbcs
-	var cRun, cbExtRst;
+	var cRun = 0, cbExtRst;
 	var z = {};
 	if(fRichSt) cRun = blob.read_shift(2);
 	if(fExtSt) cbExtRst = blob.read_shift(4);
@@ -354,7 +354,7 @@ function parse_XLUnicodeString(blob, length, opts) {
 }
 /* BIFF5 override */
 function parse_XLUnicodeString2(blob, length, opts) {
-	if(opts.biff !== 5 && opts.biff !== 2) return parse_XLUnicodeString(blob, length, opts);
+	if(opts.biff > 5) return parse_XLUnicodeString(blob, length, opts);
 	var cch = blob.read_shift(1);
 	if(cch === 0) { blob.l++; return ""; }
 	return blob.read_shift(cch, 'sbcs-cont');

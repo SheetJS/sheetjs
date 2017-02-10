@@ -10,7 +10,7 @@ node_js:
   - "0.8"
 before_install:
   - "npm install -g npm@next"
-  - "npm install -g mocha voc"
+  - "npm install -g mocha@2.x voc"
   - "npm install blanket"
   - "npm install xlsjs"
   - "npm install coveralls mocha-lcov-reporter"

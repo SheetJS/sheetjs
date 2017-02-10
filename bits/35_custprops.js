@@ -3,8 +3,8 @@ XMLNS.CUST_PROPS = "http://schemas.openxmlformats.org/officeDocument/2006/custom
 RELS.CUST_PROPS  = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/custom-properties';
 
 var custregex = /<[^>]+>[^<]*/g;
-function parse_cust_props(data, opts) {
-	var p = {}, name;
+function parse_cust_props(data/*:string*/, opts) {
+	var p = {}, name = "";
 	var m = data.match(custregex);
 	if(m) for(var i = 0; i != m.length; ++i) {
 		var x = m[i], y = parsexmltag(x);
@@ -54,7 +54,7 @@ var CUST_PROPS_XML_ROOT = writextag('Properties', null, {
 	'xmlns:vt': XMLNS.vt
 });
 
-function write_cust_props(cp, opts) {
+function write_cust_props(cp, opts)/*:string*/ {
 	var o = [XML_HEADER, CUST_PROPS_XML_ROOT];
 	if(!cp) return o.join("");
 	var pid = 1;

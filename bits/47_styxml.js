@@ -38,7 +38,7 @@ function parse_fills(t, opts) {
 				break;
 			case '<fgColor/>': case '</fgColor>': break;
 
-			default: if(opts.WTF) throw 'unrecognized ' + y[0] + ' in fills';
+			default: if(opts.WTF) throw new Error('unrecognized ' + y[0] + ' in fills');
 		}
 	});
 }
@@ -46,9 +46,10 @@ function parse_fills(t, opts) {
 /* 18.8.31 numFmts CT_NumFmts */
 function parse_numFmts(t, opts) {
 	styles.NumberFmt = [];
-	var k = keys(SSF._table);
+	var k/*Array<number>*/ = (keys(SSF._table)/*:any*/);
 	for(var i=0; i < k.length; ++i) styles.NumberFmt[k[i]] = SSF._table[k[i]];
 	var m = t[0].match(tagregex);
+	if(!m) return;
 	for(i=0; i < m.length; ++i) {
 		var y = parsexmltag(m[i]);
 		switch(y[0]) {
@@ -57,7 +58,7 @@ function parse_numFmts(t, opts) {
 				var f=unescapexml(utf8read(y.formatCode)), j=parseInt(y.numFmtId,10);
 				styles.NumberFmt[j] = f; if(j>0) SSF.load(f,j);
 			} break;
-			default: if(opts.WTF) throw 'unrecognized ' + y[0] + ' in numFmts';
+			default: if(opts.WTF) throw new Error('unrecognized ' + y[0] + ' in numFmts');
 		}
 	}
 }
@@ -101,7 +102,7 @@ function parse_cellXfs(t, opts) {
 	});
 }
 
-function write_cellXfs(cellXfs) {
+function write_cellXfs(cellXfs)/*:string*/ {
 	var o = [];
 	o[o.length] = (writextag('cellXfs',null));
 	cellXfs.forEach(function(c) { o[o.length] = (writextag('xf', null, c)); });
@@ -118,6 +119,7 @@ var cellXfRegex = /<cellXfs([^>]*)>.*<\/cellXfs>/;
 var fillsRegex = /<fills([^>]*)>.*<\/fills>/;
 
 return function parse_sty_xml(data, opts) {
+	if(!data) return styles;
 	/* 18.8.39 styleSheet CT_Stylesheet */
 	var t;
 
@@ -152,7 +154,7 @@ var STYLES_XML_ROOT = writextag('styleSheet', null, {
 
 RELS.STY = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles";
 
-function write_sty_xml(wb, opts) {
+function write_sty_xml(wb/*:Workbook*/, opts)/*:string*/ {
 	var o = [XML_HEADER, STYLES_XML_ROOT], w;
 	if((w = write_numFmts(wb.SSF)) != null) o[o.length] = w;
 	o[o.length] = ('<fonts count="1"><font><sz val="12"/><color theme="1"/><name val="Calibri"/><family val="2"/><scheme val="minor"/></font></fonts>');

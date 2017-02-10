@@ -1,5 +1,6 @@
 /* [MS-XLSB] 2.1.4 Record */
-function recordhopper(data, cb, opts) {
+function recordhopper(data, cb/*:RecordHopperCB*/, opts/*:?any*/) {
+	if(!data) return;
 	var tmpbyte, cntbyte, length;
 	prep_blob(data, data.l || 0);
 	while(data.l < data.length) {
@@ -15,7 +16,7 @@ function recordhopper(data, cb, opts) {
 }
 
 /* control buffer usage for fixed-length buffers */
-function buf_array() {
+function buf_array()/*:BufArray*/ {
 	var bufs = [], blksz = 2048;
 	var newblk = function ba_newblk(sz) {
 		var o = new_buf(sz);
@@ -26,13 +27,14 @@ function buf_array() {
 	var curbuf = newblk(blksz);
 
 	var endbuf = function ba_endbuf() {
+		if(!curbuf) return;
 		if(curbuf.length > curbuf.l) curbuf = curbuf.slice(0, curbuf.l);
 		if(curbuf.length > 0) bufs.push(curbuf);
 		curbuf = null;
 	};
 
 	var next = function ba_next(sz) {
-		if(sz < curbuf.length - curbuf.l) return curbuf;
+		if(curbuf && sz < curbuf.length - curbuf.l) return curbuf;
 		endbuf();
 		return (curbuf = newblk(Math.max(sz+1, blksz)));
 	};
@@ -44,11 +46,12 @@ function buf_array() {
 
 	var push = function ba_push(buf) { endbuf(); curbuf = buf; next(blksz); };
 
-	return { next:next, push:push, end:end, _bufs:bufs };
+	return ({ next:next, push:push, end:end, _bufs:bufs }/*:any*/);
 }
 
 function write_record(ba/*:BufArray*/, type/*:string*/, payload, length/*:?number*/) {
-	var t = evert_RE[type], l;
+	var t/*:number*/ = Number(evert_RE[type]), l;
+	if(isNaN(t)) return; // TODO: throw something here?
 	if(!length) length = XLSBRecordEnum[t].p || (payload||[]).length || 0;
 	l = 1 + (t >= 0x80 ? 1 : 0) + 1 + length;
 	if(length >= 0x80) ++l; if(length >= 0x4000) ++l; if(length >= 0x200000) ++l;

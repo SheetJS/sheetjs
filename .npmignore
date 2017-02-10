@@ -10,6 +10,7 @@ tmp
 *.prn
 *.slk
 *.socialcalc
+*.XLS
 *.xls
 *.xlsb
 *.xlsm
@@ -32,6 +33,7 @@ test.js
 .gitmodules
 .travis.yml
 .flowconfig
+*.flow.js
 bits/
 odsbits/
 tests/

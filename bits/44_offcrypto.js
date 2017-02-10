@@ -1,14 +1,19 @@
-function _JS2ANSI(str) { if(typeof cptable !== 'undefined') return cptable.utils.encode(1252, str); return str.split("").map(function(x) { return x.charCodeAt(0); }); }
+function _JS2ANSI(str/*:string*/)/*:Array<number>*/ {
+	if(typeof cptable !== 'undefined') return cptable.utils.encode(1252, str);
+	var o = [], oo = str.split("");
+	for(var i = 0; i < oo.length; ++i) o[i] = oo[i].charCodeAt(0);
+	return o;
+}
 
 /* [MS-OFFCRYPTO] 2.1.4 Version */
-function parse_Version(blob, length) {
+function parse_Version(blob, length/*:number*/) {
 	var o = {};
 	o.Major = blob.read_shift(2);
 	o.Minor = blob.read_shift(2);
 	return o;
 }
 /* [MS-OFFCRYPTO] 2.3.2 Encryption Header */
-function parse_EncryptionHeader(blob, length) {
+function parse_EncryptionHeader(blob, length/*:number*/) {
 	var o = {};
 	o.Flags = blob.read_shift(4);
 
@@ -26,11 +31,11 @@ function parse_EncryptionHeader(blob, length) {
 }
 
 /* [MS-OFFCRYPTO] 2.3.3 Encryption Verifier */
-function parse_EncryptionVerifier(blob, length) {
+function parse_EncryptionVerifier(blob, length/*:number*/) {
 	return parsenoop(blob, length);
 }
 /* [MS-OFFCRYPTO] 2.3.5.1 RC4 CryptoAPI Encryption Header */
-function parse_RC4CryptoHeader(blob, length) {
+function parse_RC4CryptoHeader(blob, length/*:number*/) {
 	var o = {};
 	var vers = o.EncryptionVersionInfo = parse_Version(blob, 4); length -= 4;
 	if(vers.Minor != 2) throw 'unrecognized minor version code: ' + vers.Minor;
@@ -42,7 +47,7 @@ function parse_RC4CryptoHeader(blob, length) {
 	return o;
 }
 /* [MS-OFFCRYPTO] 2.3.6.1 RC4 Encryption Header */
-function parse_RC4Header(blob, length) {
+function parse_RC4Header(blob, length/*:number*/) {
 	var o = {};
 	var vers = o.EncryptionVersionInfo = parse_Version(blob, 4); length -= 4;
 	if(vers.Major != 1 || vers.Minor != 1) throw 'unrecognized version code ' + vers.Major + ' : ' + vers.Minor;
@@ -53,7 +58,7 @@ function parse_RC4Header(blob, length) {
 }
 
 /* [MS-OFFCRYPTO] 2.3.7.1 Binary Document Password Verifier Derivation */
-function crypto_CreatePasswordVerifier_Method1(Password) {
+function crypto_CreatePasswordVerifier_Method1(Password/*:string*/) {
 	var Verifier = 0x0000, PasswordArray;
 	var PasswordDecoded = _JS2ANSI(Password);
 	var len = PasswordDecoded.length + 1, i, PasswordByte;
@@ -90,7 +95,7 @@ var crypto_CreateXorArray_Method1 = (function() {
 		}
 		return XorKey;
 	};
-	return function(password) {
+	return function(password/*:string*/) {
 		var Password = _JS2ANSI(password);
 		var XorKey = CreateXorKey_Method1(Password);
 		var Index = Password.length;
@@ -130,7 +135,7 @@ var crypto_CreateXorArray_Method1 = (function() {
 })();
 
 /* [MS-OFFCRYPTO] 2.3.7.3 Binary Document XOR Data Transformation Method 1 */
-var crypto_DecryptData_Method1 = function(password, Data, XorArrayIndex, XorArray, O) {
+var crypto_DecryptData_Method1 = function(password/*:string*/, Data, XorArrayIndex, XorArray, O) {
 	/* If XorArray is set, use it; if O is not set, make changes in-place */
 	if(!O) O = Data;
 	if(!XorArray) XorArray = crypto_CreateXorArray_Method1(password);
@@ -145,10 +150,10 @@ var crypto_DecryptData_Method1 = function(password, Data, XorArrayIndex, XorArra
 	return [O, XorArrayIndex, XorArray];
 };
 
-var crypto_MakeXorDecryptor = function(password) {
+var crypto_MakeXorDecryptor = function(password/*:string*/) {
 	var XorArrayIndex = 0, XorArray = crypto_CreateXorArray_Method1(password);
 	return function(Data) {
-		var O = crypto_DecryptData_Method1(null, Data, XorArrayIndex, XorArray);
+		var O = crypto_DecryptData_Method1("", Data, XorArrayIndex, XorArray);
 		XorArrayIndex = O[1];
 		return O[0];
 	};
@@ -156,7 +161,7 @@ var crypto_MakeXorDecryptor = function(password) {
 
 /* 2.5.343 */
 function parse_XORObfuscation(blob, length, opts, out) {
-	var o = { key: parseuint16(blob), verificationBytes: parseuint16(blob) };
+	var o = ({ key: parseuint16(blob), verificationBytes: parseuint16(blob) }/*:any*/);
 	if(opts.password) o.verifier = crypto_CreatePasswordVerifier_Method1(opts.password);
 	out.valid = o.verificationBytes === o.verifier;
 	if(out.valid) out.insitu_decrypt = crypto_MakeXorDecryptor(opts.password);
@@ -164,13 +169,13 @@ function parse_XORObfuscation(blob, length, opts, out) {
 }
 
 /* 2.4.117 */
-function parse_FilePassHeader(blob, length, oo) {
+function parse_FilePassHeader(blob, length/*:number*/, oo) {
 	var o = oo || {}; o.Info = blob.read_shift(2); blob.l -= 2;
 	if(o.Info === 1) o.Data = parse_RC4Header(blob, length);
 	else o.Data = parse_RC4CryptoHeader(blob, length);
 	return o;
 }
-function parse_FilePass(blob, length, opts) {
+function parse_FilePass(blob, length/*:number*/, opts) {
 	var o = { Type: blob.read_shift(2) }; /* wEncryptionType */
 	if(o.Type) parse_FilePassHeader(blob, length-2, o);
 	else parse_XORObfuscation(blob, length-2, opts, o);

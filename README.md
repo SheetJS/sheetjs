@@ -6,16 +6,18 @@ implementation from official specifications and related documents.
 Supported read formats:
 
 - Excel 2007+ XML Formats (XLSX/XLSM)
-- Excel 2007+ Binary Format (XLSB)
+- Excel 2007+ Binary Format (XLSB BIFF12)
 - Excel 2003-2004 XML Format (XML "SpreadsheetML")
 - Excel 97-2004 (XLS BIFF8)
 - Excel 5.0/95 (XLS BIFF5)
+- Excel 2.0/3.0/4.0 (XLS BIFF2/BIFF3/BIFF4)
 - OpenDocument Spreadsheet (ODS)
 
 Supported write formats:
 
-- Excel 2007+ XML Formats (XLSX/XLSM)
-- Excel 2007+ Binary Format (XLSB) nodejs only
+- Excel 2.0 (XLS BIFF2, compatible with *every version* of Excel)
+- Excel 2007+ XML Formats (XLSX/XLSM, compatible with Excel 2007+)
+- Excel 2007+ Binary Format (XLSB, compatible with Excel 2007+)
 - CSV (and general DSV)
 - JSON and JS objects (various styles)
 - OpenDocument Spreadsheet (ODS)
@@ -25,6 +27,7 @@ Demo: <http://oss.sheetjs.com/js-xlsx>
 Source: <http://git.io/xlsx>
 
 Paid support available through the [reinforcements program](http://sheetjs.com/reinforcements)
+
 
 ## Installation
 
@@ -198,11 +201,6 @@ function handleFile(e) {
 input_dom_element.addEventListener('change', handleFile, false);
 ```
 
-The readAsArrayBuffer form requires some preprocessing:
-
-```js
-```
-
 ## Working with the Workbook
 
 The full object format is described later in this README.
@@ -277,10 +275,11 @@ XLSX.writeFile(workbook, 'out.xlsx');
 /* at this point, out.xlsx is a file that you can distribute */
 ```
 
-- write to binary string (using FileSaver.js):
+- browser generate binary blob and "download" to client
+  (using [FileSaver.js](https://github.com/eligrey/FileSaver.js/) for download):
 
 ```js
-/* bookType can be 'xlsx' or 'xlsm' or 'xlsb' */
+/* bookType can be 'xlsx' or 'xlsm' or 'xlsb' or 'ods' */
 var wopts = { bookType:'xlsx', bookSST:false, type:'binary' };
 
 var wbout = XLSX.write(workbook,wopts);
@@ -508,28 +507,43 @@ The defaults are enumerated in bits/84\_defaults.js
 
 The exported `write` and `writeFile` functions accept an options argument:
 
-| Option Name | Default | Description                                          |
-| :---------- | ------: | :--------------------------------------------------- |
-| cellDates   | `false` | Store dates as type `d` (default is `n`)             |
-| bookSST     | `false` | Generate Shared String Table **                      |
-| bookType    | 'xlsx'  | Type of Workbook ("xlsx" or "xlsm" or "xlsb")        |
-| compression | `false` | Use file compression for formats with ZIP containers |
+| Option Name |  Default | Description                                         |
+| :---------- | -------: | :-------------------------------------------------- |
+| cellDates   |  `false` | Store dates as type `d` (default is `n`)            |
+| bookSST     |  `false` | Generate Shared String Table **                     |
+| bookType    | `"xlsx"` | Type of Workbook (see below for supported formats)  |
+| sheet       |     `""` | Name of Worksheet for single-sheet formats **       |
+| compression |  `false` | Use ZIP compression for ZIP-based formats **        |
 
 - `bookSST` is slower and more memory intensive, but has better compatibility
   with older versions of iOS Numbers
-- `bookType = 'xlsb'` is stubbed and far from complete
 - The raw data is the only thing guaranteed to be saved.  Formulae, formatting,
   and other niceties may not be serialized (pending CSF standardization)
 - `cellDates` only applies to XLSX output and is not guaranteed to work with
   third-party readers.  Excel itself does not usually write cells with type `d`
   so non-Excel tools may ignore the data or blow up in the presence of dates.
 
+Supported output formats (`bookType`):
+
+| bookType | file ext | container | sheets | Description                  |
+| :------- | -------: | :-------: | :----- |:---------------------------- |
+| `xlsx`   | `.xlsx`  |    ZIP    | multi  | Excel 2007+ XML Format       |
+| `xlsm`   | `.xlsm`  |    ZIP    | multi  | Excel 2007+ Macro XML Format |
+| `xlsb`   | `.xlsb`  |    ZIP    | multi  | Excel 2007+ Binary Format    |
+| `ods`    | `.ods`   |    ZIP    | multi  | OpenDocument Spreadsheet     |
+| `biff2`  | `.xls`   |   none    | single | Excel 2.0 Worksheet format   |
+
+- `compression` only applies to formats with ZIP containers.
+- Formats that only support a single sheet require a `sheet` option specifying
+  the worksheet.  If the string is empty, the first worksheet is used.
+
 ## Tested Environments
 
  - NodeJS 0.8, 0.9, 0.10, 0.11, 0.12, 4.x, 5.x, 6.x, 7.x
- - IE 6/7/8/9/10/11 using Base64 mode (IE10/11 using HTML5 mode)
- - FF 18 using Base64 or HTML5 mode
- - Chrome 24 using Base64 or HTML5 mode
+ - IE 6/7/8/9/10/11 (IE6-9 browsers require shims for interacting with client)
+ - Chrome 24+
+ - Safari 6+
+ - FF 18+
 
 Tests utilize the mocha testing framework.  Travis-CI and Sauce Labs links:
 

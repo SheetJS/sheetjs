@@ -2,19 +2,20 @@ function parse_ws_xml_dim(ws, s) {
 	var d = safe_decode_range(s);
 	if(d.s.r<=d.e.r && d.s.c<=d.e.c && d.s.r>=0 && d.s.c>=0) ws["!ref"] = encode_range(d);
 }
-var mergecregex = /<mergeCell ref="[A-Z0-9:]+"\s*\/>/g;
+var mergecregex = /<(?:\w:)?mergeCell ref="[A-Z0-9:]+"\s*\/>/g;
 var sheetdataregex = /<(?:\w+:)?sheetData>([^\u2603]*)<\/(?:\w+:)?sheetData>/;
-var hlinkregex = /<hyperlink[^>]*\/>/g;
+var hlinkregex = /<(?:\w*:)?hyperlink[^>]*\/>/g;
 var dimregex = /"(\w*:\w*)"/;
-var colregex = /<col[^>]*\/>/g;
+var colregex = /<(?:\w*:)?col[^>]*\/>/g;
 /* 18.3 Worksheets */
-function parse_ws_xml(data, opts, rels) {
+function parse_ws_xml(data/*:?string*/, opts, rels) {
 	if(!data) return data;
 	/* 18.3.1.99 worksheet CT_Worksheet */
 	var s = {};
 
 	/* 18.3.1.35 dimension CT_SheetDimension ? */
-	var ridx = data.indexOf("<dimension");
+	// $FlowIgnore
+	var ridx = (data.match(/<(?:\w*:)?dimension/)||{index:-1}).index;
 	if(ridx > 0) {
 		var ref = data.substr(ridx,50).match(dimregex);
 		if(ref != null) parse_ws_xml_dim(s, ref[1]);
@@ -22,28 +23,27 @@ function parse_ws_xml(data, opts, rels) {
 
 	/* 18.3.1.55 mergeCells CT_MergeCells */
 	var mergecells = [];
-	if(data.indexOf("</mergeCells>")!==-1) {
-		var merges = data.match(mergecregex);
-		if(merges) for(ridx = 0; ridx != merges.length; ++ridx)
-			mergecells[ridx] = safe_decode_range(merges[ridx].substr(merges[ridx].indexOf("\"")+1));
-	}
+	var merges = data.match(mergecregex);
+	if(merges) for(ridx = 0; ridx != merges.length; ++ridx)
+		mergecells[ridx] = safe_decode_range(merges[ridx].substr(merges[ridx].indexOf("\"")+1));
 
 	/* 18.3.1.17 cols CT_Cols */
 	var columns = [];
-	if(opts.cellStyles && data.indexOf("</cols>")!==-1) {
+	if(opts.cellStyles) {
 		/* 18.3.1.13 col CT_Col */
 		var cols = data.match(colregex);
-		parse_ws_xml_cols(columns, cols);
+		if(cols) parse_ws_xml_cols(columns, cols);
 	}
 
-	var refguess = {s: {r:2000000, c:2000000}, e: {r:0, c:0} };
+	var refguess/*:Range*/ = ({s: {r:2000000, c:2000000}, e: {r:0, c:0} }/*:any*/);
 
 	/* 18.3.1.80 sheetData CT_SheetData ? */
 	var mtch=data.match(sheetdataregex);
 	if(mtch) parse_ws_xml_data(mtch[1], s, opts, refguess);
 
 	/* 18.3.1.48 hyperlinks CT_Hyperlinks */
-	if(data.indexOf("</hyperlinks>")!==-1) parse_ws_xml_hlinks(s, data.match(hlinkregex), rels);
+	var hlink = data.match(hlinkregex);
+	if(hlink) parse_ws_xml_hlinks(s, hlink, rels);
 
 	if(!s["!ref"] && refguess.e.c >= refguess.s.c && refguess.e.r >= refguess.s.r) s["!ref"] = encode_range(refguess);
 	if(opts.sheetRows > 0 && s["!ref"]) {
@@ -109,11 +109,11 @@ function parse_ws_xml_cols(columns, cols) {
 	}
 }
 
-function write_ws_xml_cols(ws, cols) {
+function write_ws_xml_cols(ws, cols)/*:string*/ {
 	var o = ["<cols>"], col, width;
 	for(var i = 0; i != cols.length; ++i) {
 		if(!(col = cols[i])) continue;
-		var p = {min:i+1,max:i+1};
+		var p = ({min:i+1,max:i+1}/*:any*/);
 		/* wch (chars), wpx (pixels) */
 		width = -1;
 		if(col.wpx) width = px2char(col.wpx);
@@ -143,7 +143,7 @@ function write_ws_xml_cell(cell, ref, ws, opts, idx, wb) {
 			break;
 		default: vv = cell.v; break;
 	}
-	var v = writetag('v', escapexml(vv)), o = {r:ref};
+	var v = writetag('v', escapexml(vv)), o = ({r:ref}/*:any*/);
 	/* TODO: cell style */
 	var os = get_cell_style(opts.cellXfs, cell, opts);
 	if(os !== 0) o.s = os;
@@ -165,11 +165,11 @@ function write_ws_xml_cell(cell, ref, ws, opts, idx, wb) {
 
 var parse_ws_xml_data = (function parse_ws_xml_data_factory() {
 	var cellregex = /<(?:\w+:)?c[ >]/, rowregex = /<\/(?:\w+:)?row>/;
-	var rregex = /r=["']([^"']*)["']/, isregex = /<is>([\S\s]*?)<\/is>/;
+	var rregex = /r=["']([^"']*)["']/, isregex = /<(?:\w+:)?is>([\S\s]*?)<\/(?:\w+:)?is>/;
 	var match_v = matchtag("v"), match_f = matchtag("f");
 
 return function parse_ws_xml_data(sdata, s, opts, guess) {
-	var ri = 0, x = "", cells = [], cref = [], idx = 0, i=0, cc=0, d="", p;
+	var ri = 0, x = "", cells = [], cref = [], idx = 0, i=0, cc=0, d="", p/*:any*/;
 	var tag, tagr = 0, tagc = 0;
 	var sstr;
 	var fmtid = 0, fillid = 0, do_format = Array.isArray(styles.CellXf), cf;
@@ -194,7 +194,7 @@ return function parse_ws_xml_data(sdata, s, opts, guess) {
 			if(x.length === 0) continue;
 			cref = x.match(rregex); idx = ri; i=0; cc=0;
 			x = "<c " + (x.substr(0,1)=="<"?">":"") + x;
-			if(cref !== null && cref.length === 2) {
+			if(cref != null && cref.length === 2) {
 				idx = 0; d=cref[1];
 				for(i=0; i != d.length; ++i) {
 					if((cc=d.charCodeAt(i)-64) < 1 || cc > 26) break;
@@ -207,10 +207,12 @@ return function parse_ws_xml_data(sdata, s, opts, guess) {
 			tag = parsexmltag(x.substr(0,i), true);
 			if(!tag.r) tag.r = utils.encode_cell({r:tagr-1, c:tagc});
 			d = x.substr(i);
-			p = {t:""};
+			p = ({t:""}/*:any*/);
 
-			if((cref=d.match(match_v))!== null && cref[1] !== '') p.v=unescapexml(cref[1]);
-			if(opts.cellFormula && (cref=d.match(match_f))!== null) p.f=unescapexml(cref[1]);
+			// $FlowIgnore
+			if((cref=d.match(match_v))!= null && cref[1] !== '') p.v=unescapexml(cref[1]);
+			// $FlowIgnore
+			if(opts.cellFormula && (cref=d.match(match_f))!= null && cref[1] !== '') p.f=unescapexml(cref[1]);
 
 			/* SCHEMA IS ACTUALLY INCORRECT HERE.  IF A CELL HAS NO T, EMIT "" */
 			if(tag.t === undefined && p.v === undefined) {
@@ -237,7 +239,7 @@ return function parse_ws_xml_data(sdata, s, opts, guess) {
 				case 'inlineStr':
 					cref = d.match(isregex);
 					p.t = 's';
-					if(cref !== null) { sstr = parse_si(cref[1]); p.v = sstr.t; } else p.v = "";
+					if(cref != null) { if((sstr = parse_si(cref[1]))) p.v = sstr.t; } else p.v = "";
 					break; // inline string
 				case 'b': p.v = parsexmlbool(p.v); break;
 				case 'd':
@@ -261,8 +263,8 @@ return function parse_ws_xml_data(sdata, s, opts, guess) {
 	}
 }; })();
 
-function write_ws_xml_data(ws, opts, idx, wb) {
-	var o = [], r = [], range = safe_decode_range(ws['!ref']), cell, ref, rr = "", cols = [], R, C;
+function write_ws_xml_data(ws/*:Worksheet*/, opts, idx/*:number*/, wb/*:Workbook*/)/*:string*/ {
+	var o = [], r = [], range = safe_decode_range(ws['!ref']), cell, ref, rr = "", cols = [], R=0, C=0;
 	for(C = range.s.c; C <= range.e.c; ++C) cols[C] = encode_col(C);
 	for(R = range.s.r; R <= range.e.r; ++R) {
 		r = [];
@@ -282,7 +284,7 @@ var WS_XML_ROOT = writextag('worksheet', null, {
 	'xmlns:r': XMLNS.r
 });
 
-function write_ws_xml(idx/*:number*/, opts, wb)/*:string*/ {
+function write_ws_xml(idx/*:number*/, opts, wb/*:Workbook*/)/*:string*/ {
 	var o = [XML_HEADER, WS_XML_ROOT];
 	var s = wb.SheetNames[idx], sidx = 0, rdata = "";
 	var ws = wb.Sheets[s];

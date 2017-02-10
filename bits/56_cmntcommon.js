@@ -34,7 +34,7 @@ function insertCommentsIntoSheet(sheetName, sheet, comments) {
 		}
 
 		if (!cell.c) cell.c = [];
-		var o = {a: comment.author, t: comment.t, r: comment.r};
+		var o = ({a: comment.author, t: comment.t, r: comment.r}/*:any*/);
 		if(comment.h) o.h = comment.h;
 		cell.c.push(o);
 	});

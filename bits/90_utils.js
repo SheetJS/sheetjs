@@ -1,26 +1,26 @@
-function decode_row(rowstr) { return parseInt(unfix_row(rowstr),10) - 1; }
-function encode_row(row) { return "" + (row + 1); }
-function fix_row(cstr) { return cstr.replace(/([A-Z]|^)(\d+)$/,"$1$$$2"); }
-function unfix_row(cstr) { return cstr.replace(/\$(\d+)$/,"$1"); }
+function decode_row(rowstr/*:string*/)/*:number*/ { return parseInt(unfix_row(rowstr),10) - 1; }
+function encode_row(row/*:number*/)/*:string*/ { return "" + (row + 1); }
+function fix_row(cstr/*:string*/)/*:string*/ { return cstr.replace(/([A-Z]|^)(\d+)$/,"$1$$$2"); }
+function unfix_row(cstr/*:string*/)/*:string*/ { return cstr.replace(/\$(\d+)$/,"$1"); }
 
-function decode_col(colstr) { var c = unfix_col(colstr), d = 0, i = 0; for(; i !== c.length; ++i) d = 26*d + c.charCodeAt(i) - 64; return d - 1; }
-function encode_col(col) { var s=""; for(++col; col; col=Math.floor((col-1)/26)) s = String.fromCharCode(((col-1)%26) + 65) + s; return s; }
-function fix_col(cstr) { return cstr.replace(/^([A-Z])/,"$$$1"); }
-function unfix_col(cstr) { return cstr.replace(/^\$([A-Z])/,"$1"); }
+function decode_col(colstr/*:string*/)/*:number*/ { var c = unfix_col(colstr), d = 0, i = 0; for(; i !== c.length; ++i) d = 26*d + c.charCodeAt(i) - 64; return d - 1; }
+function encode_col(col/*:number*/)/*:string*/ { var s=""; for(++col; col; col=Math.floor((col-1)/26)) s = String.fromCharCode(((col-1)%26) + 65) + s; return s; }
+function fix_col(cstr/*:string*/)/*:string*/ { return cstr.replace(/^([A-Z])/,"$$$1"); }
+function unfix_col(cstr/*:string*/)/*:string*/ { return cstr.replace(/^\$([A-Z])/,"$1"); }
 
-function split_cell(cstr) { return cstr.replace(/(\$?[A-Z]*)(\$?\d*)/,"$1,$2").split(","); }
-function decode_cell(cstr) { var splt = split_cell(cstr); return { c:decode_col(splt[0]), r:decode_row(splt[1]) }; }
-function encode_cell(cell) { return encode_col(cell.c) + encode_row(cell.r); }
-function fix_cell(cstr) { return fix_col(fix_row(cstr)); }
-function unfix_cell(cstr) { return unfix_col(unfix_row(cstr)); }
-function decode_range(range) { var x =range.split(":").map(decode_cell); return {s:x[0],e:x[x.length-1]}; }
-function encode_range(cs,ce) {
+function split_cell(cstr/*:string*/)/*:Array<string>*/ { return cstr.replace(/(\$?[A-Z]*)(\$?\d*)/,"$1,$2").split(","); }
+function decode_cell(cstr/*:string*/)/*:CellAddress*/ { var splt = split_cell(cstr); return { c:decode_col(splt[0]), r:decode_row(splt[1]) }; }
+function encode_cell(cell/*:Cell*/)/*:string*/ { return encode_col(cell.c) + encode_row(cell.r); }
+function fix_cell(cstr/*:string*/)/*:string*/ { return fix_col(fix_row(cstr)); }
+function unfix_cell(cstr/*:string*/)/*:string*/ { return unfix_col(unfix_row(cstr)); }
+function decode_range(range/*:string*/)/*:Range*/ { var x =range.split(":").map(decode_cell); return {s:x[0],e:x[x.length-1]}; }
+function encode_range(cs/*:any*/,ce/*:?any*/)/*:string*/ {
 	if(ce === undefined || typeof ce === 'number') return encode_range(cs.s, cs.e);
 	if(typeof cs !== 'string') cs = encode_cell(cs); if(typeof ce !== 'string') ce = encode_cell(ce);
 	return cs == ce ? cs : cs + ":" + ce;
 }
 
-function safe_decode_range(range) {
+function safe_decode_range(range/*:string*/)/*:Range*/ {
 	var o = {s:{c:0,r:0},e:{c:0,r:0}};
 	var idx = 0, i = 0, cc = 0;
 	var len = range.length;
@@ -52,20 +52,20 @@ function safe_decode_range(range) {
 	return o;
 }
 
-function safe_format_cell(cell, v) {
+function safe_format_cell(cell/*:Cell*/, v/*:any*/) {
 	if(cell.z !== undefined) try { return (cell.w = SSF.format(cell.z, v)); } catch(e) { }
 	if(!cell.XF) return v;
 	try { return (cell.w = SSF.format(cell.XF.ifmt||0, v)); } catch(e) { return ''+v; }
 }
 
-function format_cell(cell, v) {
+function format_cell(cell/*:Cell*/, v/*:any*/) {
 	if(cell == null || cell.t == null) return "";
 	if(cell.w !== undefined) return cell.w;
 	if(v === undefined) return safe_format_cell(cell, cell.v);
 	return safe_format_cell(cell, v);
 }
 
-function sheet_to_json(sheet, opts){
+function sheet_to_json(sheet/*:Worksheet*/, opts/*:?Sheet2JSONOpts*/){
 	var val, row, range, header = 0, offset = 1, r, hdr = [], isempty, R, C, v;
 	var o = opts != null ? opts : {};
 	var raw = o.raw;
@@ -127,9 +127,9 @@ function sheet_to_json(sheet, opts){
 	return out;
 }
 
-function sheet_to_row_object_array(sheet, opts) { return sheet_to_json(sheet, opts != null ? opts : {}); }
+function sheet_to_row_object_array(sheet/*:Worksheet*/, opts/*:?Sheet2JSONOpts*/) { return sheet_to_json(sheet, opts != null ? opts : {}); }
 
-function sheet_to_csv(sheet, opts) {
+function sheet_to_csv(sheet/*:Worksheet*/, opts/*:?Sheet2CSVOpts*/) {
 	var out = "", txt = "", qreg = /"/g;
 	var o = opts == null ? {} : opts;
 	if(sheet == null || sheet["!ref"] == null) return "";
@@ -156,7 +156,7 @@ function sheet_to_csv(sheet, opts) {
 }
 var make_csv = sheet_to_csv;
 
-function sheet_to_formulae(sheet) {
+function sheet_to_formulae(sheet/*:Worksheet*/) {
 	var cmds, y = "", x, val="";
 	if(sheet == null || sheet["!ref"] == null) return "";
 	var r = safe_decode_range(sheet['!ref']), rr = "", cols = [], C;

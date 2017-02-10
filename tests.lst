@@ -25,7 +25,7 @@ text_and_numbers.xlsb
 xlsx-stream-d-date-cell.xlsb
 2013/apachepoi_29982.xls.xlsb
 2013/apachepoi_43251.xls.xlsb
-#2013/apachepoi_44593.xls.xlsb ## xlsb loop timeout
+2013/apachepoi_44593.xls.xlsb ## xlsb loop timeout
 2013/apachepoi_44643.xls.xlsb
 2013/apachepoi_44958.xls.xlsb
 2013/apachepoi_46136-NoWarnings.xls.xlsb
@@ -344,7 +344,7 @@ formula_stress_test.ods
 merge_cells.ods
 number_format.ods
 rich_text_stress.ods
-# roo_Bibelbund.ods ## timeout
+roo_Bibelbund.ods
 roo_Bibelbund1.ods
 roo_bbu.ods
 roo_boolean.ods
@@ -475,7 +475,7 @@ apachepoi_44200.xls
 apachepoi_44201.xls
 apachepoi_44235.xls
 apachepoi_44297.xls
-# apachepoi_44593.xls ## xlsb loop timeout
+apachepoi_44593.xls ## xlsb loop timeout
 apachepoi_44636.xls
 apachepoi_44643.xls
 apachepoi_44693.xls
@@ -615,12 +615,12 @@ apachepoi_PercentPtg.xls
 apachepoi_QuotientFunctionTestCaseData.xls
 apachepoi_RangePtg.xls
 apachepoi_ReadOnlyRecommended.xls
-# apachepoi_ReferencePtg.xls ## xlsb loop timeout
+apachepoi_ReferencePtg.xls ## xlsb loop timeout
 apachepoi_RepeatingRowsCols.xls
 apachepoi_ReptFunctionTestCaseData.xls
 apachepoi_RomanFunctionTestCaseData.xls
 apachepoi_SampleSS.xls
-# apachepoi_SharedFormulaTest.xls ## xlsb loop timeout
+apachepoi_SharedFormulaTest.xls ## xlsb loop timeout
 apachepoi_SheetWithDrawing.xls
 apachepoi_ShrinkToFit.xls
 apachepoi_Simple.xls
@@ -899,7 +899,7 @@ libreoffice_calc_xls-import_pivot-dup-data-fields.xls
 libreoffice_calc_xls-import_pivot-layout-field-non-default.xls
 libreoffice_calc_xls-import_row-attributes_row-all-hidden.xls
 libreoffice_calc_xls-import_row-attributes_row-filtered.xls
-# libreoffice_calc_xls-import_row-attributes_row-heights.xls ## xlsb loop timeout
+libreoffice_calc_xls-import_row-attributes_row-heights.xls ## xlsb loop timeout
 libreoffice_calc_xls-import_row-attributes_row-tail-hidden-2.xls
 libreoffice_calc_xls-import_row-attributes_row-tail-hidden-last-row-visible.xls
 libreoffice_calc_xls-import_row-attributes_row-tail-hidden.xls

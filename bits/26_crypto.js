@@ -25,11 +25,10 @@ var make_offcrypto = function(O, _crypto) {
 		return out;
 	};
 
-	if(crypto) {
-		O.md5 = function(hex) { return crypto.createHash('md5').update(hex).digest('hex'); };
-	} else {
-		O.md5 = function(hex) { throw "unimplemented"; };
-	}
+	O.md5 = function(hex) {
+		if(!crypto) throw new Error("Unsupported crypto");
+		return crypto.createHash('md5').update(hex).digest('hex');
+	};
 };
 make_offcrypto(OFFCRYPTO, typeof crypto !== "undefined" ? crypto : undefined);
 

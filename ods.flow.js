@@ -17,13 +17,13 @@ var get_utils = function() {
 };
 var has_buf = (typeof Buffer !== 'undefined');
 
-function cc2str(arr) {
+function cc2str(arr)/*:string*/ {
 	var o = "";
 	for(var i = 0; i != arr.length; ++i) o += String.fromCharCode(arr[i]);
 	return o;
 }
 
-function dup(o/*:object*/)/*:object*/ {
+function dup(o/*:any*/)/*:any*/ {
 	if(typeof JSON != 'undefined') return JSON.parse(JSON.stringify(o));
 	if(typeof o != 'object' || !o) return o;
 	var out = {};
@@ -63,8 +63,7 @@ var _fs, jszip;
 if(typeof JSZip !== 'undefined') jszip = JSZip;
 if (typeof exports !== 'undefined') {
 	if (typeof module !== 'undefined' && module.exports) {
-		if(has_buf && typeof jszip === 'undefined') jszip = require('js'+'zip');
-		if(typeof jszip === 'undefined') jszip = require('./js'+'zip').JSZip;
+		if(typeof jszip === 'undefined') jszip = require('./js'+'zip');
 		_fs = require('f'+'s');
 	}
 }

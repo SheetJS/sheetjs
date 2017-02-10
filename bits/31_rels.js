@@ -1,10 +1,10 @@
 /* 9.3.2 OPC Relationships Markup */
-var RELS = {
+var RELS = ({
 	WB: "http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument",
 	SHEET: "http://sheetjs.openxmlformats.org/officeDocument/2006/relationships/officeDocument"
-};
+}/*:any*/);
 
-function parse_rels(data, currentFilePath) {
+function parse_rels(data/*:?string*/, currentFilePath/*:string*/) {
 	if (!data) return data;
 	if (currentFilePath.charAt(0) !== '/') {
 		currentFilePath = '/'+currentFilePath;
@@ -27,7 +27,7 @@ function parse_rels(data, currentFilePath) {
 		return toksFrom.join('/');
 	};
 
-	data.match(tagregex).forEach(function(x) {
+	(data.match(tagregex)||[]).forEach(function(x) {
 		var y = parsexmltag(x);
 		/* 9.3.2.2 OPC_Relationships */
 		if (y[0] === '<Relationship') {
@@ -49,7 +49,7 @@ var RELS_ROOT = writextag('Relationships', null, {
 });
 
 /* TODO */
-function write_rels(rels) {
+function write_rels(rels)/*:string*/ {
 	var o = [];
 	o[o.length] = (XML_HEADER);
 	o[o.length] = (RELS_ROOT);

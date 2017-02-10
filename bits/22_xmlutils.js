@@ -1,8 +1,8 @@
 var attregexg=/([\w:]+)=((?:")([^"]*)(?:")|(?:')([^']*)(?:'))/g;
 var tagregex=/<[^>]*>/g;
 var nsregex=/<\w*:/, nsregex2 = /<(\/?)\w+:/;
-function parsexmltag(tag, skip_root) {
-	var z = [];
+function parsexmltag(tag/*:string*/, skip_root/*:?boolean*/)/*:any*/ {
+	var z = ([]/*:any*/);
 	var eq = 0, c = 0;
 	for(; eq !== tag.length; ++eq) if((c = tag.charCodeAt(eq)) === 32 || c === 10 || c === 13) break;
 	if(!skip_root) z[0] = tag.substr(0, eq);
@@ -18,7 +18,7 @@ function parsexmltag(tag, skip_root) {
 	}
 	return z;
 }
-function strip_ns(x) { return x.replace(nsregex2, "<$1"); }
+function strip_ns(x/*:string*/)/*:string*/ { return x.replace(nsregex2, "<$1"); }
 
 var encodings = {
 	'&quot;': '"',
@@ -31,28 +31,28 @@ var rencoding = evert(encodings);
 var rencstr = "&<>'\"".split("");
 
 // TODO: CP remap (need to read file version to determine OS)
-var unescapexml = (function() {
+var unescapexml/*:StringConv*/ = (function() {
 	var encregex = /&[a-z]*;/g, coderegex = /_x([\da-fA-F]+)_/g;
-	return function unescapexml(text){
+	return function unescapexml(text/*:string*/)/*:string*/ {
 		var s = text + '';
 		return s.replace(encregex, function($$) { return encodings[$$]; }).replace(coderegex,function(m,c) {return String.fromCharCode(parseInt(c,16));});
 	};
 })();
 
 var decregex=/[&<>'"]/g, charegex = /[\u0000-\u0008\u000b-\u001f]/g;
-function escapexml(text){
+function escapexml(text/*:string*/)/*:string*/{
 	var s = text + '';
 	return s.replace(decregex, function(y) { return rencoding[y]; }).replace(charegex,function(s) { return "_x" + ("000"+s.charCodeAt(0).toString(16)).substr(-4) + "_";});
 }
 
 /* TODO: handle codepages */
-var xlml_fixstr = (function() {
+var xlml_fixstr/*:StringConv*/ = (function() {
 	var entregex = /&#(\d+);/g;
-	function entrepl($$,$1) { return String.fromCharCode(parseInt($1,10)); }
-	return function xlml_fixstr(str) { return str.replace(entregex,entrepl); };
+	function entrepl($$/*:string*/,$1/*:string*/)/*:string*/ { return String.fromCharCode(parseInt($1,10)); }
+	return function xlml_fixstr(str/*:string*/)/*:string*/ { return str.replace(entregex,entrepl); };
 })();
 
-function parsexmlbool(value, tag) {
+function parsexmlbool(value/*:any*/, tag/*:?string*/)/*:boolean*/ {
 	switch(value) {
 		case '1': case 'true': case 'TRUE': return true;
 		/* case '0': case 'false': case 'FALSE':*/
@@ -60,7 +60,7 @@ function parsexmlbool(value, tag) {
 	}
 }
 
-var utf8read = function utf8reada(orig) {
+var utf8read/*:StringConv*/ = function utf8reada(orig) {
 	var out = "", i = 0, c = 0, d = 0, e = 0, f = 0, w = 0;
 	while (i < orig.length) {
 		c = orig.charCodeAt(i++);
@@ -106,7 +106,7 @@ if(has_buf) {
 var matchtag = (function() {
 	var mtcache = {};
 	return function matchtag(f,g) {
-		var t = f+"|"+g;
+		var t = f+"|"+(g||"");
 		if(mtcache[t] !== undefined) return mtcache[t];
 		return (mtcache[t] = new RegExp('<(?:\\w+:)?'+f+'(?: xml:space="preserve")?(?:[^>]*)>([^\u2603]*)</(?:\\w+:)?'+f+'>',(g||"")));
 	};
@@ -122,7 +122,7 @@ function parseVector(data) {
 	var h = parsexmltag(data);
 
 	var matches = data.match(vtregex(h.baseType))||[];
-	if(matches.length != h.size) throw "unexpected vector length " + matches.length + " != " + h.size;
+	if(matches.length != h.size) throw new Error("unexpected vector length " + matches.length + " != " + h.size);
 	var res = [];
 	matches.forEach(function(x) {
 		var v = x.replace(vtvregex,"").match(vtmregex);
@@ -134,10 +134,10 @@ function parseVector(data) {
 var wtregex = /(^\s|\s$|\n)/;
 function writetag(f,g) {return '<' + f + (g.match(wtregex)?' xml:space="preserve"' : "") + '>' + g + '</' + f + '>';}
 
-function wxt_helper(h) { return keys(h).map(function(k) { return " " + k + '="' + h[k] + '"';}).join(""); }
-function writextag(f,g,h) { return '<' + f + (isval(h) ? wxt_helper(h) : "") + (isval(g) ? (g.match(wtregex)?' xml:space="preserve"' : "") + '>' + g + '</' + f : "/") + '>';}
+function wxt_helper(h)/*:string*/ { return keys(h).map(function(k) { return " " + k + '="' + h[k] + '"';}).join(""); }
+function writextag(f,g,h) { return '<' + f + (isval(h) /*:: && h */? wxt_helper(h) : "") + (isval(g) /*:: && g */? (g.match(wtregex)?' xml:space="preserve"' : "") + '>' + g + '</' + f : "/") + '>';}
 
-function write_w3cdtf(d, t) { try { return d.toISOString().replace(/\.\d*/,""); } catch(e) { if(t) throw e; } }
+function write_w3cdtf(d/*:Date*/, t/*:?boolean*/)/*:string*/ { try { return d.toISOString().replace(/\.\d*/,""); } catch(e) { if(t) throw e; } return ""; }
 
 function write_vt(s) {
 	switch(typeof s) {
@@ -150,7 +150,7 @@ function write_vt(s) {
 }
 
 var XML_HEADER = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\r\n';
-var XMLNS = {
+var XMLNS = ({
 	'dc': 'http://purl.org/dc/elements/1.1/',
 	'dcterms': 'http://purl.org/dc/terms/',
 	'dcmitype': 'http://purl.org/dc/dcmitype/',
@@ -160,7 +160,7 @@ var XMLNS = {
 	'vt': 'http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes',
 	'xsi': 'http://www.w3.org/2001/XMLSchema-instance',
 	'xsd': 'http://www.w3.org/2001/XMLSchema'
-};
+}/*:any*/);
 
 XMLNS.main = [
 	'http://schemas.openxmlformats.org/spreadsheetml/2006/main',

@@ -3,7 +3,7 @@
 /* 14.2 Part Summary <DrawingML> */
 /* [MS-XLSX] 2.1 Part Enumerations */
 /* [MS-XLSB] 2.1.7 Part Enumeration */
-var ct2type = {
+var ct2type/*{[string]:string}*/ = ({
 	/* Workbook */
 	"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml": "workbooks",
 
@@ -141,7 +141,7 @@ var ct2type = {
 	"application/vnd.openxmlformats-officedocument.oleObject": "TODO",
 
 	"sheet": "js"
-};
+}/*:any*/);
 
 var CT_LIST = (function(){
 	var o = {
@@ -169,16 +169,16 @@ var CT_LIST = (function(){
 	return o;
 })();
 
-var type2ct = evert_arr(ct2type);
+var type2ct/*{[string]:Array<string>}*/ = evert_arr(ct2type);
 
 XMLNS.CT = 'http://schemas.openxmlformats.org/package/2006/content-types';
 
-function parse_ct(data, opts) {
-	var ctext = {};
-	if(!data || !data.match) return data;
-	var ct = { workbooks: [], sheets: [], calcchains: [], themes: [], styles: [],
+function parse_ct(data/*:?string*/, opts) {
+	var ct = ({ workbooks: [], sheets: [], calcchains: [], themes: [], styles: [],
 		coreprops: [], extprops: [], custprops: [], strs:[], comments: [], vba: [],
-		TODO:[], rels:[], xmlns: "" };
+		TODO:[], rels:[], xmlns: "" }/*:any*/);
+	if(!data || !data.match) return ct;
+	var ctext = {};
 	(data.match(tagregex)||[]).forEach(function(x) {
 		var y = parsexmltag(x);
 		switch(y[0].replace(nsregex,"<")) {
@@ -214,8 +214,8 @@ var CTYPE_DEFAULTS = [
 	return writextag('Default', null, {'Extension':x[0], 'ContentType': x[1]});
 });
 
-function write_ct(ct, opts) {
-	var o = [], v;
+function write_ct(ct, opts)/*:string*/ {
+	var o/*:Array<string>*/ = [], v;
 	o[o.length] = (XML_HEADER);
 	o[o.length] = (CTYPE_XML_ROOT);
 	o = o.concat(CTYPE_DEFAULTS);

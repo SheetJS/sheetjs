@@ -43,62 +43,62 @@
 
 /* [MS-OSHARED] 2.3.3.2.2.1 Document Summary Information PIDDSI */
 var DocSummaryPIDDSI = {
-	0x01: { n: 'CodePage', t: VT_I2 },
-	0x02: { n: 'Category', t: VT_STRING },
-	0x03: { n: 'PresentationFormat', t: VT_STRING },
-	0x04: { n: 'ByteCount', t: VT_I4 },
-	0x05: { n: 'LineCount', t: VT_I4 },
-	0x06: { n: 'ParagraphCount', t: VT_I4 },
-	0x07: { n: 'SlideCount', t: VT_I4 },
-	0x08: { n: 'NoteCount', t: VT_I4 },
-	0x09: { n: 'HiddenCount', t: VT_I4 },
-	0x0a: { n: 'MultimediaClipCount', t: VT_I4 },
-	0x0b: { n: 'Scale', t: VT_BOOL },
-	0x0c: { n: 'HeadingPair', t: VT_VECTOR | VT_VARIANT },
-	0x0d: { n: 'DocParts', t: VT_VECTOR | VT_LPSTR },
-	0x0e: { n: 'Manager', t: VT_STRING },
-	0x0f: { n: 'Company', t: VT_STRING },
-	0x10: { n: 'LinksDirty', t: VT_BOOL },
-	0x11: { n: 'CharacterCount', t: VT_I4 },
-	0x13: { n: 'SharedDoc', t: VT_BOOL },
-	0x16: { n: 'HLinksChanged', t: VT_BOOL },
-	0x17: { n: 'AppVersion', t: VT_I4, p: 'version' },
-	0x1A: { n: 'ContentType', t: VT_STRING },
-	0x1B: { n: 'ContentStatus', t: VT_STRING },
-	0x1C: { n: 'Language', t: VT_STRING },
-	0x1D: { n: 'Version', t: VT_STRING },
-	0xFF: {}
+	/*::[*/0x01/*::]*/: { n: 'CodePage', t: VT_I2 },
+	/*::[*/0x02/*::]*/: { n: 'Category', t: VT_STRING },
+	/*::[*/0x03/*::]*/: { n: 'PresentationFormat', t: VT_STRING },
+	/*::[*/0x04/*::]*/: { n: 'ByteCount', t: VT_I4 },
+	/*::[*/0x05/*::]*/: { n: 'LineCount', t: VT_I4 },
+	/*::[*/0x06/*::]*/: { n: 'ParagraphCount', t: VT_I4 },
+	/*::[*/0x07/*::]*/: { n: 'SlideCount', t: VT_I4 },
+	/*::[*/0x08/*::]*/: { n: 'NoteCount', t: VT_I4 },
+	/*::[*/0x09/*::]*/: { n: 'HiddenCount', t: VT_I4 },
+	/*::[*/0x0a/*::]*/: { n: 'MultimediaClipCount', t: VT_I4 },
+	/*::[*/0x0b/*::]*/: { n: 'Scale', t: VT_BOOL },
+	/*::[*/0x0c/*::]*/: { n: 'HeadingPair', t: VT_VECTOR | VT_VARIANT },
+	/*::[*/0x0d/*::]*/: { n: 'DocParts', t: VT_VECTOR | VT_LPSTR },
+	/*::[*/0x0e/*::]*/: { n: 'Manager', t: VT_STRING },
+	/*::[*/0x0f/*::]*/: { n: 'Company', t: VT_STRING },
+	/*::[*/0x10/*::]*/: { n: 'LinksDirty', t: VT_BOOL },
+	/*::[*/0x11/*::]*/: { n: 'CharacterCount', t: VT_I4 },
+	/*::[*/0x13/*::]*/: { n: 'SharedDoc', t: VT_BOOL },
+	/*::[*/0x16/*::]*/: { n: 'HLinksChanged', t: VT_BOOL },
+	/*::[*/0x17/*::]*/: { n: 'AppVersion', t: VT_I4, p: 'version' },
+	/*::[*/0x1A/*::]*/: { n: 'ContentType', t: VT_STRING },
+	/*::[*/0x1B/*::]*/: { n: 'ContentStatus', t: VT_STRING },
+	/*::[*/0x1C/*::]*/: { n: 'Language', t: VT_STRING },
+	/*::[*/0x1D/*::]*/: { n: 'Version', t: VT_STRING },
+	/*::[*/0xFF/*::]*/: {}
 };
 
 /* [MS-OSHARED] 2.3.3.2.1.1 Summary Information Property Set PIDSI */
 var SummaryPIDSI = {
-	0x01: { n: 'CodePage', t: VT_I2 },
-	0x02: { n: 'Title', t: VT_STRING },
-	0x03: { n: 'Subject', t: VT_STRING },
-	0x04: { n: 'Author', t: VT_STRING },
-	0x05: { n: 'Keywords', t: VT_STRING },
-	0x06: { n: 'Comments', t: VT_STRING },
-	0x07: { n: 'Template', t: VT_STRING },
-	0x08: { n: 'LastAuthor', t: VT_STRING },
-	0x09: { n: 'RevNumber', t: VT_STRING },
-	0x0A: { n: 'EditTime', t: VT_FILETIME },
-	0x0B: { n: 'LastPrinted', t: VT_FILETIME },
-	0x0C: { n: 'CreatedDate', t: VT_FILETIME },
-	0x0D: { n: 'ModifiedDate', t: VT_FILETIME },
-	0x0E: { n: 'PageCount', t: VT_I4 },
-	0x0F: { n: 'WordCount', t: VT_I4 },
-	0x10: { n: 'CharCount', t: VT_I4 },
-	0x11: { n: 'Thumbnail', t: VT_CF },
-	0x12: { n: 'ApplicationName', t: VT_LPSTR },
-	0x13: { n: 'DocumentSecurity', t: VT_I4 },
-	0xFF: {}
+	/*::[*/0x01/*::]*/: { n: 'CodePage', t: VT_I2 },
+	/*::[*/0x02/*::]*/: { n: 'Title', t: VT_STRING },
+	/*::[*/0x03/*::]*/: { n: 'Subject', t: VT_STRING },
+	/*::[*/0x04/*::]*/: { n: 'Author', t: VT_STRING },
+	/*::[*/0x05/*::]*/: { n: 'Keywords', t: VT_STRING },
+	/*::[*/0x06/*::]*/: { n: 'Comments', t: VT_STRING },
+	/*::[*/0x07/*::]*/: { n: 'Template', t: VT_STRING },
+	/*::[*/0x08/*::]*/: { n: 'LastAuthor', t: VT_STRING },
+	/*::[*/0x09/*::]*/: { n: 'RevNumber', t: VT_STRING },
+	/*::[*/0x0A/*::]*/: { n: 'EditTime', t: VT_FILETIME },
+	/*::[*/0x0B/*::]*/: { n: 'LastPrinted', t: VT_FILETIME },
+	/*::[*/0x0C/*::]*/: { n: 'CreatedDate', t: VT_FILETIME },
+	/*::[*/0x0D/*::]*/: { n: 'ModifiedDate', t: VT_FILETIME },
+	/*::[*/0x0E/*::]*/: { n: 'PageCount', t: VT_I4 },
+	/*::[*/0x0F/*::]*/: { n: 'WordCount', t: VT_I4 },
+	/*::[*/0x10/*::]*/: { n: 'CharCount', t: VT_I4 },
+	/*::[*/0x11/*::]*/: { n: 'Thumbnail', t: VT_CF },
+	/*::[*/0x12/*::]*/: { n: 'ApplicationName', t: VT_LPSTR },
+	/*::[*/0x13/*::]*/: { n: 'DocumentSecurity', t: VT_I4 },
+	/*::[*/0xFF/*::]*/: {}
 };
 
 /* [MS-OLEPS] 2.18 */
 var SpecialProperties = {
-	0x80000000: { n: 'Locale', t: VT_UI4 },
-	0x80000003: { n: 'Behavior', t: VT_UI4 },
-	0x72627262: {}
+	/*::[*/0x80000000/*::]*/: { n: 'Locale', t: VT_UI4 },
+	/*::[*/0x80000003/*::]*/: { n: 'Behavior', t: VT_UI4 },
+	/*::[*/0x72627262/*::]*/: {}
 };
 
 (function() {
@@ -108,56 +108,56 @@ var SpecialProperties = {
 
 /* [MS-XLS] 2.4.63 Country/Region codes */
 var CountryEnum = {
-	0x0001: "US", // United States
-	0x0002: "CA", // Canada
-	0x0003: "", // Latin America (except Brazil)
-	0x0007: "RU", // Russia
-	0x0014: "EG", // Egypt
-	0x001E: "GR", // Greece
-	0x001F: "NL", // Netherlands
-	0x0020: "BE", // Belgium
-	0x0021: "FR", // France
-	0x0022: "ES", // Spain
-	0x0024: "HU", // Hungary
-	0x0027: "IT", // Italy
-	0x0029: "CH", // Switzerland
-	0x002B: "AT", // Austria
-	0x002C: "GB", // United Kingdom
-	0x002D: "DK", // Denmark
-	0x002E: "SE", // Sweden
-	0x002F: "NO", // Norway
-	0x0030: "PL", // Poland
-	0x0031: "DE", // Germany
-	0x0034: "MX", // Mexico
-	0x0037: "BR", // Brazil
-	0x003d: "AU", // Australia
-	0x0040: "NZ", // New Zealand
-	0x0042: "TH", // Thailand
-	0x0051: "JP", // Japan
-	0x0052: "KR", // Korea
-	0x0054: "VN", // Viet Nam
-	0x0056: "CN", // China
-	0x005A: "TR", // Turkey
-	0x0069: "JS", // Ramastan
-	0x00D5: "DZ", // Algeria
-	0x00D8: "MA", // Morocco
-	0x00DA: "LY", // Libya
-	0x015F: "PT", // Portugal
-	0x0162: "IS", // Iceland
-	0x0166: "FI", // Finland
-	0x01A4: "CZ", // Czech Republic
-	0x0376: "TW", // Taiwan
-	0x03C1: "LB", // Lebanon
-	0x03C2: "JO", // Jordan
-	0x03C3: "SY", // Syria
-	0x03C4: "IQ", // Iraq
-	0x03C5: "KW", // Kuwait
-	0x03C6: "SA", // Saudi Arabia
-	0x03CB: "AE", // United Arab Emirates
-	0x03CC: "IL", // Israel
-	0x03CE: "QA", // Qatar
-	0x03D5: "IR", // Iran
-	0xFFFF: "US"  // United States
+	/*::[*/0x0001/*::]*/: "US", // United States
+	/*::[*/0x0002/*::]*/: "CA", // Canada
+	/*::[*/0x0003/*::]*/: "", // Latin America (except Brazil)
+	/*::[*/0x0007/*::]*/: "RU", // Russia
+	/*::[*/0x0014/*::]*/: "EG", // Egypt
+	/*::[*/0x001E/*::]*/: "GR", // Greece
+	/*::[*/0x001F/*::]*/: "NL", // Netherlands
+	/*::[*/0x0020/*::]*/: "BE", // Belgium
+	/*::[*/0x0021/*::]*/: "FR", // France
+	/*::[*/0x0022/*::]*/: "ES", // Spain
+	/*::[*/0x0024/*::]*/: "HU", // Hungary
+	/*::[*/0x0027/*::]*/: "IT", // Italy
+	/*::[*/0x0029/*::]*/: "CH", // Switzerland
+	/*::[*/0x002B/*::]*/: "AT", // Austria
+	/*::[*/0x002C/*::]*/: "GB", // United Kingdom
+	/*::[*/0x002D/*::]*/: "DK", // Denmark
+	/*::[*/0x002E/*::]*/: "SE", // Sweden
+	/*::[*/0x002F/*::]*/: "NO", // Norway
+	/*::[*/0x0030/*::]*/: "PL", // Poland
+	/*::[*/0x0031/*::]*/: "DE", // Germany
+	/*::[*/0x0034/*::]*/: "MX", // Mexico
+	/*::[*/0x0037/*::]*/: "BR", // Brazil
+	/*::[*/0x003d/*::]*/: "AU", // Australia
+	/*::[*/0x0040/*::]*/: "NZ", // New Zealand
+	/*::[*/0x0042/*::]*/: "TH", // Thailand
+	/*::[*/0x0051/*::]*/: "JP", // Japan
+	/*::[*/0x0052/*::]*/: "KR", // Korea
+	/*::[*/0x0054/*::]*/: "VN", // Viet Nam
+	/*::[*/0x0056/*::]*/: "CN", // China
+	/*::[*/0x005A/*::]*/: "TR", // Turkey
+	/*::[*/0x0069/*::]*/: "JS", // Ramastan
+	/*::[*/0x00D5/*::]*/: "DZ", // Algeria
+	/*::[*/0x00D8/*::]*/: "MA", // Morocco
+	/*::[*/0x00DA/*::]*/: "LY", // Libya
+	/*::[*/0x015F/*::]*/: "PT", // Portugal
+	/*::[*/0x0162/*::]*/: "IS", // Iceland
+	/*::[*/0x0166/*::]*/: "FI", // Finland
+	/*::[*/0x01A4/*::]*/: "CZ", // Czech Republic
+	/*::[*/0x0376/*::]*/: "TW", // Taiwan
+	/*::[*/0x03C1/*::]*/: "LB", // Lebanon
+	/*::[*/0x03C2/*::]*/: "JO", // Jordan
+	/*::[*/0x03C3/*::]*/: "SY", // Syria
+	/*::[*/0x03C4/*::]*/: "IQ", // Iraq
+	/*::[*/0x03C5/*::]*/: "KW", // Kuwait
+	/*::[*/0x03C6/*::]*/: "SA", // Saudi Arabia
+	/*::[*/0x03CB/*::]*/: "AE", // United Arab Emirates
+	/*::[*/0x03CC/*::]*/: "IL", // Israel
+	/*::[*/0x03CE/*::]*/: "QA", // Qatar
+	/*::[*/0x03D5/*::]*/: "IR", // Iran
+	/*::[*/0xFFFF/*::]*/: "US"  // United States
 };
 
 /* [MS-XLS] 2.5.127 */

@@ -1,6 +1,7 @@
 /* 18.6 Calculation Chain */
 function parse_cc_xml(data, opts) {
 	var d = [];
+	if(!data) return d;
 	var l = 0, i = 1;
 	(data.match(tagregex)||[]).forEach(function(x) {
 		var y = parsexmltag(x);

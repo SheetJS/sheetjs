@@ -6,15 +6,15 @@ function safe_parse_wbrels(wbrels, sheets) {
 	return !wbrels || wbrels.length === 0 ? null : wbrels;
 }
 
-function safe_parse_ws(zip, path, relsPath, sheet, sheetRels, sheets, opts) {
+function safe_parse_ws(zip, path/*:string*/, relsPath/*:string*/, sheet, sheetRels, sheets, opts) {
 	try {
-		sheetRels[sheet]=parse_rels(getzipdata(zip, relsPath, true), path);
+		sheetRels[sheet]=parse_rels(getzipstr(zip, relsPath, true), path);
 		sheets[sheet]=parse_ws(getzipdata(zip, path),path,opts,sheetRels[sheet]);
 	} catch(e) { if(opts.WTF) throw e; }
 }
 
-var nodirs = function nodirs(x){return x.substr(-1) != '/';};
-function parse_zip(zip, opts) {
+var nodirs = function nodirs(x/*:string*/)/*:boolean*/{return x.substr(-1) != '/';};
+function parse_zip(zip/*:ZIP*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
 	make_ssf(SSF);
 	opts = opts || {};
 	fix_read_opts(opts);
@@ -24,7 +24,7 @@ function parse_zip(zip, opts) {
 	if(safegetzipfile(zip, 'META-INF/manifest.xml')) return parse_ods(zip, opts);
 
 	var entries = keys(zip.files).filter(nodirs).sort();
-	var dir = parse_ct(getzipdata(zip, '[Content_Types].xml'), opts);
+	var dir = parse_ct((getzipstr(zip, '[Content_Types].xml')/*:?any*/), opts);
 	var xlsb = false;
 	var sheets, binname;
 	if(dir.workbooks.length === 0) {
@@ -56,10 +56,10 @@ function parse_zip(zip, opts) {
 	var props = {}, propdata = "";
 
 	if(dir.coreprops.length !== 0) {
-		propdata = getzipdata(zip, dir.coreprops[0].replace(/^\//,''), true);
+		propdata = getzipstr(zip, dir.coreprops[0].replace(/^\//,''), true);
 		if(propdata) props = parse_core_props(propdata);
 		if(dir.extprops.length !== 0) {
-			propdata = getzipdata(zip, dir.extprops[0].replace(/^\//,''), true);
+			propdata = getzipstr(zip, dir.extprops[0].replace(/^\//,''), true);
 			if(propdata) parse_ext_props(propdata, props);
 		}
 	}
@@ -67,7 +67,7 @@ function parse_zip(zip, opts) {
 	var custprops = {};
 	if(!opts.bookSheets || opts.bookProps) {
 		if (dir.custprops.length !== 0) {
-			propdata = getzipdata(zip, dir.custprops[0].replace(/^\//,''), true);
+			propdata = getzipstr(zip, dir.custprops[0].replace(/^\//,''), true);
 			if(propdata) custprops = parse_cust_props(propdata, opts);
 		}
 	}
@@ -86,7 +86,7 @@ function parse_zip(zip, opts) {
 	if(opts.bookDeps && dir.calcchain) deps=parse_cc(getzipdata(zip, dir.calcchain.replace(/^\//,'')),dir.calcchain,opts);
 
 	var i=0;
-	var sheetRels = {};
+	var sheetRels = ({}/*:any*/);
 	var path, relsPath;
 	if(!props.Worksheets) {
 		var wbsheets = wb.Sheets;
@@ -99,12 +99,12 @@ function parse_zip(zip, opts) {
 
 	var wbext = xlsb ? "bin" : "xml";
 	var wbrelsfile = 'xl/_rels/workbook.' + wbext + '.rels';
-	var wbrels = parse_rels(getzipdata(zip, wbrelsfile, true), wbrelsfile);
+	var wbrels = parse_rels(getzipstr(zip, wbrelsfile, true), wbrelsfile);
 	if(wbrels) wbrels = safe_parse_wbrels(wbrels, wb.Sheets);
 	/* Numbers iOS hack */
 	var nmode = (getzipdata(zip,"xl/worksheets/sheet.xml",true))?1:0;
 	for(i = 0; i != props.Worksheets; ++i) {
-		if(wbrels) path = 'xl/' + (wbrels[i][1]).replace(/[\/]?xl\//, "");
+		if(wbrels && wbrels[i]) path = 'xl/' + (wbrels[i][1]).replace(/[\/]?xl\//, "");
 		else {
 			path = 'xl/worksheets/sheet'+(i+1-nmode)+"." + wbext;
 			path = path.replace(/sheet0\./,"sheet.");
@@ -115,7 +115,7 @@ function parse_zip(zip, opts) {
 
 	if(dir.comments) parse_comments(zip, dir.comments, sheets, sheetRels, opts);
 
-	out = {
+	out = ({
 		Directory: dir,
 		Workbook: wb,
 		Props: props,
@@ -127,14 +127,14 @@ function parse_zip(zip, opts) {
 		Styles: styles,
 		Themes: themes,
 		SSF: SSF.get_table()
-	};
+	}/*:any*/);
 	if(opts.bookFiles) {
 		out.keys = entries;
 		out.files = zip.files;
 	}
 	if(opts.bookVBA) {
 		if(dir.vba.length > 0) out.vbaraw = getzipdata(zip,dir.vba[0],true);
-		else if(dir.defaults.bin === 'application/vnd.ms-office.vbaProject') out.vbaraw = getzipdata(zip,'xl/vbaProject.bin',true);
+		else if(dir.defaults && dir.defaults.bin === 'application/vnd.ms-office.vbaProject') out.vbaraw = getzipdata(zip,'xl/vbaProject.bin',true);
 	}
 	return out;
 }

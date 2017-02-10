@@ -1,12 +1,12 @@
 var has_buf = (typeof Buffer !== 'undefined');
 
-function new_raw_buf(len) {
+function new_raw_buf(len/*:number*/) {
 	/* jshint -W056 */
 	return new (has_buf ? Buffer : Array)(len);
 	/* jshint +W056 */
 }
 
-function s2a(s) {
+function s2a(s/*:string*/) {
 	if(has_buf) return new Buffer(s, "binary");
 	return s.split("").map(function(x){ return x.charCodeAt(0) & 0xff; });
 }

@@ -3,7 +3,7 @@ var _ssfopts = {}; // spreadsheet formatting options
 
 RELS.WS = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet";
 
-function get_sst_id(sst, str) {
+function get_sst_id(sst/*:SST*/, str)/*:number*/ {
 	for(var i = 0, len = sst.length; i < len; ++i) if(sst[i].t === str) { sst.Count ++; return i; }
 	sst[len] = {t:str}; sst.Count ++; sst.Unique ++; return len;
 }

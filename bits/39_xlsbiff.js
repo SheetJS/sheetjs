@@ -1,11 +1,11 @@
 /* --- MS-XLS --- */
 
 /* 2.5.19 */
-function parse_XLSCell(blob, length) {
+function parse_XLSCell(blob, length)/*:Cell*/ {
 	var rw = blob.read_shift(2); // 0-indexed
 	var col = blob.read_shift(2);
 	var ixfe = blob.read_shift(2);
-	return {r:rw, c:col, ixfe:ixfe};
+	return ({r:rw, c:col, ixfe:ixfe}/*:any*/);
 }
 
 /* 2.5.134 */
@@ -101,22 +101,22 @@ function parse_FtCf(blob, length) {
 
 /* 2.5.140 - 2.5.154 and friends */
 var FtTab = {
-	0x15: parse_FtCmo,
-	0x13: parsenoop,                                /* FtLbsData */
-	0x12: function(blob, length) { blob.l += 12; }, /* FtCblsData */
-	0x11: function(blob, length) { blob.l += 8; },  /* FtRboData */
-	0x10: parsenoop,                                /* FtEdoData */
-	0x0F: parsenoop,                                /* FtGboData */
-	0x0D: parse_FtNts,                              /* FtNts */
-	0x0C: function(blob, length) { blob.l += 24; }, /* FtSbs */
-	0x0B: function(blob, length) { blob.l += 10; }, /* FtRbo */
-	0x0A: function(blob, length) { blob.l += 16; }, /* FtCbls */
-	0x09: parsenoop,                                /* FtPictFmla */
-	0x08: function(blob, length) { blob.l += 6; },  /* FtPioGrbit */
-	0x07: parse_FtCf,                               /* FtCf */
-	0x06: function(blob, length) { blob.l += 6; },  /* FtGmo */
-	0x04: parsenoop,                                /* FtMacro */
-	0x00: function(blob, length) { blob.l += 4; }   /* FtEnding */
+	/*::[*/0x15/*::]*/: parse_FtCmo,
+	/*::[*/0x13/*::]*/: parsenoop,                                /* FtLbsData */
+	/*::[*/0x12/*::]*/: function(blob, length) { blob.l += 12; }, /* FtCblsData */
+	/*::[*/0x11/*::]*/: function(blob, length) { blob.l += 8; },  /* FtRboData */
+	/*::[*/0x10/*::]*/: parsenoop,                                /* FtEdoData */
+	/*::[*/0x0F/*::]*/: parsenoop,                                /* FtGboData */
+	/*::[*/0x0D/*::]*/: parse_FtNts,                              /* FtNts */
+	/*::[*/0x0C/*::]*/: function(blob, length) { blob.l += 24; }, /* FtSbs */
+	/*::[*/0x0B/*::]*/: function(blob, length) { blob.l += 10; }, /* FtRbo */
+	/*::[*/0x0A/*::]*/: function(blob, length) { blob.l += 16; }, /* FtCbls */
+	/*::[*/0x09/*::]*/: parsenoop,                                /* FtPictFmla */
+	/*::[*/0x08/*::]*/: function(blob, length) { blob.l += 6; },  /* FtPioGrbit */
+	/*::[*/0x07/*::]*/: parse_FtCf,                               /* FtCf */
+	/*::[*/0x06/*::]*/: function(blob, length) { blob.l += 6; },  /* FtGmo */
+	/*::[*/0x04/*::]*/: parsenoop,                                /* FtMacro */
+	/*::[*/0x00/*::]*/: function(blob, length) { blob.l += 4; }   /* FtEnding */
 };
 function parse_FtArray(blob, length, ot) {
 	var s = blob.l;
@@ -146,7 +146,7 @@ function parse_BOF(blob, length) {
 		case 0x0500: /* BIFF5 */
 		case 0x0002: case 0x0007: /* BIFF2 */
 			break;
-		default: throw "Unexpected BIFF Ver " + o.BIFFVer;
+		default: if(length > 6) throw new Error("Unexpected BIFF Ver " + o.BIFFVer);
 	}
 	blob.read_shift(length);
 	return o;
@@ -175,7 +175,7 @@ function parse_WriteAccess(blob, length, opts) {
 /* 2.4.28 */
 function parse_BoundSheet8(blob, length, opts) {
 	var pos = blob.read_shift(4);
-	var hidden = blob.read_shift(1) >> 6;
+	var hidden = blob.read_shift(1) & 0x03;
 	var dt = blob.read_shift(1);
 	switch(dt) {
 		case 0: dt = 'Worksheet'; break;
@@ -241,7 +241,7 @@ function parse_RecalcId(blob, length) {
 
 /* 2.4.87 */
 function parse_DefaultRowHeight (blob, length) {
-	var f = blob.read_shift(2), miyRw;
+	var f = length == 4 ? blob.read_shift(2) : 0, miyRw;
 	miyRw = blob.read_shift(2); // flags & 0x02 -> hidden, else empty
 	var fl = {Unsynced:f&1,DyZero:(f&2)>>1,ExAsc:(f&4)>>2,ExDsc:(f&8)>>3};
 	return [fl, miyRw];
@@ -284,6 +284,7 @@ function parse_Format(blob, length, opts) {
 	var fmtstr = parse_XLUnicodeString2(blob, 0, opts);
 	return [ifmt, fmtstr];
 }
+var parse_BIFF2Format = parse_XLUnicodeString2;
 
 /* 2.4.90 */
 function parse_Dimensions(blob, length) {
@@ -342,13 +343,14 @@ function parse_Guts(blob, length) {
 	var out = [blob.read_shift(2), blob.read_shift(2)];
 	if(out[0] !== 0) out[0]--;
 	if(out[1] !== 0) out[1]--;
-	if(out[0] > 7 || out[1] > 7) throw "Bad Gutters: " + out;
+	if(out[0] > 7 || out[1] > 7) throw "Bad Gutters: " + out.join("|");
 	return out;
 }
 
 /* 2.4.24 */
-function parse_BoolErr(blob, length) {
+function parse_BoolErr(blob, length, opts) {
 	var cell = parse_XLSCell(blob, 6);
+	if(opts.biff == 2) ++blob.l;
 	var val = parse_Bes(blob, 2);
 	cell.val = val;
 	cell.t = (val === true || val === false) ? 'b' : 'e';
@@ -381,7 +383,7 @@ function parse_SupBook(blob, length, opts) {
 function parse_ExternName(blob, length, opts) {
 	var flags = blob.read_shift(2);
 	var body;
-	var o = {
+	var o = ({
 		fBuiltIn: flags & 0x01,
 		fWantAdvise: (flags >>> 1) & 0x01,
 		fWantPict: (flags >>> 2) & 0x01,
@@ -389,7 +391,7 @@ function parse_ExternName(blob, length, opts) {
 		fOleLink: (flags >>> 4) & 0x01,
 		cf: (flags >>> 5) & 0x3FF,
 		fIcon: flags >>> 15 & 0x01
-	};
+	}/*:any*/);
 	if(opts.sbcch === 0x3A01) body = parse_AddinUdf(blob, length-2);
 	//else throw new Error("unsupported SupBook cch: " + opts.sbcch);
 	o.body = body || blob.read_shift(length-2);
@@ -398,7 +400,6 @@ function parse_ExternName(blob, length, opts) {
 
 /* 2.4.150 TODO */
 function parse_Lbl(blob, length, opts) {
-	if(opts.biff < 8) return parse_Label(blob, length, opts);
 	var target = blob.l + length;
 	var flags = blob.read_shift(2);
 	var chKey = blob.read_shift(1);
@@ -486,6 +487,7 @@ function parse_Obj(blob, length) {
 /* 2.4.329 TODO: parse properly */
 function parse_TxO(blob, length, opts) {
 	var s = blob.l;
+	var texts = "";
 try {
 	blob.l += 4;
 	var ot = (opts.lastobj||{cmo:[0,0]}).cmo[1];
@@ -499,7 +501,6 @@ try {
 	blob.l += len;
 	//var fmla = parse_ObjFmla(blob, s + length - blob.l);
 
-	var texts = "";
 	for(var i = 1; i < blob.lens.length-1; ++i) {
 		if(blob.l-s != blob.lens[i]) throw "TxO: bad continue record";
 		var hdr = blob[blob.l];
@@ -520,7 +521,7 @@ try {
 //	blob.l += 6;
 //	if(s + length != blob.l) throw "TxO " + (s + length) + ", at " + blob.l;
 	return { t: texts };
-} catch(e) { blob.l = s + length; return { t: texts||"" }; }
+} catch(e) { blob.l = s + length; return { t: texts }; }
 }
 
 /* 2.4.140 */
@@ -915,3 +916,26 @@ function parse_BIFF2NUM(blob, length, opts) {
 	return cell;
 }
 
+function parse_BIFF2INT(blob, length) {
+	var cell = parse_XLSCell(blob, 6);
+	++blob.l;
+	var num = blob.read_shift(2);
+	cell.val = num;
+	return cell;
+}
+
+function parse_BIFF2STRING(blob, length) {
+	var cch = blob.read_shift(1);
+	if(cch === 0) { blob.l++; return ""; }
+	return blob.read_shift(cch, 'sbcs-cont');
+}
+
+/* TODO: convert to BIFF8 font struct */
+function parse_BIFF2FONTXTRA(blob, length) {
+	blob.l += 6; // unknown
+	blob.l += 2; // font weight "bls"
+	blob.l += 1; // charset
+	blob.l += 3; // unknown
+	blob.l += 1; // font family
+	blob.l += length - 9;
+}

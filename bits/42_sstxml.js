@@ -1,30 +1,30 @@
 /* 18.4.1 charset to codepage mapping */
-var CS2CP = {
-	0:    1252, /* ANSI */
-	1:   65001, /* DEFAULT */
-	2:   65001, /* SYMBOL */
-	77:  10000, /* MAC */
-	128:   932, /* SHIFTJIS */
-	129:   949, /* HANGUL */
-	130:  1361, /* JOHAB */
-	134:   936, /* GB2312 */
-	136:   950, /* CHINESEBIG5 */
-	161:  1253, /* GREEK */
-	162:  1254, /* TURKISH */
-	163:  1258, /* VIETNAMESE */
-	177:  1255, /* HEBREW */
-	178:  1256, /* ARABIC */
-	186:  1257, /* BALTIC */
-	204:  1251, /* RUSSIAN */
-	222:   874, /* THAI */
-	238:  1250, /* EASTEUROPE */
-	255:  1252, /* OEM */
-	69:   6969  /* MISC */
-};
+var CS2CP = ({
+	/*::[*/0/*::]*/:    1252, /* ANSI */
+	/*::[*/1/*::]*/:   65001, /* DEFAULT */
+	/*::[*/2/*::]*/:   65001, /* SYMBOL */
+	/*::[*/77/*::]*/:  10000, /* MAC */
+	/*::[*/128/*::]*/:   932, /* SHIFTJIS */
+	/*::[*/129/*::]*/:   949, /* HANGUL */
+	/*::[*/130/*::]*/:  1361, /* JOHAB */
+	/*::[*/134/*::]*/:   936, /* GB2312 */
+	/*::[*/136/*::]*/:   950, /* CHINESEBIG5 */
+	/*::[*/161/*::]*/:  1253, /* GREEK */
+	/*::[*/162/*::]*/:  1254, /* TURKISH */
+	/*::[*/163/*::]*/:  1258, /* VIETNAMESE */
+	/*::[*/177/*::]*/:  1255, /* HEBREW */
+	/*::[*/178/*::]*/:  1256, /* ARABIC */
+	/*::[*/186/*::]*/:  1257, /* BALTIC */
+	/*::[*/204/*::]*/:  1251, /* RUSSIAN */
+	/*::[*/222/*::]*/:   874, /* THAI */
+	/*::[*/238/*::]*/:  1250, /* EASTEUROPE */
+	/*::[*/255/*::]*/:  1252, /* OEM */
+	/*::[*/69/*::]*/:   6969  /* MISC */
+}/*:any*/);
 
 /* Parse a list of <r> tags */
 var parse_rs = (function parse_rs_factory() {
-	var tregex = matchtag("t"), rpregex = matchtag("rPr"), rregex = /<r>/g, rend = /<\/r>/, nlregex = /\r\n/g;
+	var tregex = matchtag("t"), rpregex = matchtag("rPr"), rregex = /<(?:\w+:)?r>/g, rend = /<\/(?:\w+:)?r>/, nlregex = /\r\n/g;
 	/* 18.4.7 rPr CT_RPrElt */
 	var parse_rpr = function parse_rpr(rpr, intro, outro) {
 		var font = {}, cp = 65001;
@@ -121,11 +121,11 @@ var parse_rs = (function parse_rs_factory() {
 		var terms = [[],"",[]];
 		/* 18.4.12 t ST_Xstring */
 		var t = r.match(tregex), cp = 65001;
-		if(!isval(t)) return "";
+		if(!isval(t)/*:: || !t*/) return "";
 		terms[1] = t[1];
 
 		var rpr = r.match(rpregex);
-		if(isval(rpr)) cp = parse_rpr(rpr[1], terms[0], terms[2]);
+		if(isval(rpr)/*:: && rpr*/) cp = parse_rpr(rpr[1], terms[0], terms[2]);
 
 		return terms[0].join("") + terms[1].replace(nlregex,'<br/>') + terms[2].join("");
 	}
@@ -135,22 +135,22 @@ var parse_rs = (function parse_rs_factory() {
 })();
 
 /* 18.4.8 si CT_Rst */
-var sitregex = /<t[^>]*>([^<]*)<\/t>/g, sirregex = /<r>/;
+var sitregex = /<(?:\w+:)?t[^>]*>([^<]*)<\/(?:\w+:)?t>/g, sirregex = /<(?:\w+:)?r>/;
 function parse_si(x, opts) {
 	var html = opts ? opts.cellHTML : true;
 	var z = {};
 	if(!x) return null;
 	var y;
 	/* 18.4.12 t ST_Xstring (Plaintext String) */
-	if(x.charCodeAt(1) === 116) {
-		z.t = utf8read(unescapexml(x.substr(x.indexOf(">")+1).split(/<\/t>/)[0]));
+	if(x.match(/^<(?:\w+:)?t[^>]*>/)) {
+		z.t = utf8read(unescapexml(x.substr(x.indexOf(">")+1).split(/<\/(?:\w+:)?t>/)[0]));
 		z.r = x;
 		if(html) z.h = z.t;
 	}
 	/* 18.4.4 r CT_RElt (Rich Text Run) */
 	else if((y = x.match(sirregex))) {
 		z.r = x;
-		z.t = utf8read(unescapexml(x.match(sitregex).join("").replace(tagregex,"")));
+		z.t = utf8read(unescapexml((x.match(sitregex)||[]).join("").replace(tagregex,"")));
 		if(html) z.h = parse_rs(x);
 	}
 	/* 18.4.3 phoneticPr CT_PhoneticPr (TODO: needed for Asian support) */
@@ -159,14 +159,15 @@ function parse_si(x, opts) {
 }
 
 /* 18.4 Shared String Table */
-var sstr0 = /<sst([^>]*)>([\s\S]*)<\/sst>/;
-var sstr1 = /<(?:si|sstItem)>/g;
-var sstr2 = /<\/(?:si|sstItem)>/;
-function parse_sst_xml(data, opts) {
-	var s = [], ss;
+var sstr0 = /<(?:\w+:)?sst([^>]*)>([\s\S]*)<\/(?:\w+:)?sst>/;
+var sstr1 = /<(?:\w+:)?(?:si|sstItem)>/g;
+var sstr2 = /<\/(?:\w+:)?(?:si|sstItem)>/;
+function parse_sst_xml(data/*:string*/, opts)/*:SST*/ {
+	var s/*:SST*/ = ([]/*:any*/), ss = "";
+	if(!data) return s;
 	/* 18.4.9 sst CT_Sst */
 	var sst = data.match(sstr0);
-	if(isval(sst)) {
+	if(isval(sst)/*:: && sst*/) {
 		ss = sst[2].replace(sstr1,"").split(sstr2);
 		for(var i = 0; i != ss.length; ++i) {
 			var o = parse_si(ss[i], opts);
@@ -179,7 +180,7 @@ function parse_sst_xml(data, opts) {
 
 RELS.SST = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings";
 var straywsregex = /^\s|\s$|[\t\n\r]/;
-function write_sst_xml(sst, opts) {
+function write_sst_xml(sst/*:SST*/, opts)/*:string*/ {
 	if(!opts.bookSST) return "";
 	var o = [XML_HEADER];
 	o[o.length] = (writextag('sst', null, {

@@ -1,6 +1,6 @@
 /* 15.2.12.3 Extended File Properties Part */
 /* [MS-OSHARED] 2.3.3.2.[1-2].1 (PIDSI/PIDDSI) */
-var EXT_PROPS = [
+var EXT_PROPS/*:Array<Array<string> >*/ = [
 	["Application", "Application", "string"],
 	["AppVersion", "AppVersion", "string"],
 	["Company", "Company", "string"],
@@ -51,7 +51,7 @@ var EXT_PROPS_XML_ROOT = writextag('Properties', null, {
 	'xmlns:vt': XMLNS.vt
 });
 
-function write_ext_props(cp, opts) {
+function write_ext_props(cp, opts)/*:string*/ {
 	var o = [], p = {}, W = writextag;
 	if(!cp) cp = {};
 	cp.Application = "SheetJS";

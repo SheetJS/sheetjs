@@ -1,16 +1,16 @@
 
 /* [MS-XLSB] 2.5.143 */
-function parse_StrRun(data, length) {
+function parse_StrRun(data, length/*:?number*/) {
 	return { ich: data.read_shift(2), ifnt: data.read_shift(2) };
 }
 
 /* [MS-XLSB] 2.1.7.121 */
-function parse_RichStr(data, length) {
+function parse_RichStr(data, length/*:number*/) {
 	var start = data.l;
 	var flags = data.read_shift(1);
 	var str = parse_XLWideString(data);
 	var rgsStrRun = [];
-	var z = { t: str, h: str };
+	var z = ({ t: str, h: str }/*:any*/);
 	if((flags & 1) !== 0) { /* fRichStr */
 		/* TODO: formatted string */
 		var dwSizeStrRun = data.read_shift(4);
@@ -43,7 +43,7 @@ function parse_XLSBCell(data) {
 function write_XLSBCell(cell, o) {
 	if(o == null) o = new_buf(8);
 	o.write_shift(-4, cell.c);
-	o.write_shift(3, cell.iStyleRef === undefined ? cell.iStyleRef : cell.s);
+	o.write_shift(3, cell.iStyleRef || cell.s);
 	o.write_shift(1, 0); /* fPhShow */
 	return o;
 }
@@ -53,11 +53,11 @@ function write_XLSBCell(cell, o) {
 function parse_XLSBCodeName (data, length) { return parse_XLWideString(data, length); }
 
 /* [MS-XLSB] 2.5.166 */
-function parse_XLNullableWideString(data) {
+function parse_XLNullableWideString(data)/*:string*/ {
 	var cchCharacters = data.read_shift(4);
 	return cchCharacters === 0 || cchCharacters === 0xFFFFFFFF ? "" : data.read_shift(cchCharacters, 'dbcs');
 }
-function write_XLNullableWideString(data, o) {
+function write_XLNullableWideString(data/*:string*/, o) {
 	if(!o) o = new_buf(127);
 	o.write_shift(4, data.length > 0 ? data.length : 0xFFFFFFFF);
 	if(data.length > 0) o.write_shift(0, data, 'dbcs');
@@ -65,11 +65,11 @@ function write_XLNullableWideString(data, o) {
 }
 
 /* [MS-XLSB] 2.5.168 */
-function parse_XLWideString(data) {
+function parse_XLWideString(data)/*:string*/ {
 	var cchCharacters = data.read_shift(4);
 	return cchCharacters === 0 ? "" : data.read_shift(cchCharacters, 'dbcs');
 }
-function write_XLWideString(data, o) {
+function write_XLWideString(data/*:string*/, o) {
 	if(o == null) o = new_buf(4+2*data.length);
 	o.write_shift(4, data.length);
 	if(data.length > 0) o.write_shift(0, data, 'dbcs');
@@ -83,7 +83,7 @@ var write_RelID = write_XLNullableWideString;
 
 /* [MS-XLSB] 2.5.122 */
 /* [MS-XLS] 2.5.217 */
-function parse_RkNumber(data) {
+function parse_RkNumber(data)/*:number*/ {
 	var b = data.slice(data.l, data.l+4);
 	var fX100 = b[0] & 1, fInt = b[0] & 2;
 	data.l+=4;
@@ -102,8 +102,8 @@ function write_RkNumber(data/*:number*/, o) {
 
 
 /* [MS-XLSB] 2.5.153 */
-function parse_UncheckedRfX(data) {
-	var cell = {s: {}, e: {}};
+function parse_UncheckedRfX(data)/*:Range*/ {
+	var cell/*:Range*/ = ({s: {}, e: {}}/*:any*/);
 	cell.s.r = data.read_shift(4);
 	cell.e.r = data.read_shift(4);
 	cell.s.c = data.read_shift(4);
@@ -111,7 +111,7 @@ function parse_UncheckedRfX(data) {
 	return cell;
 }
 
-function write_UncheckedRfX(r, o) {
+function write_UncheckedRfX(r/*:Range*/, o) {
 	if(!o) o = new_buf(16);
 	o.write_shift(4, r.s.r);
 	o.write_shift(4, r.e.r);
@@ -123,25 +123,25 @@ function write_UncheckedRfX(r, o) {
 /* [MS-XLSB] 2.5.171 */
 /* [MS-XLS] 2.5.342 */
 /* TODO: error checking, NaN and Infinity values are not valid Xnum */
-function parse_Xnum(data, length) { return data.read_shift(8, 'f'); }
+function parse_Xnum(data, length/*:?number*/) { return data.read_shift(8, 'f'); }
 function write_Xnum(data, o) { return (o || new_buf(8)).write_shift(8, data, 'f'); }
 
 /* [MS-XLSB] 2.5.198.2 */
 var BErr = {
-	0x00: "#NULL!",
-	0x07: "#DIV/0!",
-	0x0F: "#VALUE!",
-	0x17: "#REF!",
-	0x1D: "#NAME?",
-	0x24: "#NUM!",
-	0x2A: "#N/A",
-	0x2B: "#GETTING_DATA",
-	0xFF: "#WTF?"
+	/*::[*/0x00/*::]*/: "#NULL!",
+	/*::[*/0x07/*::]*/: "#DIV/0!",
+	/*::[*/0x0F/*::]*/: "#VALUE!",
+	/*::[*/0x17/*::]*/: "#REF!",
+	/*::[*/0x1D/*::]*/: "#NAME?",
+	/*::[*/0x24/*::]*/: "#NUM!",
+	/*::[*/0x2A/*::]*/: "#N/A",
+	/*::[*/0x2B/*::]*/: "#GETTING_DATA",
+	/*::[*/0xFF/*::]*/: "#WTF?"
 };
 var RBErr = evert_num(BErr);
 
 /* [MS-XLSB] 2.4.321 BrtColor */
-function parse_BrtColor(data, length) {
+function parse_BrtColor(data, length/*:number*/) {
 	var out = {};
 	var d = data.read_shift(1);
 	out.fValidRGB = d & 1;
@@ -155,7 +155,7 @@ function parse_BrtColor(data, length) {
 }
 
 /* [MS-XLSB] 2.5.52 */
-function parse_FontFlags(data, length) {
+function parse_FontFlags(data, length/*:number*/) {
 	var d = data.read_shift(1);
 	data.l++;
 	var out = {

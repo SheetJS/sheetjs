@@ -1,13 +1,13 @@
 /* [MS-XLSB] 2.4.651 BrtFmt */
-function parse_BrtFmt(data, length) {
+function parse_BrtFmt(data, length/*:number*/) {
 	var ifmt = data.read_shift(2);
 	var stFmtCode = parse_XLWideString(data,length-2);
 	return [ifmt, stFmtCode];
 }
 
 /* [MS-XLSB] 2.4.653 BrtFont TODO */
-function parse_BrtFont(data, length) {
-	var out = {flags:{}};
+function parse_BrtFont(data, length/*:number*/) {
+	var out = ({flags:{}}/*:any*/);
 	out.dyHeight = data.read_shift(2);
 	out.grbit = parse_FontFlags(data, 2);
 	out.bls = data.read_shift(2);
@@ -33,7 +33,7 @@ function parse_BrtFont(data, length) {
 }
 
 /* [MS-XLSB] 2.4.816 BrtXF */
-function parse_BrtXF(data, length) {
+function parse_BrtXF(data, length/*:number*/) {
 	var ixfeParent = data.read_shift(2);
 	var ifmt = data.read_shift(2);
 	parsenoop(data, length-4);
@@ -42,7 +42,7 @@ function parse_BrtXF(data, length) {
 
 /* [MS-XLSB] 2.1.7.50 Styles */
 function parse_sty_bin(data, opts) {
-	styles.NumberFmt = [];
+	styles.NumberFmt = ([]/*:any*/);
 	for(var y in SSF._table) styles.NumberFmt[y] = SSF._table[y];
 
 	styles.CellXf = [];

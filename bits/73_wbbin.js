@@ -1,5 +1,5 @@
 /* [MS-XLSB] 2.4.301 BrtBundleSh */
-function parse_BrtBundleSh(data, length) {
+function parse_BrtBundleSh(data, length/*:number*/) {
 	var z = {};
 	z.hsState = data.read_shift(4); //ST_SheetState
 	z.iTabID = data.read_shift(4);
@@ -49,7 +49,7 @@ function parse_wb_bin(data, opts) {
 
 			case 'BrtBeginBook': break;
 			case 'BrtFileVersion': break;
-			case 'BrtWbProp': break;
+			case 'BrtWbProp14': case 'BrtWbProp': break;
 			case 'BrtACBegin': break;
 			case 'BrtAbsPath15': break;
 			case 'BrtACEnd': break;

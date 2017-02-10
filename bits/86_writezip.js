@@ -9,7 +9,7 @@ function add_rels(rels, rId, f, type, relobj) {
 	rels[('/' + relobj.Target).replace("//","/")] = relobj;
 }
 
-function write_zip(wb, opts) {
+function write_zip(wb/*:Workbook*/, opts/*:WriteOpts*/) {
 	if(opts.bookType == "ods") return write_ods(wb, opts);
 	if(wb && !wb.SSF) {
 		wb.SSF = SSF.get_table();
@@ -25,11 +25,14 @@ function write_zip(wb, opts) {
 		coreprops: [], extprops: [], custprops: [], strs:[], comments: [], vba: [],
 		TODO:[], rels:[], xmlns: "" };
 	fix_write_opts(opts = opts || {});
+	/*:: if(!jszip) throw new Error("JSZip is not available"); */
 	var zip = new jszip();
 	var f = "", rId = 0;
 
 	opts.cellXfs = [];
 	get_cell_style(opts.cellXfs, {}, {revssf:{"General":0}});
+
+	if(!wb.Props) wb.Props = {};
 
 	f = "docProps/core.xml";
 	zip.file(f, write_core_props(wb.Props, opts));
@@ -37,7 +40,6 @@ function write_zip(wb, opts) {
 	add_rels(opts.rels, 2, f, RELS.CORE_PROPS);
 
 	f = "docProps/app.xml";
-	if(!wb.Props) wb.Props = {};
 	wb.Props.SheetNames = wb.SheetNames;
 	wb.Props.Worksheets = wb.SheetNames.length;
 	zip.file(f, write_ext_props(wb.Props, opts));
