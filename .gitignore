@@ -1,2 +1,5 @@
 test_files/
 node_modules/
+*.[xX][lL][sS][xXmMbB]
+*.[xX][lL][sS]
+*.[oO][dD][sS]
