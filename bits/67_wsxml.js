@@ -8,10 +8,10 @@ var hlinkregex = /<(?:\w*:)?hyperlink[^>]*\/>/g;
 var dimregex = /"(\w*:\w*)"/;
 var colregex = /<(?:\w*:)?col[^>]*\/>/g;
 /* 18.3 Worksheets */
-function parse_ws_xml(data/*:?string*/, opts, rels) {
+function parse_ws_xml(data/*:?string*/, opts, rels)/*:Worksheet*/ {
 	if(!data) return data;
 	/* 18.3.1.99 worksheet CT_Worksheet */
-	var s = {};
+	var s = ({}/*:any*/);
 
 	/* 18.3.1.35 dimension CT_SheetDimension ? */
 	// $FlowIgnore
@@ -166,13 +166,16 @@ function write_ws_xml_cell(cell, ref, ws, opts, idx, wb) {
 var parse_ws_xml_data = (function parse_ws_xml_data_factory() {
 	var cellregex = /<(?:\w+:)?c[ >]/, rowregex = /<\/(?:\w+:)?row>/;
 	var rregex = /r=["']([^"']*)["']/, isregex = /<(?:\w+:)?is>([\S\s]*?)<\/(?:\w+:)?is>/;
+	var refregex = /ref=["']([^"']*)["']/;
 	var match_v = matchtag("v"), match_f = matchtag("f");
 
 return function parse_ws_xml_data(sdata, s, opts, guess) {
 	var ri = 0, x = "", cells = [], cref = [], idx = 0, i=0, cc=0, d="", p/*:any*/;
 	var tag, tagr = 0, tagc = 0;
-	var sstr;
+	var sstr, ftag;
 	var fmtid = 0, fillid = 0, do_format = Array.isArray(styles.CellXf), cf;
+	var arrayf = [];
+	var sharedf = [];
 	for(var marr = sdata.split(rowregex), mt = 0, marrlen = marr.length; mt != marrlen; ++mt) {
 		x = marr[mt].trim();
 		var xlen = x.length;
@@ -209,10 +212,29 @@ return function parse_ws_xml_data(sdata, s, opts, guess) {
 			d = x.substr(i);
 			p = ({t:""}/*:any*/);
 
-			// $FlowIgnore
-			if((cref=d.match(match_v))!= null && cref[1] !== '') p.v=unescapexml(cref[1]);
-			// $FlowIgnore
-			if(opts.cellFormula && (cref=d.match(match_f))!= null && cref[1] !== '') p.f=unescapexml(cref[1]);
+			if((cref=d.match(match_v))!= null && /*::cref != null && */cref[1] !== '') p.v=unescapexml(cref[1]);
+			if(opts.cellFormula) {
+				if((cref=d.match(match_f))!= null && /*::cref != null && */cref[1] !== '') {
+					p.f=unescapexml(utf8read(cref[1]));
+					if(/*::cref != null && cref[0] != null && */cref[0].indexOf('t="array"') > -1) {
+						p.F = (d.match(refregex)||[])[1];
+						if(p.F.indexOf(":") > -1) arrayf.push([safe_decode_range(p.F), p.F]);
+					} else if(/*::cref != null && cref[0] != null && */cref[0].indexOf('t="shared"') > -1) {
+						// TODO: parse formula
+						ftag = parsexmltag(cref[0]);
+						sharedf[parseInt(ftag.si, 10)] = [ftag, unescapexml(utf8read(cref[1]))];
+					}
+				} else if((cref=d.match(/<f[^>]*\/>/))) {
+					ftag = parsexmltag(cref[0]);
+					if(sharedf[ftag.si]) p.f = shift_formula_xlsx(sharedf[ftag.si][1], sharedf[ftag.si][0].ref, tag.r);
+				}
+				/* TODO: factor out contains logic */
+				var _tag = decode_cell(tag.r);
+				for(i = 0; i < arrayf.length; ++i)
+					if(_tag.r >= arrayf[i][0].s.r && _tag.r <= arrayf[i][0].e.r)
+						if(_tag.c >= arrayf[i][0].s.c && _tag.c <= arrayf[i][0].e.c)
+							p.F = arrayf[i][1];
+			}
 
 			/* SCHEMA IS ACTUALLY INCORRECT HERE.  IF A CELL HAS NO T, EMIT "" */
 			if(tag.t === undefined && p.v === undefined) {

@@ -82,7 +82,7 @@ function process_style_xlml(styles, stag, opts) {
 }
 
 /* TODO: there must exist some form of OSP-blessed spec */
-function parse_xlml_data(xml, ss, data, cell/*:any*/, base, styles, csty, row, o)/*:Workbook*/ {
+function parse_xlml_data(xml, ss, data, cell/*:any*/, base, styles, csty, row, arrayf, o)/*:Workbook*/ {
 	var nf = "General", sid = cell.StyleID, S = {}; o = o || {};
 	var interiors = [];
 	if(sid === undefined && row) sid = row.StyleID;
@@ -100,7 +100,7 @@ function parse_xlml_data(xml, ss, data, cell/*:any*/, base, styles, csty, row, o
 			break;
 		case 'String':
 			cell.t = 's'; cell.r = xlml_fixstr(unescapexml(xml));
-			cell.v = xml.indexOf("<") > -1 ? ss : cell.r;
+			cell.v = xml.indexOf("<") > -1 ? unescapexml(ss) : cell.r;
 			break;
 		case 'DateTime':
 			cell.v = (Date.parse(xml) - new Date(Date.UTC(1899, 11, 30))) / (24 * 60 * 60 * 1000);
@@ -116,9 +116,24 @@ function parse_xlml_data(xml, ss, data, cell/*:any*/, base, styles, csty, row, o
 		default: cell.t = 's'; cell.v = xlml_fixstr(ss); break;
 	}
 	safe_format_xlml(cell, nf, o);
-	if(o.cellFormula != null && cell.Formula) {
-		cell.f = rc_to_a1(unescapexml(cell.Formula), base);
-		cell.Formula = undefined;
+	if(o.cellFormula != null) {
+		if(cell.Formula) {
+			var fstr = unescapexml(cell.Formula);
+			/* strictly speaking, the leading = is required but some writers omit */
+			if(fstr.charCodeAt(0) == 61 /* = */) fstr = fstr.substr(1);
+			cell.f = rc_to_a1(fstr, base);
+			cell.Formula = undefined;
+			if(cell.ArrayRange == "RC") cell.F = rc_to_a1("RC:RC", base);
+			else if(cell.ArrayRange) {
+				cell.F = rc_to_a1(cell.ArrayRange, base);
+				arrayf.push([safe_decode_range(cell.F), cell.F]);
+			}
+		} else {
+			for(i = 0; i < arrayf.length; ++i)
+				if(base.r >= arrayf[i][0].s.r && base.r <= arrayf[i][0].e.r)
+					if(base.c >= arrayf[i][0].s.c && base.c <= arrayf[i][0].e.c)
+						cell.F = arrayf[i][1];
+		}
 	}
 	if(o.cellStyles) {
 		interiors.forEach(function(x) {
@@ -157,11 +172,12 @@ function parse_xlml_xml(d, opts) {
 	var Props = {}, Custprops = {}, pidx = 0, cp = {};
 	var comments = [], comment = {};
 	var cstys = [], csty;
+	var arrayf = [];
 	xlmlregex.lastIndex = 0;
 	while((Rn = xlmlregex.exec(str))) switch(Rn[3]) {
 		case 'Data':
 			if(state[state.length-1][1]) break;
-			if(Rn[1]==='/') parse_xlml_data(str.slice(didx, Rn.index), ss, dtag, state[state.length-1][0]=="Comment"?comment:cell, {c:c,r:r}, styles, cstys[c], row, opts);
+			if(Rn[1]==='/') parse_xlml_data(str.slice(didx, Rn.index), ss, dtag, state[state.length-1][0]=="Comment"?comment:cell, {c:c,r:r}, styles, cstys[c], row, arrayf, opts);
 			else { ss = ""; dtag = xlml_parsexmltag(Rn[0]); didx = Rn.index + Rn[0].length; }
 			break;
 		case 'Cell':

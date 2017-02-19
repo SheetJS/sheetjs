@@ -10,10 +10,7 @@ function parse_cust_props(data/*:string*/, opts) {
 		var x = m[i], y = parsexmltag(x);
 		switch(y[0]) {
 			case '<?xml': break;
-			case '<Properties':
-				if(y.xmlns !== XMLNS.CUST_PROPS) throw "unrecognized xmlns " + y.xmlns;
-				if(y.xmlnsvt && y.xmlnsvt !== XMLNS.vt) throw "unrecognized vt " + y.xmlnsvt;
-				break;
+			case '<Properties': break;
 			case '<property': name = y.name; break;
 			case '</property>': name = null; break;
 			default: if (x.indexOf('<vt:') === 0) {

@@ -304,7 +304,15 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 						default:
 							temp_val = ({v:val.val, ixfe:val.cell.ixfe, t:val.tt}/*:any*/);
 							temp_val.XF = XFs[temp_val.ixfe];
-							if(options.cellFormula) temp_val.f = "="+stringify_formula(val.formula,range,val.cell,supbooks, opts);
+							if(options.cellFormula) {
+								var _f = val.formula;
+								if(_f && _f[0] && _f[0][0] && _f[0][0][0] == 'PtgExp') {
+									var _fr = _f[0][0][1][0], _fc = _f[0][0][1][1];
+									var _fe = encode_cell({r:_fr, c:_fc});
+									if(shared_formulae[_fe]) temp_val.f = stringify_formula(val.formula,range,val.cell,supbooks, opts);
+									else temp_val.F = (out[_fe] || {}).F;
+								} else temp_val.f = stringify_formula(val.formula,range,val.cell,supbooks, opts);
+							}
 							safe_format_xf(temp_val, options, wb.opts.Date1904);
 							addcell(val.cell, temp_val, options);
 							last_formula = val;
@@ -315,7 +323,7 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 						last_formula.val = val;
 						temp_val = ({v:last_formula.val, ixfe:last_formula.cell.ixfe, t:'s'}/*:any*/);
 						temp_val.XF = XFs[temp_val.ixfe];
-						if(options.cellFormula) temp_val.f = "="+stringify_formula(last_formula.formula, range, last_formula.cell, supbooks, opts);
+						if(options.cellFormula) temp_val.f = stringify_formula(last_formula.formula, range, last_formula.cell, supbooks, opts);
 						safe_format_xf(temp_val, options, wb.opts.Date1904);
 						addcell(last_formula.cell, temp_val, options);
 						last_formula = null;
@@ -323,12 +331,19 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 				} break;
 				case 'Array': {
 					array_formulae.push(val);
+					if(options.cellFormula && out[last_cell]) {
+						out[last_cell].f = stringify_formula(last_formula.formula, range, last_formula.cell, supbooks, opts);
+						out[last_cell].F = encode_range(val[0]);
+					}
 				} break;
 				case 'ShrFmla': {
 					if(!cell_valid) break;
-					//if(options.cellFormula) out[last_cell].f = stringify_formula(val[0], range, lastcell, supbooks, opts);
-					/* TODO: capture range */
-					if(last_formula) shared_formulae[encode_cell(last_formula.cell)]= val[0];
+					if(!options.cellFormula) break;
+					if(last_cell) {
+						/* TODO: capture range */
+						shared_formulae[encode_cell(last_formula.cell)]= val[0];
+						(out[encode_cell(last_formula.cell)]||{}).f = stringify_formula(val[0], range, lastcell, supbooks, opts);
+					}
 				} break;
 				case 'LabelSst':
 					temp_val=make_cell(sst[val.isst].t, val.ixfe, 's');
@@ -336,6 +351,7 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 					safe_format_xf(temp_val, options, wb.opts.Date1904);
 					addcell({c:val.c, r:val.r}, temp_val, options);
 					break;
+				case 'RString':
 				case 'Label': case 'BIFF2STR':
 					temp_val=make_cell(val.val, val.ixfe, 's');
 					temp_val.XF = XFs[temp_val.ixfe];
@@ -609,14 +625,12 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 				default: switch(R.n) { /* nested */
 				/* BIFF5 records */
 				case 'ExternCount': break;
-				case 'RString': break;
 				case 'TabIdConf': case 'Radar': case 'RadarArea': case 'DropBar': case 'Intl': case 'CoordList': case 'SerAuxErrBar': break;
 
 				/* BIFF2-4 records */
-				case 'BIFF2FONTCLR': case 'BIFF2FMTCNT': break;
+				case 'BIFF2FONTCLR': case 'BIFF2FMTCNT': case 'BIFF2FONTXTRA': break;
 				case 'BIFF2XF': case 'BIFF3XF': case 'BIFF4XF': break;
 				case 'BIFF4FMTCNT': case 'BIFF2ROW': case 'BIFF2WINDOW2': break;
-				case 'Dimension': break;
 
 				/* Miscellaneous */
 				case 'SCENARIO': case 'DConBin': case 'PicF': case 'DataLabExt':

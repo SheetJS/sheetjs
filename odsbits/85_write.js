@@ -10,7 +10,7 @@ function write_ods(wb/*:any*/, opts/*:any*/) {
 	f = "mimetype";
 	zip.file(f, "application/vnd.oasis.opendocument.spreadsheet");
 
-	/* Part 2 Section 2.2 Documents */
+	/* Part 1 Section 2.2 Documents */
 	f = "content.xml";
 	zip.file(f, write_content_xml(wb, opts));
 	manifest.push([f, "text/xml"]);

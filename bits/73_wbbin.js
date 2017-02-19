@@ -38,14 +38,42 @@ function parse_BrtFRTArchID$(data, length) {
 	return o;
 }
 
+/* [MS-XLSB] 2.4.680 BrtName */
+function parse_BrtName(data, length, opts) {
+	var end = data.l + length;
+	var flags = data.read_shift(4);
+	var chKey = data.read_shift(1);
+	var itab = data.read_shift(4);
+	var name = parse_XLNameWideString(data);
+	var formula = parse_XLSBNameParsedFormula(data, 0, opts);
+	var comment = parse_XLNullableWideString(data);
+	if(0 /* fProc */) {
+		// unusedstring1: XLNullableWideString
+		// description: XLNullableWideString
+		// helpTopic: XLNullableWideString
+		// unusedstring2: XLNullableWideString
+	}
+	data.l = end;
+	return {Name:name, Ptg:formula, Comment:comment};
+}
+
 /* [MS-XLSB] 2.1.7.60 Workbook */
 function parse_wb_bin(data, opts) {
 	var wb = { AppVersion:{}, WBProps:{}, WBView:[], Sheets:[], CalcPr:{}, xmlns: "" };
 	var pass = false, z;
 
+	if(!opts) opts = {};
+	opts.biff = 12;
+
+	var Names = {}, NameList = [];
+
 	recordhopper(data, function hopper_wb(val, R) {
 		switch(R.n) {
 			case 'BrtBundleSh': wb.Sheets.push(val); break;
+
+			case 'BrtName':
+				Names[val.Name] = val; NameList.push(val.Name);
+				break;
 
 			case 'BrtBeginBook': break;
 			case 'BrtFileVersion': break;
@@ -68,7 +96,6 @@ function parse_wb_bin(data, opts) {
 			case 'BrtSupBookSrc': break;
 			case 'BrtExternSheet': break;
 			case 'BrtEndExternals': break;
-			case 'BrtName': break;
 			case 'BrtCalcProp': break;
 			case 'BrtUserBookView': break;
 			case 'BrtBeginPivotCacheIDs': break;
@@ -95,9 +122,12 @@ function parse_wb_bin(data, opts) {
 			case 'BrtEndBook': break;
 			default: if(!pass || opts.WTF) throw new Error("Unexpected record " + R.n);
 		}
-	});
+	}, opts);
 
 	parse_wb_defaults(wb);
+
+	Names['!names'] = NameList;
+	wb.Names = Names;
 
 	return wb;
 }

@@ -39,10 +39,10 @@ function parse_RkRec(blob, length) {
 }
 
 /* 2.5.1 */
-function parse_AddinUdf(blob, length) {
+function parse_AddinUdf(blob, length, opts) {
 	blob.l += 4; length -= 4;
 	var l = blob.l + length;
-	var udfName = parse_ShortXLUnicodeString(blob, length);
+	var udfName = parse_ShortXLUnicodeString(blob, length, opts);
 	var cb = blob.read_shift(2);
 	l -= blob.l;
 	if(cb !== l) throw "Malformed AddinUdf: padding = " + l + " != " + cb;
@@ -272,8 +272,10 @@ function parse_LabelSst(blob, length) {
 
 /* 2.4.148 */
 function parse_Label(blob, length, opts) {
+	var target = blob.l + length;
 	var cell = parse_XLSCell(blob, 6);
-	var str = parse_XLUnicodeString(blob, length-6, opts);
+	if(opts.biff == 2) blob.l++;
+	var str = parse_XLUnicodeString(blob, target - blob.l, opts);
 	cell.val = str;
 	return cell;
 }
@@ -287,11 +289,12 @@ function parse_Format(blob, length, opts) {
 var parse_BIFF2Format = parse_XLUnicodeString2;
 
 /* 2.4.90 */
-function parse_Dimensions(blob, length) {
-	var w = length === 10 ? 2 : 4;
+function parse_Dimensions(blob, length, opts) {
+	var end = blob.l + length;
+	var w = opts.biff == 8 || !opts.biff ? 4 : 2;
 	var r = blob.read_shift(w), R = blob.read_shift(w),
 	    c = blob.read_shift(2), C = blob.read_shift(2);
-	blob.l += 2;
+	blob.l = end;
 	return {s: {r:r, c:c}, e: {r:R, c:C}};
 }
 
@@ -392,7 +395,7 @@ function parse_ExternName(blob, length, opts) {
 		cf: (flags >>> 5) & 0x3FF,
 		fIcon: flags >>> 15 & 0x01
 	}/*:any*/);
-	if(opts.sbcch === 0x3A01) body = parse_AddinUdf(blob, length-2);
+	if(opts.sbcch === 0x3A01) body = parse_AddinUdf(blob, length-2, opts);
 	//else throw new Error("unsupported SupBook cch: " + opts.sbcch);
 	o.body = body || blob.read_shift(length-2);
 	return o;
@@ -404,12 +407,15 @@ function parse_Lbl(blob, length, opts) {
 	var flags = blob.read_shift(2);
 	var chKey = blob.read_shift(1);
 	var cch = blob.read_shift(1);
-	var cce = blob.read_shift(2);
-	blob.l += 2;
-	var itab = blob.read_shift(2);
-	blob.l += 4;
+	var cce = blob.read_shift(opts && opts.biff == 2 ? 1 : 2);
+	if(!opts || opts.biff >= 5) {
+		blob.l += 2;
+		var itab = blob.read_shift(2);
+		blob.l += 4;
+	}
 	var name = parse_XLUnicodeStringNoCch(blob, cch, opts);
-	var rgce = parse_NameParsedFormula(blob, target - blob.l, opts, cce);
+	var npflen = target - blob.l; if(opts && opts.biff == 2) --npflen;
+	var rgce = target == blob.l || cce == 0 ? [] : parse_NameParsedFormula(blob, npflen, opts, cce);
 	return {
 		chKey: chKey,
 		Name: name,
@@ -441,7 +447,12 @@ function parse_ShrFmla(blob, length, opts) {
 /* 2.4.4 TODO */
 function parse_Array(blob, length, opts) {
 	var ref = parse_Ref(blob, 6);
-	blob.l += 6; length -= 12; /* TODO: fAlwaysCalc */
+	/* TODO: fAlwaysCalc */
+	switch(opts.biff) {
+		case 2: blob.l ++; length -= 7; break;
+		case 3: case 4: blob.l += 2; length -= 8; break;
+		default: blob.l += 6; length -= 12;
+	}
 	return [ref, parse_ArrayParsedFormula(blob, length, opts, ref)];
 }
 
@@ -904,6 +915,7 @@ function parse_BIFF2STR(blob, length, opts) {
 	var cell = parse_XLSCell(blob, 6);
 	++blob.l;
 	var str = parse_XLUnicodeString2(blob, length-7, opts);
+	cell.t = 'str';
 	cell.val = str;
 	return cell;
 }
@@ -912,6 +924,7 @@ function parse_BIFF2NUM(blob, length, opts) {
 	var cell = parse_XLSCell(blob, 6);
 	++blob.l;
 	var num = parse_Xnum(blob, 8);
+	cell.t = 'n';
 	cell.val = num;
 	return cell;
 }
@@ -920,6 +933,7 @@ function parse_BIFF2INT(blob, length) {
 	var cell = parse_XLSCell(blob, 6);
 	++blob.l;
 	var num = blob.read_shift(2);
+	cell.t = 'n';
 	cell.val = num;
 	return cell;
 }
@@ -938,4 +952,16 @@ function parse_BIFF2FONTXTRA(blob, length) {
 	blob.l += 3; // unknown
 	blob.l += 1; // font family
 	blob.l += length - 9;
+}
+
+/* TODO: parse rich text runs */
+function parse_RString(blob, length, opts) {
+	var end = blob.l + length;
+	var cell = parse_XLSCell(blob, 6);
+	var cch = blob.read_shift(2);
+	var str = parse_XLUnicodeStringNoCch(blob, cch, opts);
+	blob.l = end;
+	cell.t = 'str';
+	cell.val = str;
+	return cell;
 }

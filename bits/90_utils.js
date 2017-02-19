@@ -156,11 +156,11 @@ function sheet_to_csv(sheet/*:Worksheet*/, opts/*:?Sheet2CSVOpts*/) {
 }
 var make_csv = sheet_to_csv;
 
-function sheet_to_formulae(sheet/*:Worksheet*/) {
-	var cmds, y = "", x, val="";
-	if(sheet == null || sheet["!ref"] == null) return "";
+function sheet_to_formulae(sheet/*:Worksheet*/)/*:Array<string>*/ {
+	var y = "", x, val="";
+	if(sheet == null || sheet["!ref"] == null) return [];
 	var r = safe_decode_range(sheet['!ref']), rr = "", cols = [], C;
-	cmds = new Array((r.e.r-r.s.r+1)*(r.e.c-r.s.c+1));
+	var cmds = new Array((r.e.r-r.s.r+1)*(r.e.c-r.s.c+1));
 	var i = 0;
 	for(C = r.s.c; C <= r.e.c; ++C) cols[C] = encode_col(C);
 	for(var R = r.s.r; R <= r.e.r; ++R) {
@@ -170,9 +170,18 @@ function sheet_to_formulae(sheet/*:Worksheet*/) {
 			x = sheet[y];
 			val = "";
 			if(x === undefined) continue;
+			else if(x.F != null) {
+				y = x.F;
+				if(!x.f) continue;
+				val = x.f;
+				if(y.indexOf(":") == -1) y = y + ":" + y;
+			}
 			if(x.f != null) val = x.f;
+			else if(x.t == 'n' && x.v != null) val = "" + x.v;
+			else if(x.t == 'b') val = x.v ? "TRUE" : "FALSE";
 			else if(x.w !== undefined) val = "'" + x.w;
 			else if(x.v === undefined) continue;
+			else if(x.t == 's') val = "'" + x.v;
 			else val = ""+x.v;
 			cmds[i++] = y + "=" + val;
 		}

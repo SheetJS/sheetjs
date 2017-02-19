@@ -366,23 +366,27 @@ for(var R = range.s.r; R <= range.e.r; ++R) {
 
 ### Cell Object
 
-| Key | Description |
-| --- | ----------- |
-| `v` | raw value (see Data Types section for more info) |
-| `w` | formatted text (if applicable) |
-| `t` | cell type: `b` Boolean, `n` Number, `e` error, `s` String, `d` Date |
-| `f` | cell formula (if applicable) |
-| `r` | rich text encoding (if applicable) |
-| `h` | HTML rendering of the rich text (if applicable) |
-| `c` | comments associated with the cell ** |
-| `z` | number format string associated with the cell (if requested) |
-| `l` | cell hyperlink object (.Target holds link, .tooltip is tooltip) |
-| `s` | the style/theme of the cell (if applicable) |
+| Key | Description                                                            |
+| --- | ---------------------------------------------------------------------- |
+| `v` | raw value (see Data Types section for more info)                       |
+| `w` | formatted text (if applicable)                                         |
+| `t` | cell type: `b` Boolean, `n` Number, `e` error, `s` String, `d` Date    |
+| `f` | cell formula encoded as an A1-style string (if applicable)             |
+| `F` | range of enclosing array if formula is array formula (if applicable)   |
+| `r` | rich text encoding (if applicable)                                     |
+| `h` | HTML rendering of the rich text (if applicable)                        |
+| `c` | comments associated with the cell                                      |
+| `z` | number format string associated with the cell (if requested)           |
+| `l` | cell hyperlink object (.Target holds link, .tooltip is tooltip)        |
+| `s` | the style/theme of the cell (if applicable)                            |
 
 Built-in export utilities (such as the CSV exporter) will use the `w` text if it
 is available.  To change a value, be sure to delete `cell.w` (or set it to
 `undefined`) before attempting to export.  The utilities will regenerate the `w`
 text from the number format (`cell.z`) and the raw value if possible.
+
+The actual array formula is stored in the `f` field of the first cell in the
+array range.  Other cells in the range will omit the `f` field.
 
 ### Data Types
 
@@ -418,6 +422,20 @@ dates in the local timezone.  js-xlsx does not correct for this error.
 Type `s` is the String type.  `v` should be explicitly stored as a string to
 avoid possible confusion.
 
+### Formulae
+
+The A1-style formula string is stored in the `f` field.  Even though different
+file formats store the formulae in different ways, the formats are converted.
+
+Shared formulae are decompressed and each cell has the correct formula.
+
+Array formulae are stored in the top-left cell of the array block.  All cells
+of an array formula have a `F` field corresponding to the range.  A single-cell
+formula can be distinguished from a plain formula by the presence of `F` field.
+
+The `sheet_to_formulae` method generates one line per formula or array formula.
+Array formulae are rendered in the form `range=formula` while plain cells are
+rendered in the form `cell=formula or value`.
 
 ### Worksheet Object
 
@@ -619,6 +637,8 @@ OSP-covered specifications:
  - [MS-OLEDS]: Object Linking and Embedding (OLE) Data Structures
  - [MS-OLEPS]: Object Linking and Embedding (OLE) Property Set Data Structures
  - [MS-OSHARED]: Office Common Data Types and Objects Structures
+ - [MS-ODRAW]: Office Drawing Binary File Format
+ - [MS-ODRAWXML]: Office Drawing Extensions to Office Open XML Structure
  - [MS-OVBA]: Office VBA File Format Structure
  - [MS-CTXLS]: Excel Custom Toolbar Binary File Format
  - [MS-XLDM]: Spreadsheet Data Model File Format

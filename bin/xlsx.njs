@@ -21,6 +21,7 @@ program
 	.option('-S, --formulae', 'print formulae')
 	.option('-j, --json', 'emit formatted JSON (all fields text)')
 	.option('-J, --raw-js', 'emit raw JS object (raw numbers)')
+	.option('-A, --arrays', 'emit rows as JS objects (raw numbers)')
 	.option('-F, --field-sep <sep>', 'CSV field separator', ",")
 	.option('-R, --row-sep <sep>', 'CSV row separator', "\n")
 	.option('-n, --sheet-rows <num>', 'Number of rows to process (0=all rows)')
@@ -77,7 +78,7 @@ if(program.xlsx || program.xlsm || program.xlsb) {
 	opts.cellNF = true;
 	if(program.output) sheetname = program.output;
 }
-else if(program.formulae);
+else if(program.formulae) opts.cellFormula = true;
 else opts.cellFormula = false;
 
 if(program.all) {
@@ -142,6 +143,7 @@ if(!program.quiet) console.error(target_sheet);
 if(program.formulae) oo = X.utils.get_formulae(ws).join("\n");
 else if(program.json) oo = JSON.stringify(X.utils.sheet_to_row_object_array(ws));
 else if(program.rawJs) oo = JSON.stringify(X.utils.sheet_to_row_object_array(ws,{raw:true}));
+else if(program.arrays) oo = JSON.stringify(X.utils.sheet_to_row_object_array(ws,{raw:true, header:1}));
 else oo = X.utils.make_csv(ws, {FS:program.fieldSep, RS:program.rowSep});
 
 if(program.output) fs.writeFileSync(program.output, oo);

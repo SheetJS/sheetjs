@@ -303,13 +303,15 @@ function parse_Bes(blob) {
 
 /* [MS-XLS] 2.5.240 ShortXLUnicodeString */
 function parse_ShortXLUnicodeString(blob, length, opts) {
-	var cch = blob.read_shift(1);
+	var cch = blob.read_shift(opts && opts.biff >= 12 ? 2 : 1);
 	var width = 1, encoding = 'sbcs-cont';
 	var cp = current_codepage;
 	if(opts && opts.biff >= 8) current_codepage = 1200;
-	if(opts === undefined || opts.biff !== 5) {
+	if(!opts || opts.biff == 8 ) {
 		var fHighByte = blob.read_shift(1);
 		if(fHighByte) { width = 2; encoding = 'dbcs-cont'; }
+	} else if(opts.biff == 12) {
+		width = 2; encoding = 'wstr';
 	}
 	var o = cch ? blob.read_shift(cch, encoding) : "";
 	current_codepage = cp;
@@ -340,6 +342,10 @@ function parse_XLUnicodeRichExtendedString(blob) {
 /* 2.5.296 XLUnicodeStringNoCch */
 function parse_XLUnicodeStringNoCch(blob, cch, opts) {
 	var retval;
+	if(opts) {
+		if(opts.biff >= 2 && opts.biff <= 5) return blob.read_shift(cch, 'sbcs-cont');
+		if(opts.biff >= 12) return blob.read_shift(cch, 'dbcs-cont');
+	}
 	var fHighByte = blob.read_shift(1);
 	if(fHighByte===0) { retval = blob.read_shift(cch, 'sbcs-cont'); }
 	else { retval = blob.read_shift(cch, 'dbcs-cont'); }
@@ -348,7 +354,7 @@ function parse_XLUnicodeStringNoCch(blob, cch, opts) {
 
 /* 2.5.294 XLUnicodeString */
 function parse_XLUnicodeString(blob, length, opts) {
-	var cch = blob.read_shift(opts !== undefined && opts.biff > 0 && opts.biff < 8 ? 1 : 2);
+	var cch = blob.read_shift(opts && opts.biff == 2 ? 1 : 2);
 	if(cch === 0) { blob.l++; return ""; }
 	return parse_XLUnicodeStringNoCch(blob, cch, opts);
 }

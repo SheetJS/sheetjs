@@ -76,6 +76,10 @@ function write_XLWideString(data/*:string*/, o) {
 	return o;
 }
 
+/* [MS-XLSB] 2.5.165 */
+var parse_XLNameWideString = parse_XLWideString;
+var write_XLNameWideString = write_XLWideString;
+
 /* [MS-XLSB] 2.5.114 */
 var parse_RelID = parse_XLNullableWideString;
 var write_RelID = write_XLNullableWideString;
@@ -101,8 +105,8 @@ function write_RkNumber(data/*:number*/, o) {
 }
 
 
-/* [MS-XLSB] 2.5.153 */
-function parse_UncheckedRfX(data)/*:Range*/ {
+/* [MS-XLSB] 2.5.117 RfX */
+function parse_RfX(data)/*:Range*/ {
 	var cell/*:Range*/ = ({s: {}, e: {}}/*:any*/);
 	cell.s.r = data.read_shift(4);
 	cell.e.r = data.read_shift(4);
@@ -111,7 +115,7 @@ function parse_UncheckedRfX(data)/*:Range*/ {
 	return cell;
 }
 
-function write_UncheckedRfX(r/*:Range*/, o) {
+function write_RfX(r/*:Range*/, o) {
 	if(!o) o = new_buf(16);
 	o.write_shift(4, r.s.r);
 	o.write_shift(4, r.e.r);
@@ -119,6 +123,10 @@ function write_UncheckedRfX(r/*:Range*/, o) {
 	o.write_shift(4, r.e.c);
 	return o;
 }
+
+/* [MS-XLSB] 2.5.153 UncheckedRfX */
+var parse_UncheckedRfX = parse_RfX;
+var write_UncheckedRfX = write_RfX;
 
 /* [MS-XLSB] 2.5.171 */
 /* [MS-XLS] 2.5.342 */

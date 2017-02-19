@@ -40,6 +40,12 @@ var ct2type/*{[string]:string}*/ = ({
 	"application/vnd.ms-excel.pivotTable": "TODO",
 	"application/vnd.openxmlformats-officedocument.spreadsheetml.pivotTable+xml": "TODO",
 
+	/* Chart Colors */
+	"application/vnd.ms-office.chartcolorstyle+xml": "TODO",
+
+	/* Chart Style */
+	"application/vnd.ms-office.chartstyle+xml": "TODO",
+
 	/* Calculation Chain */
 	"application/vnd.ms-excel.calcChain": "calcchains",
 	"application/vnd.openxmlformats-officedocument.spreadsheetml.calcChain+xml": "calcchains",

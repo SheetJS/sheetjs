@@ -82,6 +82,8 @@ function ReadShift(size, t) {
 		case 'utf8': o = __utf8(this, this.l, this.l + size); break;
 		case 'utf16le': size *= 2; o = __utf16le(this, this.l, this.l + size); break;
 
+		case 'wstr': o = cptable.utils.decode(current_codepage, this.slice(this.l, this.l+2*size)); size = 2 * size; break;
+
 		/* [MS-OLEDS] 2.1.4 LengthPrefixedAnsiString */
 		case 'lpstr': o = __lpstr(this, this.l); size = 5 + o.length; break;
 		/* [MS-OLEDS] 2.1.5 LengthPrefixedUnicodeString */

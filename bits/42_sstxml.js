@@ -70,21 +70,21 @@ var parse_rs = (function parse_rs_factory() {
 
 				/* 18.4.13 u CT_UnderlineProperty */
 				case '<u':
-					if(!y.val) break;
+					if(y.val == '0') break;
 					/* falls through */
 				case '<u/>': font.u = 1; break;
 				case '</u>': break;
 
 				/* 18.8.2 b */
 				case '<b':
-					if(!y.val) break;
+					if(y.val == '0') break;
 					/* falls through */
 				case '<b/>': font.b = 1; break;
 				case '</b>': break;
 
 				/* 18.8.26 i */
 				case '<i':
-					if(!y.val) break;
+					if(y.val == '0') break;
 					/* falls through */
 				case '<i/>': font.i = 1; break;
 				case '</i>': break;
@@ -142,16 +142,17 @@ function parse_si(x, opts) {
 	if(!x) return null;
 	var y;
 	/* 18.4.12 t ST_Xstring (Plaintext String) */
-	if(x.match(/^<(?:\w+:)?t[^>]*>/)) {
+	// TODO: is whitespace actually valid here?
+	if(x.match(/^\s*<(?:\w+:)?t[^>]*>/)) {
 		z.t = utf8read(unescapexml(x.substr(x.indexOf(">")+1).split(/<\/(?:\w+:)?t>/)[0]));
-		z.r = x;
+		z.r = utf8read(x);
 		if(html) z.h = z.t;
 	}
 	/* 18.4.4 r CT_RElt (Rich Text Run) */
 	else if((y = x.match(sirregex))) {
-		z.r = x;
+		z.r = utf8read(x);
 		z.t = utf8read(unescapexml((x.match(sitregex)||[]).join("").replace(tagregex,"")));
-		if(html) z.h = parse_rs(x);
+		if(html) z.h = parse_rs(z.r);
 	}
 	/* 18.4.3 phoneticPr CT_PhoneticPr (TODO: needed for Asian support) */
 	/* 18.4.6 rPh CT_PhoneticRun (TODO: needed for Asian support) */
@@ -170,7 +171,7 @@ function parse_sst_xml(data/*:string*/, opts)/*:SST*/ {
 	if(isval(sst)/*:: && sst*/) {
 		ss = sst[2].replace(sstr1,"").split(sstr2);
 		for(var i = 0; i != ss.length; ++i) {
-			var o = parse_si(ss[i], opts);
+			var o = parse_si(ss[i].trim(), opts);
 			if(o != null) s[s.length] = o;
 		}
 		sst = parsexmltag(sst[1]); s.Count = sst.count; s.Unique = sst.uniqueCount;
