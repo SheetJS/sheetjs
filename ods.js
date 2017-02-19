@@ -239,6 +239,17 @@ var utf8read = function utf8reada(orig) {
 	}
 	return out;
 };
+/* Part 3 TODO: actually parse formulae */
+function ods_to_csf_formula(f) {
+	if(f.substr(0,3) == "of:") f = f.substr(3);
+	/* 5.2 Basic Expressions */
+	if(f.charCodeAt(0) == 61) {
+		f = f.substr(1);
+		if(f.charCodeAt(0) == 61) f = f.substr(1);
+	}
+	/* Part 3 Section 5.8 References */
+	return f.replace(/\[((?:\.[A-Z]+[0-9]+)(?::\.[A-Z]+[0-9]+)?)\]/g, "$1").replace(/\./g, "");
+}
 var parse_content_xml = (function() {
 
 	var number_formats = {
@@ -266,7 +277,9 @@ var parse_content_xml = (function() {
 		var R = -1, C = -1, range = {s: {r:1000000,c:10000000}, e: {r:0, c:0}};
 		var number_format_map = {};
 		var merges = [], mrange = {}, mR = 0, mC = 0;
-		var rept = 1;
+		var arrayf = [];
+		var rept = 1, isstub = false;
+		var i = 0;
 		xlmlregex.lastIndex = 0;
 		while((Rn = xlmlregex.exec(str))) switch(Rn[3]) {
 
@@ -305,7 +318,21 @@ var parse_content_xml = (function() {
 					if(C < range.s.c) range.s.c = C;
 					if(R < range.s.r) range.s.r = R;
 					ctag = parsexmltag(Rn[0], false);
-					q = {t:ctag['value-type'], v:null};
+					q = ({t:ctag['value-type'], v:null});
+					if(opts.cellFormula) {
+						if(ctag['number-matrix-columns-spanned'] && ctag['number-matrix-rows-spanned']) {
+							mR = parseInt(ctag['number-matrix-rows-spanned'],10) || 0;
+							mC = parseInt(ctag['number-matrix-columns-spanned'],10) || 0;
+							mrange = {s: {r:R,c:C}, e:{r:R + mR-1,c:C + mC-1}};
+							q.F = get_utils().encode_range(mrange);
+							arrayf.push([mrange, q.F]);
+						}
+						if(ctag.formula) q.f = ods_to_csf_formula(ctag.formula);
+						else for(i = 0; i < arrayf.length; ++i)
+							if(R >= arrayf[i][0].s.r && R <= arrayf[i][0].e.r)
+								if(C >= arrayf[i][0].s.c && C <= arrayf[i][0].e.c)
+									q.F = arrayf[i][1];
+					}
 					if(ctag['number-columns-spanned'] || ctag['number-rows-spanned']) {
 						mR = parseInt(ctag['number-rows-spanned'],10) || 0;
 						mC = parseInt(ctag['number-columns-spanned'],10) || 0;
@@ -331,13 +358,19 @@ var parse_content_xml = (function() {
 							} else throw new Error('Unsupported value type ' + q.t);
 					}
 				} else {
-					if(q.t === 's') q.v = textp || '';
-					if(textp) q.w = textp;
-					if(!(opts.sheetRows && opts.sheetRows < R)) {
-						ws[get_utils().encode_cell({r:R,c:C})] = q;
-						while(--rept > 0) ws[get_utils().encode_cell({r:R,c:++C})] = dup(q);
-						if(range.e.c <= C) range.e.c = C;
+					isstub = false;
+					if(q.t === 's') {
+						q.v = textp || '';
+						isstub = textpidx == 0;
 					}
+					if(textp) q.w = textp;
+					if(!isstub || opts.cellStubs) {
+						if(!(opts.sheetRows && opts.sheetRows < R)) {
+							ws[get_utils().encode_cell({r:R,c:C})] = q;
+							while(--rept > 0) ws[get_utils().encode_cell({r:R,c:++C})] = dup(q);
+							if(range.e.c <= C) range.e.c = C;
+						}
+					} else { C += rept; rept = 0; }
 					q = {};
 					textp = "";
 				}
@@ -364,6 +397,7 @@ var parse_content_xml = (function() {
 			case 'annotation': // 14.1 <office:annotation>
 				if(Rn[1]==='/'){if((tmp=state.pop())[0]!==Rn[3]) throw "Bad state: "+tmp;}
 				else if(Rn[0].charAt(Rn[0].length-2) !== '/') state.push([Rn[3], false]);
+				textp = ""; textpidx = 0;
 				break;
 
 			case 'number-style': // 16.27.2 <number:number-style>
@@ -616,7 +650,7 @@ var zip = new jszip();
 	f = "mimetype";
 	zip.file(f, "application/vnd.oasis.opendocument.spreadsheet");
 
-	/* Part 2 Section 2.2 Documents */
+	/* Part 1 Section 2.2 Documents */
 	f = "content.xml";
 	zip.file(f, write_content_xml(wb, opts));
 	manifest.push([f, "text/xml"]);
