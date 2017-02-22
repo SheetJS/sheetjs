@@ -554,7 +554,7 @@ files with the `.xls` extension will tell your computer to use Excel to open the
 file but Excel will know how to handle it.  This library applies similar logic:
 
 | Byte 0 | Raw File Type | Spreadsheet Types                                   |
-|:-------|:--------------------------------------------------------------------|
+|:-------|:--------------|:----------------------------------------------------|
 | `0xD0` | CFB Container | BIFF 5/8 or password-protected XLSX/XLSB            |
 | `0x09` | BIFF Stream   | BIFF 2/3/4/5                                        |
 | `0x3C` | XML           | SpreadsheetML or Flat ODS or UOS1                   |
