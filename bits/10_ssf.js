@@ -564,7 +564,7 @@ function eval_fmt(fmt, v, opts, flen) {
 			case '[':
 				o = c;
 				while(fmt[i++] !== ']' && i < fmt.length) o += fmt[i];
-				if(o.substr(-1) !== ']') throw 'unterminated "[" block: |' + o + '|';
+				if(o.slice(-1) !== ']') throw 'unterminated "[" block: |' + o + '|';
 				if(o.match(abstime)) {
 					if(dt==null) { dt=parse_date_code(v, opts); if(dt==null) return ""; }
 					out[out.length] = {t:'Z', v:o.toLowerCase()};

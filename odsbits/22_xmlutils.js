@@ -1,4 +1,4 @@
-var attregexg=/\b[\w:-]+=["'][^"]*['"]/g;
+var attregexg=/[^\s?>\/]+=["'][^"]*['"]/g;
 var tagregex=/<[^>]*>/g;
 var nsregex=/<\w*:/, nsregex2 = /<(\/?)\w+:/;
 function parsexmltag(tag, skip_root) {
@@ -13,8 +13,15 @@ function parsexmltag(tag, skip_root) {
 		for(c=0; c != cc.length; ++c) if(cc.charCodeAt(c) === 61) break;
 		q = cc.substr(0,c); v = cc.substring(c+2, cc.length-1);
 		for(j=0;j!=q.length;++j) if(q.charCodeAt(j) === 58) break;
-		if(j===q.length) z[q] = v;
-		else z[(j===5 && q.substr(0,5)==="xmlns"?"xmlns":"")+q.substr(j+1)] = v;
+		if(j===q.length) {
+			if(q.indexOf("_") > 0) q = q.substr(0, q.indexOf("_"));
+			z[q] = v;
+		}
+		else {
+			var k = (j===5 && q.substr(0,5)==="xmlns"?"xmlns":"")+q.substr(j+1);
+			if(z[k] && q.substr(j-3,3) == "ext") continue;
+			z[k] = v;
+		}
 	}
 	return z;
 }

@@ -42,6 +42,12 @@ function cc2str(arr/*:Array<number>*/)/*:string*/ {
 	return o;
 }
 
+function str2cc(str) {
+	var o = [];
+	for(var i = 0; i != str.length; ++i) o.push(str.charCodeAt(i));
+	return o;
+}
+
 function dup(o/*:any*/)/*:any*/ {
 	if(typeof JSON != 'undefined') return JSON.parse(JSON.stringify(o));
 	if(typeof o != 'object' || !o) return o;

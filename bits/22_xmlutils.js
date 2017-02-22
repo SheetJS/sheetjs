@@ -42,7 +42,7 @@ var unescapexml/*:StringConv*/ = (function() {
 var decregex=/[&<>'"]/g, charegex = /[\u0000-\u0008\u000b-\u001f]/g;
 function escapexml(text/*:string*/)/*:string*/{
 	var s = text + '';
-	return s.replace(decregex, function(y) { return rencoding[y]; }).replace(charegex,function(s) { return "_x" + ("000"+s.charCodeAt(0).toString(16)).substr(-4) + "_";});
+	return s.replace(decregex, function(y) { return rencoding[y]; }).replace(charegex,function(s) { return "_x" + ("000"+s.charCodeAt(0).toString(16)).slice(-4) + "_";});
 }
 
 /* TODO: handle codepages */

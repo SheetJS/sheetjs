@@ -200,15 +200,15 @@ function parse_xlml_xml(d, opts) {
 				if(cell.Index) c = +cell.Index - 1;
 				if(c < refguess.s.c) refguess.s.c = c;
 				if(c > refguess.e.c) refguess.e.c = c;
-				if(Rn[0].substr(-2) === "/>") ++c;
+				if(Rn[0].slice(-2) === "/>") ++c;
 				comments = [];
 			}
 			break;
 		case 'Row':
-			if(Rn[1]==='/' || Rn[0].substr(-2) === "/>") {
+			if(Rn[1]==='/' || Rn[0].slice(-2) === "/>") {
 				if(r < refguess.s.r) refguess.s.r = r;
 				if(r > refguess.e.r) refguess.e.r = r;
-				if(Rn[0].substr(-2) === "/>") {
+				if(Rn[0].slice(-2) === "/>") {
 					row = xlml_parsexmltag(Rn[0]);
 					if(row.Index) r = +row.Index - 1;
 				}
@@ -274,7 +274,7 @@ function parse_xlml_xml(d, opts) {
 		case 'Alignment': break;
 		case 'Borders': break;
 		case 'Font':
-			if(Rn[0].substr(-2) === "/>") break;
+			if(Rn[0].slice(-2) === "/>") break;
 			else if(Rn[1]==="/") ss += str.slice(fidx, Rn.index);
 			else fidx = Rn.index + Rn[0].length;
 			break;
@@ -300,7 +300,7 @@ function parse_xlml_xml(d, opts) {
 		case 'TotalTime':
 		case 'HyperlinkBase':
 		case 'Manager':
-			if(Rn[0].substr(-2) === "/>") break;
+			if(Rn[0].slice(-2) === "/>") break;
 			else if(Rn[1]==="/") xlml_set_prop(Props, Rn[3], str.slice(pidx, Rn.index));
 			else pidx = Rn.index + Rn[0].length;
 			break;
@@ -352,6 +352,11 @@ function parse_xlml_xml(d, opts) {
 			break;
 
 		default:
+			/* FODS file root is <office:document> */
+			if(state.length == 0 && Rn[3] == "document") return parse_fods(str, opts);
+			/* UOS file root is <uof:UOF> */
+			if(state.length == 0 && Rn[3] == "UOF") return parse_fods(str, opts);
+
 			var seen = true;
 			switch(state[state.length-1][0]) {
 				/* OfficeDocumentSettings */
@@ -689,7 +694,7 @@ function parse_xlml_xml(d, opts) {
 			/* CustomDocumentProperties */
 			if(!state[state.length-1][1]) throw 'Unrecognized tag: ' + Rn[3] + "|" + state.join("|");
 			if(state[state.length-1][0]==='CustomDocumentProperties') {
-				if(Rn[0].substr(-2) === "/>") break;
+				if(Rn[0].slice(-2) === "/>") break;
 				else if(Rn[1]==="/") xlml_set_custprop(Custprops, Rn, cp, str.slice(pidx, Rn.index));
 				else { cp = Rn; pidx = Rn.index + Rn[0].length; }
 				break;
@@ -714,6 +719,7 @@ function parse_xlml(data, opts) {
 	}
 }
 
+/* TODO */
 function write_xlml(wb, opts)/*:string*/ {
 	var o = [XML_HEADER];
 	return o.join("");

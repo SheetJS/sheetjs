@@ -9,3 +9,8 @@ function write_ods(wb, opts) {
 	if(typeof ODS === 'undefined' || !ODS.write_ods) throw new Error("Unsupported ODS");
 	return ODS.write_ods(wb, opts);
 }
+function parse_fods(data, opts) {
+	if(typeof module !== "undefined" && typeof require !== 'undefined' && typeof ODS === 'undefined') ODS = require('./od' + 's');
+	if(typeof ODS === 'undefined' || !ODS.parse_fods) throw new Error("Unsupported ODS");
+	return ODS.parse_fods(data, opts);
+}

@@ -18,6 +18,7 @@ var parse_content_xml = (function() {
 		var tag/*:: = {}*/;
 		var NFtag = {name:""}, NF = "", pidx = 0;
 		var sheetag/*:: = {name:""}*/;
+		var rowtag/*:: = {'行号':""}*/;
 		var Sheets = {}, SheetNames/*:Array<string>*/ = [], ws = {};
 		var Rn, q/*:: = ({t:"", v:null, z:null, w:""}:any)*/;
 		var ctag = {value:""};
@@ -29,13 +30,13 @@ var parse_content_xml = (function() {
 		var rept = 1, isstub = false;
 		var i = 0;
 		xlmlregex.lastIndex = 0;
-		while((Rn = xlmlregex.exec(str))) switch(Rn[3]) {
+		while((Rn = xlmlregex.exec(str))) switch(Rn[3]=Rn[3].replace(/_.*$/,"")) {
 
-			case 'table': // 9.1.2 <table:table>
+			case 'table': case '工作表': // 9.1.2 <table:table>
 				if(Rn[1]==='/') {
 					if(range.e.c >= range.s.c && range.e.r >= range.s.r) ws['!ref'] = get_utils().encode_range(range);
 					if(merges.length) ws['!merges'] = merges;
-					sheetag.name = utf8read(sheetag.name);
+					sheetag.name = utf8read(sheetag['名称'] || sheetag.name);
 					SheetNames.push(sheetag.name);
 					Sheets[sheetag.name] = ws;
 				}
@@ -47,12 +48,14 @@ var parse_content_xml = (function() {
 				}
 				break;
 
-			case 'table-row': // 9.1.3 <table:table-row>
+			case 'table-row': case '行': // 9.1.3 <table:table-row>
 				if(Rn[1] === '/') break;
-				++R; C = -1; break;
+				rowtag = parsexmltag(Rn[0], false);
+				if(rowtag['行号']) R = rowtag['行号'] - 1; else ++R;
+				C = -1; break;
 			case 'covered-table-cell': // 9.1.5 table:covered-table-cell
 				++C; break; /* stub */
-			case 'table-cell':
+			case 'table-cell': case '数据':
 				if(Rn[0].charAt(Rn[0].length-2) === '/') {
 					ctag = parsexmltag(Rn[0], false);
 					if(ctag['number-columns-repeated']) C+= parseInt(ctag['number-columns-repeated'], 10);
@@ -66,7 +69,7 @@ var parse_content_xml = (function() {
 					if(C < range.s.c) range.s.c = C;
 					if(R < range.s.r) range.s.r = R;
 					ctag = parsexmltag(Rn[0], false);
-					q = ({t:ctag['value-type'], v:null/*:: , z:null, w:""*/}/*:any*/);
+					q = ({t:ctag['数据类型'] || ctag['value-type'], v:null/*:: , z:null, w:""*/}/*:any*/);
 					if(opts.cellFormula) {
 						if(ctag['number-matrix-columns-spanned'] && ctag['number-matrix-rows-spanned']) {
 							mR = parseInt(ctag['number-matrix-rows-spanned'],10) || 0;
@@ -99,8 +102,9 @@ var parse_content_xml = (function() {
 						case 'currency': q.t = 'n'; q.v = parseFloat(ctag.value); break;
 						case 'date': q.t = 'n'; q.v = datenum(ctag['date-value']); q.z = 'm/d/yy'; break;
 						case 'time': q.t = 'n'; q.v = parse_isodur(ctag['time-value'])/86400; break;
+						case 'number': q.t = 'n'; q.v = parseFloat(ctag['数据数值']); break;
 						default:
-							if(q.t === 'string' || !q.t) {
+							if(q.t === 'string' || q.t === 'text' || !q.t) {
 								q.t = 's';
 								if(ctag['string-value'] != null) textp = ctag['string-value'];
 							} else throw new Error('Unsupported value type ' + q.t);
@@ -125,15 +129,23 @@ var parse_content_xml = (function() {
 				break; // 9.1.4 <table:table-cell>
 
 			/* pure state */
-			case 'document-content': // 3.1.3.2 <office:document-content>
-			case 'spreadsheet': // 3.7 <office:spreadsheet>
+			case 'document': // TODO: <office:document> is the root for FODS
+			case 'document-content': case '电子表格文档': // 3.1.3.2 <office:document-content>
+			case 'spreadsheet': case '主体': // 3.7 <office:spreadsheet>
 			case 'scripts': // 3.12 <office:scripts>
+			case 'styles': // TODO <office:styles>
 			case 'font-face-decls': // 3.14 <office:font-face-decls>
 				if(Rn[1]==='/'){if((tmp=state.pop())[0]!==Rn[3]) throw "Bad state: "+tmp;}
 				else if(Rn[0].charAt(Rn[0].length-2) !== '/') state.push([Rn[3], true]);
 				break;
 
 			/* ignore state */
+			case 'meta': case '元数据': // TODO: <office:meta> <uof:元数据> FODS/UOF
+			case 'settings': // TODO: <office:settings>
+			case 'config-item-set': // TODO: <office:config-item-set>
+			case 'config-item-map-indexed': // TODO: <office:config-item-map-indexed>
+			case 'config-item-map-entry': // TODO: <office:config-item-map-entry>
+			case 'config-item-map-named': // TODO: <office:config-item-map-entry>
 			case 'shapes': // 9.2.8 <table:shapes>
 			case 'frame': // 10.4.2 <draw:frame>
 			case 'text-box': // 10.4.3 <draw:text-box>
@@ -143,11 +155,18 @@ var parse_content_xml = (function() {
 			case 'form': // 13.13 <form:form>
 			case 'dde-links': // 9.8 <table:dde-links>
 			case 'annotation': // 14.1 <office:annotation>
+			case 'event-listeners': // TODO
 				if(Rn[1]==='/'){if((tmp=state.pop())[0]!==Rn[3]) throw "Bad state: "+tmp;}
 				else if(Rn[0].charAt(Rn[0].length-2) !== '/') state.push([Rn[3], false]);
 				textp = ""; textpidx = 0;
 				break;
 
+			case 'scientific-number': // TODO: <number:scientific-number>
+				break;
+			case 'currency-symbol': // TODO: <number:currency-symbol>
+				break;
+			case 'currency-style': // TODO: <number:currency-style>
+				break;
 			case 'number-style': // 16.27.2 <number:number-style>
 			case 'percentage-style': // 16.27.9 <number:percentage-style>
 			case 'date-style': // 16.27.10 <number:date-style>
@@ -162,8 +181,12 @@ var parse_content_xml = (function() {
 				} break;
 
 			case 'script': break; // 3.13 <office:script>
+			case 'libraries': break; // TODO: <ooo:libraries>
 			case 'automatic-styles': break; // 3.15.3 <office:automatic-styles>
+			case 'master-styles': break; // TODO: <office:automatic-styles>
 
+			case 'default-style': // TODO: <style:default-style>
+			case 'page-layout': break; // TODO: <style:page-layout>
 			case 'style': break; // 16.2 <style:style>
 			case 'map': break; // 16.3 <style:map>
 			case 'font-face': break; // 16.21 <style:font-face>
@@ -206,7 +229,7 @@ var parse_content_xml = (function() {
 			case 'boolean': break; // 16.27.24 <number:boolean>
 			case 'text-style': break; // 16.27.25 <number:text-style>
 			case 'text': // 16.27.26 <number:text>
-				if(Rn[0].substr(-2) === "/>") break;
+				if(Rn[0].slice(-2) === "/>") break;
 				else if(Rn[1]==="/") switch(state[state.length-1][0]) {
 					case 'number-style':
 					case 'date-style':
@@ -219,7 +242,7 @@ var parse_content_xml = (function() {
 			case 'text-content': break; // 16.27.27 <number:text-content>
 			case 'text-properties': break; // 16.27.27 <style:text-properties>
 
-			case 'body': break; // 3.3 16.9.6 19.726.3
+			case 'body': case '电子表格': break; // 3.3 16.9.6 19.726.3
 
 			case 'forms': break; // 12.25.2 13.2
 			case 'table-column': break; // 9.1.6 <table:table-column>
@@ -237,7 +260,7 @@ var parse_content_xml = (function() {
 
 			case 'span': break; // <text:span>
 			case 'line-break': break; // 6.1.5 <text:line-break>
-			case 'p':
+			case 'p': case '文本串':
 				if(Rn[1]==='/') textp = parse_text_p(str.slice(textpidx,Rn.index), textptag);
 				else { textptag = parsexmltag(Rn[0], false); textpidx = Rn.index + Rn[0].length; }
 				break; // <text:p>
@@ -245,7 +268,7 @@ var parse_content_xml = (function() {
 			case 'date': break; // <*:date>
 
 			case 'object': break; // 10.4.6.2 <draw:object>
-			case 'title': break; // <*:title>
+			case 'title': case '标题': break; // <*:title> OR <uof:标题>
 			case 'desc': break; // <*:desc>
 
 			case 'table-source': break; // 9.2.6
@@ -289,6 +312,25 @@ var parse_content_xml = (function() {
 			case 'sheet-name': // 7.3.9
 				break;
 
+			case 'event-listener': // TODO
+			/* TODO: FODS Properties */
+			case 'initial-creator':
+			case 'creator':
+			case 'creation-date':
+			case 'generator':
+			case 'document-statistic':
+			case 'user-defined':
+				break;
+
+			/* TODO: FODS Config */
+			case 'config-item':
+				break;
+
+			/* TODO: style tokens */
+			case 'page-number': break; // TODO <text:page-number>
+			case 'page-count': break; // TODO <text:page-count>
+			case 'time': break; // TODO <text:time>
+
 			/* 9.6 Data Pilot Tables <table: */
 			case 'data-pilot-table': // 9.6.3
 			case 'source-cell-range': // 9.6.5
@@ -330,7 +372,12 @@ var parse_content_xml = (function() {
 			default:
 				if(Rn[2] === 'dc:') break; // TODO: properties
 				if(Rn[2] === 'draw:') break; // TODO: drawing
+				if(Rn[2] === 'style:') break; // TODO: styles
 				if(Rn[2] === 'calcext:') break; // ignore undocumented extensions
+				if(Rn[2] === 'loext:') break; // ignore undocumented extensions
+				if(Rn[2] === 'uof:') break; // TODO: uof
+				if(Rn[2] === '表:') break; // TODO: uof
+				if(Rn[2] === '字:') break; // TODO: uof
 				if(opts.WTF) throw Rn;
 		}
 		var out = {

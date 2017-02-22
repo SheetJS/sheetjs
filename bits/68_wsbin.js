@@ -504,7 +504,7 @@ function write_ws_bin_cell(ba/*:BufArray*/, cell/*:Cell*/, R/*:number*/, C/*:num
 	}
 	var o/*:CellAddress*/ = ({r:R, c:C}/*:any*/);
 	/* TODO: cell style */
-	o.s = get_cell_style(opts.cellXfs, cell, opts);
+	//o.s = get_cell_style(opts.cellXfs, cell, opts);
 	switch(cell.t) {
 		case 's': case 'str':
 			if(opts.bookSST) {

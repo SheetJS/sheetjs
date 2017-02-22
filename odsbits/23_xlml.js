@@ -5,4 +5,5 @@ function xlml_normalize(d) {
 	throw "badf";
 }
 
-var xlmlregex = /<(\/?)([a-z0-9]*:|)([\w-]+)[^>]*>/mg;
+/* UOS uses CJK in tags, original regex /<(\/?)([a-z0-9]*:|)([\w-]+)[^>]*>/ */
+var xlmlregex = /<(\/?)([^\s?>\/:]*:|)([^\s?>]*[^\s?>\/])[^>]*>/mg;

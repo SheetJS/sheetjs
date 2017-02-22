@@ -1,4 +1,6 @@
 function write_ods(wb/*:any*/, opts/*:any*/) {
+	if(opts.bookType == "fods") return write_content_xml(wb, opts);
+
 	/*:: if(!jszip) throw new Error("JSZip is not available"); */
 	var zip = new jszip();
 	var f = "";

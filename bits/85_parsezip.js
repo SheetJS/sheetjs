@@ -13,7 +13,7 @@ function safe_parse_ws(zip, path/*:string*/, relsPath/*:string*/, sheet, sheetRe
 	} catch(e) { if(opts.WTF) throw e; }
 }
 
-var nodirs = function nodirs(x/*:string*/)/*:boolean*/{return x.substr(-1) != '/';};
+var nodirs = function nodirs(x/*:string*/)/*:boolean*/{return x.slice(-1) != '/';};
 function parse_zip(zip/*:ZIP*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
 	make_ssf(SSF);
 	opts = opts || {};
@@ -22,6 +22,8 @@ function parse_zip(zip/*:ZIP*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
 
 	/* OpenDocument Part 3 Section 2.2.1 OpenDocument Package */
 	if(safegetzipfile(zip, 'META-INF/manifest.xml')) return parse_ods(zip, opts);
+	/* UOC */
+	if(safegetzipfile(zip, 'objectdata.xml')) return parse_ods(zip, opts);
 
 	var entries = keys(zip.files).filter(nodirs).sort();
 	var dir = parse_ct((getzipstr(zip, '[Content_Types].xml')/*:?any*/), opts);
@@ -37,7 +39,7 @@ function parse_zip(zip/*:ZIP*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
 		dir.workbooks.push(binname);
 		xlsb = true;
 	}
-	if(dir.workbooks[0].substr(-3) == "bin") xlsb = true;
+	if(dir.workbooks[0].slice(-3) == "bin") xlsb = true;
 	if(xlsb) set_cp(1200);
 
 	if(!opts.bookSheets && !opts.bookProps) {

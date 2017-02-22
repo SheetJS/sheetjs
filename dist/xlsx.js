@@ -4,7 +4,7 @@
 /*jshint funcscope:true, eqnull:true */
 var XLSX = {};
 (function make_xlsx(XLSX){
-XLSX.version = '0.8.4';
+XLSX.version = '0.8.5';
 var current_codepage = 1200, current_cptable;
 if(typeof module !== "undefined" && typeof require !== 'undefined') {
 	if(typeof cptable === 'undefined') cptable = require('./dist/cpexcel');
@@ -651,7 +651,7 @@ function eval_fmt(fmt, v, opts, flen) {
 			case '[':
 				o = c;
 				while(fmt[i++] !== ']' && i < fmt.length) o += fmt[i];
-				if(o.substr(-1) !== ']') throw 'unterminated "[" block: |' + o + '|';
+				if(o.slice(-1) !== ']') throw 'unterminated "[" block: |' + o + '|';
 				if(o.match(abstime)) {
 					if(dt==null) { dt=parse_date_code(v, opts); if(dt==null) return ""; }
 					out[out.length] = {t:'Z', v:o.toLowerCase()};
@@ -1297,6 +1297,12 @@ function cc2str(arr) {
 	return o;
 }
 
+function str2cc(str) {
+	var o = [];
+	for(var i = 0; i != str.length; ++i) o.push(str.charCodeAt(i));
+	return o;
+}
+
 function dup(o) {
 	if(typeof JSON != 'undefined') return JSON.parse(JSON.stringify(o));
 	if(typeof o != 'object' || !o) return o;
@@ -1319,11 +1325,15 @@ function getdatabin(data) {
 	if(!data) return null;
 	if(data.data) return char_codes(data.data);
 	if(data.asNodeBuffer && has_buf) return data.asNodeBuffer();
-	if(data._data && data._data.getContent) return Array.prototype.slice.call(data._data.getContent());
+	if(data._data && data._data.getContent) {
+		var o = data._data.getContent();
+		if(typeof o == "string") return str2cc(o);
+		return Array.prototype.slice.call(o);
+	}
 	return null;
 }
 
-function getdata(data) { return (data && data.name.substr(data.name.length-4) === ".bin") ? getdatabin(data) : getdatastr(data); }
+function getdata(data) { return (data && data.name.slice(-4) === ".bin") ? getdatabin(data) : getdatastr(data); }
 
 function safegetzipfile(zip, file) {
 	var f = file; if(zip.files[f]) return zip.files[f];
@@ -1402,7 +1412,7 @@ var unescapexml = (function() {
 var decregex=/[&<>'"]/g, charegex = /[\u0000-\u0008\u000b-\u001f]/g;
 function escapexml(text){
 	var s = text + '';
-	return s.replace(decregex, function(y) { return rencoding[y]; }).replace(charegex,function(s) { return "_x" + ("000"+s.charCodeAt(0).toString(16)).substr(-4) + "_";});
+	return s.replace(decregex, function(y) { return rencoding[y]; }).replace(charegex,function(s) { return "_x" + ("000"+s.charCodeAt(0).toString(16)).slice(-4) + "_";});
 }
 
 /* TODO: handle codepages */
@@ -1613,7 +1623,10 @@ function ReadShift(size, t) {
 		case 'utf8': o = __utf8(this, this.l, this.l + size); break;
 		case 'utf16le': size *= 2; o = __utf16le(this, this.l, this.l + size); break;
 
-		case 'wstr': o = cptable.utils.decode(current_codepage, this.slice(this.l, this.l+2*size)); size = 2 * size; break;
+		case 'wstr':
+			if(typeof cptable !== 'undefined') o = cptable.utils.decode(current_codepage, this.slice(this.l, this.l+2*size));
+			else return ReadShift.call(this, size, 'dbcs');
+			o = size = 2 * size; break;
 
 		/* [MS-OLEDS] 2.1.4 LengthPrefixedAnsiString */
 		case 'lpstr': o = __lpstr(this, this.l); size = 5 + o.length; break;
@@ -8050,7 +8063,7 @@ return function parse_ws_xml_data(sdata, s, opts, guess) {
 
 		/* 18.3.1.4 c CT_Cell */
 		cells = x.substr(ri).split(cellregex);
-		for(ri = typeof tag.r === 'undefined' ? 0 : 1; ri != cells.length; ++ri) {
+		for(ri = 0; ri != cells.length; ++ri) {
 			x = cells[ri].trim();
 			if(x.length === 0) continue;
 			cref = x.match(rregex); idx = ri; i=0; cc=0;
@@ -8691,7 +8704,7 @@ function write_ws_bin_cell(ba, cell, R, C, opts) {
 	}
 	var o = ({r:R, c:C});
 	/* TODO: cell style */
-	o.s = get_cell_style(opts.cellXfs, cell, opts);
+	//o.s = get_cell_style(opts.cellXfs, cell, opts);
 	switch(cell.t) {
 		case 's': case 'str':
 			if(opts.bookSST) {
@@ -9236,17 +9249,17 @@ function write_wb_bin(wb, opts) {
 	return ba.end();
 }
 function parse_wb(data, name, opts) {
-	if(name.substr(name.length-4)===".bin") return parse_wb_bin((data), opts);
+	if(name.slice(-4)===".bin") return parse_wb_bin((data), opts);
 	return parse_wb_xml((data), opts);
 }
 
 function parse_ws(data, name, opts, rels, wb) {
-	if(name.substr(name.length-4)===".bin") return parse_ws_bin((data), opts, rels, wb);
+	if(name.slice(-4)===".bin") return parse_ws_bin((data), opts, rels, wb);
 	return parse_ws_xml((data), opts, rels, wb);
 }
 
 function parse_sty(data, name, opts) {
-	if(name.substr(name.length-4)===".bin") return parse_sty_bin((data), opts);
+	if(name.slice(-4)===".bin") return parse_sty_bin((data), opts);
 	return parse_sty_xml((data), opts);
 }
 
@@ -9255,42 +9268,42 @@ function parse_theme(data, name, opts) {
 }
 
 function parse_sst(data, name, opts) {
-	if(name.substr(name.length-4)===".bin") return parse_sst_bin((data), opts);
+	if(name.slice(-4)===".bin") return parse_sst_bin((data), opts);
 	return parse_sst_xml((data), opts);
 }
 
 function parse_cmnt(data, name, opts) {
-	if(name.substr(name.length-4)===".bin") return parse_comments_bin((data), opts);
+	if(name.slice(-4)===".bin") return parse_comments_bin((data), opts);
 	return parse_comments_xml((data), opts);
 }
 
 function parse_cc(data, name, opts) {
-	if(name.substr(name.length-4)===".bin") return parse_cc_bin((data), opts);
+	if(name.slice(-4)===".bin") return parse_cc_bin((data), opts);
 	return parse_cc_xml((data), opts);
 }
 
 function write_wb(wb, name, opts) {
-	return (name.substr(name.length-4)===".bin" ? write_wb_bin : write_wb_xml)(wb, opts);
+	return (name.slice(-4)===".bin" ? write_wb_bin : write_wb_xml)(wb, opts);
 }
 
 function write_ws(data, name, opts, wb) {
-	return (name.substr(name.length-4)===".bin" ? write_ws_bin : write_ws_xml)(data, opts, wb);
+	return (name.slice(-4)===".bin" ? write_ws_bin : write_ws_xml)(data, opts, wb);
 }
 
 function write_sty(data, name, opts) {
-	return (name.substr(name.length-4)===".bin" ? write_sty_bin : write_sty_xml)(data, opts);
+	return (name.slice(-4)===".bin" ? write_sty_bin : write_sty_xml)(data, opts);
 }
 
 function write_sst(data, name, opts) {
-	return (name.substr(name.length-4)===".bin" ? write_sst_bin : write_sst_xml)(data, opts);
+	return (name.slice(-4)===".bin" ? write_sst_bin : write_sst_xml)(data, opts);
 }
 /*
 function write_cmnt(data, name:string, opts) {
-	return (name.substr(name.length-4)===".bin" ? write_comments_bin : write_comments_xml)(data, opts);
+	return (name.slice(-4)===".bin" ? write_comments_bin : write_comments_xml)(data, opts);
 }
 
 function write_cc(data, name:string, opts) {
-	return (name.substr(name.length-4)===".bin" ? write_cc_bin : write_cc_xml)(data, opts);
+	return (name.slice(-4)===".bin" ? write_cc_bin : write_cc_xml)(data, opts);
 }
 */
 var attregexg2=/([\w:]+)=((?:")([^"]*)(?:")|(?:')([^']*)(?:'))/g;
@@ -9493,15 +9506,15 @@ function parse_xlml_xml(d, opts) {
 				if(cell.Index) c = +cell.Index - 1;
 				if(c < refguess.s.c) refguess.s.c = c;
 				if(c > refguess.e.c) refguess.e.c = c;
-				if(Rn[0].substr(-2) === "/>") ++c;
+				if(Rn[0].slice(-2) === "/>") ++c;
 				comments = [];
 			}
 			break;
 		case 'Row':
-			if(Rn[1]==='/' || Rn[0].substr(-2) === "/>") {
+			if(Rn[1]==='/' || Rn[0].slice(-2) === "/>") {
 				if(r < refguess.s.r) refguess.s.r = r;
 				if(r > refguess.e.r) refguess.e.r = r;
-				if(Rn[0].substr(-2) === "/>") {
+				if(Rn[0].slice(-2) === "/>") {
 					row = xlml_parsexmltag(Rn[0]);
 					if(row.Index) r = +row.Index - 1;
 				}
@@ -9567,7 +9580,7 @@ function parse_xlml_xml(d, opts) {
 		case 'Alignment': break;
 		case 'Borders': break;
 		case 'Font':
-			if(Rn[0].substr(-2) === "/>") break;
+			if(Rn[0].slice(-2) === "/>") break;
 			else if(Rn[1]==="/") ss += str.slice(fidx, Rn.index);
 			else fidx = Rn.index + Rn[0].length;
 			break;
@@ -9593,7 +9606,7 @@ function parse_xlml_xml(d, opts) {
 		case 'TotalTime':
 		case 'HyperlinkBase':
 		case 'Manager':
-			if(Rn[0].substr(-2) === "/>") break;
+			if(Rn[0].slice(-2) === "/>") break;
 			else if(Rn[1]==="/") xlml_set_prop(Props, Rn[3], str.slice(pidx, Rn.index));
 			else pidx = Rn.index + Rn[0].length;
 			break;
@@ -9645,6 +9658,11 @@ function parse_xlml_xml(d, opts) {
 			break;
 
 		default:
+			/* FODS file root is <office:document> */
+			if(state.length == 0 && Rn[3] == "document") return parse_fods(str, opts);
+			/* UOS file root is <uof:UOF> */
+			if(state.length == 0 && Rn[3] == "UOF") return parse_fods(str, opts);
+
 			var seen = true;
 			switch(state[state.length-1][0]) {
 				/* OfficeDocumentSettings */
@@ -9982,7 +10000,7 @@ function parse_xlml_xml(d, opts) {
 			/* CustomDocumentProperties */
 			if(!state[state.length-1][1]) throw 'Unrecognized tag: ' + Rn[3] + "|" + state.join("|");
 			if(state[state.length-1][0]==='CustomDocumentProperties') {
-				if(Rn[0].substr(-2) === "/>") break;
+				if(Rn[0].slice(-2) === "/>") break;
 				else if(Rn[1]==="/") xlml_set_custprop(Custprops, Rn, cp, str.slice(pidx, Rn.index));
 				else { cp = Rn; pidx = Rn.index + Rn[0].length; }
 				break;
@@ -10007,6 +10025,7 @@ function parse_xlml(data, opts) {
 	}
 }
 
+/* TODO */
 function write_xlml(wb, opts) {
 	var o = [XML_HEADER];
 	return o.join("");
@@ -12067,20 +12086,12 @@ function write_biff_buf(wb, o) {
 	// TODO
 	return ba.end();
 }
-
-function write_biff(wb, o) {
-	var out = write_biff_buf(wb, o);
-	switch(o.type) {
-		case "base64": break; // TODO
-		case "binary": {
-			var bstr = "";
-			for(var i = 0; i < out.length; ++i) bstr += String.fromCharCode(out[i]);
-			return bstr;
-		}
-		case "file": return _fs.writeFileSync(o.file, out);
-		case "buffer": return out;
-		default: throw new Error("Unrecognized type " + o.type);
-	}
+/* actual implementation in utils, wrappers are for read/write */
+function write_csv_str(wb, o) {
+	var idx = 0;
+	for(var i=0;i<wb.SheetNames.length;++i) if(wb.SheetNames[i] == o.sheet) idx=i;
+	if(idx == 0 && !!o.sheet && wb.SheetNames[0] != o.sheet) throw new Error("Sheet not found: " + o.sheet);
+	return sheet_to_csv(wb.Sheets[wb.SheetNames[idx]], o);
 }
 /* Helper functions to call out to ODS */
 function parse_ods(zip, opts) {
@@ -12092,6 +12103,11 @@ function write_ods(wb, opts) {
 	if(typeof module !== "undefined" && typeof require !== 'undefined' && typeof ODS === 'undefined') ODS = require('./od' + 's');
 	if(typeof ODS === 'undefined' || !ODS.write_ods) throw new Error("Unsupported ODS");
 	return ODS.write_ods(wb, opts);
+}
+function parse_fods(data, opts) {
+	if(typeof module !== "undefined" && typeof require !== 'undefined' && typeof ODS === 'undefined') ODS = require('./od' + 's');
+	if(typeof ODS === 'undefined' || !ODS.parse_fods) throw new Error("Unsupported ODS");
+	return ODS.parse_fods(data, opts);
 }
 function fix_opts_func(defaults) {
 	return function fix_opts(opts) {
@@ -12150,7 +12166,7 @@ function safe_parse_ws(zip, path, relsPath, sheet, sheetRels, sheets, opts, wb) 
 	} catch(e) { if(opts.WTF) throw e; }
 }
 
-var nodirs = function nodirs(x){return x.substr(-1) != '/';};
+var nodirs = function nodirs(x){return x.slice(-1) != '/';};
 function parse_zip(zip, opts) {
 	make_ssf(SSF);
 	opts = opts || {};
@@ -12159,6 +12175,8 @@ function parse_zip(zip, opts) {
 
 	/* OpenDocument Part 3 Section 2.2.1 OpenDocument Package */
 	if(safegetzipfile(zip, 'META-INF/manifest.xml')) return parse_ods(zip, opts);
+	/* UOC */
+	if(safegetzipfile(zip, 'objectdata.xml')) return parse_ods(zip, opts);
 
 	var entries = keys(zip.files).filter(nodirs).sort();
 	var dir = parse_ct((getzipstr(zip, '[Content_Types].xml')), opts);
@@ -12174,7 +12192,7 @@ function parse_zip(zip, opts) {
 		dir.workbooks.push(binname);
 		xlsb = true;
 	}
-	if(dir.workbooks[0].substr(-3) == "bin") xlsb = true;
+	if(dir.workbooks[0].slice(-3) == "bin") xlsb = true;
 	if(xlsb) set_cp(1200);
 
 	if(!opts.bookSheets && !opts.bookProps) {
@@ -12424,11 +12442,36 @@ function write_zip_type(wb, opts) {
 	return z.generate(oopts);
 }
 
+function write_string_type(out, opts) {
+	switch(opts.type) {
+		case "base64": break; // TODO
+		case "binary": break; // TODO
+		case "file": return _fs.writeFileSync(opts.file, out, {encoding:'utf8'});
+		case "buffer": break; // TODO
+		default: return out;
+	}
+}
+
+function write_binary_type(out, opts) {
+	switch(opts.type) {
+		case "base64": break; // TODO
+		case "binary":
+			var bstr = "";
+			for(var i = 0; i < out.length; ++i) bstr += String.fromCharCode(out[i]);
+			return bstr;
+		case "file": return _fs.writeFileSync(opts.file, out);
+		case "buffer": return out;
+		default: throw new Error("Unrecognized type " + opts.type);
+	}
+}
+
 function writeSync(wb, opts) {
 	var o = opts||{};
 	switch(o.bookType) {
-		case 'xml': return write_xlml(wb, o);
-		case 'biff2': return write_biff(wb, o);
+		case 'xml': return write_string_type(write_xlml(wb, o), o);
+		case 'csv': return write_string_type(write_csv_str(wb, o), o);
+		case 'fods': return write_string_type(write_ods(wb, o), o);
+		case 'biff2': return write_binary_type(write_biff_buf(wb, o), o);
 		default: return write_zip_type(wb, o);
 	}
 }
@@ -12436,14 +12479,16 @@ function writeSync(wb, opts) {
 function writeFileSync(wb, filename, opts) {
 	var o = opts||{}; o.type = 'file';
 	o.file = filename;
-	if(!o.bookType) switch(o.file.substr(-5).toLowerCase()) {
+	if(!o.bookType) switch(o.file.slice(-5).toLowerCase()) {
 		case '.xlsx': o.bookType = 'xlsx'; break;
 		case '.xlsm': o.bookType = 'xlsm'; break;
 		case '.xlsb': o.bookType = 'xlsb'; break;
-	default: switch(o.file.substr(-4).toLowerCase()) {
+		case '.fods': o.bookType = 'fods'; break;
+	default: switch(o.file.slice(-4).toLowerCase()) {
 		case '.xls': o.bookType = 'biff2'; break;
 		case '.xml': o.bookType = 'xml'; break;
 		case '.ods': o.bookType = 'ods'; break;
+		case '.csv': o.bookType = 'csv'; break;
 	}}
 	return writeSync(wb, o);
 }

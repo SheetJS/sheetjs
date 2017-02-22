@@ -101,18 +101,3 @@ function write_biff_buf(wb/*:Workbook*/, o/*:WriteOpts*/) {
 	// TODO
 	return ba.end();
 }
-
-function write_biff(wb/*:Workbook*/, o/*:WriteOpts*/) {
-	var out = write_biff_buf(wb, o);
-	switch(o.type) {
-		case "base64": break; // TODO
-		case "binary": {
-			var bstr = "";
-			for(var i = 0; i < out.length; ++i) bstr += String.fromCharCode(out[i]);
-			return bstr;
-		}
-		case "file": return _fs.writeFileSync(o.file, out);
-		case "buffer": return out;
-		default: throw new Error("Unrecognized type " + o.type);
-	}
-}

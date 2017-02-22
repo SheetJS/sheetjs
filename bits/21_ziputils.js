@@ -11,11 +11,15 @@ function getdatabin(data) {
 	if(!data) return null;
 	if(data.data) return char_codes(data.data);
 	if(data.asNodeBuffer && has_buf) return data.asNodeBuffer();
-	if(data._data && data._data.getContent) return Array.prototype.slice.call(data._data.getContent());
+	if(data._data && data._data.getContent) {
+		var o = data._data.getContent();
+		if(typeof o == "string") return str2cc(o);
+		return Array.prototype.slice.call(o);
+	}
 	return null;
 }
 
-function getdata(data) { return (data && data.name.substr(data.name.length-4) === ".bin") ? getdatabin(data) : getdatastr(data); }
+function getdata(data) { return (data && data.name.slice(-4) === ".bin") ? getdatabin(data) : getdatastr(data); }
 
 function safegetzipfile(zip, file/*:string*/) {
 	var f = file; if(zip.files[f]) return zip.files[f];

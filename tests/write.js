@@ -89,3 +89,5 @@ XLSX.writeFile(wb, 'sheetjs.xlsm');
 XLSX.writeFile(wb, 'sheetjs.xlsb');
 XLSX.writeFile(wb, 'sheetjs.xls', {bookType:'biff2'});
 XLSX.writeFile(wb, 'sheetjs.ods');
+XLSX.writeFile(wb, 'sheetjs.fods');
+XLSX.writeFile(wb, 'sheetjs.csv');

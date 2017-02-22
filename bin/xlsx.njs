@@ -13,11 +13,14 @@ program
 	.option('-p, --password <pw>', 'if file is encrypted, try with specified pw')
 	.option('-l, --list-sheets', 'list sheet names and exit')
 	.option('-o, --output <file>', 'output to specified file')
+
 	.option('-B, --xlsb', 'emit XLSB to <sheetname> or <file>.xlsb')
 	.option('-M, --xlsm', 'emit XLSM to <sheetname> or <file>.xlsm')
 	.option('-X, --xlsx', 'emit XLSX to <sheetname> or <file>.xlsx')
 	.option('-Y, --ods',  'emit ODS  to <sheetname> or <file>.ods')
 	.option('-2, --biff2','emit XLS  to <sheetname> or <file>.xls (BIFF2)')
+	.option('-T, --fods', 'emit FODS to <sheetname> or <file>.xls (Flat ODS)')
+
 	.option('-S, --formulae', 'print formulae')
 	.option('-j, --json', 'emit formatted JSON (all fields text)')
 	.option('-J, --raw-js', 'emit raw JS object (raw numbers)')
@@ -39,6 +42,8 @@ program.on('--help', function() {
 	console.log('  Web Demo: http://oss.sheetjs.com/js-'+n+'/');
 });
 
+/* output formats, update list with full option name */
+var workbook_formats = ['xlsx', 'xlsm', 'xlsb', 'ods', 'fods'];
 program.parse(process.argv);
 
 /* see https://github.com/SheetJS/j/issues/4 */
@@ -112,7 +117,7 @@ var wopts = ({WTF:opts.WTF, bookSST:program.sst}/*:any*/);
 if(program.compress) wopts.compression = true;
 
 /* full workbook formats */
-['xlsx', 'xlsm', 'xlsb', 'ods'].forEach(function(m) { if(program[m]) {
+workbook_formats.forEach(function(m) { if(program[m]) {
 		X.writeFile(wb, sheetname || ((filename || "") + "." + m), wopts);
 		process.exit(0);
 } });
