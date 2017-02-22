@@ -1,5 +1,14 @@
 test_files/
 node_modules/
+*.[cC][sS][vV]
+*.[dD][iI][fF]
+*.[pP][rR][nN]
+*.[sS][lL][kK]
+*.socialcalc
+*.[xX][lL][sSwW]
 *.[xX][lL][sS][xXmMbB]
-*.[xX][lL][sS]
 *.[oO][dD][sS]
+*.[fF][oO][dD][sS]
+*.[xX][mM][lL]
+*.[uU][oO][sS]
+*.sheetjs
