@@ -41,7 +41,12 @@ function getdata(data) {
 function safegetzipfile(zip, file) {
 	var f = file; if(zip.files[f]) return zip.files[f];
 	f = file.toLowerCase(); if(zip.files[f]) return zip.files[f];
-	f = f.replace(/\//g,'\\'); if(zip.files[f]) return zip.files[f];
+	var g = f.replace(/\//g,'\\'); if(zip.files[g]) return zip.files[g];
+	f = keys(zip.files).filter(function (n) {
+		var m = n.toLowerCase();
+		return zip.files[n] && (m == f);
+	});
+	if ( f.length == 1 ) return zip.files[f[0]];
 	return null;
 }
 

@@ -643,7 +643,7 @@ function eval_fmt(fmt, v, opts, flen) {
 				out[out.length] = {t:'T', v:v}; ++i; break;
 			case 'B': case 'b':
 				if(fmt[i+1] === "1" || fmt[i+1] === "2") {
-          if(dt==null) { dt=parse_date_code(v, opts, fmt[i+1] === "2"); if(dt==null) return ""; }
+		  if(dt==null) { dt=parse_date_code(v, opts, fmt[i+1] === "2"); if(dt==null) return ""; }
 					out[out.length] = {t:'X', v:fmt.substr(i,2)}; lst = c; i+=2; break;
 				}
 				/* falls through */
@@ -660,8 +660,8 @@ function eval_fmt(fmt, v, opts, flen) {
 			case 'A':
 				q={t:c, v:"A"};
 				if(dt==null) dt=parse_date_code(v, opts);
-        if(fmt.substr(i, 3) === "A/P") { if(dt!=null) q.v = dt.H >= 12 ? "P" : "A"; q.t = 'T'; hr='h';i+=3;}
-        else if(fmt.substr(i,5) === "AM/PM") { if(dt!=null) q.v = dt.H >= 12 ? "PM" : "AM"; q.t = 'T'; i+=5; hr='h'; }
+		if(fmt.substr(i, 3) === "A/P") { if(dt!=null) q.v = dt.H >= 12 ? "P" : "A"; q.t = 'T'; hr='h';i+=3;}
+		else if(fmt.substr(i,5) === "AM/PM") { if(dt!=null) q.v = dt.H >= 12 ? "PM" : "AM"; q.t = 'T'; i+=5; hr='h'; }
 				else { q.t = "t"; ++i; }
 				if(dt==null && q.t === 'T') return "";
 				out[out.length] = q; lst = c; break;
@@ -1098,7 +1098,7 @@ function make_find_path(FullPaths, Paths, FileIndex, files, root_name) {
 }
 
 /** Chase down the rest of the DIFAT chain to build a comprehensive list
-    DIFAT chains by storing the next sector number as the last 32 bytes */
+	DIFAT chains by storing the next sector number as the last 32 bytes */
 function sleuth_fat(idx, cnt, sectors, ssz, fat_addrs) {
 	var q;
 	if(idx === ENDOFCHAIN) {
@@ -1355,7 +1355,12 @@ function getdata(data) { return (data && data.name.slice(-4) === ".bin") ? getda
 function safegetzipfile(zip, file/*:string*/) {
 	var f = file; if(zip.files[f]) return zip.files[f];
 	f = file.toLowerCase(); if(zip.files[f]) return zip.files[f];
-	f = f.replace(/\//g,'\\'); if(zip.files[f]) return zip.files[f];
+	var g = f.replace(/\//g,'\\'); if(zip.files[g]) return zip.files[g];
+	f = keys(zip.files).filter(function (n) {
+		var m = n.toLowerCase();
+		return zip.files[n] && (m == f);
+	});
+	if ( f.length == 1 ) return zip.files[f[0]];
 	return null;
 }
 
@@ -3609,7 +3614,7 @@ function parse_Dimensions(blob, length, opts) {
 	var end = blob.l + length;
 	var w = opts.biff == 8 || !opts.biff ? 4 : 2;
 	var r = blob.read_shift(w), R = blob.read_shift(w),
-	    c = blob.read_shift(2), C = blob.read_shift(2);
+		c = blob.read_shift(2), C = blob.read_shift(2);
 	blob.l = end;
 	return {s: {r:r, c:c}, e: {r:R, c:C}};
 }
