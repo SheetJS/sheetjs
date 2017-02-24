@@ -91,3 +91,12 @@ XLSX.writeFile(wb, 'sheetjs.xls', {bookType:'biff2'});
 XLSX.writeFile(wb, 'sheetjs.ods');
 XLSX.writeFile(wb, 'sheetjs.fods');
 XLSX.writeFile(wb, 'sheetjs.csv');
+
+/* test by reading back files */
+XLSX.readFile('sheetjs.xlsx');
+XLSX.readFile('sheetjs.xlsm');
+XLSX.readFile('sheetjs.xlsb');
+XLSX.readFile('sheetjs.xls');
+XLSX.readFile('sheetjs.ods');
+XLSX.readFile('sheetjs.fods');
+//XLSX.readFile('sheetjs.csv');

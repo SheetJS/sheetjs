@@ -227,7 +227,7 @@ function handleDrop(e) {
 				if(rABS) {
 					wb = X.read(data, {type: 'binary'});
 				} else {
-				var arr = fixdata(data);
+					var arr = fixdata(data);
 					wb = X.read(btoa(arr), {type: 'base64'});
 				}
 				process_wb(wb);

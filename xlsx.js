@@ -4,7 +4,7 @@
 /*jshint funcscope:true, eqnull:true */
 var XLSX = {};
 (function make_xlsx(XLSX){
-XLSX.version = '0.8.5';
+XLSX.version = '0.8.6';
 var current_codepage = 1200, current_cptable;
 if(typeof module !== "undefined" && typeof require !== 'undefined') {
 	if(typeof cptable === 'undefined') cptable = require('./dist/cpexcel');
@@ -14,12 +14,18 @@ function reset_cp() { set_cp(1200); }
 var set_cp = function(cp) { current_codepage = cp; };
 
 function char_codes(data) { var o = []; for(var i = 0, len = data.length; i < len; ++i) o[i] = data.charCodeAt(i); return o; }
-var debom_xml = function(data) { return data; };
+var debom = function(data) {
+	var c1 = data.charCodeAt(0), c2 = data.charCodeAt(1);
+	if(c1 == 0xFF && c2 == 0xFE) return data.substr(2);
+	if(c1 == 0xFE && c2 == 0xFF) return data.substr(2);
+	if(c1 == 0xFEFF) return data.substr(1);
+	return data;
+};
 
 var _getchar = function _gc1(x) { return String.fromCharCode(x); };
 if(typeof cptable !== 'undefined') {
 	set_cp = function(cp) { current_codepage = cp; current_cptable = cptable[cp]; };
-	debom_xml = function(data) {
+	debom = function(data) {
 		if(data.charCodeAt(0) === 0xFF && data.charCodeAt(1) === 0xFE) { return cptable.utils.decode(1200, char_codes(data.substr(2))); }
 		return data;
 	};
@@ -871,14 +877,14 @@ var XLMLFormatMap/*{[string]:string}*/ = ({
 });
 
 var DO_NOT_EXPORT_CFB = true;
-/* cfb.js (C) 2013-2014 SheetJS -- http://sheetjs.com */
+/* cfb.js (C) 2013-present SheetJS -- http://sheetjs.com */
 /* vim: set ts=2: */
 /*jshint eqnull:true */
 
 /* [MS-CFB] v20130118 */
 var CFB = (function _CFB(){
 var exports = {};
-exports.version = '0.10.2';
+exports.version = '0.11.0';
 function parse(file) {
 var mver = 3; // major version
 var ssz = 512; // sector size
@@ -1088,6 +1094,7 @@ function sleuth_fat(idx, cnt, sectors, ssz, fat_addrs) {
 		if(cnt !== 0) throw "DIFAT chain shorter than expected";
 	} else if(idx !== -1 /*FREESECT*/) {
 		var sector = sectors[idx], m = (ssz>>>2)-1;
+		if(!sector) return;
 		for(var i = 0; i < m; ++i) {
 			if((q = __readInt32LE(sector,i*4)) === ENDOFCHAIN) break;
 			fat_addrs.push(q);
@@ -1111,6 +1118,7 @@ function get_sector_list(sectors, start, fat_addrs, ssz, chkd) {
 		var addr = fat_addrs[Math.floor(j*4/ssz)];
 		jj = ((j*4) & modulus);
 		if(ssz < 4 + jj) throw "FAT boundary crossed: " + j + " 4 "+ssz;
+		if(!sectors[addr]) break;
 		j = __readInt32LE(sectors[addr], jj);
 	}
 	return {nodes: buf, data:__toBuffer([buf_chain])};
@@ -1133,6 +1141,7 @@ function make_sector_list(sectors, dir_start, fat_addrs, ssz) {
 			var addr = fat_addrs[Math.floor(j*4/ssz)];
 			jj = ((j*4) & modulus);
 			if(ssz < 4 + jj) throw "FAT boundary crossed: " + j + " 4 "+ssz;
+			if(!sectors[addr]) break;
 			j = __readInt32LE(sectors[addr], jj);
 		}
 		sector_list[k] = {nodes: buf, data:__toBuffer([buf_chain])};
@@ -1153,7 +1162,7 @@ function read_directory(dir_start, sector_list, sectors, Paths, nmfs, files, Fil
 		if(namelen === 0) continue;
 		name = __utf16le(blob,0,namelen-pl);
 		Paths.push(name);
-		o = {
+		o = ({
 			name:  name,
 			type:  blob.read_shift(1),
 			color: blob.read_shift(1),
@@ -1162,7 +1171,7 @@ function read_directory(dir_start, sector_list, sectors, Paths, nmfs, files, Fil
 			C:     blob.read_shift(4, 'i'),
 			clsid: blob.read_shift(16),
 			state: blob.read_shift(4, 'i')
-		};
+		});
 		ctime = blob.read_shift(2) + blob.read_shift(2) + blob.read_shift(2) + blob.read_shift(2);
 		if(ctime !== 0) {
 			o.ctime = ctime; o.ct = read_date(blob, blob.l-8);
@@ -1314,10 +1323,10 @@ function dup(o) {
 function fill(c,l) { var o = ""; while(o.length < l) o+=c; return o; }
 function getdatastr(data) {
 	if(!data) return null;
-	if(data.data) return debom_xml(data.data);
-	if(data.asNodeBuffer && has_buf) return debom_xml(data.asNodeBuffer().toString('binary'));
-	if(data.asBinary) return debom_xml(data.asBinary());
-	if(data._data && data._data.getContent) return debom_xml(cc2str(Array.prototype.slice.call(data._data.getContent(),0)));
+	if(data.data) return debom(data.data);
+	if(data.asNodeBuffer && has_buf) return debom(data.asNodeBuffer().toString('binary'));
+	if(data.asBinary) return debom(data.asBinary());
+	if(data._data && data._data.getContent) return debom(cc2str(Array.prototype.slice.call(data._data.getContent(),0)));
 	return null;
 }
 
@@ -1335,10 +1344,14 @@ function getdatabin(data) {
 
 function getdata(data) { return (data && data.name.slice(-4) === ".bin") ? getdatabin(data) : getdatastr(data); }
 
+/* Part 2 Section 10.1.2 "Mapping Content Types" Names are case-insensitive */
 function safegetzipfile(zip, file) {
-	var f = file; if(zip.files[f]) return zip.files[f];
-	f = file.toLowerCase(); if(zip.files[f]) return zip.files[f];
-	f = f.replace(/\//g,'\\'); if(zip.files[f]) return zip.files[f];
+	var k = keys(zip.files);
+	var f = file.toLowerCase(), g = f.replace(/\//g,'\\');
+	for(var i=0; i<k.length; ++i) {
+		var n = k[i].toLowerCase();
+		if(f == n || g == n) return zip.files[k[i]];
+	}
 	return null;
 }
 
@@ -9464,7 +9477,7 @@ function xlml_normalize(d) {
 /* TODO: Everything */
 var xlmlregex = /<(\/?)([a-z0-9]*:|)(\w+)[^>]*>/mg;
 function parse_xlml_xml(d, opts) {
-	var str = xlml_normalize(d);
+	var str = debom(xlml_normalize(d));
 	var Rn;
 	var state = [], tmp;
 	var sheets = {}, sheetnames = [], cursheet = {}, sheetname = "";
@@ -12418,6 +12431,7 @@ function readSync(data, opts) {
 		case 0x09: return parse_xlscfb(s2a(o.type === 'base64' ? Base64.decode(d) : d), o);
 		case 0x3C: return parse_xlml(d, o);
 		case 0x50: return read_zip(d, o);
+		case 0xEF: return parse_xlml(d, o);
 		default: throw new Error("Unsupported file " + n);
 	}
 }
@@ -12442,23 +12456,28 @@ function write_zip_type(wb, opts) {
 	return z.generate(oopts);
 }
 
+/* TODO: test consistency */
 function write_string_type(out, opts) {
 	switch(opts.type) {
-		case "base64": break; // TODO
-		case "binary": break; // TODO
+		case "base64": return Base64.encode(out);
+		case "binary": return out;
 		case "file": return _fs.writeFileSync(opts.file, out, {encoding:'utf8'});
-		case "buffer": break; // TODO
+		case "buffer": {
+			if(has_buf) return new Buffer(out, 'utf8');
+			else return out.split("").map(function(c) { return c.charCodeAt(0); });
+		} break;
 		default: return out;
 	}
 }
 
+/* TODO: test consistency */
 function write_binary_type(out, opts) {
 	switch(opts.type) {
-		case "base64": break; // TODO
+		case "base64":
 		case "binary":
 			var bstr = "";
 			for(var i = 0; i < out.length; ++i) bstr += String.fromCharCode(out[i]);
-			return bstr;
+			return opts.type == 'base64' ? Base64.encode(bstr) : bstr;
 		case "file": return _fs.writeFileSync(opts.file, out);
 		case "buffer": return out;
 		default: throw new Error("Unrecognized type " + opts.type);
@@ -12467,12 +12486,16 @@ function write_binary_type(out, opts) {
 
 function writeSync(wb, opts) {
 	var o = opts||{};
-	switch(o.bookType) {
+	switch(o.bookType || 'xlsx') {
 		case 'xml': return write_string_type(write_xlml(wb, o), o);
 		case 'csv': return write_string_type(write_csv_str(wb, o), o);
 		case 'fods': return write_string_type(write_ods(wb, o), o);
 		case 'biff2': return write_binary_type(write_biff_buf(wb, o), o);
-		default: return write_zip_type(wb, o);
+		case 'xlsx':
+		case 'xlsm':
+		case 'xlsb':
+		case 'ods': return write_zip_type(wb, o);
+		default: throw new Error ("Unrecognized bookType |" + o.bookType + "|");
 	}
 }
 

@@ -559,6 +559,7 @@ file but Excel will know how to handle it.  This library applies similar logic:
 | `0x09` | BIFF Stream   | BIFF 2/3/4/5                                        |
 | `0x3C` | XML           | SpreadsheetML or Flat ODS or UOS1                   |
 | `0x50` | ZIP Archive   | XLSB or XLSX/M or ODS or UOS2                       |
+| `0xFE` | UTF8 Text     | SpreadsheetML or Flat ODS or UOS1                   |
 
 ## Writing Options
 

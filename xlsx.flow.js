@@ -4,7 +4,7 @@
 /*jshint funcscope:true, eqnull:true */
 var XLSX = {};
 (function make_xlsx(XLSX){
-XLSX.version = '0.8.5';
+XLSX.version = '0.8.6';
 var current_codepage = 1200, current_cptable;
 if(typeof module !== "undefined" && typeof require !== 'undefined') {
 	if(typeof cptable === 'undefined') cptable = require('./dist/cpexcel');
@@ -14,12 +14,18 @@ function reset_cp() { set_cp(1200); }
 var set_cp = function(cp) { current_codepage = cp; };
 
 function char_codes(data) { var o = []; for(var i = 0, len = data.length; i < len; ++i) o[i] = data.charCodeAt(i); return o; }
-var debom_xml = function(data) { return data; };
+var debom = function(data/*:string*/)/*:string*/ {
+	var c1 = data.charCodeAt(0), c2 = data.charCodeAt(1);
+	if(c1 == 0xFF && c2 == 0xFE) return data.substr(2);
+	if(c1 == 0xFE && c2 == 0xFF) return data.substr(2);
+	if(c1 == 0xFEFF) return data.substr(1);
+	return data;
+};
 
 var _getchar = function _gc1(x) { return String.fromCharCode(x); };
 if(typeof cptable !== 'undefined') {
 	set_cp = function(cp) { current_codepage = cp; current_cptable = cptable[cp]; };
-	debom_xml = function(data) {
+	debom = function(data) {
 		if(data.charCodeAt(0) === 0xFF && data.charCodeAt(1) === 0xFE) { return cptable.utils.decode(1200, char_codes(data.substr(2))); }
 		return data;
 	};
@@ -31,7 +37,7 @@ if(typeof cptable !== 'undefined') {
 var Base64 = (function make_b64(){
 	var map = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
 	return {
-		encode: function(input, utf8) {
+		encode: function(input/*:string*/, utf8)/*:string*/ {
 			var o = "";
 			var c1, c2, c3, e1, e2, e3, e4;
 			for(var i = 0; i < input.length; ) {
@@ -48,7 +54,7 @@ var Base64 = (function make_b64(){
 			}
 			return o;
 		},
-		decode: function b64_decode(input, utf8) {
+		decode: function b64_decode(input/*:string*/, utf8)/*:string*/ {
 			var o = "";
 			var c1, c2, c3;
 			var e1, e2, e3, e4;
@@ -888,14 +894,38 @@ var XLMLFormatMap/*{[string]:string}*/ = ({
 }/*:any*/);
 
 var DO_NOT_EXPORT_CFB = true;
-/* cfb.js (C) 2013-2014 SheetJS -- http://sheetjs.com */
+/*::
+declare var Base64:any;
+declare var ReadShift:any;
+declare var CheckField:any;
+declare var prep_blob:any;
+declare var __readUInt32LE:any;
+declare var __readInt32LE:any;
+declare var __toBuffer:any;
+declare var __utf16le:any;
+declare var bconcat:any;
+declare var s2a:any;
+declare var chr0:any;
+declare var chr1:any;
+*/
+/* cfb.js (C) 2013-present SheetJS -- http://sheetjs.com */
 /* vim: set ts=2: */
 /*jshint eqnull:true */
 
+/*::
+declare var DO_NOT_EXPORT_CFB:any;
+type SectorEntry = any;
+type SectorList = {
+	(k:string|number):SectorEntry;
+	name:?string;
+	fat_addrs:any;
+	ssz:number;
+}
+*/
 /* [MS-CFB] v20130118 */
 var CFB = (function _CFB(){
 var exports = {};
-exports.version = '0.10.2';
+exports.version = '0.11.0';
 function parse(file) {
 var mver = 3; // major version
 var ssz = 512; // sector size
@@ -908,7 +938,7 @@ var difat_start = 0; // first mini FAT sector location
 var fat_addrs = []; // locations of FAT sectors
 
 /* [MS-CFB] 2.2 Compound File Header */
-var blob = file.slice(0,512);
+var blob/*:any*/ = file.slice(0,512);
 prep_blob(blob, 0);
 
 /* major version */
@@ -968,7 +998,7 @@ var sectors = sectorify(file, ssz);
 sleuth_fat(difat_start, ndfs, sectors, ssz, fat_addrs);
 
 /** Chains */
-var sector_list = make_sector_list(sectors, dir_start, fat_addrs, ssz);
+var sector_list/*:SectorList*/ = make_sector_list(sectors, dir_start, fat_addrs, ssz);
 
 sector_list[dir_start].name = "!Directory";
 if(nmfs > 0 && minifat_start !== ENDOFCHAIN) sector_list[minifat_start].name = "!MiniFAT";
@@ -977,7 +1007,7 @@ sector_list.fat_addrs = fat_addrs;
 sector_list.ssz = ssz;
 
 /* [MS-CFB] 2.6.1 Compound File Directory Entry */
-var files = {}, Paths = [], FileIndex = [], FullPaths = [], FullPathDir = {};
+var files = {}, Paths/*:any*/ = [], FileIndex = [], FullPaths = [], FullPathDir = {};
 read_directory(dir_start, sector_list, sectors, Paths, nmfs, files, FileIndex);
 
 build_full_paths(FileIndex, FullPathDir, FullPaths, Paths);
@@ -1086,7 +1116,7 @@ function make_find_path(FullPaths, Paths, FileIndex, files, root_name) {
 	var UCPaths = new Array(Paths.length), i;
 	for(i = 0; i < FullPaths.length; ++i) UCFullPaths[i] = FullPaths[i].toUpperCase().replace(chr0,'').replace(chr1,'!');
 	for(i = 0; i < Paths.length; ++i) UCPaths[i] = Paths[i].toUpperCase().replace(chr0,'').replace(chr1,'!');
-	return function find_path(path) {
+	return function find_path(path/*:string*/) {
 		var k;
 		if(path.charCodeAt(0) === 47 /* "/" */) { k=true; path = root_name + path; }
 		else k = path.indexOf("/") !== -1;
@@ -1105,6 +1135,7 @@ function sleuth_fat(idx, cnt, sectors, ssz, fat_addrs) {
 		if(cnt !== 0) throw "DIFAT chain shorter than expected";
 	} else if(idx !== -1 /*FREESECT*/) {
 		var sector = sectors[idx], m = (ssz>>>2)-1;
+		if(!sector) return;
 		for(var i = 0; i < m; ++i) {
 			if((q = __readInt32LE(sector,i*4)) === ENDOFCHAIN) break;
 			fat_addrs.push(q);
@@ -1128,13 +1159,14 @@ function get_sector_list(sectors, start, fat_addrs, ssz, chkd) {
 		var addr = fat_addrs[Math.floor(j*4/ssz)];
 		jj = ((j*4) & modulus);
 		if(ssz < 4 + jj) throw "FAT boundary crossed: " + j + " 4 "+ssz;
+		if(!sectors[addr]) break;
 		j = __readInt32LE(sectors[addr], jj);
 	}
 	return {nodes: buf, data:__toBuffer([buf_chain])};
 }
 
 /** Chase down the sector linked lists */
-function make_sector_list(sectors, dir_start, fat_addrs, ssz) {
+function make_sector_list(sectors, dir_start, fat_addrs, ssz/*:number*/)/*:any*/ {
 	var sl = sectors.length, sector_list = new Array(sl);
 	var chkd = new Array(sl), buf, buf_chain;
 	var modulus = ssz - 1, i, j, k, jj;
@@ -1150,6 +1182,7 @@ function make_sector_list(sectors, dir_start, fat_addrs, ssz) {
 			var addr = fat_addrs[Math.floor(j*4/ssz)];
 			jj = ((j*4) & modulus);
 			if(ssz < 4 + jj) throw "FAT boundary crossed: " + j + " 4 "+ssz;
+			if(!sectors[addr]) break;
 			j = __readInt32LE(sectors[addr], jj);
 		}
 		sector_list[k] = {nodes: buf, data:__toBuffer([buf_chain])};
@@ -1170,7 +1203,7 @@ function read_directory(dir_start, sector_list, sectors, Paths, nmfs, files, Fil
 		if(namelen === 0) continue;
 		name = __utf16le(blob,0,namelen-pl);
 		Paths.push(name);
-		o = {
+		o = ({
 			name:  name,
 			type:  blob.read_shift(1),
 			color: blob.read_shift(1),
@@ -1179,7 +1212,7 @@ function read_directory(dir_start, sector_list, sectors, Paths, nmfs, files, Fil
 			C:     blob.read_shift(4, 'i'),
 			clsid: blob.read_shift(16),
 			state: blob.read_shift(4, 'i')
-		};
+		}/*:any*/);
 		ctime = blob.read_shift(2) + blob.read_shift(2) + blob.read_shift(2) + blob.read_shift(2);
 		if(ctime !== 0) {
 			o.ctime = ctime; o.ct = read_date(blob, blob.l-8);
@@ -1217,12 +1250,12 @@ function read_date(blob, offset) {
 }
 
 var fs;
-function readFileSync(filename, options) {
+function readFileSync(filename/*:string*/, options/*:any*/) {
 	if(fs === undefined) fs = require('fs');
 	return parse(fs.readFileSync(filename), options);
 }
 
-function readSync(blob, options) {
+function readSync(blob/*:any*/, options/*:any*/) {
 	switch(options !== undefined && options.type !== undefined ? options.type : "base64") {
 		case "file": return readFileSync(blob, options);
 		case "base64": return parse(s2a(Base64.decode(blob)), options);
@@ -1331,10 +1364,10 @@ function dup(o/*:any*/)/*:any*/ {
 function fill(c/*:string*/,l/*:number*/)/*:string*/ { var o = ""; while(o.length < l) o+=c; return o; }
 function getdatastr(data)/*:?string*/ {
 	if(!data) return null;
-	if(data.data) return debom_xml(data.data);
-	if(data.asNodeBuffer && has_buf) return debom_xml(data.asNodeBuffer().toString('binary'));
-	if(data.asBinary) return debom_xml(data.asBinary());
-	if(data._data && data._data.getContent) return debom_xml(cc2str(Array.prototype.slice.call(data._data.getContent(),0)));
+	if(data.data) return debom(data.data);
+	if(data.asNodeBuffer && has_buf) return debom(data.asNodeBuffer().toString('binary'));
+	if(data.asBinary) return debom(data.asBinary());
+	if(data._data && data._data.getContent) return debom(cc2str(Array.prototype.slice.call(data._data.getContent(),0)));
 	return null;
 }
 
@@ -1352,10 +1385,14 @@ function getdatabin(data) {
 
 function getdata(data) { return (data && data.name.slice(-4) === ".bin") ? getdatabin(data) : getdatastr(data); }
 
+/* Part 2 Section 10.1.2 "Mapping Content Types" Names are case-insensitive */
 function safegetzipfile(zip, file/*:string*/) {
-	var f = file; if(zip.files[f]) return zip.files[f];
-	f = file.toLowerCase(); if(zip.files[f]) return zip.files[f];
-	f = f.replace(/\//g,'\\'); if(zip.files[f]) return zip.files[f];
+	var k = keys(zip.files);
+	var f = file.toLowerCase(), g = f.replace(/\//g,'\\');
+	for(var i=0; i<k.length; ++i) {
+		var n = k[i].toLowerCase();
+		if(f == n || g == n) return zip.files[k[i]];
+	}
 	return null;
 }
 
@@ -9484,7 +9521,7 @@ function xlml_normalize(d)/*:string*/ {
 /* TODO: Everything */
 var xlmlregex = /<(\/?)([a-z0-9]*:|)(\w+)[^>]*>/mg;
 function parse_xlml_xml(d, opts) {
-	var str = xlml_normalize(d);
+	var str = debom(xlml_normalize(d));
 	var Rn;
 	var state = [], tmp;
 	var sheets = {}, sheetnames = [], cursheet = {}, sheetname = "";
@@ -12440,6 +12477,7 @@ function readSync(data/*:RawData*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
 		case 0x09: return parse_xlscfb(s2a(o.type === 'base64' ? Base64.decode(d) : d), o);
 		case 0x3C: return parse_xlml(d, o);
 		case 0x50: return read_zip(d, o);
+		case 0xEF: return parse_xlml(d, o);
 		default: throw new Error("Unsupported file " + n);
 	}
 }
@@ -12464,23 +12502,28 @@ function write_zip_type(wb/*:Workbook*/, opts/*:?WriteOpts*/) {
 	return z.generate(oopts);
 }
 
+/* TODO: test consistency */
 function write_string_type(out/*:string*/, opts/*:WriteOpts*/) {
 	switch(opts.type) {
-		case "base64": break; // TODO
-		case "binary": break; // TODO
+		case "base64": return Base64.encode(out);
+		case "binary": return out;
 		case "file": return _fs.writeFileSync(opts.file, out, {encoding:'utf8'});
-		case "buffer": break; // TODO
+		case "buffer": {
+			if(has_buf) return new Buffer(out, 'utf8');
+			else return out.split("").map(function(c) { return c.charCodeAt(0); });
+		} break;
 		default: return out;
 	}
 }
 
+/* TODO: test consistency */
 function write_binary_type(out, opts/*:WriteOpts*/) {
 	switch(opts.type) {
-		case "base64": break; // TODO
+		case "base64":
 		case "binary":
 			var bstr = "";
 			for(var i = 0; i < out.length; ++i) bstr += String.fromCharCode(out[i]);
-			return bstr;
+			return opts.type == 'base64' ? Base64.encode(bstr) : bstr;
 		case "file": return _fs.writeFileSync(opts.file, out);
 		case "buffer": return out;
 		default: throw new Error("Unrecognized type " + opts.type);
@@ -12489,12 +12532,16 @@ function write_binary_type(out, opts/*:WriteOpts*/) {
 
 function writeSync(wb/*:Workbook*/, opts/*:?WriteOpts*/) {
 	var o = opts||{};
-	switch(o.bookType) {
+	switch(o.bookType || 'xlsx') {
 		case 'xml': return write_string_type(write_xlml(wb, o), o);
 		case 'csv': return write_string_type(write_csv_str(wb, o), o);
 		case 'fods': return write_string_type(write_ods(wb, o), o);
 		case 'biff2': return write_binary_type(write_biff_buf(wb, o), o);
-		default: return write_zip_type(wb, o);
+		case 'xlsx':
+		case 'xlsm':
+		case 'xlsb':
+		case 'ods': return write_zip_type(wb, o);
+		default: throw new Error ("Unrecognized bookType |" + o.bookType + "|");
 	}
 }
 

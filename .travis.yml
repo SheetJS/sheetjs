@@ -9,7 +9,7 @@ node_js:
   - "0.9"
   - "0.8"
 before_install:
-  - "npm install -g npm@next"
+  - "npm install -g npm@4.3.0"
   - "npm install -g mocha@2.x voc"
   - "npm install blanket"
   - "npm install xlsjs"

@@ -32,6 +32,7 @@ function readSync(data/*:RawData*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
 		case 0x09: return parse_xlscfb(s2a(o.type === 'base64' ? Base64.decode(d) : d), o);
 		case 0x3C: return parse_xlml(d, o);
 		case 0x50: return read_zip(d, o);
+		case 0xEF: return parse_xlml(d, o);
 		default: throw new Error("Unsupported file " + n);
 	}
 }

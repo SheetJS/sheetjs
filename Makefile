@@ -30,7 +30,7 @@ $(FLOWTARGET): $(DEPS)
 bits/01_version.js: package.json
 	echo "$(ULIB).version = '"`grep version package.json | awk '{gsub(/[^0-9a-z\.-]/,"",$$2); print $$2}'`"';" > $@
 
-bits/18_cfb.js: node_modules/cfb/dist/xlscfb.js
+bits/18_cfb.js: node_modules/cfb/xlscfb.flow.js
 	cp $^ $@
 
 .PHONY: clean
@@ -76,7 +76,7 @@ ods: ods.js
 
 ODSDEPS=$(sort $(wildcard odsbits/*.js))
 ods.flow.js: $(ODSDEPS) ## Build ODS support library
-	cat $(ODSDEPS) | tr -d '\15\32' > $@
+	cat $^ | tr -d '\15\32' > $@
 
 
 ## Testing
