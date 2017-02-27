@@ -3,7 +3,7 @@ var make_offcrypto = function(O, _crypto) {
 	var crypto;
 	if(typeof _crypto !== 'undefined') crypto = _crypto;
 	else if(typeof require !== 'undefined') {
-		try { crypto = require('cry'+'pto'); }
+		try { crypto = require('crypto'); }
 		catch(e) { crypto = null; }
 	}
 

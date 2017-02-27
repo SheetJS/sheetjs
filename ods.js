@@ -61,8 +61,8 @@ var _fs, jszip;
 if(typeof JSZip !== 'undefined') jszip = JSZip;
 if (typeof exports !== 'undefined') {
 	if (typeof module !== 'undefined' && module.exports) {
-		if(typeof jszip === 'undefined') jszip = require('./js'+'zip');
-		_fs = require('f'+'s');
+		if(typeof jszip === 'undefined') jszip = require('./jszip');
+		_fs = require('fs');
 	}
 }
 var attregexg=/[^\s?>\/]+=["'][^"]*['"]/g;
