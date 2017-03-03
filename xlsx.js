@@ -7850,8 +7850,124 @@ function get_cell_style(styles, cell, opts) {
 	return len;
 }
 
+/**
+ * This function permits to know if a "fmtid" is related to a date
+ * In other terms, it permits to know if a cell contains a date
+ * @param  {Number}  fmtid The fmtid of the cell
+ * @param  {String}  fmt   The format provided from fmtid using SSF._table[]
+ * @return {Boolean} TRUE if it's a Date, or FALSE if it's not
+ */
+function isFmtDate(fmtid, fmt) {
+  /* here is a list of fmtid from
+      - http://stackoverflow.com/questions/4730152/what-indicates-an-office-open-xml-cell-contains-a-date-time-value
+      - http://stackoverflow.com/questions/19034805/how-to-distinguish-inline-numbers-from-ole-automation-date-numbers-in-openxml-sp/19582685#19582685
+
+    (*) dates
+    0 = 'General';
+    1 = '0';
+    2 = '0.00';
+    3 = '#,##0';
+    4 = '#,##0.00';
+
+    9 = '0%';
+    10 = '0.00%';
+    11 = '0.00E+00';
+    12 = '# ?/?';
+    13 = '# ??/??';
+    14* = 'mm-dd-yy';
+    15* = 'd-mmm-yy';
+    16* = 'd-mmm';
+    17* = 'mmm-yy';
+    18* = 'h:mm AM/PM';
+    19* = 'h:mm:ss AM/PM';
+    20* = 'h:mm';
+    21* = 'h:mm:ss';
+    22* = 'm/d/yy h:mm';
+
+    27* = '[$-404]e/m/d';
+    28*
+    29*
+    30* = 'm/d/yy';
+    31*
+    32*
+    33*
+    34*
+    35*
+    36* = '[$-404]e/m/d';
+    37 = '#,##0 ;(#,##0)';
+    38 = '#,##0 ;[Red](#,##0)';
+    39 = '#,##0.00;(#,##0.00)';
+    40 = '#,##0.00;[Red](#,##0.00)';
+
+    44 = '_("$"* #,##0.00_);_("$"* \(#,##0.00\);_("$"* "-"??_);_(@_)';
+    45* = 'mm:ss';
+    46* = '[h]:mm:ss';
+    47* = 'mmss.0';
+    48 = '##0.0E+0';
+    49 = '@';
+    50* = '[$-404]e/m/d';
+    51*
+    52*
+    53*
+    54*
+    55* = 'yyyy/mm/dd';
+    56*
+    57* = '[$-404]e/m/d';
+    58*
+    59 = 't0';
+    60 = 't0.00';
+    61 = 't#,##0';
+    62 = 't#,##0.00';
+    67 = 't0%';
+    68 = 't0.00%';
+    69 = 't# ?/?';
+    70 = 't# ??/??';
+
+    164+ => customized format
+
+    Example of possible date formats:
+    '[$-F800]dddd\,\ mmmm\ dd\,\ yyyy'
+    'd/m;@'
+    'd/m/yy;@'
+    'dd/mm/yy;@'
+    '[$-40C]d\-mmm;@'
+    '[$-40C]d\-mmm\-yy;@'
+    '[$-40C]dd\-mmm\-yy;@'
+    '[$-40C]mmm\-yy;@'
+    '[$-40C]mmmm\-yy;@'
+    '[$-40C]d\ mmmm\ yyyy;@'
+    '[$-409]d/m/yy\ h:mm\ AM/PM;@'
+    'd/m/yy\ h:mm;@'
+    'm/d/yyyy;@'
+    '[$-40C]d\-mmm\-yyyy;@'
+    'dd/mm/yy\ hh:mm'
+  */
+  switch(fmtid) {
+    case 14: case 15: case 16: case 17: case 18: case 19: case 20: case 21: case 22: case 27: case 28: case 29: case 30: case 31: case 32: case 33: case 34: case 35: case 36: case 45: case 46: case 47: case 50: case 51: case 52: case 53: case 54: case 55: case 56: case 57: case 58: return true;
+    default: {
+      // check if it's a customized format, and if it's the case we should have 'ymdhsAPM', and no #
+      if (fmtid >= 164) {
+        return /[ymdhsAPM]/.test(fmt) && fmt.indexOf('#') === -1
+      }
+    }
+  }
+  return false;
+}
+
 function safe_format(p, fmtid, fillid, opts) {
 	try {
+		// we want to save fmt and fmtid into the object so the end-user can use it
+		// for example to parse it into the original format
+		p.fmt = SSF._table[fmtid]; // retrive the format
+		p.fmtid = fmtid;
+		// check if the cell is a date
+		if (p.t === "n" && opts.cellDates===true && isFmtDate(p.fmtid, p.fmt)) {
+		  p.t = "d";
+		  // parse the date
+		  var dval = XLSX.SSF.parse_date_code(p.v);
+		  // provide p.d as a JavaScript Date Object
+		  p.d = new Date(dval.y,dval.m-1,dval.d,dval.H,dval.M,dval.S);
+		}
 		if(p.t === 'e') p.w = p.w || BErr[p.v];
 		else if(fmtid === 0) {
 			if(p.t === 'n') {
