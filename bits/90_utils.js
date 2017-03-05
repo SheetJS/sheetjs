@@ -10,13 +10,20 @@ function unfix_col(cstr/*:string*/)/*:string*/ { return cstr.replace(/^\$([A-Z])
 
 function split_cell(cstr/*:string*/)/*:Array<string>*/ { return cstr.replace(/(\$?[A-Z]*)(\$?\d*)/,"$1,$2").split(","); }
 function decode_cell(cstr/*:string*/)/*:CellAddress*/ { var splt = split_cell(cstr); return { c:decode_col(splt[0]), r:decode_row(splt[1]) }; }
-function encode_cell(cell/*:Cell*/)/*:string*/ { return encode_col(cell.c) + encode_row(cell.r); }
+function encode_cell(cell/*:CellAddress*/)/*:string*/ { return encode_col(cell.c) + encode_row(cell.r); }
 function fix_cell(cstr/*:string*/)/*:string*/ { return fix_col(fix_row(cstr)); }
 function unfix_cell(cstr/*:string*/)/*:string*/ { return unfix_col(unfix_row(cstr)); }
 function decode_range(range/*:string*/)/*:Range*/ { var x =range.split(":").map(decode_cell); return {s:x[0],e:x[x.length-1]}; }
 function encode_range(cs/*:any*/,ce/*:?any*/)/*:string*/ {
-	if(ce === undefined || typeof ce === 'number') return encode_range(cs.s, cs.e);
-	if(typeof cs !== 'string') cs = encode_cell(cs); if(typeof ce !== 'string') ce = encode_cell(ce);
+	if(typeof ce === 'undefined' || typeof ce === 'number') {
+/*:: if(!(cs instanceof Range)) throw "unreachable"; */
+		return encode_range(cs.s, cs.e);
+	}
+/*:: if((cs instanceof Range)) throw "unreachable"; */
+	if(typeof cs !== 'string') cs = encode_cell((cs/*:any*/));
+	if(typeof ce !== 'string') ce = encode_cell((ce/*:any*/));
+/*:: if(typeof cs !== 'string') throw "unreachable"; */
+/*:: if(typeof ce !== 'string') throw "unreachable"; */
 	return cs == ce ? cs : cs + ":" + ce;
 }
 

@@ -1,16 +1,12 @@
 /* xlsx.js (C) 2013-present SheetJS -- http://sheetjs.com */
-/* uncomment the next line for encoding support */
-//importScripts('dist/cpexcel.js');
-importScripts('jszip.js');
-importScripts('xlsx.js');
-/* uncomment the next line for ODS support */
-importScripts('dist/ods.js');
+importScripts('browserify.min.js');
+var XLSX = require('xlsx');
 postMessage({t:"ready"});
 
 function ab2str(data) {
 	var o = "", l = 0, w = 10240;
-	for(; l<data.byteLength/w; ++l) o+=String.fromCharCode.apply(null,new Uint8Array(data.slice(l*w,l*w+w)));
-	o+=String.fromCharCode.apply(null, new Uint8Array(data.slice(l*w)));
+	for(; l<data.byteLength/w; ++l) o+=String.fromCharCode.apply(null,new Uint16Array(data.slice(l*w,l*w+w)));
+	o+=String.fromCharCode.apply(null, new Uint16Array(data.slice(l*w)));
 	return o;
 }
 

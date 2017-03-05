@@ -1,5 +1,6 @@
 test_files/
 tests/files/
+demos/
 index.html
 misc/
 node_modules
@@ -10,7 +11,7 @@ tmp
 *.[pP][rR][nN]
 *.[sS][lL][kK]
 *.socialcalc
-*.[xX][lL][sSwW]
+*.[xX][lL][sSwWcC]
 *.[xX][lL][sS][xXmMbB]
 *.[oO][dD][sS]
 *.[fF][oO][dD][sS]

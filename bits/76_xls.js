@@ -160,6 +160,7 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 		var length = (blob.l === blob.length ? 0 : blob.read_shift(2)), y;
 		var R = XLSRecordEnum[RecordType];
 		//console.log(RecordType.toString(16), RecordType, R, blob.l, length, blob.length);
+		//if(!R) console.log(blob.slice(blob.l, blob.l + length));
 		if(R && R.f) {
 			if(options.bookSheets) {
 				if(last_Rn === 'BoundSheet8' && R.n !== 'BoundSheet8') break;
@@ -253,12 +254,13 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 				} break;
 				case 'BOF': {
 					if(opts.biff !== 8){}
-					else if(val.BIFFVer === 0x0500) opts.biff = 5;
-					else if(val.BIFFVer === 0x0002) opts.biff = 2;
-					else if(val.BIFFVer === 0x0007) opts.biff = 2;
 					else if(RecordType  === 0x0009) opts.biff = 2;
 					else if(RecordType  === 0x0209) opts.biff = 3;
 					else if(RecordType  === 0x0409) opts.biff = 4;
+					else if(val.BIFFVer === 0x0500) opts.biff = 5;
+					else if(val.BIFFVer === 0x0600) opts.biff = 8;
+					else if(val.BIFFVer === 0x0002) opts.biff = 2;
+					else if(val.BIFFVer === 0x0007) opts.biff = 2;
 					if(file_depth++) break;
 					cell_valid = true;
 					out = {};

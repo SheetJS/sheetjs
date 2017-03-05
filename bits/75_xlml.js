@@ -701,7 +701,7 @@ function parse_xlml_xml(d, opts) {
 			}
 			if(opts.WTF) throw 'Unrecognized tag: ' + Rn[3] + "|" + state.join("|");
 	}
-	var out = ({}/*:Any*/);
+	var out = ({}/*:any*/);
 	if(!opts.bookSheets && !opts.bookProps) out.Sheets = sheets;
 	out.SheetNames = sheetnames;
 	out.SSF = SSF.get_table();

@@ -10,6 +10,7 @@ program
 	.usage('[options] <file> [sheetname]')
 	.option('-f, --file <file>', 'use specified workbook')
 	.option('-s, --sheet <sheet>', 'print specified sheet (default first sheet)')
+	.option('-N, --sheet-index <idx>', 'use specified sheet index (0-based)')
 	.option('-p, --password <pw>', 'if file is encrypted, try with specified pw')
 	.option('-l, --list-sheets', 'list sheet names and exit')
 	.option('-o, --output <file>', 'output to specified file')
@@ -25,6 +26,7 @@ program
 	.option('-j, --json', 'emit formatted JSON (all fields text)')
 	.option('-J, --raw-js', 'emit raw JS object (raw numbers)')
 	.option('-A, --arrays', 'emit rows as JS objects (raw numbers)')
+
 	.option('-F, --field-sep <sep>', 'CSV field separator', ",")
 	.option('-R, --row-sep <sep>', 'CSV row separator', "\n")
 	.option('-n, --sheet-rows <num>', 'Number of rows to process (0=all rows)')
@@ -80,6 +82,7 @@ if(program.listSheets) opts.bookSheets = true;
 if(program.sheetRows) opts.sheetRows = program.sheetRows;
 if(program.password) opts.password = program.password;
 if(program.xlsx || program.xlsm || program.xlsb) {
+	opts.cellFormula = true;
 	opts.cellNF = true;
 	if(program.output) sheetname = program.output;
 }
@@ -109,7 +112,7 @@ if(program.read) process.exit(0);
 
 /*::   if(wb) { */
 if(program.listSheets) {
-	console.log(wb.SheetNames.join("\n"));
+	console.log((wb.SheetNames||[]).join("\n"));
 	process.exit(0);
 }
 
@@ -123,7 +126,10 @@ workbook_formats.forEach(function(m) { if(program[m]) {
 } });
 
 var target_sheet = sheetname || '';
-if(target_sheet === '') target_sheet = wb.SheetNames[0];
+if(target_sheet === '') {
+	if(program.sheetIndex < (wb.SheetNames||[]).length) target_sheet = wb.SheetNames[program.sheetIndex];
+	else target_sheet = (wb.SheetNames||[""])[0];
+}
 
 var ws;
 try {

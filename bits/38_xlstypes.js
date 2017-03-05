@@ -68,7 +68,7 @@ function parse_VtVecHeadingPair(blob) {
 /* [MS-OLEPS] 2.18.1 Dictionary (uses 2.17, 2.16) */
 function parse_dictionary(blob,CodePage) {
 	var cnt = blob.read_shift(4);
-	var dict/*{[number]:string}*/ = ({}/*:any*/);
+	var dict/*:{[number]:string}*/ = ({}/*:any*/);
 	for(var j = 0; j != cnt; ++j) {
 		var pid = blob.read_shift(4);
 		var len = blob.read_shift(4);
@@ -149,7 +149,7 @@ function parse_PropertySet(blob, PIDSI) {
 	var NumProps = blob.read_shift(4);
 	var Props = [], i = 0;
 	var CodePage = 0;
-	var Dictionary = -1, DictObj/*{[number]:string}*/ = ({}/*:any*/);
+	var Dictionary = -1, DictObj/*:{[number]:string}*/ = ({}/*:any*/);
 	for(i = 0; i != NumProps; ++i) {
 		var PropID = blob.read_shift(4);
 		var Offset = blob.read_shift(4);

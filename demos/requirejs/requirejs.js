@@ -1,78 +1,10 @@
-<!DOCTYPE html>
-<!-- xlsx.js (C) 2013-present  SheetJS http://sheetjs.com -->
-<!-- vim: set ts=2: -->
-<html>
-<head>
-<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-<title>JS-XLSX Live Demo</title>
-<style>
-#drop{
-	border:2px dashed #bbb;
-	-moz-border-radius:5px;
-	-webkit-border-radius:5px;
-	border-radius:5px;
-	padding:25px;
-	text-align:center;
-	font:20pt bold,"Vollkorn";color:#bbb
-}
-#b64data{
-	width:100%;
-}
-</style>
-</head>
-<body>
-<b>JS-XLSX Live Demo</b><br />
-Output Format:
-<select name="format">
-<option value="csv" selected> CSV</option>
-<option value="json"> JSON</option>
-<option value="form"> FORMULAE</option>
-</select><br />
-
-<div id="drop">Drop a spreadsheet file here to see sheet data</div>
-<p><input type="file" name="xlfile" id="xlf" /> ... or click here to select a file</p>
-<textarea id="b64data">... or paste a base64-encoding here</textarea>
-<input type="button" id="dotext" value="Click here to process the base64 text" onclick="b64it();"/><br />
-Advanced Demo Options: <br />
-Use Web Workers: (when available) <input type="checkbox" name="useworker" checked><br />
-Use Transferrables: (when available) <input type="checkbox" name="xferable" checked><br />
-Use readAsBinaryString: (when available) <input type="checkbox" name="userabs" checked><br />
-<pre id="out"></pre>
-<br />
-<!-- uncomment the next line here and in xlsxworker.js for encoding support -->
-<!--<script src="dist/cpexcel.js"></script>-->
-<script src="shim.js"></script>
-<script src="jszip.js"></script>
-<script src="xlsx.js"></script>
-<!-- uncomment the next line here and in xlsxworker.js for ODS support -->
-<script src="ods.js"></script>
-<script>
+require(["xlsx.full"], function(_XLSX) {
 var X = XLSX;
-var XW = {
-	/* worker message */
-	msg: 'xlsx',
-	/* worker scripts */
-	rABS: './xlsxworker2.js',
-	norABS: './xlsxworker1.js',
-	noxfer: './xlsxworker.js'
-};
 
 var rABS = typeof FileReader !== "undefined" && typeof FileReader.prototype !== "undefined" && typeof FileReader.prototype.readAsBinaryString !== "undefined";
 if(!rABS) {
 	document.getElementsByName("userabs")[0].disabled = true;
 	document.getElementsByName("userabs")[0].checked = false;
-}
-
-var use_worker = typeof Worker !== 'undefined';
-if(!use_worker) {
-	document.getElementsByName("useworker")[0].disabled = true;
-	document.getElementsByName("useworker")[0].checked = false;
-}
-
-var transferable = use_worker;
-if(!transferable) {
-	document.getElementsByName("xferable")[0].disabled = true;
-	document.getElementsByName("xferable")[0].checked = false;
 }
 
 var wtf_mode = false;
@@ -95,42 +27,6 @@ function s2ab(s) {
 	var b = new ArrayBuffer(s.length*2), v = new Uint16Array(b);
 	for (var i=0; i != s.length; ++i) v[i] = s.charCodeAt(i);
 	return [v, b];
-}
-
-function xw_noxfer(data, cb) {
-	var worker = new Worker(XW.noxfer);
-	worker.onmessage = function(e) {
-		switch(e.data.t) {
-			case 'ready': break;
-			case 'e': console.error(e.data.d); break;
-			case XW.msg: cb(JSON.parse(e.data.d)); break;
-		}
-	};
-	var arr = rABS ? data : btoa(fixdata(data));
-	worker.postMessage({d:arr,b:rABS});
-}
-
-function xw_xfer(data, cb) {
-	var worker = new Worker(rABS ? XW.rABS : XW.norABS);
-	worker.onmessage = function(e) {
-		switch(e.data.t) {
-			case 'ready': break;
-			case 'e': console.error(e.data.d); break;
-			default: xx=ab2str(e.data).replace(/\n/g,"\\n").replace(/\r/g,"\\r"); console.log("done"); cb(JSON.parse(xx)); break;
-		}
-	};
-	if(rABS) {
-		var val = s2ab(data);
-		worker.postMessage(val[1], [val[1]]);
-	} else {
-		worker.postMessage(data, [data]);
-	}
-}
-
-function xw(data, cb) {
-	transferable = document.getElementsByName("xferable")[0].checked;
-	if(transferable) xw_xfer(data, cb);
-	else xw_noxfer(data, cb);
 }
 
 function get_radio_value( radioName ) {
@@ -208,18 +104,15 @@ function handleDrop(e) {
 	e.stopPropagation();
 	e.preventDefault();
 	rABS = document.getElementsByName("userabs")[0].checked;
-	use_worker = document.getElementsByName("useworker")[0].checked;
 	var files = e.dataTransfer.files;
 	var f = files[0];
 	{
 		var reader = new FileReader();
 		var name = f.name;
 		reader.onload = function(e) {
-			if(typeof console !== 'undefined') console.log("onload", new Date(), rABS, use_worker);
+			if(typeof console !== 'undefined') console.log("onload", new Date(), rABS);
 			var data = e.target.result;
-			if(use_worker) {
-				xw(data, process_wb);
-			} else {
+			{
 				var wb;
 				if(rABS) {
 					wb = X.read(data, {type: 'binary'});
@@ -251,18 +144,15 @@ if(drop.addEventListener) {
 var xlf = document.getElementById('xlf');
 function handleFile(e) {
 	rABS = document.getElementsByName("userabs")[0].checked;
-	use_worker = document.getElementsByName("useworker")[0].checked;
 	var files = e.target.files;
 	var f = files[0];
 	{
 		var reader = new FileReader();
 		var name = f.name;
 		reader.onload = function(e) {
-			if(typeof console !== 'undefined') console.log("onload", new Date(), rABS, use_worker);
+			if(typeof console !== 'undefined') console.log("onload", new Date(), rABS);
 			var data = e.target.result;
-			if(use_worker) {
-				xw(data, process_wb);
-			} else {
+			{
 				var wb;
 				if(rABS) {
 					wb = X.read(data, {type: 'binary'});
@@ -279,6 +169,5 @@ function handleFile(e) {
 }
 
 if(xlf.addEventListener) xlf.addEventListener('change', handleFile, false);
-</script>
-</body>
-</html>
+
+});

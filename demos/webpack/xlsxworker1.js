@@ -1,10 +1,5 @@
 /* xlsx.js (C) 2013-present SheetJS -- http://sheetjs.com */
-/* uncomment the next line for encoding support */
-//importScripts('dist/cpexcel.js');
-importScripts('jszip.js');
-importScripts('xlsx.js');
-/* uncomment the next line for ODS support */
-importScripts('dist/ods.js');
+importScripts('webpack.min.js');
 postMessage({t:"ready"});
 
 function ab2str(data) {

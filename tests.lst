@@ -3,6 +3,7 @@ BlankSheetTypes.xlsb.pending
 ErrorTypes.xlsb
 NumberFormatCondition.xlsb
 RkNumber.xlsb
+apachepoi_Simple.xlsb.pending
 calendar_stress_test.xlsb.pending
 cell_style_simple.xlsb
 comments_stress_test.xlsb
@@ -11,17 +12,20 @@ defined_names_simple.xlsb
 formula_stress_test.xlsb
 formulae_test_simple.xlsb
 hyperlink_stress_test_2011.xlsb
+large_strings.xlsb.pending
 merge_cells.xlsb
 named_ranges_2011.xlsb
 number_format.xlsb
 number_format_entities.xlsb
 number_format_russian.xlsb
+numfmt_1_russian.xlsb
 pivot_table_named_range.xlsb
 pivot_table_test.xlsb
 rich_text_stress.xlsb
 smart_tags_2007.xlsb
 sushi.xlsb
 text_and_numbers.xlsb
+time_stress_test_1.xlsb.pending
 xlsx-stream-d-date-cell.xlsb
 2013/apachepoi_29982.xls.xlsb
 2013/apachepoi_43251.xls.xlsb
@@ -247,6 +251,7 @@ mixed_sheets.xlsx
 named_ranges_2011.xlsx
 number_format_entities.xlsx
 openpyxl_g_NameWithValueBug.xlsx
+openpyxl_g_empty.xlsx.pending
 openpyxl_g_empty-no-string.xlsx
 openpyxl_g_empty-with-styles.xlsx
 openpyxl_g_empty_libre.xlsx

@@ -11,8 +11,8 @@ importScripts('dist/ods.js');
 
 function ab2str(data) {
 	var o = "", l = 0, w = 10240;
-	for(; l<data.byteLength/w; ++l) o+=String.fromCharCode.apply(null,/*::(*/new Uint16Array(data.slice(l*w,l*w+w))/*:: :any)*/);
-	o+=String.fromCharCode.apply(null, /*::(*/new Uint16Array(data.slice(l*w))/*:: :any)*/);
+	for(; l<data.byteLength/w; ++l) o+=String.fromCharCode.apply(null,/*::(*/new Uint8Array(data.slice(l*w,l*w+w))/*:: :any)*/);
+	o+=String.fromCharCode.apply(null, /*::(*/new Uint8Array(data.slice(l*w))/*:: :any)*/);
 	return o;
 }
 

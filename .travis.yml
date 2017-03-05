@@ -16,6 +16,6 @@ before_install:
   - "npm install coveralls mocha-lcov-reporter"
 before_script:
   - "make init"
-  - "cd test_files; make all; cd -" 
+  - "cd test_files; make all; cd -"
 after_success:
   - "make coveralls-spin"

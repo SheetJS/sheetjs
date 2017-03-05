@@ -73,6 +73,14 @@ An appropriate version for each dependency is included in the dist/ directory.
 
 The complete single-file version is generated at `dist/xlsx.full.min.js`
 
+### JS Ecosystem Demos
+
+The `demos` directory includes sample projects for:
+
+- [`browserify`](http://browserify.org/)
+- [`requirejs`](http://requirejs.org/)
+- [`webpack`](https://webpack.js.org/)
+
 ### ECMAScript 5 Compatibility
 
 Since xlsx.js uses ES5 functions like `Array#forEach`, older browsers require
@@ -338,7 +346,7 @@ Utilities are available in the `XLSX.utils` object:
 
 Exporting:
 
-- `sheet_to_json` converts a workbook object to an array of JSON objects.
+- `sheet_to_json` converts a worksheet object to an array of JSON objects.
   `sheet_to_row_object_array` is an alias that will be removed in the future.
 - `sheet_to_csv` generates delimiter-separated-values output.
 - `sheet_to_formulae` generates a list of the formulae (with value fallbacks).

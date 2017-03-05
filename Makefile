@@ -57,8 +57,9 @@ dist: dist-deps $(TARGET) bower.json ## Prepare JS files for distribution
 	misc/strip_sourcemap.sh dist/$(LIB).min.js
 	uglifyjs $(UGLIFYOPTS) $(REQS) $(TARGET) -o dist/$(LIB).core.min.js --source-map dist/$(LIB).core.min.map --preamble "$$(head -n 1 bits/00_header.js)"
 	misc/strip_sourcemap.sh dist/$(LIB).core.min.js
-	uglifyjs $(UGLIFYOPTS) $(REQS) $(ADDONS) $(TARGET) -o dist/$(LIB).full.min.js --source-map dist/$(LIB).full.min.map --preamble "$$(head -n 1 bits/00_header.js)"
+	uglifyjs $(UGLIFYOPTS) $(REQS) $(ADDONS) $(TARGET) $(AUXTARGETS) -o dist/$(LIB).full.min.js --source-map dist/$(LIB).full.min.map --preamble "$$(head -n 1 bits/00_header.js)"
 	misc/strip_sourcemap.sh dist/$(LIB).full.min.js
+	cat <(head -n 1 bits/00_header.js) $(REQS) $(ADDONS) $(TARGET) $(AUXTARGETS) > demos/requirejs/$(LIB).full.js
 
 .PHONY: dist-deps
 dist-deps: ods.js ## Copy dependencies for distribution
@@ -91,6 +92,15 @@ TESTFMT=$(patsubst %,test_%,$(FMT))
 $(TESTFMT): test_%:
 	FMTS=$* make test
 
+.PHONY: demo-browserify
+demo-browserify: ## Run browserify demo build
+	make -C demos/browserify
+	@echo "start a local server and go to demos/browserify/browserify.html"
+
+.PHONY: demo-webpack
+demo-webpack: ## Run webpack demo build
+	make -C demos/webpack
+	@echo "start a local server and go to demos/webpack/webpack.html"
 
 ## Code Checking
 

@@ -4,10 +4,10 @@
 /*jshint funcscope:true, eqnull:true */
 var XLSX = {};
 (function make_xlsx(XLSX){
-XLSX.version = '0.8.6';
+XLSX.version = '0.8.7';
 var current_codepage = 1200, current_cptable;
 if(typeof module !== "undefined" && typeof require !== 'undefined') {
-	if(typeof cptable === 'undefined') cptable = require('./dist/cpexcel');
+	if(typeof cptable === 'undefined') cptable = require('./dist/cpexcel.js');
 	current_cptable = cptable[current_codepage];
 }
 function reset_cp() { set_cp(1200); }
@@ -1377,8 +1377,8 @@ var _fs, jszip;
 if(typeof JSZip !== 'undefined') jszip = JSZip;
 if (typeof exports !== 'undefined') {
 	if (typeof module !== 'undefined' && module.exports) {
-		if(typeof jszip === 'undefined') jszip = require('./js'+'zip');
-		_fs = require('f'+'s');
+		if(typeof jszip === 'undefined') jszip = require('./jszip.js');
+		_fs = require('fs');
 	}
 }
 var attregexg=/([\w:]+)=((?:")([^"]*)(?:")|(?:')([^']*)(?:'))/g;
@@ -1847,7 +1847,7 @@ var make_offcrypto = function(O, _crypto) {
 	var crypto;
 	if(typeof _crypto !== 'undefined') crypto = _crypto;
 	else if(typeof require !== 'undefined') {
-		try { crypto = require('cry'+'pto'); }
+		try { crypto = require('crypto'); }
 		catch(e) { crypto = null; }
 	}
 
@@ -2933,7 +2933,7 @@ function parse_VtVecHeadingPair(blob) {
 /* [MS-OLEPS] 2.18.1 Dictionary (uses 2.17, 2.16) */
 function parse_dictionary(blob,CodePage) {
 	var cnt = blob.read_shift(4);
-	var dict/*{[number]:string}*/ = ({});
+	var dict = ({});
 	for(var j = 0; j != cnt; ++j) {
 		var pid = blob.read_shift(4);
 		var len = blob.read_shift(4);
@@ -3014,7 +3014,7 @@ function parse_PropertySet(blob, PIDSI) {
 	var NumProps = blob.read_shift(4);
 	var Props = [], i = 0;
 	var CodePage = 0;
-	var Dictionary = -1, DictObj/*{[number]:string}*/ = ({});
+	var Dictionary = -1, DictObj = ({});
 	for(i = 0; i != NumProps; ++i) {
 		var PropID = blob.read_shift(4);
 		var Offset = blob.read_shift(4);
@@ -6215,6 +6215,7 @@ function parse_FormulaValue(blob) {
 
 /* 2.5.198.103 */
 function parse_RgbExtra(blob, length, rgce, opts) {
+	if(opts.biff < 8) return parsenoop(blob, length);
 	var target = blob.l + length;
 	var o = [];
 	for(var i = 0; i !== rgce.length; ++i) {
@@ -6282,7 +6283,6 @@ function parse_ArrayParsedFormula(blob, length, opts, ref) {
 }
 
 /* 2.5.198.104 */
-var gcnt = 0;
 function parse_Rgce(blob, length, opts) {
 	var target = blob.l + length;
 	var R, id, ptgs = [];
@@ -6550,6 +6550,7 @@ function stringify_formula(formula, range, cell, supbooks, opts) {
 
 			/* 2.5.198.38 */
 			case 'PtgAttrSpace':
+			/* 2.5.198.39 */
 			case 'PtgAttrSpaceSemi':
 				last_sp = ff;
 				break;
@@ -10205,6 +10206,7 @@ function parse_workbook(blob, options) {
 		var length = (blob.l === blob.length ? 0 : blob.read_shift(2)), y;
 		var R = XLSRecordEnum[RecordType];
 		//console.log(RecordType.toString(16), RecordType, R, blob.l, length, blob.length);
+		//if(!R) console.log(blob.slice(blob.l, blob.l + length));
 		if(R && R.f) {
 			if(options.bookSheets) {
 				if(last_Rn === 'BoundSheet8' && R.n !== 'BoundSheet8') break;
@@ -10298,12 +10300,13 @@ function parse_workbook(blob, options) {
 				} break;
 				case 'BOF': {
 					if(opts.biff !== 8){}
-					else if(val.BIFFVer === 0x0500) opts.biff = 5;
-					else if(val.BIFFVer === 0x0002) opts.biff = 2;
-					else if(val.BIFFVer === 0x0007) opts.biff = 2;
 					else if(RecordType  === 0x0009) opts.biff = 2;
 					else if(RecordType  === 0x0209) opts.biff = 3;
 					else if(RecordType  === 0x0409) opts.biff = 4;
+					else if(val.BIFFVer === 0x0500) opts.biff = 5;
+					else if(val.BIFFVer === 0x0600) opts.biff = 8;
+					else if(val.BIFFVer === 0x0002) opts.biff = 2;
+					else if(val.BIFFVer === 0x0007) opts.biff = 2;
 					if(file_depth++) break;
 					cell_valid = true;
 					out = {};
@@ -12107,18 +12110,23 @@ function write_csv_str(wb, o) {
 	return sheet_to_csv(wb.Sheets[wb.SheetNames[idx]], o);
 }
 /* Helper functions to call out to ODS */
+
+function get_ods() {
+	if(typeof module !== "undefined" && typeof require !== 'undefined' && typeof ODS === 'undefined') ODS = require('./ods.js');
+	return ODS;
+}
 function parse_ods(zip, opts) {
-	if(typeof module !== "undefined" && typeof require !== 'undefined' && typeof ODS === 'undefined') ODS = require('./od' + 's');
+	get_ods();
 	if(typeof ODS === 'undefined' || !ODS.parse_ods) throw new Error("Unsupported ODS");
 	return ODS.parse_ods(zip, opts);
 }
 function write_ods(wb, opts) {
-	if(typeof module !== "undefined" && typeof require !== 'undefined' && typeof ODS === 'undefined') ODS = require('./od' + 's');
+	get_ods();
 	if(typeof ODS === 'undefined' || !ODS.write_ods) throw new Error("Unsupported ODS");
 	return ODS.write_ods(wb, opts);
 }
 function parse_fods(data, opts) {
-	if(typeof module !== "undefined" && typeof require !== 'undefined' && typeof ODS === 'undefined') ODS = require('./od' + 's');
+	get_ods();
 	if(typeof ODS === 'undefined' || !ODS.parse_fods) throw new Error("Unsupported ODS");
 	return ODS.parse_fods(data, opts);
 }
@@ -12533,9 +12541,12 @@ function fix_cell(cstr) { return fix_col(fix_row(cstr)); }
 function unfix_cell(cstr) { return unfix_col(unfix_row(cstr)); }
 function decode_range(range) { var x =range.split(":").map(decode_cell); return {s:x[0],e:x[x.length-1]}; }
 function encode_range(cs,ce) {
-	if(ce === undefined || typeof ce === 'number') return encode_range(cs.s, cs.e);
-	if(typeof cs !== 'string') cs = encode_cell(cs); if(typeof ce !== 'string') ce = encode_cell(ce);
-	return cs == ce ? cs : cs + ":" + ce;
+	if(typeof ce === 'undefined' || typeof ce === 'number') {
+return encode_range(cs.s, cs.e);
+	}
+if(typeof cs !== 'string') cs = encode_cell((cs));
+	if(typeof ce !== 'string') ce = encode_cell((ce));
+return cs == ce ? cs : cs + ":" + ce;
 }
 
 function safe_decode_range(range) {

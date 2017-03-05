@@ -1,16 +1,21 @@
 /* Helper functions to call out to ODS */
+
+function get_ods() {
+	if(typeof module !== "undefined" && typeof require !== 'undefined' && typeof ODS === 'undefined') ODS = require('./ods.js');
+	return ODS;
+}
 function parse_ods(zip, opts) {
-	if(typeof module !== "undefined" && typeof require !== 'undefined' && typeof ODS === 'undefined') ODS = require('./od' + 's');
+	get_ods();
 	if(typeof ODS === 'undefined' || !ODS.parse_ods) throw new Error("Unsupported ODS");
 	return ODS.parse_ods(zip, opts);
 }
 function write_ods(wb, opts) {
-	if(typeof module !== "undefined" && typeof require !== 'undefined' && typeof ODS === 'undefined') ODS = require('./od' + 's');
+	get_ods();
 	if(typeof ODS === 'undefined' || !ODS.write_ods) throw new Error("Unsupported ODS");
 	return ODS.write_ods(wb, opts);
 }
 function parse_fods(data, opts) {
-	if(typeof module !== "undefined" && typeof require !== 'undefined' && typeof ODS === 'undefined') ODS = require('./od' + 's');
+	get_ods();
 	if(typeof ODS === 'undefined' || !ODS.parse_fods) throw new Error("Unsupported ODS");
 	return ODS.parse_fods(data, opts);
 }

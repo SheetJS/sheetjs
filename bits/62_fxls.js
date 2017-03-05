@@ -557,6 +557,7 @@ function parse_FormulaValue(blob) {
 
 /* 2.5.198.103 */
 function parse_RgbExtra(blob, length, rgce, opts) {
+	if(opts.biff < 8) return parsenoop(blob, length);
 	var target = blob.l + length;
 	var o = [];
 	for(var i = 0; i !== rgce.length; ++i) {
@@ -624,7 +625,6 @@ function parse_ArrayParsedFormula(blob, length, opts, ref) {
 }
 
 /* 2.5.198.104 */
-var gcnt = 0;
 function parse_Rgce(blob, length, opts) {
 	var target = blob.l + length;
 	var R, id, ptgs = [];
@@ -892,6 +892,7 @@ function stringify_formula(formula, range, cell, supbooks, opts) {
 
 			/* 2.5.198.38 */
 			case 'PtgAttrSpace':
+			/* 2.5.198.39 */
 			case 'PtgAttrSpaceSemi':
 				last_sp = ff;
 				break;

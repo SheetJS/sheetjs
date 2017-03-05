@@ -39,15 +39,9 @@ Use Transferrables: (when available) <input type="checkbox" name="xferable" chec
 Use readAsBinaryString: (when available) <input type="checkbox" name="userabs" checked><br />
 <pre id="out"></pre>
 <br />
-<!-- uncomment the next line here and in xlsxworker.js for encoding support -->
-<!--<script src="dist/cpexcel.js"></script>-->
-<script src="shim.js"></script>
-<script src="jszip.js"></script>
-<script src="xlsx.js"></script>
-<!-- uncomment the next line here and in xlsxworker.js for ODS support -->
-<script src="ods.js"></script>
+<script src="browserify.min.js"></script>
 <script>
-var X = XLSX;
+var X = require('xlsx');
 var XW = {
 	/* worker message */
 	msg: 'xlsx',
