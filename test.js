@@ -976,8 +976,9 @@ describe('json output', function() {
 		data = [
 			[1,2,3],
 			[true, false, null, "sheetjs"],
-			["foo","bar",new Date("2014-02-19T14:30Z"), "0.3"],
-			["baz", null, "qux"]
+			["foo", "bar", new Date("2014-02-19T14:30Z"), "0.3"],
+			["baz", null, "qux"],
+			[undefined, "corge", null]
 		];
 		ws = sheet_from_array_of_arrays(data);
 	});
@@ -987,6 +988,7 @@ describe('json output', function() {
 		assert.equal(json[0][1], true);
 		assert.equal(json[1][2], "bar");
 		assert.equal(json[2][3], "qux");
+		assert.equal(json[3][1], undefined);
 		assert.doesNotThrow(function() { seeker(json, [1,2,3], "sheetjs"); });
 		assert.throws(function() { seeker(json, [1,2,3], "baz"); });
 	});
@@ -1020,17 +1022,56 @@ describe('json output', function() {
 		assert.throws(function() { seeker(json, "ODIN", "sheetjs"); });
 		assert.throws(function() { seeker(json, "ODIN", "baz"); });
 	});
-	[["string", "A2:D4"], ["numeric", 1], ["object", {s:{r:1,c:0},e:{r:3,c:3}}]].forEach(function(w) {
+	[["string", "A2:D5"], ["numeric", 1], ["object", {s:{r:1,c:0},e:{r:4,c:3}}]].forEach(function(w) {
 		it('should accept custom ' + w[0] + ' range', function() {
 			var json = X.utils.sheet_to_json(ws, {header:1, range:w[1]});
-			assert.equal(json.length, 3);
+			assert.equal(json.length, 4);
 			assert.equal(json[0][0], true);
 			assert.equal(json[1][1], "bar");
 			assert.equal(json[2][2], "qux");
+			assert.equal(json[3][0], undefined);
+			assert.equal(json[3][1], "corge");
+			assert.equal(json[3][2], null);
 			assert.doesNotThrow(function() { seeker(json, [0,1,2], "sheetjs"); });
 			assert.throws(function() { seeker(json, [0,1,2,3], "sheetjs"); });
 			assert.throws(function() { seeker(json, [0,1,2], "baz"); });
 		});
+	});
+	it('should use skip undefined false by header default', function() {
+		var json = X.utils.sheet_to_json(ws, {skipUndefined:false});
+		assert.equal(json.length, data.length - 1);
+		assert.equal(json[0][1], true);
+		assert.equal(json[1][2], "bar");
+		assert.equal(json[2][3], "qux");
+		assert.equal(json[3][1], "");
+		assert.equal(json[3][2], "corge");
+		assert.equal(json[3][3], "");
+		assert.doesNotThrow(function() { seeker(json, [1,2,3], "sheetjs"); });
+		assert.throws(function() { seeker(json, [1,2,3], "baz"); });
+	});
+	it('should use skip undefined true by header default', function() {
+		var json = X.utils.sheet_to_json(ws, {skipUndefined:true});
+		assert.equal(json.length, data.length - 1);
+		assert.equal(json[0][1], true);
+		assert.equal(json[1][2], "bar");
+		assert.equal(json[2][3], "qux");
+		assert.equal(json[3][1], undefined);
+		assert.equal(json[3][2], "corge");
+		assert.equal(json[3][3], null);
+		assert.doesNotThrow(function() { seeker(json, [1,2,3], "sheetjs"); });
+		assert.throws(function() { seeker(json, [1,2,3], "baz"); });
+	});
+	it('should use skip undefined false and default value is xxxx by header default', function() {
+		var json = X.utils.sheet_to_json(ws, {skipUndefined:false, defaultValue: 'xxxx'});
+		assert.equal(json.length, data.length - 1);
+		assert.equal(json[0][1], true);
+		assert.equal(json[1][2], "bar");
+		assert.equal(json[2][3], "qux");
+		assert.equal(json[3][1], "xxxx");
+		assert.equal(json[3][2], "corge");
+		assert.equal(json[3][3], "xxxx");
+		assert.doesNotThrow(function() { seeker(json, [1,2,3], "sheetjs"); });
+		assert.throws(function() { seeker(json, [1,2,3], "baz"); });
 	});
 });
 
