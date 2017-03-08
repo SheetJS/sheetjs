@@ -4,7 +4,7 @@
 /*jshint funcscope:true, eqnull:true */
 var XLSX = {};
 (function make_xlsx(XLSX){
-XLSX.version = '0.8.7';
+XLSX.version = '0.8.8';
 var current_codepage = 1200, current_cptable;
 if(typeof module !== "undefined" && typeof require !== 'undefined') {
 	if(typeof cptable === 'undefined') cptable = require('./dist/cpexcel.js');
@@ -12604,6 +12604,7 @@ function format_cell(cell, v) {
 function sheet_to_json(sheet, opts){
 	var val, row, range, header = 0, offset = 1, r, hdr = [], isempty, R, C, v;
 	var o = opts != null ? opts : {};
+	var skipUndefined = o.skipUndefined === undefined ? true : o.skipUndefined;
 	var raw = o.raw;
 	if(sheet == null || sheet["!ref"] == null) return [];
 	range = o.range !== undefined ? o.range : sheet["!ref"];
@@ -12628,7 +12629,7 @@ function sheet_to_json(sheet, opts){
 			case 2: hdr[C] = cols[C]; break;
 			case 3: hdr[C] = o.header[C - r.s.c]; break;
 			default:
-				if(val === undefined) continue;
+				if(skipUndefined && val === undefined) continue;
 				hdr[C] = format_cell(val);
 		}
 	}
@@ -12644,7 +12645,13 @@ function sheet_to_json(sheet, opts){
 		}
 		for (C = r.s.c; C <= r.e.c; ++C) {
 			val = sheet[cols[C] + rr];
-			if(val === undefined || val.t === undefined) continue;
+			if(val === undefined || val.t === undefined) {
+				if (!skipUndefined) {
+					row[hdr[C]] = o.defaultValue || '';
+					isempty = false;
+				}
+				continue;
+			}
 			v = val.v;
 			switch(val.t){
 				case 'e': continue;
@@ -12652,7 +12659,7 @@ function sheet_to_json(sheet, opts){
 				case 'b': case 'n': break;
 				default: throw 'unrecognized type ' + val.t;
 			}
-			if(v !== undefined) {
+			if(!skipUndefined || v !== undefined) {
 				row[hdr[C]] = raw ? v : format_cell(val,v);
 				isempty = false;
 			}
