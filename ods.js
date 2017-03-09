@@ -114,7 +114,8 @@ var rencoding = {
 var rencstr = "&<>'\"".split("");
 
 // TODO: CP remap (need to read file version to determine OS)
-var encregex = /&[a-z]*;/g, coderegex = /_x([\da-fA-F]+)_/g;
+/* 22.4.2.4 bstr (Basic String) */
+var encregex = /&[a-z]*;/g, coderegex = /_x([\da-fA-F]{4})_/g;
 function unescapexml(text){
 	var s = text + '';
 	return s.replace(encregex, function($$) { return encodings[$$]; }).replace(coderegex,function(m,c) {return String.fromCharCode(parseInt(c,16));});
@@ -133,8 +134,9 @@ function parsexmlbool(value) {
 	}
 }
 
-function datenum(v) {
-	var epoch = Date.parse(v);
+function datenum(v, date1904) {
+	var epoch = v.getTime();
+	if(date1904) epoch += 1462*24*60*60*1000;
 	return (epoch + 2209161600000) / (24 * 60 * 60 * 1000);
 }
 
@@ -275,7 +277,8 @@ var parse_content_xml = (function() {
 		"day-of-week": ["ddd", "dddd"]
 	};
 
-	return function pcx(d, opts) {
+	return function pcx(d, _opts) {
+		var opts = _opts || {};
 		var str = xlml_normalize(d);
 		var state = [], tmp;
 		var tag;
@@ -363,7 +366,7 @@ var parse_content_xml = (function() {
 						case 'float': q.t = 'n'; q.v = parseFloat(ctag.value); break;
 						case 'percentage': q.t = 'n'; q.v = parseFloat(ctag.value); break;
 						case 'currency': q.t = 'n'; q.v = parseFloat(ctag.value); break;
-						case 'date': q.t = 'n'; q.v = datenum(ctag['date-value']); q.z = 'm/d/yy'; break;
+						case 'date': q.t = 'n'; q.v = datenum(new Date(ctag['date-value'])); q.z = 'm/d/yy'; break;
 						case 'time': q.t = 'n'; q.v = parse_isodur(ctag['time-value'])/86400; break;
 						case 'number': q.t = 'n'; q.v = parseFloat(ctag['数据数值']); break;
 						default:
@@ -699,6 +702,7 @@ function parse_ods(zip, opts) {
 	var ods = !!safegetzipfile(zip, 'objectdata');
 	if(ods) var manifest = parse_manifest(getzipdata(zip, 'META-INF/manifest.xml'), opts);
 	var content = getzipdata(zip, 'content.xml');
+	if(!content) throw new Error("Missing content.xml in " + (ods ? "ODS" : "UOF")+ " file");
 	return parse_content_xml(ods ? content : utf8read(content), opts);
 }
 
