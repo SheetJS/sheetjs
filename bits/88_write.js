@@ -19,12 +19,12 @@ function write_string_type(out/*:string*/, opts/*:WriteOpts*/) {
 	switch(opts.type) {
 		case "base64": return Base64.encode(out);
 		case "binary": return out;
-		case "file": return _fs.writeFileSync(opts.file, out, {encoding:'utf8'});
+		case "file": return _fs.writeFileSync(opts.file, out, 'utf8');
 		case "buffer": {
 			if(has_buf) return new Buffer(out, 'utf8');
 			else return out.split("").map(function(c) { return c.charCodeAt(0); });
 		} break;
-		default: return out;
+		default: throw new Error("Unrecognized type " + opts.type);
 	}
 }
 

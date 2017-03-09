@@ -136,8 +136,9 @@ function parsexmlbool(value) {
 	}
 }
 
-function datenum(v) {
-	var epoch = Date.parse(v);
+function datenum(v/*:Date*/, date1904/*:?boolean*/)/*:number*/ {
+	var epoch = v.getTime();
+	if(date1904) epoch += 1462*24*60*60*1000;
 	return (epoch + 2209161600000) / (24 * 60 * 60 * 1000);
 }
 
@@ -170,7 +171,7 @@ function parse_isodur(s) {
 
 var XML_HEADER = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\r\n';
 /* copied from js-xls (C) SheetJS Apache2 license */
-function xlml_normalize(d) {
+function xlml_normalize(d)/*:string*/ {
 	if(has_buf &&/*::typeof Buffer !== "undefined" && d != null &&*/ Buffer.isBuffer(d)) return d.toString('utf8');
 	if(typeof d === 'string') return d;
 	throw "badf";
@@ -237,7 +238,7 @@ var parse_text_p = function(text, tag) {
 	return unescapexml(text.replace(/<text:s\/>/g," ").replace(/<[^>]*>/g,""));
 };
 
-var utf8read = function utf8reada(orig) {
+var utf8read = function utf8reada(orig/*:string*/)/*:string*/ {
 	var out = "", i = 0, c = 0, d = 0, e = 0, f = 0, w = 0;
 	while (i < orig.length) {
 		c = orig.charCodeAt(i++);
@@ -278,12 +279,13 @@ var parse_content_xml = (function() {
 		"day-of-week": ["ddd", "dddd"]
 	};
 
-	return function pcx(d, opts) {
+	return function pcx(d, _opts) {
+		var opts = _opts || {};
 		var str = xlml_normalize(d);
 		var state/*:Array<any>*/ = [], tmp;
 		var tag/*:: = {}*/;
 		var NFtag = {name:""}, NF = "", pidx = 0;
-		var sheetag/*:: = {name:""}*/;
+		var sheetag/*:: = {name:"", '名称':""}*/;
 		var rowtag/*:: = {'行号':""}*/;
 		var Sheets = {}, SheetNames/*:Array<string>*/ = [], ws = {};
 		var Rn, q/*:: = ({t:"", v:null, z:null, w:""}:any)*/;
@@ -366,7 +368,7 @@ var parse_content_xml = (function() {
 						case 'float': q.t = 'n'; q.v = parseFloat(ctag.value); break;
 						case 'percentage': q.t = 'n'; q.v = parseFloat(ctag.value); break;
 						case 'currency': q.t = 'n'; q.v = parseFloat(ctag.value); break;
-						case 'date': q.t = 'n'; q.v = datenum(ctag['date-value']); q.z = 'm/d/yy'; break;
+						case 'date': q.t = 'n'; q.v = datenum(new Date(ctag['date-value'])); q.z = 'm/d/yy'; break;
 						case 'time': q.t = 'n'; q.v = parse_isodur(ctag['time-value'])/86400; break;
 						case 'number': q.t = 'n'; q.v = parseFloat(ctag['数据数值']); break;
 						default:
@@ -702,6 +704,7 @@ function parse_ods(zip/*:ZIPFile*/, opts/*:?ParseOpts*/) {
 	var ods = !!safegetzipfile(zip, 'objectdata');
 	if(ods) var manifest = parse_manifest(getzipdata(zip, 'META-INF/manifest.xml'), opts);
 	var content = getzipdata(zip, 'content.xml');
+	if(!content) throw new Error("Missing content.xml in " + (ods ? "ODS" : "UOF")+ " file");
 	return parse_content_xml(ods ? content : utf8read(content), opts);
 }
 

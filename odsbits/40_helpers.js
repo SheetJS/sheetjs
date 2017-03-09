@@ -2,7 +2,7 @@ var parse_text_p = function(text, tag) {
 	return unescapexml(text.replace(/<text:s\/>/g," ").replace(/<[^>]*>/g,""));
 };
 
-var utf8read = function utf8reada(orig) {
+var utf8read = function utf8reada(orig/*:string*/)/*:string*/ {
 	var out = "", i = 0, c = 0, d = 0, e = 0, f = 0, w = 0;
 	while (i < orig.length) {
 		c = orig.charCodeAt(i++);

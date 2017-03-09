@@ -37,11 +37,10 @@ function Workbook() {
 var wb = new Workbook();
 
 
-/* TODO: date1904 logic */
-function datenum(v, date1904) {
-	if(date1904) v+=1462;
-	var epoch = Date.parse(v);
-	return (epoch - new Date(Date.UTC(1899, 11, 30))) / (24 * 60 * 60 * 1000);
+function datenum(v/*:Date*/, date1904/*:?boolean*/)/*:number*/ {
+	var epoch = v.getTime();
+	if(date1904) epoch += 1462*24*60*60*1000;
+	return (epoch + 2209161600000) / (24 * 60 * 60 * 1000);
 }
 
 /* convert an array of arrays in JS to a CSF spreadsheet */

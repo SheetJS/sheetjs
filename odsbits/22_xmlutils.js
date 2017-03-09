@@ -64,8 +64,9 @@ function parsexmlbool(value) {
 	}
 }
 
-function datenum(v) {
-	var epoch = Date.parse(v);
+function datenum(v/*:Date*/, date1904/*:?boolean*/)/*:number*/ {
+	var epoch = v.getTime();
+	if(date1904) epoch += 1462*24*60*60*1000;
 	return (epoch + 2209161600000) / (24 * 60 * 60 * 1000);
 }
 

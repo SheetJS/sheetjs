@@ -137,7 +137,7 @@ function write_ws_xml_cell(cell, ref, ws, opts, idx, wb) {
 			if(opts.cellDates) vv = new Date(cell.v).toISOString();
 			else {
 				cell.t = 'n';
-				vv = ''+(cell.v = datenum(cell.v));
+				vv = ''+(cell.v = datenum(new Date(cell.v)));
 				if(typeof cell.z === 'undefined') cell.z = SSF._table[14];
 			}
 			break;
@@ -265,7 +265,7 @@ return function parse_ws_xml_data(sdata, s, opts, guess) {
 					break; // inline string
 				case 'b': p.v = parsexmlbool(p.v); break;
 				case 'd':
-					if(!opts.cellDates) { p.v = datenum(p.v); p.t = 'n'; }
+					if(!opts.cellDates) { p.v = datenum(new Date(p.v)); p.t = 'n'; }
 					break;
 				/* error string in .v, number in .v */
 				case 'e': p.w = p.v; p.v = RBErr[p.v]; break;

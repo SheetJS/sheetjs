@@ -12,12 +12,13 @@ var parse_content_xml = (function() {
 		"day-of-week": ["ddd", "dddd"]
 	};
 
-	return function pcx(d, opts) {
+	return function pcx(d, _opts) {
+		var opts = _opts || {};
 		var str = xlml_normalize(d);
 		var state/*:Array<any>*/ = [], tmp;
 		var tag/*:: = {}*/;
 		var NFtag = {name:""}, NF = "", pidx = 0;
-		var sheetag/*:: = {name:""}*/;
+		var sheetag/*:: = {name:"", '名称':""}*/;
 		var rowtag/*:: = {'行号':""}*/;
 		var Sheets = {}, SheetNames/*:Array<string>*/ = [], ws = {};
 		var Rn, q/*:: = ({t:"", v:null, z:null, w:""}:any)*/;
@@ -100,7 +101,7 @@ var parse_content_xml = (function() {
 						case 'float': q.t = 'n'; q.v = parseFloat(ctag.value); break;
 						case 'percentage': q.t = 'n'; q.v = parseFloat(ctag.value); break;
 						case 'currency': q.t = 'n'; q.v = parseFloat(ctag.value); break;
-						case 'date': q.t = 'n'; q.v = datenum(ctag['date-value']); q.z = 'm/d/yy'; break;
+						case 'date': q.t = 'n'; q.v = datenum(new Date(ctag['date-value'])); q.z = 'm/d/yy'; break;
 						case 'time': q.t = 'n'; q.v = parse_isodur(ctag['time-value'])/86400; break;
 						case 'number': q.t = 'n'; q.v = parseFloat(ctag['数据数值']); break;
 						default:

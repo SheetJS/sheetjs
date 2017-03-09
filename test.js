@@ -869,8 +869,9 @@ describe('roundtrip features', function() {
 				else if(dj && dk && !di); /* TODO: convert to date */
 				else assert.equal(m[1].t, 'n');
 
-				if(m[0].t === m[1].t) assert.equal(m[0].v, m[1].v);
-				else if(m[0].t === 'd') assert(Math.abs(datenum(new Date(m[0].v)) - m[1].v) < 0.01); /* TODO: 1sec adjustment */
+				if(m[0].t === 'n' && m[1].t === 'n') assert.equal(m[0].v, m[1].v);
+				else if(m[0].t === 'd' && m[1].t === 'd') assert.equal(m[0].v.toString(), m[1].v.toString());
+				else if(m[1].t === 'n') assert(Math.abs(datenum(new Date(m[0].v)) - m[1].v) < 0.01); /* TODO: 1sec adjustment */
 			});
 		});
 	});
@@ -932,10 +933,10 @@ describe('invalid files', function() {
 	});
 });
 
-function datenum(v, date1904) {
-	if(date1904) v+=1462;
-	var epoch = Date.parse(v);
-	return (epoch - new Date(Date.UTC(1899, 11, 30))) / (24 * 60 * 60 * 1000);
+function datenum(v/*:Date*/, date1904/*:?boolean*/)/*:number*/ {
+	var epoch = v.getTime();
+	if(date1904) epoch += 1462*24*60*60*1000;
+	return (epoch + 2209161600000) / (24 * 60 * 60 * 1000);
 }
 function sheet_from_array_of_arrays(data, opts) {
 	var ws = {};

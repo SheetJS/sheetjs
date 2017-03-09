@@ -2,7 +2,7 @@
 /* uncomment the next line for encoding support */
 /*:: declare var XLSX: XLSXModule; */
 /*:: declare var self: DedicatedWorkerGlobalScope; */
-//importScripts('dist/cpexcel.js');
+importScripts('dist/cpexcel.js');
 importScripts('jszip.js');
 importScripts('xlsx.js');
 /* uncomment the next line for ODS support */

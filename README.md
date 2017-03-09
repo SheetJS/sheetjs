@@ -24,6 +24,8 @@ File format support for known spreadsheet data formats:
 | OpenDocument Spreadsheet (ODS)                               |  :o:  |  :o:  |
 | Flat XML ODF Spreadsheet (FODS)                              |  :o:  |  :o:  |
 | Uniform Office Format Spreadsheet (标文通 UOS1/UOS2)         |  :o:  |       |
+| **Other Common Spreadsheet Output Formats**                  |:-----:|:-----:|
+| HTML Tables                                                  |  :o:  |       |
 
 Demo: <http://oss.sheetjs.com/js-xlsx>
 
@@ -565,7 +567,7 @@ file but Excel will know how to handle it.  This library applies similar logic:
 |:-------|:--------------|:----------------------------------------------------|
 | `0xD0` | CFB Container | BIFF 5/8 or password-protected XLSX/XLSB            |
 | `0x09` | BIFF Stream   | BIFF 2/3/4/5                                        |
-| `0x3C` | XML           | SpreadsheetML or Flat ODS or UOS1                   |
+| `0x3C` | XML/HTML      | SpreadsheetML or Flat ODS or UOS1 or HTML           |
 | `0x50` | ZIP Archive   | XLSB or XLSX/M or ODS or UOS2                       |
 | `0xFE` | UTF8 Text     | SpreadsheetML or Flat ODS or UOS1                   |
 
@@ -679,6 +681,11 @@ Excel CSV deviates from RFC4180 in a number of important ways.  The generated
 CSV files should generally work in Excel although they may not work in RFC4180
 compatible readers.
 
+### HTML
+
+Excel HTML worksheets include special metadata encoded in styles.  For example,
+`mso-number-format` is a localized string containing the number format.  Despite
+the metadata the output is valid HTML, although it does accept bare `&` symbols.
 
 ## Tested Environments
 
