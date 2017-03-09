@@ -5718,7 +5718,7 @@ function parse_si(x, opts) {
 	if(x.match(/^\s*<(?:\w+:)?t[^>]*>/)) {
 		z.t = utf8read(unescapexml(x.substr(x.indexOf(">")+1).split(/<\/(?:\w+:)?t>/)[0]));
 		z.r = utf8read(x);
-		if(html) z.h = z.t;
+		if(html) z.h = escapexml(z.t);
 	}
 	/* 18.4.4 r CT_RElt (Rich Text Run) */
 	else if((y = x.match(sirregex))) {
@@ -10133,7 +10133,7 @@ return function parse_ws_xml_data(sdata, s, opts, guess, themes, styles) {
 				case 'str':
 					p.t = "s";
 					p.v = (p.v!=null) ? utf8read(p.v) : '';
-					if(opts.cellHTML) p.h = p.v;
+					if(opts.cellHTML) p.h = escapexml(p.v);
 					break;
 				case 'inlineStr':
 					cref = d.match(isregex);
