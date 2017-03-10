@@ -1064,6 +1064,20 @@ describe('json output', function() {
 			assert.throws(function() { seeker(json, [0,1,2], "baz"); });
 		});
 	});
+	it('should disambiguate headers', function() {
+		var _data = [["S","h","e","e","t","J","S"],[1,2,3,4,5,6,7],[2,3,4,5,6,7,8]];
+		var _ws = sheet_from_array_of_arrays(_data);
+		var json = X.utils.sheet_to_json(_ws);
+		for(var i = 0; i < json.length; ++i) {
+			assert.equal(json[i].S,   1 + i);
+			assert.equal(json[i].h,   2 + i);
+			assert.equal(json[i].e,   3 + i);
+			assert.equal(json[i].e_1, 4 + i);
+			assert.equal(json[i].t,   5 + i);
+			assert.equal(json[i].J,   6 + i);
+			assert.equal(json[i].S_1, 7 + i);
+		}
+	});
 });
 
 describe('js -> file -> js', function() {

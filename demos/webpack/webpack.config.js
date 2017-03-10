@@ -9,10 +9,5 @@ module.exports = {
 	node: {
 		fs: false,
 		Buffer: false
-	},
-	externals: [
-		{
-			'./cptable': 'var cptable'
-		}
-	]
+	}
 }

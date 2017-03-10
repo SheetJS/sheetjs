@@ -5,7 +5,7 @@
 /*exported XLSX */
 var XLSX = {};
 (function make_xlsx(XLSX){
-XLSX.version = '0.9.0';
+XLSX.version = '0.9.1';
 var current_codepage = 1200, current_cptable;
 if(typeof module !== "undefined" && typeof require !== 'undefined') {
 	if(typeof cptable === 'undefined') cptable = require('./dist/cpexcel.js');
@@ -9680,6 +9680,7 @@ var xlmlregex = /<(\/?)([^\s?>!\/:]*:|)([^\s?>]*[^\s?>\/])[^>]*>/mg;
 //var xlmlregex = /<(\/?)([a-z0-9]*:|)(\w+)[^>]*>/mg;
 function parse_xlml_xml(d, opts) {
 	var str = debom(xlml_normalize(d));
+	if(opts && opts.type == 'binary' && typeof cptable !== 'undefined') str = cptable.utils.decode(65001, char_codes(str));
 	if(str.substr(0,1000).indexOf("<html") >= 0) return parse_html(str, opts);
 	var Rn;
 	var state = [], tmp;

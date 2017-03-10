@@ -162,6 +162,7 @@ var xlmlregex = /<(\/?)([^\s?>!\/:]*:|)([^\s?>]*[^\s?>\/])[^>]*>/mg;
 //var xlmlregex = /<(\/?)([a-z0-9]*:|)(\w+)[^>]*>/mg;
 function parse_xlml_xml(d, opts)/*:Workbook*/ {
 	var str = debom(xlml_normalize(d));
+	if(opts && opts.type == 'binary' && typeof cptable !== 'undefined') str = cptable.utils.decode(65001, char_codes(str));
 	if(str.substr(0,1000).indexOf("<html") >= 0) return parse_html(str, opts);
 	var Rn;
 	var state = [], tmp;
