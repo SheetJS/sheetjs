@@ -4,13 +4,13 @@ var write_content_xml/*:{(wb:any, opts:any):string}*/ = (function() {
 		/* Section 9 Tables */
 		var o = [];
 		o.push('      <table:table table:name="' + escapexml(wb.SheetNames[i]) + '">\n');
-		var R=0,C=0, range = get_utils().decode_range(ws['!ref']);
+		var R=0,C=0, range = decode_range(ws['!ref']);
 		for(R = 0; R < range.s.r; ++R) o.push('        <table:table-row></table:table-row>\n');
 		for(; R <= range.e.r; ++R) {
 			o.push('        <table:table-row>\n');
 			for(C=0; C < range.s.c; ++C) o.push(null_cell_xml);
 			for(; C <= range.e.c; ++C) {
-				var ref = get_utils().encode_cell({r:R, c:C}), cell = ws[ref];
+				var ref = encode_cell({r:R, c:C}), cell = ws[ref];
 				if(cell) switch(cell.t) {
 					case 'b': o.push('          <table:table-cell office:value-type="boolean" office:boolean-value="' + (cell.v ? 'true' : 'false') + '"><text:p>' + (cell.v ? 'TRUE' : 'FALSE') + '</text:p></table:table-cell>\n'); break;
 					case 'n': o.push('          <table:table-cell office:value-type="float" office:value="' + cell.v + '"><text:p>' + (cell.w||cell.v) + '</text:p></table:table-cell>\n'); break;

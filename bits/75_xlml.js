@@ -85,6 +85,7 @@ function process_style_xlml(styles, stag, opts) {
 function parse_xlml_data(xml, ss, data, cell/*:any*/, base, styles, csty, row, arrayf, o)/*:Workbook*/ {
 	var nf = "General", sid = cell.StyleID, S = {}; o = o || {};
 	var interiors = [];
+	var i = 0;
 	if(sid === undefined && row) sid = row.StyleID;
 	if(sid === undefined && csty) sid = csty.StyleID;
 	while(styles[sid] !== undefined) {
@@ -150,13 +151,15 @@ function xlml_clean_comment(comment/*:any*/) {
 }
 
 function xlml_normalize(d)/*:string*/ {
-	if(has_buf && Buffer.isBuffer(d)) return d.toString('utf8');
+	if(has_buf &&/*::typeof Buffer !== "undefined" && d != null &&*/ Buffer.isBuffer(d)) return d.toString('utf8');
 	if(typeof d === 'string') return d;
 	throw new Error("Bad input format: expected Buffer or string");
 }
 
 /* TODO: Everything */
-var xlmlregex = /<(\/?)([a-z0-9]*:|)(\w+)[^>]*>/mg;
+/* UOS uses CJK in tags */
+var xlmlregex = /<(\/?)([^\s?>\/:]*:|)([^\s?>]*[^\s?>\/])[^>]*>/mg;
+//var xlmlregex = /<(\/?)([a-z0-9]*:|)(\w+)[^>]*>/mg;
 function parse_xlml_xml(d, opts)/*:Workbook*/ {
 	var str = debom(xlml_normalize(d));
 	if(str.substr(0,1000).indexOf("<html") >= 0) return parse_html(str, opts);

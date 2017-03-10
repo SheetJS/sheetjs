@@ -1,5 +1,9 @@
 var parse_content_xml = (function() {
 
+	var parse_text_p = function(text, tag) {
+		return unescapexml(text.replace(/<text:s\/>/g," ").replace(/<[^>]*>/g,""));
+	};
+
 	var number_formats = {
 		/* ods name: [short ssf fmt, long ssf fmt] */
 		day: ["d", "dd"],
@@ -35,7 +39,7 @@ var parse_content_xml = (function() {
 
 			case 'table': case '工作表': // 9.1.2 <table:table>
 				if(Rn[1]==='/') {
-					if(range.e.c >= range.s.c && range.e.r >= range.s.r) ws['!ref'] = get_utils().encode_range(range);
+					if(range.e.c >= range.s.c && range.e.r >= range.s.r) ws['!ref'] = encode_range(range);
 					if(merges.length) ws['!merges'] = merges;
 					sheetag.name = utf8read(sheetag['名称'] || sheetag.name);
 					SheetNames.push(sheetag.name);
@@ -76,7 +80,7 @@ var parse_content_xml = (function() {
 							mR = parseInt(ctag['number-matrix-rows-spanned'],10) || 0;
 							mC = parseInt(ctag['number-matrix-columns-spanned'],10) || 0;
 							mrange = {s: {r:R,c:C}, e:{r:R + mR-1,c:C + mC-1}};
-							q.F = get_utils().encode_range(mrange);
+							q.F = encode_range(mrange);
 							arrayf.push([mrange, q.F]);
 						}
 						if(ctag.formula) q.f = ods_to_csf_formula(ctag.formula);
@@ -119,8 +123,8 @@ var parse_content_xml = (function() {
 					if(textp) q.w = textp;
 					if(!isstub || opts.cellStubs) {
 						if(!(opts.sheetRows && opts.sheetRows < R)) {
-							ws[get_utils().encode_cell({r:R,c:C})] = q;
-							while(--rept > 0) ws[get_utils().encode_cell({r:R,c:++C})] = dup(q);
+							ws[encode_cell({r:R,c:C})] = q;
+							while(--rept > 0) ws[encode_cell({r:R,c:++C})] = dup(q);
 							if(range.e.c <= C) range.e.c = C;
 						}
 					} else { C += rept; rept = 0; }

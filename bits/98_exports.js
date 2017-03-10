@@ -1,4 +1,7 @@
 XLSX.parse_xlscfb = parse_xlscfb;
+XLSX.parse_ods = parse_ods;
+XLSX.parse_fods = parse_fods;
+XLSX.write_ods = write_ods;
 XLSX.parse_zip = parse_zip;
 XLSX.read = readSync; //xlsread
 XLSX.readFile = readFileSync; //readFile

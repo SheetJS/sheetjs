@@ -3,8 +3,6 @@
 importScripts('dist/cpexcel.js');
 importScripts('jszip.js');
 importScripts('xlsx.js');
-/* uncomment the next line for ODS support */
-importScripts('dist/ods.js');
 postMessage({t:"ready"});
 
 function ab2str(data) {

@@ -3,7 +3,7 @@ LIB=xlsx
 FMT=xlsx xlsm xlsb ods xls xml misc full
 REQS=jszip.js
 ADDONS=dist/cpexcel.js
-AUXTARGETS=ods.js
+AUXTARGETS=
 CMDS=bin/xlsx.njs
 HTMLLINT=index.html
 
@@ -62,23 +62,18 @@ dist: dist-deps $(TARGET) bower.json ## Prepare JS files for distribution
 	cat <(head -n 1 bits/00_header.js) $(REQS) $(ADDONS) $(TARGET) $(AUXTARGETS) > demos/requirejs/$(LIB).full.js
 
 .PHONY: dist-deps
-dist-deps: ods.js ## Copy dependencies for distribution
+dist-deps: ## Copy dependencies for distribution
 	cp node_modules/codepage/dist/cpexcel.full.js dist/cpexcel.js
 	cp jszip.js dist/jszip.js
-	cp ods.js dist/ods.js
-	uglifyjs $(UGLIFYOPTS) ods.js -o dist/ods.min.js --source-map dist/ods.min.map --preamble "$$(head -n 1 bits/00_header.js)"
-	misc/strip_sourcemap.sh dist/ods.min.js
 
 .PHONY: aux
 aux: $(AUXTARGETS)
 
-.PHONY: ods
-ods: ods.js
+.PHONY: nexe
+nexe: xlsx.exe
 
-ODSDEPS=$(sort $(wildcard odsbits/*.js))
-ods.flow.js: $(ODSDEPS) ## Build ODS support library
-	cat $^ | tr -d '\15\32' > $@
-
+xlsx.exe: bin/xlsx.js xlsx.js
+	nexe -i bin/xlsx.njs -o xlsx.exe
 
 ## Testing
 
@@ -92,6 +87,9 @@ TESTFMT=$(patsubst %,test_%,$(FMT))
 $(TESTFMT): test_%:
 	FMTS=$* make test
 
+.PHONY: demos
+demos: demo-browserify demo-webpack demo-requirejs
+
 .PHONY: demo-browserify
 demo-browserify: ## Run browserify demo build
 	make -C demos/browserify
@@ -101,6 +99,11 @@ demo-browserify: ## Run browserify demo build
 demo-webpack: ## Run webpack demo build
 	make -C demos/webpack
 	@echo "start a local server and go to demos/webpack/webpack.html"
+
+.PHONY: demo-requirejs
+demo-requirejs: ## Run requirejs demo build
+	make -C demos/requirejs
+	@echo "start a local server and go to demos/requirejs/requirejs.html"
 
 ## Code Checking
 

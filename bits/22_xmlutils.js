@@ -1,4 +1,4 @@
-var attregexg=/([\w:]+)=((?:")([^"]*)(?:")|(?:')([^']*)(?:'))/g;
+var attregexg=/([^\s?>\/]+)=((?:")([^"]*)(?:")|(?:')([^']*)(?:'))/g;
 var tagregex=/<[^>]*>/g;
 var nsregex=/<\w*:/, nsregex2 = /<(\/?)\w+:/;
 function parsexmltag(tag/*:string*/, skip_root/*:?boolean*/)/*:any*/ {
@@ -7,14 +7,21 @@ function parsexmltag(tag/*:string*/, skip_root/*:?boolean*/)/*:any*/ {
 	for(; eq !== tag.length; ++eq) if((c = tag.charCodeAt(eq)) === 32 || c === 10 || c === 13) break;
 	if(!skip_root) z[0] = tag.substr(0, eq);
 	if(eq === tag.length) return z;
-	var m = tag.match(attregexg), j=0, w="", v="", i=0, q="", cc="";
+	var m = tag.match(attregexg), j=0, v="", i=0, q="", cc="";
 	if(m) for(i = 0; i != m.length; ++i) {
 		cc = m[i];
 		for(c=0; c != cc.length; ++c) if(cc.charCodeAt(c) === 61) break;
 		q = cc.substr(0,c); v = cc.substring(c+2, cc.length-1);
 		for(j=0;j!=q.length;++j) if(q.charCodeAt(j) === 58) break;
-		if(j===q.length) z[q] = v;
-		else z[(j===5 && q.substr(0,5)==="xmlns"?"xmlns":"")+q.substr(j+1)] = v;
+		if(j===q.length) {
+			//if(q.indexOf("_") > 0) q = q.substr(0, q.indexOf("_")); // from ods
+			z[q] = v;
+		}
+		else {
+			var k = (j===5 && q.substr(0,5)==="xmlns"?"xmlns":"")+q.substr(j+1);
+			//if(z[k] && q.substr(j-3,3) == "ext") continue; // from ods
+			z[k] = v;
+		}
 	}
 	return z;
 }

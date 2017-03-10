@@ -7,4 +7,4 @@ $(TOOL).min.js: $(TOOL).js
 
 .PHONY: $(TOOL).js
 $(TOOL).js:
-	webpack main.js --output-filename $@ --display-modules
+	webpack main.js --output-filename $@ --display-modules --profile

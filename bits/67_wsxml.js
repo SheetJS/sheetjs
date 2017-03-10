@@ -249,6 +249,10 @@ return function parse_ws_xml_data(sdata, s, opts, guess) {
 				case 'n': p.v = parseFloat(p.v); break;
 				case 's':
 					sstr = strs[parseInt(p.v, 10)];
+					if(typeof p.v == 'undefined') {
+						if(!opts.sheetStubs) continue;
+						p.t = "stub";
+					}
 					p.v = sstr.t;
 					p.r = sstr.r;
 					if(opts.cellHTML) p.h = sstr.h;

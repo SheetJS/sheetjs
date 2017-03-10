@@ -67,8 +67,6 @@ be included directly:
 ```html
 <!-- international support from js-codepage -->
 <script src="dist/cpexcel.js"></script>
-<!-- ODS support -->
-<script src="dist/ods.js"></script>
 ```
 
 An appropriate version for each dependency is included in the dist/ directory.

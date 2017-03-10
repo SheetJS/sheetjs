@@ -1,6 +1,7 @@
 [ignore]
 .*/node_modules/.*
 .*/dist/.*
+.*/tmp/.*
 .*/test.js
 
 .*/bits/.*
@@ -11,8 +12,6 @@
 .*/demo/browser.js
 .*/shim.js
 
-.*/odsbits/.*
-.*/ods.js
 .*/xlsx.js
 .*/xlsxworker.js
 .*/xlsxworker1.js
@@ -27,7 +26,6 @@ xlsxworker.flow.js
 xlsxworker1.flow.js
 xlsxworker2.flow.js
 xlsx.flow.js
-ods.flow.js
 .*/bin/.*.njs
 .*/demo/browser.flow.js
 

@@ -22,6 +22,7 @@ function getdatabin(data) {
 function getdata(data) { return (data && data.name.slice(-4) === ".bin") ? getdatabin(data) : getdatastr(data); }
 
 /* Part 2 Section 10.1.2 "Mapping Content Types" Names are case-insensitive */
+/* OASIS does not comment on filename case sensitivity */
 function safegetzipfile(zip, file/*:string*/) {
 	var k = keys(zip.files);
 	var f = file.toLowerCase(), g = f.replace(/\//g,'\\');

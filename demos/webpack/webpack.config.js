@@ -12,8 +12,7 @@ module.exports = {
 	},
 	externals: [
 		{
-			'./cptable': 'var cptable',
-			'../xlsx.js': 'var _XLSX'
+			'./cptable': 'var cptable'
 		}
 	]
 }
