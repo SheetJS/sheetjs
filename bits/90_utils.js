@@ -91,6 +91,7 @@ function sheet_to_json(sheet/*:Worksheet*/, opts/*:?Sheet2JSONOpts*/){
 	var cols = new Array(r.e.c-r.s.c+1);
 	var out = new Array(r.e.r-r.s.r-offset+1);
 	var outi = 0;
+	var hdrSet = {};
 	for(C = r.s.c; C <= r.e.c; ++C) {
 		cols[C] = encode_col(C);
 		val = sheet[cols[C] + rr];
@@ -100,7 +101,14 @@ function sheet_to_json(sheet/*:Worksheet*/, opts/*:?Sheet2JSONOpts*/){
 			case 3: hdr[C] = o.header[C - r.s.c]; break;
 			default:
 				if(val === undefined) continue;
-				hdr[C] = format_cell(val);
+				v = format_cell(val);
+				vv = v; counter = 1;
+				while (vv in hdrSet) {
+					vv = v + '_' + counter;
+					counter++;
+				}
+				hdrSet[vv] = true;
+				hdr[C] = vv;
 		}
 	}
 
