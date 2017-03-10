@@ -13,6 +13,7 @@ function parse_fills(t, opts) {
 
 			/* 18.8.32 patternFill CT_PatternFill */
 			case '<patternFill':
+			case '<patternFill>':
 				if(y.patternType) fill.patternType = y.patternType;
 				break;
 			case '<patternFill/>': case '</patternFill>': break;
@@ -58,6 +59,7 @@ function parse_numFmts(t, opts) {
 				var f=unescapexml(utf8read(y.formatCode)), j=parseInt(y.numFmtId,10);
 				styles.NumberFmt[j] = f; if(j>0) SSF.load(f,j);
 			} break;
+			case '</numFmt>': break;
 			default: if(opts.WTF) throw new Error('unrecognized ' + y[0] + ' in numFmts');
 		}
 	}
@@ -90,7 +92,7 @@ function parse_cellXfs(t, opts) {
 			case '</xf>': break;
 
 			/* 18.8.1 alignment CT_CellAlignment */
-			case '<alignment': case '<alignment/>': break;
+			case '<alignment': case '<alignment/>': case '</alignment>': break;
 
 			/* 18.8.33 protection CT_CellProtection */
 			case '<protection': case '</protection>': case '<protection/>': break;

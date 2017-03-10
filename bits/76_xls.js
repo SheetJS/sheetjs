@@ -204,9 +204,7 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 				case 'RefreshAll': wb.opts.RefreshAll = val; break;
 				case 'BookBool': break; // TODO
 				case 'UsesELFs': /* if(val) console.error("Unsupported ELFs"); */ break;
-				case 'MTRSettings': {
-					if(val[0] && val[1]) throw "Unsupported threads: " + val;
-				} break; // TODO: actually support threads
+				case 'MTRSettings': break;
 				case 'CalcCount': wb.opts.CalcCount = val; break;
 				case 'CalcDelta': wb.opts.CalcDelta = val; break;
 				case 'CalcIter': wb.opts.CalcIter = val; break;

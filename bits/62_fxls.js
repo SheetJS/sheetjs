@@ -33,8 +33,8 @@ function parse_RgceArea_BIFF2(blob, length, opts) {
 }
 
 /* 2.5.198.105 TODO */
-function parse_RgceAreaRel(blob, length) {
-	var r=blob.read_shift(2), R=blob.read_shift(2);
+function parse_RgceAreaRel(blob, length, opts) {
+	var r=blob.read_shift(length == 12 ? 4 : 2), R=blob.read_shift(length == 12 ? 4 : 2);
 	var c=parse_ColRelU(blob, 2);
 	var C=parse_ColRelU(blob, 2);
 	return { s:{r:r, c:c[0], cRel:c[1], rRel:c[2]}, e:{r:R, c:C[0], cRel:C[1], rRel:C[2]} };
@@ -100,9 +100,9 @@ function parse_PtgArea3d(blob, length, opts) {
 }
 
 /* 2.5.198.29 */
-function parse_PtgAreaErr(blob, length) {
+function parse_PtgAreaErr(blob, length, opts) {
 	var type = (blob[blob.l++] & 0x60) >> 5;
-	blob.l += 8;
+	blob.l += opts && opts.biff > 8 ? 12 : 8;
 	return [type];
 }
 /* 2.5.198.30 */
@@ -119,9 +119,9 @@ function parse_PtgAreaErr3d(blob, length, opts) {
 }
 
 /* 2.5.198.31 */
-function parse_PtgAreaN(blob, length) {
+function parse_PtgAreaN(blob, length, opts) {
 	var type = (blob[blob.l++] & 0x60) >> 5;
-	var area = parse_RgceAreaRel(blob, 8);
+	var area = parse_RgceAreaRel(blob, opts && opts.biff > 8 ? 12 : 8, opts);
 	return [type, area];
 }
 
@@ -386,6 +386,19 @@ function parse_PtgRefErr(blob, length, opts) {
 	return [type];
 }
 
+/* 2.5.198.87 */
+function parse_PtgRefErr3d(blob, length, opts) {
+	var type = (blob[blob.l++] & 0x60) >> 5;
+	var ixti = blob.read_shift(2);
+	var w = 4;
+	if(opts) switch(opts.biff) {
+		case 5: throw new Error("PtgRefErr3d -- 5"); // TODO: find test case
+		case 12: w = 6; break;
+	}
+	blob.l += w;
+	return [type, ixti];
+}
+
 /* 2.5.198.26 */
 var parse_PtgAdd = parseread1;
 /* 2.5.198.45 */
@@ -429,8 +442,6 @@ var parse_PtgUplus = parseread1;
 var parse_PtgMemErr = parsenoop;
 /* 2.5.198.73 */
 var parse_PtgMemNoMem = parsenoop;
-/* 2.5.198.87 */
-var parse_PtgRefErr3d = parsenoop;
 /* 2.5.198.92 */
 var parse_PtgTbl = parsenoop;
 
@@ -676,6 +687,7 @@ var PtgBinOp = {
 	PtgSub: "-"
 };
 function stringify_formula(formula, range, cell, supbooks, opts) {
+	//console.log(formula);
 	var _range = /*range != null ? range :*/ {s:{c:0, r:0},e:{c:0, r:0}};
 	var stack = [], e1, e2, type, c, ixti, nameidx, r, sname="";
 	if(!formula[0] || !formula[0][0]) return "";
@@ -685,7 +697,6 @@ function stringify_formula(formula, range, cell, supbooks, opts) {
 		var f = formula[0][ff];
 		//console.log("++",f, stack)
 		switch(f[0]) {
-		/* 2.2.2.1 Unary Operator Tokens */
 			/* 2.5.198.93 */
 			case 'PtgUminus': stack.push("-" + stack.pop()); break;
 			/* 2.5.198.95 */
@@ -693,7 +704,6 @@ function stringify_formula(formula, range, cell, supbooks, opts) {
 			/* 2.5.198.81 */
 			case 'PtgPercent': stack.push(stack.pop() + "%"); break;
 
-		/* 2.2.2.1 Binary Value Operator Token */
 			case 'PtgAdd':    /* 2.5.198.26 */
 			case 'PtgConcat': /* 2.5.198.43 */
 			case 'PtgDiv':    /* 2.5.198.45 */
@@ -713,7 +723,7 @@ function stringify_formula(formula, range, cell, supbooks, opts) {
 						case 1: sp = fill("\r", formula[0][last_sp][1][1]); break;
 						default:
 							sp = "";
-							if(opts.WTF) throw new Error("Unexpected PtgSpace type " + formula[0][last_sp][1][0]);
+							if(opts.WTF) throw new Error("Unexpected PtgAttrSpaceType " + formula[0][last_sp][1][0]);
 					}
 					e2 = e2 + sp;
 					last_sp = -1;
@@ -721,7 +731,6 @@ function stringify_formula(formula, range, cell, supbooks, opts) {
 				stack.push(e2+PtgBinOp[f[0]]+e1);
 				break;
 
-		/* 2.2.2.1 Binary Reference Operator Token */
 			/* 2.5.198.67 */
 			case 'PtgIsect':
 				e1 = stack.pop(); e2 = stack.pop();
@@ -736,7 +745,6 @@ function stringify_formula(formula, range, cell, supbooks, opts) {
 				stack.push(e2+":"+e1);
 				break;
 
-		/* 2.2.2.3 Control Tokens "can be ignored" */
 			/* 2.5.198.34 */
 			case 'PtgAttrChoose': break;
 			/* 2.5.198.35 */
@@ -763,11 +771,11 @@ function stringify_formula(formula, range, cell, supbooks, opts) {
 				stack.push(sname + "!" + encode_cell(c));
 				break;
 
-		/* Function Call */
 			/* 2.5.198.62 */
 			case 'PtgFunc':
 			/* 2.5.198.63 */
 			case 'PtgFuncVar':
+				//console.log(f[1]);
 				/* f[1] = [argc, func, type] */
 				var argc = f[1][0], func = f[1][1];
 				if(!argc) argc = 0;
@@ -787,10 +795,15 @@ function stringify_formula(formula, range, cell, supbooks, opts) {
 			case 'PtgStr': stack.push('"' + f[1] + '"'); break;
 			/* 2.5.198.57 */
 			case 'PtgErr': stack.push(f[1]); break;
+			/* 2.5.198.31 TODO */
+			case 'PtgAreaN':
+				type = f[1][0]; r = shift_range_xls(f[1][1], _range, opts);
+				stack.push(encode_range_xls(r, opts));
+				break;
 			/* 2.5.198.27 TODO: fixed points */
 			case 'PtgArea':
-				type = f[1][0]; r = shift_range_xls(f[1][1], _range);
-				stack.push(encode_range_xls(r));
+				type = f[1][0]; r = shift_range_xls(f[1][1], _range, opts);
+				stack.push(encode_range_xls(r, opts));
 				break;
 			/* 2.5.198.28 */
 			case 'PtgArea3d': // TODO: lots of stuff
@@ -803,7 +816,6 @@ function stringify_formula(formula, range, cell, supbooks, opts) {
 				stack.push("SUM(" + stack.pop() + ")");
 				break;
 
-		/* Expression Prefixes */
 			/* 2.5.198.37 */
 			case 'PtgAttrSemi': break;
 
@@ -834,7 +846,6 @@ function stringify_formula(formula, range, cell, supbooks, opts) {
 				stack.push(externbook.body);
 				break;
 
-		/* 2.2.2.4 Display Tokens */
 			/* 2.5.198.80 */
 			case 'PtgParen':
 				var lp = '(', rp = ')';
@@ -843,10 +854,10 @@ function stringify_formula(formula, range, cell, supbooks, opts) {
 					switch(formula[0][last_sp][1][0]) {
 						case 2: lp = fill(" ", formula[0][last_sp][1][1]) + lp; break;
 						case 3: lp = fill("\r", formula[0][last_sp][1][1]) + lp; break;
-						case 4: rp = fill(" ", formula[0][last_sp][1][1]) + lp; break;
-						case 5: rp = fill("\r", formula[0][last_sp][1][1]) + lp; break;
+						case 4: rp = fill(" ", formula[0][last_sp][1][1]) + rp; break;
+						case 5: rp = fill("\r", formula[0][last_sp][1][1]) + rp; break;
 						default:
-							if(opts.WTF) throw new Error("Unexpected PtgSpace type " + formula[0][last_sp][1][0]);
+							if(opts.WTF) throw new Error("Unexpected PtgAttrSpaceType " + formula[0][last_sp][1][0]);
 					}
 					last_sp = -1;
 				}
@@ -854,6 +865,9 @@ function stringify_formula(formula, range, cell, supbooks, opts) {
 
 			/* 2.5.198.86 */
 			case 'PtgRefErr': stack.push('#REF!'); break;
+
+			/* 2.5.198.87 */
+			case 'PtgRefErr3d': stack.push('#REF!'); break;
 
 		/* */
 			/* 2.5.198.58 TODO */
@@ -884,7 +898,6 @@ function stringify_formula(formula, range, cell, supbooks, opts) {
 				stack.push("{" + stringify_array(f[1]) + "}");
 				break;
 
-		/* 2.2.2.5 Mem Tokens */
 			/* 2.5.198.70 TODO: confirm this is a non-display */
 			case 'PtgMemArea':
 				//stack.push("(" + f[2].map(encode_range).join(",") + ")");
@@ -908,31 +921,31 @@ function stringify_formula(formula, range, cell, supbooks, opts) {
 				stack.push("");
 				break;
 
-			/* 2.5.198.29 TODO */
-			case 'PtgAreaErr': break;
-
-			/* 2.5.198.31 TODO */
-			case 'PtgAreaN': stack.push(""); break;
-
-			/* 2.5.198.87 TODO */
-			case 'PtgRefErr3d': break;
+			/* 2.5.198.29 */
+			case 'PtgAreaErr': stack.push("#REF!");
 
 			/* 2.5.198.72 TODO */
 			case 'PtgMemFunc': break;
 
-			default: throw 'Unrecognized Formula Token: ' + f;
+			default: throw new Error('Unrecognized Formula Token: ' + f);
 		}
 		var PtgNonDisp = ['PtgAttrSpace', 'PtgAttrSpaceSemi', 'PtgAttrGoto'];
 		if(last_sp >= 0 && PtgNonDisp.indexOf(formula[0][ff][0]) == -1) {
 			f = formula[0][last_sp];
+			var _left = true;
 			switch(f[1][0]) {
+				/* note: some bad XLSB files omit the PtgParen */
+				case 4: _left = false;
+				/* falls through */
 				case 0: sp = fill(" ", f[1][1]); break;
+				case 5: _left = false;
+				/* falls through */
 				case 1: sp = fill("\r", f[1][1]); break;
 				default:
 					sp = "";
-					if(opts.WTF) throw new Error("Unexpected PtgSpace type " + f[1][0]);
+					if(opts.WTF) throw new Error("Unexpected PtgAttrSpaceType " + f[1][0]);
 			}
-			stack.push(sp + stack.pop());
+			stack.push((_left ? sp : "") + stack.pop() + (_left ? "" : sp));
 			last_sp = -1;
 		}
 		//console.log("::",f, stack)

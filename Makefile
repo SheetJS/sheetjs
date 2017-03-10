@@ -73,7 +73,7 @@ aux: $(AUXTARGETS)
 nexe: xlsx.exe
 
 xlsx.exe: bin/xlsx.js xlsx.js
-	nexe -i bin/xlsx.njs -o xlsx.exe
+	nexe -i $< -o $@ --flags
 
 ## Testing
 

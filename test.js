@@ -13,7 +13,7 @@ if(process.env.WTF) {
 }
 var fullex = [".xlsb", ".xlsm", ".xlsx"];
 var ofmt = ["xlsb", "xlsm", "xlsx", "ods", "biff2"];
-var ex = fullex.slice(); ex.push(".ods"); ex.push(".xls"); ex.push("xml");
+var ex = fullex.slice(); ex = ex.concat([".ods", ".xls", ".xml", ".fods"]);
 if(process.env.FMTS === "full") process.env.FMTS = ex.join(":");
 if(process.env.FMTS) ex=process.env.FMTS.split(":").map(function(x){return x[0]==="."?x:"."+x;});
 var exp = ex.map(function(x){ return x + ".pending"; });
@@ -950,6 +950,13 @@ describe('invalid files', function() {
 					delete wb[t];
 					X.write(wb, {type:'binary'});
 				});
+			});
+		});
+		it('should fail if SheetNames has duplicate entries', function() {
+			var wb = X.readFile(paths.fstxlsx);
+			wb.SheetNames.push(wb.SheetNames[0]);
+			assert.throws(function() {
+				X.write(wb, {type:'binary'});
 			});
 		});
 	});

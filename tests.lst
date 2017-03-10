@@ -517,7 +517,7 @@ roo_comments.ods
 roo_datetime.ods
 roo_dreimalvier.ods
 roo_emptysheets.ods
-roo_encrypted-letmein.ods
+# roo_encrypted-letmein.ods
 roo_formula.ods
 roo_hidden_sheets.ods
 roo_html-escape.ods
@@ -1161,9 +1161,9 @@ formulae_test_simple.xml
 hyperlink_stress_test_2011.xml
 interview.xlsx.xml
 issue.xlsx.xml
-large_strings.xls.xml
-large_strings.xlsb.xml
-large_strings.xlsx.xml
+large_strings.xls.xml.pending
+large_strings.xlsb.xml.pending
+large_strings.xlsx.xml.pending
 merge_cells.xls.xml
 merge_cells.xlsb.xml
 merge_cells.xlsx.xml

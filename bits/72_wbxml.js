@@ -18,7 +18,7 @@ function parse_wb_xml(data, opts) {
 
 			/* 18.2.13 fileVersion CT_FileVersion ? */
 			case '<fileVersion': delete y[0]; wb.AppVersion = y; break;
-			case '<fileVersion/>': break;
+			case '<fileVersion/>': case '</fileVersion>': break;
 
 			/* 18.2.12 fileSharing CT_FileSharing ? */
 			case '<fileSharing': case '<fileSharing/>': break;
@@ -26,6 +26,7 @@ function parse_wb_xml(data, opts) {
 			/* 18.2.28 workbookPr CT_WorkbookPr ? */
 			case '<workbookPr': delete y[0]; wb.WBProps = y; break;
 			case '<workbookPr/>': delete y[0]; wb.WBProps = y; break;
+			case '</workbookPr>': break;
 
 			/* 18.2.29 workbookProtection CT_WorkbookProtection ? */
 			case '<workbookProtection': break;
@@ -35,11 +36,13 @@ function parse_wb_xml(data, opts) {
 			case '<bookViews>': case '</bookViews>': break;
 			/* 18.2.30   workbookView CT_BookView + */
 			case '<workbookView': delete y[0]; wb.WBView.push(y); break;
+			case '</workbookView>': break;
 
 			/* 18.2.20 sheets CT_Sheets 1 */
 			case '<sheets>': case '</sheets>': break; // aggregate sheet
 			/* 18.2.19   sheet CT_Sheet + */
 			case '<sheet': delete y[0]; y.name = utf8read(y.name); wb.Sheets.push(y); break;
+			case '</sheet>': break;
 
 			/* 18.2.15 functionGroups CT_FunctionGroups ? */
 			case '<functionGroups': case '<functionGroups/>': break;
@@ -61,6 +64,7 @@ function parse_wb_xml(data, opts) {
 			/* 18.2.2  calcPr CT_CalcPr ? */
 			case '<calcPr': delete y[0]; wb.CalcPr = y; break;
 			case '<calcPr/>': delete y[0]; wb.CalcPr = y; break;
+			case '</calcPr>': break;
 
 			/* 18.2.16 oleSize CT_OleSize ? (ref required) */
 			case '<oleSize': break;
@@ -105,7 +109,7 @@ function parse_wb_xml(data, opts) {
 			case '<AlternateContent': pass=true; break;
 			case '</AlternateContent>': pass=false; break;
 
-			default: if(!pass && opts.WTF) throw 'unrecognized ' + y[0] + ' in workbook';
+			default: if(!pass && opts.WTF) throw new Error('unrecognized ' + y[0] + ' in workbook');
 		}
 	});
 	if(XMLNS.main.indexOf(wb.xmlns) === -1) throw new Error("Unknown Namespace: " + wb.xmlns);

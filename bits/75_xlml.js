@@ -158,7 +158,7 @@ function xlml_normalize(d)/*:string*/ {
 
 /* TODO: Everything */
 /* UOS uses CJK in tags */
-var xlmlregex = /<(\/?)([^\s?>\/:]*:|)([^\s?>]*[^\s?>\/])[^>]*>/mg;
+var xlmlregex = /<(\/?)([^\s?>!\/:]*:|)([^\s?>]*[^\s?>\/])[^>]*>/mg;
 //var xlmlregex = /<(\/?)([a-z0-9]*:|)(\w+)[^>]*>/mg;
 function parse_xlml_xml(d, opts)/*:Workbook*/ {
 	var str = debom(xlml_normalize(d));
@@ -178,6 +178,7 @@ function parse_xlml_xml(d, opts)/*:Workbook*/ {
 	var cstys = [], csty;
 	var arrayf = [];
 	xlmlregex.lastIndex = 0;
+	str = str.replace(/<!--([^\u2603]*?)-->/mg,"");
 	while((Rn = xlmlregex.exec(str))) switch(Rn[3]) {
 		case 'Data':
 			if(state[state.length-1][1]) break;

@@ -85,7 +85,7 @@ function ReadShift(size, t) {
 		case 'wstr':
 			if(typeof cptable !== 'undefined') o = cptable.utils.decode(current_codepage, this.slice(this.l, this.l+2*size));
 			else return ReadShift.call(this, size, 'dbcs');
-			o = size = 2 * size; break;
+			size = 2 * size; break;
 
 		/* [MS-OLEDS] 2.1.4 LengthPrefixedAnsiString */
 		case 'lpstr': o = __lpstr(this, this.l); size = 5 + o.length; break;

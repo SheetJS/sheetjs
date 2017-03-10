@@ -43,6 +43,7 @@ function write_binary_type(out, opts/*:WriteOpts*/) {
 }
 
 function writeSync(wb/*:Workbook*/, opts/*:?WriteOpts*/) {
+	check_wb(wb);
 	var o = opts||{};
 	switch(o.bookType || 'xlsx') {
 		case 'xml': return write_string_type(write_xlml(wb, o), o);
