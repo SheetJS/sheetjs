@@ -27,6 +27,8 @@ File format support for known spreadsheet data formats:
 | **Other Common Spreadsheet Output Formats**                  |:-----:|:-----:|
 | HTML Tables                                                  |  :o:  |       |
 
+![circo graph of format support](formats.png)
+
 Demo: <http://oss.sheetjs.com/js-xlsx>
 
 Source: <http://git.io/xlsx>
@@ -57,6 +59,14 @@ $ bower install js-xlsx
 CDNjs automatically pulls the latest version and makes all versions available at
 <http://cdnjs.com/libraries/xlsx>
 
+### JS Ecosystem Demos
+
+The `demos` directory includes sample projects for:
+
+- [`browserify`](http://browserify.org/)
+- [`requirejs`](http://requirejs.org/)
+- [`webpack`](https://webpack.js.org/)
+
 ### Optional Modules
 
 The node version automatically requires modules for additional features.  Some
@@ -72,14 +82,6 @@ be included directly:
 An appropriate version for each dependency is included in the dist/ directory.
 
 The complete single-file version is generated at `dist/xlsx.full.min.js`
-
-### JS Ecosystem Demos
-
-The `demos` directory includes sample projects for:
-
-- [`browserify`](http://browserify.org/)
-- [`requirejs`](http://requirejs.org/)
-- [`webpack`](https://webpack.js.org/)
 
 ### ECMAScript 5 Compatibility
 
@@ -411,20 +413,20 @@ array range.  Other cells in the range will omit the `f` field.
 
 The raw value is stored in the `v` field, interpreted based on the `t` field.
 
-Type `b` is the Boolean type.  `v` is interpreted according to JS truth tables
+Type `b` is the Boolean type.  `v` is interpreted according to JS truth tables.
 
 Type `e` is the Error type. `v` holds the number and `w` holds the common name:
 
-| Value | Error Meaning  |
-| ----: | :------------- |
-|  0x00 | #NULL!         |
-|  0x07 | #DIV/0!        |
-|  0x0F | #VALUE!        |
-|  0x17 | #REF!          |
-|  0x1D | #NAME?         |
-|  0x24 | #NUM!          |
-|  0x2A | #N/A           |
-|  0x2B | #GETTING\_DATA |
+|  Value | Error Meaning   |
+| -----: | :-------------- |
+| `0x00` | `#NULL!`        |
+| `0x07` | `#DIV/0!`       |
+| `0x0F` | `#VALUE!`       |
+| `0x17` | `#REF!`         |
+| `0x1D` | `#NAME?`        |
+| `0x24` | `#NUM!`         |
+| `0x2A` | `#N/A`          |
+| `0x2B` | `#GETTING_DATA` |
 
 Type `n` is the Number type. This includes all forms of data that Excel stores
 as numbers, such as dates/times and Boolean fields.  Excel exclusively uses data
@@ -707,8 +709,28 @@ Running `make init` will refresh the `test_files` submodule and get the files.
 
 ## Testing
 
-`make test` will run the node-based tests.  To run the in-browser tests, clone
-[the oss.sheetjs.com repo](https://github.com/SheetJS/SheetJS.github.io) and
+`make test` will run the node-based tests.  By default it runs tests on files in
+every supported format.  To test a specific file type, set `FMTS` to the format
+you want to test.  Feature-specific tests are avaialble with `make test_misc`
+
+```bash
+$ make test        # run full tests
+$ make test_xls    # only use the XLS test files
+$ make test_xlsx   # only use the XLSX test files
+$ make test_xlsb   # only use the XLSB test files
+$ make test_xml    # only use the XLSB test files
+$ make test_ods    # only use the XLSB test files
+```
+
+To enable all errors, set the environment variable `WTF=1`:
+
+```bash
+$ make test        # run full tests
+$ WTF=1 make test  # enable all error messages
+```
+
+To run the in-browser tests, clone
+[The oss.sheetjs.com repo](https://github.com/SheetJS/SheetJS.github.io) and
 replace the xlsx.js file (then fire up the browser and go to `stress.html`):
 
 ```bash
@@ -718,7 +740,6 @@ $ simplehttpserver # or "python -mSimpleHTTPServer" or "serve"
 $ open -a Chromium.app http://localhost:8000/stress.html
 ```
 
-For a much smaller test, run `make test_misc`.
 
 ## Contributing
 
@@ -728,28 +749,24 @@ important to ensure code is cleanroom.  Consult CONTRIBUTING.md
 The xlsx.js file is constructed from the files in the `bits` subdirectory. The
 build script (run `make`) will concatenate the individual bits to produce the
 script.  Before submitting a contribution, ensure that running make will produce
-the xlsx.js file exactly.  The simplest way to test is to move the script:
+the xlsx.js file exactly.  The simplest way to test is to add the script:
 
 ```bash
-$ mv xlsx.js xlsx.new.js
+$ git add xlsx.js
+$ make clean
 $ make
-$ diff xlsx.js xlsx.new.js
+$ git diff xlsx.js
 ```
 
 To produce the dist files, run `make dist`.  The dist files are updated in each
-version release and should not be committed between versions.
+version release and *should not be committed between versions*.
+
 
 ## License
 
 Please consult the attached LICENSE file for details.  All rights not explicitly
 granted by the Apache 2.0 License are reserved by the Original Author.
 
-It is the opinion of the Original Author that this code conforms to the terms of
-the Microsoft Open Specifications Promise, falling under the same terms as
-OpenOffice (which is governed by the Apache License v2).  Given the vagaries of
-the promise, the Original Author makes no legal claim that in fact end users are
-protected from future actions.  It is highly recommended that, for commercial
-uses, you consult a lawyer before proceeding.
 
 ## References
 
@@ -776,6 +793,8 @@ OSP-covered specifications:
  - [XLS]: Microsoft Office Excel 97-2007 Binary File Format Specification
 
 Open Document Format for Office Applications Version 1.2 (29 September 2011)
+
+Worksheet File Format (From Lotus) December 1984
 
 
 ## Badges

@@ -69,10 +69,15 @@ dist-deps: ## Copy dependencies for distribution
 .PHONY: aux
 aux: $(AUXTARGETS)
 
-.PHONY: nexe
-nexe: xlsx.exe
+.PHONY: graph
+graph: formats.png ## Rebuild format conversion graph
+formats.png: formats.dot
+	circo -Tpng -o$@ $<
 
-xlsx.exe: bin/xlsx.js xlsx.js
+.PHONY: nexe
+nexe: xlsx.exe ## Build nexe standalone executable
+
+xlsx.exe: bin/xlsx.njs xlsx.js
 	nexe -i $< -o $@ --flags
 
 ## Testing

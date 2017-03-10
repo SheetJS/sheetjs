@@ -1,0 +1,50 @@
+digraph G {
+	graph [mindist=0.1]; 
+	csf [shape=doublecircle,label="Common\nSpreadsheet\nFormat\n(JS Object)"];
+	subgraph XL {
+		node  [style=filled,color=green];
+		xlsx  [label="XLSX\nXLSM"];
+		xlsb  [label="XLSB\nBIFF12"];
+		xlml  [label="SSML\n(2003/4)"];
+		xls2  [label="XLS\nBIFF2"];
+		xls3  [label="XLS\nBIFF3"];
+		xls4  [label="XLS\nBIFF4"];
+		xls5  [label="XLS\nBIFF5"];
+		xls8  [label="XLS\nBIFF8"];
+	}
+
+	subgraph OD {
+		node  [style=filled,color=yellow];
+		ods   [label="ODS"];
+		fods  [label="Flat\nODS"];
+		uos   [label="UOS\n标文通"];
+	}
+
+	subgraph OLD {
+		node  [style=filled,color=cyan];
+		html  [label="HTML\nTable"];
+		csv   [label="CSV"];
+	}
+
+	subgraph JSXLSX {
+		edge [color=blue];
+		csf -> xlsx
+		xlsx -> csf
+		csf -> xlsb
+		xlsb -> csf
+		xlml -> csf
+		xls2 -> csf
+		csf -> xls2
+		xls3 -> csf
+		xls4 -> csf
+		xls5 -> csf
+		xls8 -> csf
+		csf -> csv
+		ods -> csf
+		csf -> ods
+		fods -> csf
+		csf -> fods
+		uos -> csf
+		html -> csf
+	}
+}
