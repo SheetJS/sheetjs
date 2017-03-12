@@ -1,5 +1,5 @@
 /* XLS ranges enforced */
-function shift_cell_xls(cell, tgt, opts) {
+function shift_cell_xls(cell, tgt/*:any*/, opts/*:?any*/) {
 	var out = dup(cell);
 	if(tgt.s) {
 		if(out.cRel) out.c += tgt.s.c;

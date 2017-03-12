@@ -96,7 +96,7 @@ function parse_themeElements(data, opts) {
 var themeltregex = /<a:themeElements([^>]*)>[^\u2603]*<\/a:themeElements>/;
 
 /* 14.2.7 Theme Part */
-function parse_theme_xml(data, opts) {
+function parse_theme_xml(data/*:string*/, opts) {
 	/* 20.1.6.9 theme CT_OfficeStyleSheet */
 	if(!data || data.length === 0) return themes;
 

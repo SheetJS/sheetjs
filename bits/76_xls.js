@@ -52,7 +52,7 @@ function slurp(R, blob, length/*:number*/, opts) {
 	return R.f(b, b.length, opts);
 }
 
-function safe_format_xf(p, opts, date1904) {
+function safe_format_xf(p/*:any*/, opts/*:ParseOpts*/, date1904/*:?boolean*/) {
 	if(p.t === 'e') { p.w = p.w || BErr[p.v]; }
 	if(!p.XF) return;
 	try {
@@ -65,7 +65,7 @@ function safe_format_xf(p, opts, date1904) {
 			}
 			else p.w = SSF._general(p.v);
 		}
-		else p.w = SSF.format(fmtid,p.v, {date1904:date1904||false});
+		else p.w = SSF.format(fmtid,p.v, {date1904:!!date1904});
 		if(opts.cellNF) p.z = SSF._table[fmtid];
 	} catch(e) { if(opts.WTF) throw e; }
 }
@@ -86,7 +86,7 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 	var sst = [];
 	var cur_sheet = "";
 	var Preamble = {};
-	var lastcell, last_cell, cc, cmnt, rng, rngC, rngR;
+	var lastcell, last_cell = "", cc, cmnt, rng, rngC, rngR;
 	var shared_formulae = {};
 	var array_formulae = []; /* TODO: something more clever */
 	var temp_val;
@@ -99,16 +99,16 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 		if(icv < 64) return palette[icv-8] || XLSIcv[icv];
 		return XLSIcv[icv];
 	};
-	var process_cell_style = function pcs(cell, line) {
+	var process_cell_style = function pcs(cell, line/*:any*/) {
 		var xfd = line.XF.data;
 		if(!xfd || !xfd.patternType) return;
-		line.s = {};
+		line.s = ({}/*:any*/);
 		line.s.patternType = xfd.patternType;
 		var t;
 		if((t = rgb2Hex(get_rgb(xfd.icvFore)))) { line.s.fgColor = {rgb:t}; }
 		if((t = rgb2Hex(get_rgb(xfd.icvBack)))) { line.s.bgColor = {rgb:t}; }
 	};
-	var addcell = function addcell(cell, line, options) {
+	var addcell = function addcell(cell/*:any*/, line/*:any*/, options/*:any*/) {
 		if(!cell_valid) return;
 		if(options.cellStyles && line.XF && line.XF.data) process_cell_style(cell, line);
 		lastcell = cell;
@@ -332,6 +332,8 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 				case 'Array': {
 					array_formulae.push(val);
 					if(options.cellFormula && out[last_cell]) {
+						if(!last_formula) break; /* technically unreachable */
+						if(!last_cell || !out[last_cell]) break; /* technically unreachable */
 						out[last_cell].f = stringify_formula(last_formula.formula, range, last_formula.cell, supbooks, opts);
 						out[last_cell].F = encode_range(val[0]);
 					}
@@ -341,6 +343,7 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 					if(!options.cellFormula) break;
 					if(last_cell) {
 						/* TODO: capture range */
+						if(!last_formula) break; /* technically unreachable */
 						shared_formulae[encode_cell(last_formula.cell)]= val[0];
 						(out[encode_cell(last_formula.cell)]||{}).f = stringify_formula(val[0], range, lastcell, supbooks, opts);
 					}
@@ -654,7 +657,7 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 	return wb;
 }
 
-function parse_xlscfb(cfb/*:any*/, options/*:?ParseOpts*/) {
+function parse_xlscfb(cfb/*:any*/, options/*:?ParseOpts*/)/*:Workbook*/ {
 if(!options) options = {};
 fix_read_opts(options);
 reset_cp();
@@ -669,10 +672,10 @@ if(cfb.FullPaths) {
 }
 
 if(!Workbook) Workbook = cfb.find('/Book');
-var CompObjP, SummaryP, WorkbookP/*:?any*/;
+var CompObjP, SummaryP, WorkbookP/*:Workbook*/;
 
 if(CompObj) CompObjP = parse_compobj(CompObj);
-if(options.bookProps && !options.bookSheets) WorkbookP = {};
+if(options.bookProps && !options.bookSheets) WorkbookP = ({}/*:any*/);
 else {
 	if(Workbook) WorkbookP = parse_workbook(Workbook.content, options, !!Workbook.find);
 	else throw new Error("Cannot find Workbook stream");
@@ -685,7 +688,7 @@ for(var y in cfb.Summary) props[y] = cfb.Summary[y];
 for(y in cfb.DocSummary) props[y] = cfb.DocSummary[y];
 WorkbookP.Props = WorkbookP.Custprops = props; /* TODO: split up properties */
 if(options.bookFiles) WorkbookP.cfb = cfb;
-WorkbookP.CompObjP = CompObjP;
+/*WorkbookP.CompObjP = CompObjP; // TODO: storage? */
 return WorkbookP;
 }
 

@@ -23,9 +23,9 @@ function write_string_type(out/*:string*/, opts/*:WriteOpts*/) {
 		case "buffer": {
 			if(has_buf) return new Buffer(out, 'utf8');
 			else return out.split("").map(function(c) { return c.charCodeAt(0); });
-		} break;
-		default: throw new Error("Unrecognized type " + opts.type);
+		}
 	}
+	throw new Error("Unrecognized type " + opts.type);
 }
 
 /* TODO: test consistency */

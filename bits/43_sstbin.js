@@ -4,8 +4,8 @@ function parse_BrtBeginSst(data, length) {
 }
 
 /* [MS-XLSB] 2.1.7.45 Shared Strings */
-function parse_sst_bin(data, opts) {
-	var s = [];
+function parse_sst_bin(data, opts)/*:SST*/ {
+	var s/*:SST*/ = ([]/*:any*/);
 	var pass = false;
 	recordhopper(data, function hopper_sst(val, R, RT) {
 		switch(R.n) {

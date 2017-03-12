@@ -69,7 +69,7 @@ var __readInt32LE = function(b, idx) { return (b[idx+3]<<24)|(b[idx+2]<<16)|(b[i
 var ___unhexlify = function(s) { return s.match(/../g).map(function(x) { return parseInt(x,16);}); };
 var __unhexlify = typeof Buffer !== "undefined" ? function(s) { return Buffer.isBuffer(s) ? new Buffer(s, 'hex') : ___unhexlify(s); } : ___unhexlify;
 
-function ReadShift(size, t) {
+function ReadShift(size/*:number*/, t/*:?string*/) {
 	var o="", oI, oR, oo=[], w, vv, i, loc;
 	switch(t) {
 		case 'dbcs':
@@ -130,7 +130,7 @@ function ReadShift(size, t) {
 		case 2: oI = (t === 'i' ? __readInt16LE : __readUInt16LE)(this, this.l); this.l += 2; return oI;
 		case 4:
 			if(t === 'i' || (this[this.l+3] & 0x80)===0) { oI = __readInt32LE(this, this.l); this.l += 4; return oI; }
-			else { oR = __readUInt32LE(this, this.l); this.l += 4; return oR; } break;
+			else { oR = __readUInt32LE(this, this.l); this.l += 4; } return oR;
 		case 8: if(t === 'f') { oR = __double(this, this.l); this.l += 8; return oR; }
 		/* falls through */
 		case 16: o = __hexlify(this, this.l, size); break;
@@ -142,15 +142,17 @@ var __writeUInt16LE = function(b, val, idx) { b[idx] = (val & 0xFF); b[idx+1] = 
 var __writeUInt32LE = function(b, val, idx) { b[idx] = (val & 0xFF); b[idx+1] = ((val >>> 8) & 0xFF); b[idx+2] = ((val >>> 16) & 0xFF); b[idx+3] = ((val >>> 24) & 0xFF); };
 var __writeInt32LE  = function(b, val, idx) { b[idx] = (val & 0xFF); b[idx+1] = ((val >> 8) & 0xFF); b[idx+2] = ((val >> 16) & 0xFF); b[idx+3] = ((val >> 24) & 0xFF); };
 
-function WriteShift(t, val, f) {
-	var size, i;
+function WriteShift(t/*:number*/, val/*:string|number*/, f/*:?string*/) {
+	var size = 0, i = 0;
 	if(f === 'dbcs') {
+		/*:: if(typeof val !== 'string') throw new Error("unreachable"); */
 		for(i = 0; i != val.length; ++i) __writeUInt16LE(this, val.charCodeAt(i), this.l + 2 * i);
 		size = 2 * val.length;
 	} else if(f === 'sbcs') {
+		/*:: if(typeof val !== 'string') throw new Error("unreachable"); */
 		for(i = 0; i != val.length; ++i) this[this.l + i] = val.charCodeAt(i) & 0xFF;
 		size = val.length;
-	} else switch(t) {
+	} else /*:: if(typeof val === 'number') */ switch(t) {
 		case  1: size = 1; this[this.l] = val&0xFF; break;
 		case  2: size = 2; this[this.l] = val&0xFF; val >>>= 8; this[this.l+1] = val&0xFF; break;
 		case  3: size = 3; this[this.l] = val&0xFF; val >>>= 8; this[this.l+1] = val&0xFF; val >>>= 8; this[this.l+2] = val&0xFF; break;
@@ -180,7 +182,7 @@ function parsenoop(blob, length/*:number*/) { blob.l += length; }
 
 function writenoop(blob, length/*:number*/) { blob.l += length; }
 
-function new_buf(sz) {
+function new_buf(sz/*:number*/)/*:Block*/ {
 	var o = new_raw_buf(sz);
 	prep_blob(o, 0);
 	return o;

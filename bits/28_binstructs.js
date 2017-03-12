@@ -5,7 +5,7 @@ function parse_StrRun(data, length/*:?number*/) {
 }
 
 /* [MS-XLSB] 2.1.7.121 */
-function parse_RichStr(data, length/*:number*/) {
+function parse_RichStr(data, length/*:number*/)/*:XLString*/ {
 	var start = data.l;
 	var flags = data.read_shift(1);
 	var str = parse_XLWideString(data);
@@ -24,7 +24,7 @@ function parse_RichStr(data, length/*:number*/) {
 	data.l = start + length;
 	return z;
 }
-function write_RichStr(str, o) {
+function write_RichStr(str/*:XLString*/, o/*:?Block*/)/*:Block*/ {
 	/* TODO: formatted string */
 	if(o == null) o = new_buf(5+2*str.t.length);
 	o.write_shift(1,0);
@@ -33,14 +33,14 @@ function write_RichStr(str, o) {
 }
 
 /* [MS-XLSB] 2.5.9 */
-function parse_XLSBCell(data) {
+function parse_XLSBCell(data)/*:any*/ {
 	var col = data.read_shift(4);
 	var iStyleRef = data.read_shift(2);
 	iStyleRef += data.read_shift(1) <<16;
 	var fPhShow = data.read_shift(1);
 	return { c:col, iStyleRef: iStyleRef };
 }
-function write_XLSBCell(cell, o) {
+function write_XLSBCell(cell/*:any*/, o/*:?Block*/) {
 	if(o == null) o = new_buf(8);
 	o.write_shift(-4, cell.c);
 	o.write_shift(3, cell.iStyleRef || cell.s);

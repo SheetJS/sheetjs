@@ -21,7 +21,7 @@ var CORE_PROPS/*:Array<Array<string> >*/ = [
 XMLNS.CORE_PROPS = "http://schemas.openxmlformats.org/package/2006/metadata/core-properties";
 RELS.CORE_PROPS  = 'http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties';
 
-var CORE_PROPS_REGEX/*:Array<RegEx>*/ = (function() {
+var CORE_PROPS_REGEX/*:Array<RegExp>*/ = (function() {
 	var r = new Array(CORE_PROPS.length);
 	for(var i = 0; i < CORE_PROPS.length; ++i) {
 		var f = CORE_PROPS[i];

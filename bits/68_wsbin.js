@@ -1,7 +1,7 @@
 
 /* [MS-XLSB] 2.4.718 BrtRowHdr */
 function parse_BrtRowHdr(data, length) {
-	var z = [];
+	var z = ([]/*:any*/);
 	z.r = data.read_shift(4);
 	data.l += length-4;
 	return z;
@@ -227,7 +227,7 @@ function parse_BrtArrFmla(data, length, opts) {
 	var end = data.l + length;
 	var rfx = parse_RfX(data, 16);
 	var fAlwaysCalc = data.read_shift(1);
-	var o = [rfx, null, fAlwaysCalc];
+	var o = [rfx]; o[2] = fAlwaysCalc;
 	if(opts.cellFormula) {
 		var formula = parse_XLSBArrayParsedFormula(data, end - data.l, opts);
 		o[1] = formula;
@@ -239,7 +239,7 @@ function parse_BrtArrFmla(data, length, opts) {
 function parse_BrtShrFmla(data, length, opts) {
 	var end = data.l + length;
 	var rfx = parse_UncheckedRfX(data, 16);
-	var o = [rfx, null];
+	var o = [rfx];
 	if(opts.cellFormula) {
 		var formula = parse_XLSBSharedParsedFormula(data, end - data.l, opts);
 		o[1] = formula;
@@ -502,7 +502,7 @@ function write_ws_bin_cell(ba/*:BufArray*/, cell/*:Cell*/, R/*:number*/, C/*:num
 		case 'n': case 'e': vv = ''+cell.v; break;
 		default: vv = cell.v; break;
 	}
-	var o/*:CellAddress*/ = ({r:R, c:C}/*:any*/);
+	var o/*:any*/ = ({r:R, c:C}/*:any*/);
 	/* TODO: cell style */
 	//o.s = get_cell_style(opts.cellXfs, cell, opts);
 	switch(cell.t) {

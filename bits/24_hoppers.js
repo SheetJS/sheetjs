@@ -19,7 +19,7 @@ function recordhopper(data, cb/*:RecordHopperCB*/, opts/*:?any*/) {
 function buf_array()/*:BufArray*/ {
 	var bufs = [], blksz = 2048;
 	var newblk = function ba_newblk(sz) {
-		var o = new_buf(sz);
+		var o/*:Block*/ = (new_buf(sz)/*:any*/);
 		prep_blob(o, 0);
 		return o;
 	};

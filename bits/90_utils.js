@@ -73,7 +73,7 @@ function format_cell(cell/*:Cell*/, v/*:any*/) {
 }
 
 function sheet_to_json(sheet/*:Worksheet*/, opts/*:?Sheet2JSONOpts*/){
-	var val, row, range, header = 0, offset = 1, r, hdr = [], isempty, R, C, v, vv;
+	var val, row, range, header = 0, offset = 1, r, hdr/*:Array<any>*/ = [], isempty, R, C, v, vv;
 	var o = opts != null ? opts : {};
 	var raw = o.raw;
 	if(sheet == null || sheet["!ref"] == null) return [];

@@ -58,7 +58,7 @@ function parse_BrtName(data, length, opts) {
 }
 
 /* [MS-XLSB] 2.1.7.60 Workbook */
-function parse_wb_bin(data, opts) {
+function parse_wb_bin(data, opts)/*:WorkbookFile*/ {
 	var wb = { AppVersion:{}, WBProps:{}, WBView:[], Sheets:[], CalcPr:{}, xmlns: "" };
 	var pass = false, z;
 
@@ -127,6 +127,7 @@ function parse_wb_bin(data, opts) {
 	parse_wb_defaults(wb);
 
 	Names['!names'] = NameList;
+	// $FlowIgnore
 	wb.Names = Names;
 
 	return wb;

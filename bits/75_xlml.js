@@ -44,16 +44,17 @@ function xlml_format(format, value)/*:string*/ {
 	return SSF.format(fmt, value);
 }
 
-function xlml_set_custprop(Custprops, Rn, cp, val) {
+function xlml_set_custprop(Custprops, Rn, cp, val/*:string*/) {
+	var oval/*:any*/ = val;
 	switch((cp[0].match(/dt:dt="([\w.]+)"/)||["",""])[1]) {
-		case "boolean": val = parsexmlbool(val); break;
-		case "i2": case "int": val = parseInt(val, 10); break;
-		case "r4": case "float": val = parseFloat(val); break;
-		case "date": case "dateTime.tz": val = new Date(val); break;
+		case "boolean": oval = parsexmlbool(val); break;
+		case "i2": case "int": oval = parseInt(val, 10); break;
+		case "r4": case "float": oval = parseFloat(val); break;
+		case "date": case "dateTime.tz": oval = new Date(val); break;
 		case "i8": case "string": case "fixed": case "uuid": case "bin.base64": break;
-		default: throw "bad custprop:" + cp[0];
+		default: throw new Error("bad custprop:" + cp[0]);
 	}
-	Custprops[unescapexml(Rn[3])] = val;
+	Custprops[unescapexml(Rn[3])] = oval;
 }
 
 function safe_format_xlml(cell/*:Cell*/, nf, o) {
@@ -82,7 +83,7 @@ function process_style_xlml(styles, stag, opts) {
 }
 
 /* TODO: there must exist some form of OSP-blessed spec */
-function parse_xlml_data(xml, ss, data, cell/*:any*/, base, styles, csty, row, arrayf, o)/*:Workbook*/ {
+function parse_xlml_data(xml, ss, data, cell/*:any*/, base, styles, csty, row, arrayf, o) {
 	var nf = "General", sid = cell.StyleID, S = {}; o = o || {};
 	var interiors = [];
 	var i = 0;
@@ -226,7 +227,7 @@ function parse_xlml_xml(d, opts)/*:Workbook*/ {
 			break;
 		case 'Worksheet': /* TODO: read range from FullRows/FullColumns */
 			if(Rn[1]==='/'){
-				if((tmp=state.pop())[0]!==Rn[3]) throw "Bad state: "+tmp;
+				if((tmp=state.pop())[0]!==Rn[3]) throw new Error("Bad state: "+tmp.join("|"));
 				sheetnames.push(sheetname);
 				if(refguess.s.r <= refguess.e.r && refguess.s.c <= refguess.e.c) cursheet["!ref"] = encode_range(refguess);
 				if(mergecells.length) cursheet["!merges"] = mergecells;
@@ -242,7 +243,7 @@ function parse_xlml_xml(d, opts)/*:Workbook*/ {
 			}
 			break;
 		case 'Table':
-			if(Rn[1]==='/'){if((tmp=state.pop())[0]!==Rn[3]) throw "Bad state: "+tmp;}
+			if(Rn[1]==='/'){if((tmp=state.pop())[0]!==Rn[3]) throw new Error("Bad state: "+tmp.join("|"));}
 			else if(Rn[0].slice(-2) == "/>") break;
 			else {
 				table = xlml_parsexmltag(Rn[0]);
@@ -314,13 +315,13 @@ function parse_xlml_xml(d, opts)/*:Workbook*/ {
 
 		case 'Styles':
 		case 'Workbook':
-			if(Rn[1]==='/'){if((tmp=state.pop())[0]!==Rn[3]) throw "Bad state: "+tmp;}
+			if(Rn[1]==='/'){if((tmp=state.pop())[0]!==Rn[3]) throw new Error("Bad state: "+tmp.join("|"));}
 			else state.push([Rn[3], false]);
 			break;
 
 		case 'Comment':
 			if(Rn[1]==='/'){
-				if((tmp=state.pop())[0]!==Rn[3]) throw "Bad state: "+tmp;
+				if((tmp=state.pop())[0]!==Rn[3]) throw new Error("Bad state: "+tmp.join("|"));
 				xlml_clean_comment(comment);
 				comments.push(comment);
 			} else {
@@ -353,7 +354,7 @@ function parse_xlml_xml(d, opts)/*:Workbook*/ {
 		case 'ExcelWorkbook':
 		case 'WorkbookOptions':
 		case 'WorksheetOptions':
-			if(Rn[1]==='/'){if((tmp=state.pop())[0]!==Rn[3]) throw "Bad state: "+tmp;}
+			if(Rn[1]==='/'){if((tmp=state.pop())[0]!==Rn[3]) throw new Error("Bad state: "+tmp.join("|"));}
 			else if(Rn[0].charAt(Rn[0].length-2) !== '/') state.push([Rn[3], true]);
 			break;
 
@@ -716,13 +717,14 @@ function parse_xlml_xml(d, opts)/*:Workbook*/ {
 	return out;
 }
 
-function parse_xlml(data, opts) {
+function parse_xlml(data, opts)/*:Workbook*/ {
 	fix_read_opts(opts=opts||{});
 	switch(opts.type||"base64") {
 		case "base64": return parse_xlml_xml(Base64.decode(data), opts);
 		case "binary": case "buffer": case "file": return parse_xlml_xml(data, opts);
 		case "array": return parse_xlml_xml(data.map(_chr).join(""), opts);
 	}
+	/*:: throw new Error("unsupported type " + opts.type); */
 }
 
 /* TODO */

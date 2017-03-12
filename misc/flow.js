@@ -1,9 +1,23 @@
 /*::
 type ZIPFile = any;
 
+type XLString = {
+	t:string;
+	r?:string;
+	h?:string;
+};
+
+type WorkbookFile = any;
+
 type Workbook = {
 	SheetNames: Array<string>;
 	Sheets: any;
+
+	Props?: any;
+	Custprops?: any;
+
+	SSF?: {[n:number]:string};
+	cfb?: any;
 };
 
 interface CellAddress {
@@ -35,6 +49,13 @@ interface TypeOpts {
 
 type XLSXModule = any;
 
-type SST = any;
+type SST = {
+	[n:number]:XLString;
+	Count:number;
+	Unique:number;
+	push(x:XLString):void;
+	length:number;
+};
+
 type Comment = any;
 */

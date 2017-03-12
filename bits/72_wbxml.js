@@ -1,6 +1,6 @@
 /* 18.2 Workbook */
 var wbnsregex = /<\w+:workbook/;
-function parse_wb_xml(data, opts) {
+function parse_wb_xml(data, opts)/*:WorkbookFile*/ {
 	if(!data) throw new Error("Could not find file");
 	var wb = { AppVersion:{}, WBProps:{}, WBView:[], Sheets:[], CalcPr:{}, xmlns: "" };
 	var pass = false, xmlns = "xmlns";
@@ -128,7 +128,10 @@ var WB_XML_ROOT = writextag('workbook', null, {
 
 function safe1904(wb/*:Workbook*/)/*:string*/ {
 	/* TODO: store date1904 somewhere else */
-	try { return parsexmlbool(wb.Workbook.WBProps.date1904) ? "true" : "false"; } catch(e) { return "false"; }
+	if(!wb.Workbook) return "false";
+	if(!wb.Workbook.WBProps) return "false";
+	// $FlowIgnore
+	return parsexmlbool(wb.Workbook.WBProps.date1904) ? "true" : "false";
 }
 
 function write_wb_xml(wb/*:Workbook*/, opts/*:?WriteOpts*/)/*:string*/ {

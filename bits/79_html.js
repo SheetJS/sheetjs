@@ -25,7 +25,7 @@ function parse_html(str/*:string*/, opts)/*:Workbook*/ {
 			if(range.e.c < C) range.e.c = C;
 			var coord/*:string*/ = encode_cell({r:R, c:C});
 			/* TODO: value parsing */
-			if(m == +m) ws[coord] = {t:'n', v:+m};
+			if(Number(m) == Number(m)) ws[coord] = {t:'n', v:+m};
 			else ws[coord] = {t:'s', v:m};
 		}
 		++R; C = 0;

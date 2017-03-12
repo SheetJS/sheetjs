@@ -1,4 +1,4 @@
-function parse_wb(data, name/*:string*/, opts)/*:Workbook*/ {
+function parse_wb(data, name/*:string*/, opts)/*:WorkbookFile*/ {
 	if(name.slice(-4)===".bin") return parse_wb_bin((data/*:any*/), opts);
 	return parse_wb_xml((data/*:any*/), opts);
 }
@@ -13,7 +13,7 @@ function parse_sty(data, name/*:string*/, opts) {
 	return parse_sty_xml((data/*:any*/), opts);
 }
 
-function parse_theme(data, name/*:string*/, opts) {
+function parse_theme(data/*:string*/, name/*:string*/, opts) {
 	return parse_theme_xml(data, opts);
 }
 

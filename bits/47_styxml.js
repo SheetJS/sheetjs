@@ -65,10 +65,10 @@ function parse_numFmts(t, opts) {
 	}
 }
 
-function write_numFmts(NF, opts) {
+function write_numFmts(NF/*:{[n:number]:string}*/, opts) {
 	var o = ["<numFmts>"];
 	[[5,8],[23,26],[41,44],[63,66],[164,392]].forEach(function(r) {
-		for(var i = r[0]; i <= r[1]; ++i) if(NF[i] !== undefined) o[o.length] = (writextag('numFmt',null,{numFmtId:i,formatCode:escapexml(NF[i])}));
+		for(var i = r[0]; i <= r[1]; ++i) if(NF[i]) o[o.length] = (writextag('numFmt',null,{numFmtId:i,formatCode:escapexml(NF[i])}));
 	});
 	if(o.length === 1) return "";
 	o[o.length] = ("</numFmts>");
@@ -158,7 +158,7 @@ RELS.STY = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/
 
 function write_sty_xml(wb/*:Workbook*/, opts)/*:string*/ {
 	var o = [XML_HEADER, STYLES_XML_ROOT], w;
-	if((w = write_numFmts(wb.SSF)) != null) o[o.length] = w;
+	if(wb.SSF && (w = write_numFmts(wb.SSF)) != null) o[o.length] = w;
 	o[o.length] = ('<fonts count="1"><font><sz val="12"/><color theme="1"/><name val="Calibri"/><family val="2"/><scheme val="minor"/></font></fonts>');
 	o[o.length] = ('<fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills>');
 	o[o.length] = ('<borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders>');

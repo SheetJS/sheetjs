@@ -106,17 +106,18 @@ if(has_buf) {
 	};
 	var corpus = "foo bar baz\u00e2\u0098\u0083\u00f0\u009f\u008d\u00a3";
 	if(utf8read(corpus) == utf8readb(corpus)) utf8read = utf8readb;
+	// $FlowIgnore
 	var utf8readc = function utf8readc(data) { return Buffer(data, 'binary').toString('utf8'); };
 	if(utf8read(corpus) == utf8readc(corpus)) utf8read = utf8readc;
 }
 
 // matches <foo>...</foo> extracts content
 var matchtag = (function() {
-	var mtcache = {};
-	return function matchtag(f,g) {
+	var mtcache/*:{[k:string]:RegExp}*/ = ({}/*:any*/);
+	return function matchtag(f,g/*:?string*/)/*:RegExp*/ {
 		var t = f+"|"+(g||"");
-		if(mtcache[t] !== undefined) return mtcache[t];
-		return (mtcache[t] = new RegExp('<(?:\\w+:)?'+f+'(?: xml:space="preserve")?(?:[^>]*)>([^\u2603]*)</(?:\\w+:)?'+f+'>',(g||"")));
+		if(mtcache[t]) return mtcache[t];
+		return (mtcache[t] = new RegExp('<(?:\\w+:)?'+f+'(?: xml:space="preserve")?(?:[^>]*)>([^\u2603]*)</(?:\\w+:)?'+f+'>',((g||"")/*:any*/)));
 	};
 })();
 

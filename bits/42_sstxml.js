@@ -197,7 +197,7 @@ function write_sst_xml(sst/*:SST*/, opts)/*:string*/ {
 		uniqueCount: sst.Unique
 	}));
 	for(var i = 0; i != sst.length; ++i) { if(sst[i] == null) continue;
-		var s = sst[i];
+		var s/*:XLString*/ = sst[i];
 		var sitag = "<si>";
 		if(s.r) sitag += s.r;
 		else {

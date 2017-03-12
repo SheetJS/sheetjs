@@ -1,4 +1,5 @@
 var OFFCRYPTO = {};
+
 var make_offcrypto = function(O, _crypto) {
 	var crypto;
 	if(typeof _crypto !== 'undefined') crypto = _crypto;
@@ -15,7 +16,8 @@ var make_offcrypto = function(O, _crypto) {
 			j = (j + S[i] + (key[i%key.length]).charCodeAt(0))&255;
 			t = S[i]; S[i] = S[j]; S[j] = t;
 		}
-		i = j = 0; out = Buffer(data.length);
+		// $FlowIgnore
+		i = j = 0; var out = Buffer(data.length);
 		for(c = 0; c != data.length; ++c) {
 			i = (i + 1)&255;
 			j = (j + S[i])%256;
@@ -30,5 +32,6 @@ var make_offcrypto = function(O, _crypto) {
 		return crypto.createHash('md5').update(hex).digest('hex');
 	};
 };
+/*:: declare var crypto:any; */
 make_offcrypto(OFFCRYPTO, typeof crypto !== "undefined" ? crypto : undefined);
 

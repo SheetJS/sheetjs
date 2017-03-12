@@ -189,10 +189,10 @@ function parse_BoundSheet8(blob, length, opts) {
 }
 
 /* 2.4.265 TODO */
-function parse_SST(blob, length) {
+function parse_SST(blob, length)/*:SST*/ {
 	var cnt = blob.read_shift(4);
 	var ucnt = blob.read_shift(4);
-	var strs = [];
+	var strs/*:SST*/ = ([]/*:any*/);
 	for(var i = 0; i != ucnt; ++i) {
 		strs.push(parse_XLUnicodeRichExtendedString(blob));
 	}

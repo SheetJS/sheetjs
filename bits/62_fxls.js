@@ -327,7 +327,8 @@ function parse_PtgExtraArray(blob, length, opts) {
 		rows = 1 + blob.read_shift(2); //DRw
 	}
 	if(opts.biff >= 2 && opts.biff < 8) { --rows; if(--cols == 0) cols = 0x100; }
-	for(var i = 0, o=[]; i != rows && (o[i] = []); ++i)
+	// $FlowIgnore
+	for(var i = 0, o/*:Array<Array<any> >*/=[]; i != rows && (o[i] = []); ++i)
 		for(var j = 0; j != cols; ++j) o[i][j] = parse_SerAr(blob, opts.biff);
 	return o;
 }
@@ -647,7 +648,8 @@ function parse_Rgce(blob, length, opts) {
 			id = blob[blob.l + 1];
 			R = (id === 0x18 ? Ptg18 : Ptg19)[id];
 		}
-		if(!R || !R.f) { ptgs.push(parsenoop(blob, length)); }
+		if(!R || !R.f) { /*ptgs.push*/(parsenoop(blob, length)); }
+		// $FlowIgnore
 		else { ptgs.push([R.n, R.f(blob, length, opts)]); }
 	}
 	return ptgs;
@@ -661,7 +663,9 @@ function stringify_array(f) {
 			var y = x[j];
 			if(y) switch(y[0]) {
 				// TODO: handle embedded quotes
-				case 0x02: r.push('"' + y[1].replace(/"/g,'""') + '"'); break;
+				case 0x02:
+					/*:: if(typeof y[1] != 'string') throw "unreachable"; */
+					r.push('"' + y[1].replace(/"/g,'""') + '"'); break;
 				default: r.push(y[1]);
 			} else r.push("");
 		}
@@ -686,10 +690,10 @@ var PtgBinOp = {
 	PtgPower: "^",
 	PtgSub: "-"
 };
-function stringify_formula(formula, range, cell, supbooks, opts) {
+function stringify_formula(formula/*Array<any>*/, range, cell/*:any*/, supbooks, opts) {
 	//console.log(formula);
 	var _range = /*range != null ? range :*/ {s:{c:0, r:0},e:{c:0, r:0}};
-	var stack = [], e1, e2, type, c, ixti, nameidx, r, sname="";
+	var stack/*:Array<string>*/ = [], e1, e2, type, c, ixti=0, nameidx=0, r, sname="";
 	if(!formula[0] || !formula[0][0]) return "";
 	var last_sp = -1, sp = "";
 	//console.log("--",cell,formula[0])
@@ -719,10 +723,13 @@ function stringify_formula(formula, range, cell, supbooks, opts) {
 				e1 = stack.pop(); e2 = stack.pop();
 				if(last_sp >= 0) {
 					switch(formula[0][last_sp][1][0]) {
+						// $FlowIgnore
 						case 0: sp = fill(" ", formula[0][last_sp][1][1]); break;
+						// $FlowIgnore
 						case 1: sp = fill("\r", formula[0][last_sp][1][1]); break;
 						default:
 							sp = "";
+							// $FlowIgnore
 							if(opts.WTF) throw new Error("Unexpected PtgAttrSpaceType " + formula[0][last_sp][1][0]);
 					}
 					e2 = e2 + sp;
@@ -766,7 +773,7 @@ function stringify_formula(formula, range, cell, supbooks, opts) {
 				stack.push(encode_cell_xls(c));
 				break;
 			case 'PtgRef3d': // TODO: lots of stuff
-				type = f[1][0]; ixti = f[1][1]; c = shift_cell_xls(f[1][2], _range, opts);
+				type = f[1][0]; ixti = /*::Number(*/f[1][1]/*::)*/; c = shift_cell_xls(f[1][2], _range, opts);
 				sname = (supbooks && supbooks[1] ? supbooks[1][ixti+1] : "**MISSING**");
 				stack.push(sname + "!" + encode_cell(c));
 				break;
@@ -777,7 +784,7 @@ function stringify_formula(formula, range, cell, supbooks, opts) {
 			case 'PtgFuncVar':
 				//console.log(f[1]);
 				/* f[1] = [argc, func, type] */
-				var argc = f[1][0], func = f[1][1];
+				var argc/*:number*/ = f[1][0], func/*:string*/ = f[1][1];
 				if(!argc) argc = 0;
 				var args = argc == 0 ? [] : stack.slice(-argc);
 				stack.length -= argc;
@@ -788,13 +795,14 @@ function stringify_formula(formula, range, cell, supbooks, opts) {
 			/* 2.5.198.42 */
 			case 'PtgBool': stack.push(f[1] ? "TRUE" : "FALSE"); break;
 			/* 2.5.198.66 */
-			case 'PtgInt': stack.push(f[1]); break;
+			case 'PtgInt': stack.push(/*::String(*/f[1]/*::)*/); break;
 			/* 2.5.198.79 TODO: precision? */
 			case 'PtgNum': stack.push(String(f[1])); break;
 			/* 2.5.198.89 */
+			// $FlowIgnore
 			case 'PtgStr': stack.push('"' + f[1] + '"'); break;
 			/* 2.5.198.57 */
-			case 'PtgErr': stack.push(f[1]); break;
+			case 'PtgErr': stack.push(/*::String(*/f[1]/*::)*/); break;
 			/* 2.5.198.31 TODO */
 			case 'PtgAreaN':
 				type = f[1][0]; r = shift_range_xls(f[1][1], _range, opts);
@@ -807,7 +815,7 @@ function stringify_formula(formula, range, cell, supbooks, opts) {
 				break;
 			/* 2.5.198.28 */
 			case 'PtgArea3d': // TODO: lots of stuff
-				type = f[1][0]; ixti = f[1][1]; r = f[1][2];
+				type = f[1][0]; ixti = /*::Number(*/f[1][1]/*::)*/; r = f[1][2];
 				sname = (supbooks && supbooks[1] ? supbooks[1][ixti+1] : "**MISSING**");
 				stack.push(sname + "!" + encode_range(r));
 				break;
@@ -824,7 +832,7 @@ function stringify_formula(formula, range, cell, supbooks, opts) {
 				/* f[1] = type, 0, nameindex */
 				nameidx = f[1][2];
 				var lbl = supbooks[0][nameidx];
-				var name = lbl ? lbl.Name : "**MISSING**" + nameidx;
+				var name = lbl ? lbl.Name : "**MISSING**" + String(nameidx);
 				if(name in XLSXFutureFunctions) name = XLSXFutureFunctions[name];
 				stack.push(name);
 				break;
@@ -832,7 +840,7 @@ function stringify_formula(formula, range, cell, supbooks, opts) {
 			/* 2.5.97.61 TODO: do something different for revisions */
 			case 'PtgNameX':
 				/* f[1] = type, ixti, nameindex */
-				var bookidx = f[1][1]; nameidx = f[1][2]; var externbook;
+				var bookidx/*:number*/ = (f[1][1]/*:any*/); nameidx = f[1][2]; var externbook;
 				/* TODO: Properly handle missing values */
 				//console.log(bookidx, supbooks);
 				if(opts.biff == 5) {
@@ -852,11 +860,16 @@ function stringify_formula(formula, range, cell, supbooks, opts) {
 				if(last_sp >= 0) {
 					sp = "";
 					switch(formula[0][last_sp][1][0]) {
+						// $FlowIgnore
 						case 2: lp = fill(" ", formula[0][last_sp][1][1]) + lp; break;
+						// $FlowIgnore
 						case 3: lp = fill("\r", formula[0][last_sp][1][1]) + lp; break;
+						// $FlowIgnore
 						case 4: rp = fill(" ", formula[0][last_sp][1][1]) + rp; break;
+						// $FlowIgnore
 						case 5: rp = fill("\r", formula[0][last_sp][1][1]) + rp; break;
 						default:
+							// $FlowIgnore
 							if(opts.WTF) throw new Error("Unexpected PtgAttrSpaceType " + formula[0][last_sp][1][0]);
 					}
 					last_sp = -1;
@@ -873,7 +886,7 @@ function stringify_formula(formula, range, cell, supbooks, opts) {
 			/* 2.5.198.58 TODO */
 			case 'PtgExp':
 				c = {c:f[1][1],r:f[1][0]};
-				var q = {c: cell.c, r:cell.r};
+				var q = ({c: cell.c, r:cell.r}/*:any*/);
 				if(supbooks.sharedf[encode_cell(c)]) {
 					var parsedf = (supbooks.sharedf[encode_cell(c)]);
 					stack.push(stringify_formula(parsedf, _range, q, supbooks, opts));
@@ -889,7 +902,7 @@ function stringify_formula(formula, range, cell, supbooks, opts) {
 						fnd = true;
 						break;
 					}
-					if(!fnd) stack.push(f[1]);
+					if(!fnd) stack.push(/*::String(*/f[1]/*::)*/);
 				}
 				break;
 
@@ -927,7 +940,7 @@ function stringify_formula(formula, range, cell, supbooks, opts) {
 			/* 2.5.198.72 TODO */
 			case 'PtgMemFunc': break;
 
-			default: throw new Error('Unrecognized Formula Token: ' + f);
+			default: throw new Error('Unrecognized Formula Token: ' + String(f));
 		}
 		var PtgNonDisp = ['PtgAttrSpace', 'PtgAttrSpaceSemi', 'PtgAttrGoto'];
 		if(last_sp >= 0 && PtgNonDisp.indexOf(formula[0][ff][0]) == -1) {
@@ -937,12 +950,15 @@ function stringify_formula(formula, range, cell, supbooks, opts) {
 				/* note: some bad XLSB files omit the PtgParen */
 				case 4: _left = false;
 				/* falls through */
+				// $FlowIgnore
 				case 0: sp = fill(" ", f[1][1]); break;
 				case 5: _left = false;
 				/* falls through */
+				// $FlowIgnore
 				case 1: sp = fill("\r", f[1][1]); break;
 				default:
 					sp = "";
+					// $FlowIgnore
 					if(opts.WTF) throw new Error("Unexpected PtgAttrSpaceType " + f[1][0]);
 			}
 			stack.push((_left ? sp : "") + stack.pop() + (_left ? "" : sp));

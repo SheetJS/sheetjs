@@ -9,17 +9,19 @@ function add_rels(rels, rId, f, type, relobj) {
 	rels[('/' + relobj.Target).replace("//","/")] = relobj;
 }
 
-function write_zip(wb/*:Workbook*/, opts/*:WriteOpts*/) {
+function write_zip(wb/*:Workbook*/, opts/*:WriteOpts*/)/*:ZIP*/ {
 	if(opts.bookType == "ods") return write_ods(wb, opts);
 	if(wb && !wb.SSF) {
 		wb.SSF = SSF.get_table();
 	}
 	if(wb && wb.SSF) {
+		// $FlowIgnore
 		make_ssf(SSF); SSF.load_table(wb.SSF);
+		// $FlowIgnore
 		opts.revssf = evert_num(wb.SSF); opts.revssf[wb.SSF[65535]] = 0;
 	}
 	opts.rels = {}; opts.wbrels = {};
-	opts.Strings = []; opts.Strings.Count = 0; opts.Strings.Unique = 0;
+	opts.Strings = /*::((*/[]/*:: :any):SST)*/; opts.Strings.Count = 0; opts.Strings.Unique = 0;
 	var wbext = opts.bookType == "xlsb" ? "bin" : "xml";
 	var ct = { workbooks: [], sheets: [], calcchains: [], themes: [], styles: [],
 		coreprops: [], extprops: [], custprops: [], strs:[], comments: [], vba: [],
@@ -39,6 +41,7 @@ function write_zip(wb/*:Workbook*/, opts/*:WriteOpts*/) {
 	ct.coreprops.push(f);
 	add_rels(opts.rels, 2, f, RELS.CORE_PROPS);
 
+	/*::if(!wb.Props) throw "unreachable"; */
 	f = "docProps/app.xml";
 	wb.Props.SheetNames = wb.SheetNames;
 	wb.Props.Worksheets = wb.SheetNames.length;

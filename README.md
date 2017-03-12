@@ -858,6 +858,13 @@ $ make test        # run full tests
 $ WTF=1 make test  # enable all error messages
 ```
 
+Flow and JSHint/JSCS checks are available:
+
+```bash
+$ make lint        # JSHint and JSCS checks
+$ make flow        # make lint + Flow checking
+```
+
 To run the in-browser tests, clone
 [The oss.sheetjs.com repo](https://github.com/SheetJS/SheetJS.github.io) and
 replace the xlsx.js file (then fire up the browser and go to `stress.html`):

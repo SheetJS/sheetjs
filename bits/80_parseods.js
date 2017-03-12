@@ -16,7 +16,7 @@ var parse_content_xml = (function() {
 		"day-of-week": ["ddd", "dddd"]
 	};
 
-	return function pcx(d, _opts) {
+	return function pcx(d/*:string*/, _opts)/*:Workbook*/ {
 		var opts = _opts || {};
 		var str = xlml_normalize(d);
 		var state/*:Array<any>*/ = [], tmp;
