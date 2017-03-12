@@ -10,7 +10,7 @@ default options are described below:
 
 ```js>tmp/10_opts.js
 /* Options */
-var opts_fmt = [
+var opts_fmt/*:Array<Array<any> >*/ = [
 ```
 
 There are two commonly-recognized date code formats:
@@ -60,8 +60,8 @@ Semicolons can be escaped with the `\` character, so we need to split on those
 semicolons that aren't prefaced by a slash or within a quoted string:
 
 ```js>tmp/80_split.js
-function split_fmt(fmt) {
-  var out = [];
+function split_fmt(fmt/*:string*/)/*:Array<string>*/ {
+  var out/*:Array<string>*/ = [];
   var in_str = false, cc;
   for(var i = 0, j = 0; i < fmt.length; ++i) switch((cc=fmt.charCodeAt(i))) {
     case 34: /* '"' */
@@ -117,26 +117,26 @@ as the last format.
 ## Utility Functions
 
 ```js>tmp/02_utilities.js
-function _strrev(x) { var o = "", i = x.length-1; while(i>=0) o += x.charAt(i--); return o; }
-function fill(c,l) { var o = ""; while(o.length < l) o+=c; return o; }
+function _strrev(x/*:string*/)/*:string*/ { var o = "", i = x.length-1; while(i>=0) o += x.charAt(i--); return o; }
+function fill(c/*:string*/,l/*:number*/)/*:string*/ { var o = ""; while(o.length < l) o+=c; return o; }
 ```
 
 The next few helpers break up the general `pad` function into special cases:
 
 ```
-function pad0(v,d){var t=""+v; return t.length>=d?t:fill('0',d-t.length)+t;}
-function pad_(v,d){var t=""+v;return t.length>=d?t:fill(' ',d-t.length)+t;}
-function rpad_(v,d){var t=""+v; return t.length>=d?t:t+fill(' ',d-t.length);}
-function pad0r1(v,d){var t=""+Math.round(v); return t.length>=d?t:fill('0',d-t.length)+t;}
-function pad0r2(v,d){var t=""+v; return t.length>=d?t:fill('0',d-t.length)+t;}
+function pad0(v/*:any*/,d/*:number*/)/*:string*/{var t=""+v; return t.length>=d?t:fill('0',d-t.length)+t;}
+function pad_(v/*:any*/,d/*:number*/)/*:string*/{var t=""+v;return t.length>=d?t:fill(' ',d-t.length)+t;}
+function rpad_(v/*:any*/,d/*:number*/)/*:string*/{var t=""+v; return t.length>=d?t:t+fill(' ',d-t.length);}
+function pad0r1(v/*:any*/,d/*:number*/)/*:string*/{var t=""+Math.round(v); return t.length>=d?t:fill('0',d-t.length)+t;}
+function pad0r2(v/*:any*/,d/*:number*/)/*:string*/{var t=""+v; return t.length>=d?t:fill('0',d-t.length)+t;}
 var p2_32 = Math.pow(2,32);
-function pad0r(v,d){if(v>p2_32||v<-p2_32) return pad0r1(v,d); var i = Math.round(v); return pad0r2(i,d); }
+function pad0r(v/*:any*/,d/*:number*/)/*:string*/{if(v>p2_32||v<-p2_32) return pad0r1(v,d); var i = Math.round(v); return pad0r2(i,d); }
 ```
 
 Comparing against the string "general" is faster via char codes:
 
 ```
-function isgeneral(s, i) { return s.length >= 7 + i && (s.charCodeAt(i)|32) === 103 && (s.charCodeAt(i+1)|32) === 101 && (s.charCodeAt(i+2)|32) === 110 && (s.charCodeAt(i+3)|32) === 101 && (s.charCodeAt(i+4)|32) === 114 && (s.charCodeAt(i+5)|32) === 97 && (s.charCodeAt(i+6)|32) === 108; }
+function isgeneral(s/*:string*/, i/*:?number*/)/*:boolean*/ { i = i || 0; return s.length >= 7 + i && (s.charCodeAt(i)|32) === 103 && (s.charCodeAt(i+1)|32) === 101 && (s.charCodeAt(i+2)|32) === 110 && (s.charCodeAt(i+3)|32) === 101 && (s.charCodeAt(i+4)|32) === 114 && (s.charCodeAt(i+5)|32) === 97 && (s.charCodeAt(i+6)|32) === 108; }
 ```
 
 ## General Number Format
@@ -149,7 +149,7 @@ First: 32-bit integers in base 10 are shorter than 11 characters, so they will
 always be written in full:
 
 ```js>tmp/40_general.js
-function general_fmt_int(v, opts) { return ""+v; }
+function general_fmt_int(v/*:number*/, opts/*:?any*/)/*:string*/ { return ""+v; }
 SSF._general_int = general_fmt_int;
 ```
 
@@ -178,7 +178,7 @@ function gfn5(o) {
   //return o;
   return o.indexOf(".") > -1 ? o.replace(gnr2,"").replace(gnr1,".$1") : o;
 }
-return function general_fmt_num(v, opts) {
+return function general_fmt_num(v/*:number*/, opts/*:?any*/)/*:string*/ {
   var V = Math.floor(Math.log(Math.abs(v))*Math.LOG10E), o;
   if(V >= -4 && V <= -1) o = v.toPrecision(10+V);
   else if(Math.abs(V) <= 9) o = gfn2(v);
@@ -192,7 +192,7 @@ SSF._general_num = general_fmt_num;
 Finally
 
 ```js>tmp/40_general.js
-function general_fmt(v, opts) {
+function general_fmt(v/*:any*/, opts/*:?any*/) {
   switch(typeof v) {
 ```
 
@@ -230,16 +230,16 @@ None of the international formats are included here.
 
 ```js>tmp/20_consts.js
 var table_fmt = {
-  0:  'General',
-  1:  '0',
-  2:  '0.00',
-  3:  '#,##0',
-  4:  '#,##0.00',
-  9:  '0%',
-  10: '0.00%',
-  11: '0.00E+00',
-  12: '# ?/?',
-  13: '# ??/??',
+  /*::[*/0/*::]*/:  'General',
+  /*::[*/1/*::]*/:  '0',
+  /*::[*/2/*::]*/:  '0.00',
+  /*::[*/3/*::]*/:  '#,##0',
+  /*::[*/4/*::]*/:  '#,##0.00',
+  /*::[*/9/*::]*/:  '0%',
+  /*::[*/10/*::]*/: '0.00%',
+  /*::[*/11/*::]*/: '0.00E+00',
+  /*::[*/12/*::]*/: '# ?/?',
+  /*::[*/13/*::]*/: '# ??/??',
 ```
 
 Now Excel and other formats treat code 14 as `m/d/yy` (with slashes).  Given
@@ -247,37 +247,37 @@ that the spec gives no internationalization considerations, erring on the side
 of the applications makes sense here:
 
 ```
-  14: 'm/d/yy',
-  15: 'd-mmm-yy',
-  16: 'd-mmm',
-  17: 'mmm-yy',
-  18: 'h:mm AM/PM',
-  19: 'h:mm:ss AM/PM',
-  20: 'h:mm',
-  21: 'h:mm:ss',
-  22: 'm/d/yy h:mm',
-  37: '#,##0 ;(#,##0)',
-  38: '#,##0 ;[Red](#,##0)',
-  39: '#,##0.00;(#,##0.00)',
-  40: '#,##0.00;[Red](#,##0.00)',
-  45: 'mm:ss',
-  46: '[h]:mm:ss',
-  47: 'mmss.0',
-  48: '##0.0E+0',
-  49: '@',
+  /*::[*/14/*::]*/: 'm/d/yy',
+  /*::[*/15/*::]*/: 'd-mmm-yy',
+  /*::[*/16/*::]*/: 'd-mmm',
+  /*::[*/17/*::]*/: 'mmm-yy',
+  /*::[*/18/*::]*/: 'h:mm AM/PM',
+  /*::[*/19/*::]*/: 'h:mm:ss AM/PM',
+  /*::[*/20/*::]*/: 'h:mm',
+  /*::[*/21/*::]*/: 'h:mm:ss',
+  /*::[*/22/*::]*/: 'm/d/yy h:mm',
+  /*::[*/37/*::]*/: '#,##0 ;(#,##0)',
+  /*::[*/38/*::]*/: '#,##0 ;[Red](#,##0)',
+  /*::[*/39/*::]*/: '#,##0.00;(#,##0.00)',
+  /*::[*/40/*::]*/: '#,##0.00;[Red](#,##0.00)',
+  /*::[*/45/*::]*/: 'mm:ss',
+  /*::[*/46/*::]*/: '[h]:mm:ss',
+  /*::[*/47/*::]*/: 'mmss.0',
+  /*::[*/48/*::]*/: '##0.0E+0',
+  /*::[*/49/*::]*/: '@',
 ```
 
 There are special implicit format codes identified in [ECMA-376] 18.8.30.
 Assuming zh-tw is the default:
 
 ```
-  56: '"上午/下午 "hh"時"mm"分"ss"秒 "',
+  /*::[*/56/*::]*/: '"上午/下午 "hh"時"mm"分"ss"秒 "',
 ```
 
 some writers erroneously emit 65535 for general:
 
 ```
-  65535: 'General'
+  /*::[*/65535/*::]*/: 'General'
 };
 ```
 
@@ -326,7 +326,7 @@ portion of a 24 hour day).
 Excel supports the alternative Hijri calendar (indicated with `b2`):
 
 ```js>tmp/50_date.js
-function parse_date_code(v,opts,b2) {
+function parse_date_code(v/*:number*/,opts/*:?any*/,b2/*:?boolean*/) {
 ```
 
 Date codes beyond 12/31/9999 are invalid:
@@ -378,8 +378,8 @@ For the other dates, using the JS date mechanism suffices.
 ```
   else {
     if(date > 60) --date;
-    /* 1 = Jan 1 1900 */
-    var d = new Date(1900,0,1);
+    /* 1 = Jan 1 1900 in Gregorian */
+    var d = new Date(1900, 0, 1);
     d.setDate(d.getDate() + date - 1);
     dout = [d.getFullYear(), d.getMonth()+1,d.getDate()];
     dow = d.getDay();
@@ -426,7 +426,7 @@ function fix_hijri(date, o) { return 0; }
 The utility `commaify` adds commas to integers:
 
 ```js>tmp/56_commaify.js
-function commaify(s) {
+function commaify(s/*:string*/)/*:string*/ {
   if(s.length <= 3) return s;
   var j = (s.length % 3), o = s.substr(0,j);
   for(; j!=s.length; j+=3) o+=(o.length > 0 ? "," : "") + s.substr(j,3);
@@ -446,7 +446,7 @@ The underlying number for the percentages should be physically shifted:
 
 ```js>tmp/59_numhelp.js
 var pct1 = /%/g;
-function write_num_pct(type, fmt, val){
+function write_num_pct(type/*:string*/, fmt/*:string*/, val/*:number*/)/*:string*/{
   var sfmt = fmt.replace(pct1,""), mul = fmt.length - sfmt.length;
   return write_num(type, sfmt, val * Math.pow(10,2*mul)) + fill("%",mul);
 }
@@ -458,7 +458,7 @@ Formats with multiple commas after the decimal point should be shifted by the
 appropiate multiple of 1000 (more magic):
 
 ```js>tmp/60_number.js
-function write_num_cm(type, fmt, val){
+function write_num_cm(type/*:string*/, fmt/*:string*/, val/*:number*/)/*:string*/{
   var idx = fmt.length - 1;
   while(fmt.charCodeAt(idx-1) === 44) --idx;
   return write_num(type, fmt.substr(0,idx), val / Math.pow(10,3*(fmt.length-idx)));
@@ -470,8 +470,8 @@ function write_num_cm(type, fmt, val){
 For exponents, get the exponent and mantissa and format them separately:
 
 ```
-function write_num_exp(fmt, val){
-  var o;
+function write_num_exp(fmt/*:string*/, val/*:number*/)/*:string*/{
+  var o/*:string*/;
   var idx = fmt.indexOf("E") - fmt.indexOf(".") - 1;
 ```
 
@@ -490,17 +490,17 @@ TODO: something cleaner
 
 ```
       var fakee = Math.floor(Math.log(Math.abs(val))*Math.LOG10E);
-      if(o.indexOf(".") === -1) o = o[0] + "." + o.substr(1) + "E+" + (fakee - o.length+ee);
+      if(o.indexOf(".") === -1) o = o.charAt(0) + "." + o.substr(1) + "E+" + (fakee - o.length+ee);
       else o += "E+" + (fakee - ee);
       while(o.substr(0,2) === "0.") {
-        o = o[0] + o.substr(2,period) + "." + o.substr(2+period);
+        o = o.charAt(0) + o.substr(2,period) + "." + o.substr(2+period);
         o = o.replace(/^0+([1-9])/,"$1").replace(/^0+\./,"0.");
       }
       o = o.replace(/\+-/,"-");
     }
     o = o.replace(/^([+-]?)(\d*)\.(\d*)[Ee]/,function($$,$1,$2,$3) { return $1 + $2 + $3.substr(0,(period+ee)%period) + "." + $3.substr(ee) + "E"; });
   } else o = val.toExponential(idx);
-  if(fmt.match(/E\+00$/) && o.match(/e[+-]\d$/)) o = o.substr(0,o.length-1) + "0" + o[o.length-1];
+  if(fmt.match(/E\+00$/) && o.match(/e[+-]\d$/)) o = o.substr(0,o.length-1) + "0" + o.charAt(o.length-1);
   if(fmt.match(/E\-/) && o.match(/e\+/)) o = o.replace(/e\+/,"e");
   return o.replace("e","E");
 }
@@ -510,18 +510,18 @@ TODO: something cleaner
 
 ```
 var frac1 = /# (\?+)( ?)\/( ?)(\d+)/;
-function write_num_f1(r, aval, sign) {
-  var den = parseInt(r[4]), rr = Math.round(aval * den), base = Math.floor(rr/den);
+function write_num_f1(r/*:Array<string>*/, aval/*:number*/, sign/*:string*/)/*:string*/ {
+  var den = parseInt(r[4],10), rr = Math.round(aval * den), base = Math.floor(rr/den);
   var myn = (rr - base*den), myd = den;
   return sign + (base === 0 ? "" : ""+base) + " " + (myn === 0 ? fill(" ", r[1].length + 1 + r[4].length) : pad_(myn,r[1].length) + r[2] + "/" + r[3] + pad0(myd,r[4].length));
 }
-function write_num_f2(r, aval, sign) {
+function write_num_f2(r/*:Array<string>*/, aval/*:number*/, sign/*:string*/)/*:string*/ {
   return sign + (aval === 0 ? "" : ""+aval) + fill(" ", r[1].length + 2 + r[4].length);
 }
 var dec1 = /^#*0*\.(0+)/;
 var closeparen = /\).*[0#]/;
 var phone = /\(###\) ###\\?-####/;
-function hashq(str) {
+function hashq(str/*:string*/)/*:string*/ {
   var o = "", cc;
   for(var i = 0; i != str.length; ++i) switch((cc=str.charCodeAt(i))) {
     case 35: break;
@@ -536,9 +536,9 @@ function hashq(str) {
 V8 has an annoying habit of deoptimizing round and floor
 
 ```
-function rnd(val, d) { var dd = Math.pow(10,d); return ""+(Math.round(val * dd)/dd); }
-function dec(val, d) { return Math.round((val-Math.floor(val))*Math.pow(10,d)); }
-function flr(val) { if(val < 2147483647 && val > -2147483648) return ""+(val >= 0 ? (val|0) : (val-1|0)); return ""+Math.floor(val); }
+function rnd(val/*:number*/, d/*:number*/)/*:string*/ { var dd = Math.pow(10,d); return ""+(Math.round(val * dd)/dd); }
+function dec(val/*:number*/, d/*:number*/)/*:number*/ { return Math.round((val-Math.floor(val))*Math.pow(10,d)); }
+function flr(val/*:number*/)/*:string*/ { if(val < 2147483647 && val > -2147483648) return ""+(val >= 0 ? (val|0) : (val-1|0)); return ""+Math.floor(val); }
 ```
 
 ### Main Number Writing Function
@@ -546,7 +546,7 @@ function flr(val) { if(val < 2147483647 && val > -2147483648) return ""+(val >= 
 Finally the body:
 
 ```
-function write_num_flt(type, fmt, val) {
+function write_num_flt(type/*:string*/, fmt/*:string*/, val/*:number*/)/*:string*/ {
 ```
 
 For parentheses, explicitly resolve the sign issue:
@@ -579,8 +579,8 @@ TODO: localize the currency:
 Some simple cases should be resolved first:
 
 ```
-  var o, oo;
-  var r, ri, ff, aval = Math.abs(val), sign = val < 0 ? "-" : "";
+  var o;
+  var r/*:?Array<string>*/, ri, ff, aval = Math.abs(val), sign = val < 0 ? "-" : "";
   if(fmt.match(/^00+$/)) return sign + pad0r(aval,fmt.length);
   if(fmt.match(/^[#?]+$/)) {
     o = pad0r(val,0); if(o === "0") o = "";
@@ -591,14 +591,15 @@ Some simple cases should be resolved first:
 Fractions with known denominator are resolved by rounding:
 
 ```
-  if((r = fmt.match(frac1)) !== null) return write_num_f1(r, aval, sign);
+  if((r = fmt.match(frac1))) return write_num_f1(r, aval, sign);
 ```
 
 A few special general cases can be handled in a very dumb manner:
 
 ```
-  if(fmt.match(/^#+0+$/) !== null) return sign + pad0r(aval,fmt.length - fmt.indexOf("0"));
-  if((r = fmt.match(dec1)) !== null) {
+  if(fmt.match(/^#+0+$/)) return sign + pad0r(aval,fmt.length - fmt.indexOf("0"));
+  if((r = fmt.match(dec1))) {
+    // $FlowIgnore
     o = rnd(val, r[1].length).replace(/^([^\.]+)$/,"$1."+r[1]).replace(/\.$/,"."+r[1]).replace(/\.(\d*)$/,function($$, $1) { return "." + $1 + fill("0", r[1].length-$1.length); });
     return fmt.indexOf("0.") !== -1 ? o : o.replace(/^0\./,".");
   }
@@ -608,20 +609,20 @@ The next few simplifications ignore leading optional sigils (`#`):
 
 ```
   fmt = fmt.replace(/^#+([0.])/, "$1");
-  if((r = fmt.match(/^(0*)\.(#*)$/)) !== null) {
+  if((r = fmt.match(/^(0*)\.(#*)$/))) {
     return sign + rnd(aval, r[2].length).replace(/\.(\d*[1-9])0*$/,".$1").replace(/^(-?\d*)$/,"$1.").replace(/^0\./,r[1].length?"0.":".");
   }
-  if((r = fmt.match(/^#,##0(\.?)$/)) !== null) return sign + commaify(pad0r(aval,0));
-  if((r = fmt.match(/^#,##0\.([#0]*0)$/)) !== null) {
+  if((r = fmt.match(/^#,##0(\.?)$/))) return sign + commaify(pad0r(aval,0));
+  if((r = fmt.match(/^#,##0\.([#0]*0)$/))) {
     return val < 0 ? "-" + write_num_flt(type, fmt, -val) : commaify(""+(Math.floor(val))) + "." + pad0(dec(val, r[1].length),r[1].length);
   }
-  if((r = fmt.match(/^#,#*,#0/)) !== null) return write_num_flt(type,fmt.replace(/^#,#*,/,""),val);
+  if((r = fmt.match(/^#,#*,#0/))) return write_num_flt(type,fmt.replace(/^#,#*,/,""),val);
 ```
 
 The `Zip Code + 4` format needs to treat an interstitial hyphen as a character:
 
 ```
-  if((r = fmt.match(/^([0#]+)(\\?-([0#]+))+$/)) !== null) {
+  if((r = fmt.match(/^([0#]+)(\\?-([0#]+))+$/))) {
     o = _strrev(write_num_flt(type, fmt.replace(/[\\-]/g,""), val));
     ri = 0;
     return _strrev(_strrev(fmt.replace(/\\/g,"")).replace(/[0#]/g,function(x){return ri<o.length?o[ri++]:x==='0'?'0':"";}));
@@ -632,7 +633,7 @@ There's a better way to generalize the phone number and other formats in terms
 of first drawing the digits, but this selection allows for more nuance:
 
 ```
-  if(fmt.match(phone) !== null) {
+  if(fmt.match(phone)) {
     o = write_num_flt(type, "##########", val);
     return "(" + o.substr(0,3) + ") " + o.substr(3, 3) + "-" + o.substr(6);
   }
@@ -642,19 +643,19 @@ The frac helper function is used for fraction formats (defined below).
 
 ```
   var oa = "";
-  if((r = fmt.match(/^([#0?]+)( ?)\/( ?)([#0?]+)/)) !== null) {
-    ri = Math.min(r[4].length,7);
+  if((r = fmt.match(/^([#0?]+)( ?)\/( ?)([#0?]+)/))) {
+    ri = Math.min(/*::String(*/r[4]/*::)*/.length,7);
     ff = frac(aval, Math.pow(10,ri)-1, false);
     o = "" + sign;
-    oa = write_num("n", r[1], ff[1]);
+    oa = write_num("n", /*::String(*/r[1]/*::)*/, ff[1]);
     if(oa[oa.length-1] == " ") oa = oa.substr(0,oa.length-1) + "0";
-    o += oa + r[2] + "/" + r[3];
+    o += oa + /*::String(*/r[2]/*::)*/ + "/" + /*::String(*/r[3]/*::)*/;
     oa = rpad_(ff[2],ri);
     if(oa.length < r[4].length) oa = hashq(r[4].substr(r[4].length-oa.length)) + oa;
     o += oa;
     return o;
   }
-  if((r = fmt.match(/^# ([#0?]+)( ?)\/( ?)([#0?]+)/)) !== null) {
+  if((r = fmt.match(/^# ([#0?]+)( ?)\/( ?)([#0?]+)/))) {
     ri = Math.min(Math.max(r[1].length, r[4].length),7);
     ff = frac(aval, Math.pow(10,ri)-1, true);
     return sign + (ff[0]||(ff[1] ? "" : "0")) + " " + (ff[1] ? pad_(ff[1],ri) + r[2] + "/" + r[3] + rpad_(ff[2],ri): fill(" ", 2*ri+1 + r[2].length + r[3].length));
@@ -664,12 +665,12 @@ The frac helper function is used for fraction formats (defined below).
 The general class `/^[#0?]+$/` treats the '0' as literal, '#' as noop, '?' as space:
 
 ```
-  if((r = fmt.match(/^[#0?]+$/)) !== null) {
+  if((r = fmt.match(/^[#0?]+$/))) {
     o = pad0r(val, 0);
     if(fmt.length <= o.length) return o;
     return hashq(fmt.substr(0,fmt.length-o.length)) + o;
   }
-  if((r = fmt.match(/^([#0?]+)\.([#0]+)$/)) !== null) {
+  if((r = fmt.match(/^([#0?]+)\.([#0]+)$/))) {
     o = "" + val.toFixed(Math.min(r[2].length,10)).replace(/([^0])0+$/,"$1");
     ri = o.indexOf(".");
     var lres = fmt.indexOf(".") - ri, rres = fmt.length - o.length - lres;
@@ -680,7 +681,7 @@ The general class `/^[#0?]+$/` treats the '0' as literal, '#' as noop, '?' as sp
 The default cases are hard-coded.  TODO: actually parse them
 
 ```js>tmp/60_number.js
-  if((r = fmt.match(/^00,000\.([#0]*0)$/)) !== null) {
+  if((r = fmt.match(/^00,000\.([#0]*0)$/))) {
     ri = dec(val, r[1].length);
 ```
 
@@ -706,17 +707,17 @@ For now, the default case is an error:
 ### Integer Optimizations
 
 ```
-function write_num_cm2(type, fmt, val){
+function write_num_cm2(type/*:string*/, fmt/*:string*/, val/*:number*/)/*:string*/{
   var idx = fmt.length - 1;
   while(fmt.charCodeAt(idx-1) === 44) --idx;
   return write_num(type, fmt.substr(0,idx), val / Math.pow(10,3*(fmt.length-idx)));
 }
-function write_num_pct2(type, fmt, val){
+function write_num_pct2(type/*:string*/, fmt/*:string*/, val/*:number*/)/*:string*/{
   var sfmt = fmt.replace(pct1,""), mul = fmt.length - sfmt.length;
   return write_num(type, sfmt, val * Math.pow(10,2*mul)) + fill("%",mul);
 }
-function write_num_exp2(fmt, val){
-  var o;
+function write_num_exp2(fmt/*:string*/, val/*:number*/)/*:string*/{
+  var o/*:string*/;
   var idx = fmt.indexOf("E") - fmt.indexOf(".") - 1;
   if(fmt.match(/^#+0.0E\+0$/)) {
     var period = fmt.indexOf("."); if(period === -1) period=fmt.indexOf('E');
@@ -725,17 +726,17 @@ function write_num_exp2(fmt, val){
     o = (val/Math.pow(10,ee)).toPrecision(idx+1+(period+ee)%period);
     if(!o.match(/[Ee]/)) {
       var fakee = Math.floor(Math.log(Math.abs(val))*Math.LOG10E);
-      if(o.indexOf(".") === -1) o = o[0] + "." + o.substr(1) + "E+" + (fakee - o.length+ee);
+      if(o.indexOf(".") === -1) o = o.charAt(0) + "." + o.substr(1) + "E+" + (fakee - o.length+ee);
       else o += "E+" + (fakee - ee);
       o = o.replace(/\+-/,"-");
     }
     o = o.replace(/^([+-]?)(\d*)\.(\d*)[Ee]/,function($$,$1,$2,$3) { return $1 + $2 + $3.substr(0,(period+ee)%period) + "." + $3.substr(ee) + "E"; });
   } else o = val.toExponential(idx);
-  if(fmt.match(/E\+00$/) && o.match(/e[+-]\d$/)) o = o.substr(0,o.length-1) + "0" + o[o.length-1];
+  if(fmt.match(/E\+00$/) && o.match(/e[+-]\d$/)) o = o.substr(0,o.length-1) + "0" + o.charAt(o.length-1);
   if(fmt.match(/E\-/) && o.match(/e\+/)) o = o.replace(/e\+/,"e");
   return o.replace("e","E");
 }
-function write_num_int(type, fmt, val) {
+function write_num_int(type/*:string*/, fmt/*:string*/, val/*:number*/)/*:string*/ {
   if(type.charCodeAt(0) === 40 && !fmt.match(closeparen)) {
     var ffmt = fmt.replace(/\( */,"").replace(/ \)/,"").replace(/\)/,"");
     if(val >= 0) return write_num_int('n', ffmt, val);
@@ -752,32 +753,33 @@ function write_num_int(type, fmt, val) {
     o = (""+val); if(val === 0) o = "";
     return o.length > fmt.length ? o : hashq(fmt.substr(0,fmt.length-o.length)) + o;
   }
-  if((r = fmt.match(frac1)) !== null) return write_num_f2(r, aval, sign);
-  if(fmt.match(/^#+0+$/) !== null) return sign + pad0(aval,fmt.length - fmt.indexOf("0"));
-  if((r = fmt.match(dec1)) !== null) {
+  if((r = fmt.match(frac1))) return write_num_f2(r, aval, sign);
+  if(fmt.match(/^#+0+$/)) return sign + pad0(aval,fmt.length - fmt.indexOf("0"));
+  if((r = fmt.match(dec1))) {
+    // $FlowIgnore
     o = (""+val).replace(/^([^\.]+)$/,"$1."+r[1]).replace(/\.$/,"."+r[1]).replace(/\.(\d*)$/,function($$, $1) { return "." + $1 + fill("0", r[1].length-$1.length); });
     return fmt.indexOf("0.") !== -1 ? o : o.replace(/^0\./,".");
   }
   fmt = fmt.replace(/^#+([0.])/, "$1");
-  if((r = fmt.match(/^(0*)\.(#*)$/)) !== null) {
+  if((r = fmt.match(/^(0*)\.(#*)$/))) {
     return sign + (""+aval).replace(/\.(\d*[1-9])0*$/,".$1").replace(/^(-?\d*)$/,"$1.").replace(/^0\./,r[1].length?"0.":".");
   }
-  if((r = fmt.match(/^#,##0(\.?)$/)) !== null) return sign + commaify((""+aval));
-  if((r = fmt.match(/^#,##0\.([#0]*0)$/)) !== null) {
+  if((r = fmt.match(/^#,##0(\.?)$/))) return sign + commaify((""+aval));
+  if((r = fmt.match(/^#,##0\.([#0]*0)$/))) {
     return val < 0 ? "-" + write_num_int(type, fmt, -val) : commaify((""+val)) + "." + fill('0',r[1].length);
   }
-  if((r = fmt.match(/^#,#*,#0/)) !== null) return write_num_int(type,fmt.replace(/^#,#*,/,""),val);
-  if((r = fmt.match(/^([0#]+)(\\?-([0#]+))+$/)) !== null) {
+  if((r = fmt.match(/^#,#*,#0/))) return write_num_int(type,fmt.replace(/^#,#*,/,""),val);
+  if((r = fmt.match(/^([0#]+)(\\?-([0#]+))+$/))) {
     o = _strrev(write_num_int(type, fmt.replace(/[\\-]/g,""), val));
     ri = 0;
     return _strrev(_strrev(fmt.replace(/\\/g,"")).replace(/[0#]/g,function(x){return ri<o.length?o[ri++]:x==='0'?'0':"";}));
   }
-  if(fmt.match(phone) !== null) {
+  if(fmt.match(phone)) {
     o = write_num_int(type, "##########", val);
     return "(" + o.substr(0,3) + ") " + o.substr(3, 3) + "-" + o.substr(6);
   }
   var oa = "";
-  if((r = fmt.match(/^([#0?]+)( ?)\/( ?)([#0?]+)/)) !== null) {
+  if((r = fmt.match(/^([#0?]+)( ?)\/( ?)([#0?]+)/))) {
     ri = Math.min(r[4].length,7);
     ff = frac(aval, Math.pow(10,ri)-1, false);
     o = "" + sign;
@@ -789,23 +791,23 @@ function write_num_int(type, fmt, val) {
     o += oa;
     return o;
   }
-  if((r = fmt.match(/^# ([#0?]+)( ?)\/( ?)([#0?]+)/)) !== null) {
+  if((r = fmt.match(/^# ([#0?]+)( ?)\/( ?)([#0?]+)/))) {
     ri = Math.min(Math.max(r[1].length, r[4].length),7);
     ff = frac(aval, Math.pow(10,ri)-1, true);
     return sign + (ff[0]||(ff[1] ? "" : "0")) + " " + (ff[1] ? pad_(ff[1],ri) + r[2] + "/" + r[3] + rpad_(ff[2],ri): fill(" ", 2*ri+1 + r[2].length + r[3].length));
   }
-  if((r = fmt.match(/^[#0?]+$/)) !== null) {
+  if((r = fmt.match(/^[#0?]+$/))) {
     o = "" + val;
     if(fmt.length <= o.length) return o;
     return hashq(fmt.substr(0,fmt.length-o.length)) + o;
   }
-  if((r = fmt.match(/^([#0]+)\.([#0]+)$/)) !== null) {
+  if((r = fmt.match(/^([#0]+)\.([#0]+)$/))) {
     o = "" + val.toFixed(Math.min(r[2].length,10)).replace(/([^0])0+$/,"$1");
     ri = o.indexOf(".");
     var lres = fmt.indexOf(".") - ri, rres = fmt.length - o.length - lres;
     return hashq(fmt.substr(0,lres) + o + fmt.substr(fmt.length-rres));
   }
-  if((r = fmt.match(/^00,000\.([#0]*0)$/)) !== null) {
+  if((r = fmt.match(/^00,000\.([#0]*0)$/))) {
     return val < 0 ? "-" + write_num_int(type, fmt, -val) : commaify(""+val).replace(/^\d,\d{3}$/,"0$&").replace(/^\d*$/,function($$) { return "00," + ($$.length < 3 ? pad0(0,3-$$.length) : "") + $$; }) + "." + pad0(0,r[1].length);
   }
   switch(fmt) {
@@ -819,7 +821,7 @@ function write_num_int(type, fmt, val) {
 The final function simply dispatches:
 
 ```
-return function write_num(type, fmt, val) {
+return function write_num(type/*:string*/, fmt/*:string*/, val/*:number*/)/*:string*/ {
   return (val|0) === val ? write_num_int(type, fmt, val) : write_num_flt(type, fmt, val);
 };})();
 ```
@@ -828,12 +830,12 @@ return function write_num(type, fmt, val) {
 
 ```js>tmp/82_eval.js
 var abstime = /\[[HhMmSs]*\]/;
-function eval_fmt(fmt, v, opts, flen) {
+function eval_fmt(fmt/*:string*/, v/*:any*/, opts/*:any*/, flen/*:number*/) {
   var out = [], o = "", i = 0, c = "", lst='t', q, dt, j, cc;
   var hr='H';
   /* Tokenize */
   while(i < fmt.length) {
-    switch((c = fmt[i])) {
+    switch((c = fmt.charAt(i))) {
 ```
 
 LO Formats sometimes leak "GENERAL" or "General" to stand for general format:
@@ -1045,11 +1047,13 @@ Having determined the smallest time unit, round appropriately:
   switch(bt) {
     case 0: break;
     case 1:
+      /*::if(!dt) break;*/
       if(dt.u >= 0.5) { dt.u = 0; ++dt.S; }
       if(dt.S >=  60) { dt.S = 0; ++dt.M; }
       if(dt.M >=  60) { dt.M = 0; ++dt.H; }
       break;
     case 2:
+      /*::if(!dt) break;*/
       if(dt.u >= 0.5) { dt.u = 0; ++dt.S; }
       if(dt.S >=  60) { dt.S = 0; ++dt.M; }
       break;
@@ -1065,8 +1069,9 @@ group them together to construct the real number string:
   for(i=0; i < out.length; ++i) {
     switch(out[i].t) {
       case 't': case 'T': case ' ': case 'D': break;
-      case 'X': out[i] = undefined; break;
+      case 'X': out[i].v = ""; out[i].t = ";"; break;
       case 'd': case 'm': case 'y': case 'h': case 'H': case 'M': case 's': case 'e': case 'b': case 'Z':
+        /*::if(!dt) throw "unreachable"; */
         out[i].v = write_date(out[i].t.charCodeAt(0), out[i].v, dt, ss0);
         out[i].t = 't'; break;
       case 'n': case '(': case '?':
@@ -1078,7 +1083,7 @@ group them together to construct the real number string:
           c === 't' && (out[jj].v === '/' || '$€'.indexOf(out[jj].v) > -1 || out[jj].v === ' ' && out[jj+1] != null && out[jj+1].t == '?')
         )) {
           out[i].v += out[jj].v;
-          out[jj] = undefined; ++jj;
+          out[jj] = {v:"", t:";"}; ++jj;
         }
         nstr += out[i].v;
         i = jj-1; break;
@@ -1183,7 +1188,7 @@ display minutes instead of the month.
 
 ```js>tmp/50_date.js
 /*jshint -W086 */
-function write_date(type, fmt, val, ss0) {
+function write_date(type/*:number*/, fmt/*:string*/, val, ss0/*:?number*/)/*:string*/ {
   var o="", ss=0, tt=0, y = val.y, out, outl = 0;
   switch(type) {
 ```
@@ -1260,6 +1265,7 @@ terms.  That is passed via the `ss0` parameter:
     }
     switch(fmt) {
       case 's': case 'ss': case '.0': case '.00': case '.000':
+        /*::if(!ss0) ss0 = 0; */
         if(ss0 >= 2) tt = ss0 === 3 ? 1000 : 100;
         else tt = ss0 === 1 ? 10 : 1;
         ss = Math.round((tt)*(val.S + val.u));
@@ -1306,11 +1312,11 @@ Based on the value, `choose_fmt` picks the right format string.  If formats have
 explicit negative specifications, those values should be passed as positive:
 
 ```js>tmp/90_main.js
-function choose_fmt(f, v) {
+function choose_fmt(f/*:string*/, v) {
   var fmt = split_fmt(f);
   var l = fmt.length, lat = fmt[l-1].indexOf("@");
   if(l<4 && lat>-1) --l;
-  if(fmt.length > 4) throw "cannot find right format for |" + fmt + "|";
+  if(fmt.length > 4) throw new Error("cannot find right format for |" + fmt.join("|") + "|");
 ```
 
 Short-circuit the string case by using the last format if it has "@":
@@ -1375,7 +1381,7 @@ The main function checks for conditional operators and acts accordingly:
 Finally, the format wrapper brings everything together:
 
 ```
-function format(fmt,v,o) {
+function format(fmt/*:string|number*/,v/*:any*/,o/*:?any*/) {
   fixopts(o != null ? o : (o=[]));
 ```
 
@@ -1385,7 +1391,7 @@ The string format is saved to a different variable:
   var sfmt = "";
   switch(typeof fmt) {
     case "string": sfmt = fmt; break;
-    case "number": sfmt = (o.table != null ? o.table : table_fmt)[fmt]; break;
+    case "number": sfmt = (o.table != null ? (o.table/*:any*/) : table_fmt)[fmt]; break;
   }
 ```
 
@@ -1416,7 +1422,7 @@ used directly in programs.
 
 ```js>tmp/98_exports.js
 SSF._table = table_fmt;
-SSF.load = function load_entry(fmt, idx) { table_fmt[idx] = fmt; };
+SSF.load = function load_entry(fmt/*:string*/, idx/*:number*/) { table_fmt[idx] = fmt; };
 SSF.format = format;
 ```
 
@@ -1424,7 +1430,7 @@ To support multiple SSF tables:
 
 ```
 SSF.get_table = function get_table() { return table_fmt; };
-SSF.load_table = function load_table(tbl) { for(var i=0; i!=0x0188; ++i) if(tbl[i] !== undefined) SSF.load(tbl[i], i); };
+SSF.load_table = function load_table(tbl/*:{[n:number]:string}*/) { for(var i=0; i!=0x0188; ++i) if(tbl[i] !== undefined) SSF.load(tbl[i], i); };
 ```
 
 ## Fraction Library
@@ -1459,7 +1465,7 @@ function frac(x, D, mixed) {
 ## JS Boilerplate
 
 ```js>tmp/00_header.js
-/* ssf.js (C) 2013-2014 SheetJS -- http://sheetjs.com */
+/* ssf.js (C) 2013-present SheetJS -- http://sheetjs.com */
 /*jshint -W041 */
 var SSF = {};
 var make_ssf = function make_ssf(SSF){
@@ -1468,6 +1474,8 @@ var make_ssf = function make_ssf(SSF){
 ```js>tmp/99_footer.js
 };
 make_ssf(SSF);
+/*global module */
+/*:: declare var DO_NOT_EXPORT_SSF: any; */
 if(typeof module !== 'undefined' && typeof DO_NOT_EXPORT_SSF === 'undefined') module.exports = SSF;
 ```
 
@@ -1486,294 +1494,3 @@ cat tmp/*.js > ssf.js
 }
 ```
 
-```>.gitignore
-node_modules/
-tmp/
-.vocrc
-v8.log
-perf.log
-```
-
-```>.npmignore
-test/*.tsv
-node_modules/
-tmp/
-.gitignore
-.vocrc
-v8.log
-perf.log
-```
-
-```make>Makefile
-.PHONY: test ssf
-ssf: ssf.md
-        voc ssf.md
-
-test:
-        npm test
-
-test_min:
-        MINTEST=1 npm test
-
-.PHONY: lint
-lint:
-        jshint ssf.js test/
-        jscs ssf.js
-
-.PHONY: perf
-perf:
-        bash misc/perf.sh
-```
-
-Coverage tests use [blanket](http://npm.im/blanket):
-
-```
-
-.PHONY: cov
-cov: tmp/coverage.html
-
-tmp/coverage.html: ssf
-        mocha --require blanket -R html-cov > tmp/coverage.html
-
-.PHONY: cov_min
-cov_min:
-        MINTEST=1 make cov
-```
-
-Coveralls.io support
-
-```
-
-.PHONY: coveralls full_coveralls
-full_coveralls:
-        mocha --require blanket --reporter mocha-lcov-reporter | ./node_modules/coveralls/bin/coveralls.js
-
-coveralls:
-        MINTEST=1 make full_coveralls
-
-```
-
-```json>package.json
-{
-  "name": "ssf",
-  "version": "0.8.1",
-  "author": "SheetJS",
-  "description": "Format data using ECMA-376 spreadsheet Format Codes",
-  "keywords": [ "format", "sprintf", "spreadsheet" ],
-  "main": "ssf.js",
-  "dependencies": {
-    "voc":"",
-    "colors":"0.6.2",
-    "frac":"0.3.1"
-  },
-  "devDependencies": {
-    "mocha":""
-  },
-  "repository": { "type":"git", "url":"git://github.com/SheetJS/ssf.git" },
-  "scripts": {
-    "test": "mocha -R spec"
-  },
-  "bin": {
-    "ssf": "./bin/ssf.njs"
-  },
-  "config": {
-    "blanket": {
-      "pattern": "ssf.js"
-    }
-  },
-  "bugs": { "url": "https://github.com/SheetJS/ssf/issues" },
-  "license": "Apache-2.0",
-  "engines": { "node": ">=0.8" }
-}
-```
-
-# Test Driver
-
-Travis CI is used for node testing:
-
-```>.travis.yml
-language: node_js
-node_js:
-  - "0.10"
-  - "0.8"
-before_install:
-  - "npm install -g mocha"
-  - "npm install blanket"
-  - "npm install coveralls mocha-lcov-reporter"
-after_success:
-  - "make coveralls"
-```
-
-The mocha test driver tests the implied formats:
-
-```js>test/implied.js
-var SSF = require('../');
-var fs = require('fs'), assert = require('assert');
-var data = JSON.parse(fs.readFileSync('./test/implied.json','utf8'));
-var skip = [];
-function doit(d) {
-  d[1].forEach(function(r){if(r.length === 2)assert.equal(SSF.format(r[0],d[0]),r[1]);});
-}
-describe('implied formats', function() {
-  data.forEach(function(d) {
-    if(d.length == 2) it(d[0], function() { doit(d); });
-    else it(d[1]+" for "+d[0], skip.indexOf(d[1]) > -1 ? null : function(){
-      assert.equal(SSF.format(d[1], d[0], {}), d[2]);
-    });
-  });
-});
-```
-
-The general test driver tests the General format:
-
-```js>test/general.js
-/* vim: set ts=2: */
-var SSF = require('../');
-var fs = require('fs'), assert = require('assert');
-var data = JSON.parse(fs.readFileSync('./test/general.json','utf8'));
-var skip = [];
-describe('General format', function() {
-  data.forEach(function(d) {
-    it(d[1]+" for "+d[0], skip.indexOf(d[1]) > -1 ? null : function(){
-      assert.equal(SSF.format(d[1], d[0], {}), d[2]);
-    });
-  });
-  it('should fail for undefined and null', function() {
-    assert.throws(function() {
-      SSF.format("General", undefined);
-      SSF.format("General", null);
-    });
-  });
-});
-```
-
-The fraction test driver tests fractional formats:
-
-```js>test/fraction.js
-/* vim: set ts=2: */
-var SSF = require('../');
-var fs = require('fs'), assert = require('assert');
-var data = JSON.parse(fs.readFileSync('./test/fraction.json','utf8'));
-var skip = [];
-describe('fractional formats', function() {
-  data.forEach(function(d) {
-    it(d[1]+" for "+d[0], skip.indexOf(d[1]) > -1 ? null : function(){
-      var expected = d[2], actual = SSF.format(d[1], d[0], {});
-      //var r = actual.match(/(-?)\d* *\d+\/\d+/);
-      assert.equal(actual, expected);
-    });
-  });
-});
-```
-
-The dates test driver tests the date and time formats:
-
-```js>test/date.js
-/* vim: set ts=2: */
-/*jshint -W041 */
-/*jshint loopfunc:true */
-var SSF = require('../');
-var fs = require('fs'), assert = require('assert');
-var dates = fs.readFileSync('./test/dates.tsv','utf8').split("\n");
-var date2 = fs.readFileSync('./test/cal.tsv',  'utf8').split("\n");
-var times = fs.readFileSync('./test/times.tsv','utf8').split("\n");
-function doit(data) {
-  var step = Math.ceil(data.length/100), i = 1;
-  var headers = data[0].split("\t");
-  for(j=0;j<=100;++j) it(j, function() {
-    for(var k = 0; k <= step; ++k,++i) {
-      if(data[i] == null || data[i].length < 3) return;
-      var d = data[i].replace(/#{255}/g,"").split("\t");
-      for(var w = 1; w < headers.length; ++w) {
-        var expected = d[w], actual = SSF.format(headers[w], parseFloat(d[0]), {});
-        if(actual != expected) throw [actual, expected, w, headers[w],d[0],d,i].join("|");
-        actual = SSF.format(headers[w].toUpperCase(), parseFloat(d[0]), {});
-        if(actual != expected) throw [actual, expected, w, headers[w].toUpperCase(),d[0],d,i].join("|");
-      }
-    }
-  });
-}
-describe('time formats', function() {
-  doit(process.env.MINTEST ? times.slice(0,4000) : times);
-});
-describe('date formats', function() {
-  doit(process.env.MINTEST ? dates.slice(0,4000) : dates);
-  //doit(process.env.MINTEST ? date2.slice(0,1000) : date2);
-  it('should fail for bad formats', function() {
-    var bad = [];
-    var chk = function(fmt){ return function(){ SSF.format(fmt,0); }; };
-    bad.forEach(function(fmt){assert.throws(chk(fmt));});
-  });
-});
-```
-
-The exponential test driver tests exponential formats (pipe denotes fails)
-
-```js>test/exp.js
-/* vim: set ts=2: */
-/*jshint loopfunc:true */
-var SSF = require('../');
-var fs = require('fs'), assert = require('assert');
-var data = fs.readFileSync('./test/exp.tsv','utf8').split("\n");
-function doit(d, headers) {
-  it(d[0], function() {
-    for(var w = 1; w < headers.length; ++w) {
-      var expected = d[w].replace("|", ""), actual;
-      try { actual = SSF.format(headers[w], parseFloat(d[0]), {}); } catch(e) { }
-      if(actual != expected && d[w][0] !== "|") throw [actual, expected, w, headers[w],d[0],d].join("|");
-    }
-  });
-}
-describe('exponential formats', function() {
-  var headers = data[0].split("\t");
-  for(var j=1;j<data.length;++j) {
-    if(!data[j]) return;
-    doit(data[j].replace(/#{255}/g,"").split("\t"), headers);
-  }
-});
-```
-
-The oddities test driver tests random odd formats
-
-```js>test/oddities.js
-/* vim: set ts=2: */
-/*jshint loopfunc:true */
-var SSF = require('../');
-var fs = require('fs'), assert = require('assert');
-var data = JSON.parse(fs.readFileSync('./test/oddities.json','utf8'));
-describe('oddities', function() {
-  data.forEach(function(d) {
-    it(d[0], function(){
-      for(var j=1;j<d.length;++j) {
-        if(d[j].length == 2) {
-          var expected = d[j][1], actual = SSF.format(d[0], d[j][0], {});
-          assert.equal(actual, expected);
-        } else if(d[j][2] !== "#") assert.throws(function() { SSF.format(d[0], d[j][0]); });
-      }
-    });
-  });
-  it('should fail for bad formats', function() {
-    var bad = ['##,##'];
-    var chk = function(fmt){ return function(){ SSF.format(fmt,0); }; };
-    bad.forEach(function(fmt){assert.throws(chk(fmt));});
-  });
-});
-```
-
-# LICENSE
-
-```>LICENSE
-Copyright (C) 2013-2014   SheetJS
-
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
-
-       http://www.apache.org/licenses/LICENSE-2.0
-
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
-```

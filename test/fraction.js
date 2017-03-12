@@ -1,4 +1,5 @@
 /* vim: set ts=2: */
+/*jshint loopfunc:true, mocha:true, node:true */
 var SSF = require('../');
 var fs = require('fs'), assert = require('assert');
 var data = JSON.parse(fs.readFileSync('./test/fraction.json','utf8'));

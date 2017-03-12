@@ -1,7 +1,7 @@
 /* vim: set ts=2: */
-/*jshint loopfunc:true */
+/*jshint loopfunc:true, mocha:true, node:true */
 var SSF = require('../');
-var fs = require('fs'), assert = require('assert');
+var fs = require('fs');
 var data = fs.readFileSync('./test/comma.tsv','utf8').split("\n");
 
 function doit(w, headers) {
@@ -11,7 +11,7 @@ function doit(w, headers) {
       var d = data[j].replace(/#{255}/g,"").split("\t");
       var expected = d[w].replace("|", ""), actual;
       try { actual = SSF.format(headers[w], Number(d[0]), {}); } catch(e) { }
-      if(actual != expected && d[w][0] !== "|") throw [actual, expected, w, headers[w],d[0],d].join("|");
+      if(actual != expected && d[w][0] !== "|") throw new Error([actual, expected, w, headers[w],d[0],d].join("|"));
     }
   });
 }

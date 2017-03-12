@@ -1,11 +1,11 @@
 /* vim: set ts=2: */
-/*jshint loopfunc:true */
+/*jshint loopfunc:true, mocha:true, node:true */
 var SSF = require('../');
 var fs = require('fs'), assert = require('assert');
 var data = JSON.parse(fs.readFileSync('./test/oddities.json','utf8'));
 describe('oddities', function() {
   data.forEach(function(d) {
-    it(d[0], function(){
+    it(String(d[0]), function(){
       for(var j=1;j<d.length;++j) {
         if(d[j].length == 2) {
           var expected = d[j][1], actual = SSF.format(d[0], d[j][0], {});

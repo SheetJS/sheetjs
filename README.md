@@ -1,59 +1,98 @@
 # SSF
 
-SpreadSheet Format (SSF) is a pure-JS library to format data using ECMA-376 
-spreadsheet format codes (like those used in Microsoft Excel)
+ssf (SpreadSheet Format) is a pure-JS library to format data using ECMA-376
+spreadsheet format codes (used in popular spreadsheet software packages).
 
-This is written in [voc](https://npmjs.org/package/voc) -- see ssf.md for code.
 
-To build: `voc ssf.md`
+## Installation
 
-## Setup
+With [npm](https://www.npmjs.org/package/ssf):
+
+```bash
+$ npm install ssf
+```
 
 In the browser:
 
-    <script src="ssf.js"></script>
+```html
+<script src="ssf.js"></script>
+```
 
-In node:
+The browser exposes a variable `SSF`
 
-    var SSF = require('ssf');
+When installed globally, npm installs a script `ssf` that renders the format
+string with the given arguments.  Running the script with `-h` displays help.
 
-The script will manipulate `module.exports` if available (e.g. in a CommonJS 
-`require` context).  This is not always desirable.  To prevent the behavior, 
-define `DO_NOT_EXPORT_SSF`:
+The script will manipulate `module.exports` if available (e.g. in a CommonJS
+`require` context).  This is not always desirable.  To prevent the behavior,
+define `DO_NOT_EXPORT_SSF`.
 
 ## Usage
 
-`.load(fmt, idx)` sets custom formats (generally indices above `164`).
+`SSF.format(fmt, val, opts)` formats `val` using the format `fmt`.  If `fmt` is
+a string, it will be parsed and evaluated.  If `fmt` is a `number`, the actual
+format will be the corresponding entry in the internal format table.
 
-`.format(fmt, val, opts)` formats `val` using the format `fmt`.  If `fmt` is of 
-type `number`, the internal table (and custom formats) will be used.  If `fmt` 
-is a literal format, then it will be parsed and evaluated.
+### Manipulating the Internal Format Table
 
-`.parse_date_code(val, opts)` parses `val` as date code and returns object:
+Binary spreadsheet formats store cell formats in a table and reference by index.
+This library uses a global table:
 
-- `D,T`: Date (`[val]`) Time (`{val}`)
-- `y,m,d`: Year, Month, Day
-- `H,M,S,u`: (0-23)Hour, Minute, Second, Sub-second
-- `q`: Day of Week (0=Sunday, 1=Monday, ..., 5=Friday, 6=Saturday)
+`SSF._table` is the underlying object, mapping numeric keys to format strings.
 
-`.get_table()` gets the internal format table (number to format mapping).
+`SSF.load(fmt:string, idx:?number):number` assigns the format to the specified
+index and returns the index.  If the index is not specified, SSF will search the
+space for an available format slot pick an unused slot.  For compatibility with
+the XLS and XLSB file formats, custom indices should be in the valid ranges
+`5-8`, `23-26`, `41-44`, `63-66`, `164-382` (see `[MS-XLSB] 2.4.655 BrtFmt`)
 
-`.load_table(table)` sets the internal format table.
+`SSF.get_table()` gets the internal format table (number to format mapping).
 
-## Notes
+`SSF.load_table(table)` sets the internal format table.
 
-Format code 14 in the spec is broken; the correct format is 'mm/dd/yy' (dashes,
-not spaces)
+### Other Utilities
+
+`SSF.parse_date_code(val:number, opts:?any)` parses `val`, returning an object:
+
+```typescript
+type SSFDate = {
+  D:number; /* number of whole days since relevant epoch, 0 <= D */
+  y:number; /* integral year portion, epoch_year <= y */
+  m:number; /* integral month portion, 1 <= m <= 12 */
+  d:number; /* integral day portion, subject to gregorian YMD constraints */
+  q:number; /* integral day of week (0=Sunday .. 6=Saturday) 0 <= q <= 6 */
+
+  T:number; /* number of seconds since midnight, 0 <= T < 86400 */
+  H:number; /* integral number of hours since midnight, 0 <= H < 24 */
+  M:number; /* integral number of minutes since the last hour, 0 <= M < 60 */
+  S:number; /* integral number of seconds since the last minute, 0 <= S < 60 */
+  u:number; /* sub-second part of time, 0 <= u < 1 */
+}
+```
+
 
 ## License
 
-Apache 2.0
+Please consult the attached LICENSE file for details.  All rights not explicitly
+granted by the Apache 2.0 license are reserved by the Original Author.
 
-## Tests
+## References
+
+- [ECMA-376] Office Open XML File Formats
+- [MS-XLSB] Excel (.xlsb) Binary File Format
+
+## Badges
+
+[![Sauce Test Status](https://saucelabs.com/browser-matrix/ssfjs.svg)](https://saucelabs.com/u/ssfjs)
 
 [![Build Status](https://travis-ci.org/SheetJS/ssf.svg?branch=master)](https://travis-ci.org/SheetJS/ssf)
 
-[![Coverage Status](https://coveralls.io/repos/SheetJS/ssf/badge.png?branch=master)](https://coveralls.io/r/SheetJS/ssf?branch=master)
+[![Coverage Status](http://img.shields.io/coveralls/SheetJS/ssf/master.svg)](https://coveralls.io/r/SheetJS/ssf?branch=master)
 
-[![githalytics.com alpha](https://cruel-carlota.pagodabox.com/c1dac903f4b43f82a529bc8df145d085 "githalytics.com")](http://githalytics.com/SheetJS/ssf)
+[![NPM Downloads](https://img.shields.io/npm/dt/ssf.svg)](https://npmjs.org/package/ssf)
 
+[![Dependencies Status](https://david-dm.org/sheetjs/ssf/status.svg)](https://david-dm.org/sheetjs/ssf)
+
+[![ghit.me](https://ghit.me/badge.svg?repo=sheetjs/js-xlsx)](https://ghit.me/repo/sheetjs/js-xlsx)
+
+[![Analytics](https://ga-beacon.appspot.com/UA-36810333-1/SheetJS/ssf?pixel)](https://github.com/SheetJS/ssf)

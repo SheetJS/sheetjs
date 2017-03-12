@@ -1,4 +1,5 @@
 /* vim: set ts=2: */
+/*jshint loopfunc:true, mocha:true, node:true */
 var SSF = require('../');
 var fs = require('fs'), assert = require('assert');
 var data = JSON.parse(fs.readFileSync('./test/general.json','utf8'));
@@ -9,10 +10,9 @@ describe('General format', function() {
       assert.equal(SSF.format(d[1], d[0], {}), d[2]);
     });
   });
-  it('should fail for undefined and null', function() {
-    assert.throws(function() {
-      SSF.format("General", undefined);
-      SSF.format("General", null);
-    });
+  it.skip('should handle special values', function() {
+    assert.equal(SSF.format("General", true), "TRUE");
+    assert.equal(SSF.format("General", undefined), "");
+    assert.equal(SSF.format("General", null), "");
   });
 });
