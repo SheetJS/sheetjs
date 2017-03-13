@@ -290,6 +290,7 @@ sheet_name_list.forEach(function(y) { /* iterate through sheets */
   }
 });
 ```
+**Note**: In order to parse the workbook object in a parsing excel workbooks into an Javascript object you can refer to the library [xlso](https://github.com/nanachimi/xlso)
 
 Complete examples:
 
