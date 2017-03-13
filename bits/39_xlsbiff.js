@@ -322,6 +322,10 @@ function parse_CellStyleXF(blob, length, style) {
 	var a = blob.read_shift(4), b = blob.read_shift(4);
 	var c = blob.read_shift(4), d = blob.read_shift(2);
 	o.patternType = XLSFillPattern[c >> 26];
+	o.icvTop = c & 0x7F;
+	o.icvBottom = (c >> 7) & 0x7F;
+	o.icvLeft = (b >> 15) & 0x7F;
+	o.icvRight = (b >> 23) & 0x7F;
 	o.icvFore = d & 0x7F;
 	o.icvBack = (d >> 7) & 0x7F;
 	return o;
