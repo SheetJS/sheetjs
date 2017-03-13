@@ -1,4 +1,5 @@
 node_modules
+*.tgz
 misc/coverage.html
 misc/prof.js
 v8.log

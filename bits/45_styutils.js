@@ -1,6 +1,6 @@
 function hex2RGB(h) {
 	var o = h.substr(h[0]==="#"?1:0,6);
-	return [parseInt(o.substr(0,2),16),parseInt(o.substr(0,2),16),parseInt(o.substr(0,2),16)];
+	return [parseInt(o.substr(0,2),16),parseInt(o.substr(2,2),16),parseInt(o.substr(4,2),16)];
 }
 function rgb2Hex(rgb) {
 	for(var i=0,o=1; i!=3; ++i) o = o*256 + (rgb[i]>255?255:rgb[i]<0?0:rgb[i]);

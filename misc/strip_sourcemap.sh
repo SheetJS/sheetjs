@@ -4,7 +4,7 @@
 
 if [ $# -gt 0 ]; then
 	if [ -e "$1" ]; then
-		sed -i .sheetjs '/sourceMappingURL/d' "$1"
+		sed -i.sheetjs '/sourceMappingURL/d' "$1"
 	fi
 else
 	cat - | sed '/sourceMappingURL/d'

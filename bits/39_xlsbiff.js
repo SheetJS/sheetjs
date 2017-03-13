@@ -34,7 +34,6 @@ function parse_XTI(blob, length) {
 function parse_RkRec(blob, length) {
 	var ixfe = blob.read_shift(2);
 	var RK = parse_RkNumber(blob);
-	//console.log("::", ixfe, RK,";;");
 	return [ixfe, RK];
 }
 

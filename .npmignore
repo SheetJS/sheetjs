@@ -4,6 +4,7 @@ demos/
 index.html
 misc/
 node_modules
+*.tgz
 tmp
 *.txt
 *.[cC][sS][vV]
@@ -20,6 +21,7 @@ tmp
 *.htm
 *.html
 *.sheetjs
+*.exe
 .gitignore
 .jshintrc
 CONTRIBUTING.md

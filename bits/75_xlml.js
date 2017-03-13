@@ -237,7 +237,7 @@ function parse_xlml_xml(d, opts)/*:Workbook*/ {
 				r = c = 0;
 				state.push([Rn[3], false]);
 				tmp = xlml_parsexmltag(Rn[0]);
-				sheetname = tmp.Name;
+				sheetname = unescapexml(tmp.Name);
 				cursheet = {};
 				mergecells = [];
 			}

@@ -5,7 +5,7 @@
 /*exported XLSX */
 var XLSX = {};
 (function make_xlsx(XLSX){
-XLSX.version = '0.9.1';
+XLSX.version = '0.9.2';
 var current_codepage = 1200, current_cptable;
 if(typeof module !== "undefined" && typeof require !== 'undefined') {
 	if(typeof cptable === 'undefined') cptable = require('./dist/cpexcel.js');
@@ -2566,7 +2566,6 @@ function parse_ct(data, opts) {
 			case '<Default': ctext[y.Extension] = y.ContentType; break;
 			case '<Override':
 				if(ct[ct2type[y.ContentType]] !== undefined) ct[ct2type[y.ContentType]].push(y.PartName);
-				else if(opts.WTF) console.error(y);
 				break;
 		}
 	});
@@ -2893,7 +2892,7 @@ function write_ext_props(cp, opts) {
 
 	/* TODO: HeadingPairs, TitlesOfParts */
 	o[o.length] = (W('HeadingPairs', W('vt:vector', W('vt:variant', '<vt:lpstr>Worksheets</vt:lpstr>')+W('vt:variant', W('vt:i4', String(cp.Worksheets))), {size:2, baseType:"variant"})));
-	o[o.length] = (W('TitlesOfParts', W('vt:vector', cp.SheetNames.map(function(s) { return "<vt:lpstr>" + s + "</vt:lpstr>"; }).join(""), {size: cp.Worksheets, baseType:"lpstr"})));
+	o[o.length] = (W('TitlesOfParts', W('vt:vector', cp.SheetNames.map(function(s) { return "<vt:lpstr>" + escapexml(s) + "</vt:lpstr>"; }).join(""), {size: cp.Worksheets, baseType:"lpstr"})));
 	if(o.length>2){ o[o.length] = ('</Properties>'); o[1]=o[1].replace("/>",">"); }
 	return o.join("");
 }
@@ -3455,7 +3454,6 @@ function parse_XTI(blob, length) {
 function parse_RkRec(blob, length) {
 	var ixfe = blob.read_shift(2);
 	var RK = parse_RkNumber(blob);
-	//console.log("::", ixfe, RK,";;");
 	return [ixfe, RK];
 }
 
@@ -4825,7 +4823,7 @@ function parse_FilePass(blob, length, opts) {
 
 function hex2RGB(h) {
 	var o = h.substr(h[0]==="#"?1:0,6);
-	return [parseInt(o.substr(0,2),16),parseInt(o.substr(0,2),16),parseInt(o.substr(0,2),16)];
+	return [parseInt(o.substr(0,2),16),parseInt(o.substr(2,2),16),parseInt(o.substr(4,2),16)];
 }
 function rgb2Hex(rgb) {
 	for(var i=0,o=1; i!=3; ++i) o = o*256 + (rgb[i]>255?255:rgb[i]<0?0:rgb[i]);
@@ -5567,10 +5565,15 @@ function update_xfext(xf, xfext) {
 		switch(xfe[0]) { /* 2.5.108 extPropData */
 			case 0x04: break; /* foreground color */
 			case 0x05: break; /* background color */
-			case 0x07: case 0x08: case 0x09: case 0x0a: break;
+			case 0x06: break; /* gradient fill */
+			case 0x07: break; /* top cell border color */
+			case 0x08: break; /* bottom cell border color */
+			case 0x09: break; /* left cell border color */
+			case 0x0a: break; /* right cell border color */
+			case 0x0b: break; /* diagonal cell border color */
 			case 0x0d: break; /* text color */
 			case 0x0e: break; /* font scheme */
-			default: throw "bafuq" + xfe[0].toString(16);
+			case 0x0f: break; /* indentation level */
 		}
 	});
 }
@@ -5763,9 +5766,10 @@ var rc_to_a1 = (function(){
 	};
 })();
 
-/* TODO actually parse the formula */
+/* no defined name can collide with a valid cell address A1:XFD1048576 ... except LOG10! */
+var crefregex = /(^|[^._A-Z0-9])([$]?)([A-Z]{1,2}|[A-W][A-Z]{2}|X[A-E][A-Z]|XF[A-D])([$]?)([1-9]\d{0,5}|10[0-3]\d{4}|104[0-7]\d{3}|1048[0-4]\d{2}|10485[0-6]\d|104857[0-6])(?![_.\(A-Za-z0-9])/g;
 function shift_formula_str(f, delta) {
-	return f.replace(/(^|[^A-Z0-9])([$]?)([A-Z]+)([$]?)(\d+)/g, function($0, $1, $2, $3, $4, $5, off, str) {
+	return f.replace(crefregex, function($0, $1, $2, $3, $4, $5, off, str) {
 		return $1+($2=="$" ? $2+$3 : encode_col(decode_col($3)+delta.c))+($4=="$" ? $4+$5 : encode_row(decode_row($5) + delta.r));
 	});
 }
@@ -8355,7 +8359,7 @@ return function parse_ws_xml_data(sdata, s, opts, guess) {
 				case 'inlineStr':
 					cref = d.match(isregex);
 					p.t = 's';
-					if(cref != null) { if((sstr = parse_si(cref[1]))) p.v = sstr.t; } else p.v = "";
+					if(cref != null && (sstr = parse_si(cref[1]))) p.v = sstr.t; else p.v = "";
 					break; // inline string
 				case 'b': p.v = parsexmlbool(p.v); break;
 				case 'd':
@@ -9169,7 +9173,7 @@ function parse_wb_xml(data, opts) {
 			/* 18.2.20 sheets CT_Sheets 1 */
 			case '<sheets>': case '</sheets>': break; // aggregate sheet
 			/* 18.2.19   sheet CT_Sheet + */
-			case '<sheet': delete y[0]; y.name = utf8read(y.name); wb.Sheets.push(y); break;
+			case '<sheet': delete y[0]; y.name = unescapexml(utf8read(y.name)); wb.Sheets.push(y); break;
 			case '</sheet>': break;
 
 			/* 18.2.15 functionGroups CT_FunctionGroups ? */
@@ -9268,7 +9272,7 @@ function write_wb_xml(wb, opts) {
 	o[o.length] = (writextag('workbookPr', null, {date1904:safe1904(wb)}));
 	o[o.length] = "<sheets>";
 	for(var i = 0; i != wb.SheetNames.length; ++i)
-		o[o.length] = (writextag('sheet',null,{name:wb.SheetNames[i].substr(0,31), sheetId:""+(i+1), "r:id":"rId"+(i+1)}));
+		o[o.length] = (writextag('sheet',null,{name:escapexml(wb.SheetNames[i].substr(0,31)), sheetId:""+(i+1), "r:id":"rId"+(i+1)}));
 	o[o.length] = "</sheets>";
 	if(o.length>2){ o[o.length] = '</workbook>'; o[1]=o[1].replace("/>",">"); }
 	return o.join("");
@@ -9781,7 +9785,7 @@ function parse_xlml_xml(d, opts) {
 				r = c = 0;
 				state.push([Rn[3], false]);
 				tmp = xlml_parsexmltag(Rn[0]);
-				sheetname = tmp.Name;
+				sheetname = unescapexml(tmp.Name);
 				cursheet = {};
 				mergecells = [];
 			}

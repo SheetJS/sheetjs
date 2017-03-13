@@ -16,9 +16,10 @@ var rc_to_a1 = (function(){
 	};
 })();
 
-/* TODO actually parse the formula */
+/* no defined name can collide with a valid cell address A1:XFD1048576 ... except LOG10! */
+var crefregex = /(^|[^._A-Z0-9])([$]?)([A-Z]{1,2}|[A-W][A-Z]{2}|X[A-E][A-Z]|XF[A-D])([$]?)([1-9]\d{0,5}|10[0-3]\d{4}|104[0-7]\d{3}|1048[0-4]\d{2}|10485[0-6]\d|104857[0-6])(?![_.\(A-Za-z0-9])/g;
 function shift_formula_str(f/*:string*/, delta/*:Cell*/)/*:string*/ {
-	return f.replace(/(^|[^A-Z0-9])([$]?)([A-Z]+)([$]?)(\d+)/g, function($0, $1, $2, $3, $4, $5, off, str) {
+	return f.replace(crefregex, function($0, $1, $2, $3, $4, $5, off, str) {
 		return $1+($2=="$" ? $2+$3 : encode_col(decode_col($3)+delta.c))+($4=="$" ? $4+$5 : encode_row(decode_row($5) + delta.r));
 	});
 }

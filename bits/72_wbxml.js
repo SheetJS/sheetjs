@@ -41,7 +41,7 @@ function parse_wb_xml(data, opts)/*:WorkbookFile*/ {
 			/* 18.2.20 sheets CT_Sheets 1 */
 			case '<sheets>': case '</sheets>': break; // aggregate sheet
 			/* 18.2.19   sheet CT_Sheet + */
-			case '<sheet': delete y[0]; y.name = utf8read(y.name); wb.Sheets.push(y); break;
+			case '<sheet': delete y[0]; y.name = unescapexml(utf8read(y.name)); wb.Sheets.push(y); break;
 			case '</sheet>': break;
 
 			/* 18.2.15 functionGroups CT_FunctionGroups ? */
@@ -140,7 +140,7 @@ function write_wb_xml(wb/*:Workbook*/, opts/*:?WriteOpts*/)/*:string*/ {
 	o[o.length] = (writextag('workbookPr', null, {date1904:safe1904(wb)}));
 	o[o.length] = "<sheets>";
 	for(var i = 0; i != wb.SheetNames.length; ++i)
-		o[o.length] = (writextag('sheet',null,{name:wb.SheetNames[i].substr(0,31), sheetId:""+(i+1), "r:id":"rId"+(i+1)}));
+		o[o.length] = (writextag('sheet',null,{name:escapexml(wb.SheetNames[i].substr(0,31)), sheetId:""+(i+1), "r:id":"rId"+(i+1)}));
 	o[o.length] = "</sheets>";
 	if(o.length>2){ o[o.length] = '</workbook>'; o[1]=o[1].replace("/>",">"); }
 	return o.join("");

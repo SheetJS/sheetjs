@@ -265,7 +265,7 @@ return function parse_ws_xml_data(sdata, s, opts, guess) {
 				case 'inlineStr':
 					cref = d.match(isregex);
 					p.t = 's';
-					if(cref != null) { if((sstr = parse_si(cref[1]))) p.v = sstr.t; } else p.v = "";
+					if(cref != null && (sstr = parse_si(cref[1]))) p.v = sstr.t; else p.v = "";
 					break; // inline string
 				case 'b': p.v = parsexmlbool(p.v); break;
 				case 'd':

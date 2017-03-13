@@ -193,7 +193,6 @@ function parse_ct(data/*:?string*/, opts) {
 			case '<Default': ctext[y.Extension] = y.ContentType; break;
 			case '<Override':
 				if(ct[ct2type[y.ContentType]] !== undefined) ct[ct2type[y.ContentType]].push(y.PartName);
-				else if(opts.WTF) console.error(y);
 				break;
 		}
 	});
