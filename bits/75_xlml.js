@@ -728,7 +728,85 @@ function parse_xlml(data, opts)/*:Workbook*/ {
 }
 
 /* TODO */
-function write_xlml(wb, opts)/*:string*/ {
-	var o = [XML_HEADER];
+function write_props_xlml(wb, opts) {
+	var o = [];
+	/* DocumentProperties */
+	if(wb.Props) o.push(xlml_write_docprops(wb.Props));
+	/* CustomDocumentProperties */
+	if(wb.Custprops) o.push(xlml_write_custprops(wb.Props, wb.Custprops));
 	return o.join("");
+}
+/* TODO */
+function write_wb_xlml(wb, opts) {
+	/* OfficeDocumentSettings */
+	/* ExcelWorkbook */
+	return "";
+}
+/* TODO */
+function write_sty_xlml(wb, opts)/*:string*/ {
+	/* Styles */
+	return "";
+}
+/* TODO */
+function write_ws_xlml_cell(cell, ref, ws, opts, idx, wb, addr)/*:string*/{
+	if(!cell || cell.v === undefined) return "<Cell></Cell>";
+
+	var attr = {};
+	if(cell.f) attr["ss:Formula"] = "=" + escapexml(a1_to_rc(cell.f, addr));
+
+	var t = "", p = "";
+	switch(cell.t) {
+		case 'n': t = 'Number'; p = String(cell.v); break;
+		case 'b': t = 'Boolean'; p = (cell.v ? "1" : "0"); break;
+		case 'e': t = 'Error'; p = BErr[cell.v]; break;
+		case 'd': t = 'DateTime'; p = new Date(cell.v).toISOString(); break;
+		default:  t = 'String'; p = escapexml(cell.v||"");
+	}
+	var m = '<Data ss:Type="' + t + '">' + p + '</Data>';
+
+	return writextag("Cell", m, attr);
+}
+/* TODO */
+function write_ws_xlml_table(ws/*:Worksheet*/, opts, idx/*:number*/, wb/*:Workbook*/)/*:string*/ {
+	if(!ws['!ref']) return "";
+	var range = safe_decode_range(ws['!ref']);
+	var o = [];
+	for(var R = range.s.r; R <= range.e.r; ++R) {
+		var row = ["<Row>"];
+		for(var C = range.s.c; C <= range.e.c; ++C) {
+			var addr = {r:R,c:C};
+			var ref = encode_cell(addr), cell = ws[ref];
+			row.push(write_ws_xlml_cell(ws[ref], ref, ws, opts, idx, wb, addr));
+		}
+		row.push("</Row>");
+		o.push(row.join(""));
+	}
+	return o.join("");
+}
+function write_ws_xlml(idx/*:number*/, opts, wb/*:Workbook*/)/*:string*/ {
+	var o = [];
+	var s = wb.SheetNames[idx];
+	var ws = wb.Sheets[s];
+
+	/* Table */
+	var t = ws ? write_ws_xlml_table(ws, opts, idx, wb) : "";
+	if(t.length > 0) o.push("<Table>" + t + "</Table>");
+	/* WorksheetOptions */
+	return o.join("");
+}
+function write_xlml(wb, opts)/*:string*/ {
+	var d = [];
+	d.push(write_props_xlml(wb, opts));
+	d.push(write_wb_xlml(wb, opts));
+	d.push(write_sty_xlml(wb, opts));
+	for(var i = 0; i < wb.SheetNames.length; ++i)
+		d.push(writextag("Worksheet", write_ws_xlml(i, opts, wb), {"ss:Name":escapexml(wb.SheetNames[i])}));
+	return XML_HEADER + writextag("Workbook", d.join(""), {
+		'xmlns':      XLMLNS.ss,
+		'xmlns:o':    XLMLNS.o,
+		'xmlns:x':    XLMLNS.x,
+		'xmlns:ss':   XLMLNS.ss,
+		'xmlns:dt':   XLMLNS.dt,
+		'xmlns:html': XLMLNS.html
+	});
 }

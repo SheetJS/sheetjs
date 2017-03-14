@@ -11,8 +11,8 @@ if(process.env.WTF) {
 	opts.WTF = true;
 	opts.cellStyles = true;
 }
-var fullex = [".xlsb", ".xlsm", ".xlsx"];
-var ofmt = ["xlsb", "xlsm", "xlsx", "ods", "biff2"];
+var fullex = [".xlsb", ".xlsm", ".xlsx", ".xlml"];
+var ofmt = ["xlsb", "xlsm", "xlsx", "ods", "biff2", "xlml"];
 var ex = fullex.slice(); ex = ex.concat([".ods", ".xls", ".xml", ".fods"]);
 if(process.env.FMTS === "full") process.env.FMTS = ex.join(":");
 if(process.env.FMTS) ex=process.env.FMTS.split(":").map(function(x){return x[0]==="."?x:"."+x;});

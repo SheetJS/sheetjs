@@ -1512,6 +1512,7 @@ function escapexml(text/*:string*/)/*:string*/{
 	var s = text + '';
 	return s.replace(decregex, function(y) { return rencoding[y]; }).replace(charegex,function(s) { return "_x" + ("000"+s.charCodeAt(0).toString(16)).slice(-4) + "_";});
 }
+function escapexmltag(text/*:string*/)/*:string*/{ return escapexml(text).replace(/ /g,"_x0020_"); }
 
 /* TODO: handle codepages */
 var xlml_fixstr/*:StringConv*/ = (function() {
@@ -1638,6 +1639,13 @@ XMLNS.main = [
 	'http://schemas.microsoft.com/office/excel/2006/2'
 ];
 
+var XLMLNS = ({
+	'o':    'urn:schemas-microsoft-com:office:office',
+	'x':    'urn:schemas-microsoft-com:office:excel',
+	'ss':   'urn:schemas-microsoft-com:office:spreadsheet',
+	'dt':   'uuid:C2F41010-65B3-11d1-A29F-00AA00C14882',
+	'html': 'http://www.w3.org/TR/REC-html40'
+}/*:any*/);
 function read_double_le(b, idx/*:number*/)/*:number*/ {
 	var s = 1 - 2 * (b[idx + 7] >>> 7);
 	var e = ((b[idx + 7] & 0x7f) << 4) + ((b[idx + 6] >>> 4) & 0x0f);
@@ -3018,10 +3026,69 @@ function xlml_set_prop(Props, tag/*:string*/, val) {
 	/* TODO: Normalize the properties */
 	switch(tag) {
 		case 'Description': tag = 'Comments'; break;
+		case 'Created': tag = 'CreatedDate'; break;
+		case 'LastSaved': tag = 'ModifiedDate'; break;
 	}
 	Props[tag] = val;
 }
 
+var XLMLDocumentProperties = [
+	['Title', 'Title'],
+	['Subject', 'Subject'],
+	['Author', 'Author'],
+	['Keywords', 'Keywords'],
+	['Comments', 'Description'],
+	['LastAuthor', 'LastAuthor'],
+	['CreatedDate', 'Created', 'date'],
+	['ModifiedDate', 'LastSaved', 'date'],
+	['Category', 'Category'],
+	['Manager', 'Manager'],
+	['Company', 'Company'],
+	['AppVersion', 'Version']
+];
+
+/* TODO: verify */
+function xlml_write_docprops(Props) {
+	var T = 'DocumentProperties';
+	var o = [];
+	XLMLDocumentProperties.forEach(function(p) {
+		if(!Props[p[0]]) return;
+		var m = Props[p[0]];
+		switch(p[2]) {
+			case 'date': m = new Date(m).toISOString(); break;
+		}
+		o.push(writetag(p[1], m));
+	});
+	return '<' + T + ' xmlns="' + XLMLNS.o + '">' + o.join("") + '</' + T + '>';
+}
+function xlml_write_custprops(Props, Custprops) {
+	var T = 'CustomDocumentProperties';
+	var o = [];
+	if(Props) keys(Props).forEach(function(k) {
+		/*:: if(!Props) return; */
+		if(!Props.hasOwnProperty(k)) return;
+		for(var i = 0; i < XLMLDocumentProperties.length; ++i)
+			if(k == XLMLDocumentProperties[i][0]) return;
+		var m = Props[k];
+		var t = "string";
+		if(typeof m == 'number') { t = "float"; m = String(m); }
+		else if(m === true || m === false) { t = "boolean"; m = m ? "1" : "0"; }
+		else m = String(m);
+		o.push(writextag(escapexmltag(k), m, {"dt:dt":t}));
+	});
+	if(Custprops) keys(Custprops).forEach(function(k) {
+		/*:: if(!Custprops) return; */
+		if(!Custprops.hasOwnProperty(k)) return;
+		var m = Custprops[k];
+		var t = "string";
+		if(typeof m == 'number') { t = "float"; m = String(m); }
+		else if(m === true || m === false) { t = "boolean"; m = m ? "1" : "0"; }
+		else if(m instanceof Date) { t = "dateTime.tz"; m = m.toISOString(); }
+		else m = String(m);
+		o.push(writextag(escapexmltag(k), m, {"dt:dt":t}));
+	});
+	return '<' + T + ' xmlns="' + XLMLNS.o + '">' + o.join("") + '</' + T + '>';
+}
 /* [MS-DTYP] 2.3.3 FILETIME */
 /* [MS-OLEDS] 2.1.3 FILETIME (Packet Version) */
 /* [MS-OLEPS] 2.8 FILETIME (Packet Version) */
@@ -3786,14 +3853,44 @@ function parse_MulRk(blob, length) {
 	return {r:rw, c:col, C:lastcol, rkrec:rkrecs};
 }
 
-/* 2.5.20 2.5.249 TODO */
+/* 2.5.20 2.5.249 TODO: interpret values here */
 function parse_CellStyleXF(blob, length, style) {
 	var o = {};
 	var a = blob.read_shift(4), b = blob.read_shift(4);
 	var c = blob.read_shift(4), d = blob.read_shift(2);
 	o.patternType = XLSFillPattern[c >> 26];
+
+	o.alc = a & 0x07;
+	o.fWrap = (a >> 3) & 0x01;
+	o.alcV = (a >> 4) & 0x07;
+	o.fJustLast = (a >> 7) & 0x01;
+	o.trot = (a >> 8) & 0xFF;
+	o.cIndent = (a >> 16) & 0x0F;
+	o.fShrinkToFit = (a >> 20) & 0x01;
+	o.iReadOrder = (a >> 22) & 0x02;
+	o.fAtrNum = (a >> 26) & 0x01;
+	o.fAtrFnt = (a >> 27) & 0x01;
+	o.fAtrAlc = (a >> 28) & 0x01;
+	o.fAtrBdr = (a >> 29) & 0x01;
+	o.fAtrPat = (a >> 30) & 0x01;
+	o.fAtrProt = (a >> 31) & 0x01;
+
+	o.dgLeft = b & 0x0F;
+	o.dgRight = (b >> 4) & 0x0F;
+	o.dgTop = (b >> 8) & 0x0F;
+	o.dgBottom = (b >> 12) & 0x0F;
+	o.icvLeft = (b >> 16) & 0x7F;
+	o.icvRight = (b >> 23) & 0x7F;
+	o.grbitDiag = (b >> 30) & 0x03;
+
+	o.icvTop = c & 0x7F;
+	o.icvBottom = (c >> 7) & 0x7F;
+	o.icvDiag = (c >> 14) & 0x7F;
+	o.dgDiag = (c >> 21) & 0x0F;
+
 	o.icvFore = d & 0x7F;
 	o.icvBack = (d >> 7) & 0x7F;
+	o.fsxButton = (d >> 14) & 0x01;
 	return o;
 }
 function parse_CellXF(blob, length) {return parse_CellStyleXF(blob,length,0);}
@@ -5816,8 +5913,19 @@ var rc_to_a1 = (function(){
 	};
 })();
 
-/* no defined name can collide with a valid cell address A1:XFD1048576 ... except LOG10! */
 var crefregex = /(^|[^._A-Z0-9])([$]?)([A-Z]{1,2}|[A-W][A-Z]{2}|X[A-E][A-Z]|XF[A-D])([$]?)([1-9]\d{0,5}|10[0-3]\d{4}|104[0-7]\d{3}|1048[0-4]\d{2}|10485[0-6]\d|104857[0-6])(?![_.\(A-Za-z0-9])/g;
+var a1_to_rc =(function(){
+	return function a1_to_rc(fstr, base) {
+		return fstr.replace(crefregex, function($0, $1, $2, $3, $4, $5, off, str) {
+			/* TODO: handle fixcol / fixrow */
+			var c = decode_col($3) - base.c;
+			var r = decode_row($5) - base.r;
+			return $1 + "R" + (r == 0 ? "" : "[" + r + "]") + "C" + (c == 0 ? "" : "[" + c + "]");
+		});
+	};
+})();
+
+/* no defined name can collide with a valid cell address A1:XFD1048576 ... except LOG10! */
 function shift_formula_str(f/*:string*/, delta/*:Cell*/)/*:string*/ {
 	return f.replace(crefregex, function($0, $1, $2, $3, $4, $5, off, str) {
 		return $1+($2=="$" ? $2+$3 : encode_col(decode_col($3)+delta.c))+($4=="$" ? $4+$5 : encode_row(decode_row($5) + delta.r));
@@ -10329,9 +10437,87 @@ function parse_xlml(data, opts)/*:Workbook*/ {
 }
 
 /* TODO */
-function write_xlml(wb, opts)/*:string*/ {
-	var o = [XML_HEADER];
+function write_props_xlml(wb, opts) {
+	var o = [];
+	/* DocumentProperties */
+	if(wb.Props) o.push(xlml_write_docprops(wb.Props));
+	/* CustomDocumentProperties */
+	if(wb.Custprops) o.push(xlml_write_custprops(wb.Props, wb.Custprops));
 	return o.join("");
+}
+/* TODO */
+function write_wb_xlml(wb, opts) {
+	/* OfficeDocumentSettings */
+	/* ExcelWorkbook */
+	return "";
+}
+/* TODO */
+function write_sty_xlml(wb, opts)/*:string*/ {
+	/* Styles */
+	return "";
+}
+/* TODO */
+function write_ws_xlml_cell(cell, ref, ws, opts, idx, wb, addr)/*:string*/{
+	if(!cell || cell.v === undefined) return "<Cell></Cell>";
+
+	var attr = {};
+	if(cell.f) attr["ss:Formula"] = "=" + escapexml(a1_to_rc(cell.f, addr));
+
+	var t = "", p = "";
+	switch(cell.t) {
+		case 'n': t = 'Number'; p = String(cell.v); break;
+		case 'b': t = 'Boolean'; p = (cell.v ? "1" : "0"); break;
+		case 'e': t = 'Error'; p = BErr[cell.v]; break;
+		case 'd': t = 'DateTime'; p = new Date(cell.v).toISOString(); break;
+		default:  t = 'String'; p = escapexml(cell.v||"");
+	}
+	var m = '<Data ss:Type="' + t + '">' + p + '</Data>';
+
+	return writextag("Cell", m, attr);
+}
+/* TODO */
+function write_ws_xlml_table(ws/*:Worksheet*/, opts, idx/*:number*/, wb/*:Workbook*/)/*:string*/ {
+	if(!ws['!ref']) return "";
+	var range = safe_decode_range(ws['!ref']);
+	var o = [];
+	for(var R = range.s.r; R <= range.e.r; ++R) {
+		var row = ["<Row>"];
+		for(var C = range.s.c; C <= range.e.c; ++C) {
+			var addr = {r:R,c:C};
+			var ref = encode_cell(addr), cell = ws[ref];
+			row.push(write_ws_xlml_cell(ws[ref], ref, ws, opts, idx, wb, addr));
+		}
+		row.push("</Row>");
+		o.push(row.join(""));
+	}
+	return o.join("");
+}
+function write_ws_xlml(idx/*:number*/, opts, wb/*:Workbook*/)/*:string*/ {
+	var o = [];
+	var s = wb.SheetNames[idx];
+	var ws = wb.Sheets[s];
+
+	/* Table */
+	var t = ws ? write_ws_xlml_table(ws, opts, idx, wb) : "";
+	if(t.length > 0) o.push("<Table>" + t + "</Table>");
+	/* WorksheetOptions */
+	return o.join("");
+}
+function write_xlml(wb, opts)/*:string*/ {
+	var d = [];
+	d.push(write_props_xlml(wb, opts));
+	d.push(write_wb_xlml(wb, opts));
+	d.push(write_sty_xlml(wb, opts));
+	for(var i = 0; i < wb.SheetNames.length; ++i)
+		d.push(writextag("Worksheet", write_ws_xlml(i, opts, wb), {"ss:Name":escapexml(wb.SheetNames[i])}));
+	return XML_HEADER + writextag("Workbook", d.join(""), {
+		'xmlns':      XLMLNS.ss,
+		'xmlns:o':    XLMLNS.o,
+		'xmlns:x':    XLMLNS.x,
+		'xmlns:ss':   XLMLNS.ss,
+		'xmlns:dt':   XLMLNS.dt,
+		'xmlns:html': XLMLNS.html
+	});
 }
 /* [MS-OLEDS] 2.3.8 CompObjStream */
 function parse_compobj(obj) {
@@ -10644,9 +10830,9 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 								if(_f && _f[0] && _f[0][0] && _f[0][0][0] == 'PtgExp') {
 									var _fr = _f[0][0][1][0], _fc = _f[0][0][1][1];
 									var _fe = encode_cell({r:_fr, c:_fc});
-									if(shared_formulae[_fe]) temp_val.f = stringify_formula(val.formula,range,val.cell,supbooks, opts);
+									if(shared_formulae[_fe]) temp_val.f = ""+stringify_formula(val.formula,range,val.cell,supbooks, opts);
 									else temp_val.F = (out[_fe] || {}).F;
-								} else temp_val.f = stringify_formula(val.formula,range,val.cell,supbooks, opts);
+								} else temp_val.f = ""+stringify_formula(val.formula,range,val.cell,supbooks, opts);
 							}
 							safe_format_xf(temp_val, options, wb.opts.Date1904);
 							addcell(val.cell, temp_val, options);
@@ -10658,7 +10844,7 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 						last_formula.val = val;
 						temp_val = ({v:last_formula.val, ixfe:last_formula.cell.ixfe, t:'s'}/*:any*/);
 						temp_val.XF = XFs[temp_val.ixfe];
-						if(options.cellFormula) temp_val.f = stringify_formula(last_formula.formula, range, last_formula.cell, supbooks, opts);
+						if(options.cellFormula) temp_val.f = ""+stringify_formula(last_formula.formula, range, last_formula.cell, supbooks, opts);
 						safe_format_xf(temp_val, options, wb.opts.Date1904);
 						addcell(last_formula.cell, temp_val, options);
 						last_formula = null;
@@ -10669,7 +10855,7 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 					if(options.cellFormula && out[last_cell]) {
 						if(!last_formula) break; /* technically unreachable */
 						if(!last_cell || !out[last_cell]) break; /* technically unreachable */
-						out[last_cell].f = stringify_formula(last_formula.formula, range, last_formula.cell, supbooks, opts);
+						out[last_cell].f = ""+stringify_formula(last_formula.formula, range, last_formula.cell, supbooks, opts);
 						out[last_cell].F = encode_range(val[0]);
 					}
 				} break;
@@ -10680,7 +10866,7 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 						/* TODO: capture range */
 						if(!last_formula) break; /* technically unreachable */
 						shared_formulae[encode_cell(last_formula.cell)]= val[0];
-						(out[encode_cell(last_formula.cell)]||{}).f = stringify_formula(val[0], range, lastcell, supbooks, opts);
+						(out[encode_cell(last_formula.cell)]||{}).f = ""+stringify_formula(val[0], range, lastcell, supbooks, opts);
 					}
 				} break;
 				case 'LabelSst':
@@ -13286,7 +13472,8 @@ function writeSync(wb/*:Workbook*/, opts/*:?WriteOpts*/) {
 	check_wb(wb);
 	var o = opts||{};
 	switch(o.bookType || 'xlsx') {
-		case 'xml': return write_string_type(write_xlml(wb, o), o);
+		case 'xml':
+		case 'xlml': return write_string_type(write_xlml(wb, o), o);
 		case 'csv': return write_string_type(write_csv_str(wb, o), o);
 		case 'fods': return write_string_type(write_ods(wb, o), o);
 		case 'biff2': return write_binary_type(write_biff_buf(wb, o), o);
@@ -13306,6 +13493,7 @@ function writeFileSync(wb/*:Workbook*/, filename/*:string*/, opts/*:?WriteFileOp
 		case '.xlsm': o.bookType = 'xlsm'; break;
 		case '.xlsb': o.bookType = 'xlsb'; break;
 		case '.fods': o.bookType = 'fods'; break;
+		case '.xlml': o.bookType = 'xlml'; break;
 	default: switch(o.file.slice(-4).toLowerCase()) {
 		case '.xls': o.bookType = 'biff2'; break;
 		case '.xml': o.bookType = 'xml'; break;

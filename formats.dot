@@ -32,6 +32,7 @@ digraph G {
 		xlsx -> csf
 		csf -> xlsb
 		xlsb -> csf
+		csf -> xlml
 		xlml -> csf
 		xls2 -> csf
 		csf -> xls2

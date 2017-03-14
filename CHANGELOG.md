@@ -5,6 +5,10 @@ but not limited to API changes and file location changes.  Minor behavioral
 changes may not be included if they are not expected to break existing code.
 
 
+## Unreleased
+
+* XLML property names are more closely mapped to the XLSX equivalent
+
 ## 0.9.2 (2017-03-13)
 
 * Removed stale TypeScript definition files.  Flowtype comments are used in the

@@ -316,14 +316,44 @@ function parse_MulRk(blob, length) {
 	return {r:rw, c:col, C:lastcol, rkrec:rkrecs};
 }
 
-/* 2.5.20 2.5.249 TODO */
+/* 2.5.20 2.5.249 TODO: interpret values here */
 function parse_CellStyleXF(blob, length, style) {
 	var o = {};
 	var a = blob.read_shift(4), b = blob.read_shift(4);
 	var c = blob.read_shift(4), d = blob.read_shift(2);
 	o.patternType = XLSFillPattern[c >> 26];
+
+	o.alc = a & 0x07;
+	o.fWrap = (a >> 3) & 0x01;
+	o.alcV = (a >> 4) & 0x07;
+	o.fJustLast = (a >> 7) & 0x01;
+	o.trot = (a >> 8) & 0xFF;
+	o.cIndent = (a >> 16) & 0x0F;
+	o.fShrinkToFit = (a >> 20) & 0x01;
+	o.iReadOrder = (a >> 22) & 0x02;
+	o.fAtrNum = (a >> 26) & 0x01;
+	o.fAtrFnt = (a >> 27) & 0x01;
+	o.fAtrAlc = (a >> 28) & 0x01;
+	o.fAtrBdr = (a >> 29) & 0x01;
+	o.fAtrPat = (a >> 30) & 0x01;
+	o.fAtrProt = (a >> 31) & 0x01;
+
+	o.dgLeft = b & 0x0F;
+	o.dgRight = (b >> 4) & 0x0F;
+	o.dgTop = (b >> 8) & 0x0F;
+	o.dgBottom = (b >> 12) & 0x0F;
+	o.icvLeft = (b >> 16) & 0x7F;
+	o.icvRight = (b >> 23) & 0x7F;
+	o.grbitDiag = (b >> 30) & 0x03;
+
+	o.icvTop = c & 0x7F;
+	o.icvBottom = (c >> 7) & 0x7F;
+	o.icvDiag = (c >> 14) & 0x7F;
+	o.dgDiag = (c >> 21) & 0x0F;
+
 	o.icvFore = d & 0x7F;
 	o.icvBack = (d >> 7) & 0x7F;
+	o.fsxButton = (d >> 14) & 0x01;
 	return o;
 }
 function parse_CellXF(blob, length) {return parse_CellStyleXF(blob,length,0);}

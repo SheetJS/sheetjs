@@ -52,6 +52,7 @@ function escapexml(text/*:string*/)/*:string*/{
 	var s = text + '';
 	return s.replace(decregex, function(y) { return rencoding[y]; }).replace(charegex,function(s) { return "_x" + ("000"+s.charCodeAt(0).toString(16)).slice(-4) + "_";});
 }
+function escapexmltag(text/*:string*/)/*:string*/{ return escapexml(text).replace(/ /g,"_x0020_"); }
 
 /* TODO: handle codepages */
 var xlml_fixstr/*:StringConv*/ = (function() {
@@ -178,3 +179,10 @@ XMLNS.main = [
 	'http://schemas.microsoft.com/office/excel/2006/2'
 ];
 
+var XLMLNS = ({
+	'o':    'urn:schemas-microsoft-com:office:office',
+	'x':    'urn:schemas-microsoft-com:office:excel',
+	'ss':   'urn:schemas-microsoft-com:office:spreadsheet',
+	'dt':   'uuid:C2F41010-65B3-11d1-A29F-00AA00C14882',
+	'html': 'http://www.w3.org/TR/REC-html40'
+}/*:any*/);

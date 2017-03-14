@@ -20,6 +20,7 @@ program
 	.option('-X, --xlsx', 'emit XLSX to <sheetname> or <file>.xlsx')
 	.option('-Y, --ods',  'emit ODS  to <sheetname> or <file>.ods')
 	.option('-2, --biff2','emit XLS  to <sheetname> or <file>.xls (BIFF2)')
+	.option('-6, --xlml', 'emit SSML to <sheetname> or <file>.xls (2003 XML)')
 	.option('-T, --fods', 'emit FODS to <sheetname> or <file>.xls (Flat ODS)')
 
 	.option('-S, --formulae', 'print formulae')
@@ -33,7 +34,7 @@ program
 	.option('--sst', 'generate shared string table for XLS* formats')
 	.option('--compress', 'use compression when writing XLSX/M/B and ODS')
 	.option('--perf', 'do not generate output')
-	.option('--all', 'parse everything; XLS[XMB] write as much as possible')
+	.option('--all', 'parse everything; write as much as possible')
 	.option('--dev', 'development mode')
 	.option('--read', 'read but do not print out contents')
 	.option('-q, --quiet', 'quiet mode');
@@ -46,6 +47,10 @@ program.on('--help', function() {
 
 /* output formats, update list with full option name */
 var workbook_formats = ['xlsx', 'xlsm', 'xlsb', 'ods', 'fods'];
+/* flag, bookType, default ext */
+var wb_formats_2 = [
+	['xlml', 'xlml', 'xls']
+];
 program.parse(process.argv);
 
 /* see https://github.com/SheetJS/j/issues/4 */
@@ -81,11 +86,16 @@ var opts = {}, wb/*:?Workbook*/;
 if(program.listSheets) opts.bookSheets = true;
 if(program.sheetRows) opts.sheetRows = program.sheetRows;
 if(program.password) opts.password = program.password;
-if(program.xlsx || program.xlsm || program.xlsb) {
+var seen = false;
+function wb_fmt() {
+	seen = true;
 	opts.cellFormula = true;
 	opts.cellNF = true;
 	if(program.output) sheetname = program.output;
 }
+workbook_formats.forEach(function(m) { if(program[m]) { wb_fmt(); } });
+wb_formats_2.forEach(function(m) { if(program[m[0]]) { wb_fmt(); } });
+if(seen);
 else if(program.formulae) opts.cellFormula = true;
 else opts.cellFormula = false;
 
@@ -122,6 +132,12 @@ if(program.compress) wopts.compression = true;
 /* full workbook formats */
 workbook_formats.forEach(function(m) { if(program[m]) {
 		X.writeFile(wb, sheetname || ((filename || "") + "." + m), wopts);
+		process.exit(0);
+} });
+
+wb_formats_2.forEach(function(m) { if(program[m[0]]) {
+		wopts.bookType = m[1];
+		X.writeFile(wb, sheetname || ((filename || "") + "." + m[2]), wopts);
 		process.exit(0);
 } });
 

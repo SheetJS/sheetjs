@@ -46,7 +46,8 @@ function writeSync(wb/*:Workbook*/, opts/*:?WriteOpts*/) {
 	check_wb(wb);
 	var o = opts||{};
 	switch(o.bookType || 'xlsx') {
-		case 'xml': return write_string_type(write_xlml(wb, o), o);
+		case 'xml':
+		case 'xlml': return write_string_type(write_xlml(wb, o), o);
 		case 'csv': return write_string_type(write_csv_str(wb, o), o);
 		case 'fods': return write_string_type(write_ods(wb, o), o);
 		case 'biff2': return write_binary_type(write_biff_buf(wb, o), o);
@@ -66,6 +67,7 @@ function writeFileSync(wb/*:Workbook*/, filename/*:string*/, opts/*:?WriteFileOp
 		case '.xlsm': o.bookType = 'xlsm'; break;
 		case '.xlsb': o.bookType = 'xlsb'; break;
 		case '.fods': o.bookType = 'fods'; break;
+		case '.xlml': o.bookType = 'xlml'; break;
 	default: switch(o.file.slice(-4).toLowerCase()) {
 		case '.xls': o.bookType = 'biff2'; break;
 		case '.xml': o.bookType = 'xml'; break;
