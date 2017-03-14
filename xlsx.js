@@ -13223,7 +13223,7 @@ function parse_zip(zip, opts) {
 		out.files = zip.files;
 	}
 	if(opts.bookVBA) {
-		if(dir.vba.length > 0) out.vbaraw = getzipdata(zip,dir.vba[0],true);
+		if(dir.vba.length > 0) out.vbaraw = getzipdata(zip,dir.vba[0].replace(/^\//,''),true);
 		else if(dir.defaults && dir.defaults.bin === 'application/vnd.ms-office.vbaProject') out.vbaraw = getzipdata(zip,'xl/vbaProject.bin',true);
 	}
 	return out;

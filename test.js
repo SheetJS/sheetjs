@@ -434,9 +434,9 @@ describe('parse options', function() {
 		});
 		it('bookVBA should generate vbaraw (XLSX/XLSB)', function() {
 			var wb = X.readFile(paths.nfxlsx,{bookVBA:true});
-			assert(typeof wb.vbaraw !== 'undefined');
+			assert(wb.vbaraw);
 			wb = X.readFile(paths.nfxlsb,{bookVBA:true});
-			assert(typeof wb.vbaraw !== 'undefined');
+			assert(wb.vbaraw);
 		});
 	});
 });
