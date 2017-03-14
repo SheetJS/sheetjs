@@ -30,7 +30,7 @@
 	"repository": { "type":"git", "url":"git://github.com/SheetJS/js-xlsx.git" },
 	"scripts": {
 		"pretest": "git submodule init && git submodule update",
-		"test": "make test"
+		"test": "make travis"
 	},
 	"config": {
 		"blanket": {

@@ -11,7 +11,7 @@ if(process.env.WTF) {
 	opts.WTF = true;
 	opts.cellStyles = true;
 }
-var fullex = [".xlsb", ".xlsm", ".xlsx", ".xlml"];
+var fullex = [".xlsb", ".xlsm", ".xlsx"/*, ".xlml"*/];
 var ofmt = ["xlsb", "xlsm", "xlsx", "ods", "biff2", "xlml"];
 var ex = fullex.slice(); ex = ex.concat([".ods", ".xls", ".xml", ".fods"]);
 if(process.env.FMTS === "full") process.env.FMTS = ex.join(":");

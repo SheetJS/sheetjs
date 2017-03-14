@@ -92,6 +92,10 @@ TESTFMT=$(patsubst %,test_%,$(FMT))
 $(TESTFMT): test_%:
 	FMTS=$* make test
 
+.PHONY: travis
+travis: ## Run test suite with minimal output
+	mocha -R dot -t 30000
+
 .PHONY: demos
 demos: demo-browserify demo-webpack demo-requirejs
 

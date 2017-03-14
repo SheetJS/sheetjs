@@ -18,4 +18,4 @@ before_script:
   - "make init"
   - "cd test_files; make all; cd -"
 after_success:
-  - "make coveralls-spin"
+#  - "make coveralls-spin"
