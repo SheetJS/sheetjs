@@ -477,6 +477,10 @@ dates in the local timezone.  js-xlsx does not correct for this error.
 Type `s` is the String type.  `v` should be explicitly stored as a string to
 avoid possible confusion.
 
+Type `z` represents blank stub cells.  These do not have any data or type, and
+are not processed by any of the core library functions.  By default these cells
+will not be generated; the parser `cellStubs` option must be set to `true`.
+
 ### Formulae
 
 The A1-style formula string is stored in the `f` field.  Even though different
@@ -549,7 +553,7 @@ The exported `read` and `readFile` functions accept an options argument:
 | cellNF      | false   | Save number format string to the .z field            |
 | cellStyles  | false   | Save style/theme info to the .s field                |
 | cellDates   | false   | Store dates as type `d` (default is `n`) **          |
-| sheetStubs  | false   | Create cell objects for stub cells                   |
+| sheetStubs  | false   | Create cell objects of type `z` for stub cells       |
 | sheetRows   | 0       | If >0, read the first `sheetRows` rows **            |
 | bookDeps    | false   | If true, parse calculation chains                    |
 | bookFiles   | false   | If true, add raw files to book object **             |

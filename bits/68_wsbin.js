@@ -324,7 +324,7 @@ function parse_ws_bin(data, opts, rels, wb)/*:Worksheet*/ {
 				break;
 
 			case 'BrtCellBlank': if(!opts.sheetStubs) break;
-				p = ({t:'s',v:undefined}/*:any*/);
+				p = ({t:'z',v:undefined}/*:any*/);
 				s[encode_col(C=val[0].c) + rr] = p;
 				if(refguess.s.r > row.r) refguess.s.r = row.r;
 				if(refguess.s.c > C) refguess.s.c = C;

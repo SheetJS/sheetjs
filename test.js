@@ -346,10 +346,18 @@ describe('parse options', function() {
 			});
 		});
 		it('should generate sheet stubs when requested', function() {
-			/* TODO: ODS/XLS/XML */
-			[paths.mcxlsx, paths.mcxlsb /*, paths.mcods, paths.mcxls, paths.mcxml*/].forEach(function(p) {
+			[paths.mcxlsx, paths.mcxlsb, paths.mcods, paths.mcxls, paths.mcxml].forEach(function(p) {
 				var wb = X.readFile(p, {sheetStubs:true});
-				assert(typeof wb.Sheets.Merge.A2.t !== 'undefined');
+				assert(wb.Sheets.Merge.A2.t == 'z');
+			});
+		});
+		it('should handle stub cells', function() {
+			[paths.mcxlsx, paths.mcxlsb, paths.mcods, paths.mcxls, paths.mcxml].forEach(function(p) {
+				var wb = X.readFile(p, {sheetStubs:true});
+				X.utils.sheet_to_csv(wb.Sheets.Merge);
+				X.utils.sheet_to_json(wb.Sheets.Merge);
+				X.utils.sheet_to_formulae(wb.Sheets.Merge);
+				ofmt.forEach(function(f) { X.write(wb, {type:"binary", bookType:f}); });
 			});
 		});
 		function checkcells(wb, A46, B26, C16, D2) {

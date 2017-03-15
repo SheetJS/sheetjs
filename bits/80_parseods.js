@@ -58,8 +58,10 @@ var parse_content_xml = (function() {
 				rowtag = parsexmltag(Rn[0], false);
 				if(rowtag['行号']) R = rowtag['行号'] - 1; else ++R;
 				C = -1; break;
-			case 'covered-table-cell': // 9.1.5 table:covered-table-cell
-				++C; break; /* stub */
+			case 'covered-table-cell': // 9.1.5 <table:covered-table-cell>
+				++C;
+				if(opts.sheetStubs) ws[encode_cell({r:R,c:C})] = {t:'z'};
+				break; /* stub */
 			case 'table-cell': case '数据':
 				if(Rn[0].charAt(Rn[0].length-2) === '/') {
 					ctag = parsexmltag(Rn[0], false);
@@ -121,7 +123,7 @@ var parse_content_xml = (function() {
 						isstub = textpidx == 0;
 					}
 					if(textp) q.w = textp;
-					if(!isstub || opts.cellStubs) {
+					if(!isstub || opts.sheetStubs) {
 						if(!(opts.sheetRows && opts.sheetRows < R)) {
 							ws[encode_cell({r:R,c:C})] = q;
 							while(--rept > 0) ws[encode_cell({r:R,c:++C})] = dup(q);

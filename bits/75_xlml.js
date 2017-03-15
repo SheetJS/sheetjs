@@ -58,6 +58,7 @@ function xlml_set_custprop(Custprops, Rn, cp, val/*:string*/) {
 }
 
 function safe_format_xlml(cell/*:Cell*/, nf, o) {
+	if(cell.t === 'z') return;
 	try {
 		if(cell.t === 'e') { cell.w = cell.w || BErr[cell.v]; }
 		else if(nf === "General") {
@@ -200,8 +201,17 @@ function parse_xlml_xml(d, opts)/*:Workbook*/ {
 					var rr = r + (parseInt(cell.MergeDown,10)|0);
 					mergecells.push({s:{c:c,r:r},e:{c:cc,r:rr}});
 				}
-				++c;
-				if(cell.MergeAcross) c += +cell.MergeAcross;
+				if(!opts.sheetStubs) { if(cell.MergeAcross) c = cc + 1; else ++c; }
+				else if(cell.MergeAcross || cell.MergeDown) {
+					/*:: if(!cc) cc = 0; if(!rr) rr = 0; */
+					for(var cma = c; cma <= cc; ++cma) {
+						for(var cmd = r; cmd <= rr; ++cmd) {
+							if(cma > c || cmd > r) cursheet[encode_col(cma) + encode_row(cmd)] = {t:'z'};
+						}
+					}
+					c = cc + 1;
+				}
+				else ++c;
 			} else {
 				cell = xlml_parsexmltagobj(Rn[0]);
 				if(cell.Index) c = +cell.Index - 1;
@@ -756,6 +766,7 @@ function write_ws_xlml_cell(cell, ref, ws, opts, idx, wb, addr)/*:string*/{
 
 	var t = "", p = "";
 	switch(cell.t) {
+		case 'z': return "";
 		case 'n': t = 'Number'; p = String(cell.v); break;
 		case 'b': t = 'Boolean'; p = (cell.v ? "1" : "0"); break;
 		case 'e': t = 'Error'; p = BErr[cell.v]; break;

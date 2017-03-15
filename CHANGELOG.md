@@ -8,6 +8,7 @@ changes may not be included if they are not expected to break existing code.
 ## Unreleased
 
 * XLML property names are more closely mapped to the XLSX equivalent
+* Stub cells are now cell type `z`
 
 ## 0.9.2 (2017-03-13)
 

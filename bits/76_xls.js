@@ -53,6 +53,7 @@ function slurp(R, blob, length/*:number*/, opts) {
 }
 
 function safe_format_xf(p/*:any*/, opts/*:ParseOpts*/, date1904/*:?boolean*/) {
+	if(p.t === 'z') return;
 	if(p.t === 'e') { p.w = p.w || BErr[p.v]; }
 	if(!p.XF) return;
 	try {
@@ -354,6 +355,19 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 					safe_format_xf(temp_val, options, wb.opts.Date1904);
 					addcell({c:val.c, r:val.r}, temp_val, options);
 					break;
+				case 'Blank': if(options.sheetStubs) {
+					temp_val = {ixfe: val.ixfe, XF: XFs[val.ixfe], t:'z'};
+					safe_format_xf(temp_val, options, wb.opts.Date1904);
+					addcell({c:val.c, r:val.r}, temp_val, options);
+				} break;
+				case 'MulBlank': if(options.sheetStubs) {
+					for(var _j = val.c; _j <= val.C; ++_j) {
+						var _ixfe = val.ixfe[_j-val.c];
+						temp_val= {ixfe:_ixfe, XF:XFs[_ixfe], t:'z'};
+						safe_format_xf(temp_val, options, wb.opts.Date1904);
+						addcell({c:_j, r:val.r}, temp_val, options);
+					}
+				} break;
 				case 'RString':
 				case 'Label': case 'BIFF2STR':
 					temp_val=make_cell(val.val, val.ixfe, 's');
@@ -420,7 +434,6 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 				case 'ColInfo': break; // TODO
 				case 'Row': break; // TODO
 				case 'DBCell': break; // TODO
-				case 'MulBlank': break; // TODO
 				case 'EntExU2': break; // TODO
 				case 'SxView': break; // TODO
 				case 'Sxvd': break; // TODO
@@ -435,7 +448,6 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 				case 'Feat': break;
 				case 'FeatHdr': case 'FeatHdr11': break;
 				case 'Feature11': case 'Feature12': case 'List12': break;
-				case 'Blank': break;
 				case 'Country': country = val; break;
 				case 'RecalcId': break;
 				case 'DefaultRowHeight': case 'DxGCol': break; // TODO: htmlify

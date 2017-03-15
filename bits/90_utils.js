@@ -66,7 +66,7 @@ function safe_format_cell(cell/*:Cell*/, v/*:any*/) {
 }
 
 function format_cell(cell/*:Cell*/, v/*:any*/) {
-	if(cell == null || cell.t == null) return "";
+	if(cell == null || cell.t == null || cell.t == 'z') return "";
 	if(cell.w !== undefined) return cell.w;
 	if(v === undefined) return safe_format_cell(cell, cell.v);
 	return safe_format_cell(cell, v);
@@ -121,6 +121,7 @@ function sheet_to_json(sheet/*:Worksheet*/, opts/*:?Sheet2JSONOpts*/){
 			if(val === undefined || val.t === undefined) continue;
 			v = val.v;
 			switch(val.t){
+				case 'z': continue;
 				case 'e': continue;
 				case 's': break;
 				case 'b': case 'n': break;
@@ -187,6 +188,7 @@ function sheet_to_formulae(sheet/*:Worksheet*/)/*:Array<string>*/ {
 				if(y.indexOf(":") == -1) y = y + ":" + y;
 			}
 			if(x.f != null) val = x.f;
+			else if(x.t == 'z') continue;
 			else if(x.t == 'n' && x.v != null) val = "" + x.v;
 			else if(x.t == 'b') val = x.v ? "TRUE" : "FALSE";
 			else if(x.w !== undefined) val = "'" + x.w;
