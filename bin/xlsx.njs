@@ -103,6 +103,8 @@ if(program.all) {
 	opts.cellFormula = true;
 	opts.cellNF = true;
 	opts.cellStyles = true;
+	opts.sheetStubs = true;
+	opts.cellDates = true;
 }
 
 if(program.dev) {

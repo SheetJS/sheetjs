@@ -1,21 +1,37 @@
 var write_content_xml/*:{(wb:any, opts:any):string}*/ = (function() {
 	var null_cell_xml = '          <table:table-cell />\n';
+	var covered_cell_xml = '          <table:covered-table-cell/>\n';
+	var cell_begin = '          <table:table-cell ', cell_end = '</table:table-cell>\n';
+	var vt = 'office:value-type=';
+	var p_begin = '<text:p>', p_end = '</text:p>';
 	var write_ws = function(ws, wb, i/*:number*/, opts)/*:string*/ {
 		/* Section 9 Tables */
 		var o = [];
 		o.push('      <table:table table:name="' + escapexml(wb.SheetNames[i]) + '">\n');
 		var R=0,C=0, range = decode_range(ws['!ref']);
+		var marr = ws['!merges'] || [], mi = 0;
 		for(R = 0; R < range.s.r; ++R) o.push('        <table:table-row></table:table-row>\n');
 		for(; R <= range.e.r; ++R) {
 			o.push('        <table:table-row>\n');
 			for(C=0; C < range.s.c; ++C) o.push(null_cell_xml);
 			for(; C <= range.e.c; ++C) {
+				var skip = false, mxml = "";
+				for(mi = 0; mi != marr.length; ++mi) {
+					if(marr[mi].s.c > C) continue;
+					if(marr[mi].s.r > R) continue;
+					if(marr[mi].e.c < C) continue;
+					if(marr[mi].e.r < R) continue;
+					if(marr[mi].s.c != C || marr[mi].s.r != R) skip = true;
+					mxml = 'table:number-columns-spanned="' + (marr[mi].e.c - marr[mi].s.c + 1) + '" table:number-rows-spanned="' + (marr[mi].e.r - marr[mi].s.r + 1) + '" ';
+					break;
+				}
+				if(skip) { o.push(covered_cell_xml); continue; }
 				var ref = encode_cell({r:R, c:C}), cell = ws[ref];
 				if(cell) switch(cell.t) {
-					case 'b': o.push('          <table:table-cell office:value-type="boolean" office:boolean-value="' + (cell.v ? 'true' : 'false') + '"><text:p>' + (cell.v ? 'TRUE' : 'FALSE') + '</text:p></table:table-cell>\n'); break;
-					case 'n': o.push('          <table:table-cell office:value-type="float" office:value="' + cell.v + '"><text:p>' + (cell.w||cell.v) + '</text:p></table:table-cell>\n'); break;
-					case 's': case 'str': o.push('          <table:table-cell office:value-type="string"><text:p>' + escapexml(cell.v) + '</text:p></table:table-cell>\n'); break;
-					//case 'd': // TODO
+					case 'b': o.push(cell_begin + mxml + vt + '"boolean" office:boolean-value="' + (cell.v ? 'true' : 'false') + '">' + p_begin + (cell.v ? 'TRUE' : 'FALSE') + p_end + cell_end); break;
+					case 'n': o.push(cell_begin + mxml + vt + '"float" office:value="' + cell.v + '">' + p_begin + (cell.w||cell.v) + p_end + cell_end); break;
+					case 's': case 'str': o.push(cell_begin + mxml + vt + '"string">' + p_begin + escapexml(cell.v) + p_end + cell_end); break;
+					case 'd': o.push(cell_begin + mxml + vt + '"date" office:date-value="' + (new Date(cell.v).toISOString()) + '">' + p_begin + (cell.w||(new Date(cell.v).toISOString())) + p_end + cell_end); break;
 					//case 'e':
 					default: o.push(null_cell_xml);
 				} else o.push(null_cell_xml);

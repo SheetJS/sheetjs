@@ -764,6 +764,15 @@ function write_ws_xlml_cell(cell, ref, ws, opts, idx, wb, addr)/*:string*/{
 	var attr = {};
 	if(cell.f) attr["ss:Formula"] = "=" + escapexml(a1_to_rc(cell.f, addr));
 
+	if(ws['!merges']) {
+		var marr = ws['!merges'];
+		for(var mi = 0; mi != marr.length; ++mi) {
+			if(marr[mi].s.c != addr.c || marr[mi].s.r != addr.r) continue;
+			if(marr[mi].e.c > marr[mi].s.c) attr['ss:MergeAcross'] = marr[mi].e.c - marr[mi].s.c;
+			if(marr[mi].e.r > marr[mi].s.r) attr['ss:MergeDown'] = marr[mi].e.r - marr[mi].s.r;
+		}
+	}
+
 	var t = "", p = "";
 	switch(cell.t) {
 		case 'z': return "";
@@ -771,7 +780,7 @@ function write_ws_xlml_cell(cell, ref, ws, opts, idx, wb, addr)/*:string*/{
 		case 'b': t = 'Boolean'; p = (cell.v ? "1" : "0"); break;
 		case 'e': t = 'Error'; p = BErr[cell.v]; break;
 		case 'd': t = 'DateTime'; p = new Date(cell.v).toISOString(); break;
-		default:  t = 'String'; p = escapexml(cell.v||"");
+		case 's':  t = 'String'; p = escapexml(cell.v||""); break;
 	}
 	var m = '<Data ss:Type="' + t + '">' + p + '</Data>';
 
@@ -781,16 +790,27 @@ function write_ws_xlml_cell(cell, ref, ws, opts, idx, wb, addr)/*:string*/{
 function write_ws_xlml_table(ws/*:Worksheet*/, opts, idx/*:number*/, wb/*:Workbook*/)/*:string*/ {
 	if(!ws['!ref']) return "";
 	var range = safe_decode_range(ws['!ref']);
+	var marr = ws['!merges'] || [], mi = 0;
 	var o = [];
 	for(var R = range.s.r; R <= range.e.r; ++R) {
-		var row = ["<Row>"];
+		var row = ['<Row ss:Index="' + (R+1) + '">'];
 		for(var C = range.s.c; C <= range.e.c; ++C) {
+			var skip = false;
+			for(mi = 0; mi != marr.length; ++mi) {
+				if(marr[mi].s.c > C) continue;
+				if(marr[mi].s.r > R) continue;
+				if(marr[mi].e.c < C) continue;
+				if(marr[mi].e.r < R) continue;
+				if(marr[mi].s.c != C || marr[mi].s.r != R) skip = true;
+				break;
+			}
+			if(skip) continue;
 			var addr = {r:R,c:C};
 			var ref = encode_cell(addr), cell = ws[ref];
 			row.push(write_ws_xlml_cell(ws[ref], ref, ws, opts, idx, wb, addr));
 		}
 		row.push("</Row>");
-		o.push(row.join(""));
+		if(row.length > 2) o.push(row.join(""));
 	}
 	return o.join("");
 }

@@ -5,7 +5,7 @@
 /*exported XLSX */
 var XLSX = {};
 (function make_xlsx(XLSX){
-XLSX.version = '0.9.2';
+XLSX.version = '0.9.3';
 var current_codepage = 1200, current_cptable;
 /*:: declare var cptable:any; */
 if(typeof module !== "undefined" && typeof require !== 'undefined') {
@@ -1500,15 +1500,15 @@ var rencstr = "&<>'\"".split("");
 // TODO: CP remap (need to read file version to determine OS)
 var unescapexml/*:StringConv*/ = (function() {
 	/* 22.4.2.4 bstr (Basic String) */
-	var encregex = /&[a-z]*;/g, coderegex = /_x([\da-fA-F]{4})_/g;
+	var encregex = /&(?:quot|apos|gt|lt|amp|#x?([\da-fA-F]+));/g, coderegex = /_x([\da-fA-F]{4})_/g;
 	return function unescapexml(text/*:string*/)/*:string*/ {
 		var s = text + '';
-		return s.replace(encregex, function($$) { return encodings[$$]; }).replace(coderegex,function(m,c) {return String.fromCharCode(parseInt(c,16));});
+		return s.replace(encregex, function($$, $1) { return encodings[$$]||String.fromCharCode(parseInt($1,$$.indexOf("x")>-1?16:10))||$$; }).replace(coderegex,function(m,c) {return String.fromCharCode(parseInt(c,16));});
 	};
 })();
 
 var decregex=/[&<>'"]/g, charegex = /[\u0000-\u0008\u000b-\u001f]/g;
-function escapexml(text/*:string*/)/*:string*/{
+function escapexml(text/*:string*/, xml/*:?boolean*/)/*:string*/{
 	var s = text + '';
 	return s.replace(decregex, function(y) { return rencoding[y]; }).replace(charegex,function(s) { return "_x" + ("000"+s.charCodeAt(0).toString(16)).slice(-4) + "_";});
 }
@@ -8806,6 +8806,13 @@ function parse_BrtFmlaString(data, length, opts) {
 
 /* [MS-XLSB] 2.4.676 BrtMergeCell */
 var parse_BrtMergeCell = parse_UncheckedRfX;
+var write_BrtMergeCell = write_UncheckedRfX;
+/* [MS-XLSB] 2.4.108 BrtBeginMergeCells */
+function write_BrtBeginMergeCells(cnt, o) {
+	if(o == null) o = new_buf(4);
+	o.write_shift(4, cnt);
+	return o;
+}
 
 /* [MS-XLSB] 2.4.656 BrtHLink */
 function parse_BrtHLink(data, length, opts) {
@@ -9147,7 +9154,14 @@ function write_CELLTABLE(ba, ws, idx, opts, wb) {
 	write_record(ba, 'BrtEndSheetData');
 }
 
-function write_ws_bin(idx, opts, wb) {
+function write_MERGECELLS(ba, ws/*:Worksheet*/) {
+	if(!ws || !ws['!merges']) return;
+	write_record(ba, 'BrtBeginMergeCells', write_BrtBeginMergeCells(ws['!merges'].length));
+	ws['!merges'].forEach(function(m) { write_record(ba, 'BrtMergeCell', write_BrtMergeCell(m)); });
+	write_record(ba, 'BrtEndMergeCells');
+}
+
+function write_ws_bin(idx/*:number*/, opts, wb/*:Workbook*/) {
 	var ba = buf_array();
 	var s = wb.SheetNames[idx], ws = wb.Sheets[s] || {};
 	var r = safe_decode_range(ws['!ref'] || "A1");
@@ -9166,7 +9180,7 @@ function write_ws_bin(idx, opts, wb) {
 	/* [SORTSTATE] */
 	/* [DCON] */
 	/* [USERSHVIEWS] */
-	/* [MERGECELLS] */
+	write_MERGECELLS(ba, ws);
 	/* [BrtPhoneticInfo] */
 	/* *CONDITIONALFORMATTING */
 	/* [DVALS] */
@@ -10484,6 +10498,15 @@ function write_ws_xlml_cell(cell, ref, ws, opts, idx, wb, addr)/*:string*/{
 	var attr = {};
 	if(cell.f) attr["ss:Formula"] = "=" + escapexml(a1_to_rc(cell.f, addr));
 
+	if(ws['!merges']) {
+		var marr = ws['!merges'];
+		for(var mi = 0; mi != marr.length; ++mi) {
+			if(marr[mi].s.c != addr.c || marr[mi].s.r != addr.r) continue;
+			if(marr[mi].e.c > marr[mi].s.c) attr['ss:MergeAcross'] = marr[mi].e.c - marr[mi].s.c;
+			if(marr[mi].e.r > marr[mi].s.r) attr['ss:MergeDown'] = marr[mi].e.r - marr[mi].s.r;
+		}
+	}
+
 	var t = "", p = "";
 	switch(cell.t) {
 		case 'z': return "";
@@ -10491,7 +10514,7 @@ function write_ws_xlml_cell(cell, ref, ws, opts, idx, wb, addr)/*:string*/{
 		case 'b': t = 'Boolean'; p = (cell.v ? "1" : "0"); break;
 		case 'e': t = 'Error'; p = BErr[cell.v]; break;
 		case 'd': t = 'DateTime'; p = new Date(cell.v).toISOString(); break;
-		default:  t = 'String'; p = escapexml(cell.v||"");
+		case 's':  t = 'String'; p = escapexml(cell.v||""); break;
 	}
 	var m = '<Data ss:Type="' + t + '">' + p + '</Data>';
 
@@ -10501,16 +10524,27 @@ function write_ws_xlml_cell(cell, ref, ws, opts, idx, wb, addr)/*:string*/{
 function write_ws_xlml_table(ws/*:Worksheet*/, opts, idx/*:number*/, wb/*:Workbook*/)/*:string*/ {
 	if(!ws['!ref']) return "";
 	var range = safe_decode_range(ws['!ref']);
+	var marr = ws['!merges'] || [], mi = 0;
 	var o = [];
 	for(var R = range.s.r; R <= range.e.r; ++R) {
-		var row = ["<Row>"];
+		var row = ['<Row ss:Index="' + (R+1) + '">'];
 		for(var C = range.s.c; C <= range.e.c; ++C) {
+			var skip = false;
+			for(mi = 0; mi != marr.length; ++mi) {
+				if(marr[mi].s.c > C) continue;
+				if(marr[mi].s.r > R) continue;
+				if(marr[mi].e.c < C) continue;
+				if(marr[mi].e.r < R) continue;
+				if(marr[mi].s.c != C || marr[mi].s.r != R) skip = true;
+				break;
+			}
+			if(skip) continue;
 			var addr = {r:R,c:C};
 			var ref = encode_cell(addr), cell = ws[ref];
 			row.push(write_ws_xlml_cell(ws[ref], ref, ws, opts, idx, wb, addr));
 		}
 		row.push("</Row>");
-		o.push(row.join(""));
+		if(row.length > 2) o.push(row.join(""));
 	}
 	return o.join("");
 }
@@ -12756,13 +12790,15 @@ var parse_content_xml = (function() {
 						case 'float': q.t = 'n'; q.v = parseFloat(ctag.value); break;
 						case 'percentage': q.t = 'n'; q.v = parseFloat(ctag.value); break;
 						case 'currency': q.t = 'n'; q.v = parseFloat(ctag.value); break;
-						case 'date': q.t = 'n'; q.v = datenum(new Date(ctag['date-value'])); q.z = 'm/d/yy'; break;
+						case 'date': q.t = 'd'; q.v = new Date(ctag['date-value']);
+							if(!opts.cellDates) { q.t = 'n'; q.v = datenum(q.v); }
+							q.z = 'm/d/yy'; break;
 						case 'time': q.t = 'n'; q.v = parse_isodur(ctag['time-value'])/86400; break;
 						case 'number': q.t = 'n'; q.v = parseFloat(ctag['数据数值']); break;
 						default:
 							if(q.t === 'string' || q.t === 'text' || !q.t) {
 								q.t = 's';
-								if(ctag['string-value'] != null) textp = ctag['string-value'];
+								if(ctag['string-value'] != null) textp = unescapexml(ctag['string-value']);
 							} else throw new Error('Unsupported value type ' + q.t);
 					}
 				} else {
@@ -13045,22 +13081,38 @@ var parse_content_xml = (function() {
 })();
 var write_content_xml/*:{(wb:any, opts:any):string}*/ = (function() {
 	var null_cell_xml = '          <table:table-cell />\n';
+	var covered_cell_xml = '          <table:covered-table-cell/>\n';
+	var cell_begin = '          <table:table-cell ', cell_end = '</table:table-cell>\n';
+	var vt = 'office:value-type=';
+	var p_begin = '<text:p>', p_end = '</text:p>';
 	var write_ws = function(ws, wb, i/*:number*/, opts)/*:string*/ {
 		/* Section 9 Tables */
 		var o = [];
 		o.push('      <table:table table:name="' + escapexml(wb.SheetNames[i]) + '">\n');
 		var R=0,C=0, range = decode_range(ws['!ref']);
+		var marr = ws['!merges'] || [], mi = 0;
 		for(R = 0; R < range.s.r; ++R) o.push('        <table:table-row></table:table-row>\n');
 		for(; R <= range.e.r; ++R) {
 			o.push('        <table:table-row>\n');
 			for(C=0; C < range.s.c; ++C) o.push(null_cell_xml);
 			for(; C <= range.e.c; ++C) {
+				var skip = false, mxml = "";
+				for(mi = 0; mi != marr.length; ++mi) {
+					if(marr[mi].s.c > C) continue;
+					if(marr[mi].s.r > R) continue;
+					if(marr[mi].e.c < C) continue;
+					if(marr[mi].e.r < R) continue;
+					if(marr[mi].s.c != C || marr[mi].s.r != R) skip = true;
+					mxml = 'table:number-columns-spanned="' + (marr[mi].e.c - marr[mi].s.c + 1) + '" table:number-rows-spanned="' + (marr[mi].e.r - marr[mi].s.r + 1) + '" ';
+					break;
+				}
+				if(skip) { o.push(covered_cell_xml); continue; }
 				var ref = encode_cell({r:R, c:C}), cell = ws[ref];
 				if(cell) switch(cell.t) {
-					case 'b': o.push('          <table:table-cell office:value-type="boolean" office:boolean-value="' + (cell.v ? 'true' : 'false') + '"><text:p>' + (cell.v ? 'TRUE' : 'FALSE') + '</text:p></table:table-cell>\n'); break;
-					case 'n': o.push('          <table:table-cell office:value-type="float" office:value="' + cell.v + '"><text:p>' + (cell.w||cell.v) + '</text:p></table:table-cell>\n'); break;
-					case 's': case 'str': o.push('          <table:table-cell office:value-type="string"><text:p>' + escapexml(cell.v) + '</text:p></table:table-cell>\n'); break;
-					//case 'd': // TODO
+					case 'b': o.push(cell_begin + mxml + vt + '"boolean" office:boolean-value="' + (cell.v ? 'true' : 'false') + '">' + p_begin + (cell.v ? 'TRUE' : 'FALSE') + p_end + cell_end); break;
+					case 'n': o.push(cell_begin + mxml + vt + '"float" office:value="' + cell.v + '">' + p_begin + (cell.w||cell.v) + p_end + cell_end); break;
+					case 's': case 'str': o.push(cell_begin + mxml + vt + '"string">' + p_begin + escapexml(cell.v) + p_end + cell_end); break;
+					case 'd': o.push(cell_begin + mxml + vt + '"date" office:date-value="' + (new Date(cell.v).toISOString()) + '">' + p_begin + (cell.w||(new Date(cell.v).toISOString())) + p_end + cell_end); break;
 					//case 'e':
 					default: o.push(null_cell_xml);
 				} else o.push(null_cell_xml);

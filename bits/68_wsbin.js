@@ -209,6 +209,13 @@ function parse_BrtFmlaString(data, length, opts) {
 
 /* [MS-XLSB] 2.4.676 BrtMergeCell */
 var parse_BrtMergeCell = parse_UncheckedRfX;
+var write_BrtMergeCell = write_UncheckedRfX;
+/* [MS-XLSB] 2.4.108 BrtBeginMergeCells */
+function write_BrtBeginMergeCells(cnt, o) {
+	if(o == null) o = new_buf(4);
+	o.write_shift(4, cnt);
+	return o;
+}
 
 /* [MS-XLSB] 2.4.656 BrtHLink */
 function parse_BrtHLink(data, length, opts) {
@@ -550,7 +557,14 @@ function write_CELLTABLE(ba, ws, idx, opts, wb) {
 	write_record(ba, 'BrtEndSheetData');
 }
 
-function write_ws_bin(idx, opts, wb) {
+function write_MERGECELLS(ba, ws/*:Worksheet*/) {
+	if(!ws || !ws['!merges']) return;
+	write_record(ba, 'BrtBeginMergeCells', write_BrtBeginMergeCells(ws['!merges'].length));
+	ws['!merges'].forEach(function(m) { write_record(ba, 'BrtMergeCell', write_BrtMergeCell(m)); });
+	write_record(ba, 'BrtEndMergeCells');
+}
+
+function write_ws_bin(idx/*:number*/, opts, wb/*:Workbook*/) {
 	var ba = buf_array();
 	var s = wb.SheetNames[idx], ws = wb.Sheets[s] || {};
 	var r = safe_decode_range(ws['!ref'] || "A1");
@@ -569,7 +583,7 @@ function write_ws_bin(idx, opts, wb) {
 	/* [SORTSTATE] */
 	/* [DCON] */
 	/* [USERSHVIEWS] */
-	/* [MERGECELLS] */
+	write_MERGECELLS(ba, ws);
 	/* [BrtPhoneticInfo] */
 	/* *CONDITIONALFORMATTING */
 	/* [DVALS] */

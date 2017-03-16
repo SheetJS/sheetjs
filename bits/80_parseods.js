@@ -107,13 +107,15 @@ var parse_content_xml = (function() {
 						case 'float': q.t = 'n'; q.v = parseFloat(ctag.value); break;
 						case 'percentage': q.t = 'n'; q.v = parseFloat(ctag.value); break;
 						case 'currency': q.t = 'n'; q.v = parseFloat(ctag.value); break;
-						case 'date': q.t = 'n'; q.v = datenum(new Date(ctag['date-value'])); q.z = 'm/d/yy'; break;
+						case 'date': q.t = 'd'; q.v = new Date(ctag['date-value']);
+							if(!opts.cellDates) { q.t = 'n'; q.v = datenum(q.v); }
+							q.z = 'm/d/yy'; break;
 						case 'time': q.t = 'n'; q.v = parse_isodur(ctag['time-value'])/86400; break;
 						case 'number': q.t = 'n'; q.v = parseFloat(ctag['数据数值']); break;
 						default:
 							if(q.t === 'string' || q.t === 'text' || !q.t) {
 								q.t = 's';
-								if(ctag['string-value'] != null) textp = ctag['string-value'];
+								if(ctag['string-value'] != null) textp = unescapexml(ctag['string-value']);
 							} else throw new Error('Unsupported value type ' + q.t);
 					}
 				} else {

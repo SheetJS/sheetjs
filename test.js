@@ -866,13 +866,14 @@ describe('roundtrip features', function() {
 
 	describe('should preserve features', function() {
 		it('merge cells', function() {
+		["xlsx", "xlsb", "xlml", "ods"].forEach(function(f) {
 			var wb1 = X.readFile(paths.mcxlsx);
-			var wb2 = X.read(X.write(wb1, {type:'binary'}), {type:'binary'});
+			var wb2 = X.read(X.write(wb1,{bookType:f,type:'binary'}),{type:'binary'});
 			var m1 = wb1.Sheets.Merge['!merges'].map(X.utils.encode_range);
 			var m2 = wb2.Sheets.Merge['!merges'].map(X.utils.encode_range);
 			assert.equal(m1.length, m2.length);
-			for(var i = 0; i < m1.length; ++i) assert.equal(m1[i], m2[i]);
-		});
+			for(var i = 0; i < m1.length; ++i) assert(m1.indexOf(m2[i]) > -1);
+		}); });
 	});
 
 	describe('should preserve dates', function() {
@@ -1204,3 +1205,45 @@ describe('encryption', function() {
 		});
 	});
 });
+
+describe('multiformat tests', function() {
+var mfopts = opts;
+var mft = fs.readFileSync('multiformat.lst','utf-8').split("\n");
+var csv = true;
+mft.forEach(function(x) {
+	if(x[0]!="#") describe('MFT ' + x, function() {
+		var fil = {}, f = [], r = x.split(/\s+/);
+		if(r.length < 3) return;
+		it('should parse all', function() {
+			for(var j = 1; j != r.length; ++j) f[j-1] = X.readFile(dir + r[0] + r[j], mfopts);
+		});
+		it('should have the same sheetnames', function() {
+			cmparr(f.map(function(x) { return x.SheetNames; }));
+		});
+		it('should have the same ranges', function() {
+			f[0].SheetNames.forEach(function(s) {
+				var ss = f.map(function(x) { return x.Sheets[s]; });
+				cmparr(ss.map(function(s) { return s['!ref']; }));
+			});
+		});
+		it('should have the same merges', function() {
+			f[0].SheetNames.forEach(function(s) {
+				var ss = f.map(function(x) { return x.Sheets[s]; });
+				cmparr(ss.map(function(s) { return (s['!merges']||[]).map(function(y) { return X.utils.encode_range(y); }).sort(); }));
+			});
+		});
+		it('should have the same CSV', csv ? function() {
+			cmparr(f.map(function(x) { return x.SheetNames; }));
+			var names = f[0].SheetNames;
+			names.forEach(function(name) {
+				cmparr(f.map(function(x) { return X.utils.sheet_to_csv(x.Sheets[name]); }));
+			});
+		} : null);
+	});
+	else x.split(/\s+/).forEach(function(w) { switch(w) {
+		case "no-csv": csv = false; break;
+		case "yes-csv": csv = true; break;
+	}});
+});
+});
+

@@ -479,7 +479,7 @@ avoid possible confusion.
 
 Type `z` represents blank stub cells.  These do not have any data or type, and
 are not processed by any of the core library functions.  By default these cells
-will not be generated; the parser `cellStubs` option must be set to `true`.
+will not be generated; the parser `sheetStubs` option must be set to `true`.
 
 ### Formulae
 
