@@ -8,7 +8,7 @@ var hlinkregex = /<(?:\w*:)?hyperlink[^>]*\/>/g;
 var dimregex = /"(\w*:\w*)"/;
 var colregex = /<(?:\w*:)?col[^>]*\/>/g;
 /* 18.3 Worksheets */
-function parse_ws_xml(data/*:?string*/, opts, rels)/*:Worksheet*/ {
+function parse_ws_xml(data/*:?string*/, opts, rels, wb, themes, styles)/*:Worksheet*/ {
 	if(!data) return data;
 	/* 18.3.1.99 worksheet CT_Worksheet */
 	var s = ({}/*:any*/);
@@ -39,7 +39,7 @@ function parse_ws_xml(data/*:?string*/, opts, rels)/*:Worksheet*/ {
 
 	/* 18.3.1.80 sheetData CT_SheetData ? */
 	var mtch=data.match(sheetdataregex);
-	if(mtch) parse_ws_xml_data(mtch[1], s, opts, refguess);
+	if(mtch) parse_ws_xml_data(mtch[1], s, opts, refguess, themes, styles);
 
 	/* 18.3.1.48 hyperlinks CT_Hyperlinks */
 	var hlink = data.match(hlinkregex);
@@ -173,7 +173,7 @@ var parse_ws_xml_data = (function parse_ws_xml_data_factory() {
 	var refregex = /ref=["']([^"']*)["']/;
 	var match_v = matchtag("v"), match_f = matchtag("f");
 
-return function parse_ws_xml_data(sdata, s, opts, guess) {
+return function parse_ws_xml_data(sdata, s, opts, guess, themes, styles) {
 	var ri = 0, x = "", cells = [], cref = [], idx = 0, i=0, cc=0, d="", p/*:any*/;
 	var tag, tagr = 0, tagc = 0;
 	var sstr, ftag;
@@ -288,7 +288,7 @@ return function parse_ws_xml_data(sdata, s, opts, guess) {
 					if(opts.cellStyles && cf.fillId != null) fillid = cf.fillId;
 				}
 			}
-			safe_format(p, fmtid, fillid, opts);
+			safe_format(p, fmtid, fillid, opts, themes, styles);
 			s[tag.r] = p;
 		}
 	}

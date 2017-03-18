@@ -22,7 +22,7 @@ function get_cell_style(styles, cell, opts) {
 	return len;
 }
 
-function safe_format(p, fmtid, fillid, opts) {
+function safe_format(p, fmtid, fillid, opts, themes, styles) {
 	if(p.t === 'z') return;
 	if(p.t === 'd' && typeof p.v === 'string') p.v = new Date(p.v);
 	try {

@@ -1,5 +1,5 @@
 /* 18.8.21 fills CT_Fills */
-function parse_fills(t, opts) {
+function parse_fills(t, styles, opts) {
 	styles.Fills = [];
 	var fill = {};
 	t[0].match(tagregex).forEach(function(x) {
@@ -39,13 +39,13 @@ function parse_fills(t, opts) {
 				break;
 			case '<fgColor/>': case '</fgColor>': break;
 
-			default: if(opts.WTF) throw new Error('unrecognized ' + y[0] + ' in fills');
+			default: if(opts && opts.WTF) throw new Error('unrecognized ' + y[0] + ' in fills');
 		}
 	});
 }
 
 /* 18.8.31 numFmts CT_NumFmts */
-function parse_numFmts(t, opts) {
+function parse_numFmts(t, styles, opts) {
 	styles.NumberFmt = [];
 	var k/*Array<number>*/ = (keys(SSF._table)/*:any*/);
 	for(var i=0; i < k.length; ++i) styles.NumberFmt[k[i]] = SSF._table[k[i]];
@@ -77,7 +77,7 @@ function write_numFmts(NF/*:{[n:number]:string}*/, opts) {
 }
 
 /* 18.8.10 cellXfs CT_CellXfs */
-function parse_cellXfs(t, opts) {
+function parse_cellXfs(t, styles, opts) {
 	styles.CellXf = [];
 	t[0].match(tagregex).forEach(function(x) {
 		var y = parsexmltag(x);
@@ -121,24 +121,25 @@ var cellXfRegex = /<cellXfs([^>]*)>.*<\/cellXfs>/;
 var fillsRegex = /<fills([^>]*)>.*<\/fills>/;
 
 return function parse_sty_xml(data, opts) {
+	var styles = {};
 	if(!data) return styles;
 	/* 18.8.39 styleSheet CT_Stylesheet */
 	var t;
 
 	/* numFmts CT_NumFmts ? */
-	if((t=data.match(numFmtRegex))) parse_numFmts(t, opts);
+	if((t=data.match(numFmtRegex))) parse_numFmts(t, styles, opts);
 
 	/* fonts CT_Fonts ? */
 	/*if((t=data.match(/<fonts([^>]*)>.*<\/fonts>/))) parse_fonts(t, opts);*/
 
 	/* fills CT_Fills */
-	if((t=data.match(fillsRegex))) parse_fills(t, opts);
+	if((t=data.match(fillsRegex))) parse_fills(t, styles, opts);
 
 	/* borders CT_Borders ? */
 	/* cellStyleXfs CT_CellStyleXfs ? */
 
 	/* cellXfs CT_CellXfs ? */
-	if((t=data.match(cellXfRegex))) parse_cellXfs(t, opts);
+	if((t=data.match(cellXfRegex))) parse_cellXfs(t, styles, opts);
 
 	/* dxfs CT_Dxfs ? */
 	/* tableStyles CT_TableStyles ? */

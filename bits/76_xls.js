@@ -149,7 +149,7 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 		biff: 8, // BIFF version
 		codepage: 0, // CP from CodePage record
 		winlocked: 0, // fLockWn from WinProtect
-		wtf: false
+		WTF: !!options && !!options.wtf
 	}/*:any*/);
 	if(options.password) opts.password = options.password;
 	var mergecells = [];

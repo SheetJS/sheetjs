@@ -1,5 +1,5 @@
 /* [MS-XLS] 2.4.326 TODO: payload is a zip file */
-function parse_Theme(blob, length) {
+function parse_Theme(blob, length, opts) {
 	var dwThemeVersion = blob.read_shift(4);
 	if(dwThemeVersion === 124226) return;
 	blob.l += length-4;

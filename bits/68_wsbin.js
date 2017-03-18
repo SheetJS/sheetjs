@@ -256,7 +256,7 @@ function parse_BrtShrFmla(data, length, opts) {
 }
 
 /* [MS-XLSB] 2.1.7.61 Worksheet */
-function parse_ws_bin(data, opts, rels, wb)/*:Worksheet*/ {
+function parse_ws_bin(data, opts, rels, wb, themes, styles)/*:Worksheet*/ {
 	if(!data) return data;
 	if(!rels) rels = {'!id':{}};
 	var s = {};
@@ -311,7 +311,7 @@ function parse_ws_bin(data, opts, rels, wb)/*:Worksheet*/ {
 					case 'e': p.v = val[1]; p.w = BErr[p.v]; break;
 					case 'str': p.t = 's'; p.v = utf8read(val[1]); break;
 				}
-				if((cf = styles.CellXf[val[0].iStyleRef])) safe_format(p,cf.ifmt,null,opts);
+				if((cf = styles.CellXf[val[0].iStyleRef])) safe_format(p,cf.ifmt,null,opts, themes, styles);
 				s[encode_col(C=val[0].c) + rr] = p;
 				if(opts.cellFormula) {
 					af = false;

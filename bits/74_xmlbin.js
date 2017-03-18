@@ -3,9 +3,9 @@ function parse_wb(data, name/*:string*/, opts)/*:WorkbookFile*/ {
 	return parse_wb_xml((data/*:any*/), opts);
 }
 
-function parse_ws(data, name/*:string*/, opts, rels, wb)/*:Worksheet*/ {
-	if(name.slice(-4)===".bin") return parse_ws_bin((data/*:any*/), opts, rels, wb);
-	return parse_ws_xml((data/*:any*/), opts, rels, wb);
+function parse_ws(data, name/*:string*/, opts, rels, wb, themes, styles)/*:Worksheet*/ {
+	if(name.slice(-4)===".bin") return parse_ws_bin((data/*:any*/), opts, rels, wb, themes, styles);
+	return parse_ws_xml((data/*:any*/), opts, rels, wb, themes, styles);
 }
 
 function parse_sty(data, name/*:string*/, opts) {

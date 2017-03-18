@@ -42,6 +42,7 @@ function parse_BrtXF(data, length/*:number*/) {
 
 /* [MS-XLSB] 2.1.7.50 Styles */
 function parse_sty_bin(data, opts) {
+	var styles = {};
 	styles.NumberFmt = ([]/*:any*/);
 	for(var y in SSF._table) styles.NumberFmt[y] = SSF._table[y];
 

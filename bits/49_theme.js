@@ -1,7 +1,7 @@
 RELS.THEME = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/theme";
 
 /* 20.1.6.2 clrScheme CT_ColorScheme */
-function parse_clrScheme(t, opts) {
+function parse_clrScheme(t, themes, opts) {
 	themes.themeElements.clrScheme = [];
 	var color = {};
 	(t[0].match(tagregex)||[]).forEach(function(x) {
@@ -59,23 +59,23 @@ function parse_clrScheme(t, opts) {
 				}
 				break;
 
-			default: if(opts.WTF) throw 'unrecognized ' + y[0] + ' in clrScheme';
+			default: if(opts && opts.WTF) throw new Error('Unrecognized ' + y[0] + ' in clrScheme');
 		}
 	});
 }
 
 /* 20.1.4.1.18 fontScheme CT_FontScheme */
-function parse_fontScheme(t, opts) { }
+function parse_fontScheme(t, themes, opts) { }
 
 /* 20.1.4.1.15 fmtScheme CT_StyleMatrix */
-function parse_fmtScheme(t, opts) { }
+function parse_fmtScheme(t, themes, opts) { }
 
 var clrsregex = /<a:clrScheme([^>]*)>[^\u2603]*<\/a:clrScheme>/;
 var fntsregex = /<a:fontScheme([^>]*)>[^\u2603]*<\/a:fontScheme>/;
 var fmtsregex = /<a:fmtScheme([^>]*)>[^\u2603]*<\/a:fmtScheme>/;
 
 /* 20.1.6.10 themeElements CT_BaseStyles */
-function parse_themeElements(data, opts) {
+function parse_themeElements(data, themes, opts) {
 	themes.themeElements = {};
 
 	var t;
@@ -89,7 +89,7 @@ function parse_themeElements(data, opts) {
 		['fmtScheme', fmtsregex, parse_fmtScheme]
 	].forEach(function(m) {
 		if(!(t=data.match(m[1]))) throw new Error(m[0] + ' not found in themeElements');
-		m[2](t, opts);
+		m[2](t, themes, opts);
 	});
 }
 
@@ -98,18 +98,19 @@ var themeltregex = /<a:themeElements([^>]*)>[^\u2603]*<\/a:themeElements>/;
 /* 14.2.7 Theme Part */
 function parse_theme_xml(data/*:string*/, opts) {
 	/* 20.1.6.9 theme CT_OfficeStyleSheet */
-	if(!data || data.length === 0) return themes;
+	if(!data || data.length === 0) return parse_theme_xml(write_theme());
 
 	var t;
+	var themes = {};
 
 	/* themeElements CT_BaseStyles */
 	if(!(t=data.match(themeltregex))) throw 'themeElements not found in theme';
-	parse_themeElements(t[0], opts);
+	parse_themeElements(t[0], themes, opts);
 
 	return themes;
 }
 
-function write_theme() {
+function write_theme(Themes, opts)/*:string*/ {
 	var o = [XML_HEADER];
 	o[o.length] = '<a:theme xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" name="Office Theme">';
 	o[o.length] =  '<a:themeElements>';
@@ -264,15 +265,15 @@ function write_theme() {
 	o[o.length] =     '</a:gradFill>';
 	o[o.length] =    '</a:bgFillStyleLst>';
 	o[o.length] =   '</a:fmtScheme>';
-
 	o[o.length] =  '</a:themeElements>';
+
 	o[o.length] =  '<a:objectDefaults>';
 	o[o.length] =   '<a:spDef>';
 	o[o.length] =    '<a:spPr/><a:bodyPr/><a:lstStyle/><a:style><a:lnRef idx="1"><a:schemeClr val="accent1"/></a:lnRef><a:fillRef idx="3"><a:schemeClr val="accent1"/></a:fillRef><a:effectRef idx="2"><a:schemeClr val="accent1"/></a:effectRef><a:fontRef idx="minor"><a:schemeClr val="lt1"/></a:fontRef></a:style>';
 	o[o.length] =   '</a:spDef>';
 	o[o.length] =   '<a:lnDef>';
 	o[o.length] =    '<a:spPr/><a:bodyPr/><a:lstStyle/><a:style><a:lnRef idx="2"><a:schemeClr val="accent1"/></a:lnRef><a:fillRef idx="0"><a:schemeClr val="accent1"/></a:fillRef><a:effectRef idx="1"><a:schemeClr val="accent1"/></a:effectRef><a:fontRef idx="minor"><a:schemeClr val="tx1"/></a:fontRef></a:style>';
-	o[o.length] =     '</a:lnDef>';
+	o[o.length] =   '</a:lnDef>';
 	o[o.length] =  '</a:objectDefaults>';
 	o[o.length] =  '<a:extraClrSchemeLst/>';
 	o[o.length] = '</a:theme>';

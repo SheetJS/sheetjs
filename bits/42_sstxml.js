@@ -113,7 +113,6 @@ var parse_rs = (function parse_rs_factory() {
 					if(y[0].charCodeAt(1) !== 47) throw 'Unrecognized rich format ' + y[0];
 			}
 		}
-		/* TODO: These should be generated styles, not inline */
 		var style = [];
 		if(font.b) style.push("font-weight: bold;");
 		if(font.i) style.push("font-style: italic;");

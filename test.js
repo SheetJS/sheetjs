@@ -601,7 +601,7 @@ function diffsty(ws, r1,r2) {
 }
 
 describe('parse features', function() {
-	it('should have comment as part of cell properties', function(){
+	if(fs.existsSync(paths.swcxlsx)) it('should have comment as part of cell properties', function(){
 		var X = require(modp);
 		var sheet = 'Sheet1';
 		var wb1=X.readFile(paths.swcxlsx);
@@ -620,7 +620,7 @@ describe('parse features', function() {
 	});
 
 	describe('should parse core properties and custom properties', function() {
-		var wb1, wb2;
+		var wb1, wb2, wb3, wb4;
 		var bef = (function() {
 			wb1 = X.readFile(paths.cpxlsx);
 			wb2 = X.readFile(paths.cpxlsb);
@@ -1142,7 +1142,7 @@ describe('corner cases', function() {
 			["foo","bar",new Date("2014-02-19T14:30Z"), "0.3"],
 			["baz", null, "q\"ux"]
 		];
-		ws = sheet_from_array_of_arrays(data);
+		var ws = sheet_from_array_of_arrays(data);
 		ws.A1.f = ""; ws.A1.w = "";
 		delete ws.C3.w; delete ws.C3.z; ws.C3.XF = {ifmt:14};
 		ws.A4.t = "e";

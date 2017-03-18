@@ -15,6 +15,7 @@ type Workbook = {
 
 	Props?: any;
 	Custprops?: any;
+	Themes?: any;
 
 	SSF?: {[n:number]:string};
 	cfb?: any;

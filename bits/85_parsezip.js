@@ -6,10 +6,10 @@ function safe_parse_wbrels(wbrels, sheets) {
 	return !wbrels || wbrels.length === 0 ? null : wbrels;
 }
 
-function safe_parse_ws(zip, path/*:string*/, relsPath/*:string*/, sheet, sheetRels, sheets, opts, wb) {
+function safe_parse_ws(zip, path/*:string*/, relsPath/*:string*/, sheet, sheetRels, sheets, opts, wb, themes, styles) {
 	try {
 		sheetRels[sheet]=parse_rels(getzipstr(zip, relsPath, true), path);
-		sheets[sheet]=parse_ws(getzipdata(zip, path),path,opts,sheetRels[sheet], wb);
+		sheets[sheet]=parse_ws(getzipdata(zip, path),path,opts,sheetRels[sheet], wb, themes, styles);
 	} catch(e) { if(opts.WTF) throw e; }
 }
 
@@ -42,14 +42,14 @@ function parse_zip(zip/*:ZIP*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
 	if(dir.workbooks[0].slice(-3) == "bin") xlsb = true;
 	if(xlsb) set_cp(1200);
 
+	var themes = ({}/*:any*/);
+	var styles = ({}/*:any*/);
 	if(!opts.bookSheets && !opts.bookProps) {
 		strs = [];
 		if(dir.sst) strs=parse_sst(getzipdata(zip, dir.sst.replace(/^\//,'')), dir.sst, opts);
 
-		styles = {};
 		if(dir.style) styles = parse_sty(getzipdata(zip, dir.style.replace(/^\//,'')),dir.style, opts);
 
-		themes = {};
 		if(opts.cellStyles && dir.themes.length) themes = parse_theme(getzipstr(zip, dir.themes[0].replace(/^\//,''), true)||"",dir.themes[0], opts);
 	}
 
@@ -112,7 +112,7 @@ function parse_zip(zip/*:ZIP*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
 			path = path.replace(/sheet0\./,"sheet.");
 		}
 		relsPath = path.replace(/^(.*)(\/)([^\/]*)$/, "$1/_rels/$3.rels");
-		safe_parse_ws(zip, path, relsPath, props.SheetNames[i], sheetRels, sheets, opts, wb);
+		safe_parse_ws(zip, path, relsPath, props.SheetNames[i], sheetRels, sheets, opts, wb, themes, styles);
 	}
 
 	if(dir.comments) parse_comments(zip, dir.comments, sheets, sheetRels, opts);
