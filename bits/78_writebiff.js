@@ -57,20 +57,20 @@ function write_BIFF2LABEL(r, c, val) {
 }
 
 function write_ws_biff_cell(ba/*:BufArray*/, cell/*:Cell*/, R/*:number*/, C/*:number*/, opts) {
-	switch(cell.t) {
+	if(cell.v != null) switch(cell.t) {
 		case 'n':
 			if((cell.v == (cell.v|0)) && (cell.v >= 0) && (cell.v < 65536))
 				write_biff_rec(ba, 0x0002, write_BIFF2INT(R, C, cell.v));
 			else
 				write_biff_rec(ba, 0x0003, write_BIFF2NUMBER(R,C, cell.v));
-			break;
-		case 'b': case 'e': write_biff_rec(ba, 0x0005, write_BIFF2BERR(R, C, cell.v, cell.t)); break;
+			return;
+		case 'b': case 'e': write_biff_rec(ba, 0x0005, write_BIFF2BERR(R, C, cell.v, cell.t)); return;
 		/* TODO: codepage, sst */
 		case 's': case 'str':
 			write_biff_rec(ba, 0x0004, write_BIFF2LABEL(R, C, cell.v));
-			break;
-		default: write_biff_rec(ba, 0x0001, write_BIFF2Cell(null, R, C));
+			return;
 	}
+	write_biff_rec(ba, 0x0001, write_BIFF2Cell(null, R, C));
 }
 
 function write_biff_ws(ba/*:BufArray*/, ws/*:Worksheet*/, idx/*:number*/, opts, wb/*:Workbook*/) {

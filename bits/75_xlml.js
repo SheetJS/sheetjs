@@ -108,7 +108,7 @@ function parse_xlml_data(xml, ss, data, cell/*:any*/, base, styles, csty, row, a
 		case 'DateTime':
 			cell.v = (Date.parse(xml) - new Date(Date.UTC(1899, 11, 30))) / (24 * 60 * 60 * 1000);
 			if(cell.v !== cell.v) cell.v = unescapexml(xml);
-			else if(cell.v >= 1 && cell.v<60) cell.v = cell.v -1;
+			else if(cell.v<60) cell.v = cell.v -1;
 			if(!nf || nf == "General") nf = "yyyy-mm-dd";
 			/* falls through */
 		case 'Number':
@@ -250,6 +250,7 @@ function parse_xlml_xml(d, opts)/*:Workbook*/ {
 				sheetname = unescapexml(tmp.Name);
 				cursheet = {};
 				mergecells = [];
+				arrayf = [];
 			}
 			break;
 		case 'Table':
@@ -759,10 +760,14 @@ function write_sty_xlml(wb, opts)/*:string*/ {
 }
 /* TODO */
 function write_ws_xlml_cell(cell, ref, ws, opts, idx, wb, addr)/*:string*/{
-	if(!cell || cell.v === undefined) return "<Cell></Cell>";
+	if(!cell || cell.v == undefined && cell.f == undefined) return "<Cell></Cell>";
 
 	var attr = {};
 	if(cell.f) attr["ss:Formula"] = "=" + escapexml(a1_to_rc(cell.f, addr));
+	if(cell.F && cell.F.substr(0, ref.length) == ref) {
+		var end = decode_cell(cell.F.substr(ref.length + 1));
+		attr["ss:ArrayRange"] = "RC:R" + (end.r == addr.r ? "" : "[" + (end.r - addr.r) + "]") + "C" + (end.c == addr.c ? "" : "[" + (end.c - addr.c) + "]");
+	}
 
 	if(ws['!merges']) {
 		var marr = ws['!merges'];
@@ -780,9 +785,9 @@ function write_ws_xlml_cell(cell, ref, ws, opts, idx, wb, addr)/*:string*/{
 		case 'b': t = 'Boolean'; p = (cell.v ? "1" : "0"); break;
 		case 'e': t = 'Error'; p = BErr[cell.v]; break;
 		case 'd': t = 'DateTime'; p = new Date(cell.v).toISOString(); break;
-		case 's':  t = 'String'; p = escapexml(cell.v||""); break;
+		case 's': t = 'String'; p = escapexml(cell.v||""); break;
 	}
-	var m = '<Data ss:Type="' + t + '">' + p + '</Data>';
+	var m = '<Data ss:Type="' + t + '">' + (cell.v != null ? p : "") + '</Data>';
 
 	return writextag("Cell", m, attr);
 }

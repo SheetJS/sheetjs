@@ -156,9 +156,15 @@ function sheet_to_csv(sheet/*:Worksheet*/, opts/*:?Sheet2CSVOpts*/) {
 		rr = encode_row(R);
 		for(C = r.s.c; C <= r.e.c; ++C) {
 			val = sheet[cols[C] + rr];
-			txt = val !== undefined ? ''+format_cell(val) : "";
-			for(i = 0, cc = 0; i !== txt.length; ++i) if((cc = txt.charCodeAt(i)) === fs || cc === rs || cc === 34) {
-				txt = "\"" + txt.replace(qreg, '""') + "\""; break; }
+			if(val == null) txt = "";
+			else if(val.v != null) {
+				txt = ''+format_cell(val);
+				for(i = 0, cc = 0; i !== txt.length; ++i) if((cc = txt.charCodeAt(i)) === fs || cc === rs || cc === 34) {
+					txt = "\"" + txt.replace(qreg, '""') + "\""; break; }
+			} else if(val.f != null && !val.F) {
+				txt = '=' + val.f; if(txt.indexOf(",") >= 0) txt = '"' + txt.replace(qreg, '""') + '"';
+			} else txt = "";
+			/* NOTE: Excel CSV does not support array formulae */
 			row += (C === r.s.c ? "" : FS) + txt;
 		}
 		out += row + RS;

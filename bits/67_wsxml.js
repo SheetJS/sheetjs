@@ -126,7 +126,7 @@ function write_ws_xml_cols(ws, cols)/*:string*/ {
 }
 
 function write_ws_xml_cell(cell, ref, ws, opts, idx, wb) {
-	if(cell.v === undefined || cell.t === 'z') return "";
+	if(cell.v === undefined && cell.f === undefined || cell.t === 'z') return "";
 	var vv = "";
 	var oldt = cell.t, oldv = cell.v;
 	switch(cell.t) {
@@ -152,7 +152,7 @@ function write_ws_xml_cell(cell, ref, ws, opts, idx, wb) {
 		case 'd': o.t = "d"; break;
 		case 'b': o.t = "b"; break;
 		case 'e': o.t = "e"; break;
-		default:
+		default: if(cell.v == null) { delete cell.t; break; }
 			if(opts.bookSST) {
 				v = writetag('v', ''+get_sst_id(opts.Strings, cell.v));
 				o.t = "s"; break;
@@ -160,6 +160,10 @@ function write_ws_xml_cell(cell, ref, ws, opts, idx, wb) {
 			o.t = "str"; break;
 	}
 	if(cell.t != oldt) { cell.t = oldt; cell.v = oldv; }
+	if(cell.f) {
+		var ff = cell.F && cell.F.substr(0, ref.length) == ref ? {t:"array", ref:cell.F} : null;
+		v = writextag('f', escapexml(cell.f), ff) + (cell.v != null ? v : "");
+	}
 	return writextag('c', v, o);
 }
 
@@ -215,7 +219,8 @@ return function parse_ws_xml_data(sdata, s, opts, guess) {
 			if((cref=d.match(match_v))!= null && /*::cref != null && */cref[1] !== '') p.v=unescapexml(cref[1]);
 			if(opts.cellFormula) {
 				if((cref=d.match(match_f))!= null && /*::cref != null && */cref[1] !== '') {
-					p.f=unescapexml(utf8read(cref[1]));
+					/* TODO: match against XLSXFutureFunctions */
+					p.f=unescapexml(utf8read(cref[1])).replace(/_xlfn\./,"");
 					if(/*::cref != null && cref[0] != null && */cref[0].indexOf('t="array"') > -1) {
 						p.F = (d.match(refregex)||[])[1];
 						if(p.F.indexOf(":") > -1) arrayf.push([safe_decode_range(p.F), p.F]);

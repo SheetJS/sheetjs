@@ -310,7 +310,18 @@ function hashq(str/*:string*/)/*:string*/ {
 	return o;
 }
 function rnd(val/*:number*/, d/*:number*/)/*:string*/ { var dd = Math.pow(10,d); return ""+(Math.round(val * dd)/dd); }
-function dec(val/*:number*/, d/*:number*/)/*:number*/ { return Math.round((val-Math.floor(val))*Math.pow(10,d)); }
+function dec(val/*:number*/, d/*:number*/)/*:number*/ {
+	if (d < ('' + Math.round((val-Math.floor(val))*Math.pow(10,d))).length) {
+		return 0;
+	}
+	return Math.round((val-Math.floor(val))*Math.pow(10,d));
+}
+function carry(val/*:number*/, d/*:number*/)/*:number*/ {
+	if (d < ('' + Math.round((val-Math.floor(val))*Math.pow(10,d))).length) {
+		return 1;
+	}
+	return 0;
+}
 function flr(val/*:number*/)/*:string*/ { if(val < 2147483647 && val > -2147483648) return ""+(val >= 0 ? (val|0) : (val-1|0)); return ""+Math.floor(val); }
 function write_num_flt(type/*:string*/, fmt/*:string*/, val/*:number*/)/*:string*/ {
 	if(type.charCodeAt(0) === 40 && !fmt.match(closeparen)) {
@@ -332,8 +343,7 @@ function write_num_flt(type/*:string*/, fmt/*:string*/, val/*:number*/)/*:string
 	if((r = fmt.match(frac1))) return write_num_f1(r, aval, sign);
 	if(fmt.match(/^#+0+$/)) return sign + pad0r(aval,fmt.length - fmt.indexOf("0"));
 	if((r = fmt.match(dec1))) {
-		// $FlowIgnore
-		o = rnd(val, r[1].length).replace(/^([^\.]+)$/,"$1."+r[1]).replace(/\.$/,"."+r[1]).replace(/\.(\d*)$/,function($$, $1) { return "." + $1 + fill("0", r[1].length-$1.length); });
+		o = rnd(val, r[1].length).replace(/^([^\.]+)$/,"$1."+r[1]).replace(/\.$/,"."+r[1]).replace(/\.(\d*)$/,function($$, $1) { return "." + $1 + fill("0", /*::(*/r/*::||[""])*/[1].length-$1.length); });
 		return fmt.indexOf("0.") !== -1 ? o : o.replace(/^0\./,".");
 	}
 	fmt = fmt.replace(/^#+([0.])/, "$1");
@@ -342,7 +352,7 @@ function write_num_flt(type/*:string*/, fmt/*:string*/, val/*:number*/)/*:string
 	}
 	if((r = fmt.match(/^#,##0(\.?)$/))) return sign + commaify(pad0r(aval,0));
 	if((r = fmt.match(/^#,##0\.([#0]*0)$/))) {
-		return val < 0 ? "-" + write_num_flt(type, fmt, -val) : commaify(""+(Math.floor(val))) + "." + pad0(dec(val, r[1].length),r[1].length);
+		return val < 0 ? "-" + write_num_flt(type, fmt, -val) : commaify(""+(Math.floor(val) + carry(val, r[1].length))) + "." + pad0(dec(val, r[1].length),r[1].length);
 	}
 	if((r = fmt.match(/^#,#*,#0/))) return write_num_flt(type,fmt.replace(/^#,#*,/,""),val);
 	if((r = fmt.match(/^([0#]+)(\\?-([0#]+))+$/))) {

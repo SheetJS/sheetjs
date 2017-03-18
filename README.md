@@ -484,7 +484,7 @@ will not be generated; the parser `sheetStubs` option must be set to `true`.
 ### Formulae
 
 The A1-style formula string is stored in the `f` field.  Even though different
-file formats store the formulae in different ways, the formats are converted.
+file formats store the formulae in different ways, the formats are translated.
 
 Shared formulae are decompressed and each cell has the correct formula.
 

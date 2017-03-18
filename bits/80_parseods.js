@@ -78,6 +78,7 @@ var parse_content_xml = (function() {
 					ctag = parsexmltag(Rn[0], false);
 					q = ({t:ctag['数据类型'] || ctag['value-type'], v:null/*:: , z:null, w:""*/}/*:any*/);
 					if(opts.cellFormula) {
+						if(ctag.formula) ctag.formula = unescapexml(ctag.formula);
 						if(ctag['number-matrix-columns-spanned'] && ctag['number-matrix-rows-spanned']) {
 							mR = parseInt(ctag['number-matrix-rows-spanned'],10) || 0;
 							mC = parseInt(ctag['number-matrix-columns-spanned'],10) || 0;

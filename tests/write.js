@@ -79,14 +79,32 @@ var ws = sheet_from_array_of_arrays(data);
 wb.SheetNames.push(ws_name);
 wb.Sheets[ws_name] = ws;
 
+/* TEST: simple formula */
+ws['C1'].f = "A1+B1";
+ws['C2'] = {t:'n', f:"A1+B1"};
+
+/* TEST: single-cell array formula */
+ws['D1'] = {t:'n', f:"SUM(A1:C1*A1:C1)", F:"D1:D1"};
+
+/* TEST: multi-cell array formula */
+ws['E1'] = {t:'n', f:"TRANSPOSE(A1:D1)", F:"E1:E4"};
+ws['E2'] = {t:'n', F:"E1:E4"};
+ws['E3'] = {t:'n', F:"E1:E4"};
+ws['E4'] = {t:'n', F:"E1:E4"};
+ws["!ref"] = "A1:E4";
+
 /* TEST: column widths */
 ws['!cols'] = wscols;
 
+console.log("JSON Data: "); console.log(XLSX.utils.sheet_to_json(ws, {header:1}));
+
+
 /* write file */
-XLSX.writeFile(wb, 'sheetjs.xlsx');
+XLSX.writeFile(wb, 'sheetjs.xlsx', {bookSST:true});
 XLSX.writeFile(wb, 'sheetjs.xlsm');
-XLSX.writeFile(wb, 'sheetjs.xlsb');
-XLSX.writeFile(wb, 'sheetjs.xls', {bookType:'biff2'});
+XLSX.writeFile(wb, 'sheetjs.xlsb'); // no formula
+XLSX.writeFile(wb, 'sheetjs.xls', {bookType:'biff2'}); // no formula
+XLSX.writeFile(wb, 'sheetjs.xml.xls', {bookType:'xlml'});
 XLSX.writeFile(wb, 'sheetjs.ods');
 XLSX.writeFile(wb, 'sheetjs.fods');
 XLSX.writeFile(wb, 'sheetjs.csv');
@@ -96,6 +114,7 @@ XLSX.readFile('sheetjs.xlsx');
 XLSX.readFile('sheetjs.xlsm');
 XLSX.readFile('sheetjs.xlsb');
 XLSX.readFile('sheetjs.xls');
+XLSX.readFile('sheetjs.xml.xls');
 XLSX.readFile('sheetjs.ods');
 XLSX.readFile('sheetjs.fods');
 //XLSX.readFile('sheetjs.csv');

@@ -122,6 +122,19 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 			if(cell.r + 1 > range.e.r) range.e.r = cell.r + 1;
 			if(cell.c + 1 > range.e.c) range.e.c = cell.c + 1;
 		}
+		if(options.cellFormula && line.f) {
+			for(var afi = 0; afi < array_formulae.length; ++afi) {
+				if(array_formulae[afi][0].s.c > cell.c) continue;
+				if(array_formulae[afi][0].s.r > cell.r) continue;
+				if(array_formulae[afi][0].e.c < cell.c) continue;
+				if(array_formulae[afi][0].e.r < cell.r) continue;
+				line.F = encode_range(array_formulae[afi][0]);
+				if(array_formulae[afi][0].s.c != cell.c) delete line.f;
+				if(array_formulae[afi][0].s.r != cell.r) delete line.f;
+				if(line.f) line.f = "" + stringify_formula(array_formulae[afi][1], range, cell, supbooks, opts);
+				break;
+			}
+		}
 		if(options.sheetRows && lastcell.r >= options.sheetRows) cell_valid = false;
 		else out[last_cell] = line;
 	};
@@ -274,7 +287,9 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 					else cur_sheet = (Directory[s] || {name:""}).name;
 					mergecells = [];
 					objects = [];
+					array_formulae = []; opts.arrayf = array_formulae;
 				} break;
+
 				case 'Number': case 'BIFF2NUM': case 'BIFF2INT': {
 					temp_val = {ixfe: val.ixfe, XF: XFs[val.ixfe], v:val.val, t:'n'};
 					safe_format_xf(temp_val, options, wb.opts.Date1904);
@@ -299,44 +314,43 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 					}
 				} break;
 				case 'Formula': {
-					switch(val.val) {
-						case 'String': last_formula = val; break;
-						case 'Array Formula': throw "Array Formula unsupported";
-						default:
-							temp_val = ({v:val.val, ixfe:val.cell.ixfe, t:val.tt}/*:any*/);
-							temp_val.XF = XFs[temp_val.ixfe];
-							if(options.cellFormula) {
-								var _f = val.formula;
-								if(_f && _f[0] && _f[0][0] && _f[0][0][0] == 'PtgExp') {
-									var _fr = _f[0][0][1][0], _fc = _f[0][0][1][1];
-									var _fe = encode_cell({r:_fr, c:_fc});
-									if(shared_formulae[_fe]) temp_val.f = ""+stringify_formula(val.formula,range,val.cell,supbooks, opts);
-									else temp_val.F = (out[_fe] || {}).F;
-								} else temp_val.f = ""+stringify_formula(val.formula,range,val.cell,supbooks, opts);
-							}
-							safe_format_xf(temp_val, options, wb.opts.Date1904);
-							addcell(val.cell, temp_val, options);
-							last_formula = val;
+					if(val.val == 'String') { last_formula = val; break; }
+					temp_val = ({v:val.val, ixfe:val.cell.ixfe, t:val.tt}/*:any*/);
+					temp_val.XF = XFs[temp_val.ixfe];
+					if(options.cellFormula) {
+						var _f = val.formula;
+						if(_f && _f[0] && _f[0][0] && _f[0][0][0] == 'PtgExp') {
+							var _fr = _f[0][0][1][0], _fc = _f[0][0][1][1];
+							var _fe = encode_cell({r:_fr, c:_fc});
+							if(shared_formulae[_fe]) temp_val.f = ""+stringify_formula(val.formula,range,val.cell,supbooks, opts);
+							else temp_val.F = (out[_fe] || {}).F;
+						} else temp_val.f = ""+stringify_formula(val.formula,range,val.cell,supbooks, opts);
 					}
+					safe_format_xf(temp_val, options, wb.opts.Date1904);
+					addcell(val.cell, temp_val, options);
+					last_formula = val;
 				} break;
 				case 'String': {
-					if(last_formula) {
+					if(last_formula) { /* technically always true */
 						last_formula.val = val;
-						temp_val = ({v:last_formula.val, ixfe:last_formula.cell.ixfe, t:'s'}/*:any*/);
+						temp_val = ({v:val, ixfe:last_formula.cell.ixfe, t:'s'}/*:any*/);
 						temp_val.XF = XFs[temp_val.ixfe];
-						if(options.cellFormula) temp_val.f = ""+stringify_formula(last_formula.formula, range, last_formula.cell, supbooks, opts);
+						if(options.cellFormula) {
+							temp_val.f = ""+stringify_formula(last_formula.formula, range, last_formula.cell, supbooks, opts);
+						}
 						safe_format_xf(temp_val, options, wb.opts.Date1904);
 						addcell(last_formula.cell, temp_val, options);
 						last_formula = null;
-					}
+					} else throw new Error("String record expects Formula");
 				} break;
 				case 'Array': {
 					array_formulae.push(val);
-					if(options.cellFormula && out[last_cell]) {
+					var _arraystart = encode_cell(val[0].s);
+					if(options.cellFormula && out[_arraystart]) {
 						if(!last_formula) break; /* technically unreachable */
-						if(!last_cell || !out[last_cell]) break; /* technically unreachable */
-						out[last_cell].f = ""+stringify_formula(last_formula.formula, range, last_formula.cell, supbooks, opts);
-						out[last_cell].F = encode_range(val[0]);
+						if(!_arraystart || !out[_arraystart]) break;
+						out[_arraystart].f = ""+stringify_formula(val[1], range, val[0], supbooks, opts);
+						out[_arraystart].F = encode_range(val[0]);
 					}
 				} break;
 				case 'ShrFmla': {
@@ -375,6 +389,7 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 					safe_format_xf(temp_val, options, wb.opts.Date1904);
 					addcell({c:val.c, r:val.r}, temp_val, options);
 					break;
+
 				case 'Dimensions': {
 					if(file_depth === 1) range = val; /* TODO: stack */
 				} break;

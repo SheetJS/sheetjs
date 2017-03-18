@@ -838,9 +838,7 @@ function seq(end, start) {
 }
 
 describe('roundtrip features', function() {
-	var bef = (function() {
-		X = require(modp);
-	});
+	var bef = (function() { X = require(modp); });
 	if(typeof before != 'undefined') before(bef);
 	else it('before', bef);
 	describe('should parse core properties and custom properties', function() {
@@ -907,14 +905,18 @@ describe('roundtrip features', function() {
 		});
 	});
 
-	describe('xls to xlsx conversions', function() { [
-			['XLS', 'formula_stress_test.xls'],
-			['XML', 'formula_stress_test.xls.xml']
+	describe('should preserve formulae', function() { [
+			['xlml', paths.fstxml],
+			['xlsx', paths.fstxlsx],
+			['ods',  paths.fstods]
 		].forEach(function(w) {
-			it('should be able to write ' + w[0] + ' files', function() {
-				var xls = X.readFile('./test_files/' + w[1], {cellNF:true});
-				X.writeFile(xls, './tmp/' + w[1] + '.xlsx', {bookSST:true});
-				X.writeFile(xls, './tmp/' + w[1] + '.xlsb', {bookSST:true});
+			it(w[0], function() {
+				var wb1 = X.readFile(w[1], {cellFormula:true});
+				if(w[0] == 'ods') X.writeFile(wb1, "./tmp/_.ods", {bookType:"ods"});
+				var wb2 = X.read(X.write(wb1, {bookType:w[0], type:"buffer"}), {cellFormula:true, type:"buffer"});
+				wb1.SheetNames.forEach(function(n) {
+					assert.equal( X.utils.sheet_to_formulae(wb1.Sheets[n]).sort().join("\n"), X.utils.sheet_to_formulae(wb2.Sheets[n]).sort().join("\n") );
+				});
 			});
 		});
 	});
@@ -1209,7 +1211,7 @@ describe('encryption', function() {
 describe('multiformat tests', function() {
 var mfopts = opts;
 var mft = fs.readFileSync('multiformat.lst','utf-8').split("\n");
-var csv = true;
+var csv = true, formulae = false;
 mft.forEach(function(x) {
 	if(x[0]!="#") describe('MFT ' + x, function() {
 		var fil = {}, f = [], r = x.split(/\s+/);
@@ -1239,10 +1241,20 @@ mft.forEach(function(x) {
 				cmparr(f.map(function(x) { return X.utils.sheet_to_csv(x.Sheets[name]); }));
 			});
 		} : null);
+		it('should have the same formulae', formulae ? function() {
+			cmparr(f.map(function(x) { return x.SheetNames; }));
+			var names = f[0].SheetNames;
+			names.forEach(function(name) {
+				cmparr(f.map(function(x) { return X.utils.sheet_to_formulae(x.Sheets[name]).sort(); }));
+			});
+		} : null);
+
 	});
 	else x.split(/\s+/).forEach(function(w) { switch(w) {
 		case "no-csv": csv = false; break;
 		case "yes-csv": csv = true; break;
+		case "no-formula": formulae = false; break;
+		case "yes-formula": formulae = true; break;
 	}});
 });
 });
