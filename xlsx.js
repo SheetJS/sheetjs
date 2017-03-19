@@ -9460,9 +9460,11 @@ function check_wb(wb) {
 var wbnsregex = /<\w+:workbook/;
 function parse_wb_xml(data, opts) {
 	if(!data) throw new Error("Could not find file");
-	var wb = { AppVersion:{}, WBProps:{}, WBView:[], Sheets:[], CalcPr:{}, xmlns: "" };
+	var wb = { AppVersion:{}, WBProps:{}, WBView:[], Sheets:[], CalcPr:{}, Names:{'!names':[]}, xmlns: "" };
 	var pass = false, xmlns = "xmlns";
-	(data.match(tagregex)||[]).forEach(function xml_wb(x) {
+	var dname = {}, dnstart = 0;
+	/*(data.match(tagregex)||[]).forEach */
+	data.replace(tagregex, function xml_wb(x, idx) {
 		var y = parsexmltag(x);
 		switch(strip_ns(y[0])) {
 			case '<?xml': break;
@@ -9517,7 +9519,18 @@ function parse_wb_xml(data, opts) {
 			case '<definedNames>': case '<definedNames': pass=true; break;
 			case '</definedNames>': pass=false; break;
 			/* 18.2.5    definedName CT_DefinedName + */
-			case '<definedName': case '<definedName/>': case '</definedName>': break;
+			case '<definedName': {
+				dname = {};
+				dname.Name = y.name;
+				if(y.comment) dname.Comment = y.comment;
+				dnstart = idx + x.length;
+			}	break;
+			case '</definedName>': {
+				dname.Ref = data.slice(dnstart, idx);
+				wb.Names[dname.Name] = dname;
+				wb.Names['!names'].push(dname.Name);
+			} break;
+			case '<definedName/>': break;
 
 			/* 18.2.2  calcPr CT_CalcPr ? */
 			case '<calcPr': delete y[0]; wb.CalcPr = y; break;
@@ -9569,6 +9582,7 @@ function parse_wb_xml(data, opts) {
 
 			default: if(!pass && opts.WTF) throw new Error('unrecognized ' + y[0] + ' in workbook');
 		}
+		return x;
 	});
 	if(XMLNS.main.indexOf(wb.xmlns) === -1) throw new Error("Unknown Namespace: " + wb.xmlns);
 
