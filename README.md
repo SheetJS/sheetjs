@@ -1005,6 +1005,8 @@ Worksheet File Format (From Lotus) December 1984
 
 [![Build Status](https://travis-ci.org/SheetJS/js-xlsx.svg?branch=master)](https://travis-ci.org/SheetJS/js-xlsx)
 
+[![Build Status](https://semaphoreci.com/api/v1/sheetjs/js-xlsx/branches/master/badge.svg)](https://semaphoreci.com/sheetjs/js-xlsx)
+
 [![Coverage Status](http://img.shields.io/coveralls/SheetJS/js-xlsx/master.svg)](https://coveralls.io/r/SheetJS/js-xlsx?branch=master)
 
 [![NPM Downloads](https://img.shields.io/npm/dt/xlsx.svg)](https://npmjs.org/package/xlsx)
