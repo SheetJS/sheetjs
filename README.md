@@ -465,7 +465,8 @@ Type `e` is the Error type. `v` holds the number and `w` holds the common name:
 Type `n` is the Number type. This includes all forms of data that Excel stores
 as numbers, such as dates/times and Boolean fields.  Excel exclusively uses data
 that can be fit in an IEEE754 floating point number, just like JS Number, so the
-`v` field holds the raw number.  The `w` field holds formatted text.
+`v` field holds the raw number.  The `w` field holds formatted text.  Dates are
+stored as numbers by default and converted with `XLSX.SSF.parse_date_code`.
 
 Type `d` is the Date type, generated only when the option `cellDates` is passed.
 Since JSON does not have a natural Date type, parsers are generally expected to
@@ -540,6 +541,12 @@ Special worksheet keys (accessible as `worksheet[key]`, each starting with `!`):
 custom properties.  Since the XLS standard properties deviate from the XLSX
 standard, XLS parsing stores core properties in both places.  .
 
+`wb.WBProps` includes more workbook-level properties:
+
+- Excel supports two epochs (January 1 1900 and January 1 1904), see
+  [1900 vs. 1904 Date System](http://support2.microsoft.com/kb/180162).
+  The workbook's epoch can be determined by examining the workbook's
+  `wb.WBProps.date1904` property.
 
 ## Parsing Options
 
@@ -932,6 +939,7 @@ $ open -a Chromium.app http://localhost:8000/stress.html
 Tests utilize the mocha testing framework.  Travis-CI and Sauce Labs links:
 
  - <https://travis-ci.org/SheetJS/js-xlsx> for XLSX module in nodejs
+ - <https://semaphoreci.com/sheetjs/js-xlsx> for XLSX module in nodejs
  - <https://travis-ci.org/SheetJS/SheetJS.github.io> for XLS\* modules
  - <https://saucelabs.com/u/sheetjs> for XLS\* modules using Sauce Labs
 
@@ -1005,7 +1013,7 @@ Worksheet File Format (From Lotus) December 1984
 
 [![Build Status](https://travis-ci.org/SheetJS/js-xlsx.svg?branch=master)](https://travis-ci.org/SheetJS/js-xlsx)
 
-[![Build Status](https://semaphoreci.com/api/v1/sheetjs/js-xlsx/branches/master/badge.svg)](https://semaphoreci.com/sheetjs/js-xlsx)
+[![Build Status](https://semaphoreci.com/api/v1/sheetjs/js-xlsx/branches/master/shields_badge.svg)](https://semaphoreci.com/sheetjs/js-xlsx)
 
 [![Coverage Status](http://img.shields.io/coveralls/SheetJS/js-xlsx/master.svg)](https://coveralls.io/r/SheetJS/js-xlsx?branch=master)
 
