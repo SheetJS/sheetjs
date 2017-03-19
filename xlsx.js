@@ -5019,8 +5019,71 @@ var XLMLPatternTypeMap = {
 	"ThinHorzCross": "lightGrid"
 };
 
+/* 18.8.5 borders CT_Borders */
+function parse_borders(t, styles, themes, opts) {
+	styles.Borders = [];
+	var border = {}, sub_border = {};
+	t[0].match(tagregex).forEach(function(x) {
+		var y = parsexmltag(x);
+		switch (y[0]) {
+			case '<borders': case '<borders>': case '</borders>': break;
+
+			/* 18.8.4 border CT_Border */
+			case '<border': case '<border>':
+				border = {};
+				if (y.diagonalUp) { border.diagonalUp = y.diagonalUp; }
+				if (y.diagonalDown) { border.diagonalDown = y.diagonalDown; }
+				styles.Borders.push(border);
+				break;
+			case '</border>': break;
+
+			/* note: not in spec, appears to be CT_BorderPr */
+			case '<left': case '<left/>': break;
+			case '</left>': break;
+
+			/* note: not in spec, appears to be CT_BorderPr */
+			case '<right': case '<right/>': break;
+			case '</right>': break;
+
+			/* 18.8.43 top CT_BorderPr */
+			case '<top': case '<top/>': break;
+			case '</top>': break;
+
+			/* 18.8.6 bottom CT_BorderPr */
+			case '<bottom': case '<bottom/>': break;
+			case '</bottom>': break;
+
+			/* 18.8.13 diagonal CT_BorderPr */
+			case '<diagonal': case '<diagonal/>': break;
+			case '</diagonal>': break;
+
+			/* 18.8.25 horizontal CT_BorderPr */
+			case '<horizontal': case '<horizontal/>': break;
+			case '</horizontal>': break;
+
+			/* 18.8.44 vertical CT_BorderPr */
+			case '<vertical': case '<vertical/>': break;
+			case '</vertical>': break;
+
+			/* 18.8.37 start CT_BorderPr */
+			case '<start': case '<start/>': break;
+			case '</start>': break;
+
+			/* 18.8.16 end CT_BorderPr */
+			case '<end': case '<end/>': break;
+			case '</end>': break;
+
+			/* 18.8.? color CT_Color */
+			case '<color': case '<color/>': break;
+			case '</color>': break;
+
+			default: if(opts && opts.WTF) throw new Error('unrecognized ' + y[0] + ' in borders');
+		}
+	});
+}
+
 /* 18.8.21 fills CT_Fills */
-function parse_fills(t, styles, opts) {
+function parse_fills(t, styles, themes, opts) {
 	styles.Fills = [];
 	var fill = {};
 	t[0].match(tagregex).forEach(function(x) {
@@ -5032,9 +5095,12 @@ function parse_fills(t, styles, opts) {
 			case '<fill>': break;
 			case '</fill>': styles.Fills.push(fill); fill = {}; break;
 
+			/* 18.8.24 gradientFill CT_GradientFill */
+			case '<fill>': break;
+			case '</fill>': styles.Fills.push(fill); fill = {}; break;
+
 			/* 18.8.32 patternFill CT_PatternFill */
-			case '<patternFill':
-			case '<patternFill>':
+			case '<patternFill': case '<patternFill>':
 				if(y.patternType) fill.patternType = y.patternType;
 				break;
 			case '<patternFill/>': case '</patternFill>': break;
@@ -5046,7 +5112,7 @@ function parse_fills(t, styles, opts) {
 				if(y.theme) fill.bgColor.theme = parseInt(y.theme, 10);
 				if(y.tint) fill.bgColor.tint = parseFloat(y.tint);
 				/* Excel uses ARGB strings */
-				if(y.rgb) fill.bgColor.rgb = y.rgb.substring(y.rgb.length - 6);
+				if(y.rgb) fill.bgColor.rgb = y.rgb.slice(-6);
 				break;
 			case '<bgColor/>': case '</bgColor>': break;
 
@@ -5056,11 +5122,100 @@ function parse_fills(t, styles, opts) {
 				if(y.theme) fill.fgColor.theme = parseInt(y.theme, 10);
 				if(y.tint) fill.fgColor.tint = parseFloat(y.tint);
 				/* Excel uses ARGB strings */
-				if(y.rgb) fill.fgColor.rgb = y.rgb.substring(y.rgb.length - 6);
+				if(y.rgb) fill.fgColor.rgb = y.rgb.slice(-6);
 				break;
 			case '<fgColor/>': case '</fgColor>': break;
 
+			/* 18.8.38 stop CT_GradientStop */
+			case '<stop': case '<stop/>': break;
+			case '</stop>': break;
+
+			/* 18.8.? color CT_Color */
+			case '<color': case '<color/>': break;
+			case '</color>': break;
+
 			default: if(opts && opts.WTF) throw new Error('unrecognized ' + y[0] + ' in fills');
+		}
+	});
+}
+
+/* 18.8.23 fonts CT_Fonts */
+function parse_fonts(t, styles, themes, opts) {
+	styles.Fonts = [];
+	var font = {};
+	t[0].match(tagregex).forEach(function(x) {
+		var y = parsexmltag(x);
+		switch (y[0]) {
+			case '<fonts': case '<fonts>': case '</fonts>': break;
+
+			/* 18.8.22 font CT_Font */
+			case '<font': case '<font>': break;
+			case '</font>': case '<font/>':
+				styles.Fonts.push(font);
+				font = {};
+				break;
+
+			/* 18.8.29 name CT_FontName */
+			case '<name': if(y.val) font.name = y.val; break;
+			case '<name/>': case '</name>': break;
+
+			/* 18.8.2 b CT_BooleanProperty */
+			case '<b': break; // TODO: read val (0 = off)
+			case '<b/>': font.bold = true; break;
+
+			/* 18.8.26 i CT_BooleanProperty */
+			case '<i': break; // TODO: read val (0 = off)
+			case '<i/>': font.italic = true; break;
+
+			/* 18.4.13 u CT_UnderlineProperty */
+			case '<u': font.underline = true; break; // TODO: double underline
+			case '<u/>': font.underline = true; break;
+
+			/* 18.4.10 strike CT_BooleanProperty */
+			case '<strike': break; // TODO: read val (0 = off)
+			case '<strike/>': font.strike = true; break;
+
+			/* 18.4.2 outline CT_BooleanProperty */
+			case '<outline/>': font.outline = true; break;
+
+			/* 18.8.36 shadow CT_BooleanProperty */
+			case '<shadow/>': font.shadow = true; break;
+
+			/* 18.4.11 sz CT_FontSize */
+			case '<sz': if(y.val) font.sz = y.val; break;
+			case '<sz/>': case '</sz>': break;
+
+			/* 18.4.14 vertAlign CT_VerticalAlignFontProperty */
+			case '<vertAlign': if(y.val) font.vertAlign = y.val; break;
+			case '<vertAlign/>': case '</vertAlign>': break;
+
+			/* 18.8.18 family CT_FontFamily */
+			case '<family': if(y.val) font.family = y.val; break;
+			case '<family/>': case '</family>': break;
+
+			/* 18.8.35 scheme CT_FontScheme */
+			case '<scheme': if(y.val) font.scheme = y.val; break;
+			case '<scheme/>': case '</scheme>': break;
+
+			/* 18.4.1 charset CT_IntProperty TODO */
+			case '<charset':
+				if(y.val == '1') break;
+				y.codepage = CS2CP[parseInt(y.val, 10)];
+				break;
+
+			/* 18.?.? color CT_Color TODO */
+			case '<color':
+				if(!font.color) font.color = {};
+				if(y.theme) font.color.theme = y.theme;
+				if(y.tint) font.color.tint = y.tint;
+				if(y.theme && themes.themeElements && themes.themeElements.clrScheme) {
+					font.color.rgb = rgb_tint(themes.themeElements.clrScheme[font.color.theme].rgb, font.color.tint || 0);
+				}
+				if(y.rgb) font.color.rgb = y.rgb;
+				break;
+			case '<color/>': case '</color>': break;
+
+			default: if(opts && opts.WTF) throw new Error('unrecognized ' + y[0] + ' in fonts');
 		}
 	});
 }
@@ -5089,7 +5244,7 @@ function parse_numFmts(t, styles, opts) {
 function write_numFmts(NF, opts) {
 	var o = ["<numFmts>"];
 	[[5,8],[23,26],[41,44],[63,66],[164,392]].forEach(function(r) {
-		for(var i = r[0]; i <= r[1]; ++i) if(NF[i]) o[o.length] = (writextag('numFmt',null,{numFmtId:i,formatCode:escapexml(NF[i])}));
+		for(var i = r[0]; i <= r[1]; ++i) if(NF[i] != null) o[o.length] = (writextag('numFmt',null,{numFmtId:i,formatCode:escapexml(NF[i])}));
 	});
 	if(o.length === 1) return "";
 	o[o.length] = ("</numFmts>");
@@ -5100,24 +5255,37 @@ function write_numFmts(NF, opts) {
 /* 18.8.10 cellXfs CT_CellXfs */
 function parse_cellXfs(t, styles, opts) {
 	styles.CellXf = [];
+	var xf;
 	t[0].match(tagregex).forEach(function(x) {
 		var y = parsexmltag(x);
 		switch(y[0]) {
 			case '<cellXfs': case '<cellXfs>': case '<cellXfs/>': case '</cellXfs>': break;
 
 			/* 18.8.45 xf CT_Xf */
-			case '<xf': delete y[0];
-				if(y.numFmtId) y.numFmtId = parseInt(y.numFmtId, 10);
-				if(y.fillId) y.fillId = parseInt(y.fillId, 10);
-				styles.CellXf.push(y); break;
+			case '<xf':
+				xf = y;
+				delete xf[0];
+				if(xf.numFmtId) xf.numFmtId = parseInt(xf.numFmtId, 10);
+				if(xf.fillId) xf.fillId = parseInt(xf.fillId, 10);
+				styles.CellXf.push(xf); break;
 			case '</xf>': break;
 
 			/* 18.8.1 alignment CT_CellAlignment */
-			case '<alignment': case '<alignment/>': case '</alignment>': break;
+			case '<alignment': case '<alignment/>':
+				var alignment = {};
+				if(y.vertical) alignment.vertical = y.vertical;
+				if(y.horizontal) alignment.horizontal = y.horizontal;
+				if(y.textRotation != null) alignment.textRotation = y.textRotation;
+				if(y.indent) alignment.indent = y.indent;
+				if(y.wrapText) alignment.wrapText = y.wrapText;
+				xf.alignment = alignment;
+				break;
+			case '</alignment>': break;
 
 			/* 18.8.33 protection CT_CellProtection */
 			case '<protection': case '</protection>': case '<protection/>': break;
 
+			/* 18.2.10 extLst CT_ExtensionList ? */
 			case '<extLst': case '</extLst>': break;
 			case '<ext': break;
 			default: if(opts.WTF) throw 'unrecognized ' + y[0] + ' in cellXfs';
@@ -5140,32 +5308,36 @@ var parse_sty_xml= (function make_pstyx() {
 var numFmtRegex = /<numFmts([^>]*)>.*<\/numFmts>/;
 var cellXfRegex = /<cellXfs([^>]*)>.*<\/cellXfs>/;
 var fillsRegex = /<fills([^>]*)>.*<\/fills>/;
+var fontsRegex = /<fonts([^>]*)>.*<\/fonts>/;
+var bordersRegex = /<borders([^>]*)>.*<\/borders>/;
 
-return function parse_sty_xml(data, opts) {
+return function parse_sty_xml(data, themes, opts) {
 	var styles = {};
 	if(!data) return styles;
 	/* 18.8.39 styleSheet CT_Stylesheet */
 	var t;
 
-	/* numFmts CT_NumFmts ? */
+	/* 18.8.31 numFmts CT_NumFmts ? */
 	if((t=data.match(numFmtRegex))) parse_numFmts(t, styles, opts);
 
-	/* fonts CT_Fonts ? */
-	/*if((t=data.match(/<fonts([^>]*)>.*<\/fonts>/))) parse_fonts(t, opts);*/
+	/* 18.8.23 fonts CT_Fonts ? */
+	if((t=data.match(fontsRegex))) parse_fonts(t, styles, themes, opts);
 
-	/* fills CT_Fills */
-	if((t=data.match(fillsRegex))) parse_fills(t, styles, opts);
+	/* 18.8.21 fills CT_Fills */
+	if((t=data.match(fillsRegex))) parse_fills(t, styles, themes, opts);
 
-	/* borders CT_Borders ? */
-	/* cellStyleXfs CT_CellStyleXfs ? */
+	/* 18.8.5 borders CT_Borders ? */
+	if((t=data.match(bordersRegex))) parse_borders(t, styles, themes, opts);
 
-	/* cellXfs CT_CellXfs ? */
+	/* 18.8.9 cellStyleXfs CT_CellStyleXfs ? */
+
+	/* 18.8.10 cellXfs CT_CellXfs ? */
 	if((t=data.match(cellXfRegex))) parse_cellXfs(t, styles, opts);
 
-	/* dxfs CT_Dxfs ? */
-	/* tableStyles CT_TableStyles ? */
-	/* colors CT_Colors ? */
-	/* extLst CT_ExtensionList ? */
+	/* 18.8.15 dxfs CT_Dxfs ? */
+	/* 18.8.42 tableStyles CT_TableStyles ? */
+	/* 18.8.11 colors CT_Colors ? */
+	/* 18.2.10 extLst CT_ExtensionList ? */
 
 	return styles;
 };
@@ -5236,7 +5408,7 @@ function parse_BrtXF(data, length) {
 }
 
 /* [MS-XLSB] 2.1.7.50 Styles */
-function parse_sty_bin(data, opts) {
+function parse_sty_bin(data, themes, opts) {
 	var styles = {};
 	styles.NumberFmt = ([]);
 	for(var y in SSF._table) styles.NumberFmt[y] = SSF._table[y];
@@ -9654,9 +9826,9 @@ function parse_ws(data, name, opts, rels, wb, themes, styles) {
 	return parse_ws_xml((data), opts, rels, wb, themes, styles);
 }
 
-function parse_sty(data, name, opts) {
-	if(name.slice(-4)===".bin") return parse_sty_bin((data), opts);
-	return parse_sty_xml((data), opts);
+function parse_sty(data, name, themes, opts) {
+	if(name.slice(-4)===".bin") return parse_sty_bin((data), themes, opts);
+	return parse_sty_xml((data), themes, opts);
 }
 
 function parse_theme(data, name, opts) {
@@ -13279,9 +13451,9 @@ function parse_zip(zip, opts) {
 		strs = [];
 		if(dir.sst) strs=parse_sst(getzipdata(zip, dir.sst.replace(/^\//,'')), dir.sst, opts);
 
-		if(dir.style) styles = parse_sty(getzipdata(zip, dir.style.replace(/^\//,'')),dir.style, opts);
-
 		if(opts.cellStyles && dir.themes.length) themes = parse_theme(getzipstr(zip, dir.themes[0].replace(/^\//,''), true)||"",dir.themes[0], opts);
+
+		if(dir.style) styles = parse_sty(getzipdata(zip, dir.style.replace(/^\//,'')),dir.style, themes, opts);
 	}
 
 	var wb = parse_wb(getzipdata(zip, dir.workbooks[0].replace(/^\//,'')), dir.workbooks[0], opts);

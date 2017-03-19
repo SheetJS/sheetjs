@@ -191,7 +191,10 @@ describe('should parse test files', function() {
 			it(x + ' [' + ext + ']', function(){
 				var wb = wbtable[dir + x];
 				if(!wb) wb = X.readFile(dir + x, opts);
-				parsetest(x, X.read(X.write(wb, {type:"buffer", bookType:ext.replace(/\./,"")}), {WTF:opts.WTF}), ext.replace(/\./,"") !== "xlsb", ext);
+
+				wb = X.read(X.write(wb, {type:"buffer", bookType:ext.replace(/\./,"")}), {WTF:opts.WTF, cellNF: true});
+
+				parsetest(x, wb, ext.replace(/\./,"") !== "xlsb", ext);
 			});
 		});
 	});
@@ -292,7 +295,7 @@ describe('parse options', function() {
 		});
 		it('should generate cell styles when requested', function() {
 			/* TODO: XLS / XLML */
-			[paths.cssxlsx, /*paths.cssxls, paths.cssxml*/].forEach(function(p) {
+			[paths.cssxlsx /*,paths.cssxls, paths.cssxml*/].forEach(function(p) {
 			var wb = X.readFile(p, {cellStyles:true});
 			var found = false;
 			wb.SheetNames.forEach(function(s) {
@@ -774,31 +777,31 @@ describe('parse features', function() {
 			'H1:J4', 'H10' /* blocks */
 		];
 		var exp = [
-  { patternType: 'darkHorizontal',
-    fgColor: { theme: 9, raw_rgb: 'F79646' },
-    bgColor: { theme: 5, raw_rgb: 'C0504D' } },
-  { patternType: 'darkUp',
-    fgColor: { theme: 3, raw_rgb: 'EEECE1' },
-    bgColor: { theme: 7, raw_rgb: '8064A2' } },
-  { patternType: 'darkGray',
-    fgColor: { theme: 3, raw_rgb: 'EEECE1' },
-    bgColor: { theme: 1, raw_rgb: 'FFFFFF' } },
-  { patternType: 'lightGray',
-    fgColor: { theme: 6, raw_rgb: '9BBB59' },
-    bgColor: { theme: 2, raw_rgb: '1F497D' } },
-  { patternType: 'lightDown',
-    fgColor: { theme: 4, raw_rgb: '4F81BD' },
-    bgColor: { theme: 7, raw_rgb: '8064A2' } },
-  { patternType: 'lightGrid',
-    fgColor: { theme: 6, raw_rgb: '9BBB59' },
-    bgColor: { theme: 9, raw_rgb: 'F79646' } },
-  { patternType: 'lightGrid',
-    fgColor: { theme: 4, raw_rgb: '4F81BD' },
-    bgColor: { theme: 2, raw_rgb: '1F497D' } },
-  { patternType: 'lightVertical',
-    fgColor: { theme: 3, raw_rgb: 'EEECE1' },
-    bgColor: { theme: 7, raw_rgb: '8064A2' } }
-    ];
+			{ patternType: 'darkHorizontal',
+			  fgColor: { theme: 9, raw_rgb: 'F79646' },
+			  bgColor: { theme: 5, raw_rgb: 'C0504D' } },
+			{ patternType: 'darkUp',
+			  fgColor: { theme: 3, raw_rgb: 'EEECE1' },
+			  bgColor: { theme: 7, raw_rgb: '8064A2' } },
+			{ patternType: 'darkGray',
+			  fgColor: { theme: 3, raw_rgb: 'EEECE1' },
+			  bgColor: { theme: 1, raw_rgb: 'FFFFFF' } },
+			{ patternType: 'lightGray',
+			  fgColor: { theme: 6, raw_rgb: '9BBB59' },
+			  bgColor: { theme: 2, raw_rgb: '1F497D' } },
+			{ patternType: 'lightDown',
+			  fgColor: { theme: 4, raw_rgb: '4F81BD' },
+			  bgColor: { theme: 7, raw_rgb: '8064A2' } },
+			{ patternType: 'lightGrid',
+			  fgColor: { theme: 6, raw_rgb: '9BBB59' },
+			  bgColor: { theme: 9, raw_rgb: 'F79646' } },
+			{ patternType: 'lightGrid',
+			  fgColor: { theme: 4, raw_rgb: '4F81BD' },
+			  bgColor: { theme: 2, raw_rgb: '1F497D' } },
+			{ patternType: 'lightVertical',
+			  fgColor: { theme: 3, raw_rgb: 'EEECE1' },
+			  bgColor: { theme: 7, raw_rgb: '8064A2' } }
+		];
 		ranges.forEach(function(rng) {
 			it('XLS  | ' + rng,function(){cmparr(rn2(rng).map(function(x){ return wsxls[x].s; }));});
 			it('XLSX | ' + rng,function(){cmparr(rn2(rng).map(function(x){ return wsxlsx[x].s; }));});
@@ -1172,17 +1175,17 @@ describe('corner cases', function() {
 			assert.doesNotThrow(function(x) { return X.SSF.format(f, 12345.6789);});
 		});
 	});
-  it('SSF oddities', function() {
-    var ssfdata = require('./misc/ssf.json');
-    ssfdata.forEach(function(d) {
-      for(var j=1;j<d.length;++j) {
-        if(d[j].length == 2) {
-          var expected = d[j][1], actual = X.SSF.format(d[0], d[j][0], {});
-          assert.equal(actual, expected);
-        } else if(d[j][2] !== "#") assert.throws(function() { SSF.format(d[0], d[j][0]); });
-      }
-    });
-  });
+	it('SSF oddities', function() {
+		var ssfdata = require('./misc/ssf.json');
+		ssfdata.forEach(function(d) {
+			for(var j=1;j<d.length;++j) {
+				if(d[j].length == 2) {
+					var expected = d[j][1], actual = X.SSF.format(d[0], d[j][0], {});
+					assert.equal(actual, expected);
+				} else if(d[j][2] !== "#") assert.throws(function() { SSF.format(d[0], d[j][0]); });
+			}
+		});
+	});
 	it('CFB', function() {
 		var cfb = X.CFB.read(paths.swcxls, {type:"file"});
 		var xls = X.parse_xlscfb(cfb);

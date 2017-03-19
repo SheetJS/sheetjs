@@ -8,9 +8,9 @@ function parse_ws(data, name/*:string*/, opts, rels, wb, themes, styles)/*:Works
 	return parse_ws_xml((data/*:any*/), opts, rels, wb, themes, styles);
 }
 
-function parse_sty(data, name/*:string*/, opts) {
-	if(name.slice(-4)===".bin") return parse_sty_bin((data/*:any*/), opts);
-	return parse_sty_xml((data/*:any*/), opts);
+function parse_sty(data, name/*:string*/, themes, opts) {
+	if(name.slice(-4)===".bin") return parse_sty_bin((data/*:any*/), themes, opts);
+	return parse_sty_xml((data/*:any*/), themes, opts);
 }
 
 function parse_theme(data/*:string*/, name/*:string*/, opts) {
