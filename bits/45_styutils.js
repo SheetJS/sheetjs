@@ -50,17 +50,43 @@ function rgb_tint(hex, tint) {
 }
 
 /* 18.3.1.13 width calculations */
+/* [MS-OI29500] 2.1.595 Column Width & Formatting */
 var DEF_MDW = 7, MAX_MDW = 15, MIN_MDW = 1, MDW = DEF_MDW;
-function width2px(width) { return (( width + ((128/MDW)|0)/256 )* MDW )|0; }
-function px2char(px) { return (((px - 5)/MDW * 100 + 0.5)|0)/100; }
-function char2width(chr) { return (((chr * MDW + 5)/MDW*256)|0)/256; }
+function width2px(width) { return Math.floor(( width + (Math.round(128/MDW))/256 )* MDW ); }
+function px2char(px) { return (Math.floor((px - 5)/MDW * 100 + 0.5))/100; }
+function char2width(chr) { return (Math.round((chr * MDW + 5)/MDW*256))/256; }
+function px2char_(px) { return (((px - 5)/MDW * 100 + 0.5))/100; }
+function char2width_(chr) { return (((chr * MDW + 5)/MDW*256))/256; }
 function cycle_width(collw) { return char2width(px2char(width2px(collw))); }
-function find_mdw(collw, coll) {
-	if(cycle_width(collw) != collw) {
-		for(MDW=DEF_MDW; MDW>MIN_MDW; --MDW) if(cycle_width(collw) === collw) break;
-		if(MDW === MIN_MDW) for(MDW=DEF_MDW+1; MDW<MAX_MDW; ++MDW) if(cycle_width(collw) === collw) break;
-		if(MDW === MAX_MDW) MDW = DEF_MDW;
+/* XLSX/XLSB/XLS specify width in units of MDW */
+function find_mdw_colw(collw) {
+	var delta = Infinity, _MDW = MIN_MDW;
+	for(MDW=MIN_MDW; MDW<MAX_MDW; ++MDW) if(Math.abs(collw - cycle_width(collw)) < delta) { delta = Math.abs(collw - cycle_width(collw)); _MDW = MDW; }
+	MDW = _MDW;
+}
+/* XLML specifies width in terms of pixels */
+function find_mdw_wpx(wpx) {
+	var delta = Infinity, guess = 0, _MDW = MIN_MDW;
+	for(MDW=MIN_MDW; MDW<MAX_MDW; ++MDW) {
+		guess = char2width_(px2char_(wpx))*256;
+		guess = (guess) % 1;
+		if(guess > 0.5) guess--;
+		if(Math.abs(guess) < delta) { delta = Math.abs(guess); _MDW = MDW; }
 	}
+	MDW = _MDW;
+}
+
+function process_col(coll/*:ColInfo*/) {
+	if(coll.width) {
+		coll.wpx = width2px(coll.width);
+		coll.wch = px2char(coll.wpx);
+		coll.MDW = MDW;
+	} else if(coll.wpx) {
+		coll.wch = px2char(coll.wpx);
+		coll.width = char2width(coll.wch);
+		coll.MDW = MDW;
+	}
+	if(coll.customWidth) delete coll.customWidth;
 }
 
 /* [MS-EXSPXML3] 2.4.54 ST_enmPattern */

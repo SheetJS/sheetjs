@@ -282,6 +282,10 @@ function parse_ws_bin(data, opts, rels, wb, themes, styles)/*:Worksheet*/ {
 
 	for(var i = 0; i < wb.Names['!names'].length; ++i) supbooks[0][i+1] = wb.Names[wb.Names['!names'][i]];
 
+	var colinfo = [], rowinfo = [];
+	var defwidth = 0, defheight = 0; // twips / MDW respectively
+	var seencol = false;
+
 	recordhopper(data, function ws_parse(val, Record) {
 		if(end) return;
 		switch(Record.n) {
@@ -369,6 +373,16 @@ function parse_ws_bin(data, opts, rels, wb, themes, styles)/*:Worksheet*/ {
 				s[encode_col(C) + rr].f = stringify_formula(val[1], refguess, {r:row.r, c:C}, supbooks, opts);
 				break;
 
+			/* identical to 'ColInfo' in XLS */
+			case 'BrtColInfo': {
+				if(!opts.cellStyles) break;
+				while(val.e >= val.s) {
+					colinfo[val.e--] = { width: val.w/256 };
+					if(!seencol) { seencol = true; find_mdw_colw(val.w/256); }
+					process_col(colinfo[val.e+1]);
+				}
+			} break;
+
 			case 'BrtBeginSheet': break;
 			case 'BrtWsProp': break; // TODO
 			case 'BrtSheetCalcProp': break; // TODO
@@ -384,7 +398,6 @@ function parse_ws_bin(data, opts, rels, wb, themes, styles)/*:Worksheet*/ {
 			case 'BrtWsFmtInfoEx14': break; // TODO
 			case 'BrtWsFmtInfo': break; // TODO
 			case 'BrtBeginColInfos': break; // TODO
-			case 'BrtColInfo': break; // TODO
 			case 'BrtEndColInfos': break; // TODO
 			case 'BrtBeginSheetData': break; // TODO
 			case 'BrtEndSheetData': break; // TODO
@@ -497,6 +510,8 @@ function parse_ws_bin(data, opts, rels, wb, themes, styles)/*:Worksheet*/ {
 		}
 	}
 	if(mergecells.length > 0) s["!merges"] = mergecells;
+	if(colinfo.length > 0) s["!cols"] = colinfo;
+	if(rowinfo.length > 0) s["!rows"] = rowinfo;
 	return s;
 }
 

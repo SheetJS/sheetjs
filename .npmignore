@@ -37,5 +37,5 @@ test.js
 .flowconfig
 *.flow.js
 bits/
-odsbits/
+docbits/
 tests/

@@ -98,14 +98,10 @@ function parse_ws_xml_cols(columns, cols) {
 	for(var coli = 0; coli != cols.length; ++coli) {
 		var coll = parsexmltag(cols[coli], true);
 		var colm=parseInt(coll.min, 10)-1, colM=parseInt(coll.max,10)-1;
-		delete coll.min; delete coll.max;
-		if(!seencol && coll.width) { seencol = true; find_mdw(+coll.width, coll); }
-		if(coll.width) {
-			coll.wpx = width2px(+coll.width);
-			coll.wch = px2char(coll.wpx);
-			coll.MDW = MDW;
-		}
-		while(colm <= colM) columns[colm++] = coll;
+		delete coll.min; delete coll.max; coll.width = +coll.width;
+		if(!seencol && coll.width) { seencol = true; find_mdw_colw(coll.width); }
+		process_col(coll);
+		while(colm <= colM) columns[colm++] = dup(coll);
 	}
 }
 
@@ -116,7 +112,9 @@ function write_ws_xml_cols(ws, cols)/*:string*/ {
 		var p = ({min:i+1,max:i+1}/*:any*/);
 		/* wch (chars), wpx (pixels) */
 		width = -1;
-		if(col.wpx) width = px2char(col.wpx);
+		if(col.MDW) MDW = col.MDW;
+		if(col.width);
+		else if(col.wpx) width = px2char(col.wpx);
 		else if(col.wch) width = col.wch;
 		if(width > -1) { p.width = char2width(width); p.customWidth= 1; }
 		o[o.length] = (writextag('col', null, p));

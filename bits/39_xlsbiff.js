@@ -239,10 +239,11 @@ function parse_RecalcId(blob, length) {
 }
 
 /* 2.4.87 */
-function parse_DefaultRowHeight (blob, length) {
-	var f = length == 4 ? blob.read_shift(2) : 0, miyRw;
-	miyRw = blob.read_shift(2); // flags & 0x02 -> hidden, else empty
+function parse_DefaultRowHeight(blob, length) {
+	var f = blob.read_shift(2);
 	var fl = {Unsynced:f&1,DyZero:(f&2)>>1,ExAsc:(f&4)>>2,ExDsc:(f&8)>>3};
+	/* char is misleading, miyRw and miyRwHidden overlap */
+	var miyRw = blob.read_shift(2);
 	return [fl, miyRw];
 }
 
@@ -328,12 +329,13 @@ function parse_MulBlank(blob, length) {
 }
 
 /* 2.5.20 2.5.249 TODO: interpret values here */
-function parse_CellStyleXF(blob, length, style) {
+function parse_CellStyleXF(blob, length, style, opts) {
 	var o = {};
 	var a = blob.read_shift(4), b = blob.read_shift(4);
 	var c = blob.read_shift(4), d = blob.read_shift(2);
 	o.patternType = XLSFillPattern[c >> 26];
 
+	if(!opts.cellStyles) return o;
 	o.alc = a & 0x07;
 	o.fWrap = (a >> 3) & 0x01;
 	o.alcV = (a >> 4) & 0x07;
@@ -367,16 +369,16 @@ function parse_CellStyleXF(blob, length, style) {
 	o.fsxButton = (d >> 14) & 0x01;
 	return o;
 }
-function parse_CellXF(blob, length) {return parse_CellStyleXF(blob,length,0);}
-function parse_StyleXF(blob, length) {return parse_CellStyleXF(blob,length,1);}
+function parse_CellXF(blob, length, opts) {return parse_CellStyleXF(blob,length,0, opts);}
+function parse_StyleXF(blob, length, opts) {return parse_CellStyleXF(blob,length,1, opts);}
 
 /* 2.4.353 TODO: actually do this right */
-function parse_XF(blob, length) {
+function parse_XF(blob, length, opts) {
 	var o = {};
 	o.ifnt = blob.read_shift(2); o.ifmt = blob.read_shift(2); o.flags = blob.read_shift(2);
 	o.fStyle = (o.flags >> 2) & 0x01;
 	length -= 6;
-	o.data = parse_CellStyleXF(blob, length, o.fStyle);
+	o.data = parse_CellStyleXF(blob, length, o.fStyle, opts);
 	return o;
 }
 
@@ -626,11 +628,23 @@ function parse_XFCRC(blob, length) {
 	return o;
 }
 
+/* 2.4.53 TODO: parse flags */
+/* [MS-XLSB] 2.4.323 TODO: parse flags */
+function parse_ColInfo(blob, length, opts) {
+	if(!opts.cellStyles) return parsenoop(blob, length);
+	var w = opts && opts.biff >= 12 ? 4 : 2;
+	var colFirst = blob.read_shift(w);
+	var colLast = blob.read_shift(w);
+	var coldx = blob.read_shift(w);
+	var ixfe = blob.read_shift(w);
+	var flags = blob.read_shift(2);
+	if(w == 2) blob.l += 2;
+	return {s:colFirst, e:colLast, w:coldx, ixfe:ixfe, flags:flags};
+}
+
 
 var parse_Style = parsenoop;
 var parse_StyleExt = parsenoop;
-
-var parse_ColInfo = parsenoop;
 
 var parse_Window2 = parsenoop;
 

@@ -53,7 +53,7 @@ var XLSBRecordEnum = {
 	/*::[*/0x0039/*::]*/: { n:"BrtEndMdxTuple", f:parsenoop },
 	/*::[*/0x003A/*::]*/: { n:"BrtMdxMbrIstr", f:parsenoop },
 	/*::[*/0x003B/*::]*/: { n:"BrtStr", f:parsenoop },
-	/*::[*/0x003C/*::]*/: { n:"BrtColInfo", f:parsenoop },
+	/*::[*/0x003C/*::]*/: { n:"BrtColInfo", f:parse_ColInfo },
 	/*::[*/0x003E/*::]*/: { n:"BrtCellRString", f:parsenoop },
 	/*::[*/0x003F/*::]*/: { n:"BrtCalcChainItem$", f:parse_BrtCalcChainItem$ },
 	/*::[*/0x0040/*::]*/: { n:"BrtDVal", f:parsenoop },

@@ -100,9 +100,9 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 		if(icv < 64) return palette[icv-8] || XLSIcv[icv];
 		return XLSIcv[icv];
 	};
-	var process_cell_style = function pcs(cell, line/*:any*/) {
+	var process_cell_style = function pcs(cell, line/*:any*/, options) {
 		var xfd = line.XF.data;
-		if(!xfd || !xfd.patternType) return;
+		if(!xfd || !xfd.patternType || !options || !options.cellStyles) return;
 		line.s = ({}/*:any*/);
 		line.s.patternType = xfd.patternType;
 		var t;
@@ -110,8 +110,9 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 		if((t = rgb2Hex(get_rgb(xfd.icvBack)))) { line.s.bgColor = {rgb:t}; }
 	};
 	var addcell = function addcell(cell/*:any*/, line/*:any*/, options/*:any*/) {
+		if(file_depth > 1) return;
 		if(!cell_valid) return;
-		if(options.cellStyles && line.XF && line.XF.data) process_cell_style(cell, line);
+		if(options.cellStyles && line.XF && line.XF.data) process_cell_style(cell, line, options);
 		lastcell = cell;
 		last_cell = encode_cell(cell);
 		if(range.s) {
@@ -149,11 +150,15 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 		biff: 8, // BIFF version
 		codepage: 0, // CP from CodePage record
 		winlocked: 0, // fLockWn from WinProtect
+		cellStyles: !!options && !!options.cellStyles,
 		WTF: !!options && !!options.wtf
 	}/*:any*/);
 	if(options.password) opts.password = options.password;
 	var mergecells = [];
 	var objects = [];
+	var colinfo = [], rowinfo = [];
+	var defwidth = 0, defheight = 0; // twips / MDW respectively
+	var seencol = false;
 	var supbooks = ([[]]/*:any*/); // 1-indexed, will hold extern names
 	var sbc = 0, sbci = 0, sbcli = 0;
 	supbooks.SheetNames = opts.snames;
@@ -260,6 +265,8 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 						}
 						if(mergecells.length > 0) out["!merges"] = mergecells;
 						if(objects.length > 0) out["!objects"] = objects;
+						if(colinfo.length > 0) out["!cols"] = colinfo;
+						if(rowinfo.length > 0) out["!rows"] = rowinfo;
 					}
 					if(cur_sheet === "") Preamble = out; else Sheets[cur_sheet] = out;
 					out = {};
@@ -288,6 +295,9 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 					mergecells = [];
 					objects = [];
 					array_formulae = []; opts.arrayf = array_formulae;
+					colinfo = []; rowinfo = [];
+					defwidth = defheight = 0;
+					seencol = false;
 				} break;
 
 				case 'Number': case 'BIFF2NUM': case 'BIFF2INT': {
@@ -436,6 +446,19 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 				case 'ClrtClient': break;
 				case 'XFExt': update_xfext(XFs[val.ixfe], val.ext); break;
 
+				case 'DefColWidth': defwidth = val; break;
+				case 'DefaultRowHeight': defheight = val[1]; break; // TODO: flags
+
+				case 'ColInfo': {
+					if(!opts.cellStyles) break;
+					while(val.e >= val.s) {
+						colinfo[val.e--] = { width: val.w/256 };
+						if(!seencol) { seencol = true; find_mdw_colw(val.w/256); }
+						process_col(colinfo[val.e+1]);
+					}
+				} break;
+				case 'Row': break; // TODO
+
 				case 'NameCmt': break;
 				case 'Header': break; // TODO
 				case 'Footer': break; // TODO
@@ -443,11 +466,8 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 				case 'VCenter': break; // TODO
 				case 'Pls': break; // TODO
 				case 'Setup': break; // TODO
-				case 'DefColWidth': break; // TODO
 				case 'GCW': break;
 				case 'LHRecord': break;
-				case 'ColInfo': break; // TODO
-				case 'Row': break; // TODO
 				case 'DBCell': break; // TODO
 				case 'EntExU2': break; // TODO
 				case 'SxView': break; // TODO
@@ -465,7 +485,7 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 				case 'Feature11': case 'Feature12': case 'List12': break;
 				case 'Country': country = val; break;
 				case 'RecalcId': break;
-				case 'DefaultRowHeight': case 'DxGCol': break; // TODO: htmlify
+				case 'DxGCol': break; // TODO: htmlify
 				case 'Fbi': case 'Fbi2': case 'GelFrame': break;
 				case 'Font': break; // TODO
 				case 'XFCRC': break; // TODO

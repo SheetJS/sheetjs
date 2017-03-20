@@ -144,8 +144,12 @@ misc/coverage.html: $(TARGET) test.js
 coveralls: ## Coverage Test + Send to coveralls.io
 	mocha --require blanket --reporter mocha-lcov-reporter -t 20000 | node ./node_modules/coveralls/bin/coveralls.js
 
+READEPS=$(sort $(wildcard docbits/*.md))
+README.md: $(READEPS)
+	awk 'FNR==1{p=0}/#/{p=1}p' $^ | tr -d '\15\32' > $@
+
 .PHONY: readme
-readme: ## Update README Table of Contents
+readme: README.md ## Update README Table of Contents
 	markdown-toc -i README.md
 
 .PHONY: help

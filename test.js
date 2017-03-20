@@ -66,6 +66,12 @@ var paths = {
 	nfxlsb:  dir + 'number_format.xlsb',
 	dtxlsx:  dir + 'xlsx-stream-d-date-cell.xlsx',
 	dtxlsb:  dir + 'xlsx-stream-d-date-cell.xlsb',
+	cwxls:  dir + 'column_width.xlsx',
+	cwxls5:  dir + 'column_width.biff5',
+	cwxml:  dir + 'column_width.xml',
+	cwxlsx:  dir + 'column_width.xlsx',
+	cwxlsb:  dir + 'column_width.xlsx',
+	dtxlsb:  dir + 'xlsx-stream-d-date-cell.xlsb',
 	swcxls: dir + 'apachepoi_SimpleWithComments.xls',
 	swcxml: dir + '2011/apachepoi_SimpleWithComments.xls.xml',
 	swcxlsx: dir + 'apachepoi_SimpleWithComments.xlsx',
@@ -676,6 +682,49 @@ describe('parse features', function() {
 			[wb1, wb2 /*, wb3, wb4 */].forEach(function(wb) {
 				assert.equal(wb.Sheets.Sheet7["!fullref"],"A1:N34");
 				assert.equal(wb.Sheets.Sheet7["!ref"],"A1");
+			});
+		});
+	});
+
+	describe('column properties', function() {
+		var wb1, wb2, wb3, wb4, wb5;
+		var bef = (function() {
+			X = require(modp);
+			wb1 = X.readFile(paths.cwxlsx, {cellStyles:true});
+			wb2 = X.readFile(paths.cwxlsb, {cellStyles:true});
+			wb3 = X.readFile(paths.cwxls, {cellStyles:true});
+			wb4 = X.readFile(paths.cwxls5, {cellStyles:true});
+			wb5 = X.readFile(paths.cwxml, {cellStyles:true});
+		});
+		if(typeof before != 'undefined') before(bef);
+		else it('before', bef);
+		it('should have "!cols"', function() {
+			assert(wb1.Sheets.Sheet1['!cols']);
+			assert(wb2.Sheets.Sheet1['!cols']);
+			assert(wb3.Sheets.Sheet1['!cols']);
+			assert(wb4.Sheets.Sheet1['!cols']);
+			assert(wb5.Sheets.Sheet1['!cols']);
+		});
+		it('should have correct widths', function() {
+			[wb1, wb2, wb3, wb4, wb5].map(function(x) { return x.Sheets.Sheet1['!cols']; }).forEach(function(x) {
+				assert.equal(x[1].width, 0.1640625);
+				assert.equal(x[2].width, 16.6640625);
+				assert.equal(x[3].width, 1.6640625);
+				assert.equal(x[4].width, 4.83203125);
+				assert.equal(x[5].width, 8.83203125);
+				assert.equal(x[6].width, 12.83203125);
+				assert.equal(x[7].width, 16.83203125);
+			});
+		});
+		it('should have correct pixels', function() {
+			[wb1, wb2, wb3, wb4, wb5].map(function(x) { return x.Sheets.Sheet1['!cols']; }).forEach(function(x) {
+				assert.equal(x[1].wpx, 1);
+				assert.equal(x[2].wpx, 100);
+				assert.equal(x[3].wpx, 10);
+				assert.equal(x[4].wpx, 29);
+				assert.equal(x[5].wpx, 53);
+				assert.equal(x[6].wpx, 77);
+				assert.equal(x[7].wpx, 101);
 			});
 		});
 	});

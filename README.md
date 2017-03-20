@@ -35,10 +35,12 @@ with a unified JS representation, and ES3/ES5 browser compatibility back to IE6.
 - [Workbook / Worksheet / Cell Object Description](#workbook--worksheet--cell-object-description)
   * [General Structures](#general-structures)
   * [Cell Object](#cell-object)
-  * [Data Types](#data-types)
-  * [Formulae](#formulae)
+    + [Data Types](#data-types)
   * [Worksheet Object](#worksheet-object)
   * [Workbook Object](#workbook-object)
+  * [Document Features](#document-features)
+    + [Formulae](#formulae)
+    + [Column Properties](#column-properties)
 - [Parsing Options](#parsing-options)
   * [Input Type](#input-type)
   * [Guessing File Type](#guessing-file-type)
@@ -443,7 +445,7 @@ text from the number format (`cell.z`) and the raw value if possible.
 The actual array formula is stored in the `f` field of the first cell in the
 array range.  Other cells in the range will omit the `f` field.
 
-### Data Types
+#### Data Types
 
 The raw value is stored in the `v` field, interpreted based on the `t` field.
 
@@ -481,21 +483,6 @@ avoid possible confusion.
 Type `z` represents blank stub cells.  These do not have any data or type, and
 are not processed by any of the core library functions.  By default these cells
 will not be generated; the parser `sheetStubs` option must be set to `true`.
-
-### Formulae
-
-The A1-style formula string is stored in the `f` field.  Even though different
-file formats store the formulae in different ways, the formats are translated.
-
-Shared formulae are decompressed and each cell has the correct formula.
-
-Array formulae are stored in the top-left cell of the array block.  All cells
-of an array formula have a `F` field corresponding to the range.  A single-cell
-formula can be distinguished from a plain formula by the presence of `F` field.
-
-The `sheet_to_formulae` method generates one line per formula or array formula.
-Array formulae are rendered in the form `range=formula` while plain cells are
-rendered in the form `cell=formula or value`.
 
 ### Worksheet Object
 
@@ -548,6 +535,123 @@ standard, XLS parsing stores core properties in both places.  .
   The workbook's epoch can be determined by examining the workbook's
   `wb.WBProps.date1904` property.
 
+### Document Features
+
+Even for basic features like date storage, the official Excel formats store the
+same content in different ways.  The parsers are expected to convert from the
+underlying file format representation to the Common Spreadsheet Format.  Writers
+are expected to convert from CSF back to the underlying file format.
+
+#### Formulae
+
+The A1-style formula string is stored in the `f` field.  Even though different
+file formats store the formulae in different ways, the formats are translated.
+Even though some formats store formulae with a leading equal sign, CSF formulae
+do not start with `=`.
+
+The worksheet representation of A1=1, A2=2, A3=A1+A2:
+
+```js
+{
+	"!ref": "A1:A3",
+	A1: { t:'n', v:1 },
+	A2: { t:'n', v:2 },
+	A3: { t:'n', v:3, f:'A1+A2' }
+}
+```
+
+Shared formulae are decompressed and each cell has the formula corresponding to
+its cell.  Writers generally do not attempt to generate shared formulae.
+
+Cells with formula entries but no value will be serialized in a way that Excel
+and other spreadsheet tools will recognize.  This library will not automatically
+compute formula results!  For example, to compute `BESSELJ` in a worksheet:
+
+```js
+{
+	"!ref": "A1:A3",
+	A1: { t:'n', v:3.14159 },
+	A2: { t:'n', v:2 },
+	A3: { t:'n', f:'BESSELJ(A1,A2)' }
+}
+```
+
+**Array Formulae**
+
+Array formulae are stored in the top-left cell of the array block.  All cells
+of an array formula have a `F` field corresponding to the range.  A single-cell
+formula can be distinguished from a plain formula by the presence of `F` field.
+
+For example, setting the cell `C1` to the array formula `{=SUM(A1:A3*B1:B3)}`:
+
+```js
+worksheet['C1'] = { t:'n', f: "SUM(A1:A3*B1:B3)", F:"C1:C1" };
+```
+
+For a multi-cell array formula, every cell has the same array range but only the
+first cell has content.  Consider `D1:D3=A1:A3*B1:B3`:
+
+```js
+worksheet['D1'] = { t:'n', F:"D1:D3", f:"A1:A3*B1:B3" };
+worksheet['D2'] = { t:'n', F:"D1:D3" };
+worksheet['D3'] = { t:'n', F:"D1:D3" };
+```
+
+Utilities and writers are expected to check for the presence of a `F` field and
+ignore any possible formula element `f` in cells other than the starting cell.
+They are not expected to perform validation of the formulae!
+
+**Formula Output**
+
+The `sheet_to_formulae` method generates one line per formula or array formula.
+Array formulae are rendered in the form `range=formula` while plain cells are
+rendered in the form `cell=formula or value`.  Note that string literals are
+prefixed with an apostrophe `'`, consistent with Excel's formula bar display.
+
+**Formulae File Format Details**
+
+| Storage Representation | Formats                  | Read  | Write |
+|:-----------------------|:-------------------------|:-----:|:-----:|
+| A1-style strings       | XLSX                     |  :o:  |  :o:  |
+| RC-style strings       | XLML and plaintext       |  :o:  |  :o:  |
+| BIFF Parsed formulae   | XLSB and all XLS formats |  :o:  |       |
+| OpenFormula formulae   | ODS/FODS/UOS             |  :o:  |  :o:  |
+
+Since Excel prohibits named cells from colliding with names of A1 or RC style
+cell references, a (not-so-simple) regex conversion is possible.  BIFF Parsed
+formulae have to be explicitly unwound.  OpenFormula formulae can be converted
+with regexes for the most part.
+#### Column Properties
+
+Excel internally stores column widths in a nebulous "Max Digit Width" form.  The
+Max Digit Width is the width of the largest digit when rendered.  The internal
+width must be an integer multiple of the the width divided by 256.  ECMA-376
+describes a formula for converting between pixels and the internal width.
+
+Given the constraints, it is possible to determine the MDW without actually
+inspecting the font!  The parsers guess the pixel width by converting from width
+to pixels and back, repeating for all possible MDW and selecting the MDW that
+minimizes the error.  XLML actually stores the pixel width, so the guess works
+in the opposite direction.
+
+The `!cols` array in each worksheet, if present, is a collection of `ColInfo`
+objects which have the following properties:
+
+```typescript
+type ColInfo = {
+	MDW?:number;  // Excel's "Max Digit Width" unit, always integral
+	width:number; // width in Excel's "Max Digit Width", width*256 is integral 
+	wpx?:number;  // width in screen pixels
+	wch?:number;  // intermediate character calculation
+};
+```
+
+Even though all of the information is made available, writers are expected to
+follow the priority order:
+
+1) use `width` field if available
+2) use `wpx` pixel width if available
+2) use `wch` character count if available
 ## Parsing Options
 
 The exported `read` and `readFile` functions accept an options argument:
@@ -1001,6 +1105,7 @@ OSP-covered specifications:
  - [MS-XLDM]: Spreadsheet Data Model File Format
  - [MS-EXSPXML3]: Excel Calculation Version 2 Web Service XML Schema
  - [XLS]: Microsoft Office Excel 97-2007 Binary File Format Specification
+ - [MS-OI29500]: Office Implementation Information for ISO/IEC 29500 Standards Support
 
 Open Document Format for Office Applications Version 1.2 (29 September 2011)
 

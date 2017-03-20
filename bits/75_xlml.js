@@ -178,8 +178,9 @@ function parse_xlml_xml(d, opts)/*:Workbook*/ {
 	var mergecells = [];
 	var Props = {}, Custprops = {}, pidx = 0, cp = {};
 	var comments = [], comment = {};
-	var cstys = [], csty;
+	var cstys = [], csty, seencol = false;
 	var arrayf = [];
+	var rowinfo = [];
 	xlmlregex.lastIndex = 0;
 	str = str.replace(/<!--([^\u2603]*?)-->/mg,"");
 	while((Rn = xlmlregex.exec(str))) switch(Rn[3]) {
@@ -241,6 +242,8 @@ function parse_xlml_xml(d, opts)/*:Workbook*/ {
 				sheetnames.push(sheetname);
 				if(refguess.s.r <= refguess.e.r && refguess.s.c <= refguess.e.c) cursheet["!ref"] = encode_range(refguess);
 				if(mergecells.length) cursheet["!merges"] = mergecells;
+				if(cstys.length > 0) cursheet["!cols"] = cstys;
+				if(rowinfo.length > 0) cursheet["!rows"] = rowinfo;
 				sheets[sheetname] = cursheet;
 			} else {
 				refguess = {s: {r:2000000, c:2000000}, e: {r:0, c:0} };
@@ -251,6 +254,7 @@ function parse_xlml_xml(d, opts)/*:Workbook*/ {
 				cursheet = {};
 				mergecells = [];
 				arrayf = [];
+				rowinfo = [];
 			}
 			break;
 		case 'Table':
@@ -259,7 +263,7 @@ function parse_xlml_xml(d, opts)/*:Workbook*/ {
 			else {
 				table = xlml_parsexmltag(Rn[0]);
 				state.push([Rn[3], false]);
-				cstys = [];
+				cstys = []; seencol = false;
 			}
 			break;
 
@@ -275,8 +279,14 @@ function parse_xlml_xml(d, opts)/*:Workbook*/ {
 		case 'Column':
 			if(state[state.length-1][0] !== 'Table') break;
 			csty = xlml_parsexmltag(Rn[0]);
+			csty.wpx = parseInt(csty.Width, 10);
+			if(!seencol && csty.wpx > 10) {
+				seencol = true; find_mdw_wpx(csty.wpx);
+				for(var _col = 0; _col < cstys.length; ++_col) if(cstys[_col]) process_col(cstys[_col]);
+			}
+			if(seencol) process_col(csty);
 			cstys[(csty.Index-1||cstys.length)] = csty;
-			for(var i = 0; i < +csty.Span; ++i) cstys[cstys.length] = csty;
+			for(var i = 0; i < +csty.Span; ++i) cstys[cstys.length] = dup(csty);
 			break;
 
 		case 'NamedRange': break;
