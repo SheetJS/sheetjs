@@ -5,7 +5,7 @@
 /*exported XLSX */
 var XLSX = {};
 (function make_xlsx(XLSX){
-XLSX.version = '0.9.3';
+XLSX.version = '0.9.4';
 var current_codepage = 1200, current_cptable;
 /*:: declare var cptable:any; */
 if(typeof module !== "undefined" && typeof require !== 'undefined') {
@@ -8496,11 +8496,11 @@ function parse_ws_xml_dim(ws, s) {
 	var d = safe_decode_range(s);
 	if(d.s.r<=d.e.r && d.s.c<=d.e.c && d.s.r>=0 && d.s.c>=0) ws["!ref"] = encode_range(d);
 }
-var mergecregex = /<(?:\w:)?mergeCell ref="[A-Z0-9:]+"\s*\/>/g;
+var mergecregex = /<(?:\w:)?mergeCell ref="[A-Z0-9:]+"\s*[\/]?>/g;
 var sheetdataregex = /<(?:\w+:)?sheetData>([^\u2603]*)<\/(?:\w+:)?sheetData>/;
-var hlinkregex = /<(?:\w*:)?hyperlink[^>]*\/>/g;
+var hlinkregex = /<(?:\w*:)?hyperlink [^>]*>/mg;
 var dimregex = /"(\w*:\w*)"/;
-var colregex = /<(?:\w*:)?col[^>]*\/>/g;
+var colregex = /<(?:\w*:)?col[^>]*[\/]?>/g;
 /* 18.3 Worksheets */
 function parse_ws_xml(data/*:?string*/, opts, rels, wb, themes, styles)/*:Worksheet*/ {
 	if(!data) return data;
@@ -10793,7 +10793,14 @@ function write_ws_xlml_cell(cell, ref, ws, opts, idx, wb, addr)/*:string*/{
 		case 'd': t = 'DateTime'; p = new Date(cell.v).toISOString(); break;
 		case 's': t = 'String'; p = escapexml(cell.v||""); break;
 	}
-	var m = '<Data ss:Type="' + t + '">' + (cell.v != null ? p : "") + '</Data>';
+	var _v = (cell.v != null ? p : "");
+	if(opts && opts.type == 'binary' && typeof cptable !== 'undefined' && cell.t == 's') {
+		_v = cptable.utils.encode(65001, _v);
+		var __v = "";
+		for(__i = 0; __i < _v.length; ++__i) __v += String.fromCharCode(_v[__i]);
+		_v = __v;
+	}
+	var m = '<Data ss:Type="' + t + '">' + _v + '</Data>';
 
 	return writextag("Cell", m, attr);
 }
