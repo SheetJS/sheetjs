@@ -35,7 +35,7 @@ clean: ## Remove targets and build artifacts
 
 .PHONY: test mocha
 test mocha: ## Run test suite
-	mocha -R spec
+	mocha -R spec -t 30000
 
 .PHONY: test_min
 test_min:
