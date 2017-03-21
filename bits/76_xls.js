@@ -67,6 +67,9 @@ function safe_format_xf(p/*:any*/, opts/*:ParseOpts*/, date1904/*:?boolean*/) {
 			else p.w = SSF._general(p.v);
 		}
 		else p.w = SSF.format(fmtid,p.v, {date1904:!!date1904});
+		if(opts.cellDates && fmtid && p.t == 'n' && SSF.is_date(SSF._table[fmtid])) {
+			var _d = SSF.parse_date_code(p.v); if(_d) { p.t = 'd'; p.v = new Date(Date.UTC(_d.y, _d.m-1,_d.d,_d.H,_d.M,_d.S,_d.u)); }
+		}
 		if(opts.cellNF) p.z = SSF._table[fmtid];
 	} catch(e) { if(opts.WTF) throw e; }
 }

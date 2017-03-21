@@ -2,7 +2,7 @@
 /*jshint -W041 */
 var SSF = {};
 var make_ssf = function make_ssf(SSF){
-SSF.version = '0.8.1';
+SSF.version = '0.9.0';
 function _strrev(x/*:string*/)/*:string*/ { var o = "", i = x.length-1; while(i>=0) o += x.charAt(i--); return o; }
 function fill(c/*:string*/,l/*:number*/)/*:string*/ { var o = ""; while(o.length < l) o+=c; return o; }
 function pad0(v/*:any*/,d/*:number*/)/*:string*/{var t=""+v; return t.length>=d?t:fill('0',d-t.length)+t;}
@@ -55,7 +55,7 @@ var table_fmt = {
 	/*::[*/56/*::]*/: '"上午/下午 "hh"時"mm"分"ss"秒 "',
 	/*::[*/65535/*::]*/: 'General'
 };
-var days = [
+var days/*:Array<Array<string> >*/ = [
 	['Sun', 'Sunday'],
 	['Mon', 'Monday'],
 	['Tue', 'Tuesday'],
@@ -64,7 +64,7 @@ var days = [
 	['Fri', 'Friday'],
 	['Sat', 'Saturday']
 ];
-var months = [
+var months/*:Array<Array<string> >*/ = [
 	['J', 'Jan', 'January'],
 	['F', 'Feb', 'February'],
 	['M', 'Mar', 'March'],
@@ -452,8 +452,11 @@ function write_num_int(type/*:string*/, fmt/*:string*/, val/*:number*/)/*:string
 	if((r = fmt.match(frac1))) return write_num_f2(r, aval, sign);
 	if(fmt.match(/^#+0+$/)) return sign + pad0(aval,fmt.length - fmt.indexOf("0"));
 	if((r = fmt.match(dec1))) {
-		// $FlowIgnore
-		o = (""+val).replace(/^([^\.]+)$/,"$1."+r[1]).replace(/\.$/,"."+r[1]).replace(/\.(\d*)$/,function($$, $1) { return "." + $1 + fill("0", r[1].length-$1.length); });
+		/*:: if(!Array.isArray(r)) throw "unreachable"; */
+		o = (""+val).replace(/^([^\.]+)$/,"$1."+r[1]).replace(/\.$/,"."+r[1]);
+		o = o.replace(/\.(\d*)$/,function($$, $1) {
+		/*:: if(!Array.isArray(r)) throw "unreachable"; */
+			return "." + $1 + fill("0", r[1].length-$1.length); });
 		return fmt.indexOf("0.") !== -1 ? o : o.replace(/^0\./,".");
 	}
 	fmt = fmt.replace(/^#+([0.])/, "$1");
@@ -533,6 +536,47 @@ function split_fmt(fmt/*:string*/)/*:Array<string>*/ {
 }
 SSF._split = split_fmt;
 var abstime = /\[[HhMmSs]*\]/;
+function fmt_is_date(fmt/*:string*/)/*:boolean*/ {
+	var i = 0, cc = 0, c = "", o = "";
+	while(i < fmt.length) {
+		switch((c = fmt.charAt(i))) {
+			case 'G': if(isgeneral(fmt, i)) i+= 6; i++; break;
+			case '"': for(;(cc=fmt.charCodeAt(++i)) !== 34 && i < fmt.length;) ++i; ++i; break;
+			case '\\': i+=2; break;
+			case '_': i+=2; break;
+			case '@': ++i; break;
+			case 'B': case 'b':
+				if(fmt.charAt(i+1) === "1" || fmt.charAt(i+1) === "2") return true;
+				/* falls through */
+			case 'M': case 'D': case 'Y': case 'H': case 'S': case 'E':
+				/* falls through */
+			case 'm': case 'd': case 'y': case 'h': case 's': case 'e': case 'g': return true;
+			case 'A':
+				if(fmt.substr(i, 3) === "A/P") return true;
+				if(fmt.substr(i, 5) === "AM/PM") return true;
+				++i; break;
+			case '[':
+				o = c;
+				while(fmt.charAt(i++) !== ']' && i < fmt.length) o += fmt.charAt(i);
+				if(o.match(abstime)) return true;
+				break;
+			case '.':
+				/* falls through */
+			case '0': case '#':
+				while(i < fmt.length && ("0#?.,E+-%".indexOf(c=fmt.charAt(++i)) > -1 || c=='\\' && fmt.charAt(i+1) == "-" && "0#".indexOf(fmt.charAt(i+2))>-1));
+				break;
+			case '?': while(fmt.charAt(++i) === c); break;
+			case '*': ++i; if(fmt.charAt(i) == ' ' || fmt.charAt(i) == '*') ++i; break;
+			case '(': case ')': ++i; break;
+			case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':
+				while(i < fmt.length && "0123456789".indexOf(fmt.charAt(++i)) > -1); break;
+			case ' ': ++i; break;
+			default: ++i; break;
+		}
+	}
+	return false;
+}
+SSF.is_date = fmt_is_date;
 function eval_fmt(fmt/*:string*/, v/*:any*/, opts/*:any*/, flen/*:number*/) {
 	var out = [], o = "", i = 0, c = "", lst='t', q, dt, j, cc;
 	var hr='H';
@@ -545,14 +589,14 @@ function eval_fmt(fmt/*:string*/, v/*:any*/, opts/*:any*/, flen/*:number*/) {
 			case '"': /* Literal text */
 				for(o="";(cc=fmt.charCodeAt(++i)) !== 34 && i < fmt.length;) o += String.fromCharCode(cc);
 				out[out.length] = {t:'t', v:o}; ++i; break;
-			case '\\': var w = fmt[++i], t = (w === "(" || w === ")") ? w : 't';
+			case '\\': var w = fmt.charAt(++i), t = (w === "(" || w === ")") ? w : 't';
 				out[out.length] = {t:t, v:w}; ++i; break;
 			case '_': out[out.length] = {t:'t', v:" "}; i+=2; break;
 			case '@': /* Text Placeholder */
 				out[out.length] = {t:'T', v:v}; ++i; break;
 			case 'B': case 'b':
-				if(fmt[i+1] === "1" || fmt[i+1] === "2") {
-					if(dt==null) { dt=parse_date_code(v, opts, fmt[i+1] === "2"); if(dt==null) return ""; }
+				if(fmt.charAt(i+1) === "1" || fmt.charAt(i+1) === "2") {
+					if(dt==null) { dt=parse_date_code(v, opts, fmt.charAt(i+1) === "2"); if(dt==null) return ""; }
 					out[out.length] = {t:'X', v:fmt.substr(i,2)}; lst = c; i+=2; break;
 				}
 				/* falls through */
@@ -562,7 +606,7 @@ function eval_fmt(fmt/*:string*/, v/*:any*/, opts/*:any*/, flen/*:number*/) {
 			case 'm': case 'd': case 'y': case 'h': case 's': case 'e': case 'g':
 				if(v < 0) return "";
 				if(dt==null) { dt=parse_date_code(v, opts); if(dt==null) return ""; }
-				o = c; while(++i<fmt.length && fmt[i].toLowerCase() === c) o+=c;
+				o = c; while(++i<fmt.length && fmt.charAt(i).toLowerCase() === c) o+=c;
 				if(c === 'm' && lst.toLowerCase() === 'h') c = 'M'; /* m = minute */
 				if(c === 'h') c = hr;
 				out[out.length] = {t:c, v:o}; lst = c; break;
@@ -576,8 +620,8 @@ function eval_fmt(fmt/*:string*/, v/*:any*/, opts/*:any*/, flen/*:number*/) {
 				out[out.length] = q; lst = c; break;
 			case '[':
 				o = c;
-				while(fmt[i++] !== ']' && i < fmt.length) o += fmt[i];
-				if(o.substr(-1) !== ']') throw 'unterminated "[" block: |' + o + '|';
+				while(fmt.charAt(i++) !== ']' && i < fmt.length) o += fmt.charAt(i);
+				if(o.slice(-1) !== ']') throw 'unterminated "[" block: |' + o + '|';
 				if(o.match(abstime)) {
 					if(dt==null) { dt=parse_date_code(v, opts); if(dt==null) return ""; }
 					out[out.length] = {t:'Z', v:o.toLowerCase()};
@@ -586,20 +630,20 @@ function eval_fmt(fmt/*:string*/, v/*:any*/, opts/*:any*/, flen/*:number*/) {
 			/* Numbers */
 			case '.':
 				if(dt != null) {
-					o = c; while((c=fmt[++i]) === "0") o += c;
+					o = c; while((c=fmt.charAt(++i)) === "0") o += c;
 					out[out.length] = {t:'s', v:o}; break;
 				}
 				/* falls through */
 			case '0': case '#':
-				o = c; while("0#?.,E+-%".indexOf(c=fmt[++i]) > -1 || c=='\\' && fmt[i+1] == "-" && "0#".indexOf(fmt[i+2])>-1) o += c;
+				o = c; while(++i < fmt.length && "0#?.,E+-%".indexOf(c=fmt.charAt(i)) > -1 || c=='\\' && fmt.charAt(i+1) == "-" && "0#".indexOf(fmt.charAt(i+2))>-1) o += c;
 				out[out.length] = {t:'n', v:o}; break;
 			case '?':
-				o = c; while(fmt[++i] === c) o+=c;
+				o = c; while(fmt.charAt(++i) === c) o+=c;
 				q={t:c, v:o}; out[out.length] = q; lst = c; break;
-			case '*': ++i; if(fmt[i] == ' ' || fmt[i] == '*') ++i; break; // **
+			case '*': ++i; if(fmt.charAt(i) == ' ' || fmt.charAt(i) == '*') ++i; break; // **
 			case '(': case ')': out[out.length] = {t:(flen===1?'t':c), v:c}; ++i; break;
 			case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':
-				o = c; while("0123456789".indexOf(fmt[++i]) > -1) o+=fmt[i];
+				o = c; while(i < fmt.length && "0123456789".indexOf(fmt.charAt(++i)) > -1) o+=fmt.charAt(i);
 				out[out.length] = {t:'D', v:o}; break;
 			case ' ': out[out.length] = {t:c, v:c}; ++i; break;
 			default:

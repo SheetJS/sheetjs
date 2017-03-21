@@ -249,7 +249,9 @@ return function parse_ws_xml_data(sdata, s, opts, guess, themes, styles) {
 			if(guess.e.c < idx) guess.e.c = idx;
 			/* 18.18.11 t ST_CellType */
 			switch(p.t) {
-				case 'n': p.v = parseFloat(p.v); break;
+				case 'n':
+					p.v = parseFloat(p.v);
+					break;
 				case 's':
 					sstr = strs[parseInt(p.v, 10)];
 					if(typeof p.v == 'undefined') {
@@ -274,7 +276,7 @@ return function parse_ws_xml_data(sdata, s, opts, guess, themes, styles) {
 				case 'd':
 					if(!opts.cellDates) { p.v = datenum(new Date(p.v)); p.t = 'n'; }
 					break;
-				/* error string in .v, number in .v */
+				/* error string in .w, number in .v */
 				case 'e': p.w = p.v; p.v = RBErr[p.v]; break;
 			}
 			/* formatting */
@@ -287,6 +289,9 @@ return function parse_ws_xml_data(sdata, s, opts, guess, themes, styles) {
 				}
 			}
 			safe_format(p, fmtid, fillid, opts, themes, styles);
+			if(opts.cellDates && do_format && p.t == 'n' && SSF.is_date(SSF._table[fmtid])) {
+				var _d = SSF.parse_date_code(p.v); if(_d) { p.t = 'd'; p.v = new Date(Date.UTC(_d.y, _d.m-1,_d.d,_d.H,_d.M,_d.S,_d.u)); }
+			}
 			s[tag.r] = p;
 		}
 	}

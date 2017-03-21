@@ -123,8 +123,7 @@ function sheet_to_json(sheet/*:Worksheet*/, opts/*:?Sheet2JSONOpts*/){
 			switch(val.t){
 				case 'z': continue;
 				case 'e': continue;
-				case 's': break;
-				case 'b': case 'n': break;
+				case 's': case 'd': case 'b': case 'n': break;
 				default: throw 'unrecognized type ' + val.t;
 			}
 			if(v !== undefined) {

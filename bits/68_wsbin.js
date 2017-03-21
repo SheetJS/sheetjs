@@ -332,6 +332,9 @@ function parse_ws_bin(data, opts, rels, wb, themes, styles)/*:Worksheet*/ {
 				if(refguess.s.c > C) refguess.s.c = C;
 				if(refguess.e.r < row.r) refguess.e.r = row.r;
 				if(refguess.e.c < C) refguess.e.c = C;
+				if(opts.cellDates && cf && p.t == 'n' && SSF.is_date(SSF._table[cf.ifmt])) {
+					var _d = SSF.parse_date_code(p.v); if(_d) { p.t = 'd'; p.v = new Date(Date.UTC(_d.y, _d.m-1,_d.d,_d.H,_d.M,_d.S,_d.u)); }
+				}
 				break;
 
 			case 'BrtCellBlank': if(!opts.sheetStubs) break;

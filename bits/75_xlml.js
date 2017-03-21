@@ -69,7 +69,11 @@ function safe_format_xlml(cell/*:Cell*/, nf, o) {
 			else cell.w = SSF._general(cell.v);
 		}
 		else cell.w = xlml_format(nf||"General", cell.v);
-		if(o.cellNF) cell.z = XLMLFormatMap[nf]||nf||"General";
+		var z = XLMLFormatMap[nf]||nf||"General";
+		if(o.cellNF) cell.z = z;
+		if(o.cellDates && cell.t == 'n' && SSF.is_date(z)) {
+			var _d = SSF.parse_date_code(cell.v); if(_d) { cell.t = 'd'; cell.v = new Date(Date.UTC(_d.y, _d.m-1,_d.d,_d.H,_d.M,_d.S,_d.u)); }
+		}
 	} catch(e) { if(o.WTF) throw e; }
 }
 
@@ -801,7 +805,7 @@ function write_ws_xlml_cell(cell, ref, ws, opts, idx, wb, addr)/*:string*/{
 	if(opts && opts.type == 'binary' && typeof cptable !== 'undefined' && cell.t == 's') {
 		_v = cptable.utils.encode(65001, _v);
 		var __v = "";
-		for(__i = 0; __i < _v.length; ++__i) __v += String.fromCharCode(_v[__i]);
+		for(var __i = 0; __i < _v.length; ++__i) __v += String.fromCharCode(_v[__i]);
 		_v = __v;
 	}
 	var m = '<Data ss:Type="' + t + '">' + _v + '</Data>';

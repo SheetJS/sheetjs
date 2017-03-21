@@ -31,7 +31,7 @@ var parse_rs = (function parse_rs_factory() {
 		var m = rpr.match(tagregex), i = 0;
 		if(m) for(;i!=m.length; ++i) {
 			var y = parsexmltag(m[i]);
-			switch(y[0]) {
+			switch(y[0].replace(/\w*:/g,"")) {
 				/* 18.8.12 condense CT_BooleanProperty */
 				/* ** not required . */
 				case '<condense': break;

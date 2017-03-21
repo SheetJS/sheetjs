@@ -184,16 +184,6 @@ describe('parse options', function() {
 				});
 			});
 		});
-		it('XLSB should not generate cell dates', function() {
-			var wb = X.read(fs.readFileSync(paths.dtxlsb), {type:"binary", cellDates: true});
-			wb.SheetNames.forEach(function(s) {
-				var ws = wb.Sheets[s];
-				Object.keys(ws).forEach(function(addr) {
-					if(addr[0] === "!" || !ws.hasOwnProperty(addr)) return;
-					assert(ws[addr].t !== 'd');
-				});
-			});
-		});
 		it('XLSX should generate cell dates when requested', function() {
 			var wb = X.read(fs.readFileSync(paths.dtxlsx), {type:"binary", cellDates: true});
 			var found = false;
