@@ -4,33 +4,57 @@ CMDS=bin/ssf.njs
 HTMLLINT=
 
 ULIB=$(shell echo $(LIB) | tr a-z A-Z)
+DEPS=$(sort $(wildcard bits/*.js))
 TARGET=$(LIB).js
+FLOWTARGET=$(LIB).flow.js
+FLOWAUX=$(patsubst %.js,%.flow.js,$(AUXTARGETS))
+AUXSCPTS=
+FLOWTGTS=$(TARGET) $(AUXTARGETS) $(AUXSCPTS)
+UGLIFYOPTS=--support-ie8
 
 ## Main Targets
 
+.PHONY: all
+all: $(TARGET) $(AUXTARGETS) $(AUXSCPTS) ## Build library and auxiliary scripts
 
-.PHONY: ssf
-ssf: ssf.md
-	voc ssf.md
+$(FLOWTGTS): %.js : %.flow.js
+	node -e 'process.stdout.write(require("fs").readFileSync("$<","utf8").replace(/^[ \t]*\/\*[:#][^*]*\*\/\s*(\n)?/gm,"").replace(/\/\*[:#][^*]*\*\//gm,""))' > $@
+
+$(FLOWTARGET): $(DEPS)
+	cat $^ | tr -d '\15\32' > $@
+
+bits/01_version.js: package.json
+	echo "$(ULIB).version = '"`grep version package.json | awk '{gsub(/[^0-9a-z\.-]/,"",$$2); print $$2}'`"';" > $@
+
+.PHONY: clean
+clean: ## Remove targets and build artifacts
+	rm -f $(TARGET) $(FLOWTARGET)
+
 
 ## Testing
 
 .PHONY: test mocha
 test mocha: ## Run test suite
-	npm test
+	mocha -R spec
 
+.PHONY: test_min
 test_min:
 	MINTEST=1 npm test
+
+.PHONY: travis
+travis: ## Run test suite with minimal output
+	mocha -R dot -t 30000
 
 ## Code Checking
 
 .PHONY: lint
-lint: ## Run jshint and jscs checks
-	@jshint --show-non-errors $(TARGET) test/
+lint: $(TARGET) $(AUXTARGETS) ## Run jshint and jscs checks
+	@jshint --show-non-errors $(TARGET) $(AUXTARGETS)
+	@jshint --show-non-errors test/
 	@jshint --show-non-errors $(CMDS)
 	@jshint --show-non-errors package.json
 	@jshint --show-non-errors --extract=always $(HTMLLINT)
-	@jscs $(TARGET)
+	@jscs $(TARGET) $(AUXTARGETS)
 
 .PHONY: flow
 flow: lint ## Run flow checker
@@ -43,7 +67,7 @@ cov: tmp/coverage.html ## Run coverage test
 cov_min:
 	MINTEST=1 make cov
 
-tmp/coverage.html: ssf
+misc/coverage.html: $(TARGET)
 	mocha --require blanket -R html-cov -t 20000 > $@
 
 .PHONY: full_coveralls

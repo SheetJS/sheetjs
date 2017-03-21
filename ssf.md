@@ -8,7 +8,7 @@ spreadsheet format codes.
 The various API functions take an `opts` argument which control parsing.  The
 default options are described below:
 
-```js>tmp/10_opts.js
+```js>bits/10_opts.js
 /* Options */
 var opts_fmt/*:Array<Array<any> >*/ = [
 ```
@@ -59,7 +59,7 @@ numbers, zero values, and text, in that order.
 Semicolons can be escaped with the `\` character, so we need to split on those
 semicolons that aren't prefaced by a slash or within a quoted string:
 
-```js>tmp/80_split.js
+```js>bits/80_split.js
 function split_fmt(fmt/*:string*/)/*:Array<string>*/ {
   var out/*:Array<string>*/ = [];
   var in_str = false, cc;
@@ -116,7 +116,7 @@ as the last format.
 
 ## Utility Functions
 
-```js>tmp/02_utilities.js
+```js>bits/02_utilities.js
 function _strrev(x/*:string*/)/*:string*/ { var o = "", i = x.length-1; while(i>=0) o += x.charAt(i--); return o; }
 function fill(c/*:string*/,l/*:number*/)/*:string*/ { var o = ""; while(o.length < l) o+=c; return o; }
 ```
@@ -148,7 +148,7 @@ of its abilities given the knowledge.
 First: 32-bit integers in base 10 are shorter than 11 characters, so they will
 always be written in full:
 
-```js>tmp/40_general.js
+```js>bits/40_general.js
 function general_fmt_int(v/*:number*/, opts/*:?any*/)/*:string*/ { return ""+v; }
 SSF._general_int = general_fmt_int;
 ```
@@ -191,7 +191,7 @@ SSF._general_num = general_fmt_num;
 
 Finally
 
-```js>tmp/40_general.js
+```js>bits/40_general.js
 function general_fmt(v/*:any*/, opts/*:?any*/) {
   switch(typeof v) {
 ```
@@ -228,7 +228,7 @@ SSF._general = general_fmt;
 These are the commonly-used formats that have a special implied code.
 None of the international formats are included here.
 
-```js>tmp/20_consts.js
+```js>bits/20_consts.js
 var table_fmt = {
   /*::[*/0/*::]*/:  'General',
   /*::[*/1/*::]*/:  '0',
@@ -285,7 +285,7 @@ some writers erroneously emit 65535 for general:
 
 The code `ddd` displays short day-of-week and `dddd` shows long day-of-week:
 
-```js>tmp/20_consts.js
+```js>bits/20_consts.js
 var days = [
   ['Sun', 'Sunday'],
   ['Mon', 'Monday'],
@@ -325,7 +325,7 @@ portion of a 24 hour day).
 
 Excel supports the alternative Hijri calendar (indicated with `b2`):
 
-```js>tmp/50_date.js
+```js>bits/50_date.js
 function parse_date_code(v/*:number*/,opts/*:?any*/,b2/*:?boolean*/) {
 ```
 
@@ -417,7 +417,7 @@ SSF.parse_date_code = parse_date_code;
 
 TODO: suitable hijri correction
 
-```js>tmp/45_hijri.js
+```js>bits/45_hijri.js
 function fix_hijri(date, o) { return 0; }
 ```
 
@@ -425,7 +425,7 @@ function fix_hijri(date, o) { return 0; }
 
 The utility `commaify` adds commas to integers:
 
-```js>tmp/56_commaify.js
+```js>bits/56_commaify.js
 function commaify(s/*:string*/)/*:string*/ {
   if(s.length <= 3) return s;
   var j = (s.length % 3), o = s.substr(0,j);
@@ -436,7 +436,7 @@ function commaify(s/*:string*/)/*:string*/ {
 
 `write_num` is broken into sub-functions to help with optimization:
 
-```js>tmp/57_numhead.js
+```js>bits/57_numhead.js
 var write_num = (function make_write_num(){
 ```
 
@@ -444,7 +444,7 @@ var write_num = (function make_write_num(){
 
 The underlying number for the percentages should be physically shifted:
 
-```js>tmp/59_numhelp.js
+```js>bits/59_numhelp.js
 var pct1 = /%/g;
 function write_num_pct(type/*:string*/, fmt/*:string*/, val/*:number*/)/*:string*/{
   var sfmt = fmt.replace(pct1,""), mul = fmt.length - sfmt.length;
@@ -457,7 +457,7 @@ function write_num_pct(type/*:string*/, fmt/*:string*/, val/*:number*/)/*:string
 Formats with multiple commas after the decimal point should be shifted by the
 appropiate multiple of 1000 (more magic):
 
-```js>tmp/60_number.js
+```js>bits/60_number.js
 function write_num_cm(type/*:string*/, fmt/*:string*/, val/*:number*/)/*:string*/{
   var idx = fmt.length - 1;
   while(fmt.charCodeAt(idx-1) === 44) --idx;
@@ -562,7 +562,7 @@ function write_num_flt(type/*:string*/, fmt/*:string*/, val/*:number*/)/*:string
 
 For parentheses, explicitly resolve the sign issue:
 
-```js>tmp/60_number.js
+```js>bits/60_number.js
   if(type.charCodeAt(0) === 40 && !fmt.match(closeparen)) {
     var ffmt = fmt.replace(/\( */,"").replace(/ \)/,"").replace(/\)/,"");
     if(val >= 0) return write_num_flt('n', ffmt, val);
@@ -575,7 +575,7 @@ Helpers are used for:
 - Trailing commas
 - Exponentials
 
-```js>tmp/60_number.js
+```js>bits/60_number.js
   if(fmt.charCodeAt(fmt.length - 1) === 44) return write_num_cm(type, fmt, val);
   if(fmt.indexOf('%') !== -1) return write_num_pct(type, fmt, val);
   if(fmt.indexOf('E') !== -1) return write_num_exp(fmt, val);
@@ -691,7 +691,7 @@ The general class `/^[#0?]+$/` treats the '0' as literal, '#' as noop, '?' as sp
 
 The default cases are hard-coded.  TODO: actually parse them
 
-```js>tmp/60_number.js
+```js>bits/60_number.js
   if((r = fmt.match(/^00,000\.([#0]*0)$/))) {
     ri = dec(val, r[1].length);
 ```
@@ -707,7 +707,7 @@ Note that this is technically incorrect
 
 For now, the default case is an error:
 
-```js>tmp/60_number.js
+```js>bits/60_number.js
     default:
   }
   throw new Error("unsupported format |" + fmt + "|");
@@ -839,7 +839,7 @@ return function write_num(type/*:string*/, fmt/*:string*/, val/*:number*/)/*:str
 
 ## Evaluating Format Strings
 
-```js>tmp/82_eval.js
+```js>bits/82_eval.js
 var abstime = /\[[HhMmSs]*\]/;
 function eval_fmt(fmt/*:string*/, v/*:any*/, opts/*:any*/, flen/*:number*/) {
   var out = [], o = "", i = 0, c = "", lst='t', q, dt, j, cc;
@@ -1197,7 +1197,7 @@ There is some overloading of the `m` character.  According to the spec:
 hours) or immediately before the "ss" code (for seconds), the application shall
 display minutes instead of the month.
 
-```js>tmp/50_date.js
+```js>bits/50_date.js
 /*jshint -W086 */
 function write_date(type/*:number*/, fmt/*:string*/, val, ss0/*:?number*/)/*:string*/ {
   var o="", ss=0, tt=0, y = val.y, out, outl = 0;
@@ -1322,7 +1322,7 @@ it is not exported and is only called when the type is in `ymdhHMsZe`
 Based on the value, `choose_fmt` picks the right format string.  If formats have
 explicit negative specifications, those values should be passed as positive:
 
-```js>tmp/90_main.js
+```js>bits/90_main.js
 function choose_fmt(f/*:string*/, v) {
   var fmt = split_fmt(f);
   var l = fmt.length, lat = fmt[l-1].indexOf("@");
@@ -1357,7 +1357,7 @@ it is treated as the text format
 Here we have to scan for conditions.  Note that the grammar precludes decimals
 but in practice they are fair game:
 
-```js>tmp/88_cond.js
+```js>bits/88_cond.js
 var cfregex = /\[[=<>]/;
 var cfregex2 = /\[([=<>]*)(-?\d+\.?\d*)\]/;
 function chkcond(v, rr) {
@@ -1377,7 +1377,7 @@ function chkcond(v, rr) {
 
 The main function checks for conditional operators and acts accordingly:
 
-```js>tmp/90_main.js
+```js>bits/90_main.js
   var ff = v > 0 ? fmt[0] : v < 0 ? fmt[1] : fmt[2];
   if(fmt[0].indexOf("[") === -1 && fmt[1].indexOf("[") === -1) return [l, ff];
   if(fmt[0].match(cfregex) != null || fmt[1].match(cfregex) != null) {
@@ -1431,7 +1431,7 @@ Empty string should always emit empty, even if there are other characters:
 The methods beginning with an underscore are subject to change and should not be
 used directly in programs.
 
-```js>tmp/98_exports.js
+```js>bits/98_exports.js
 SSF._table = table_fmt;
 SSF.load = function load_entry(fmt/*:string*/, idx/*:number*/) { table_fmt[idx] = fmt; };
 SSF.format = format;
@@ -1448,7 +1448,7 @@ SSF.load_table = function load_table(tbl/*:{[n:number]:string}*/) { for(var i=0;
 
 The implementation is from [our frac library](https://github.com/SheetJS/frac/):
 
-```js>tmp/30_frac.js
+```js>bits/30_frac.js
 function frac(x, D, mixed) {
   var sgn = x < 0 ? -1 : 1;
   var B = x * sgn;
@@ -1475,14 +1475,14 @@ function frac(x, D, mixed) {
 
 ## JS Boilerplate
 
-```js>tmp/00_header.js
+```js>bits/00_header.js
 /* ssf.js (C) 2013-present SheetJS -- http://sheetjs.com */
 /*jshint -W041 */
 var SSF = {};
 var make_ssf = function make_ssf(SSF){
 ```
 
-```js>tmp/99_footer.js
+```js>bits/99_footer.js
 };
 make_ssf(SSF);
 /*global module */

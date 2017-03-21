@@ -1,31 +1,33 @@
 {
-  "name": "ssf",
-  "version": "0.8.1",
-  "author": "SheetJS",
-  "description": "Format data using ECMA-376 spreadsheet Format Codes",
-  "keywords": [ "format", "sprintf", "spreadsheet" ],
-  "main": "ssf.js",
-  "dependencies": {
-    "voc":"",
-    "colors":"0.6.2",
-    "frac":"0.3.1"
-  },
-  "devDependencies": {
-    "mocha":""
-  },
-  "repository": { "type":"git", "url":"git://github.com/SheetJS/ssf.git" },
-  "scripts": {
-    "test": "mocha -R spec"
-  },
-  "bin": {
-    "ssf": "./bin/ssf.njs"
-  },
-  "config": {
-    "blanket": {
-      "pattern": "ssf.js"
-    }
-  },
-  "bugs": { "url": "https://github.com/SheetJS/ssf/issues" },
-  "license": "Apache-2.0",
-  "engines": { "node": ">=0.8" }
+	"name": "ssf",
+	"version": "0.9.0",
+	"author": "SheetJS",
+	"description": "Format data using ECMA-376 spreadsheet Format Codes",
+	"keywords": [ "format", "sprintf", "spreadsheet" ],
+	"bin": {
+		"ssf": "./bin/ssf.njs"
+	},
+	"main": "./ssf",
+	"dependencies": {
+		"voc":"",
+		"colors":"0.6.2",
+		"frac":"0.3.1"
+	},
+	"devDependencies": {
+		"mocha":"",
+		"uglify-js":""
+	},
+	"repository": { "type":"git", "url":"git://github.com/SheetJS/ssf.git" },
+	"scripts": {
+		"test": "make test"
+	},
+	"config": {
+		"blanket": {
+			"pattern": "ssf.js"
+		}
+	},
+	"homepage": "https://oss.sheetjs.com/ssf",
+	"bugs": { "url": "https://github.com/SheetJS/ssf/issues" },
+	"license": "Apache-2.0",
+	"engines": { "node": ">=0.8" }
 }

@@ -70,6 +70,7 @@ type SSFDate = {
 }
 ```
 
+`SSF.is_date(fmt:string):boolean` returns `true` if `fmt` encodes a date format.
 
 ## License
 
