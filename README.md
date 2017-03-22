@@ -677,7 +677,7 @@ The exported `read` and `readFile` functions accept an options argument:
 | cellHTML    | true    | Parse rich text and save HTML to the .h field        |
 | cellNF      | false   | Save number format string to the .z field            |
 | cellStyles  | false   | Save style/theme info to the .s field                |
-| cellDates   | false   | Store dates as type `d` (default is `n`) **          |
+| cellDates   | false   | Store dates as type `d` (default is `n`)             |
 | sheetStubs  | false   | Create cell objects of type `z` for stub cells       |
 | sheetRows   | 0       | If >0, read the first `sheetRows` rows **            |
 | bookDeps    | false   | If true, parse calculation chains                    |
@@ -701,7 +701,6 @@ The exported `read` and `readFile` functions accept an options argument:
 - `sheetRows-1` rows will be generated when looking at the JSON object output
   (since the header row is counted as a row when parsing the data)
 - `bookVBA` merely exposes the raw vba object.  It does not parse the data.
-- `cellDates` currently does not convert numerical dates to JS dates.
 - Currently only XOR encryption is supported.  Unsupported error will be thrown
   for files employing other encryption methods.
 - WTF is mainly for development.  By default, the parser will suppress read
@@ -826,6 +825,10 @@ produces CSV output.  The function takes an options argument:
 | :---------- | :------: | :-------------------------------------------------- |
 | FS          |  `","`   | "Field Separator"  delimiter between fields         |
 | RS          |  `"\n"`  | "Record Separator" delimiter between rows           |
+| dateNF      |  fmt 14  | Use specified date format in string output          |
+| strip       |  false   | Remove trailing field separators in each record **  |
+
+- `strip` will remove trailing commas from each line under default `FS/RS`
 
 For the example sheet:
 
@@ -852,6 +855,7 @@ generate different types of JS objects.  The function takes an options argument:
 | raw         | `false`  | Use raw values (true) or formatted strings (false)  |
 | range       | from WS  | Override Range (see table below)                    |
 | header      |          | Control output format (see table below)             |
+| dateNF      |  fmt 14  | Use specified date format in string output          |
 
 - `raw` only affects cells which have a format code (`.z`) field or a formatted
   text (`.w`) field.

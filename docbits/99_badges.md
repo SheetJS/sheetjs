@@ -1,6 +1,6 @@
 ## Badges
 
-[![Build Status](https://saucelabs.com/browser-matrix/xlsx.svg)](https://saucelabs.com/u/xlsx)
+[![Build Status](https://saucelabs.com/browser-matrix/sheetjs.svg)](https://saucelabs.com/u/sheetjs)
 
 [![Build Status](https://travis-ci.org/SheetJS/js-xlsx.svg?branch=master)](https://travis-ci.org/SheetJS/js-xlsx)
 

@@ -9,7 +9,7 @@ The exported `read` and `readFile` functions accept an options argument:
 | cellHTML    | true    | Parse rich text and save HTML to the .h field        |
 | cellNF      | false   | Save number format string to the .z field            |
 | cellStyles  | false   | Save style/theme info to the .s field                |
-| cellDates   | false   | Store dates as type `d` (default is `n`) **          |
+| cellDates   | false   | Store dates as type `d` (default is `n`)             |
 | sheetStubs  | false   | Create cell objects of type `z` for stub cells       |
 | sheetRows   | 0       | If >0, read the first `sheetRows` rows **            |
 | bookDeps    | false   | If true, parse calculation chains                    |
@@ -33,7 +33,6 @@ The exported `read` and `readFile` functions accept an options argument:
 - `sheetRows-1` rows will be generated when looking at the JSON object output
   (since the header row is counted as a row when parsing the data)
 - `bookVBA` merely exposes the raw vba object.  It does not parse the data.
-- `cellDates` currently does not convert numerical dates to JS dates.
 - Currently only XOR encryption is supported.  Unsupported error will be thrown
   for files employing other encryption methods.
 - WTF is mainly for development.  By default, the parser will suppress read

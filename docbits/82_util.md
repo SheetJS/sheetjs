@@ -34,6 +34,10 @@ produces CSV output.  The function takes an options argument:
 | :---------- | :------: | :-------------------------------------------------- |
 | FS          |  `","`   | "Field Separator"  delimiter between fields         |
 | RS          |  `"\n"`  | "Record Separator" delimiter between rows           |
+| dateNF      |  fmt 14  | Use specified date format in string output          |
+| strip       |  false   | Remove trailing field separators in each record **  |
+
+- `strip` will remove trailing commas from each line under default `FS/RS`
 
 For the example sheet:
 
@@ -60,6 +64,7 @@ generate different types of JS objects.  The function takes an options argument:
 | raw         | `false`  | Use raw values (true) or formatted strings (false)  |
 | range       | from WS  | Override Range (see table below)                    |
 | header      |          | Control output format (see table below)             |
+| dateNF      |  fmt 14  | Use specified date format in string output          |
 
 - `raw` only affects cells which have a format code (`.z`) field or a formatted
   text (`.w`) field.

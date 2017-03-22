@@ -1467,7 +1467,7 @@ var attregexg=/([^\s?>\/]+)=((?:")([^"]*)(?:")|(?:')([^']*)(?:'))/g;
 var tagregex=/<[^>]*>/g;
 var nsregex=/<\w*:/, nsregex2 = /<(\/?)\w+:/;
 function parsexmltag(tag, skip_root) {
-	var z = ([]);
+	var z = ({});
 	var eq = 0, c = 0;
 	for(; eq !== tag.length; ++eq) if((c = tag.charCodeAt(eq)) === 32 || c === 10 || c === 13) break;
 	if(!skip_root) z[0] = tag.substr(0, eq);
@@ -13799,13 +13799,15 @@ f = "docProps/app.xml";
 	return zip;
 }
 function firstbyte(f,o) {
+	var x = "";
 	switch((o||{}).type || "base64") {
-		case 'buffer': return f[0];
-		case 'base64': return Base64.decode(f.substr(0,12)).charCodeAt(0);
-		case 'binary': return f.charCodeAt(0);
-		case 'array': return f[0];
+		case 'buffer': return [f[0], f[1], f[2], f[3]];
+		case 'base64': x = Base64.decode(f.substr(0,24)); break;
+		case 'binary': x = f; break;
+		case 'array':  return [f[0], f[1], f[2], f[3]];
 		default: throw new Error("Unrecognized type " + (o ? o.type : "undefined"));
 	}
+	return [x.charCodeAt(0), x.charCodeAt(1), x.charCodeAt(2), x.charCodeAt(3)];
 }
 
 function read_zip(data, opts) {
@@ -13822,18 +13824,19 @@ var zip, d = data;
 }
 
 function readSync(data, opts) {
-	var zip, d = data, n=0;
+	var zip, d = data, n=[0];
 	var o = opts||{};
 	if(!o.type) o.type = (has_buf && Buffer.isBuffer(data)) ? "buffer" : "base64";
 	if(o.type == "file") { o.type = "buffer"; d = _fs.readFileSync(data); }
-	switch((n = firstbyte(d, o))) {
+	switch((n = firstbyte(d, o))[0]) {
 		case 0xD0: return parse_xlscfb(CFB.read(d, o), o);
 		case 0x09: return parse_xlscfb(s2a(o.type === 'base64' ? Base64.decode(d) : d), o);
 		case 0x3C: return parse_xlml(d, o);
-		case 0x50: return read_zip(d, o);
+		case 0x50: if(n[1] == 0x4B && n[2] < 0x20 && n[3] < 0x20) return read_zip(d, o); break;
 		case 0xEF: return parse_xlml(d, o);
-		default: throw new Error("Unsupported file " + n);
+		default: throw new Error("Unsupported file " + n.join("|"));
 	}
+	throw new Error("Unsupported file format " + n.join("|"));
 }
 
 function readFileSync(filename, opts) {
@@ -13977,15 +13980,16 @@ function safe_decode_range(range) {
 }
 
 function safe_format_cell(cell, v) {
-	if(cell.z !== undefined) try { return (cell.w = SSF.format(cell.z, v)); } catch(e) { }
-	if(!cell.XF) return v;
-	try { return (cell.w = SSF.format(cell.XF.ifmt||0, v)); } catch(e) { return ''+v; }
+	var q = (cell.t == 'd' && v instanceof Date);
+	if(cell.z != null) try { return (cell.w = SSF.format(cell.z, q ? datenum(v) : v)); } catch(e) { }
+	try { return (cell.w = SSF.format((cell.XF||{}).ifmt||(q ? 14 : 0),  q ? datenum(v) : v)); } catch(e) { return ''+v; }
 }
 
-function format_cell(cell, v) {
+function format_cell(cell, v, o) {
 	if(cell == null || cell.t == null || cell.t == 'z') return "";
 	if(cell.w !== undefined) return cell.w;
-	if(v === undefined) return safe_format_cell(cell, cell.v);
+	if(cell.t == 'd' && !cell.z && o && o.dateNF) cell.z = o.dateNF;
+	if(v == undefined) return safe_format_cell(cell, cell.v);
 	return safe_format_cell(cell, v);
 }
 
@@ -14063,6 +14067,7 @@ function sheet_to_csv(sheet, opts) {
 	var r = safe_decode_range(sheet["!ref"]);
 	var FS = o.FS !== undefined ? o.FS : ",", fs = FS.charCodeAt(0);
 	var RS = o.RS !== undefined ? o.RS : "\n", rs = RS.charCodeAt(0);
+	var endregex = new RegExp(FS+"+$");
 	var row = "", rr = "", cols = [];
 	var i = 0, cc = 0, val;
 	var R = 0, C = 0;
@@ -14083,6 +14088,7 @@ function sheet_to_csv(sheet, opts) {
 			/* NOTE: Excel CSV does not support array formulae */
 			row += (C === r.s.c ? "" : FS) + txt;
 		}
+		if(o.strip) row = row.replace(endregex,"");
 		out += row + RS;
 	}
 	return out;

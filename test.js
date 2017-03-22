@@ -1056,8 +1056,9 @@ function sheet_from_array_of_arrays(data, opts) {
 			if(typeof cell.v === 'number') cell.t = 'n';
 			else if(typeof cell.v === 'boolean') cell.t = 'b';
 			else if(cell.v instanceof Date) {
-				cell.t = 'n'; cell.z = X.SSF._table[14];
-				cell.v = datenum(cell.v);
+				cell.z = X.SSF._table[14];
+				if(opts && opts.cellDates) cell.t = 'd';
+				else { cell.t = 'n'; cell.v = datenum(cell.v); }
 			}
 			else cell.t = 's';
 			ws[cell_ref] = cell;
@@ -1090,7 +1091,7 @@ describe('json output', function() {
 	it('should use first-row headers and full sheet by default', function() {
 		var json = X.utils.sheet_to_json(ws);
 		assert.equal(json.length, data.length - 1);
-		assert.equal(json[0][1], true);
+		assert.equal(json[0][1], "TRUE");
 		assert.equal(json[1][2], "bar");
 		assert.equal(json[2][3], "qux");
 		assert.doesNotThrow(function() { seeker(json, [1,2,3], "sheetjs"); });
@@ -1099,7 +1100,7 @@ describe('json output', function() {
 	it('should create array of arrays if header == 1', function() {
 		var json = X.utils.sheet_to_json(ws, {header:1});
 		assert.equal(json.length, data.length);
-		assert.equal(json[1][0], true);
+		assert.equal(json[1][0], "TRUE");
 		assert.equal(json[2][1], "bar");
 		assert.equal(json[3][2], "qux");
 		assert.doesNotThrow(function() { seeker(json, [0,1,2], "sheetjs"); });
@@ -1109,7 +1110,7 @@ describe('json output', function() {
 	it('should use column names if header == "A"', function() {
 		var json = X.utils.sheet_to_json(ws, {header:'A'});
 		assert.equal(json.length, data.length);
-		assert.equal(json[1].A, true);
+		assert.equal(json[1].A, "TRUE");
 		assert.equal(json[2].B, "bar");
 		assert.equal(json[3].C, "qux");
 		assert.doesNotThrow(function() { seeker(json, "ABC", "sheetjs"); });
@@ -1119,7 +1120,7 @@ describe('json output', function() {
 	it('should use column labels if specified', function() {
 		var json = X.utils.sheet_to_json(ws, {header:["O","D","I","N"]});
 		assert.equal(json.length, data.length);
-		assert.equal(json[1].O, true);
+		assert.equal(json[1].O, "TRUE");
 		assert.equal(json[2].D, "bar");
 		assert.equal(json[3].I, "qux");
 		assert.doesNotThrow(function() { seeker(json, "ODI", "sheetjs"); });
@@ -1130,7 +1131,7 @@ describe('json output', function() {
 		it('should accept custom ' + w[0] + ' range', function() {
 			var json = X.utils.sheet_to_json(ws, {header:1, range:w[1]});
 			assert.equal(json.length, 3);
-			assert.equal(json[0][0], true);
+			assert.equal(json[0][0], "TRUE");
 			assert.equal(json[1][1], "bar");
 			assert.equal(json[2][2], "qux");
 			assert.doesNotThrow(function() { seeker(json, [0,1,2], "sheetjs"); });
@@ -1151,6 +1152,16 @@ describe('json output', function() {
 			assert.equal(json[i].J,   6 + i);
 			assert.equal(json[i].S_1, 7 + i);
 		}
+	});
+	it('should handle raw data if requested', function() {
+		var _ws = sheet_from_array_of_arrays(data, {cellDates:true});
+		var json = X.utils.sheet_to_json(_ws, {header:1, raw:true});
+		console.log(json, typeof json[2][2]);
+		assert.equal(json.length, data.length);
+		assert.equal(json[1][0], true);
+		assert.equal(json[2][1], "bar");
+		assert.equal(json[2][2].getTime(), new Date("2014-02-19T14:30Z").getTime());
+		assert.equal(json[3][2], "qux");
 	});
 });
 
