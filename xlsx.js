@@ -4758,6 +4758,7 @@ function write_sst_xml(sst, opts) {
 		if(s.r) sitag += s.r;
 		else {
 			sitag += "<t";
+			if(!s.t) s.t = "";
 			if(s.t.match(straywsregex)) sitag += ' xml:space="preserve"';
 			sitag += ">" + escapexml(s.t) + "</t>";
 		}
