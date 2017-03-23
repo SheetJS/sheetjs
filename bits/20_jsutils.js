@@ -62,6 +62,15 @@ function parse_isodur(s) {
 	return sec;
 }
 
+var good_pd_date = new Date('2017-02-19T19:06:09.000Z');
+var good_pd = good_pd_date.getFullYear() == 2017;
+function parseDate(str/*:string|Date*/)/*:Date*/ {
+	if(good_pd) return new Date(str);
+	if(str instanceof Date) return str;
+	var n = str.match(/\d+/g)||["2017","2","19","0","0","0"];
+	return new Date(Date.UTC(+n[0], +n[1] - 1, +n[2], +n[3], +n[4], +n[5]));
+}
+
 function cc2str(arr/*:Array<number>*/)/*:string*/ {
 	var o = "";
 	for(var i = 0; i != arr.length; ++i) o += String.fromCharCode(arr[i]);

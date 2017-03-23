@@ -42,7 +42,7 @@ var write_content_xml/*:{(wb:any, opts:any):string}*/ = (function() {
 					case 'b': o.push(cell_begin + mxml + vt + '"boolean" office:boolean-value="' + (cell.v ? 'true' : 'false') + '"' + fmla + '>' + p_begin + (cell.v ? 'TRUE' : 'FALSE') + p_end + cell_end); break;
 					case 'n': o.push(cell_begin + mxml + vt + '"float" office:value="' + cell.v + '"' + fmla + '>' + p_begin + (cell.w||cell.v) + p_end + cell_end); break;
 					case 's': case 'str': o.push(cell_begin + mxml + vt + '"string"' + fmla + '>' + p_begin + escapexml(cell.v) + p_end + cell_end); break;
-					case 'd': o.push(cell_begin + mxml + vt + '"date" office:date-value="' + (new Date(cell.v).toISOString()) + '"' + fmla + '>' + p_begin + (cell.w||(new Date(cell.v).toISOString())) + p_end + cell_end); break;
+					case 'd': o.push(cell_begin + mxml + vt + '"date" office:date-value="' + (parseDate(cell.v).toISOString()) + '"' + fmla + '>' + p_begin + (cell.w||(parseDate(cell.v).toISOString())) + p_end + cell_end); break;
 					//case 'e':
 					default: o.push(null_cell_xml);
 				} else o.push(null_cell_xml);

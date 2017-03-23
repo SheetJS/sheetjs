@@ -1156,7 +1156,6 @@ describe('json output', function() {
 	it('should handle raw data if requested', function() {
 		var _ws = sheet_from_array_of_arrays(data, {cellDates:true});
 		var json = X.utils.sheet_to_json(_ws, {header:1, raw:true});
-		//console.log(json, typeof json[2][2]);
 		assert.equal(json.length, data.length);
 		assert.equal(json[1][0], true);
 		assert.equal(json[2][1], "bar");

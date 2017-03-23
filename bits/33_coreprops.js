@@ -37,7 +37,7 @@ function parse_core_props(data) {
 	for(var i = 0; i < CORE_PROPS.length; ++i) {
 		var f = CORE_PROPS[i], cur = data.match(CORE_PROPS_REGEX[i]);
 		if(cur != null && cur.length > 0) p[f[1]] = cur[1];
-		if(f[2] === 'date' && p[f[1]]) p[f[1]] = new Date(p[f[1]]);
+		if(f[2] === 'date' && p[f[1]]) p[f[1]] = parseDate(p[f[1]]);
 	}
 
 	return p;

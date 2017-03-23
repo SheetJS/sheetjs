@@ -78,7 +78,7 @@ function sheet_to_json(sheet/*:Worksheet*/, opts/*:?Sheet2JSONOpts*/){
 	var o = opts != null ? opts : {};
 	var raw = o.raw;
 	if(sheet == null || sheet["!ref"] == null) return [];
-	range = o.range !== undefined ? o.range : sheet["!ref"];
+	range = o.range != null ? o.range : sheet["!ref"];
 	if(o.header === 1) header = 1;
 	else if(o.header === "A") header = 2;
 	else if(Array.isArray(o.header)) header = 3;
@@ -100,7 +100,7 @@ function sheet_to_json(sheet/*:Worksheet*/, opts/*:?Sheet2JSONOpts*/){
 			case 2: hdr[C] = cols[C]; break;
 			case 3: hdr[C] = o.header[C - r.s.c]; break;
 			default:
-				if(val === undefined) continue;
+				if(val == null) continue;
 				vv = v = format_cell(val);
 				var counter = 0;
 				for(var CC = 0; CC < hdr.length; ++CC) if(hdr[CC] == vv) vv = v + "_" + (++counter);
@@ -114,7 +114,7 @@ function sheet_to_json(sheet/*:Worksheet*/, opts/*:?Sheet2JSONOpts*/){
 		if(header === 1) row = [];
 		else {
 			row = {};
-			if(Object.defineProperty) Object.defineProperty(row, '__rowNum__', {value:R, enumerable:false});
+			if(Object.defineProperty) try { Object.defineProperty(row, '__rowNum__', {value:R, enumerable:false}); } catch(e) { row.__rowNum__ = R; }
 			else row.__rowNum__ = R;
 		}
 		for (C = r.s.c; C <= r.e.c; ++C) {
@@ -125,7 +125,7 @@ function sheet_to_json(sheet/*:Worksheet*/, opts/*:?Sheet2JSONOpts*/){
 				case 'z': continue;
 				case 'e': continue;
 				case 's': case 'd': case 'b': case 'n': break;
-				default: throw 'unrecognized type ' + val.t;
+				default: throw new Error('unrecognized type ' + val.t);
 			}
 			if(v !== undefined) {
 				row[hdr[C]] = raw ? v : format_cell(val,v);

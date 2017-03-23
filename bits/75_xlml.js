@@ -50,7 +50,7 @@ function xlml_set_custprop(Custprops, Rn, cp, val/*:string*/) {
 		case "boolean": oval = parsexmlbool(val); break;
 		case "i2": case "int": oval = parseInt(val, 10); break;
 		case "r4": case "float": oval = parseFloat(val); break;
-		case "date": case "dateTime.tz": oval = new Date(val); break;
+		case "date": case "dateTime.tz": oval = parseDate(val); break;
 		case "i8": case "string": case "fixed": case "uuid": case "bin.base64": break;
 		default: throw new Error("bad custprop:" + cp[0]);
 	}
@@ -110,7 +110,7 @@ function parse_xlml_data(xml, ss, data, cell/*:any*/, base, styles, csty, row, a
 			cell.v = xml.indexOf("<") > -1 ? unescapexml(ss) : cell.r;
 			break;
 		case 'DateTime':
-			cell.v = (Date.parse(xml) - new Date(Date.UTC(1899, 11, 30))) / (24 * 60 * 60 * 1000);
+			cell.v = (parseDate(xml) - new Date(Date.UTC(1899, 11, 30))) / (24 * 60 * 60 * 1000);
 			if(cell.v !== cell.v) cell.v = unescapexml(xml);
 			else if(cell.v<60) cell.v = cell.v -1;
 			if(!nf || nf == "General") nf = "yyyy-mm-dd";

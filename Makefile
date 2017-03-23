@@ -96,6 +96,14 @@ $(TESTFMT): test_%:
 travis: ## Run test suite with minimal output
 	mocha -R dot -t 30000
 
+.PHONY: ctest
+ctest: ## Build browser test fixtures
+	node tests/make_fixtures.js
+
+.PHONY: ctestserv
+ctestserv: ## Start a test server on port 8000
+	@cd tests && python -mSimpleHTTPServer
+
 .PHONY: demos
 demos: demo-browserify demo-webpack demo-requirejs
 

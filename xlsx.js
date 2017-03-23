@@ -5,7 +5,7 @@
 /*exported XLSX */
 var XLSX = {};
 (function make_xlsx(XLSX){
-XLSX.version = '0.9.4';
+XLSX.version = '0.9.5';
 var current_codepage = 1200, current_cptable;
 if(typeof module !== "undefined" && typeof require !== 'undefined') {
 	if(typeof cptable === 'undefined') cptable = require('./dist/cpexcel.js');
@@ -1379,6 +1379,15 @@ function parse_isodur(s) {
 		sec += mt * parseInt(m[i], 10);
 	}
 	return sec;
+}
+
+var good_pd_date = new Date('2017-02-19T19:06:09.000Z');
+var good_pd = good_pd_date.getFullYear() == 2017;
+function parseDate(str) {
+	if(good_pd) return new Date(str);
+	if(str instanceof Date) return str;
+	var n = str.match(/\d+/g)||["2017","2","19","0","0","0"];
+	return new Date(Date.UTC(+n[0], +n[1] - 1, +n[2], +n[3], +n[4], +n[5]));
 }
 
 function cc2str(arr) {
@@ -2847,7 +2856,7 @@ function parse_core_props(data) {
 	for(var i = 0; i < CORE_PROPS.length; ++i) {
 		var f = CORE_PROPS[i], cur = data.match(CORE_PROPS_REGEX[i]);
 		if(cur != null && cur.length > 0) p[f[1]] = cur[1];
-		if(f[2] === 'date' && p[f[1]]) p[f[1]] = new Date(p[f[1]]);
+		if(f[2] === 'date' && p[f[1]]) p[f[1]] = parseDate(p[f[1]]);
 	}
 
 	return p;
@@ -2989,7 +2998,7 @@ function parse_cust_props(data, opts) {
 						p[name] = parseFloat(text);
 						break;
 					case 'filetime': case 'date':
-						p[name] = new Date(text);
+						p[name] = parseDate(text);
 						break;
 					case 'cy': case 'error':
 						p[name] = unescapexml(text);
@@ -3315,7 +3324,7 @@ function parse_PropertySet(blob, PIDSI) {
 					case 0x13 /*VT_UI4*/: blob.l += 4; val = blob.read_shift(4); break;
 					case 0x05 /*VT_R8*/: blob.l += 4; val = blob.read_shift(8, 'f'); break;
 					case 0x0B /*VT_BOOL*/: blob.l += 4; val = parsebool(blob, 4); break;
-					case 0x40 /*VT_FILETIME*/: blob.l += 4; val = new Date(parse_FILETIME(blob)); break;
+					case 0x40 /*VT_FILETIME*/: blob.l += 4; val = parseDate(parse_FILETIME(blob)); break;
 					default: throw new Error("unparsed value: " + blob[blob.l]);
 				}
 				PropH[name] = val;
@@ -8450,7 +8459,7 @@ function get_cell_style(styles, cell, opts) {
 
 function safe_format(p, fmtid, fillid, opts, themes, styles) {
 	if(p.t === 'z') return;
-	if(p.t === 'd' && typeof p.v === 'string') p.v = new Date(p.v);
+	if(p.t === 'd' && typeof p.v === 'string') p.v = parseDate(p.v);
 	try {
 		if(p.t === 'e') p.w = p.w || BErr[p.v];
 		else if(fmtid === 0) {
@@ -8616,10 +8625,10 @@ function write_ws_xml_cell(cell, ref, ws, opts, idx, wb) {
 		case 'n': vv = ''+cell.v; break;
 		case 'e': vv = BErr[cell.v]; break;
 		case 'd':
-			if(opts.cellDates) vv = new Date(cell.v).toISOString();
+			if(opts.cellDates) vv = parseDate(cell.v).toISOString();
 			else {
 				cell.t = 'n';
-				vv = ''+(cell.v = datenum(new Date(cell.v)));
+				vv = ''+(cell.v = datenum(parseDate(cell.v)));
 				if(typeof cell.z === 'undefined') cell.z = SSF._table[14];
 			}
 			break;
@@ -8758,7 +8767,7 @@ return function parse_ws_xml_data(sdata, s, opts, guess, themes, styles) {
 					break; // inline string
 				case 'b': p.v = parsexmlbool(p.v); break;
 				case 'd':
-					if(!opts.cellDates) { p.v = datenum(new Date(p.v)); p.t = 'n'; }
+					if(!opts.cellDates) { p.v = datenum(parseDate(p.v)); p.t = 'n'; }
 					break;
 				/* error string in .w, number in .v */
 				case 'e': p.w = p.v; p.v = RBErr[p.v]; break;
@@ -10042,7 +10051,7 @@ function xlml_set_custprop(Custprops, Rn, cp, val) {
 		case "boolean": oval = parsexmlbool(val); break;
 		case "i2": case "int": oval = parseInt(val, 10); break;
 		case "r4": case "float": oval = parseFloat(val); break;
-		case "date": case "dateTime.tz": oval = new Date(val); break;
+		case "date": case "dateTime.tz": oval = parseDate(val); break;
 		case "i8": case "string": case "fixed": case "uuid": case "bin.base64": break;
 		default: throw new Error("bad custprop:" + cp[0]);
 	}
@@ -10102,7 +10111,7 @@ function parse_xlml_data(xml, ss, data, cell, base, styles, csty, row, arrayf, o
 			cell.v = xml.indexOf("<") > -1 ? unescapexml(ss) : cell.r;
 			break;
 		case 'DateTime':
-			cell.v = (Date.parse(xml) - new Date(Date.UTC(1899, 11, 30))) / (24 * 60 * 60 * 1000);
+			cell.v = (parseDate(xml) - new Date(Date.UTC(1899, 11, 30))) / (24 * 60 * 60 * 1000);
 			if(cell.v !== cell.v) cell.v = unescapexml(xml);
 			else if(cell.v<60) cell.v = cell.v -1;
 			if(!nf || nf == "General") nf = "yyyy-mm-dd";
@@ -13112,7 +13121,7 @@ var parse_content_xml = (function() {
 						case 'float': q.t = 'n'; q.v = parseFloat(ctag.value); break;
 						case 'percentage': q.t = 'n'; q.v = parseFloat(ctag.value); break;
 						case 'currency': q.t = 'n'; q.v = parseFloat(ctag.value); break;
-						case 'date': q.t = 'd'; q.v = new Date(ctag['date-value']);
+						case 'date': q.t = 'd'; q.v = parseDate(ctag['date-value']);
 							if(!opts.cellDates) { q.t = 'n'; q.v = datenum(q.v); }
 							q.z = 'm/d/yy'; break;
 						case 'time': q.t = 'n'; q.v = parse_isodur(ctag['time-value'])/86400; break;
@@ -13445,7 +13454,7 @@ var write_content_xml = (function() {
 					case 'b': o.push(cell_begin + mxml + vt + '"boolean" office:boolean-value="' + (cell.v ? 'true' : 'false') + '"' + fmla + '>' + p_begin + (cell.v ? 'TRUE' : 'FALSE') + p_end + cell_end); break;
 					case 'n': o.push(cell_begin + mxml + vt + '"float" office:value="' + cell.v + '"' + fmla + '>' + p_begin + (cell.w||cell.v) + p_end + cell_end); break;
 					case 's': case 'str': o.push(cell_begin + mxml + vt + '"string"' + fmla + '>' + p_begin + escapexml(cell.v) + p_end + cell_end); break;
-					case 'd': o.push(cell_begin + mxml + vt + '"date" office:date-value="' + (new Date(cell.v).toISOString()) + '"' + fmla + '>' + p_begin + (cell.w||(new Date(cell.v).toISOString())) + p_end + cell_end); break;
+					case 'd': o.push(cell_begin + mxml + vt + '"date" office:date-value="' + (parseDate(cell.v).toISOString()) + '"' + fmla + '>' + p_begin + (cell.w||(parseDate(cell.v).toISOString())) + p_end + cell_end); break;
 					//case 'e':
 					default: o.push(null_cell_xml);
 				} else o.push(null_cell_xml);
@@ -13999,7 +14008,7 @@ function sheet_to_json(sheet, opts){
 	var o = opts != null ? opts : {};
 	var raw = o.raw;
 	if(sheet == null || sheet["!ref"] == null) return [];
-	range = o.range !== undefined ? o.range : sheet["!ref"];
+	range = o.range != null ? o.range : sheet["!ref"];
 	if(o.header === 1) header = 1;
 	else if(o.header === "A") header = 2;
 	else if(Array.isArray(o.header)) header = 3;
@@ -14021,7 +14030,7 @@ function sheet_to_json(sheet, opts){
 			case 2: hdr[C] = cols[C]; break;
 			case 3: hdr[C] = o.header[C - r.s.c]; break;
 			default:
-				if(val === undefined) continue;
+				if(val == null) continue;
 				vv = v = format_cell(val);
 				var counter = 0;
 				for(var CC = 0; CC < hdr.length; ++CC) if(hdr[CC] == vv) vv = v + "_" + (++counter);
@@ -14035,7 +14044,7 @@ function sheet_to_json(sheet, opts){
 		if(header === 1) row = [];
 		else {
 			row = {};
-			if(Object.defineProperty) Object.defineProperty(row, '__rowNum__', {value:R, enumerable:false});
+			if(Object.defineProperty) try { Object.defineProperty(row, '__rowNum__', {value:R, enumerable:false}); } catch(e) { row.__rowNum__ = R; }
 			else row.__rowNum__ = R;
 		}
 		for (C = r.s.c; C <= r.e.c; ++C) {
@@ -14046,7 +14055,7 @@ function sheet_to_json(sheet, opts){
 				case 'z': continue;
 				case 'e': continue;
 				case 's': case 'd': case 'b': case 'n': break;
-				default: throw 'unrecognized type ' + val.t;
+				default: throw new Error('unrecognized type ' + val.t);
 			}
 			if(v !== undefined) {
 				row[hdr[C]] = raw ? v : format_cell(val,v);

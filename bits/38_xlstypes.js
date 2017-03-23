@@ -224,7 +224,7 @@ function parse_PropertySet(blob, PIDSI) {
 					case 0x13 /*VT_UI4*/: blob.l += 4; val = blob.read_shift(4); break;
 					case 0x05 /*VT_R8*/: blob.l += 4; val = blob.read_shift(8, 'f'); break;
 					case 0x0B /*VT_BOOL*/: blob.l += 4; val = parsebool(blob, 4); break;
-					case 0x40 /*VT_FILETIME*/: blob.l += 4; val = new Date(parse_FILETIME(blob)); break;
+					case 0x40 /*VT_FILETIME*/: blob.l += 4; val = parseDate(parse_FILETIME(blob)); break;
 					default: throw new Error("unparsed value: " + blob[blob.l]);
 				}
 				PropH[name] = val;

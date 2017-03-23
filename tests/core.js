@@ -54,6 +54,8 @@ var paths = {
 	nfxml:  dir + 'number_format.xls.xml',
 	nfxlsx:  dir + 'number_format.xlsm',
 	nfxlsb:  dir + 'number_format.xlsb',
+	dtxls:  dir + 'xlsx-stream-d-date-cell.xls',
+	dtxml:  dir + 'xlsx-stream-d-date-cell.xls.xml',
 	dtxlsx:  dir + 'xlsx-stream-d-date-cell.xlsx',
 	dtxlsb:  dir + 'xlsx-stream-d-date-cell.xlsb',
 	cwxls:  dir + 'column_width.xlsx',
@@ -61,7 +63,6 @@ var paths = {
 	cwxml:  dir + 'column_width.xml',
 	cwxlsx:  dir + 'column_width.xlsx',
 	cwxlsb:  dir + 'column_width.xlsx',
-	dtxlsb:  dir + 'xlsx-stream-d-date-cell.xlsb',
 	swcxls: dir + 'apachepoi_SimpleWithComments.xls',
 	swcxml: dir + '2011/apachepoi_SimpleWithComments.xls.xml',
 	swcxlsx: dir + 'apachepoi_SimpleWithComments.xlsx',
@@ -149,7 +150,7 @@ describe('parse options', function() {
 		});
 		it('should not generate cell styles by default', function() {
 			[paths.cssxlsx, paths.cssxls, paths.cssxml].forEach(function(p) {
-			var wb = X.read(fs.readFileSync(p), {type:"binary"});
+			var wb = X.read(fs.readFileSync(p), {type:"binary", WTF:1});
 			wb.SheetNames.forEach(function(s) {
 				var ws = wb.Sheets[s];
 				Object.keys(ws).forEach(function(addr) {
@@ -185,7 +186,7 @@ describe('parse options', function() {
 			});
 		});
 		it('XLSX should generate cell dates when requested', function() {
-			var wb = X.read(fs.readFileSync(paths.dtxlsx), {type:"binary", cellDates: true});
+			var wb = X.read(fs.readFileSync(paths.dtxlsx), {type:"binary", cellDates: true, WTF:1});
 			var found = false;
 			wb.SheetNames.forEach(function(s) {
 				var ws = wb.Sheets[s];
@@ -321,13 +322,13 @@ describe('input formats', function() {
 		X.read(fs.readFileSync(paths.cstxlsx, 'base64'), {type: 'base64'});
 		X.read(fs.readFileSync(paths.cstxlsb, 'base64'), {type: 'base64'});
 	});
-	it('should read arrays', function() {
+	(typeof UInt8Array !== 'undefined' ? it : it.skip)('should read arrays', function() {
 		X.read(fs.readFileSync(paths.cstxls, 'buffer'), {type: 'array'});
 		X.read(fs.readFileSync(paths.cstxml, 'buffer'), {type: 'array'});
 		X.read(fs.readFileSync(paths.cstxlsx, 'buffer'), {type: 'array'});
 		X.read(fs.readFileSync(paths.cstxlsb, 'buffer'), {type: 'array'});
 	});
-	it('should read array', function() {
+	(typeof UInt8Array !== 'undefined' ? it : it.skip)('should read array', function() {
 		X.read(fs.readFileSync(paths.mcxls, 'binary').split("").map(function(x) { return x.charCodeAt(0); }), {type:'array'});
 		X.read(fs.readFileSync(paths.mcxml, 'binary').split("").map(function(x) { return x.charCodeAt(0); }), {type:'array'});
 		X.read(fs.readFileSync(paths.mcxlsx, 'binary').split("").map(function(x) { return x.charCodeAt(0); }), {type:'array'});
@@ -770,23 +771,17 @@ describe('roundtrip features', function() {
 			if(dh) { f = paths.dtxlsx; sheet = 'Sheet1'; addr = 'B5'; }
 			else { f = paths.nfxlsx; sheet = '2011'; addr = 'J36'; }
 			it('[' + a + '] -> (' + b + ') -> [' + c + '] -> (' + d + ')', function() {
-				var wb1 = X.read(fs.readFileSync(f), {type:"binary", cellNF: true, cellDates: di, WTF: opts.WTF});
-				var wb2 = X.read(X.write(wb1, {type:'binary', cellDates:dj, WTF:opts.WTF}), {type:'binary', cellDates: dk, WTF: opts.WTF});
+				var wb1 = X.read(fs.readFileSync(f), {type:"binary", cellNF: true, cellDates: di, WTF: opts.WTF || true});
+				var wb2 = X.read(X.write(wb1, {type:'binary', cellDates:dj, WTF:opts.WTF||true}), {type:'binary', cellDates: dk, WTF: opts.WTF||true});
 				var m = [wb1,wb2].map(function(x) { return x.Sheets[sheet][addr]; });
 				assert.equal(m[0].w, m[1].w);
 
-				/* wb1 cellDates */
-				if(dh && di) assert.equal(m[0].t, 'd');
-				//else if(a !== 'd' && di) assert.equal(m[0].t, 'd'); /* TODO */
-				else assert.equal(m[0].t, 'n');
-				/* wb2 cellDates */
-				if(dh && di && dj && dk) assert.equal(m[1].t, 'd');
-				else if(dj && dk && !di); /* TODO: convert to date */
-				else assert.equal(m[1].t, 'n');
+				assert.equal(m[0].t, b);
+				assert.equal(m[1].t, d);
 
 				if(m[0].t === 'n' && m[1].t === 'n') assert.equal(m[0].v, m[1].v);
 				else if(m[0].t === 'd' && m[1].t === 'd') assert.equal(m[0].v.toString(), m[1].v.toString());
-				else if(m[1].t === 'n') assert(Math.abs(datenum(new Date(m[0].v)) - m[1].v) < 0.01); /* TODO: 1sec adjustment */
+				else if(m[1].t === 'n') assert(Math.abs(datenum(parseDate(m[0].v)) - m[1].v) < 0.01); /* TODO: 1sec adjustment */
 			});
 		});
 	});
@@ -878,8 +873,9 @@ function sheet_from_array_of_arrays(data, opts) {
 			if(typeof cell.v === 'number') cell.t = 'n';
 			else if(typeof cell.v === 'boolean') cell.t = 'b';
 			else if(cell.v instanceof Date) {
-				cell.t = 'n'; cell.z = X.SSF._table[14];
-				cell.v = datenum(cell.v);
+				cell.z = X.SSF._table[14];
+				if(opts && opts.cellDates) cell.t = 'd';
+				else { cell.t = 'n'; cell.v = datenum(cell.v); }
 			}
 			else cell.t = 's';
 			ws[cell_ref] = cell;
@@ -887,6 +883,15 @@ function sheet_from_array_of_arrays(data, opts) {
 	}
 	if(range.s.c < 10000000) ws['!ref'] = X.utils.encode_range(range);
 	return ws;
+}
+
+var good_pd_date = new Date('2017-02-19T19:06:09.000Z');
+var good_pd = good_pd_date.getFullYear() == 2017;
+function parseDate(str/*:string|Date*/)/*:Date*/ {
+	if(good_pd) return new Date(str);
+	if(str instanceof Date) return str;
+	var n = str.match(/\d+/g);
+	return new Date(Date.UTC(+n[0], n[1] - 1, +n[2], +n[3], +n[4], +n[5]));
 }
 
 describe('json output', function() {
@@ -902,7 +907,7 @@ describe('json output', function() {
 		data = [
 			[1,2,3],
 			[true, false, null, "sheetjs"],
-			["foo","bar",new Date("2014-02-19T14:30Z"), "0.3"],
+			["foo","bar", parseDate("2014-02-19T14:30:00.000Z"), "0.3"],
 			["baz", null, "qux"]
 		];
 		ws = sheet_from_array_of_arrays(data);
@@ -912,7 +917,7 @@ describe('json output', function() {
 	it('should use first-row headers and full sheet by default', function() {
 		var json = X.utils.sheet_to_json(ws);
 		assert.equal(json.length, data.length - 1);
-		assert.equal(json[0][1], true);
+		assert.equal(json[0][1], "TRUE");
 		assert.equal(json[1][2], "bar");
 		assert.equal(json[2][3], "qux");
 		assert.doesNotThrow(function() { seeker(json, [1,2,3], "sheetjs"); });
@@ -921,7 +926,7 @@ describe('json output', function() {
 	it('should create array of arrays if header == 1', function() {
 		var json = X.utils.sheet_to_json(ws, {header:1});
 		assert.equal(json.length, data.length);
-		assert.equal(json[1][0], true);
+		assert.equal(json[1][0], "TRUE");
 		assert.equal(json[2][1], "bar");
 		assert.equal(json[3][2], "qux");
 		assert.doesNotThrow(function() { seeker(json, [0,1,2], "sheetjs"); });
@@ -931,7 +936,7 @@ describe('json output', function() {
 	it('should use column names if header == "A"', function() {
 		var json = X.utils.sheet_to_json(ws, {header:'A'});
 		assert.equal(json.length, data.length);
-		assert.equal(json[1].A, true);
+		assert.equal(json[1].A, "TRUE");
 		assert.equal(json[2].B, "bar");
 		assert.equal(json[3].C, "qux");
 		assert.doesNotThrow(function() { seeker(json, "ABC", "sheetjs"); });
@@ -941,7 +946,7 @@ describe('json output', function() {
 	it('should use column labels if specified', function() {
 		var json = X.utils.sheet_to_json(ws, {header:["O","D","I","N"]});
 		assert.equal(json.length, data.length);
-		assert.equal(json[1].O, true);
+		assert.equal(json[1].O, "TRUE");
 		assert.equal(json[2].D, "bar");
 		assert.equal(json[3].I, "qux");
 		assert.doesNotThrow(function() { seeker(json, "ODI", "sheetjs"); });
@@ -952,7 +957,7 @@ describe('json output', function() {
 		it('should accept custom ' + w[0] + ' range', function() {
 			var json = X.utils.sheet_to_json(ws, {header:1, range:w[1]});
 			assert.equal(json.length, 3);
-			assert.equal(json[0][0], true);
+			assert.equal(json[0][0], "TRUE");
 			assert.equal(json[1][1], "bar");
 			assert.equal(json[2][2], "qux");
 			assert.doesNotThrow(function() { seeker(json, [0,1,2], "sheetjs"); });
@@ -974,6 +979,15 @@ describe('json output', function() {
 			assert.equal(json[i].S_1, 7 + i);
 		}
 	});
+	it('should handle raw data if requested', function() {
+		var _ws = sheet_from_array_of_arrays(data, {cellDates:true});
+		var json = X.utils.sheet_to_json(_ws, {header:1, raw:true});
+		assert.equal(json.length, data.length);
+		assert.equal(json[1][0], true);
+		assert.equal(json[2][1], "bar");
+		assert.equal(json[2][2].getTime(), parseDate("2014-02-19T14:30:00.000Z").getTime());
+		assert.equal(json[3][2], "qux");
+	});
 });
 
 describe('js -> file -> js', function() {
@@ -982,7 +996,7 @@ describe('js -> file -> js', function() {
 		data = [
 			[1,2,3],
 			[true, false, null, "sheetjs"],
-			["foo","bar",new Date("2014-02-19T14:30Z"), "0.3"],
+			["foo","bar", parseDate("2014-02-19T14:30:00.000Z"), "0.3"],
 			["baz", 6.9, "qux"]
 		];
 		ws = sheet_from_array_of_arrays(data);
@@ -1024,7 +1038,7 @@ describe('corner cases', function() {
 		var data = [
 			[1,2,3],
 			[true, false, null, "sheetjs"],
-			["foo","bar",new Date("2014-02-19T14:30Z"), "0.3"],
+			["foo","bar", parseDate("2014-02-19T14:30Z"), "0.3"],
 			["baz", null, "q\"ux"]
 		];
 		var ws = sheet_from_array_of_arrays(data);

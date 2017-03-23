@@ -31,7 +31,7 @@ function parse_cust_props(data/*:string*/, opts) {
 						p[name] = parseFloat(text);
 						break;
 					case 'filetime': case 'date':
-						p[name] = new Date(text);
+						p[name] = parseDate(text);
 						break;
 					case 'cy': case 'error':
 						p[name] = unescapexml(text);

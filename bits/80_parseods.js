@@ -109,7 +109,7 @@ var parse_content_xml = (function() {
 						case 'float': q.t = 'n'; q.v = parseFloat(ctag.value); break;
 						case 'percentage': q.t = 'n'; q.v = parseFloat(ctag.value); break;
 						case 'currency': q.t = 'n'; q.v = parseFloat(ctag.value); break;
-						case 'date': q.t = 'd'; q.v = new Date(ctag['date-value']);
+						case 'date': q.t = 'd'; q.v = parseDate(ctag['date-value']);
 							if(!opts.cellDates) { q.t = 'n'; q.v = datenum(q.v); }
 							q.z = 'm/d/yy'; break;
 						case 'time': q.t = 'n'; q.v = parse_isodur(ctag['time-value'])/86400; break;
