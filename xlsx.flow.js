@@ -14074,6 +14074,7 @@ function sheet_to_json(sheet/*:Worksheet*/, opts/*:?Sheet2JSONOpts*/){
 	var val, row, range, header = 0, offset = 1, r, hdr/*:Array<any>*/ = [], isempty, R, C, v, vv;
 	var o = opts != null ? opts : {};
 	var raw = o.raw;
+	var defval = o.defval;
 	if(sheet == null || sheet["!ref"] == null) return [];
 	range = o.range != null ? o.range : sheet["!ref"];
 	if(o.header === 1) header = 1;
@@ -14116,16 +14117,26 @@ function sheet_to_json(sheet/*:Worksheet*/, opts/*:?Sheet2JSONOpts*/){
 		}
 		for (C = r.s.c; C <= r.e.c; ++C) {
 			val = sheet[cols[C] + rr];
-			if(val === undefined || val.t === undefined) continue;
+			if(val === undefined || val.t === undefined) {
+				if(defval === undefined) continue;
+				if(hdr[C] != null) { row[hdr[C]] = defval; isempty = false; }
+				continue;
+			}
 			v = val.v;
 			switch(val.t){
-				case 'z': continue;
+				case 'z': if(v == null) break; continue;
 				case 'e': continue;
 				case 's': case 'd': case 'b': case 'n': break;
 				default: throw new Error('unrecognized type ' + val.t);
 			}
-			if(v !== undefined) {
-				row[hdr[C]] = raw ? v : format_cell(val,v);
+			if(hdr[C] != null) {
+				if(v == null) {
+					if(defval !== undefined) row[hdr[C]] = defval;
+					else if(raw && v === null) row[hdr[C]] = null;
+					else continue;
+				} else {
+					row[hdr[C]] = raw ? v : format_cell(val,v);
+				}
 				isempty = false;
 			}
 		}

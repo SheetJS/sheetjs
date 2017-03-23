@@ -856,6 +856,7 @@ generate different types of JS objects.  The function takes an options argument:
 | range       | from WS  | Override Range (see table below)                    |
 | header      |          | Control output format (see table below)             |
 | dateNF      |  fmt 14  | Use specified date format in string output          |
+| defval      |          | Use specified value in place of null or undefined   |
 
 - `raw` only affects cells which have a format code (`.z`) field or a formatted
   text (`.w`) field.
@@ -864,6 +865,9 @@ generate different types of JS objects.  The function takes an options argument:
 - When `header` is not specified, the conversion will automatically disambiguate
   header entries by affixing `_` and a count starting at `1`.  For example, if
   three columns have header `foo` the output fields are `foo`, `foo_1`, `foo_2`
+- `null` values are returned when `raw` is true but are skipped when false.
+- If `defval` is not specified, null and undefined values are skipped normally.
+  If specified, all null and undefined points will be filled with `defval`
 
 `range` is expected to be one of:
 

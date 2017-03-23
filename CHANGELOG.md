@@ -7,6 +7,11 @@ changes may not be included if they are not expected to break existing code.
 
 ## Unreleased
 
+* `sheet_to_json` now passes `null` values when `raw` is set to `true`
+* `sheet_to_json` treats `null` stub cells as values in conjunction with `raw`
+
+## 0.9.5 (2017-03-22) 
+
 * `cellDates` affects parsing in non-XLSX formats
 
 ## 0.9.3 (2017-03-15)

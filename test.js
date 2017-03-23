@@ -1051,9 +1051,10 @@ function sheet_from_array_of_arrays(data, opts) {
 			if(range.e.r < R) range.e.r = R;
 			if(range.e.c < C) range.e.c = C;
 			var cell = {v: data[R][C] };
-			if(cell.v == null) continue;
+			if(cell.v === undefined) continue;
 			var cell_ref = X.utils.encode_cell({c:C,r:R});
-			if(typeof cell.v === 'number') cell.t = 'n';
+			if(cell.v === null) cell.t = 'z';
+			else if(typeof cell.v === 'number') cell.t = 'n';
 			else if(typeof cell.v === 'boolean') cell.t = 'b';
 			else if(cell.v instanceof Date) {
 				cell.z = X.SSF._table[14];
@@ -1081,8 +1082,8 @@ describe('json output', function() {
 		data = [
 			[1,2,3],
 			[true, false, null, "sheetjs"],
-			["foo","bar",new Date("2014-02-19T14:30Z"), "0.3"],
-			["baz", null, "qux"]
+			["foo", "bar", new Date("2014-02-19T14:30Z"), "0.3"],
+			["baz", undefined, "qux"]
 		];
 		ws = sheet_from_array_of_arrays(data);
 	});
@@ -1139,6 +1140,23 @@ describe('json output', function() {
 			assert.throws(function() { seeker(json, [0,1,2], "baz"); });
 		});
 	});
+	it('should use defval if requested', function() {
+		var json = X.utils.sheet_to_json(ws, {defval: 'jimjin'});
+		console.log(json);
+		console.log(ws);
+		assert.equal(json.length, data.length - 1);
+		assert.equal(json[0][1], "TRUE");
+		assert.equal(json[1][2], "bar");
+		assert.equal(json[2][3], "qux");
+		assert.equal(json[2][2], "jimjin");
+		assert.equal(json[0][3], "jimjin");
+		assert.doesNotThrow(function() { seeker(json, [1,2,3], "sheetjs"); });
+		assert.throws(function() { seeker(json, [1,2,3], "baz"); });
+		var json = X.utils.sheet_to_json(ws, {raw:true});
+		console.log(json);
+		var json = X.utils.sheet_to_json(ws, {raw:true, defval: 'jimjin'});
+		console.log(json);
+	});
 	it('should disambiguate headers', function() {
 		var _data = [["S","h","e","e","t","J","S"],[1,2,3,4,5,6,7],[2,3,4,5,6,7,8]];
 		var _ws = sheet_from_array_of_arrays(_data);
@@ -1158,6 +1176,7 @@ describe('json output', function() {
 		var json = X.utils.sheet_to_json(_ws, {header:1, raw:true});
 		assert.equal(json.length, data.length);
 		assert.equal(json[1][0], true);
+		assert.equal(json[1][2], null);
 		assert.equal(json[2][1], "bar");
 		assert.equal(json[2][2].getTime(), new Date("2014-02-19T14:30Z").getTime());
 		assert.equal(json[3][2], "qux");
