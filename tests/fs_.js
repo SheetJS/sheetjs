@@ -31,6 +31,7 @@ fs.readdirSync = function(p) { return Object.keys(fs).filter(function(n) {
 };
 fs.readFileSync = function(f, enc) {
 	if(!fs[f]) throw "File not found: " + f;
+	fs[f].length;
 	switch(enc) {
 		case 'base64': return fs[f];
 		case 'buffer':
