@@ -105,7 +105,12 @@ ctestserv: ## Start a test server on port 8000
 	@cd tests && python -mSimpleHTTPServer
 
 .PHONY: demos
-demos: demo-browserify demo-webpack demo-requirejs
+demos: demo-angular demo-browserify demo-webpack demo-requirejs demo-systemjs
+
+.PHONY: demo-angular
+demo-angular: ## Run angular demo build
+	#make -C demos/angular
+	@echo "start a local server and go to demos/angular/angular.html"
 
 .PHONY: demo-browserify
 demo-browserify: ## Run browserify demo build
@@ -121,6 +126,10 @@ demo-webpack: ## Run webpack demo build
 demo-requirejs: ## Run requirejs demo build
 	make -C demos/requirejs
 	@echo "start a local server and go to demos/requirejs/requirejs.html"
+
+.PHONY: demo-systemjs
+demo-systemjs: ## Run systemjs demo build
+	make -C demos/systemjs
 
 ## Code Checking
 
