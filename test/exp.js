@@ -8,7 +8,7 @@ function doit(d, headers) {
     for(var w = 1; w < headers.length; ++w) {
       var expected = d[w].replace("|", ""), actual;
       try { actual = SSF.format(headers[w], parseFloat(d[0]), {}); } catch(e) { }
-      if(actual != expected && d[w][0] !== "|") throw new Error([actual, expected, w, headers[w],d[0],d].join("|"));
+      if(actual != expected && d[w].charAt(0) !== "|") throw new Error([actual, expected, w, headers[w],d[0],d].join("|"));
     }
   });
 }

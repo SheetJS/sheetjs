@@ -17,7 +17,7 @@
 .*/shim.js
 
 [include]
-ssf.js
+ssf.flow.js
 .*/bin/.*.njs
 
 [libs]

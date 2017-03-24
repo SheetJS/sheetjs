@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>SSF Test Runner</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="mocha.css" />
+    <link rel="icon" type="image/png" href="//oss.sheetjs.com/assets/img/logo.png" />
+    <style>
+      #t { font: 20px/1.5 "Helvetica Neue", Helvetica, Arial, sans-serif; margin: 0px 60px; font-weight: bold; }
+      #tt{ font: 16px/1.5 "Helvetica Neue", Helvetica, Arial, sans-serif; margin: 0px 60px; }
+      th { font: 16px/1.5 "Helvetica Neue", Helvetica, Arial, sans-serif; margin: 0px 60px; font-weight: bold; text-align: left; }
+    </style>
+  </head>
+  <body>
+    <h1 id="t">SSF Tests</h1>
+    <div id="mocha"></div>
+    <script src="shim.js"></script>
+		<script src="json2.js"></script>
+    <script src="mocha.js"></script>
+    <script>
+      window.initMochaPhantomJS && window.initMochaPhantomJS();
+      mocha.setup('bdd');
+    </script>
+    <script src="test.js"></script>
+    <script>
+      if(typeof mochaSaucePlease !== "undefined") mochaSaucePlease();
+      else if(window.mochaPhantomJS) mochaPhantomJS.run();
+      else mocha.run();
+    </script>
+  </body>
+</html>
+

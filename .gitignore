@@ -3,3 +3,5 @@ misc/coverage.html
 .vocrc
 v8.log
 perf.log
+ctest/test.js
+ctest/sauce*

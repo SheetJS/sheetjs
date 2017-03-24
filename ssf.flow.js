@@ -332,7 +332,7 @@ function write_num_flt(type/*:string*/, fmt/*:string*/, val/*:number*/)/*:string
 	if(fmt.charCodeAt(fmt.length - 1) === 44) return write_num_cm(type, fmt, val);
 	if(fmt.indexOf('%') !== -1) return write_num_pct(type, fmt, val);
 	if(fmt.indexOf('E') !== -1) return write_num_exp(fmt, val);
-	if(fmt.charCodeAt(0) === 36) return "$"+write_num_flt(type,fmt.substr(fmt[1]==' '?2:1),val);
+	if(fmt.charCodeAt(0) === 36) return "$"+write_num_flt(type,fmt.substr(fmt.charAt(1)==' '?2:1),val);
 	var o;
 	var r/*:?Array<string>*/, ri, ff, aval = Math.abs(val), sign = val < 0 ? "-" : "";
 	if(fmt.match(/^00+$/)) return sign + pad0r(aval,fmt.length);
@@ -359,7 +359,7 @@ function write_num_flt(type/*:string*/, fmt/*:string*/, val/*:number*/)/*:string
 	if((r = fmt.match(/^([0#]+)(\\?-([0#]+))+$/))) {
 		o = _strrev(write_num_flt(type, fmt.replace(/[\\-]/g,""), val));
 		ri = 0;
-		return _strrev(_strrev(fmt.replace(/\\/g,"")).replace(/[0#]/g,function(x){return ri<o.length?o[ri++]:x==='0'?'0':"";}));
+		return _strrev(_strrev(fmt.replace(/\\/g,"")).replace(/[0#]/g,function(x){return ri<o.length?o.charAt(ri++):x==='0'?'0':"";}));
 	}
 	if(fmt.match(phone)) {
 		o = write_num_flt(type, "##########", val);
@@ -371,7 +371,7 @@ function write_num_flt(type/*:string*/, fmt/*:string*/, val/*:number*/)/*:string
 		ff = frac(aval, Math.pow(10,ri)-1, false);
 		o = "" + sign;
 		oa = write_num("n", /*::String(*/r[1]/*::)*/, ff[1]);
-		if(oa[oa.length-1] == " ") oa = oa.substr(0,oa.length-1) + "0";
+		if(oa.charAt(oa.length-1) == " ") oa = oa.substr(0,oa.length-1) + "0";
 		o += oa + /*::String(*/r[2]/*::)*/ + "/" + /*::String(*/r[3]/*::)*/;
 		oa = rpad_(ff[2],ri);
 		if(oa.length < r[4].length) oa = hashq(r[4].substr(r[4].length-oa.length)) + oa;
@@ -442,7 +442,7 @@ function write_num_int(type/*:string*/, fmt/*:string*/, val/*:number*/)/*:string
 	if(fmt.charCodeAt(fmt.length - 1) === 44) return write_num_cm2(type, fmt, val);
 	if(fmt.indexOf('%') !== -1) return write_num_pct2(type, fmt, val);
 	if(fmt.indexOf('E') !== -1) return write_num_exp2(fmt, val);
-	if(fmt.charCodeAt(0) === 36) return "$"+write_num_int(type,fmt.substr(fmt[1]==' '?2:1),val);
+	if(fmt.charCodeAt(0) === 36) return "$"+write_num_int(type,fmt.substr(fmt.charAt(1)==' '?2:1),val);
 	var o;
 	var r, ri, ff, aval = Math.abs(val), sign = val < 0 ? "-" : "";
 	if(fmt.match(/^00+$/)) return sign + pad0(aval,fmt.length);
@@ -454,14 +454,10 @@ function write_num_int(type/*:string*/, fmt/*:string*/, val/*:number*/)/*:string
 	if(fmt.match(/^#+0+$/)) return sign + pad0(aval,fmt.length - fmt.indexOf("0"));
 	if((r = fmt.match(dec1))) {
 		/*:: if(!Array.isArray(r)) throw "unreachable"; */
-		// $FlowIgnore
 		o = (""+val).replace(/^([^\.]+)$/,"$1."+r[1]).replace(/\.$/,"."+r[1]);
-		// $FlowIgnore
 		o = o.replace(/\.(\d*)$/,function($$, $1) {
 		/*:: if(!Array.isArray(r)) throw "unreachable"; */
-		// $FlowIgnore
 			return "." + $1 + fill("0", r[1].length-$1.length); });
-		// $FlowIgnore
 		return fmt.indexOf("0.") !== -1 ? o : o.replace(/^0\./,".");
 	}
 	fmt = fmt.replace(/^#+([0.])/, "$1");
@@ -476,7 +472,7 @@ function write_num_int(type/*:string*/, fmt/*:string*/, val/*:number*/)/*:string
 	if((r = fmt.match(/^([0#]+)(\\?-([0#]+))+$/))) {
 		o = _strrev(write_num_int(type, fmt.replace(/[\\-]/g,""), val));
 		ri = 0;
-		return _strrev(_strrev(fmt.replace(/\\/g,"")).replace(/[0#]/g,function(x){return ri<o.length?o[ri++]:x==='0'?'0':"";}));
+		return _strrev(_strrev(fmt.replace(/\\/g,"")).replace(/[0#]/g,function(x){return ri<o.length?o.charAt(ri++):x==='0'?'0':"";}));
 	}
 	if(fmt.match(phone)) {
 		o = write_num_int(type, "##########", val);
@@ -488,7 +484,7 @@ function write_num_int(type/*:string*/, fmt/*:string*/, val/*:number*/)/*:string
 		ff = frac(aval, Math.pow(10,ri)-1, false);
 		o = "" + sign;
 		oa = write_num("n", r[1], ff[1]);
-		if(oa[oa.length-1] == " ") oa = oa.substr(0,oa.length-1) + "0";
+		if(oa.charAt(oa.length-1) == " ") oa = oa.substr(0,oa.length-1) + "0";
 		o += oa + r[2] + "/" + r[3];
 		oa = rpad_(ff[2],ri);
 		if(oa.length < r[4].length) oa = hashq(r[4].substr(r[4].length-oa.length)) + oa;
@@ -740,7 +736,7 @@ function eval_fmt(fmt/*:string*/, v/*:any*/, opts/*:any*/, flen/*:number*/) {
 				j=out[i].v.indexOf(".")>-1&&i===decpt?out[i].v.indexOf(".")-1:out[i].v.length-1;
 				vv = out[i].v.substr(j+1);
 				for(; j>=0; --j) {
-					if(jj>=0 && (out[i].v[j] === "0" || out[i].v[j] === "#")) vv = ostr[jj--] + vv;
+					if(jj>=0 && (out[i].v.charAt(j) === "0" || out[i].v.charAt(j) === "#")) vv = ostr.charAt(jj--) + vv;
 				}
 				out[i].v = vv;
 				out[i].t = 't';
@@ -753,7 +749,7 @@ function eval_fmt(fmt/*:string*/, v/*:any*/, opts/*:any*/, flen/*:number*/) {
 				j=out[i].v.indexOf(".")>-1&&i===decpt?out[i].v.indexOf(".")+1:0;
 				vv = out[i].v.substr(0,j);
 				for(; j<out[i].v.length; ++j) {
-					if(jj<ostr.length) vv += ostr[jj++];
+					if(jj<ostr.length) vv += ostr.charAt(jj++);
 				}
 				out[i].v = vv;
 				out[i].t = 't';

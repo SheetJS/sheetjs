@@ -156,7 +156,7 @@ function eval_fmt(fmt/*:string*/, v/*:any*/, opts/*:any*/, flen/*:number*/) {
 				j=out[i].v.indexOf(".")>-1&&i===decpt?out[i].v.indexOf(".")-1:out[i].v.length-1;
 				vv = out[i].v.substr(j+1);
 				for(; j>=0; --j) {
-					if(jj>=0 && (out[i].v[j] === "0" || out[i].v[j] === "#")) vv = ostr[jj--] + vv;
+					if(jj>=0 && (out[i].v.charAt(j) === "0" || out[i].v.charAt(j) === "#")) vv = ostr.charAt(jj--) + vv;
 				}
 				out[i].v = vv;
 				out[i].t = 't';
@@ -169,7 +169,7 @@ function eval_fmt(fmt/*:string*/, v/*:any*/, opts/*:any*/, flen/*:number*/) {
 				j=out[i].v.indexOf(".")>-1&&i===decpt?out[i].v.indexOf(".")+1:0;
 				vv = out[i].v.substr(0,j);
 				for(; j<out[i].v.length; ++j) {
-					if(jj<ostr.length) vv += ostr[jj++];
+					if(jj<ostr.length) vv += ostr.charAt(jj++);
 				}
 				out[i].v = vv;
 				out[i].t = 't';

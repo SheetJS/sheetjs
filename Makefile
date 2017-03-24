@@ -45,6 +45,10 @@ test_min:
 travis: ## Run test suite with minimal output
 	mocha -R dot -t 30000
 
+.PHONY: ctest
+ctest:
+	browserify -t brfs test/{exp,fraction,general,implied,oddities,utilities,comma}.js > ctest/test.js
+
 ## Code Checking
 
 .PHONY: lint
