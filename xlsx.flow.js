@@ -5,7 +5,7 @@
 /*exported XLSX */
 var XLSX = {};
 (function make_xlsx(XLSX){
-XLSX.version = '0.9.5';
+XLSX.version = '0.9.6';
 var current_codepage = 1200, current_cptable;
 /*:: declare var cptable:any; */
 if(typeof module !== "undefined" && typeof require !== 'undefined') {
