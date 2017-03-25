@@ -639,6 +639,31 @@ describe('parse features', function() {
 		});
 	});
 
+	describe('cellDates', function() {
+		var fmts = [
+			/* desc     path        sheet     cell   formatted */
+			['XLSX', paths.dtxlsx, 'Sheet1',  'B5',  '2/14/14'],
+			['XLSB', paths.dtxlsb, 'Sheet1',  'B5',  '2/14/14'],
+			['XLS',  paths.dtxls,  'Sheet1',  'B5',  '2/14/14'],
+			['XLML', paths.dtxml,  'Sheet1',  'B5',  '2/14/14'],
+			['XLSM', paths.nfxlsx, 'Implied', 'B13', '18-Oct-33']
+		];
+		it('should not generate date cells by default', function() { fmts.forEach(function(f) {
+			var wb, ws;
+			wb = X.read(fs.readFileSync(f[1]), {type:"binary"});
+			ws = wb.Sheets[f[2]];
+			assert.equal(ws[f[3]].w, f[4]);
+			assert.equal(ws[f[3]].t, 'n');
+		}); });
+		it('should generate date cells if cellDates is true', function() { fmts.forEach(function(f) {
+			var wb, ws;
+			wb = X.read(fs.readFileSync(f[1]), {type:"binary", cellDates:true});
+			ws = wb.Sheets[f[2]];
+			assert.equal(ws[f[3]].w, f[4]);
+			assert.equal(ws[f[3]].t, 'd');
+		}); });
+	});
+
 	describe('should correctly handle styles', function() {
 		var wsxls, wsxlsx, rn, rn2;
 		var bef = (function() {
@@ -858,33 +883,6 @@ function datenum(v/*:Date*/, date1904/*:?boolean*/)/*:number*/ {
 	if(date1904) epoch += 1462*24*60*60*1000;
 	return (epoch + 2209161600000) / (24 * 60 * 60 * 1000);
 }
-function sheet_from_array_of_arrays(data, opts) {
-	var ws = {};
-	var range = {s: {c:10000000, r:10000000}, e: {c:0, r:0 }};
-	for(var R = 0; R != data.length; ++R) {
-		for(var C = 0; C != data[R].length; ++C) {
-			if(range.s.r > R) range.s.r = R;
-			if(range.s.c > C) range.s.c = C;
-			if(range.e.r < R) range.e.r = R;
-			if(range.e.c < C) range.e.c = C;
-			var cell = {v: data[R][C] };
-			if(cell.v == null) continue;
-			var cell_ref = X.utils.encode_cell({c:C,r:R});
-			if(typeof cell.v === 'number') cell.t = 'n';
-			else if(typeof cell.v === 'boolean') cell.t = 'b';
-			else if(cell.v instanceof Date) {
-				cell.z = X.SSF._table[14];
-				if(opts && opts.cellDates) cell.t = 'd';
-				else { cell.t = 'n'; cell.v = datenum(cell.v); }
-			}
-			else cell.t = 's';
-			ws[cell_ref] = cell;
-		}
-	}
-	if(range.s.c < 10000000) ws['!ref'] = X.utils.encode_range(range);
-	return ws;
-}
-
 var good_pd_date = new Date('2017-02-19T19:06:09.000Z');
 var good_pd = good_pd_date.getFullYear() == 2017;
 function parseDate(str/*:string|Date*/)/*:Date*/ {
@@ -908,9 +906,9 @@ describe('json output', function() {
 			[1,2,3],
 			[true, false, null, "sheetjs"],
 			["foo","bar", parseDate("2014-02-19T14:30:00.000Z"), "0.3"],
-			["baz", null, "qux"]
+			["baz", undefined, "qux"]
 		];
-		ws = sheet_from_array_of_arrays(data);
+		ws = X.utils.aoa_to_sheet(data);
 	});
 	if(typeof before != 'undefined') before(bef);
 	else it('before', bef);
@@ -965,9 +963,22 @@ describe('json output', function() {
 			assert.throws(function() { seeker(json, [0,1,2], "baz"); });
 		});
 	});
+	it('should use defval if requested', function() {
+		var json = X.utils.sheet_to_json(ws, {defval: 'jimjin'});
+		assert.equal(json.length, data.length - 1);
+		assert.equal(json[0][1], "TRUE");
+		assert.equal(json[1][2], "bar");
+		assert.equal(json[2][3], "qux");
+		assert.equal(json[2][2], "jimjin");
+		assert.equal(json[0][3], "jimjin");
+		assert.doesNotThrow(function() { seeker(json, [1,2,3], "sheetjs"); });
+		assert.throws(function() { seeker(json, [1,2,3], "baz"); });
+		var json = X.utils.sheet_to_json(ws, {raw:true});
+		var json = X.utils.sheet_to_json(ws, {raw:true, defval: 'jimjin'});
+	});
 	it('should disambiguate headers', function() {
 		var _data = [["S","h","e","e","t","J","S"],[1,2,3,4,5,6,7],[2,3,4,5,6,7,8]];
-		var _ws = sheet_from_array_of_arrays(_data);
+		var _ws = X.utils.aoa_to_sheet(_data);
 		var json = X.utils.sheet_to_json(_ws);
 		for(var i = 0; i < json.length; ++i) {
 			assert.equal(json[i].S,   1 + i);
@@ -980,13 +991,80 @@ describe('json output', function() {
 		}
 	});
 	it('should handle raw data if requested', function() {
-		var _ws = sheet_from_array_of_arrays(data, {cellDates:true});
+		var _ws = X.utils.aoa_to_sheet(data, {cellDates:true});
 		var json = X.utils.sheet_to_json(_ws, {header:1, raw:true});
 		assert.equal(json.length, data.length);
 		assert.equal(json[1][0], true);
+		assert.equal(json[1][2], null);
 		assert.equal(json[2][1], "bar");
 		assert.equal(json[2][2].getTime(), parseDate("2014-02-19T14:30:00.000Z").getTime());
 		assert.equal(json[3][2], "qux");
+	});
+	it('should include __rowNum__', function() {
+		var _data = [["S","h","e","e","t","J","S"],[1,2,3,4,5,6,7],[],[2,3,4,5,6,7,8]];
+		var _ws = X.utils.aoa_to_sheet(_data);
+		var json = X.utils.sheet_to_json(_ws);
+		assert.equal(json[0].__rowNum__, 1);
+		assert.equal(json[1].__rowNum__, 3);
+	});
+	it('should handle blankrows', function() {
+		var _data = [["S","h","e","e","t","J","S"],[1,2,3,4,5,6,7],[],[2,3,4,5,6,7,8]];
+		var _ws = X.utils.aoa_to_sheet(_data);
+		var json1 = X.utils.sheet_to_json(_ws);
+		var json2 = X.utils.sheet_to_json(_ws, {header:1});
+		var json3 = X.utils.sheet_to_json(_ws, {blankrows:true});
+		var json4 = X.utils.sheet_to_json(_ws, {blankrows:true, header:1});
+		var json5 = X.utils.sheet_to_json(_ws, {blankrows:false});
+		var json6 = X.utils.sheet_to_json(_ws, {blankrows:false, header:1});
+		assert.equal(json1.length, 2); // = 2 non-empty records
+		assert.equal(json2.length, 4); // = 4 sheet rows
+		assert.equal(json3.length, 3); // = 2 records + 1 blank row
+		assert.equal(json4.length, 4); // = 4 sheet rows
+		assert.equal(json5.length, 2); // = 2 records
+		assert.equal(json6.length, 3); // = 4 sheet rows - 1 blank row
+	});
+});
+
+describe('csv output', function() {
+	var data, ws;
+	var bef = (function() {
+		data = [
+			[1,2,3,null],
+			[true, false, null, "sheetjs"],
+			["foo", "bar", parseDate("2014-02-19T14:30:00.000Z"), "0.3"],
+			[null, null, null],
+			["baz", undefined, "qux"]
+		];
+		ws = X.utils.aoa_to_sheet(data);
+	});
+	if(typeof before != 'undefined') before(bef);
+	else it('before', bef);
+	it('should generate csv', function() {
+		var baseline = "1,2,3,\nTRUE,FALSE,,sheetjs\nfoo,bar,2/19/14,0.3\n,,,\nbaz,,qux,\n";
+		assert.equal(baseline, X.utils.sheet_to_csv(ws));
+	});
+	it('should handle FS', function() {
+		assert.equal(X.utils.sheet_to_csv(ws, {FS:"|"}).replace(/[|]/g,","), X.utils.sheet_to_csv(ws));
+		assert.equal(X.utils.sheet_to_csv(ws, {FS:";"}).replace(/[;]/g,","), X.utils.sheet_to_csv(ws));
+	});
+	it('should handle RS', function() {
+		assert.equal(X.utils.sheet_to_csv(ws, {RS:"|"}).replace(/[|]/g,"\n"), X.utils.sheet_to_csv(ws));
+		assert.equal(X.utils.sheet_to_csv(ws, {RS:";"}).replace(/[;]/g,"\n"), X.utils.sheet_to_csv(ws));
+	});
+	it('should handle dateNF', function() {
+		var baseline = "1,2,3,\nTRUE,FALSE,,sheetjs\nfoo,bar,20140219,0.3\n,,,\nbaz,,qux,\n";
+		var _ws =  X.utils.aoa_to_sheet(data, {cellDates:true});
+		delete _ws.C3.w;
+		delete _ws.C3.z;
+		assert.equal(baseline, X.utils.sheet_to_csv(_ws, {dateNF:"YYYYMMDD"}));
+	});
+	it('should handle strip', function() {
+		var baseline = "1,2,3\nTRUE,FALSE,,sheetjs\nfoo,bar,2/19/14,0.3\n\nbaz,,qux\n";
+		assert.equal(baseline, X.utils.sheet_to_csv(ws, {strip:true}));
+	});
+	it('should handle blankrows', function() {
+		var baseline = "1,2,3,\nTRUE,FALSE,,sheetjs\nfoo,bar,2/19/14,0.3\nbaz,,qux,\n";
+		assert.equal(baseline, X.utils.sheet_to_csv(ws, {blankrows:false}));
 	});
 });
 
@@ -999,7 +1077,7 @@ describe('js -> file -> js', function() {
 			["foo","bar", parseDate("2014-02-19T14:30:00.000Z"), "0.3"],
 			["baz", 6.9, "qux"]
 		];
-		ws = sheet_from_array_of_arrays(data);
+		ws = X.utils.aoa_to_sheet(data);
 		wb = { SheetNames: ['Sheet1'], Sheets: {Sheet1: ws} };
 	});
 	if(typeof before != 'undefined') before(bef);
@@ -1038,10 +1116,10 @@ describe('corner cases', function() {
 		var data = [
 			[1,2,3],
 			[true, false, null, "sheetjs"],
-			["foo","bar", parseDate("2014-02-19T14:30Z"), "0.3"],
+			["foo","bar", parseDate("2014-02-19T14:30:00.000Z"), "0.3"],
 			["baz", null, "q\"ux"]
 		];
-		var ws = sheet_from_array_of_arrays(data);
+		var ws = X.utils.aoa_to_sheet(data);
 		ws.A1.f = ""; ws.A1.w = "";
 		delete ws.C3.w; delete ws.C3.z; ws.C3.XF = {ifmt:14};
 		ws.A4.t = "e";

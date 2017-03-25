@@ -239,10 +239,13 @@ if (typeof ArrayBuffer !== 'undefined' && !ArrayBuffer.prototype.slice) {
 // https://github.com/davidchambers/Base64.js
 // (C) 2015 David Chambers
 // Base64.js may be freely distributed under the Apache 2.0 License.
-
 ;(function () {
 
-  var object = typeof exports != 'undefined' ? exports : self; // #8: web workers
+  var object =
+    typeof exports != 'undefined' ? exports :
+    typeof self != 'undefined' ? self : // #8: web workers
+    $.global; // #31: ExtendScript
+
   var chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
 
   function InvalidCharacterError(message) {
@@ -279,7 +282,7 @@ if (typeof ArrayBuffer !== 'undefined' && !ArrayBuffer.prototype.slice) {
   // [https://gist.github.com/1020396] by [https://github.com/atk]
   object.atob || (
   object.atob = function (input) {
-    var str = String(input).replace(/=+$/, '');
+    var str = String(input).replace(/[=]+$/, ''); // #31: ExtendScript bad parse of /=
     if (str.length % 4 == 1) {
       throw new InvalidCharacterError("'atob' failed: The string to be decoded is not correctly encoded.");
     }
@@ -299,7 +302,6 @@ if (typeof ArrayBuffer !== 'undefined' && !ArrayBuffer.prototype.slice) {
     }
     return output;
   });
-
 }());
 
 
