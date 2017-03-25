@@ -127,7 +127,7 @@ var vtregex = (function(){ var vt_cache = {};
 		if(vt_cache[bt] !== undefined) return vt_cache[bt];
 		return (vt_cache[bt] = new RegExp("<(?:vt:)?" + bt + ">(.*?)</(?:vt:)?" + bt + ">", 'g') );
 };})();
-var vtvregex = /<\/?(:?vt:)?variant>/g, vtmregex = /<(:?vt:)?([^>]*)>(.*)</;
+var vtvregex = /<\/?(?:vt:)?variant>/g, vtmregex = /<(?:vt:)([^>]*)>(.*)</;
 function parseVector(data) {
 	var h = parsexmltag(data);
 
@@ -136,7 +136,7 @@ function parseVector(data) {
 	var res = [];
 	matches.forEach(function(x) {
 		var v = x.replace(vtvregex,"").match(vtmregex);
-		res.push({v:v[2], t:v[1]});
+		res.push({v:utf8read(v[2]), t:v[1]});
 	});
 	return res;
 }

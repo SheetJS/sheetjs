@@ -1613,7 +1613,7 @@ var vtregex = (function(){ var vt_cache = {};
 		if(vt_cache[bt] !== undefined) return vt_cache[bt];
 		return (vt_cache[bt] = new RegExp("<(?:vt:)?" + bt + ">(.*?)</(?:vt:)?" + bt + ">", 'g') );
 };})();
-var vtvregex = /<\/?(:?vt:)?variant>/g, vtmregex = /<(:?vt:)?([^>]*)>(.*)</;
+var vtvregex = /<\/?(?:vt:)?variant>/g, vtmregex = /<(?:vt:)([^>]*)>(.*)</;
 function parseVector(data) {
 	var h = parsexmltag(data);
 
@@ -1622,7 +1622,7 @@ function parseVector(data) {
 	var res = [];
 	matches.forEach(function(x) {
 		var v = x.replace(vtvregex,"").match(vtmregex);
-		res.push({v:v[2], t:v[1]});
+		res.push({v:utf8read(v[2]), t:v[1]});
 	});
 	return res;
 }
@@ -2972,14 +2972,30 @@ function parse_ext_props(data, p) {
 
 	if(q.HeadingPairs && q.TitlesOfParts) {
 		var v = parseVector(q.HeadingPairs);
-		var j = 0, widx = 0;
+		var j = 0, widx = 0, cidx = -1;
 		for(var i = 0; i !== v.length; ++i) {
 			switch(v[i].v) {
+				case "工作表":
+				case "Листы":
+				case "ワークシート":
+				case "גליונות עבודה":
+				case "Arbeitsblätter":
+				case "Çalışma Sayfaları":
+				case "Feuilles de calcul":
+				case "Fogli di lavoro":
+				case "Folhas de cálculo":
+				case "Planilhas":
+				case "Werkbladen":
 				case "Worksheets": widx = j; p.Worksheets = +(v[++i].v); break;
+
+				case "Benannte Bereiche":
 				case "Named Ranges": ++i; break; // TODO: Handle Named Ranges
+
+				case "Charts": cidx = j; p.Charts = +(v[++i].v); break;
+				default: break; //throw new Error(v[i].v);
 			}
 		}
-		var parts = parseVector(q.TitlesOfParts).map(function(x) { return utf8read(x.v); });
+		var parts = parseVector(q.TitlesOfParts).map(function(x) { return x.v; });
 		p.SheetNames = parts.slice(widx, widx + p.Worksheets);
 	}
 	return p;
