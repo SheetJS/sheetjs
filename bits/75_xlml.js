@@ -167,6 +167,7 @@ function xlml_normalize(d)/*:string*/ {
 var xlmlregex = /<(\/?)([^\s?>!\/:]*:|)([^\s?>]*[^\s?>\/])[^>]*>/mg;
 //var xlmlregex = /<(\/?)([a-z0-9]*:|)(\w+)[^>]*>/mg;
 function parse_xlml_xml(d, opts)/*:Workbook*/ {
+	make_ssf(SSF);
 	var str = debom(xlml_normalize(d));
 	if(opts && opts.type == 'binary' && typeof cptable !== 'undefined') str = cptable.utils.decode(65001, char_codes(str));
 	if(str.substr(0,1000).indexOf("<html") >= 0) return parse_html(str, opts);
@@ -277,7 +278,10 @@ function parse_xlml_xml(d, opts)/*:Workbook*/ {
 			break;
 
 		case 'NumberFormat':
-			stag.nf = xlml_parsexmltag(Rn[0]).Format || "General";
+			stag.nf = unescapexml(xlml_parsexmltag(Rn[0]).Format || "General");
+			if(XLMLFormatMap[stag.nf]) stag.nf = XLMLFormatMap[stag.nf];
+			for(var ssfidx = 0; ssfidx != 0x188; ++ssfidx) if(SSF._table[ssfidx] == stag.nf) break;
+			if(ssfidx == 0x188) for(ssfidx = 0x39; ssfidx != 0x188; ++ssfidx) if(SSF._table[ssfidx] == null) { SSF.load(stag.nf, ssfidx); break; }
 			break;
 
 		case 'Column':

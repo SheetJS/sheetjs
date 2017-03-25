@@ -242,7 +242,7 @@ if (typeof ArrayBuffer !== 'undefined' && !ArrayBuffer.prototype.slice) {
 
 ;(function () {
 
-  var object = typeof exports != 'undefined' ? exports : self; // #8: web workers
+  var object = typeof exports != 'undefined' ? exports : typeof self != 'undefined' ? self : (1,eval)("this");
   var chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
 
   function InvalidCharacterError(message) {
@@ -279,7 +279,7 @@ if (typeof ArrayBuffer !== 'undefined' && !ArrayBuffer.prototype.slice) {
   // [https://gist.github.com/1020396] by [https://github.com/atk]
   object.atob || (
   object.atob = function (input) {
-    var str = String(input).replace(/=+$/, '');
+    var str = String(input).replace(new RegExp("=+$"), '');
     if (str.length % 4 == 1) {
       throw new InvalidCharacterError("'atob' failed: The string to be decoded is not correctly encoded.");
     }
@@ -299,7 +299,7 @@ if (typeof ArrayBuffer !== 'undefined' && !ArrayBuffer.prototype.slice) {
     }
     return output;
   });
-
+  if(typeof app != 'undefined') { app.btoa = object.btoa; app.atob = object.atob; }
 }());
 
 

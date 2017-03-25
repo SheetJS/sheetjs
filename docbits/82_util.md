@@ -2,6 +2,8 @@
 
 The `sheet_to_*` functions accept a worksheet and an optional options object.
 
+The `*_to_sheet` functions accept a data object and an optional options object.
+
 The examples are based on the following worksheet:
 
 ```
@@ -10,6 +12,30 @@ XXX| A | B | C | D | E | F | G |
  1 | S | h | e | e | t | J | S |
  2 | 1 | 2 | 3 | 4 | 5 | 6 | 7 |
  3 | 2 | 3 | 4 | 5 | 6 | 7 | 8 |
+```
+
+### Array of Arrays Input
+
+`XLSX.utils.aoa_to_sheet` takes an array of arrays of JS values and returns a
+worksheet resembling the input data.  Numbers, Booleans and Strings are stored
+as the corresponding styles.  Dates are stored as date or numbers.  Array holes
+and explicit `undefined` values are skipped.  `null` values may be stubbed. All
+other values are stored as strings.  The function takes an options argument:
+
+| Option Name |  Default | Description                                         |
+| :---------- | :------: | :-------------------------------------------------- |
+| dateNF      |  fmt 14  | Use specified date format in string output          |
+| cellDates   |  false   | Store dates as type `d` (default is `n`)            |
+| sheetStubs  |  false   | Create cell objects of type `z` for `null` values   |
+
+To generate the example sheet:
+
+```js
+var ws = XLSX.utils.aoa_to_sheet([
+	"SheetJS".split(""),
+	[1,2,3,4,5,6,7],
+	[2,3,4,5,6,7,8]
+]);
 ```
 
 ### Formulae Output
@@ -36,8 +62,10 @@ produces CSV output.  The function takes an options argument:
 | RS          |  `"\n"`  | "Record Separator" delimiter between rows           |
 | dateNF      |  fmt 14  | Use specified date format in string output          |
 | strip       |  false   | Remove trailing field separators in each record **  |
+| blankrows   |  true    | Include blank lines in the CSV output               |
 
 - `strip` will remove trailing commas from each line under default `FS/RS`
+- blankrows must be set to `false` to skip blank lines.
 
 For the example sheet:
 
@@ -66,6 +94,7 @@ generate different types of JS objects.  The function takes an options argument:
 | header      |          | Control output format (see table below)             |
 | dateNF      |  fmt 14  | Use specified date format in string output          |
 | defval      |          | Use specified value in place of null or undefined   |
+| blankrows   |    **    | Include blank lines in the output **                |
 
 - `raw` only affects cells which have a format code (`.z`) field or a formatted
   text (`.w`) field.
@@ -77,6 +106,10 @@ generate different types of JS objects.  The function takes an options argument:
 - `null` values are returned when `raw` is true but are skipped when false.
 - If `defval` is not specified, null and undefined values are skipped normally.
   If specified, all null and undefined points will be filled with `defval`
+- When `header` is `1`, the default is to generate blank rows.  `blankrows` must
+  be set to `false` to skip blank rows.
+- When `header` is not `1`, the default is to skip blank rows.  `blankrows` must
+  be truthy to generate blank rows
 
 `range` is expected to be one of:
 
@@ -94,6 +127,9 @@ generate different types of JS objects.  The function takes an options argument:
 | `"A"`            | Row object keys are literal column labels                 |
 | array of strings | Use specified strings as keys in row objects              |
 | (default)        | Read and disambiguate first row as keys                   |
+
+If header is not `1`, the row object will contain the non-enumerable property
+`__rowNum__` that represents the row of the sheet corresponding to the entry.
 
 For the example sheet:
 

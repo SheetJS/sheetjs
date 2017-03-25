@@ -5,7 +5,7 @@ The exported `read` and `readFile` functions accept an options argument:
 | Option Name | Default | Description                                          |
 | :---------- | ------: | :--------------------------------------------------- |
 | type        |         | Input data encoding (see Input Type below)           |
-| cellFormula | true    | Save formulae to the .f field **                     |
+| cellFormula | true    | Save formulae to the .f field                        |
 | cellHTML    | true    | Parse rich text and save HTML to the .h field        |
 | cellNF      | false   | Save number format string to the .z field            |
 | cellStyles  | false   | Save style/theme info to the .s field                |
@@ -20,8 +20,6 @@ The exported `read` and `readFile` functions accept an options argument:
 | password    | ""      | If defined and file is encrypted, use password **    |
 | WTF         | false   | If true, throw errors on unexpected file features ** |
 
-- `cellFormula` option only applies to formats that require extra processing to
-  parse formulae (XLS/XLSB).
 - Even if `cellNF` is false, formatted text will be generated and saved to `.w`
 - In some cases, sheets may be parsed even if `bookSheets` is false.
 - `bookSheets` and `bookProps` combine to give both sets of information

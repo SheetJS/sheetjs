@@ -25,6 +25,7 @@ interface CellAddress {
 	r:number;
 	c:number;
 };
+type CellAddrSpec = CellAddress | string;
 
 type Cell = any;
 
@@ -66,4 +67,6 @@ type ColInfo = {
 	wpx?:number;  // width in screen pixels
 	wch?:number;  // intermediate character calculation
 };
+
+type AOA = Array<Array<any> >;
 */

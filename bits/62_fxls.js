@@ -806,18 +806,18 @@ function stringify_formula(formula/*Array<any>*/, range, cell/*:any*/, supbooks,
 			/* 2.5.198.31 TODO */
 			case 'PtgAreaN':
 				type = f[1][0]; r = shift_range_xls(f[1][1], _range, opts);
-				stack.push(encode_range_xls(r, opts));
+				stack.push(encode_range_xls((r/*:any*/), opts));
 				break;
 			/* 2.5.198.27 TODO: fixed points */
 			case 'PtgArea':
 				type = f[1][0]; r = shift_range_xls(f[1][1], _range, opts);
-				stack.push(encode_range_xls(r, opts));
+				stack.push(encode_range_xls((r/*:any*/), opts));
 				break;
 			/* 2.5.198.28 */
 			case 'PtgArea3d': // TODO: lots of stuff
 				type = f[1][0]; ixti = /*::Number(*/f[1][1]/*::)*/; r = f[1][2];
 				sname = (supbooks && supbooks[1] ? supbooks[1][ixti+1] : "**MISSING**");
-				stack.push(sname + "!" + encode_range(r));
+				stack.push(sname + "!" + encode_range((r/*:any*/)));
 				break;
 			/* 2.5.198.41 */
 			case 'PtgAttrSum':

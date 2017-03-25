@@ -17,7 +17,7 @@ objects which have the following properties:
 ```typescript
 type ColInfo = {
 	MDW?:number;  // Excel's "Max Digit Width" unit, always integral
-	width:number; // width in Excel's "Max Digit Width", width*256 is integral 
+	width:number; // width in Excel's "Max Digit Width", width*256 is integral
 	wpx?:number;  // width in screen pixels
 	wch?:number;  // intermediate character calculation
 };
@@ -28,4 +28,5 @@ follow the priority order:
 
 1) use `width` field if available
 2) use `wpx` pixel width if available
-2) use `wch` character count if available
+3) use `wch` character count if available
+

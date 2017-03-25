@@ -20,11 +20,18 @@ Parse options are described in the [Parsing Options](#parsing-options) section.
 
 `XLSX.writeFile(wb, filename, write_opts)` attempts to write `wb` to `filename`
 
+`XLSX.writeFileAsync(filename, wb, o, cb)` attempts to write `wb` to `filename`.
+If `o` is omitted, the writer will use the third argument as the callback.
+
 Write options are described in the [Writing Options](#writing-options) section.
 
 ### Utilities
 
 Utilities are available in the `XLSX.utils` object:
+
+**Importing:**
+
+- `aoa_to_sheet` converts an array of arrays of JS data to a worksheet.
 
 **Exporting:**
 

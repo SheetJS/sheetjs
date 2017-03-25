@@ -85,7 +85,7 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 	var out = {};
 	var Directory = {};
 	var found_sheet = false;
-	var range = {};
+	var range/*:Range*/ = ({}/*:any*/);
 	var last_formula = null;
 	var sst = [];
 	var cur_sheet = "";

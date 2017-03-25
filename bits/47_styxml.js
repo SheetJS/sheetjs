@@ -222,7 +222,7 @@ function parse_numFmts(t, styles, opts) {
 
 function write_numFmts(NF/*:{[n:number]:string}*/, opts) {
 	var o = ["<numFmts>"];
-	[[5,8],[23,26],[41,44],[63,66],[164,392]].forEach(function(r) {
+	[[5,8],[23,26],[41,44],[/*63*/50,/*66],[164,*/392]].forEach(function(r) {
 		for(var i = r[0]; i <= r[1]; ++i) if(NF[i] != null) o[o.length] = (writextag('numFmt',null,{numFmtId:i,formatCode:escapexml(NF[i])}));
 	});
 	if(o.length === 1) return "";

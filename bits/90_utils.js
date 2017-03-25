@@ -14,7 +14,8 @@ function encode_cell(cell/*:CellAddress*/)/*:string*/ { return encode_col(cell.c
 function fix_cell(cstr/*:string*/)/*:string*/ { return fix_col(fix_row(cstr)); }
 function unfix_cell(cstr/*:string*/)/*:string*/ { return unfix_col(unfix_row(cstr)); }
 function decode_range(range/*:string*/)/*:Range*/ { var x =range.split(":").map(decode_cell); return {s:x[0],e:x[x.length-1]}; }
-function encode_range(cs/*:any*/,ce/*:?any*/)/*:string*/ {
+/*# if only one arg, it is assumed to be a Range.  If 2 args, both are cell addresses */
+function encode_range(cs/*:CellAddrSpec|Range*/,ce/*:?CellAddrSpec*/)/*:string*/ {
 	if(typeof ce === 'undefined' || typeof ce === 'number') {
 /*:: if(!(cs instanceof Range)) throw "unreachable"; */
 		return encode_range(cs.s, cs.e);
@@ -69,8 +70,8 @@ function format_cell(cell/*:Cell*/, v/*:any*/, o/*:any*/) {
 	if(cell == null || cell.t == null || cell.t == 'z') return "";
 	if(cell.w !== undefined) return cell.w;
 	if(cell.t == 'd' && !cell.z && o && o.dateNF) cell.z = o.dateNF;
-	if(v == undefined) return safe_format_cell(cell, cell.v);
-	return safe_format_cell(cell, v);
+	if(v == undefined) return safe_format_cell(cell, cell.v, o);
+	return safe_format_cell(cell, v, o);
 }
 
 function sheet_to_json(sheet/*:Worksheet*/, opts/*:?Sheet2JSONOpts*/){
@@ -102,7 +103,7 @@ function sheet_to_json(sheet/*:Worksheet*/, opts/*:?Sheet2JSONOpts*/){
 			case 3: hdr[C] = o.header[C - r.s.c]; break;
 			default:
 				if(val == null) continue;
-				vv = v = format_cell(val);
+				vv = v = format_cell(val, null, o);
 				var counter = 0;
 				for(var CC = 0; CC < hdr.length; ++CC) if(hdr[CC] == vv) vv = v + "_" + (++counter);
 				hdr[C] = vv;
@@ -138,18 +139,16 @@ function sheet_to_json(sheet/*:Worksheet*/, opts/*:?Sheet2JSONOpts*/){
 					else if(raw && v === null) row[hdr[C]] = null;
 					else continue;
 				} else {
-					row[hdr[C]] = raw ? v : format_cell(val,v);
+					row[hdr[C]] = raw ? v : format_cell(val,v,o);
 				}
 				isempty = false;
 			}
 		}
-		if(isempty === false || header === 1) out[outi++] = row;
+		if((isempty === false) || (header === 1 ? o.blankrows !== false : !!o.blankrows)) out[outi++] = row;
 	}
 	out.length = outi;
 	return out;
 }
-
-function sheet_to_row_object_array(sheet/*:Worksheet*/, opts/*:?Sheet2JSONOpts*/) { return sheet_to_json(sheet, opts != null ? opts : {}); }
 
 function sheet_to_csv(sheet/*:Worksheet*/, opts/*:?Sheet2CSVOpts*/) {
 	var out = "", txt = "", qreg = /"/g;
@@ -158,27 +157,31 @@ function sheet_to_csv(sheet/*:Worksheet*/, opts/*:?Sheet2CSVOpts*/) {
 	var r = safe_decode_range(sheet["!ref"]);
 	var FS = o.FS !== undefined ? o.FS : ",", fs = FS.charCodeAt(0);
 	var RS = o.RS !== undefined ? o.RS : "\n", rs = RS.charCodeAt(0);
-	var endregex = new RegExp(FS+"+$");
+	var endregex = new RegExp((FS=="|" ? "\\|" : FS)+"+$");
 	var row = "", rr = "", cols = [];
 	var i = 0, cc = 0, val;
 	var R = 0, C = 0;
 	for(C = r.s.c; C <= r.e.c; ++C) cols[C] = encode_col(C);
 	for(R = r.s.r; R <= r.e.r; ++R) {
+		var isempty = true;
 		row = "";
 		rr = encode_row(R);
 		for(C = r.s.c; C <= r.e.c; ++C) {
 			val = sheet[cols[C] + rr];
 			if(val == null) txt = "";
 			else if(val.v != null) {
-				txt = ''+format_cell(val);
+				isempty = false;
+				txt = ''+format_cell(val, null, o);
 				for(i = 0, cc = 0; i !== txt.length; ++i) if((cc = txt.charCodeAt(i)) === fs || cc === rs || cc === 34) {
 					txt = "\"" + txt.replace(qreg, '""') + "\""; break; }
 			} else if(val.f != null && !val.F) {
+				isempty = false;
 				txt = '=' + val.f; if(txt.indexOf(",") >= 0) txt = '"' + txt.replace(qreg, '""') + '"';
 			} else txt = "";
 			/* NOTE: Excel CSV does not support array formulae */
 			row += (C === r.s.c ? "" : FS) + txt;
 		}
+		if(o.blankrows === false && isempty) continue;
 		if(o.strip) row = row.replace(endregex,"");
 		out += row + RS;
 	}
@@ -236,8 +239,9 @@ var utils = {
 	make_csv: sheet_to_csv,
 	make_json: sheet_to_json,
 	make_formulae: sheet_to_formulae,
+	aoa_to_sheet: aoa_to_sheet,
 	sheet_to_csv: sheet_to_csv,
 	sheet_to_json: sheet_to_json,
 	sheet_to_formulae: sheet_to_formulae,
-	sheet_to_row_object_array: sheet_to_row_object_array
+	sheet_to_row_object_array: sheet_to_json
 };

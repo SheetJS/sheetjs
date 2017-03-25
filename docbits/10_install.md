@@ -25,6 +25,7 @@ CDNjs automatically pulls the latest version and makes all versions available at
 
 The `demos` directory includes sample projects for:
 
+- [`angular`](demos/angular/)
 - [`browserify`](demos/browserify/)
 - [`requirejs`](demos/requirejs/)
 - [`systemjs`](demos/systemjs/)
