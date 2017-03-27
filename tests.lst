@@ -1,15 +1,24 @@
 AutoFilter.xlsb
-BlankSheetTypes.xlsb.pending
+BlankSheetTypes.xlsb.pending # macrosheets
 ErrorTypes.xlsb
 NumberFormatCondition.xlsb
 RkNumber.xlsb
-apachepoi_Simple.xlsb.pending
+apachepoi_51519.xlsb
+# apachepoi_Simple.xlsb # Beta file
+apachepoi_WithTextBox.xlsb
+apachepoi_comments.xlsb
+apachepoi_date.xlsb
+apachepoi_hyperlink.xlsb
+apachepoi_protected_passtika.xlsb.pending
+apachepoi_sample.xlsb
+apachepoi_testVarious.xlsb
 calendar_stress_test.xlsb.pending
 cell_style_simple.xlsb
+column_width.xlsb
 comments_stress_test.xlsb
 custom_properties.xlsb
 defined_names_simple.xlsb
-# formula_stress_test.xlsb # xlml
+formula_stress_test.xlsb
 formulae_test_simple.xlsb
 hyperlink_no_rels.xlsb
 hyperlink_stress_test_2011.xlsb
@@ -22,8 +31,10 @@ number_format_russian.xlsb
 numfmt_1_russian.xlsb
 phonetic_text.xlsb
 pivot_table_named_range.xlsb
-# pivot_table_test.xlsb # xlml
+pivot_table_test.xlsb
 rich_text_stress.xlsb
+row_height.xlsb
+sized_boxen.xlsb
 smart_tags_2007.xlsb
 sushi.xlsb
 text_and_numbers.xlsb
@@ -226,7 +237,7 @@ apachepoi_Themes2.xlsx
 apachepoi_TwoSheetsNoneHidden.xlsx
 apachepoi_TwoSheetsOneHidden.xlsx
 apachepoi_WithChart.xlsx
-apachepoi_WithChartSheet.xlsx.pending
+apachepoi_WithChartSheet.xlsx
 apachepoi_WithConditionalFormatting.xlsx
 apachepoi_WithDrawing.xlsx
 apachepoi_WithEmbeded.xlsx
@@ -242,7 +253,7 @@ apachepoi_atp.xlsx
 apachepoi_bug60858.xlsx
 apachepoi_chartTitle_noTitle.xlsx
 apachepoi_chartTitle_withTitle.xlsx
-apachepoi_chart_sheet.xlsx.pending
+apachepoi_chart_sheet.xlsx
 apachepoi_commentTest.xlsx
 apachepoi_comments.xlsx
 apachepoi_craftonhills.edu_programreview_report.aspx_goalpriorityreport_0011d159-1eeb-4b63-8833-867b0926e5f3.xlsx
@@ -343,7 +354,7 @@ openpyxl_r_bug304.xlsx.pending
 openpyxl_r_comments.xlsx
 openpyxl_r_complex-styles.xlsx
 openpyxl_r_conditional-formatting.xlsx
-openpyxl_r_contains_chartsheets.xlsx.pending
+openpyxl_r_contains_chartsheets.xlsx
 openpyxl_r_date_1900.xlsx
 openpyxl_r_date_1904.xlsx
 openpyxl_r_formulae.xlsx

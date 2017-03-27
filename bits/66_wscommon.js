@@ -1,7 +1,10 @@
 var strs = {}; // shared strings
 var _ssfopts = {}; // spreadsheet formatting options
 
-RELS.WS = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet";
+RELS.WS = [
+	"http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet",
+	"http://purl.oclc.org/ooxml/officeDocument/relationships/worksheet"
+];
 
 function get_sst_id(sst/*:SST*/, str/*:string*/)/*:number*/ {
 	for(var i = 0, len = sst.length; i < len; ++i) if(sst[i].t === str) { sst.Count ++; return i; }

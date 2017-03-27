@@ -65,7 +65,7 @@ function write_zip(wb/*:Workbook*/, opts/*:WriteOpts*/)/*:ZIP*/ {
 		f = "xl/worksheets/sheet" + rId + "." + wbext;
 		zip.file(f, write_ws(rId-1, f, opts, wb));
 		ct.sheets.push(f);
-		add_rels(opts.wbrels, rId, "worksheets/sheet" + rId + "." + wbext, RELS.WS);
+		add_rels(opts.wbrels, rId, "worksheets/sheet" + rId + "." + wbext, RELS.WS[0]);
 	}
 
 	if(opts.Strings != null && opts.Strings.length > 0) {

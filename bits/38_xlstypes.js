@@ -247,10 +247,10 @@ function parse_PropertySetStream(file, PIDSI) {
 	var SystemIdentifier = blob.read_shift(4);
 	blob.chk(CFB.utils.consts.HEADER_CLSID, 'CLSID: ');
 	NumSets = blob.read_shift(4);
-	if(NumSets !== 1 && NumSets !== 2) throw "Unrecognized #Sets: " + NumSets;
+	if(NumSets !== 1 && NumSets !== 2) throw new Error("Unrecognized #Sets: " + NumSets);
 	FMTID0 = blob.read_shift(16); Offset0 = blob.read_shift(4);
 
-	if(NumSets === 1 && Offset0 !== blob.l) throw "Length mismatch";
+	if(NumSets === 1 && Offset0 !== blob.l) throw new Error("Length mismatch: " + Offset0 + " !== " + blob.l);
 	else if(NumSets === 2) { FMTID1 = blob.read_shift(16); Offset1 = blob.read_shift(4); }
 	var PSet0 = parse_PropertySet(blob, PIDSI);
 
@@ -405,7 +405,7 @@ var parse_HyperlinkMoniker = function(blob, length) {
 	switch(clsid) {
 		case "e0c9ea79f9bace118c8200aa004ba90b": return parse_URLMoniker(blob, length);
 		case "0303000000000000c000000000000046": return parse_FileMoniker(blob, length);
-		default: throw "unsupported moniker " + clsid;
+		default: throw new Error("Unsupported Moniker " + clsid);
 	}
 };
 

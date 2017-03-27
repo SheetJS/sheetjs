@@ -69,6 +69,10 @@ dist-deps: ## Copy dependencies for distribution
 .PHONY: aux
 aux: $(AUXTARGETS)
 
+.PHONY: bytes
+bytes: ## display minified and gzipped file sizes
+	for i in dist/xlsx.min.js dist/xlsx.{core,full}.min.js; do printj "%-30s %7d %10d" $$i $$(wc -c < $$i) $$(gzip --best --stdout $$i | wc -c); done
+
 .PHONY: graph
 graph: formats.png ## Rebuild format conversion graph
 formats.png: formats.dot

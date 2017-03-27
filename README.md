@@ -38,6 +38,7 @@ with a unified JS representation, and ES3/ES5 browser compatibility back to IE6.
     + [Data Types](#data-types)
     + [Dates](#dates)
   * [Worksheet Object](#worksheet-object)
+  * [Chartsheet Object](#chartsheet-object)
   * [Workbook Object](#workbook-object)
   * [Document Features](#document-features)
     + [Formulae](#formulae)
@@ -543,6 +544,13 @@ Special worksheet keys (accessible as `worksheet[key]`, each starting with `!`):
   will write all cells in the merge range if they exist, so be sure that only
   the first cell (upper-left) in the range is set.
 
+### Chartsheet Object
+
+Chartsheets are represented as standard worksheets.  They are distinguished with
+the `!type` property set to `"chart"`.
+
+The underlying data and `!ref` refer to the cached data in the chartsheet.
+
 ### Workbook Object
 
 `workbook.SheetNames` is an ordered list of the sheets in the workbook
@@ -762,8 +770,8 @@ The exported `write` and `writeFile` functions accept an options argument:
 
 - `bookSST` is slower and more memory intensive, but has better compatibility
   with older versions of iOS Numbers
-- The raw data is the only thing guaranteed to be saved.  Formulae, formatting,
-  and other niceties may not be serialized (pending CSF standardization)
+- The raw data is the only thing guaranteed to be saved.  Features not described
+  in this README may not be serialized.
 - `cellDates` only applies to XLSX output and is not guaranteed to work with
   third-party readers.  Excel itself does not usually write cells with type `d`
   so non-Excel tools may ignore the data or blow up in the presence of dates.

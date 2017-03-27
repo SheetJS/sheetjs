@@ -13,8 +13,8 @@ The exported `write` and `writeFile` functions accept an options argument:
 
 - `bookSST` is slower and more memory intensive, but has better compatibility
   with older versions of iOS Numbers
-- The raw data is the only thing guaranteed to be saved.  Formulae, formatting,
-  and other niceties may not be serialized (pending CSF standardization)
+- The raw data is the only thing guaranteed to be saved.  Features not described
+  in this README may not be serialized.
 - `cellDates` only applies to XLSX output and is not guaranteed to work with
   third-party readers.  Excel itself does not usually write cells with type `d`
   so non-Excel tools may ignore the data or blow up in the presence of dates.

@@ -44,7 +44,7 @@ function parse_AddinUdf(blob, length, opts) {
 	var udfName = parse_ShortXLUnicodeString(blob, length, opts);
 	var cb = blob.read_shift(2);
 	l -= blob.l;
-	if(cb !== l) throw "Malformed AddinUdf: padding = " + l + " != " + cb;
+	if(cb !== l) throw new Error("Malformed AddinUdf: padding = " + l + " != " + cb);
 	blob.l += cb;
 	return udfName;
 }
@@ -127,7 +127,7 @@ function parse_FtArray(blob, length, ot) {
 			fts.push(FtTab[ft](blob, s + length - blob.l));
 		} catch(e) { blob.l = s + length; return fts; }
 	}
-	if(blob.l != s + length) blob.l = s + length; //throw "bad Object Ft-sequence";
+	if(blob.l != s + length) blob.l = s + length; //throw new Error("bad Object Ft-sequence");
 	return fts;
 }
 
@@ -138,8 +138,9 @@ var parse_FontIndex = parseuint16;
 
 /* 2.4.21 */
 function parse_BOF(blob, length) {
-	var o = {};
+	var o = {BIFFVer:0, dt:0};
 	o.BIFFVer = blob.read_shift(2); length -= 2;
+	if(length >= 2) { o.dt = blob.read_shift(2); blob.l -= 2; }
 	switch(o.BIFFVer) {
 		case 0x0600: /* BIFF8 */
 		case 0x0500: /* BIFF5 */
@@ -147,6 +148,7 @@ function parse_BOF(blob, length) {
 			break;
 		default: if(length > 6) throw new Error("Unexpected BIFF Ver " + o.BIFFVer);
 	}
+
 	blob.read_shift(length);
 	return o;
 }
@@ -156,7 +158,7 @@ function parse_BOF(blob, length) {
 function parse_InterfaceHdr(blob, length) {
 	if(length === 0) return 0x04b0;
 	var q;
-	if((q=blob.read_shift(2))!==0x04b0) throw 'InterfaceHdr codePage ' + q;
+	if((q=blob.read_shift(2))!==0x04b0) throw new Error("InterfaceHdr codePage " + q);
 	return 0x04b0;
 }
 
@@ -222,7 +224,7 @@ function parse_Row(blob, length) {
 /* 2.4.125 */
 function parse_ForceFullCalculation(blob, length) {
 	var header = parse_frtHeader(blob);
-	if(header.type != 0x08A3) throw "Invalid Future Record " + header.type;
+	if(header.type != 0x08A3) throw new Error("Invalid Future Record " + header.type);
 	var fullcalc = blob.read_shift(4);
 	return fullcalc !== 0x0;
 }
@@ -311,9 +313,9 @@ function parse_MulRk(blob, length) {
 	var rw = blob.read_shift(2), col = blob.read_shift(2);
 	var rkrecs = [];
 	while(blob.l < target) rkrecs.push(parse_RkRec(blob));
-	if(blob.l !== target) throw "MulRK read error";
+	if(blob.l !== target) throw new Error("MulRK read error");
 	var lastcol = blob.read_shift(2);
-	if(rkrecs.length != lastcol - col + 1) throw "MulRK length mismatch";
+	if(rkrecs.length != lastcol - col + 1) throw new Error("MulRK length mismatch");
 	return {r:rw, c:col, C:lastcol, rkrec:rkrecs};
 }
 /* 2.4.174 */
@@ -322,9 +324,9 @@ function parse_MulBlank(blob, length) {
 	var rw = blob.read_shift(2), col = blob.read_shift(2);
 	var ixfes = [];
 	while(blob.l < target) ixfes.push(blob.read_shift(2));
-	if(blob.l !== target) throw "MulBlank read error";
+	if(blob.l !== target) throw new Error("MulBlank read error");
 	var lastcol = blob.read_shift(2);
-	if(ixfes.length != lastcol - col + 1) throw "MulBlank length mismatch";
+	if(ixfes.length != lastcol - col + 1) throw new Error("MulBlank length mismatch");
 	return {r:rw, c:col, C:lastcol, ixfe:ixfes};
 }
 
@@ -388,7 +390,7 @@ function parse_Guts(blob, length) {
 	var out = [blob.read_shift(2), blob.read_shift(2)];
 	if(out[0] !== 0) out[0]--;
 	if(out[1] !== 0) out[1]--;
-	if(out[0] > 7 || out[1] > 7) throw "Bad Gutters: " + out.join("|");
+	if(out[0] > 7 || out[1] > 7) throw new Error("Bad Gutters: " + out.join("|"));
 	return out;
 }
 
@@ -555,14 +557,14 @@ try {
 	//var fmla = parse_ObjFmla(blob, s + length - blob.l);
 
 	for(var i = 1; i < blob.lens.length-1; ++i) {
-		if(blob.l-s != blob.lens[i]) throw "TxO: bad continue record";
+		if(blob.l-s != blob.lens[i]) throw new Error("TxO: bad continue record");
 		var hdr = blob[blob.l];
 		var t = parse_XLUnicodeStringNoCch(blob, blob.lens[i+1]-blob.lens[i]-1);
 		texts += t;
 		if(texts.length >= (hdr ? cchText : 2*cchText)) break;
 	}
 	if(texts.length !== cchText && texts.length !== cchText*2) {
-		throw "cchText: " + cchText + " != " + texts.length;
+		throw new Error("cchText: " + cchText + " != " + texts.length);
 	}
 
 	blob.l = s + length;
@@ -570,9 +572,9 @@ try {
 //	var rgTxoRuns = [];
 //	for(var j = 0; j != cbRuns/8-1; ++j) blob.l += 8;
 //	var cchText2 = blob.read_shift(2);
-//	if(cchText2 !== cchText) throw "TxOLastRun mismatch: " + cchText2 + " " + cchText;
+//	if(cchText2 !== cchText) throw new Error("TxOLastRun mismatch: " + cchText2 + " " + cchText);
 //	blob.l += 6;
-//	if(s + length != blob.l) throw "TxO " + (s + length) + ", at " + blob.l;
+//	if(s + length != blob.l) throw new Error("TxO " + (s + length) + ", at " + blob.l);
 	return { t: texts };
 } catch(e) { blob.l = s + length; return { t: texts }; }
 }
@@ -640,6 +642,15 @@ function parse_ColInfo(blob, length, opts) {
 	var flags = blob.read_shift(2);
 	if(w == 2) blob.l += 2;
 	return {s:colFirst, e:colLast, w:coldx, ixfe:ixfe, flags:flags};
+}
+
+/* 2.4.261 */
+function parse_ShtProps(blob, length, opts) {
+	var def = {area:false};
+	if(opts.biff != 5) { blob.l += length; return def; }
+	var d = blob.read_shift(1); blob.l += 3;
+	if((d & 0x10)) def.area = true;
+	return def;
 }
 
 
@@ -934,7 +945,6 @@ var parse_Surf = parsenoop;
 var parse_RadarArea = parsenoop;
 var parse_AxisParent = parsenoop;
 var parse_LegendException = parsenoop;
-var parse_ShtProps = parsenoop;
 var parse_SerToCrt = parsenoop;
 var parse_AxesUsed = parsenoop;
 var parse_SBaseRef = parsenoop;

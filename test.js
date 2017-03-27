@@ -88,15 +88,17 @@ function parsetest(x, wb, full, ext) {
 	ext = (ext ? " [" + ext + "]": "");
 	if(!full && ext) return;
 	describe(x + ext + ' should have all bits', function() {
-		var sname = dir + '2011/' + x.substr(x.lastIndexOf('/')+1) + '.sheetnames';
+		var sname = dir + '2016/' + x.substr(x.lastIndexOf('/')+1) + '.sheetnames';
+		if(!fs.existsSync(sname)) sname = dir + '2011/' + x.substr(x.lastIndexOf('/')+1) + '.sheetnames';
+		if(!fs.existsSync(sname)) sname = dir + '2013/' + x.substr(x.lastIndexOf('/')+1) + '.sheetnames';
 		it('should have all sheets', function() {
 			wb.SheetNames.forEach(function(y) { assert(wb.Sheets[y], 'bad sheet ' + y); });
 		});
-		it('should have the right sheet names', fs.existsSync(sname) ? function() {
+		if(fs.existsSync(sname)) it('should have the right sheet names', function() {
 			var file = fs.readFileSync(sname, 'utf-8').replace(/\r/g,"");
 			var names = wb.SheetNames.map(fixsheetname).join("\n") + "\n";
-			assert.equal(names, file);
-		} : null);
+			if(file.length) assert.equal(names, file);
+		});
 	});
 	describe(x + ext + ' should generate CSV', function() {
 		wb.SheetNames.forEach(function(ws, i) {
@@ -140,11 +142,11 @@ function parsetest(x, wb, full, ext) {
 	describe(x + ext + ' should generate correct CSV output', function() {
 		wb.SheetNames.forEach(function(ws, i) {
 			var name = getfile(dir, x, i, ".csv");
-			it('#' + i + ' (' + ws + ')', fs.existsSync(name) ? function() {
+			if(fs.existsSync(name)) it('#' + i + ' (' + ws + ')', function() {
 				var file = fs.readFileSync(name, 'utf-8');
 				var csv = X.utils.make_csv(wb.Sheets[ws]);
 				assert.equal(fixcsv(csv), fixcsv(file), "CSV badness");
-			} : null);
+			});
 		});
 	});
 	describe(x + ext + ' should generate correct JSON output', function() {
@@ -188,8 +190,8 @@ var wbtable = {};
 
 describe('should parse test files', function() {
 	files.forEach(function(x) {
-		if(!fs.existsSync(dir + x)) return;
-		it(x, x.substr(-8) == ".pending" ? null : function() {
+		if(x.slice(-8) == ".pending" || !fs.existsSync(dir + x)) return;
+		it(x, function() {
 			var wb = X.readFile(dir + x, opts);
 			wbtable[dir + x] = wb;
 			parsetest(x, wb, true);
@@ -206,8 +208,8 @@ describe('should parse test files', function() {
 		});
 	});
 	fileA.forEach(function(x) {
-		if(!fs.existsSync(dir + x)) return;
-		it(x, x.substr(-8) == ".pending" ? null : function() {
+		if(x.slice(-8) == ".pending" || !fs.existsSync(dir + x)) return;
+		it(x, function() {
 			var wb = X.readFile(dir + x, {WTF:opts.wtf, sheetRows:10});
 			parsetest(x, wb, false);
 		});

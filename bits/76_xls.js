@@ -260,7 +260,6 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 				case 'EOF': {
 					if(--file_depth) break;
 					if(range.e) {
-						out["!range"] = range;
 						if(range.e.r > 0 && range.e.c > 0) {
 							range.e.r--; range.e.c--;
 							out["!ref"] = encode_range(range);
@@ -295,6 +294,7 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 						opts.snames.push(cur_sheet);
 					}
 					else cur_sheet = (Directory[s] || {name:""}).name;
+					if(val.dt == 0x20) out["!type"] = "chart";
 					mergecells = [];
 					objects = [];
 					array_formulae = []; opts.arrayf = array_formulae;
@@ -304,6 +304,7 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 				} break;
 
 				case 'Number': case 'BIFF2NUM': case 'BIFF2INT': {
+					if(out["!type"] == "chart" && out[encode_cell({c:val.c, r:val.r})]) ++val.c;
 					temp_val = {ixfe: val.ixfe, XF: XFs[val.ixfe], v:val.val, t:'n'};
 					safe_format_xf(temp_val, options, wb.opts.Date1904);
 					addcell({c:val.c, r:val.r}, temp_val, options);

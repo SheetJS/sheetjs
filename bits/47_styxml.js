@@ -267,7 +267,7 @@ function parse_cellXfs(t, styles, opts) {
 			/* 18.2.10 extLst CT_ExtensionList ? */
 			case '<extLst': case '</extLst>': break;
 			case '<ext': break;
-			default: if(opts.WTF) throw 'unrecognized ' + y[0] + ' in cellXfs';
+			default: if(opts.WTF) throw new Error('unrecognized ' + y[0] + ' in cellXfs');
 		}
 	});
 }

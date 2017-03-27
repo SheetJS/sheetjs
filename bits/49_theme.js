@@ -104,7 +104,7 @@ function parse_theme_xml(data/*:string*/, opts) {
 	var themes = {};
 
 	/* themeElements CT_BaseStyles */
-	if(!(t=data.match(themeltregex))) throw 'themeElements not found in theme';
+	if(!(t=data.match(themeltregex))) throw new Error('themeElements not found in theme');
 	parse_themeElements(t[0], themes, opts);
 
 	return themes;

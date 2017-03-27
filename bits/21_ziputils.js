@@ -60,3 +60,15 @@ if (typeof exports !== 'undefined') {
 		_fs = require('fs');
 	}
 }
+
+function resolve_path(path/*:string*/, base/*:string*/)/*:string*/ {
+	var result = base.split('/');
+	if(base.slice(-1) != "/") result.pop(); // folder path
+	var target = path.split('/');
+	while (target.length !== 0) {
+		var step = target.shift();
+		if (step === '..') result.pop();
+		else if (step !== '.') result.push(step);
+	}
+	return result.join('/');
+}

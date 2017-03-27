@@ -475,7 +475,7 @@ var XLSBRecordEnum = {
 	/*::[*/0x021E/*::]*/: { n:"BrtBeginECTwFldInfo", f:parsenoop },
 	/*::[*/0x0224/*::]*/: { n:"BrtFileSharing", f:parsenoop },
 	/*::[*/0x0225/*::]*/: { n:"BrtOleSize", f:parsenoop },
-	/*::[*/0x0226/*::]*/: { n:"BrtDrawing", f:parsenoop },
+	/*::[*/0x0226/*::]*/: { n:"BrtDrawing", f:parse_RelID },
 	/*::[*/0x0227/*::]*/: { n:"BrtLegacyDrawing", f:parsenoop },
 	/*::[*/0x0228/*::]*/: { n:"BrtLegacyDrawingHF", f:parsenoop },
 	/*::[*/0x0229/*::]*/: { n:"BrtWebOpt", f:parsenoop },

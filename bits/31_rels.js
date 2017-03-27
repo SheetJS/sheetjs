@@ -1,8 +1,14 @@
-/* 9.3.2 OPC Relationships Markup */
+/* 9.3 Relationships */
 var RELS = ({
 	WB: "http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument",
 	SHEET: "http://sheetjs.openxmlformats.org/officeDocument/2006/relationships/officeDocument"
 }/*:any*/);
+
+/* 9.3.3 Representing Relationships */
+function get_rels_path(file/*:string*/)/*:string*/ {
+	var n = file.lastIndexOf("/");
+	return file.substr(0,n) + '/_rels' + file.substr(n) + ".rels";
+}
 
 function parse_rels(data/*:?string*/, currentFilePath/*:string*/) {
 	if (!data) return data;
@@ -11,28 +17,13 @@ function parse_rels(data/*:?string*/, currentFilePath/*:string*/) {
 	}
 	var rels = {};
 	var hash = {};
-	var resolveRelativePathIntoAbsolute = function (to) {
-		var toksFrom = currentFilePath.split('/');
-		toksFrom.pop(); // folder path
-		var toksTo = to.split('/');
-		var reversed = [];
-		while (toksTo.length !== 0) {
-			var tokTo = toksTo.shift();
-			if (tokTo === '..') {
-				toksFrom.pop();
-			} else if (tokTo !== '.') {
-				toksFrom.push(tokTo);
-			}
-		}
-		return toksFrom.join('/');
-	};
 
 	(data.match(tagregex)||[]).forEach(function(x) {
 		var y = parsexmltag(x);
 		/* 9.3.2.2 OPC_Relationships */
 		if (y[0] === '<Relationship') {
 			var rel = {}; rel.Type = y.Type; rel.Target = y.Target; rel.Id = y.Id; rel.TargetMode = y.TargetMode;
-			var canonictarget = y.TargetMode === 'External' ? y.Target : resolveRelativePathIntoAbsolute(y.Target);
+			var canonictarget = y.TargetMode === 'External' ? y.Target : resolve_path(y.Target, currentFilePath);
 			rels[canonictarget] = rel;
 			hash[y.Id] = rel;
 		}

@@ -33,9 +33,12 @@ function parse_ext_props(data, p) {
 
 	if(q.HeadingPairs && q.TitlesOfParts) {
 		var v = parseVector(q.HeadingPairs);
-		var j = 0, widx = 0, cidx = -1;
+		var parts = parseVector(q.TitlesOfParts).map(function(x) { return x.v; });
+		var idx = 0, len = 0;
 		for(var i = 0; i !== v.length; ++i) {
+			len = +(v[++i].v);
 			switch(v[i].v) {
+				case "Worksheets":
 				case "工作表":
 				case "Листы":
 				case "ワークシート":
@@ -47,17 +50,24 @@ function parse_ext_props(data, p) {
 				case "Folhas de cálculo":
 				case "Planilhas":
 				case "Werkbladen":
-				case "Worksheets": widx = j; p.Worksheets = +(v[++i].v); break;
+					p.Worksheets = len;
+					p.SheetNames = parts.slice(idx, idx + len);
+					break;
 
+				case "Named Ranges":
 				case "Benannte Bereiche":
-				case "Named Ranges": ++i; break; // TODO: Handle Named Ranges
+					p.NamedRanges = len;
+					p.DefinedNames = parts.slice(idx, idx + len);
+					break;
 
-				case "Charts": cidx = j; p.Charts = +(v[++i].v); break;
-				default: break; //throw new Error(v[i].v);
+				case "Charts":
+				case "Diagramme":
+					p.Chartsheets = len;
+					p.ChartNames = parts.slice(idx, idx + len);
+					break;
 			}
+			idx += len;
 		}
-		var parts = parseVector(q.TitlesOfParts).map(function(x) { return x.v; });
-		p.SheetNames = parts.slice(widx, widx + p.Worksheets);
 	}
 	return p;
 }

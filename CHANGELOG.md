@@ -7,6 +7,10 @@ changes may not be included if they are not expected to break existing code.
 
 ## Unreleased
 
+* XLS legacy `!range` field removed
+
+## 0.9.6 (2017-03-25)
+
 * `sheet_to_json` now passes `null` values when `raw` is set to `true`
 * `sheet_to_json` treats `null` stub cells as values in conjunction with `raw`
 

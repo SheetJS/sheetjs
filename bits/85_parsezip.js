@@ -1,15 +1,37 @@
 function safe_parse_wbrels(wbrels, sheets) {
 	if(!wbrels) return 0;
+	function get_type(n) {
+		if(RELS.WS.indexOf(n) > -1) return "sheet";
+		if(RELS.CS && n == RELS.CS) return "chart";
+		if(RELS.DS && n == RELS.DS) return "dialog";
+		if(RELS.MS && n == RELS.MS) return "macro";
+		if(!n || !n.length) return "sheet";
+		return n;
+	}
 	try {
-		wbrels = sheets.map(function pwbr(w) { return [w.name, wbrels['!id'][w.id].Target]; });
+		wbrels = sheets.map(function pwbr(w) { if(!w.id) w.id = w.strRelID; return [w.name, wbrels['!id'][w.id].Target, get_type(wbrels['!id'][w.id].Type)]; });
 	} catch(e) { return null; }
 	return !wbrels || wbrels.length === 0 ? null : wbrels;
 }
 
-function safe_parse_ws(zip, path/*:string*/, relsPath/*:string*/, sheet, sheetRels, sheets, opts, wb, themes, styles) {
+function safe_parse_sheet(zip, path/*:string*/, relsPath/*:string*/, sheet, sheetRels, sheets, stype/*:string*/, opts, wb, themes, styles) {
 	try {
 		sheetRels[sheet]=parse_rels(getzipstr(zip, relsPath, true), path);
-		sheets[sheet]=parse_ws(getzipdata(zip, path),path,opts,sheetRels[sheet], wb, themes, styles);
+		var data = getzipdata(zip, path);
+		switch(stype) {
+			case 'sheet': sheets[sheet]=parse_ws(data, path, opts,sheetRels[sheet], wb, themes, styles); break;
+			case 'chart':
+				var cs = parse_cs(data, path, opts,sheetRels[sheet], wb, themes, styles);
+				sheets[sheet] = cs;
+				if(!cs || !cs['!chart']) break;
+				var dfile = resolve_path(cs['!chart'].Target, path);
+				var drelsp = get_rels_path(dfile);
+				var draw = parse_drawing(getzipstr(zip, dfile, true), parse_rels(getzipstr(zip,drelsp,true), dfile));
+				var chartp = resolve_path(draw, dfile);
+				var crelsp = get_rels_path(chartp);
+				cs = parse_chart(getzipstr(zip, chartp, true), chartp, opts, parse_rels(getzipstr(zip, crelsp,true), chartp), wb, cs);
+				break;
+		}
 	} catch(e) { if(opts.WTF) throw e; }
 }
 
@@ -76,8 +98,8 @@ function parse_zip(zip/*:ZIP*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
 
 	var out = ({}/*:any*/);
 	if(opts.bookSheets || opts.bookProps) {
-		if(props.Worksheets && props.SheetNames.length > 0) sheets=props.SheetNames;
-		else if(wb.Sheets) sheets = wb.Sheets.map(function pluck(x){ return x.name; });
+		if(wb.Sheets) sheets = wb.Sheets.map(function pluck(x){ return x.name; });
+		else if(props.Worksheets && props.SheetNames.length > 0) sheets=props.SheetNames;
 		if(opts.bookProps) { out.Props = props; out.Custprops = custprops; }
 		if(opts.bookSheets && typeof sheets !== 'undefined') out.SheetNames = sheets;
 		if(opts.bookSheets ? out.SheetNames : opts.bookProps) return out;
@@ -106,13 +128,16 @@ function parse_zip(zip/*:ZIP*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
 	/* Numbers iOS hack */
 	var nmode = (getzipdata(zip,"xl/worksheets/sheet.xml",true))?1:0;
 	for(i = 0; i != props.Worksheets; ++i) {
-		if(wbrels && wbrels[i]) path = 'xl/' + (wbrels[i][1]).replace(/[\/]?xl\//, "");
-		else {
+		var stype = "sheet";
+		if(wbrels && wbrels[i]) {
+			path = 'xl/' + (wbrels[i][1]).replace(/[\/]?xl\//, "");
+			stype = wbrels[i][2];
+		} else {
 			path = 'xl/worksheets/sheet'+(i+1-nmode)+"." + wbext;
 			path = path.replace(/sheet0\./,"sheet.");
 		}
 		relsPath = path.replace(/^(.*)(\/)([^\/]*)$/, "$1/_rels/$3.rels");
-		safe_parse_ws(zip, path, relsPath, props.SheetNames[i], sheetRels, sheets, opts, wb, themes, styles);
+		safe_parse_sheet(zip, path, relsPath, props.SheetNames[i], sheetRels, sheets, stype, opts, wb, themes, styles);
 	}
 
 	if(dir.comments) parse_comments(zip, dir.comments, sheets, sheetRels, opts);

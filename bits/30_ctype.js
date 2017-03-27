@@ -10,17 +10,7 @@ var ct2type/*{[string]:string}*/ = ({
 	/* Worksheet */
 	"application/vnd.ms-excel.binIndexWs": "TODO", /* Binary Index */
 
-	/* Chartsheet */
-	"application/vnd.ms-excel.chartsheet": "TODO",
-	"application/vnd.openxmlformats-officedocument.spreadsheetml.chartsheet+xml": "TODO",
-
-	/* Dialogsheet */
-	"application/vnd.ms-excel.dialogsheet": "TODO",
-	"application/vnd.openxmlformats-officedocument.spreadsheetml.dialogsheet+xml": "TODO",
-
 	/* Macrosheet */
-	"application/vnd.ms-excel.macrosheet": "TODO",
-	"application/vnd.ms-excel.macrosheet+xml": "TODO",
 	"application/vnd.ms-excel.intlmacrosheet": "TODO",
 	"application/vnd.ms-excel.binIndexMs": "TODO", /* Binary Index */
 
@@ -31,6 +21,7 @@ var ct2type/*{[string]:string}*/ = ({
 
 	/* Custom Data Properties */
 	"application/vnd.openxmlformats-officedocument.customXmlProperties+xml": "TODO",
+	"application/vnd.openxmlformats-officedocument.spreadsheetml.customProperty": "TODO",
 
 	/* Comments */
 	"application/vnd.ms-excel.comments": "comments",
@@ -110,6 +101,9 @@ var ct2type/*{[string]:string}*/ = ({
 	/* Themes */
 	"application/vnd.openxmlformats-officedocument.theme+xml": "themes",
 
+	/* Theme Override */
+	"application/vnd.openxmlformats-officedocument.themeOverride+xml": "TODO",
+
 	/* Timeline */
 	"application/vnd.ms-excel.Timeline+xml": "TODO", /* verify */
 	"application/vnd.ms-excel.TimelineCache+xml": "TODO", /* verify */
@@ -146,6 +140,9 @@ var ct2type/*{[string]:string}*/ = ({
 	"application/vnd.openxmlformats-package.relationships+xml": "rels",
 	"application/vnd.openxmlformats-officedocument.oleObject": "TODO",
 
+	/* Image */
+	"image/png": "TODO",
+
 	"sheet": "js"
 }/*:any*/);
 
@@ -161,11 +158,23 @@ var CT_LIST = (function(){
 			xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml",
 			xlsb: "application/vnd.ms-excel.sharedStrings"
 		},
-		sheets: {
+		sheets: { /* Worksheet */
 			xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml",
 			xlsb: "application/vnd.ms-excel.worksheet"
 		},
-		styles: {/* Styles */
+		charts: { /* Chartsheet */
+			xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.chartsheet+xml",
+			xlsb: "application/vnd.ms-excel.chartsheet"
+		},
+		dialogs: { /* Dialogsheet */
+			xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.dialogsheet+xml",
+			xlsb: "application/vnd.ms-excel.dialogsheet"
+		},
+		macros: { /* Macrosheet (Excel 4.0 Macros) */
+			xlsx: "application/vnd.ms-excel.macrosheet+xml",
+			xlsb: "application/vnd.ms-excel.macrosheet"
+		},
+		styles: { /* Styles */
 			xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml",
 			xlsb: "application/vnd.ms-excel.styles"
 		}
@@ -180,9 +189,12 @@ var type2ct/*{[string]:Array<string>}*/ = evert_arr(ct2type);
 XMLNS.CT = 'http://schemas.openxmlformats.org/package/2006/content-types';
 
 function parse_ct(data/*:?string*/, opts) {
-	var ct = ({ workbooks: [], sheets: [], calcchains: [], themes: [], styles: [],
-		coreprops: [], extprops: [], custprops: [], strs:[], comments: [], vba: [],
-		TODO:[], rels:[], xmlns: "" }/*:any*/);
+	var ct = ({
+		workbooks:[], sheets:[], charts:[], dialogs:[],
+		rels:[], strs:[], comments:[],
+		coreprops:[], extprops:[], custprops:[], themes:[], styles:[],
+		calcchains:[], vba: [],
+		TODO:[], xmlns: "" }/*:any*/);
 	if(!data || !data.match) return ct;
 	var ctext = {};
 	(data.match(tagregex)||[]).forEach(function(x) {
