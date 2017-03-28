@@ -95,7 +95,7 @@ function ReadShift(size/*:number*/, t/*:?string*/) {
 		case 'cstr': size = 0; o = "";
 			while((w=__readUInt8(this, this.l + size++))!==0) oo.push(_getchar(w));
 			o = oo.join(""); break;
-		case 'wstr': size = 0; o = "";
+		case '_wstr': size = 0; o = "";
 			while((w=__readUInt16LE(this,this.l +size))!==0){oo.push(_getchar(w));size+=2;}
 			size+=2; o = oo.join(""); break;
 

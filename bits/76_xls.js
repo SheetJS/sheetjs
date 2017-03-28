@@ -432,7 +432,7 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 					for(rngR = val[0].s.r; rngR <= val[0].e.r; ++rngR)
 						for(rngC = val[0].s.c; rngC <= val[0].e.c; ++rngC)
 							if(out[encode_cell({c:rngC,r:rngR})])
-								out[encode_cell({c:rngC,r:rngR})].l.tooltip = val[1];
+								out[encode_cell({c:rngC,r:rngR})].l.Tooltip = val[1];
 				} break;
 
 				/* Comments */

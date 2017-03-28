@@ -602,6 +602,19 @@ function diffsty(ws, r1,r2) {
 	});
 }
 
+function hlink(wb) {
+	var ws = wb.Sheets.Sheet1;
+	assert.equal(ws.A1.l.Target, "http://www.sheetjs.com");
+	assert.equal(ws.A2.l.Target, "http://oss.sheetjs.com");
+	assert.equal(ws.A3.l.Target, "http://oss.sheetjs.com#foo");
+	assert.equal(ws.A4.l.Target, "mailto:dev@sheetjs.com");
+	assert.equal(ws.A5.l.Target, "mailto:dev@sheetjs.com?subject=hyperlink");
+	assert.equal(ws.A6.l.Target, "../../sheetjs/Documents/Test.xlsx");
+	assert.equal(ws.A7.l.Target, "http://sheetjs.com");
+	assert.equal(ws.A7.l.Tooltip, "foo bar baz");
+}
+
+
 describe('parse features', function() {
 	if(fs.existsSync(paths.swcxlsx)) it('should have comment as part of cell properties', function(){
 		var X = require(modp);
@@ -759,17 +772,6 @@ describe('parse features', function() {
 		});
 		if(typeof before != 'undefined') before(bef);
 		else it('before', bef);
-
-		function hlink(wb) {
-			var ws = wb.Sheets.Sheet1;
-			assert.equal(ws.A1.l.Target, "http://www.sheetjs.com");
-			assert.equal(ws.A2.l.Target, "http://oss.sheetjs.com");
-			assert.equal(ws.A3.l.Target, "http://oss.sheetjs.com#foo");
-			assert.equal(ws.A4.l.Target, "mailto:dev@sheetjs.com");
-			assert.equal(ws.A5.l.Target, "mailto:dev@sheetjs.com?subject=hyperlink");
-			assert.equal(ws.A6.l.Target, "../../sheetjs/Documents/Test.xlsx");
-			assert.equal(ws.A7.l.Target, "http://sheetjs.com");
-		}
 
 		it(N1, function() { hlink(wb1); });
 		it(N2, function() { hlink(wb2); });
@@ -977,11 +979,24 @@ describe('roundtrip features', function() {
 		].forEach(function(w) {
 			it(w[0], function() {
 				var wb1 = X.readFile(w[1], {cellFormula:true});
-				if(w[0] == 'ods') X.writeFile(wb1, "./tmp/_.ods", {bookType:"ods"});
-				var wb2 = X.read(X.write(wb1, {bookType:w[0], type:"buffer"}), {cellFormula:true, type:"buffer"});
+				var wb2 = X.read(X.write(wb1, {bookType:w[0], type:"buffer"}), {type:"buffer"});
 				wb1.SheetNames.forEach(function(n) {
 					assert.equal( X.utils.sheet_to_formulae(wb1.Sheets[n]).sort().join("\n"), X.utils.sheet_to_formulae(wb2.Sheets[n]).sort().join("\n") );
 				});
+			});
+		});
+	});
+
+	describe('should preserve hyperlink', function() { [
+			['xlml', paths.hlxml],
+			//['xlsx', paths.hlxlsx], // TODO
+			//['xlsb', paths.hlxlsb] // TODO
+		].forEach(function(w) {
+			it(w[0], function() {
+				var wb1 = X.readFile(w[1]);
+				var wb2 = X.read(X.write(wb1, {bookType:w[0], type:"buffer"}), {type:"buffer"});
+				hlink(wb1);
+				hlink(wb2);
 			});
 		});
 	});

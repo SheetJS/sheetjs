@@ -18,7 +18,7 @@ function parse_cust_props(data/*:string*/, opts) {
 				var type = toks[0].substring(4), text = toks[1];
 				/* 22.4.2.32 (CT_Variant). Omit the binary types from 22.4 (Variant Types) */
 				switch(type) {
-					case 'lpstr': case 'lpwstr': case 'bstr': case 'lpwstr':
+					case 'lpstr': case 'bstr': case 'lpwstr':
 						p[name] = unescapexml(text);
 						break;
 					case 'bool':

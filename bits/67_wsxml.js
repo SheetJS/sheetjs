@@ -70,7 +70,7 @@ function write_ws_xml_merges(merges) {
 	return o + '</mergeCells>';
 }
 
-function parse_ws_xml_hlinks(s, data, rels) {
+function parse_ws_xml_hlinks(s, data/*:Array<string>*/, rels) {
 	for(var i = 0; i != data.length; ++i) {
 		var val = parsexmltag(data[i], true);
 		if(!val.ref) return;
@@ -84,6 +84,7 @@ function parse_ws_xml_hlinks(s, data, rels) {
 			rel = {Target: val.location, TargetMode: 'Internal'};
 			val.Rel = rel;
 		}
+		if(val.tooltip) { val.Tooltip = val.tooltip; delete val.tooltip; }
 		var rng = safe_decode_range(val.ref);
 		for(var R=rng.s.r;R<=rng.e.r;++R) for(var C=rng.s.c;C<=rng.e.c;++C) {
 			var addr = encode_cell({c:C,r:R});
@@ -109,15 +110,7 @@ function write_ws_xml_cols(ws, cols)/*:string*/ {
 	var o = ["<cols>"], col, width;
 	for(var i = 0; i != cols.length; ++i) {
 		if(!(col = cols[i])) continue;
-		var p = ({min:i+1,max:i+1}/*:any*/);
-		/* wch (chars), wpx (pixels) */
-		width = -1;
-		if(col.MDW) MDW = col.MDW;
-		if(col.width);
-		else if(col.wpx) width = px2char(col.wpx);
-		else if(col.wch) width = col.wch;
-		if(width > -1) { p.width = char2width(width); p.customWidth= 1; }
-		o[o.length] = (writextag('col', null, p));
+		o[o.length] = (writextag('col', null, col_obj_w(i, col)));
 	}
 	o[o.length] = "</cols>";
 	return o.join("");
@@ -328,14 +321,16 @@ function write_ws_xml(idx/*:number*/, opts, wb/*:Workbook*/)/*:string*/ {
 
 	if(ws['!cols'] !== undefined && ws['!cols'].length > 0) o[o.length] = (write_ws_xml_cols(ws, ws['!cols']));
 	o[sidx = o.length] = '<sheetData/>';
-	if(ws['!ref'] !== undefined) {
+	if(ws['!ref'] != null) {
 		rdata = write_ws_xml_data(ws, opts, idx, wb);
 		if(rdata.length > 0) o[o.length] = (rdata);
 	}
 	if(o.length>sidx+1) { o[o.length] = ('</sheetData>'); o[sidx]=o[sidx].replace("/>",">"); }
 
-	if(ws['!merges'] !== undefined && ws['!merges'].length > 0) o[o.length] = (write_ws_xml_merges(ws['!merges']));
+	if(ws['!merges'] != null && ws['!merges'].length > 0) o[o.length] = (write_ws_xml_merges(ws['!merges']));
 
 	if(o.length>2) { o[o.length] = ('</worksheet>'); o[1]=o[1].replace("/>",">"); }
+
+	delete ws['!links'];
 	return o.join("");
 }

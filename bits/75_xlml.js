@@ -199,8 +199,8 @@ function parse_xlml_xml(d, opts)/*:Workbook*/ {
 				if(comments.length > 0) cell.c = comments;
 				if((!opts.sheetRows || opts.sheetRows > r) && cell.v !== undefined) cursheet[encode_col(c) + encode_row(r)] = cell;
 				if(cell.HRef) {
-					cell.l = {Target:cell.HRef, tooltip:cell.HRefScreenTip};
-					cell.HRef = cell.HRefScreenTip = undefined;
+					cell.l = {Target:cell.HRef, Tooltip:cell.HRefScreenTip};
+					delete cell.HRef; delete cell.HRefScreenTip;
 				}
 				if(cell.MergeAcross || cell.MergeDown) {
 					var cc = c + (parseInt(cell.MergeAcross,10)|0);
@@ -787,6 +787,11 @@ function write_ws_xlml_cell(cell, ref, ws, opts, idx, wb, addr)/*:string*/{
 		attr["ss:ArrayRange"] = "RC:R" + (end.r == addr.r ? "" : "[" + (end.r - addr.r) + "]") + "C" + (end.c == addr.c ? "" : "[" + (end.c - addr.c) + "]");
 	}
 
+	if(cell.l && cell.l.Target) {
+		attr["ss:HRef"] = escapexml(cell.l.Target);
+		if(cell.l.Tooltip) attr["x:HRefScreenTip"] = escapexml(cell.l.Tooltip);
+	}
+
 	if(ws['!merges']) {
 		var marr = ws['!merges'];
 		for(var mi = 0; mi != marr.length; ++mi) {
@@ -822,6 +827,10 @@ function write_ws_xlml_table(ws/*:Worksheet*/, opts, idx/*:number*/, wb/*:Workbo
 	var range = safe_decode_range(ws['!ref']);
 	var marr = ws['!merges'] || [], mi = 0;
 	var o = [];
+	if(ws['!cols']) ws['!cols'].forEach(function(n, i) {
+		var p = col_obj_w(i, n);
+		o.push(writextag("Column",null, {"ss:Index":i+1, "ss:Width":width2px(p.width)}));
+	});
 	for(var R = range.s.r; R <= range.e.r; ++R) {
 		var row = ['<Row ss:Index="' + (R+1) + '">'];
 		for(var C = range.s.c; C <= range.e.c; ++C) {

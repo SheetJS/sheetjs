@@ -226,7 +226,7 @@ function parse_BrtHLink(data, length, opts) {
 	var tooltip = parse_XLWideString(data);
 	var display = parse_XLWideString(data);
 	data.l = end;
-	return {rfx:rfx, relId:relId, loc:loc, tooltip:tooltip, display:display};
+	return {rfx:rfx, relId:relId, loc:loc, Tooltip:tooltip, display:display};
 }
 
 /* [MS-XLSB] 2.4.6 BrtArrFmla */
@@ -252,6 +252,20 @@ function parse_BrtShrFmla(data, length, opts) {
 		o[1] = formula;
 		data.l = end;
 	} else data.l = end;
+	return o;
+}
+
+/* [MS-XLSB] 2.4.323 BrtColInfo */
+/* TODO: once XLS ColInfo is set, combine the functions */
+function write_BrtColInfo(C/*:number*/, col, o) {
+	if(o == null) o = new_buf(18);
+	var p = col_obj_w(C, col);
+	o.write_shift(-4, C);
+	o.write_shift(-4, C);
+	o.write_shift(4, p.width * 256);
+	o.write_shift(4, 0/*ixfe*/); // style
+	o.write_shift(1, 2); // bit flag
+	o.write_shift(1, 0); // bit flag
 	return o;
 }
 
@@ -521,9 +535,15 @@ function parse_ws_bin(data, opts, rels, wb, themes, styles)/*:Worksheet*/ {
 /* TODO: something useful -- this is a stub */
 function write_ws_bin_cell(ba/*:BufArray*/, cell/*:Cell*/, R/*:number*/, C/*:number*/, opts) {
 	if(cell.v === undefined) return "";
-	var vv = "";
+	var vv = ""; var olddate = null;
 	switch(cell.t) {
 		case 'b': vv = cell.v ? "1" : "0"; break;
+		case 'd': // no BrtCellDate :(
+			cell.z = cell.z || SSF._table[14];
+			olddate = cell.v;
+			cell.v = datenum((cell.v/*:any*/)); cell.t = 'n';
+			break;
+		/* falls through */
 		case 'n': case 'e': vv = ''+cell.v; break;
 		default: vv = cell.v; break;
 	}
@@ -533,7 +553,7 @@ function write_ws_bin_cell(ba/*:BufArray*/, cell/*:Cell*/, R/*:number*/, C/*:num
 	switch(cell.t) {
 		case 's': case 'str':
 			if(opts.bookSST) {
-				vv = get_sst_id(opts.Strings, cell.v);
+				vv = get_sst_id(opts.Strings, (cell.v/*:any*/));
 				o.t = "s"; o.v = vv;
 				write_record(ba, "BrtCellIsst", write_BrtCellIsst(cell, o));
 			} else {
@@ -545,6 +565,7 @@ function write_ws_bin_cell(ba/*:BufArray*/, cell/*:Cell*/, R/*:number*/, C/*:num
 			/* TODO: determine threshold for Real vs RK */
 			if(cell.v == (cell.v | 0) && cell.v > -1000 && cell.v < 1000) write_record(ba, "BrtCellRk", write_BrtCellRk(cell, o));
 			else write_record(ba, "BrtCellReal", write_BrtCellReal(cell, o));
+			if(olddate) { cell.t = 'd'; cell.v = olddate; }
 			return;
 		case 'b':
 			o.t = "b";
@@ -555,7 +576,7 @@ function write_ws_bin_cell(ba/*:BufArray*/, cell/*:Cell*/, R/*:number*/, C/*:num
 	write_record(ba, "BrtCellBlank", write_BrtCellBlank(cell, o));
 }
 
-function write_CELLTABLE(ba, ws, idx, opts, wb) {
+function write_CELLTABLE(ba, ws/*:Worksheet*/, idx/*:number*/, opts, wb/*:Workbook*/) {
 	var range = safe_decode_range(ws['!ref'] || "A1"), ref, rr = "", cols = [];
 	write_record(ba, 'BrtBeginSheetData');
 	for(var R = range.s.r; R <= range.e.r; ++R) {
@@ -582,6 +603,13 @@ function write_MERGECELLS(ba, ws/*:Worksheet*/) {
 	write_record(ba, 'BrtEndMergeCells');
 }
 
+function write_COLINFOS(ba, ws/*:Worksheet*/, idx/*:number*/, opts, wb/*:Workbook*/) {
+	if(!ws || !ws['!cols']) return;
+	write_record(ba, 'BrtBeginColInfos');
+	ws['!cols'].forEach(function(m, i) { if(m) write_record(ba, 'BrtColInfo', write_BrtColInfo(i, m)); });
+	write_record(ba, 'BrtEndColInfos');
+}
+
 function write_ws_bin(idx/*:number*/, opts, wb/*:Workbook*/) {
 	var ba = buf_array();
 	var s = wb.SheetNames[idx], ws = wb.Sheets[s] || {};
@@ -591,7 +619,7 @@ function write_ws_bin(idx/*:number*/, opts, wb/*:Workbook*/) {
 	write_record(ba, "BrtWsDim", write_BrtWsDim(r));
 	/* [WSVIEWS2] */
 	/* [WSFMTINFO] */
-	/* *COLINFOS */
+	write_COLINFOS(ba, ws, idx, opts, wb);
 	write_CELLTABLE(ba, ws, idx, opts, wb);
 	/* [BrtSheetCalcProp] */
 	/* [[BrtSheetProtectionIso] BrtSheetProtection] */

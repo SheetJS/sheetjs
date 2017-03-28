@@ -11,6 +11,18 @@ function get_sst_id(sst/*:SST*/, str/*:string*/)/*:number*/ {
 	sst[len] = {t:str}; sst.Count ++; sst.Unique ++; return len;
 }
 
+function col_obj_w(C/*:number*/, col) {
+	var p = ({min:C+1,max:C+1}/*:any*/);
+	/* wch (chars), wpx (pixels) */
+	var width = -1;
+	if(col.MDW) MDW = col.MDW;
+	if(col.width != null) p.customWidth = 1;
+	else if(col.wpx != null) width = px2char(col.wpx);
+	else if(col.wch != null) width = col.wch;
+	if(width > -1) { p.width = char2width(width); p.customWidth = 1; }
+	return p;
+}
+
 function get_cell_style(styles, cell, opts) {
 	var z = opts.revssf[cell.z != null ? cell.z : "General"];
 	for(var i = 0, len = styles.length; i != len; ++i) if(styles[i].numFmtId === z) return i;

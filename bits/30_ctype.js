@@ -226,6 +226,15 @@ var CTYPE_XML_ROOT = writextag('Types', null, {
 var CTYPE_DEFAULTS = [
 	['xml', 'application/xml'],
 	['bin', 'application/vnd.ms-excel.sheet.binary.macroEnabled.main'],
+	/* from test files */
+	['bmp', 'image/bmp'],
+	['png', 'image/png'],
+	['gif', 'image/gif'],
+	['emf', 'image/x-emf'],
+	['wmf', 'image/x-wmf'],
+	['jpg', 'image/jpeg'], ['jpeg', 'image/jpeg'],
+	['tif', 'image/tiff'], ['tiff', 'image/tiff'],
+	['pdf', 'application/pdf'],
 	['rels', type2ct.rels[0]]
 ].map(function(x) {
 	return writextag('Default', null, {'Extension':x[0], 'ContentType': x[1]});
@@ -267,6 +276,7 @@ function write_ct(ct, opts)/*:string*/ {
 	['strs', 'styles'].forEach(f1);
 	['coreprops', 'extprops', 'custprops'].forEach(f3);
 	f3('vba');
+	f3('comments');
 	if(o.length>2){ o[o.length] = ('</Types>'); o[1]=o[1].replace("/>",">"); }
 	return o.join("");
 }

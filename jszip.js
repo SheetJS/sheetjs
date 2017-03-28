@@ -13,7 +13,6 @@ https://github.com/nodeca/pako/blob/master/LICENSE
 	if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();
 	else if("function"==typeof define&&define.amd){JSZip=e();define([],e);}
 	else{
-		if(typeof self == 'undefined' && typeof app != 'undefined') self = app;
 		var f;
 		"undefined"!=typeof window?f=window:
 		"undefined"!=typeof global?f=global:

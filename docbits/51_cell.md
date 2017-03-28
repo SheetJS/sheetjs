@@ -11,7 +11,7 @@
 | `h` | HTML rendering of the rich text (if applicable)                        |
 | `c` | comments associated with the cell                                      |
 | `z` | number format string associated with the cell (if requested)           |
-| `l` | cell hyperlink object (.Target holds link, .tooltip is tooltip)        |
+| `l` | cell hyperlink object (.Target holds link, .Tooltip is tooltip)        |
 | `s` | the style/theme of the cell (if applicable)                            |
 
 Built-in export utilities (such as the CSV exporter) will use the `w` text if it

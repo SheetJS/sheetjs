@@ -8,6 +8,7 @@ changes may not be included if they are not expected to break existing code.
 ## Unreleased
 
 * XLS legacy `!range` field removed
+* Hyperlink tooltip is stored in the `Tooltip` field
 
 ## 0.9.6 (2017-03-25)
 
