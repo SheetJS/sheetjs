@@ -1,7 +1,8 @@
 /* 9.3 Relationships */
 var RELS = ({
 	WB: "http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument",
-	SHEET: "http://sheetjs.openxmlformats.org/officeDocument/2006/relationships/officeDocument"
+	SHEET: "http://sheetjs.openxmlformats.org/officeDocument/2006/relationships/officeDocument",
+	VBA: "http://schemas.microsoft.com/office/2006/relationships/vbaProject"
 }/*:any*/);
 
 /* 9.3.3 Representing Relationships */

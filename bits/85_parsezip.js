@@ -1,15 +1,15 @@
+function get_sheet_type(n) {
+	if(RELS.WS.indexOf(n) > -1) return "sheet";
+	if(RELS.CS && n == RELS.CS) return "chart";
+	if(RELS.DS && n == RELS.DS) return "dialog";
+	if(RELS.MS && n == RELS.MS) return "macro";
+	if(!n || !n.length) return "sheet";
+	return n;
+}
 function safe_parse_wbrels(wbrels, sheets) {
 	if(!wbrels) return 0;
-	function get_type(n) {
-		if(RELS.WS.indexOf(n) > -1) return "sheet";
-		if(RELS.CS && n == RELS.CS) return "chart";
-		if(RELS.DS && n == RELS.DS) return "dialog";
-		if(RELS.MS && n == RELS.MS) return "macro";
-		if(!n || !n.length) return "sheet";
-		return n;
-	}
 	try {
-		wbrels = sheets.map(function pwbr(w) { if(!w.id) w.id = w.strRelID; return [w.name, wbrels['!id'][w.id].Target, get_type(wbrels['!id'][w.id].Type)]; });
+		wbrels = sheets.map(function pwbr(w) { if(!w.id) w.id = w.strRelID; return [w.name, wbrels['!id'][w.id].Target, get_sheet_type(wbrels['!id'][w.id].Type)]; });
 	} catch(e) { return null; }
 	return !wbrels || wbrels.length === 0 ? null : wbrels;
 }
@@ -31,6 +31,8 @@ function safe_parse_sheet(zip, path/*:string*/, relsPath/*:string*/, sheet, shee
 				var crelsp = get_rels_path(chartp);
 				cs = parse_chart(getzipstr(zip, chartp, true), chartp, opts, parse_rels(getzipstr(zip, crelsp,true), chartp), wb, cs);
 				break;
+			case 'macro': sheets[sheet]=parse_ms(data, path, opts,sheetRels[sheet], wb, themes, styles); break;
+			case 'dialog': sheets[sheet]=parse_ds(data, path, opts,sheetRels[sheet], wb, themes, styles); break;
 		}
 	} catch(e) { if(opts.WTF) throw e; }
 }

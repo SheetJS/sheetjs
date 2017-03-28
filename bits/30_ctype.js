@@ -190,7 +190,7 @@ XMLNS.CT = 'http://schemas.openxmlformats.org/package/2006/content-types';
 
 function parse_ct(data/*:?string*/, opts) {
 	var ct = ({
-		workbooks:[], sheets:[], charts:[], dialogs:[],
+		workbooks:[], sheets:[], charts:[], dialogs:[], macros:[],
 		rels:[], strs:[], comments:[],
 		coreprops:[], extprops:[], custprops:[], themes:[], styles:[],
 		calcchains:[], vba: [],
@@ -266,6 +266,7 @@ function write_ct(ct, opts)/*:string*/ {
 	f3('themes');
 	['strs', 'styles'].forEach(f1);
 	['coreprops', 'extprops', 'custprops'].forEach(f3);
+	f3('vba');
 	if(o.length>2){ o[o.length] = ('</Types>'); o[1]=o[1].replace("/>",">"); }
 	return o.join("");
 }

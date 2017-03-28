@@ -35,6 +35,8 @@ function readSync(data/*:RawData*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
 		case 0x3C: return parse_xlml(d, o);
 		case 0x50: if(n[1] == 0x4B && n[2] < 0x20 && n[3] < 0x20) return read_zip(d, o); break;
 		case 0xEF: return parse_xlml(d, o);
+		case 0x03: case 0x83: case 0x8B: return DBF.to_workbook(d, o);
+		case 0x30: case 0x31: if(n[2] <= 12 && n[3] <= 31) return DBF.to_workbook(d, o); break;
 		default: throw new Error("Unsupported file " + n.join("|"));
 	}
 	throw new Error("Unsupported file format " + n.join("|"));

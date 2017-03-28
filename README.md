@@ -61,6 +61,7 @@ with a unified JS representation, and ES3/ES5 browser compatibility back to IE6.
   * [Excel 2003-2004 (SpreadsheetML)](#excel-2003-2004-spreadsheetml)
   * [Excel 2007+ Binary (XLSB, BIFF12)](#excel-2007-binary-xlsb-biff12)
   * [OpenDocument Spreadsheet (ODS/FODS) and Uniform Office Spreadsheet (UOS1/2)](#opendocument-spreadsheet-odsfods-and-uniform-office-spreadsheet-uos12)
+  * [dBASE and Visual FoxPro (DBF)](#dbase-and-visual-foxpro-dbf)
   * [Comma-Separated Values](#comma-separated-values)
   * [HTML](#html)
 - [Testing](#testing)
@@ -103,6 +104,7 @@ The `demos` directory includes sample projects for:
 - [`angular`](demos/angular/)
 - [`browserify`](demos/browserify/)
 - [`Adobe ExtendScript`](demos/extendscript/)
+- [`phantomjs`](demos/phantomjs/)
 - [`requirejs`](demos/requirejs/)
 - [`systemjs`](demos/systemjs/)
 - [`webpack`](demos/webpack/)
@@ -751,9 +753,12 @@ file but Excel will know how to handle it.  This library applies similar logic:
 |:-------|:--------------|:----------------------------------------------------|
 | `0xD0` | CFB Container | BIFF 5/8 or password-protected XLSX/XLSB            |
 | `0x09` | BIFF Stream   | BIFF 2/3/4/5                                        |
-| `0x3C` | XML/HTML      | SpreadsheetML or Flat ODS or UOS1 or HTML           |
-| `0x50` | ZIP Archive   | XLSB or XLSX/M or ODS or UOS2                       |
-| `0xFE` | UTF8 Text     | SpreadsheetML or Flat ODS or UOS1                   |
+| `0x3C` | XML/HTML      | SpreadsheetML / Flat ODS / UOS1 / HTML / plaintext  |
+| `0x50` | ZIP Archive   | XLSB or XLSX/M or ODS or UOS2 or plaintext          |
+| `0xFE` | UTF8 Text     | SpreadsheetML or Flat ODS or UOS1 or plaintext      |
+
+DBF files are detected based on the first byte as well as the third and fourth
+bytes (corresponding to month and day of the file date)
 
 ## Writing Options
 
@@ -997,6 +1002,7 @@ Despite the library name `xlsx`, it supports numerous spreadsheet file formats:
 | OpenDocument Spreadsheet (ODS)                               |  :o:  |  :o:  |
 | Flat XML ODF Spreadsheet (FODS)                              |  :o:  |  :o:  |
 | Uniform Office Format Spreadsheet (标文通 UOS1/UOS2)         |  :o:  |       |
+| dBASE II/III/IV / Visual FoxPro (DBF)                        |  :o:  |       |
 | **Other Common Spreadsheet Output Formats**                  |:-----:|:-----:|
 | HTML Tables                                                  |  :o:  |       |
 
@@ -1056,6 +1062,15 @@ add undocumented extensions.
 UOS is a very similar format, and it comes in 2 varieties corresponding to ODS
 and FODS respectively.  For the most part, the difference between the formats
 lies in the names of tags and attributes.
+
+### dBASE and Visual FoxPro (DBF)
+
+DBF is really a typed table format: each column can only hold one data type and
+each record omits type information.  The parser generates a header row and
+inserts records starting at the second row of the worksheet.
+
+Multi-file extensions like external memos and tables are currently unsupported,
+limited by the general ability to read arbitrary files in the web browser.
 
 ### Comma-Separated Values
 

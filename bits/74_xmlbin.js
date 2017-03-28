@@ -13,6 +13,16 @@ function parse_cs(data, name/*:string*/, opts, rels, wb, themes, styles)/*:Works
 	return parse_cs_xml((data/*:any*/), opts, rels, wb, themes, styles);
 }
 
+function parse_ms(data, name/*:string*/, opts, rels, wb, themes, styles)/*:Worksheet*/ {
+	if(name.slice(-4)===".bin") return parse_ms_bin((data/*:any*/), opts, rels, wb, themes, styles);
+	return parse_ms_xml((data/*:any*/), opts, rels, wb, themes, styles);
+}
+
+function parse_ds(data, name/*:string*/, opts, rels, wb, themes, styles)/*:Worksheet*/ {
+	if(name.slice(-4)===".bin") return parse_ds_bin((data/*:any*/), opts, rels, wb, themes, styles);
+	return parse_ds_xml((data/*:any*/), opts, rels, wb, themes, styles);
+}
+
 function parse_sty(data, name/*:string*/, themes, opts) {
 	if(name.slice(-4)===".bin") return parse_sty_bin((data/*:any*/), themes, opts);
 	return parse_sty_xml((data/*:any*/), themes, opts);

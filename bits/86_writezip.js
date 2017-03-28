@@ -23,6 +23,7 @@ function write_zip(wb/*:Workbook*/, opts/*:WriteOpts*/)/*:ZIP*/ {
 	opts.rels = {}; opts.wbrels = {};
 	opts.Strings = /*::((*/[]/*:: :any):SST)*/; opts.Strings.Count = 0; opts.Strings.Unique = 0;
 	var wbext = opts.bookType == "xlsb" ? "bin" : "xml";
+	var vbafmt = opts.bookType == "xlsb" || opts.bookType == "xlsm";
 	var ct = { workbooks: [], sheets: [], calcchains: [], themes: [], styles: [],
 		coreprops: [], extprops: [], custprops: [], strs:[], comments: [], vba: [],
 		TODO:[], rels:[], xmlns: "" };
@@ -88,6 +89,13 @@ function write_zip(wb/*:Workbook*/, opts/*:WriteOpts*/)/*:ZIP*/ {
 	zip.file(f, write_sty(wb, f, opts));
 	ct.styles.push(f);
 	add_rels(opts.wbrels, ++rId, "styles." + wbext, RELS.STY);
+
+	if(wb.vbaraw && vbafmt) {
+		f = "xl/vbaProject.bin";
+		zip.file(f, wb.vbaraw);
+		ct.vba.push(f);
+		add_rels(opts.wbrels, ++rId, "vbaProject.bin", RELS.VBA);
+	}
 
 	zip.file("[Content_Types].xml", write_ct(ct, opts));
 	zip.file('_rels/.rels', write_rels(opts.rels));

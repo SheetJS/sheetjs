@@ -1,5 +1,5 @@
 AutoFilter.xlsb
-BlankSheetTypes.xlsb.pending # macrosheets
+BlankSheetTypes.xlsb
 ErrorTypes.xlsb
 NumberFormatCondition.xlsb
 RkNumber.xlsb
@@ -496,7 +496,7 @@ xlrd_test_comments_gdocs.xlsx
 xlrd_text_bar.xlsx
 xlsx-stream-d-date-cell.xlsx
 חישוב_נקודות_זיכוי.xlsx
-BlankSheetTypes.xlsm.pending
+BlankSheetTypes.xlsm
 NumberFormatCondition.xlsm
 apachepoi_45431.xlsm
 apachepoi_47026.xlsm

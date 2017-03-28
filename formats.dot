@@ -24,6 +24,7 @@ digraph G {
 		node  [style=filled,color=cyan];
 		html  [label="HTML\nTable"];
 		csv   [label="CSV"];
+		dbf   [label="DBF"];
 	}
 
 	subgraph JSXLSX {
@@ -46,6 +47,7 @@ digraph G {
 		fods -> csf
 		csf -> fods
 		uos -> csf
+		dbf -> csf
 		html -> csf
 	}
 }

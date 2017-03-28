@@ -19,6 +19,7 @@ Despite the library name `xlsx`, it supports numerous spreadsheet file formats:
 | OpenDocument Spreadsheet (ODS)                               |  :o:  |  :o:  |
 | Flat XML ODF Spreadsheet (FODS)                              |  :o:  |  :o:  |
 | Uniform Office Format Spreadsheet (标文通 UOS1/UOS2)         |  :o:  |       |
+| dBASE II/III/IV / Visual FoxPro (DBF)                        |  :o:  |       |
 | **Other Common Spreadsheet Output Formats**                  |:-----:|:-----:|
 | HTML Tables                                                  |  :o:  |       |
 
@@ -78,6 +79,15 @@ add undocumented extensions.
 UOS is a very similar format, and it comes in 2 varieties corresponding to ODS
 and FODS respectively.  For the most part, the difference between the formats
 lies in the names of tags and attributes.
+
+### dBASE and Visual FoxPro (DBF)
+
+DBF is really a typed table format: each column can only hold one data type and
+each record omits type information.  The parser generates a header row and
+inserts records starting at the second row of the worksheet.
+
+Multi-file extensions like external memos and tables are currently unsupported,
+limited by the general ability to read arbitrary files in the web browser.
 
 ### Comma-Separated Values
 

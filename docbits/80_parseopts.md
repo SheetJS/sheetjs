@@ -63,7 +63,10 @@ file but Excel will know how to handle it.  This library applies similar logic:
 |:-------|:--------------|:----------------------------------------------------|
 | `0xD0` | CFB Container | BIFF 5/8 or password-protected XLSX/XLSB            |
 | `0x09` | BIFF Stream   | BIFF 2/3/4/5                                        |
-| `0x3C` | XML/HTML      | SpreadsheetML or Flat ODS or UOS1 or HTML           |
-| `0x50` | ZIP Archive   | XLSB or XLSX/M or ODS or UOS2                       |
-| `0xFE` | UTF8 Text     | SpreadsheetML or Flat ODS or UOS1                   |
+| `0x3C` | XML/HTML      | SpreadsheetML / Flat ODS / UOS1 / HTML / plaintext  |
+| `0x50` | ZIP Archive   | XLSB or XLSX/M or ODS or UOS2 or plaintext          |
+| `0xFE` | UTF8 Text     | SpreadsheetML or Flat ODS or UOS1 or plaintext      |
+
+DBF files are detected based on the first byte as well as the third and fourth
+bytes (corresponding to month and day of the file date)
 

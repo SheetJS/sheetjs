@@ -101,6 +101,7 @@ else opts.cellFormula = false;
 
 if(program.all) {
 	opts.cellFormula = true;
+	opts.bookVBA = true;
 	opts.cellNF = true;
 	opts.cellStyles = true;
 	opts.sheetStubs = true;

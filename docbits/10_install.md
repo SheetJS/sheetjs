@@ -28,6 +28,7 @@ The `demos` directory includes sample projects for:
 - [`angular`](demos/angular/)
 - [`browserify`](demos/browserify/)
 - [`Adobe ExtendScript`](demos/extendscript/)
+- [`phantomjs`](demos/phantomjs/)
 - [`requirejs`](demos/requirejs/)
 - [`systemjs`](demos/systemjs/)
 - [`webpack`](demos/webpack/)
