@@ -3805,7 +3805,7 @@ function parse_BOF(blob, length) {
 function parse_InterfaceHdr(blob, length) {
 	if(length === 0) return 0x04b0;
 	var q;
-	if((q=blob.read_shift(2))!==0x04b0) throw new Error("InterfaceHdr codePage " + q);
+	if((q=blob.read_shift(2))!==0x04b0){}
 	return 0x04b0;
 }
 
@@ -13486,6 +13486,38 @@ function parse_html(str, opts) {
 	ws['!ref'] = encode_range(range);
 	return o;
 }
+
+function parse_dom_table(table, opts) {
+	var ws = ({});
+	var rows = table.getElementsByTagName('tr');
+	var range = {s:{r:0,c:0},e:{r:rows.length - 1,c:0}};
+	var merges = [], midx = 0;
+	var R = 0, _C = 0, C = 0, RS = 0, CS = 0;
+	for(; R < rows.length; ++R) {
+		var row = rows[R];
+		var elts = row.children;
+		for(_C = C = 0; _C < elts.length; ++_C) {
+			var elt = elts[_C], v = elts[_C].innerText;
+			for(midx = 0; midx < merges.length; ++midx) {
+				var m = merges[midx];
+				if(m.s.c == C && m.s.r <= R && R <= m.e.r) { C = m.e.c+1; midx = -1; }
+			}
+			/* TODO: figure out how to extract nonstandard mso- style */
+			CS = +elt.getAttribute("colspan") || 1;
+			if((RS = +elt.getAttribute("rowspan"))>0) merges.push({s:{r:R,c:C},e:{r:R + RS - 1, c:C + CS - 1}});
+			var o = {t:'s', v:v};
+			if(!isNaN(Number(v))) o = {t:'n', v:Number(v)};
+			ws[encode_cell({c:C, r:R})] = o;
+			C += CS;
+		}
+	}
+	ws['!merges'] = merges;
+	return ws;
+}
+
+function table_to_book(table, opts) {
+	return sheet_to_workbook(parse_dom_table(table, opts), opts);
+}
 var parse_content_xml = (function() {
 
 	var parse_text_p = function(text, tag) {
@@ -14694,6 +14726,8 @@ var utils = {
 	make_json: sheet_to_json,
 	make_formulae: sheet_to_formulae,
 	aoa_to_sheet: aoa_to_sheet,
+	table_to_sheet: parse_dom_table,
+	table_to_book: table_to_book,
 	sheet_to_csv: sheet_to_csv,
 	sheet_to_json: sheet_to_json,
 	sheet_to_formulae: sheet_to_formulae,

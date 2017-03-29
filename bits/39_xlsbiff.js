@@ -158,7 +158,7 @@ function parse_BOF(blob, length) {
 function parse_InterfaceHdr(blob, length) {
 	if(length === 0) return 0x04b0;
 	var q;
-	if((q=blob.read_shift(2))!==0x04b0) throw new Error("InterfaceHdr codePage " + q);
+	if((q=blob.read_shift(2))!==0x04b0){}
 	return 0x04b0;
 }
 

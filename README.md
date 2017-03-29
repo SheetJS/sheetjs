@@ -43,6 +43,7 @@ with a unified JS representation, and ES3/ES5 browser compatibility back to IE6.
   * [Document Features](#document-features)
     + [Formulae](#formulae)
     + [Column Properties](#column-properties)
+    + [Hyperlinks](#hyperlinks)
 - [Parsing Options](#parsing-options)
   * [Input Type](#input-type)
   * [Guessing File Type](#guessing-file-type)
@@ -51,6 +52,7 @@ with a unified JS representation, and ES3/ES5 browser compatibility back to IE6.
   * [Output Type](#output-type)
 - [Utility Functions](#utility-functions)
   * [Array of Arrays Input](#array-of-arrays-input)
+  * [HTML Table Input](#html-table-input)
   * [Formulae Output](#formulae-output)
   * [CSV and general DSV Output](#csv-and-general-dsv-output)
   * [JSON](#json)
@@ -158,6 +160,13 @@ data and feeding it into the library.  Here are a few common scenarios:
 ```js
 if(typeof require !== 'undefined') XLSX = require('xlsx');
 var workbook = XLSX.readFile('test.xlsx');
+/* DO SOMETHING WITH workbook HERE */
+```
+
+- Browser DOM Table element:
+
+```js
+var worksheet = XLSX.utils.table_to_book(document.getElementById('tableau'));
 /* DO SOMETHING WITH workbook HERE */
 ```
 
@@ -449,7 +458,7 @@ for(var R = range.s.r; R <= range.e.r; ++R) {
 | `h` | HTML rendering of the rich text (if applicable)                        |
 | `c` | comments associated with the cell                                      |
 | `z` | number format string associated with the cell (if requested)           |
-| `l` | cell hyperlink object (.Target holds link, .tooltip is tooltip)        |
+| `l` | cell hyperlink object (.Target holds link, .Tooltip is tooltip)        |
 | `s` | the style/theme of the cell (if applicable)                            |
 
 Built-in export utilities (such as the CSV exporter) will use the `w` text if it
@@ -688,6 +697,23 @@ follow the priority order:
 2) use `wpx` pixel width if available
 3) use `wch` character count if available
 
+#### Hyperlinks
+
+Hyperlinks are stored in the `l` key of cell objects.  The `Target` field of the
+hyperlink object is the target of the link, including the URI fragment. Tooltips
+are stored in the `Tooltip` field and are displayed when you move your mouse
+over the text.
+
+For example, the following snippet creates a link from cell `A3` to
+<http://sheetjs.com> with the tip `"Find us @ SheetJS.com!"`:
+
+```js
+ws['A3'].l = { Target:"http://sheetjs.com", Tooltip:"Find us @ SheetJS.com!" };
+```
+
+Note that Excel does not automatically style hyperlinks -- they will generally
+be displayed as normal text.
+
 ## Parsing Options
 
 The exported `read` and `readFile` functions accept an options argument:
@@ -851,6 +877,33 @@ var ws = XLSX.utils.aoa_to_sheet([
 	[2,3,4,5,6,7,8]
 ]);
 ```
+
+### HTML Table Input
+
+`XLSX.utils.table_to_sheet` takes a table DOM element and returns a worksheet
+resembling the input table.  Numbers are parsed.  All other data will be stored
+as strings.
+
+`XLSX.utils.table_to_book` produces a minimal workbook based on the worksheet.
+
+To generate the example sheet, start with the HTML table:
+
+```html
+<table id="sheetjs">
+<tr><td>S</td><td>h</td><td>e</td><td>e</td><td>t</td><td>J</td><td>S</td></tr>
+<tr><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td><td>7</td></tr>
+<tr><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td><td>7</td><td>8</td></tr>
+</table>
+```
+
+To process the table:
+
+```js
+var tbl = document.getElementById('sheetjs');
+var wb = XLSX.utils.table_to_book(tbl);
+```
+
+Note: `XLSX.read` can handle HTML represented as strings.
 
 ### Formulae Output
 

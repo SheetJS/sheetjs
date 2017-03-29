@@ -11,6 +11,13 @@ var workbook = XLSX.readFile('test.xlsx');
 /* DO SOMETHING WITH workbook HERE */
 ```
 
+- Browser DOM Table element:
+
+```js
+var worksheet = XLSX.utils.table_to_book(document.getElementById('tableau'));
+/* DO SOMETHING WITH workbook HERE */
+```
+
 - ajax (for a more complete example that works in older browsers, check the demo
   at <http://oss.sheetjs.com/js-xlsx/ajax.html>):
 

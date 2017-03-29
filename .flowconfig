@@ -8,6 +8,7 @@
 .*/ctest/.*
 .*/misc/.*
 .*/perf/.*
+.*/_book/.*
 
 .*/demo/browser.js
 .*/shim.js

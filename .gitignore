@@ -1,5 +1,6 @@
 node_modules
 *.tgz
+_book/
 misc/coverage.html
 misc/prof.js
 v8.log

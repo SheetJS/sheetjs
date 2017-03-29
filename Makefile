@@ -173,6 +173,11 @@ README.md: $(READEPS)
 readme: README.md ## Update README Table of Contents
 	markdown-toc -i README.md
 
+.PHONY: book
+book: README.md ## Update summary for documentation
+	printf "# Summary\n\n- [xlsx](README.md#xlsx)\n" > misc/docs/SUMMARY.md
+	markdown-toc README.md | sed 's/(#/(README.md#/g'>> misc/docs/SUMMARY.md
+
 .PHONY: help
 help:
 	@grep -hE '(^[a-zA-Z_-][ a-zA-Z_-]*:.*?|^#[#*])' $(MAKEFILE_LIST) | bash misc/help.sh

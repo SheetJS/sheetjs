@@ -38,6 +38,33 @@ var ws = XLSX.utils.aoa_to_sheet([
 ]);
 ```
 
+### HTML Table Input
+
+`XLSX.utils.table_to_sheet` takes a table DOM element and returns a worksheet
+resembling the input table.  Numbers are parsed.  All other data will be stored
+as strings.
+
+`XLSX.utils.table_to_book` produces a minimal workbook based on the worksheet.
+
+To generate the example sheet, start with the HTML table:
+
+```html
+<table id="sheetjs">
+<tr><td>S</td><td>h</td><td>e</td><td>e</td><td>t</td><td>J</td><td>S</td></tr>
+<tr><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td><td>7</td></tr>
+<tr><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td><td>7</td><td>8</td></tr>
+</table>
+```
+
+To process the table:
+
+```js
+var tbl = document.getElementById('sheetjs');
+var wb = XLSX.utils.table_to_book(tbl);
+```
+
+Note: `XLSX.read` can handle HTML represented as strings.
+
 ### Formulae Output
 
 `XLSX.utils.sheet_to_formulae` generates an array of commands that represent
