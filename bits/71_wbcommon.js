@@ -37,7 +37,7 @@ var WBViewDef = [
 
 /* 18.2.19 (CT_Sheet) Defaults */
 var SheetDef = [
-	['state', 'visible']
+	//['state', 'visible']
 ];
 
 /* 18.2.2  (CT_CalcPr) Defaults */

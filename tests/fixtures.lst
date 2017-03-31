@@ -39,6 +39,11 @@
 ./test_files/column_width.xml
 ./test_files/column_width.xlsx
 ./test_files/column_width.xlsx
+./test_files/sheet_visibility.xls
+./test_files/sheet_visibility.xls
+./test_files/sheet_visibility.xml
+./test_files/sheet_visibility.xlsx
+./test_files/sheet_visibility.xlsb
 ./test_files/apachepoi_SimpleWithComments.xls
 ./test_files/2011/apachepoi_SimpleWithComments.xls.xml
 ./test_files/apachepoi_SimpleWithComments.xlsx

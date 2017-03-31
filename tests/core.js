@@ -63,6 +63,11 @@ var paths = {
 	cwxml:  dir + 'column_width.xml',
 	cwxlsx:  dir + 'column_width.xlsx',
 	cwxlsb:  dir + 'column_width.xlsx',
+	svxls:  dir + 'sheet_visibility.xls',
+	svxls5: dir + 'sheet_visibility.xls',
+	svxml:  dir + 'sheet_visibility.xml',
+	svxlsx: dir + 'sheet_visibility.xlsx',
+	svxlsb: dir + 'sheet_visibility.xlsb',
 	swcxls: dir + 'apachepoi_SimpleWithComments.xls',
 	swcxml: dir + '2011/apachepoi_SimpleWithComments.xls.xml',
 	swcxlsx: dir + 'apachepoi_SimpleWithComments.xlsx',
@@ -458,21 +463,54 @@ function hlink(wb) {
 
 
 describe('parse features', function() {
-	if(fs.existsSync(paths.swcxlsx)) it('should have comment as part of cell properties', function(){
-		var X = require(modp);
-		var sheet = 'Sheet1';
-		var wb1=X.read(fs.readFileSync(paths.swcxlsx), {type:"binary"});
-		var wb2=X.read(fs.readFileSync(paths.swcxlsb), {type:"binary"});
-		var wb3=X.read(fs.readFileSync(paths.swcxls), {type:"binary"});
-		var wb4=X.read(fs.readFileSync(paths.swcxml), {type:"binary"});
+	describe('sheet visibility', function() {
+		var wb1, wb2, wb3, wb4, wb5;
+		var bef = (function() {
+			wb1 = X.read(fs.readFileSync(paths.svxls), {type:"binary"});
+			wb2 = X.read(fs.readFileSync(paths.svxls5), {type:"binary"});
+			wb3 = X.read(fs.readFileSync(paths.svxml), {type:"binary"});
+			wb4 = X.read(fs.readFileSync(paths.svxlsx), {type:"binary"});
+			wb5 = X.read(fs.readFileSync(paths.svxlsb), {type:"binary"});
+		});
+		if(typeof before != 'undefined') before(bef);
+		else it('before', bef);
 
-		[wb1,wb2,wb3,wb4].map(function(wb) { return wb.Sheets[sheet]; }).forEach(function(ws, i) {
-			assert.equal(ws.B1.c.length, 1,"must have 1 comment");
-			assert.equal(ws.B1.c[0].a, "Yegor Kozlov","must have the same author");
-			assert.equal(ws.B1.c[0].t.replace(/\r\n/g,"\n").replace(/\r/g,"\n"), "Yegor Kozlov:\nfirst cell", "must have the concatenated texts");
-			if(i > 0) return;
-			assert.equal(ws.B1.c[0].r, '<r><rPr><b/><sz val="8"/><color indexed="81"/><rFont val="Tahoma"/></rPr><t>Yegor Kozlov:</t></r><r><rPr><sz val="8"/><color indexed="81"/><rFont val="Tahoma"/></rPr><t xml:space="preserve">\r\nfirst cell</t></r>', "must have the rich text representation");
-			assert.equal(ws.B1.c[0].h, '<span style="font-weight: bold;">Yegor Kozlov:</span><span style=""><br/>first cell</span>', "must have the html representation");
+		it('should detect visible sheets', function() {
+			[/*wb1, wb2, wb3, wb4,*/ wb5].forEach(function(wb) {
+				assert(!wb.Workbook.Sheets[0].Hidden);
+			});
+		});
+		it('should detect all hidden sheets', function() {
+			[/*wb1, wb2, wb3, wb4,*/ wb5].forEach(function(wb) {
+				assert(wb.Workbook.Sheets[1].Hidden);
+				assert(wb.Workbook.Sheets[2].Hidden);
+			});
+		});
+		it('should distinguish very hidden sheets', function() {
+			[/*wb1, wb2, wb3, wb4,*/ wb5].forEach(function(wb) {
+				assert.equal(wb.Workbook.Sheets[1].Hidden,1);
+				assert.equal(wb.Workbook.Sheets[2].Hidden,2);
+			});
+		});
+	});
+
+	describe('comments', function() {
+		if(fs.existsSync(paths.swcxlsx)) it('should have comment as part of cell properties', function(){
+			var X = require(modp);
+			var sheet = 'Sheet1';
+			var wb1=X.read(fs.readFileSync(paths.swcxlsx), {type:"binary"});
+			var wb2=X.read(fs.readFileSync(paths.swcxlsb), {type:"binary"});
+			var wb3=X.read(fs.readFileSync(paths.swcxls), {type:"binary"});
+			var wb4=X.read(fs.readFileSync(paths.swcxml), {type:"binary"});
+
+			[wb1,wb2,wb3,wb4].map(function(wb) { return wb.Sheets[sheet]; }).forEach(function(ws, i) {
+				assert.equal(ws.B1.c.length, 1,"must have 1 comment");
+				assert.equal(ws.B1.c[0].a, "Yegor Kozlov","must have the same author");
+				assert.equal(ws.B1.c[0].t.replace(/\r\n/g,"\n").replace(/\r/g,"\n"), "Yegor Kozlov:\nfirst cell", "must have the concatenated texts");
+				if(i > 0) return;
+				assert.equal(ws.B1.c[0].r, '<r><rPr><b/><sz val="8"/><color indexed="81"/><rFont val="Tahoma"/></rPr><t>Yegor Kozlov:</t></r><r><rPr><sz val="8"/><color indexed="81"/><rFont val="Tahoma"/></rPr><t xml:space="preserve">\r\nfirst cell</t></r>', "must have the rich text representation");
+				assert.equal(ws.B1.c[0].h, '<span style="font-weight: bold;">Yegor Kozlov:</span><span style=""><br/>first cell</span>', "must have the html representation");
+			});
 		});
 	});
 
@@ -838,6 +876,24 @@ describe('roundtrip features', function() {
 				var wb2 = X.read(X.write(wb1, {bookType:w[0], type:"binary"}), {type:"binary"});
 				hlink(wb1);
 				hlink(wb2);
+			});
+		});
+	});
+	describe('should preserve sheet visibility', function() { [
+			['xlml', paths.svxml],
+			['xlsx', paths.svxlsx],
+			['xlsb', paths.svxlsb]
+		].forEach(function(w) {
+			it(w[0], function() {
+				var wb1 = X.read(fs.readFileSync(w[1]), {type:"binary"});
+				var wb2 = X.read(X.write(wb1, {bookType:w[0], type:"binary"}), {type:"binary"});
+				var wbs1 = wb1.Workbook.Sheets;
+				var wbs2 = wb2.Workbook.Sheets;
+				assert.equal(wbs1.length, wbs2.length);
+				for(var i = 0; i < wbs1.length; ++i) {
+					assert.equal(wbs1[i].name, wbs2[i].name);
+					assert.equal(wbs1[i].Hidden, wbs2[i].Hidden);
+				}
 			});
 		});
 	});

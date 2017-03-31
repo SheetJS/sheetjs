@@ -17,9 +17,24 @@ type Workbook = {
 	Custprops?: any;
 	Themes?: any;
 
+	Workbook?: WBWBProps;
+
 	SSF?: {[n:number]:string};
 	cfb?: any;
 };
+
+type WorkbookProps = {
+	SheetNames?: Array<string>;
+}
+
+type WBWBProps = {
+	Sheets: Array<WBWSProp>;
+};
+
+type WBWSProp = {
+	Hidden?: number;
+	name?: string;
+}
 
 interface CellAddress {
 	r:number;

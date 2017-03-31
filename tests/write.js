@@ -80,6 +80,13 @@ console.log("JSON Data: "); console.log(XLSX.utils.sheet_to_json(ws, {header:1})
 console.log("Worksheet Model:")
 console.log(ws);
 
+/* TEST: hidden sheets */
+
+wb.SheetNames.push("Hidden");
+wb.Sheets["Hidden"] = XLSX.utils.aoa_to_sheet(["Hidden".split(""), [1,2,3]]);
+wb.Workbook = {Sheets:[]};
+wb.Workbook.Sheets[1] = {Hidden:1};
+
 /* write file */
 XLSX.writeFile(wb, 'sheetjs.xlsx', {bookSST:true});
 XLSX.writeFile(wb, 'sheetjs.xlsm');

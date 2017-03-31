@@ -186,6 +186,7 @@ function parse_xlml_xml(d, opts)/*:Workbook*/ {
 	var cstys = [], csty, seencol = false;
 	var arrayf = [];
 	var rowinfo = [];
+	var Workbook = { Sheets:[] }, wsprops = {};
 	xlmlregex.lastIndex = 0;
 	str = str.replace(/<!--([^\u2603]*?)-->/mg,"");
 	while((Rn = xlmlregex.exec(str))) switch(Rn[3]) {
@@ -260,6 +261,8 @@ function parse_xlml_xml(d, opts)/*:Workbook*/ {
 				mergecells = [];
 				arrayf = [];
 				rowinfo = [];
+				wsprops = {name:sheetname, Hidden:0};
+				Workbook.Sheets.push(wsprops);
 			}
 			break;
 		case 'Table':
@@ -484,8 +487,15 @@ function parse_xlml_xml(d, opts)/*:Workbook*/ {
 
 				/* WorksheetOptions */
 				case 'WorksheetOptions': switch(Rn[3]) {
+					case 'Visible':
+						if(Rn[0].slice(-2) === "/>"){}
+						else if(Rn[1]==="/") switch(str.slice(pidx, Rn.index)) {
+							case "SheetHidden": wsprops.Hidden = 1; break;
+							case "SheetVeryHidden": wsprops.Hidden = 2; break;
+						}
+						else pidx = Rn.index + Rn[0].length;
+						break;
 					case 'Unsynced': break;
-					case 'Visible': break;
 					case 'Print': break;
 					case 'Panes': break;
 					case 'Scale': break;
@@ -740,6 +750,7 @@ function parse_xlml_xml(d, opts)/*:Workbook*/ {
 	var out = ({}/*:any*/);
 	if(!opts.bookSheets && !opts.bookProps) out.Sheets = sheets;
 	out.SheetNames = sheetnames;
+	out.Workbook = Workbook;
 	out.SSF = SSF.get_table();
 	out.Props = Props;
 	out.Custprops = Custprops;
@@ -775,6 +786,22 @@ function write_wb_xlml(wb, opts) {
 function write_sty_xlml(wb, opts)/*:string*/ {
 	/* Styles */
 	return "";
+}
+/* WorksheetOptions */
+function write_ws_xlml_wsopts(ws/*:Worksheet*/, opts, idx/*:number*/, wb/*:Workbook*/)/*:string*/ {
+	var o = [];
+	/* PageSetup */
+	if(wb && wb.Workbook && wb.Workbook.Sheets && wb.Workbook.Sheets[idx]) {
+		/* Visible */
+		if(!!wb.Workbook.Sheets[idx].Hidden) o.push("<Visible>" + (wb.Workbook.Sheets[idx].Hidden == 1 ? "SheetHidden" : "SheetVeryHidden") + "</Visible>");
+		else {
+			/* Selected */
+			for(var i = 0; i < idx; ++i) if(wb.Workbook.Sheets[i] && !wb.Workbook.Sheets[i].Hidden) break;
+			if(i == idx) o.push("<Selected/>");
+		}
+	}
+	if(o.length == 0) return "";
+	return writextag("WorksheetOptions", o.join(""), {xmlns:XLMLNS.x});
 }
 /* TODO */
 function write_ws_xlml_cell(cell, ref, ws, opts, idx, wb, addr)/*:string*/{
@@ -861,7 +888,10 @@ function write_ws_xlml(idx/*:number*/, opts, wb/*:Workbook*/)/*:string*/ {
 	/* Table */
 	var t = ws ? write_ws_xlml_table(ws, opts, idx, wb) : "";
 	if(t.length > 0) o.push("<Table>" + t + "</Table>");
+
 	/* WorksheetOptions */
+	o.push(write_ws_xlml_wsopts(ws, opts, idx, wb));
+
 	return o.join("");
 }
 function write_xlml(wb, opts)/*:string*/ {

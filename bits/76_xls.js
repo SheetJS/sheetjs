@@ -98,6 +98,7 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 	var cell_valid = true;
 	var XFs = []; /* XF records */
 	var palette = [];
+	var Workbook = { Sheets:[] }, wsprops = {};
 	var get_rgb = function getrgb(icv) {
 		if(icv < 8) return XLSIcv[icv];
 		if(icv < 64) return palette[icv-8] || XLSIcv[icv];
@@ -269,6 +270,7 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 						if(objects.length > 0) out["!objects"] = objects;
 						if(colinfo.length > 0) out["!cols"] = colinfo;
 						if(rowinfo.length > 0) out["!rows"] = rowinfo;
+						Workbook.Sheets.push(wsprops);
 					}
 					if(cur_sheet === "") Preamble = out; else Sheets[cur_sheet] = out;
 					out = {};
@@ -285,6 +287,7 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 					if(file_depth++) break;
 					cell_valid = true;
 					out = {};
+
 					if(opts.biff < 5) {
 						if(cur_sheet === "") cur_sheet = "Sheet1";
 						range = {s:{r:0,c:0},e:{r:0,c:0}};
@@ -301,6 +304,7 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 					colinfo = []; rowinfo = [];
 					defwidth = defheight = 0;
 					seencol = false;
+					wsprops = {Hidden:(Directory[s]||{hs:0}).hs, name:cur_sheet };
 				} break;
 
 				case 'Number': case 'BIFF2NUM': case 'BIFF2INT': {
@@ -705,6 +709,7 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 	if(opts.enc) wb.Encryption = opts.enc;
 	wb.Metadata = {};
 	if(country !== undefined) wb.Metadata.Country = country;
+	wb.Workbook = Workbook;
 	return wb;
 }
 

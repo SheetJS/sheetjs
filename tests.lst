@@ -34,6 +34,7 @@ pivot_table_named_range.xlsb
 pivot_table_test.xlsb
 rich_text_stress.xlsb
 row_height.xlsb
+sheet_visibility.xlsb
 sized_boxen.xlsb
 smart_tags_2007.xlsb
 sushi.xlsb
@@ -199,7 +200,6 @@ apachepoi_DataTableCities.xlsx
 apachepoi_DataValidationEvaluations.xlsx
 apachepoi_DataValidations-49244.xlsx
 # apachepoi_DateFormatTests.xlsx # xlml
-apachepoi_DateFormatTests.xlsx.xlsx
 apachepoi_ElapsedFormatTests.xlsx
 apachepoi_ExcelTables.xlsx
 apachepoi_ForShifting.xlsx
@@ -288,6 +288,7 @@ apachepoi_workbookProtection_worksheet_protected.xlsx
 apachepoi_xlsx-jdbc.xlsx
 calendar_stress_test.xlsx.pending
 cell_style_simple.xlsx
+column_width.xlsx
 comments_stress_test.xlsx
 custom_properties.xlsx
 defined_names_simple.xlsx
@@ -407,6 +408,10 @@ roo_time-test.xlsx
 roo_whitespace.xlsx
 roo_x000D.xlsx
 roo_zero-padded-number.xlsx
+row_height.xlsx
+sheet_visibility.xlsx
+sheet_visibility_strict.xlsx
+sized_boxen.xlsx
 smart_tags_2007.xlsx
 spout-xlsx_attack_billion_laughs.xlsx
 spout-xlsx_attack_quadratic_blowup.xlsx
@@ -578,6 +583,7 @@ roo_time-test.ods
 roo_type_excel.ods
 roo_type_excelx.ods
 roo_whitespace.ods
+sheet_visibility.ods
 spout-ods_attack_billion_laughs.ods
 spout-ods_attack_quadratic_blowup.ods
 # spout-ods_file_corrupted.ods
@@ -1001,6 +1007,7 @@ apachepoi_xor-encryption-abc.xls.pending
 # apachepoi_yearfracExamples.xls # xlml
 calendar_stress_test.xls.pending
 cell_style_simple.xls
+column_width.xls
 comments_stress_test.xls
 custom_properties.xls
 defined_names_simple.xls
@@ -1233,6 +1240,10 @@ roo_time-test.xls
 roo_type_excelx.xls
 # roo_type_openoffice.xls # incorrect baseline
 roo_whitespace.xls
+row_height.xls
+sheet_visibility.xls
+sheet_visibility5.xls
+sized_boxen.xls
 smart_tags_2007.xls
 sushi.xls
 text_and_numbers.xls
@@ -1261,6 +1272,7 @@ RkNumber.xlsx.xml
 apachepoi_SampleSS.xml
 calendar_stress_test.xml.pending
 cell_style_simple.xml
+column_width.xml
 comments_stress_test.xls.xml
 comments_stress_test.xlsb.xml
 comments_stress_test.xlsx.xml
@@ -1327,12 +1339,15 @@ roo_formula_parse_error.xml
 # roo_numbers1.xml # SSF TODO
 roo_only_one_sheet.xml
 roo_paragraph.xml
+# roo_sheet1.xml
 # roo_simple_spreadsheet.xml # SSF TODO
 # roo_simple_spreadsheet_from_italo.xml # SSF TODO
 roo_style.xml
 # roo_time-test.xml # SSF TODO
 # roo_whitespace.xml # SSF TODO
-# roo_sheet1.xml
+row_height.xml
+sheet_visibility.xml
+sized_boxen.xml
 smart_tags_2007.xml
 sushi.xml
 text_and_numbers.xml

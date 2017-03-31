@@ -35,8 +35,8 @@ function parse_ext_props(data, p) {
 		var v = parseVector(q.HeadingPairs);
 		var parts = parseVector(q.TitlesOfParts).map(function(x) { return x.v; });
 		var idx = 0, len = 0;
-		for(var i = 0; i !== v.length; ++i) {
-			len = +(v[++i].v);
+		for(var i = 0; i !== v.length; i+=2) {
+			len = +(v[i+1].v);
 			switch(v[i].v) {
 				case "Worksheets":
 				case "工作表":
@@ -69,6 +69,7 @@ function parse_ext_props(data, p) {
 			idx += len;
 		}
 	}
+
 	return p;
 }
 

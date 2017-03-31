@@ -179,6 +179,7 @@ function prep_blob(blob, pos/*:number*/) {
 }
 
 function parsenoop(blob, length/*:number*/) { blob.l += length; }
+function parsenooplog(blob, length/*:number*/) { if(typeof console != 'undefined') console.log(blob.slice(blob.l, blob.l + length)); blob.l += length; }
 
 function writenoop(blob, length/*:number*/) { blob.l += length; }
 

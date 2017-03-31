@@ -303,7 +303,7 @@ function write_ws_xml_data(ws/*:Worksheet*/, opts, idx/*:number*/, wb/*:Workbook
 			if((cell = write_ws_xml_cell(ws[ref], ref, ws, opts, idx, wb)) != null) r.push(cell);
 		}
 		if(r.length > 0) {
-			var params = {r:rr}
+			var params = ({r:rr}/*:any*/);
 			if(rows && rows[R]) {
 				var row = rows[R];
 				if(row.hidden) params.hidden = 1;

@@ -1,7 +1,7 @@
 /* [MS-XLSB] 2.4.301 BrtBundleSh */
 function parse_BrtBundleSh(data, length/*:number*/) {
 	var z = {};
-	z.hsState = data.read_shift(4); //ST_SheetState
+	z.Hidden = data.read_shift(4); //hsState ST_SheetState
 	z.iTabID = data.read_shift(4);
 	z.strRelID = parse_RelID(data,length-8);
 	z.name = parse_XLWideString(data);
@@ -9,7 +9,7 @@ function parse_BrtBundleSh(data, length/*:number*/) {
 }
 function write_BrtBundleSh(data, o) {
 	if(!o) o = new_buf(127);
-	o.write_shift(4, data.hsState);
+	o.write_shift(4, data.Hidden);
 	o.write_shift(4, data.iTabID);
 	write_RelID(data.strRelID, o);
 	write_XLWideString(data.name.substr(0,31), o);
@@ -138,7 +138,8 @@ function parse_wb_bin(data, opts)/*:WorkbookFile*/ {
 function write_BUNDLESHS(ba, wb, opts) {
 	write_record(ba, "BrtBeginBundleShs");
 	for(var idx = 0; idx != wb.SheetNames.length; ++idx) {
-		var d = { hsState: 0, iTabID: idx+1, strRelID: 'rId' + (idx+1), name: wb.SheetNames[idx] };
+		var viz = wb.Workbook && wb.Workbook.Sheets && wb.Workbook.Sheets[idx] && wb.Workbook.Sheets[idx].Hidden || 0;
+		var d = { Hidden: viz, iTabID: idx+1, strRelID: 'rId' + (idx+1), name: wb.SheetNames[idx] };
 		write_record(ba, "BrtBundleSh", write_BrtBundleSh(d));
 	}
 	write_record(ba, "BrtEndBundleShs");
@@ -156,9 +157,34 @@ function write_BrtFileVersion(data, o) {
 	return o.length > o.l ? o.slice(0, o.l) : o;
 }
 
+/* [MS-XLSB] 2.4.298 BrtBookView */
+function write_BrtBookView(idx, o) {
+	if(!o) o = new_buf(29);
+	o.write_shift(-4, 0);
+	o.write_shift(-4, 460);
+	o.write_shift(4,  28800);
+	o.write_shift(4,  17600);
+	o.write_shift(4,  500);
+	o.write_shift(4,  idx);
+	o.write_shift(4,  idx);
+	var flags = 0x78;
+	o.write_shift(1,  flags);
+	return o.length > o.l ? o.slice(0, o.l) : o;
+}
+
 /* [MS-XLSB] 2.1.7.60 Workbook */
 function write_BOOKVIEWS(ba, wb, opts) {
+	/* required if hidden tab appears before visible tab */
+	if(!wb.Workbook || !wb.Workbook.Sheets) return;
+	var sheets = wb.Workbook.Sheets;
+	var i = 0, vistab = -1, hidden = -1;
+	for(; i < sheets.length; ++i) {
+		if(!sheets[i] || !sheets[i].Hidden && vistab == -1) vistab = i;
+		else if(sheets[i].Hidden == 1 && hidden == -1) hidden = i;
+	}
+	if(hidden > vistab) return;
 	write_record(ba, "BrtBeginBookViews");
+	write_record(ba, "BrtBookView", write_BrtBookView(vistab));
 	/* 1*(BrtBookView *FRT) */
 	write_record(ba, "BrtEndBookViews");
 }
@@ -192,7 +218,7 @@ function write_wb_bin(wb, opts) {
 	write_record(ba, "BrtWbProp", write_BrtWbProp());
 	/* [ACABSPATH] */
 	/* [[BrtBookProtectionIso] BrtBookProtection] */
-	/* write_BOOKVIEWS(ba, wb, opts); */
+	write_BOOKVIEWS(ba, wb, opts);
 	write_BUNDLESHS(ba, wb, opts);
 	/* [FNGROUP] */
 	/* [EXTERNALS] */

@@ -24,6 +24,7 @@
     + [Formulae](README.md#formulae)
     + [Column Properties](README.md#column-properties)
     + [Hyperlinks](README.md#hyperlinks)
+    + [Sheet Visibility](README.md#sheet-visibility)
 - [Parsing Options](README.md#parsing-options)
   * [Input Type](README.md#input-type)
   * [Guessing File Type](README.md#guessing-file-type)
