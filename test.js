@@ -989,8 +989,8 @@ describe('roundtrip features', function() {
 
 	describe('should preserve hyperlink', function() { [
 			['xlml', paths.hlxml],
-			//['xlsx', paths.hlxlsx], // TODO
-			//['xlsb', paths.hlxlsb] // TODO
+			['xlsx', paths.hlxlsx],
+			['xlsb', paths.hlxlsb]
 		].forEach(function(w) {
 			it(w[0], function() {
 				var wb1 = X.readFile(w[1]);

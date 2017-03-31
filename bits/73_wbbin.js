@@ -24,10 +24,11 @@ function parse_BrtWbProp(data, length) {
 	return [dwThemeVersion, strName];
 }
 function write_BrtWbProp(data, o) {
-	if(!o) o = new_buf(8);
+	if(!o) o = new_buf(68);
 	o.write_shift(4, 0);
 	o.write_shift(4, 0);
-	return o;
+	write_XLSBCodeName("ThisWorkbook", o);
+	return o.slice(0, o.l);
 }
 
 function parse_BrtFRTArchID$(data, length) {
@@ -47,12 +48,12 @@ function parse_BrtName(data, length, opts) {
 	var name = parse_XLNameWideString(data);
 	var formula = parse_XLSBNameParsedFormula(data, 0, opts);
 	var comment = parse_XLNullableWideString(data);
-	if(0 /* fProc */) {
+	//if(0 /* fProc */) {
 		// unusedstring1: XLNullableWideString
 		// description: XLNullableWideString
 		// helpTopic: XLNullableWideString
 		// unusedstring2: XLNullableWideString
-	}
+	//}
 	data.l = end;
 	return {Name:name, Ptg:formula, Comment:comment};
 }
@@ -188,22 +189,22 @@ function write_wb_bin(wb, opts) {
 	write_record(ba, "BrtBeginBook");
 	write_record(ba, "BrtFileVersion", write_BrtFileVersion());
 	/* [[BrtFileSharingIso] BrtFileSharing] */
-	if(0) write_record(ba, "BrtWbProp", write_BrtWbProp());
+	write_record(ba, "BrtWbProp", write_BrtWbProp());
 	/* [ACABSPATH] */
 	/* [[BrtBookProtectionIso] BrtBookProtection] */
-	if(0) write_BOOKVIEWS(ba, wb, opts);
+	/* write_BOOKVIEWS(ba, wb, opts); */
 	write_BUNDLESHS(ba, wb, opts);
 	/* [FNGROUP] */
 	/* [EXTERNALS] */
 	/* *BrtName */
-	if(0) write_record(ba, "BrtCalcProp", write_BrtCalcProp());
+	/* write_record(ba, "BrtCalcProp", write_BrtCalcProp()); */
 	/* [BrtOleSize] */
 	/* *(BrtUserBookView *FRT) */
 	/* [PIVOTCACHEIDS] */
 	/* [BrtWbFactoid] */
 	/* [SMARTTAGTYPES] */
 	/* [BrtWebOpt] */
-	if(0) write_record(ba, "BrtFileRecover", write_BrtFileRecover());
+	/* write_record(ba, "BrtFileRecover", write_BrtFileRecover()); */
 	/* [WEBPUBITEMS] */
 	/* [CRERRS] */
 	/* FRTWORKBOOK */

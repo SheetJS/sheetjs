@@ -1,14 +1,3 @@
-function add_rels(rels, rId, f, type, relobj) {
-	if(!relobj) relobj = {};
-	if(!rels['!id']) rels['!id'] = {};
-	relobj.Id = 'rId' + rId;
-	relobj.Type = type;
-	relobj.Target = f;
-	if(rels['!id'][relobj.Id]) throw new Error("Cannot rewrite rId " + rId);
-	rels['!id'][relobj.Id] = relobj;
-	rels[('/' + relobj.Target).replace("//","/")] = relobj;
-}
-
 function write_zip(wb/*:Workbook*/, opts/*:WriteOpts*/)/*:ZIP*/ {
 	if(opts.bookType == "ods") return write_ods(wb, opts);
 	if(wb && !wb.SSF) {
@@ -64,9 +53,11 @@ function write_zip(wb/*:Workbook*/, opts/*:WriteOpts*/)/*:ZIP*/ {
 
 	for(rId=1;rId <= wb.SheetNames.length; ++rId) {
 		f = "xl/worksheets/sheet" + rId + "." + wbext;
-		zip.file(f, write_ws(rId-1, f, opts, wb));
+		var wsrels = {'!id':{}};
+		zip.file(f, write_ws(rId-1, f, opts, wb, wsrels));
 		ct.sheets.push(f);
 		add_rels(opts.wbrels, rId, "worksheets/sheet" + rId + "." + wbext, RELS.WS[0]);
+		if(wsrels['!id'].rId1) zip.file(get_rels_path(f), write_rels(wsrels)); // get_rels_path('')
 	}
 
 	if(opts.Strings != null && opts.Strings.length > 0) {
@@ -98,7 +89,7 @@ function write_zip(wb/*:Workbook*/, opts/*:WriteOpts*/)/*:ZIP*/ {
 	}
 
 	zip.file("[Content_Types].xml", write_ct(ct, opts));
-	zip.file('_rels/.rels', write_rels(opts.rels));
-	zip.file('xl/_rels/workbook.' + wbext + '.rels', write_rels(opts.wbrels));
+	zip.file('_rels/.rels', write_rels(opts.rels)); // get_rels_path('')
+	zip.file('xl/_rels/workbook.' + wbext + '.rels', write_rels(opts.wbrels)); // get_rels_path("xl/workbook." + wbext)
 	return zip;
 }

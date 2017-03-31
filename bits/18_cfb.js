@@ -30,7 +30,7 @@ type SectorList = {
 /* [MS-CFB] v20130118 */
 var CFB = (function _CFB(){
 var exports = {};
-exports.version = '0.11.0';
+exports.version = '0.11.1';
 function parse(file) {
 var mver = 3; // major version
 var ssz = 512; // sector size
@@ -51,7 +51,7 @@ var mv = check_get_mver(blob);
 mver = mv[0];
 switch(mver) {
 	case 3: ssz = 512; break; case 4: ssz = 4096; break;
-	default: throw "Major Version: Expected 3 or 4 saw " + mver;
+	default: throw new Error("Major Version: Expected 3 or 4 saw " + mver);
 }
 
 /* reprocess header */
@@ -63,7 +63,7 @@ check_shifts(blob, mver);
 
 // Number of Directory Sectors
 var nds = blob.read_shift(4, 'i');
-if(mver === 3 && nds !== 0) throw '# Directory Sectors: Expected 0 saw ' + nds;
+if(mver === 3 && nds !== 0) throw new Error('# Directory Sectors: Expected 0 saw ' + nds);
 
 // Number of FAT Sectors
 //var nfs = blob.read_shift(4, 'i');
@@ -149,13 +149,14 @@ function check_shifts(blob, mver) {
 	var shift = 0x09;
 
 	// Byte Order
-	blob.chk('feff', 'Byte Order: ');
+	//blob.chk('feff', 'Byte Order: '); // note: some writers put 0xffff
+	blob.l += 2;
 
 	// Sector Shift
 	switch((shift = blob.read_shift(2))) {
-		case 0x09: if(mver !== 3) throw 'MajorVersion/SectorShift Mismatch'; break;
-		case 0x0c: if(mver !== 4) throw 'MajorVersion/SectorShift Mismatch'; break;
-		default: throw 'Sector Shift: Expected 9 or 12 saw ' + shift;
+		case 0x09: if(mver != 3) throw new Error('Sector Shift: Expected 9 saw ' + shift); break;
+		case 0x0c: if(mver != 4) throw new Error('Sector Shift: Expected 12 saw ' + shift); break;
+		default: throw new Error('Sector Shift: Expected 9 or 12 saw ' + shift);
 	}
 
 	// Mini Sector Shift
@@ -237,7 +238,7 @@ function make_find_path(FullPaths, Paths, FileIndex, files, root_name) {
 function sleuth_fat(idx, cnt, sectors, ssz, fat_addrs) {
 	var q;
 	if(idx === ENDOFCHAIN) {
-		if(cnt !== 0) throw "DIFAT chain shorter than expected";
+		if(cnt !== 0) throw new Error("DIFAT chain shorter than expected");
 	} else if(idx !== -1 /*FREESECT*/) {
 		var sector = sectors[idx], m = (ssz>>>2)-1;
 		if(!sector) return;
@@ -263,7 +264,7 @@ function get_sector_list(sectors, start, fat_addrs, ssz, chkd) {
 		buf_chain.push(sectors[j]);
 		var addr = fat_addrs[Math.floor(j*4/ssz)];
 		jj = ((j*4) & modulus);
-		if(ssz < 4 + jj) throw "FAT boundary crossed: " + j + " 4 "+ssz;
+		if(ssz < 4 + jj) throw new Error("FAT boundary crossed: " + j + " 4 "+ssz);
 		if(!sectors[addr]) break;
 		j = __readInt32LE(sectors[addr], jj);
 	}
@@ -286,7 +287,7 @@ function make_sector_list(sectors, dir_start, fat_addrs, ssz/*:number*/)/*:any*/
 			buf_chain.push(sectors[j]);
 			var addr = fat_addrs[Math.floor(j*4/ssz)];
 			jj = ((j*4) & modulus);
-			if(ssz < 4 + jj) throw "FAT boundary crossed: " + j + " 4 "+ssz;
+			if(ssz < 4 + jj) throw new Error("FAT boundary crossed: " + j + " 4 "+ssz);
 			if(!sectors[addr]) break;
 			j = __readInt32LE(sectors[addr], jj);
 		}

@@ -15,6 +15,7 @@ FLOWAUX=$(patsubst %.js,%.flow.js,$(AUXTARGETS))
 AUXSCPTS=xlsxworker1.js xlsxworker2.js xlsxworker.js
 FLOWTGTS=$(TARGET) $(AUXTARGETS) $(AUXSCPTS)
 UGLIFYOPTS=--support-ie8
+CLOSURE=/usr/local/lib/node_modules/google-closure-compiler/compiler.jar
 
 ## Main Targets
 
@@ -144,6 +145,7 @@ lint: $(TARGET) $(AUXTARGETS) ## Run jshint and jscs checks
 	@jshint --show-non-errors package.json bower.json
 	@jshint --show-non-errors --extract=always $(HTMLLINT)
 	@jscs $(TARGET) $(AUXTARGETS)
+	if [ -e $(CLOSURE) ]; then java -jar $(CLOSURE) $(REQS) $(FLOWTARGET) --jscomp_warning=reportUnknownTypes >/dev/null; fi
 
 .PHONY: flow
 flow: lint ## Run flow checker

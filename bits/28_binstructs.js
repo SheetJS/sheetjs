@@ -18,9 +18,9 @@ function parse_RichStr(data, length/*:number*/)/*:XLString*/ {
 		z.r = rgsStrRun;
 	}
 	else z.r = "<t>" + escapexml(str) + "</t>";
-	if((flags & 2) !== 0) { /* fExtStr */
-		/* TODO: phonetic string */
-	}
+	//if((flags & 2) !== 0) { /* fExtStr */
+	//	/* TODO: phonetic string */
+	//}
 	data.l = start + length;
 	return z;
 }
@@ -50,7 +50,8 @@ function write_XLSBCell(cell/*:any*/, o/*:?Block*/) {
 
 
 /* [MS-XLSB] 2.5.21 */
-function parse_XLSBCodeName (data, length) { return parse_XLWideString(data, length); }
+var parse_XLSBCodeName = parse_XLWideString;
+var write_XLSBCodeName = write_XLWideString;
 
 /* [MS-XLSB] 2.5.166 */
 function parse_XLNullableWideString(data)/*:string*/ {

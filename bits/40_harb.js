@@ -63,7 +63,7 @@ function dbf_to_aoa(buf, opts)/*:AOA*/ {
 		case 0x83: memo = true; break;
 		case 0x8B: memo = true; break;
 		case 0xF5: memo = true; break;
-		default: process.exit(); throw new Error("DBF Unsupported Version: " + ft.toString(16));
+		default: throw new Error("DBF Unsupported Version: " + ft.toString(16));
 	}
 	var filedate = new Date(d.read_shift(1) + 1900, d.read_shift(1) - 1, d.read_shift(1));
 	var nrow = d.read_shift(4);

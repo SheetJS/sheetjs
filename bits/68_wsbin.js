@@ -58,6 +58,14 @@ function parse_BrtWsProp(data, length) {
 	z.name = parse_XLSBCodeName(data, length - 19);
 	return z;
 }
+function write_BrtWsProp(str, o) {
+	if(o == null) o = new_buf(80+4*str.length);
+	for(var i = 0; i < 11; ++i) o.write_shift(1,0);
+	o.write_shift(-4,-1);
+	o.write_shift(-4,-1);
+	write_XLSBCodeName(str, o);
+	return o.slice(0, o.l);
+}
 
 /* [MS-XLSB] 2.4.303 BrtCellBlank */
 function parse_BrtCellBlank(data, length) {
@@ -227,6 +235,17 @@ function parse_BrtHLink(data, length, opts) {
 	var display = parse_XLWideString(data);
 	data.l = end;
 	return {rfx:rfx, relId:relId, loc:loc, Tooltip:tooltip, display:display};
+}
+function write_BrtHLink(l, rId, o) {
+	if(o == null) o = new_buf(50+4*l[1].Target.length);
+	write_UncheckedRfX({s:decode_cell(l[0]), e:decode_cell(l[0])}, o);
+	write_RelID("rId" + rId, o);
+	var locidx = l[1].Target.indexOf("#");
+	var location = locidx == -1 ? "" : l[1].Target.substr(locidx+1);
+	write_XLWideString(location || "", o);
+	write_XLWideString(l[1].Tooltip || "", o);
+	write_XLWideString("", o);
+	return o.slice(0, o.l);
 }
 
 /* [MS-XLSB] 2.4.6 BrtArrFmla */
@@ -533,7 +552,7 @@ function parse_ws_bin(data, opts, rels, wb, themes, styles)/*:Worksheet*/ {
 }
 
 /* TODO: something useful -- this is a stub */
-function write_ws_bin_cell(ba/*:BufArray*/, cell/*:Cell*/, R/*:number*/, C/*:number*/, opts) {
+function write_ws_bin_cell(ba/*:BufArray*/, cell/*:Cell*/, R/*:number*/, C/*:number*/, opts, ws/*:Worksheet*/) {
 	if(cell.v === undefined) return "";
 	var vv = ""; var olddate = null;
 	switch(cell.t) {
@@ -550,6 +569,7 @@ function write_ws_bin_cell(ba/*:BufArray*/, cell/*:Cell*/, R/*:number*/, C/*:num
 	var o/*:any*/ = ({r:R, c:C}/*:any*/);
 	/* TODO: cell style */
 	//o.s = get_cell_style(opts.cellXfs, cell, opts);
+	if(cell.l) ws['!links'].push([encode_cell(o), cell.l]);
 	switch(cell.t) {
 		case 's': case 'str':
 			if(opts.bookSST) {
@@ -590,7 +610,7 @@ function write_CELLTABLE(ba, ws/*:Worksheet*/, idx/*:number*/, opts, wb/*:Workbo
 			ref = cols[C] + rr;
 			if(!ws[ref]) continue;
 			/* write cell */
-			write_ws_bin_cell(ba, ws[ref], R, C, opts);
+			write_ws_bin_cell(ba, ws[ref], R, C, opts, ws);
 		}
 	}
 	write_record(ba, 'BrtEndSheetData');
@@ -610,12 +630,23 @@ function write_COLINFOS(ba, ws/*:Worksheet*/, idx/*:number*/, opts, wb/*:Workboo
 	write_record(ba, 'BrtEndColInfos');
 }
 
-function write_ws_bin(idx/*:number*/, opts, wb/*:Workbook*/) {
+function write_HLINKS(ba, ws/*:Worksheet*/, rels) {
+	/* *BrtHLink */
+	ws['!links'].forEach(function(l) {
+		if(!l[1].Target) return;
+		var rId = add_rels(rels, -1, l[1].Target.replace(/#.*$/, ""), RELS.HLINK);
+		write_record(ba, "BrtHLink", write_BrtHLink(l, rId));
+	});
+	delete ws['!links'];
+}
+
+function write_ws_bin(idx/*:number*/, opts, wb/*:Workbook*/, rels) {
 	var ba = buf_array();
 	var s = wb.SheetNames[idx], ws = wb.Sheets[s] || {};
 	var r = safe_decode_range(ws['!ref'] || "A1");
+	ws['!links'] = [];
 	write_record(ba, "BrtBeginSheet");
-	/* [BrtWsProp] */
+	write_record(ba, "BrtWsProp", write_BrtWsProp(s));
 	write_record(ba, "BrtWsDim", write_BrtWsDim(r));
 	/* [WSVIEWS2] */
 	/* [WSFMTINFO] */
@@ -633,7 +664,7 @@ function write_ws_bin(idx/*:number*/, opts, wb/*:Workbook*/) {
 	/* [BrtPhoneticInfo] */
 	/* *CONDITIONALFORMATTING */
 	/* [DVALS] */
-	/* *BrtHLink */
+	write_HLINKS(ba, ws, rels);
 	/* [BrtPrintOptions] */
 	/* [BrtMargins] */
 	/* [BrtPageSetup] */

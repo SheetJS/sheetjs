@@ -155,6 +155,7 @@ function write_ws_xml_cell(cell, ref, ws, opts, idx, wb) {
 		var ff = cell.F && cell.F.substr(0, ref.length) == ref ? {t:"array", ref:cell.F} : null;
 		v = writextag('f', escapexml(cell.f), ff) + (cell.v != null ? v : "");
 	}
+	if(cell.l) ws['!links'].push([ref, cell.l]);
 	return writextag('c', v, o);
 }
 
@@ -290,7 +291,7 @@ return function parse_ws_xml_data(sdata, s, opts, guess, themes, styles) {
 	}
 }; })();
 
-function write_ws_xml_data(ws/*:Worksheet*/, opts, idx/*:number*/, wb/*:Workbook*/)/*:string*/ {
+function write_ws_xml_data(ws/*:Worksheet*/, opts, idx/*:number*/, wb/*:Workbook*/, rels)/*:string*/ {
 	var o = [], r = [], range = safe_decode_range(ws['!ref']), cell, ref, rr = "", cols = [], R=0, C=0;
 	for(C = range.s.c; C <= range.e.c; ++C) cols[C] = encode_col(C);
 	for(R = range.s.r; R <= range.e.r; ++R) {
@@ -311,26 +312,42 @@ var WS_XML_ROOT = writextag('worksheet', null, {
 	'xmlns:r': XMLNS.r
 });
 
-function write_ws_xml(idx/*:number*/, opts, wb/*:Workbook*/)/*:string*/ {
+function write_ws_xml(idx/*:number*/, opts, wb/*:Workbook*/, rels)/*:string*/ {
 	var o = [XML_HEADER, WS_XML_ROOT];
 	var s = wb.SheetNames[idx], sidx = 0, rdata = "";
 	var ws = wb.Sheets[s];
 	if(ws === undefined) ws = {};
 	var ref = ws['!ref']; if(ref === undefined) ref = 'A1';
+	if(!rels) rels = {};
+
+	o[o.length] = (writextag('sheetPr', null, {'codeName': escapexml(wb.SheetNames[idx])}));
 	o[o.length] = (writextag('dimension', null, {'ref': ref}));
 
 	if(ws['!cols'] !== undefined && ws['!cols'].length > 0) o[o.length] = (write_ws_xml_cols(ws, ws['!cols']));
 	o[sidx = o.length] = '<sheetData/>';
+	ws['!links'] = [];
 	if(ws['!ref'] != null) {
-		rdata = write_ws_xml_data(ws, opts, idx, wb);
+		rdata = write_ws_xml_data(ws, opts, idx, wb, rels);
 		if(rdata.length > 0) o[o.length] = (rdata);
 	}
 	if(o.length>sidx+1) { o[o.length] = ('</sheetData>'); o[sidx]=o[sidx].replace("/>",">"); }
 
 	if(ws['!merges'] != null && ws['!merges'].length > 0) o[o.length] = (write_ws_xml_merges(ws['!merges']));
 
-	if(o.length>2) { o[o.length] = ('</worksheet>'); o[1]=o[1].replace("/>",">"); }
-
+	var relc = -1, rel;
+	if(ws['!links'].length > 0) {
+		o[o.length] = "<hyperlinks>";
+		ws['!links'].forEach(function(l) {
+			if(!l[1].Target) return;
+			var rId = add_rels(rels, -1, escapexml(l[1].Target).replace(/#.*$/, ""), RELS.HLINK);
+			rel = ({"ref":l[0], "r:id":"rId"+rId}/*:any*/);
+			if((relc = l[1].Target.indexOf("#")) > -1) rel.location = escapexml(l[1].Target.substr(relc+1));
+			if(l[1].Tooltip) rel.tooltip = escapexml(l[1].Tooltip);
+			o[o.length] = writextag("hyperlink",null,rel);
+		});
+		o[o.length] = "</hyperlinks>";
+	}
 	delete ws['!links'];
+	if(o.length>2) { o[o.length] = ('</worksheet>'); o[1]=o[1].replace("/>",">"); }
 	return o.join("");
 }
