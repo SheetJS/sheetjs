@@ -17,6 +17,7 @@
   * [Cell Object](README.md#cell-object)
     + [Data Types](README.md#data-types)
     + [Dates](README.md#dates)
+  * [Sheet Objects](README.md#sheet-objects)
   * [Worksheet Object](README.md#worksheet-object)
   * [Chartsheet Object](README.md#chartsheet-object)
   * [Workbook Object](README.md#workbook-object)

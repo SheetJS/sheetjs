@@ -476,18 +476,18 @@ describe('parse features', function() {
 		else it('before', bef);
 
 		it('should detect visible sheets', function() {
-			[/*wb1, wb2, wb3, wb4,*/ wb5].forEach(function(wb) {
+			[wb1, wb2, wb3, wb4, wb5].forEach(function(wb) {
 				assert(!wb.Workbook.Sheets[0].Hidden);
 			});
 		});
 		it('should detect all hidden sheets', function() {
-			[/*wb1, wb2, wb3, wb4,*/ wb5].forEach(function(wb) {
+			[wb1, wb2, wb3, wb4, wb5].forEach(function(wb) {
 				assert(wb.Workbook.Sheets[1].Hidden);
 				assert(wb.Workbook.Sheets[2].Hidden);
 			});
 		});
 		it('should distinguish very hidden sheets', function() {
-			[/*wb1, wb2, wb3, wb4,*/ wb5].forEach(function(wb) {
+			[wb1, wb2, wb3, wb4, wb5].forEach(function(wb) {
 				assert.equal(wb.Workbook.Sheets[1].Hidden,1);
 				assert.equal(wb.Workbook.Sheets[2].Hidden,2);
 			});

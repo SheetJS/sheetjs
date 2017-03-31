@@ -37,6 +37,7 @@ with a unified JS representation, and ES3/ES5 browser compatibility back to IE6.
   * [Cell Object](#cell-object)
     + [Data Types](#data-types)
     + [Dates](#dates)
+  * [Sheet Objects](#sheet-objects)
   * [Worksheet Object](#worksheet-object)
   * [Chartsheet Object](#chartsheet-object)
   * [Workbook Object](#workbook-object)
@@ -522,21 +523,20 @@ string.  The formatter converts the date back to a number.
 The default behavior for all parsers is to generate number cells.  Setting
 `cellDates` to true will force the generators to store dates.
 
-### Worksheet Object
+### Sheet Objects
 
 Each key that does not start with `!` maps to a cell (using `A-1` notation)
 
-`worksheet[address]` returns the cell object for the specified address.
+`sheet[address]` returns the cell object for the specified address.
 
-Special worksheet keys (accessible as `worksheet[key]`, each starting with `!`):
+Special sheet keys (accessible as `sheet[key]`, each starting with `!`):
 
-- `ws['!ref']`: A-1 based range representing the worksheet range. Functions that
+- `sheet['!ref']`: A-1 based range representing the sheet range. Functions that
   work with sheets should use this parameter to determine the range.  Cells that
   are assigned outside of the range are not processed.  In particular, when
-  writing a worksheet by hand, be sure to update the range.  For a longer
-  discussion, see <http://git.io/KIaNKQ>
+  writing a sheet by hand, cells outside of the range are not included
 
-  Functions that handle worksheets should test for the presence of `!ref` field.
+  Functions that handle sheets should test for the presence of `!ref` field.
   If the `!ref` is omitted or is not a valid range, functions are free to treat
   the sheet as empty or attempt to guess the range.  The standard utilities that
   ship with this library treat sheets as empty (for example, the CSV output is
@@ -544,6 +544,10 @@ Special worksheet keys (accessible as `worksheet[key]`, each starting with `!`):
 
   When reading a worksheet with the `sheetRows` property set, the ref parameter
   will use the restricted range.  The original range is set at `ws['!fullref']`
+
+### Worksheet Object
+
+In addition to the base sheet keys, worksheets also add:
 
 - `ws['!cols']`: array of column properties objects.  Column widths are actually
   stored in files in a normalized manner, measured in terms of the "Maximum
@@ -558,10 +562,11 @@ Special worksheet keys (accessible as `worksheet[key]`, each starting with `!`):
 
 ### Chartsheet Object
 
-Chartsheets are represented as standard worksheets.  They are distinguished with
-the `!type` property set to `"chart"`.
+Chartsheets are represented as standard sheets.  They are distinguished with the
+`!type` property set to `"chart"`.
 
-The underlying data and `!ref` refer to the cached data in the chartsheet.
+The underlying data and `!ref` refer to the cached data in the chartsheet.  The
+first row of the chartsheet is the underlying header.
 
 ### Workbook Object
 
