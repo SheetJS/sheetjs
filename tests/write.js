@@ -6,7 +6,9 @@ var data = [
 	[1,2,3],
 	[true, false, null, "sheetjs"],
 	["foo","bar",new Date("2014-02-19T14:30Z"), "0.3"],
-	["baz", null, "qux", 3.14159]
+	["baz", null, "qux", 3.14159],
+	["hidden"],
+	["visible"]
 ];
 
 var ws_name = "SheetJS";
@@ -18,6 +20,13 @@ var wscols = [
 	{wpx:125}
 ];
 
+var wsrows = [];
+wsrows[0] = {hpt: 12}; // "points"
+wsrows[1] = {hpx: 16}; // "pixels"
+wsrows[2] = {hpt: 18};
+wsrows[3] = {hpx: 24};
+wsrows[4] = {hidden:true}; // hide row
+wsrows[5] = {hidden:false};
 
 console.log("Sheet Name: " + ws_name);
 console.log("Data: "); for(var i=0; i!=data.length; ++i) console.log(data[i]);
@@ -50,10 +59,13 @@ ws['E1'] = {t:'n', f:"TRANSPOSE(A1:D1)", F:"E1:E4"};
 ws['E2'] = {t:'n', F:"E1:E4"};
 ws['E3'] = {t:'n', F:"E1:E4"};
 ws['E4'] = {t:'n', F:"E1:E4"};
-ws["!ref"] = "A1:E4";
+ws["!ref"] = "A1:E6";
 
-/* TEST: column widths */
+/* TEST: column props */
 ws['!cols'] = wscols;
+
+/* TEST: row props */
+ws['!rows'] = wsrows;
 
 /* TEST: hyperlink note: Excel does not automatically style hyperlinks */
 ws['A3'].l = { Target: "http://sheetjs.com", Tooltip: "Visit us <SheetJS.com!>" };

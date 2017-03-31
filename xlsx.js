@@ -5404,6 +5404,10 @@ function process_col(coll) {
 	if(coll.customWidth) delete coll.customWidth;
 }
 
+var DEF_DPI = 96, DPI = DEF_DPI;
+function px2pt(px) { return px * 72 / DPI; }
+function pt2px(pt) { return pt * DPI / 72; }
+
 /* [MS-EXSPXML3] 2.4.54 ST_enmPattern */
 var XLMLPatternTypeMap = {
 	"None": "none",
@@ -9138,7 +9142,7 @@ return function parse_ws_xml_data(sdata, s, opts, guess, themes, styles) {
 }; })();
 
 function write_ws_xml_data(ws, opts, idx, wb, rels) {
-	var o = [], r = [], range = safe_decode_range(ws['!ref']), cell, ref, rr = "", cols = [], R=0, C=0;
+	var o = [], r = [], range = safe_decode_range(ws['!ref']), cell, ref, rr = "", cols = [], R=0, C=0, rows = ws['!rows'];
 	for(C = range.s.c; C <= range.e.c; ++C) cols[C] = encode_col(C);
 	for(R = range.s.r; R <= range.e.r; ++R) {
 		r = [];
@@ -9148,7 +9152,18 @@ function write_ws_xml_data(ws, opts, idx, wb, rels) {
 			if(ws[ref] === undefined) continue;
 			if((cell = write_ws_xml_cell(ws[ref], ref, ws, opts, idx, wb)) != null) r.push(cell);
 		}
-		if(r.length > 0) o[o.length] = (writextag('row', r.join(""), {r:rr}));
+		if(r.length > 0) {
+			var params = {r:rr}
+			if(rows && rows[R]) {
+				var row = rows[R];
+				if(row.hidden) params.hidden = 1;
+				var height = -1;
+				if (row.hpx) height = px2pt(row.hpx);
+				else if (row.hpt) height = row.hpt;
+				if (height > -1) { params.ht = height; params.customHeight = 1; }
+			}
+			o[o.length] = (writextag('row', r.join(""), params));
+		}
 	}
 	return o.join("");
 }
@@ -9170,7 +9185,7 @@ function write_ws_xml(idx, opts, wb, rels) {
 	o[o.length] = (writextag('dimension', null, {'ref': ref}));
 
 	/* TODO: store in WB, process styles */
-	if(opts.sheetFormat) o[o.length] = (writextag('sheetFormatPr', null, {defaultRowHeight:opts.sheetFormat.defaultRowHeight||'16', baseColWidth:opts.sheetFormat.baseColWidth||'10' }))
+	if(opts.sheetFormat) o[o.length] = (writextag('sheetFormatPr', null, {defaultRowHeight:opts.sheetFormat.defaultRowHeight||'16', baseColWidth:opts.sheetFormat.baseColWidth||'10' }));
 
 	if(ws['!cols'] !== undefined && ws['!cols'].length > 0) o[o.length] = (write_ws_xml_cols(ws, ws['!cols']));
 	o[sidx = o.length] = '<sheetData/>';

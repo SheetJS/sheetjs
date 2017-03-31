@@ -89,6 +89,10 @@ function process_col(coll/*:ColInfo*/) {
 	if(coll.customWidth) delete coll.customWidth;
 }
 
+var DEF_DPI = 96, DPI = DEF_DPI;
+function px2pt(px) { return px * 72 / DPI; }
+function pt2px(pt) { return pt * DPI / 72; }
+
 /* [MS-EXSPXML3] 2.4.54 ST_enmPattern */
 var XLMLPatternTypeMap = {
 	"None": "none",
