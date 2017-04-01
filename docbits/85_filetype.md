@@ -15,6 +15,8 @@ Despite the library name `xlsx`, it supports numerous spreadsheet file formats:
 | Excel 2.0/2.1 (XLS BIFF2)                                    |  :o:  |  :o:  |
 | **Excel Supported Text Formats**                             |:-----:|:-----:|
 | Delimiter-Separated Values (CSV/TSV/DSV)                     |       |  :o:  |
+| Data Interchange Format (DIF)                                |  :o:  |  :o:  |
+| Symbolic Link (SYLK/SLK)                                     |  :o:  |  :o:  |
 | **Other Workbook/Worksheet Formats**                         |:-----:|:-----:|
 | OpenDocument Spreadsheet (ODS)                               |  :o:  |  :o:  |
 | Flat XML ODF Spreadsheet (FODS)                              |  :o:  |  :o:  |
@@ -80,7 +82,17 @@ UOS is a very similar format, and it comes in 2 varieties corresponding to ODS
 and FODS respectively.  For the most part, the difference between the formats
 lies in the names of tags and attributes.
 
-### dBASE and Visual FoxPro (DBF)
+### Comma-Separated Values (CSV)
+
+Excel CSV deviates from RFC4180 in a number of important ways.  The generated
+CSV files should generally work in Excel although they may not work in RFC4180
+compatible readers.
+
+### Other Single-Worksheet Formats
+
+Many older formats supported only one worksheet:
+
+#### dBASE and Visual FoxPro (DBF)
 
 DBF is really a typed table format: each column can only hold one data type and
 each record omits type information.  The parser generates a header row and
@@ -89,13 +101,18 @@ inserts records starting at the second row of the worksheet.
 Multi-file extensions like external memos and tables are currently unsupported,
 limited by the general ability to read arbitrary files in the web browser.
 
-### Comma-Separated Values
+#### Symbolic Link (SYLK)
 
-Excel CSV deviates from RFC4180 in a number of important ways.  The generated
-CSV files should generally work in Excel although they may not work in RFC4180
-compatible readers.
+There is no real documentation.  All knowledge was gathered by saving files in
+various versions of Excel to deduce the meaning of fields.
 
-### HTML
+#### Data Interchange Format (DIF)
+
+There is no unified definition.  Visicalc DIF differs from Lotus DIF, and both
+differ from Excel DIF.  Where ambiguous, the parser/writer follows the expected
+behavior from Excel.
+
+#### HTML
 
 Excel HTML worksheets include special metadata encoded in styles.  For example,
 `mso-number-format` is a localized string containing the number format.  Despite

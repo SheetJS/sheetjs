@@ -6,7 +6,7 @@
 
 `wb.Props` is an object storing the standard properties.  `wb.Custprops` stores
 custom properties.  Since the XLS standard properties deviate from the XLSX
-standard, XLS parsing stores core properties in both places.  .
+standard, XLS parsing stores core properties in both places.
 
 `wb.WBProps` includes more workbook-level properties:
 

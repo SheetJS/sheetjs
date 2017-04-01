@@ -33,6 +33,8 @@ output formats.  The specific file type is controlled with `bookType` option:
 | `biff2`  | `.xls`   |   none    | single | Excel 2.0 Worksheet format        |
 | `fods`   | `.fods`  |   none    | multi  | Flat OpenDocument Spreadsheet     |
 | `csv`    | `.csv`   |   none    | single | Comma Separated Values            |
+| `sylk`   | `.sylk`  |   none    | single | Symbolic Link (SYLK)              |
+| `dif`    | `.dif`   |   none    | single | Data Interchange Format (DIF)     |
 
 - `compression` only applies to formats with ZIP containers.
 - Formats that only support a single sheet require a `sheet` option specifying

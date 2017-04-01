@@ -1,5 +1,5 @@
 digraph G {
-	graph [mindist=0.1]; 
+	graph [mindist=0.1];
 	csf [shape=doublecircle,label="Common\nSpreadsheet\nFormat\n(JS Object)"];
 	subgraph XL {
 		node  [style=filled,color=green];
@@ -17,7 +17,7 @@ digraph G {
 		node  [style=filled,color=yellow];
 		ods   [label="ODS"];
 		fods  [label="Flat\nODS"];
-		uos   [label="UOS\n标文通"];
+		uos   [label="UOS"];
 	}
 
 	subgraph OLD {
@@ -25,6 +25,8 @@ digraph G {
 		html  [label="HTML\nTable"];
 		csv   [label="CSV"];
 		dbf   [label="DBF"];
+		dif   [label="DIF"];
+		slk   [label="SYLK"];
 	}
 
 	subgraph JSXLSX {
@@ -41,6 +43,10 @@ digraph G {
 		xls4 -> csf
 		xls5 -> csf
 		xls8 -> csf
+		csf -> slk
+		slk -> csf
+		csf -> dif
+		dif -> csf
 		csf -> csv
 		ods -> csf
 		csf -> ods

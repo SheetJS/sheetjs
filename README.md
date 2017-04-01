@@ -38,9 +38,10 @@ with a unified JS representation, and ES3/ES5 browser compatibility back to IE6.
     + [Data Types](#data-types)
     + [Dates](#dates)
   * [Sheet Objects](#sheet-objects)
-  * [Worksheet Object](#worksheet-object)
-  * [Chartsheet Object](#chartsheet-object)
+    + [Worksheet Object](#worksheet-object)
+    + [Chartsheet Object](#chartsheet-object)
   * [Workbook Object](#workbook-object)
+    + [Workbook File Properties](#workbook-file-properties)
   * [Document Features](#document-features)
     + [Formulae](#formulae)
     + [Column Properties](#column-properties)
@@ -65,9 +66,12 @@ with a unified JS representation, and ES3/ES5 browser compatibility back to IE6.
   * [Excel 2003-2004 (SpreadsheetML)](#excel-2003-2004-spreadsheetml)
   * [Excel 2007+ Binary (XLSB, BIFF12)](#excel-2007-binary-xlsb-biff12)
   * [OpenDocument Spreadsheet (ODS/FODS) and Uniform Office Spreadsheet (UOS1/2)](#opendocument-spreadsheet-odsfods-and-uniform-office-spreadsheet-uos12)
-  * [dBASE and Visual FoxPro (DBF)](#dbase-and-visual-foxpro-dbf)
-  * [Comma-Separated Values](#comma-separated-values)
-  * [HTML](#html)
+  * [Comma-Separated Values (CSV)](#comma-separated-values-csv)
+  * [Other Single-Worksheet Formats](#other-single-worksheet-formats)
+    + [dBASE and Visual FoxPro (DBF)](#dbase-and-visual-foxpro-dbf)
+    + [Symbolic Link (SYLK)](#symbolic-link-sylk)
+    + [Data Interchange Format (DIF)](#data-interchange-format-dif)
+    + [HTML](#html)
 - [Testing](#testing)
   * [Tested Environments](#tested-environments)
   * [Test Files](#test-files)
@@ -545,7 +549,7 @@ Special sheet keys (accessible as `sheet[key]`, each starting with `!`):
   When reading a worksheet with the `sheetRows` property set, the ref parameter
   will use the restricted range.  The original range is set at `ws['!fullref']`
 
-### Worksheet Object
+#### Worksheet Object
 
 In addition to the base sheet keys, worksheets also add:
 
@@ -560,7 +564,7 @@ In addition to the base sheet keys, worksheets also add:
   will write all cells in the merge range if they exist, so be sure that only
   the first cell (upper-left) in the range is set.
 
-### Chartsheet Object
+#### Chartsheet Object
 
 Chartsheets are represented as standard sheets.  They are distinguished with the
 `!type` property set to `"chart"`.
@@ -576,7 +580,7 @@ first row of the chartsheet is the underlying header.
 
 `wb.Props` is an object storing the standard properties.  `wb.Custprops` stores
 custom properties.  Since the XLS standard properties deviate from the XLSX
-standard, XLS parsing stores core properties in both places.  .
+standard, XLS parsing stores core properties in both places.
 
 `wb.WBProps` includes more workbook-level properties:
 
@@ -584,6 +588,38 @@ standard, XLS parsing stores core properties in both places.  .
   [1900 vs. 1904 Date System](http://support2.microsoft.com/kb/180162).
   The workbook's epoch can be determined by examining the workbook's
   `wb.WBProps.date1904` property.
+
+#### Workbook File Properties
+
+The various file formats use different internal names for file properties.  The
+workbook `Props` object normalizes the names:
+
+| JS Name     | Excel Description              |
+|:------------|:-------------------------------|
+| Title       | Summary tab "Title"            |
+| Subject     | Summary tab "Subject"          |
+| Author      | Summary tab "Author"           |
+| Manager     | Summary tab "Manager"          |
+| Company     | Summary tab "Company"          |
+| Category    | Summary tab "Category"         |
+| Keywords    | Summary tab "Keywords"         |
+| Comments    | Summary tab "Comments"         |
+| LastAuthor  | Statistics tab "Last saved by" |
+| CreatedDate | Statistics tab "Created"       |
+
+For example, to set the workbook title property:
+
+```js
+if(!wb.Props) wb.Props = {};
+wb.Props.Title = "Insert Title Here";
+```
+
+Custom properties are added in the workbook `Custprops` object:
+
+```js
+if(!wb.Custprops) wb.Custprops = {};
+wb.Custprops["Custom Property"] = "Custom Value";
+```
 
 ### Document Features
 
@@ -818,6 +854,8 @@ file but Excel will know how to handle it.  This library applies similar logic:
 | `0x09` | BIFF Stream   | BIFF 2/3/4/5                                        |
 | `0x3C` | XML/HTML      | SpreadsheetML / Flat ODS / UOS1 / HTML / plaintext  |
 | `0x50` | ZIP Archive   | XLSB or XLSX/M or ODS or UOS2 or plaintext          |
+| `0x49` | Plain Text    | SYLK or plaintext                                   |
+| `0x54` | Plain Text    | DIF or plaintext                                    |
 | `0xFE` | UTF8 Text     | SpreadsheetML or Flat ODS or UOS1 or plaintext      |
 
 DBF files are detected based on the first byte as well as the third and fourth
@@ -858,6 +896,8 @@ output formats.  The specific file type is controlled with `bookType` option:
 | `biff2`  | `.xls`   |   none    | single | Excel 2.0 Worksheet format        |
 | `fods`   | `.fods`  |   none    | multi  | Flat OpenDocument Spreadsheet     |
 | `csv`    | `.csv`   |   none    | single | Comma Separated Values            |
+| `sylk`   | `.sylk`  |   none    | single | Symbolic Link (SYLK)              |
+| `dif`    | `.dif`   |   none    | single | Data Interchange Format (DIF)     |
 
 - `compression` only applies to formats with ZIP containers.
 - Formats that only support a single sheet require a `sheet` option specifying
@@ -1088,6 +1128,8 @@ Despite the library name `xlsx`, it supports numerous spreadsheet file formats:
 | Excel 2.0/2.1 (XLS BIFF2)                                    |  :o:  |  :o:  |
 | **Excel Supported Text Formats**                             |:-----:|:-----:|
 | Delimiter-Separated Values (CSV/TSV/DSV)                     |       |  :o:  |
+| Data Interchange Format (DIF)                                |  :o:  |  :o:  |
+| Symbolic Link (SYLK/SLK)                                     |  :o:  |  :o:  |
 | **Other Workbook/Worksheet Formats**                         |:-----:|:-----:|
 | OpenDocument Spreadsheet (ODS)                               |  :o:  |  :o:  |
 | Flat XML ODF Spreadsheet (FODS)                              |  :o:  |  :o:  |
@@ -1153,7 +1195,17 @@ UOS is a very similar format, and it comes in 2 varieties corresponding to ODS
 and FODS respectively.  For the most part, the difference between the formats
 lies in the names of tags and attributes.
 
-### dBASE and Visual FoxPro (DBF)
+### Comma-Separated Values (CSV)
+
+Excel CSV deviates from RFC4180 in a number of important ways.  The generated
+CSV files should generally work in Excel although they may not work in RFC4180
+compatible readers.
+
+### Other Single-Worksheet Formats
+
+Many older formats supported only one worksheet:
+
+#### dBASE and Visual FoxPro (DBF)
 
 DBF is really a typed table format: each column can only hold one data type and
 each record omits type information.  The parser generates a header row and
@@ -1162,13 +1214,18 @@ inserts records starting at the second row of the worksheet.
 Multi-file extensions like external memos and tables are currently unsupported,
 limited by the general ability to read arbitrary files in the web browser.
 
-### Comma-Separated Values
+#### Symbolic Link (SYLK)
 
-Excel CSV deviates from RFC4180 in a number of important ways.  The generated
-CSV files should generally work in Excel although they may not work in RFC4180
-compatible readers.
+There is no real documentation.  All knowledge was gathered by saving files in
+various versions of Excel to deduce the meaning of fields.
 
-### HTML
+#### Data Interchange Format (DIF)
+
+There is no unified definition.  Visicalc DIF differs from Lotus DIF, and both
+differ from Excel DIF.  Where ambiguous, the parser/writer follows the expected
+behavior from Excel.
+
+#### HTML
 
 Excel HTML worksheets include special metadata encoded in styles.  For example,
 `mso-number-format` is a localized string containing the number format.  Despite

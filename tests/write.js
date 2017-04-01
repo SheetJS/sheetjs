@@ -81,11 +81,24 @@ console.log("Worksheet Model:")
 console.log(ws);
 
 /* TEST: hidden sheets */
-
 wb.SheetNames.push("Hidden");
 wb.Sheets["Hidden"] = XLSX.utils.aoa_to_sheet(["Hidden".split(""), [1,2,3]]);
 wb.Workbook = {Sheets:[]};
 wb.Workbook.Sheets[1] = {Hidden:1};
+
+/* TEST: properties */
+wb.Props = {
+	Title: "SheetJS Test",
+	Subject: "Tests",
+	Author: "Devs at SheetJS",
+	Manager: "Sheet Manager",
+	Company: "SheetJS",
+	Category: "Experimentation",
+	Keywords: "Test",
+	Comments: "Nothing to say here",
+	LastAuthor: "Not SheetJS",
+	CreatedDate: new Date(2017,1,19)
+}
 
 /* write file */
 XLSX.writeFile(wb, 'sheetjs.xlsx', {bookSST:true});
@@ -95,6 +108,7 @@ XLSX.writeFile(wb, 'sheetjs.xls', {bookType:'biff2'}); // no formula
 XLSX.writeFile(wb, 'sheetjs.xml.xls', {bookType:'xlml'});
 XLSX.writeFile(wb, 'sheetjs.ods');
 XLSX.writeFile(wb, 'sheetjs.fods');
+XLSX.writeFile(wb, 'sheetjs.slk');
 XLSX.writeFile(wb, 'sheetjs.csv');
 
 /* test by reading back files */
@@ -105,4 +119,5 @@ XLSX.readFile('sheetjs.xls');
 XLSX.readFile('sheetjs.xml.xls');
 XLSX.readFile('sheetjs.ods');
 XLSX.readFile('sheetjs.fods');
+XLSX.readFile('sheetjs.slk');
 //XLSX.readFile('sheetjs.csv');

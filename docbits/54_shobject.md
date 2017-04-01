@@ -1,4 +1,4 @@
-### Worksheet Object
+#### Worksheet Object
 
 In addition to the base sheet keys, worksheets also add:
 
@@ -13,7 +13,7 @@ In addition to the base sheet keys, worksheets also add:
   will write all cells in the merge range if they exist, so be sure that only
   the first cell (upper-left) in the range is set.
 
-### Chartsheet Object
+#### Chartsheet Object
 
 Chartsheets are represented as standard sheets.  They are distinguished with the
 `!type` property set to `"chart"`.

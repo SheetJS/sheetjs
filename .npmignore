@@ -39,3 +39,5 @@ test.js
 bits/
 docbits/
 tests/
+_book
+book.json

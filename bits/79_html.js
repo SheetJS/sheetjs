@@ -53,12 +53,13 @@ function parse_dom_table(table/*:HTMLElement*/, opts/*:?any*/)/*:Worksheet*/ {
 			CS = +elt.getAttribute("colspan") || 1;
 			if((RS = +elt.getAttribute("rowspan"))>0) merges.push({s:{r:R,c:C},e:{r:R + RS - 1, c:C + CS - 1}});
 			var o = {t:'s', v:v};
-			if(!isNaN(Number(v))) o = {t:'n', v:Number(v)};
+			if(v != null && v.length && !isNaN(Number(v))) o = {t:'n', v:Number(v)};
 			ws[encode_cell({c:C, r:R})] = o;
 			C += CS;
 		}
 	}
 	ws['!merges'] = merges;
+	ws['!ref'] = encode_range(range);
 	return ws;
 }
 

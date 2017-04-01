@@ -27,6 +27,8 @@ program
 	.option('-j, --json', 'emit formatted JSON (all fields text)')
 	.option('-J, --raw-js', 'emit raw JS object (raw numbers)')
 	.option('-A, --arrays', 'emit rows as JS objects (raw numbers)')
+	.option('-D, --dif', 'emit data interchange format (dif)')
+	.option('-K, --sylk', 'emit symbolic link (sylk)')
 
 	.option('-F, --field-sep <sep>', 'CSV field separator', ",")
 	.option('-R, --row-sep <sep>', 'CSV row separator', "\n")
@@ -162,9 +164,13 @@ try {
 if(program.perf) process.exit(0);
 
 /* single worksheet XLS formats */
-['biff2'].forEach(function(m) { if(program[m]) {
-		wopts.bookType = m;
-		X.writeFile(wb, sheetname || ((filename || "") + ".xls"), wopts);
+[
+	['biff2', '.xls'],
+	['sylk', '.slk'],
+	['dif', '.dif']
+].forEach(function(m) { if(program[m[0]]) {
+		wopts.bookType = m[0];
+		X.writeFile(wb, sheetname || ((filename || "") + m[1]), wopts);
 		process.exit(0);
 } });
 

@@ -12,7 +12,7 @@ if(process.env.WTF) {
 	opts.cellStyles = true;
 }
 var fullex = [".xlsb", ".xlsm", ".xlsx"/*, ".xlml"*/];
-var ofmt = ["xlsb", "xlsm", "xlsx", "ods", "biff2", "xlml"];
+var ofmt = ["xlsb", "xlsm", "xlsx", "ods", "biff2", "xlml", "sylk", "dif"];
 var ex = fullex.slice(); ex = ex.concat([".ods", ".xls", ".xml", ".fods"]);
 if(process.env.FMTS === "full") process.env.FMTS = ex.join(":");
 if(process.env.FMTS) ex=process.env.FMTS.split(":").map(function(x){return x[0]==="."?x:"."+x;});
@@ -951,26 +951,31 @@ describe('roundtrip features', function() {
 	var bef = (function() { X = require(modp); });
 	if(typeof before != 'undefined') before(bef);
 	else it('before', bef);
-	describe('should parse core properties and custom properties', function() {
-		var wb1, wb2, base = './tmp/cp';
-		var bef = (function() {
-			wb1 = X.readFile(paths.cpxlsx);
-			wb2 = X.readFile(paths.cpxlsb);
-			fullex.forEach(function(p) {
-				X.writeFile(wb1, base + '.xlsm' + p);
-				X.writeFile(wb2, base + '.xlsb' + p);
-			});
+	describe('should preserve core properties', function() { [
+		['xlml', paths.cpxml],
+		['xlsx', paths.cpxlsx],
+		['xlsb', paths.cpxlsb]
+	].forEach(function(w) {
+		it(w[0], function() {
+				var wb1 = X.readFile(w[1]);
+				var wb2 = X.read(X.write(wb1, {bookType:w[0], type:"buffer"}), {type:"buffer"});
+				coreprop(wb1);
+				coreprop(wb2);
 		});
-		if(typeof before != 'undefined') before(bef);
-		else it('before', bef);
-		fullex.forEach(function(p) { ['.xlsm','.xlsb'].forEach(function(q) {
-			it(q + p + ' should roundtrip core and custom properties', function() {
-				var wb = X.readFile(base + q + p);
-				coreprop(wb);
-				custprop(wb);
-			}); });
+	}); });
+
+	describe('should preserve custom properties', function() { [
+		['xlml', paths.cpxml],
+		['xlsx', paths.cpxlsx],
+		['xlsb', paths.cpxlsb]
+	].forEach(function(w) {
+		it(w[0], function() {
+				var wb1 = X.readFile(w[1]);
+				var wb2 = X.read(X.write(wb1, {bookType:w[0], type:"buffer"}), {type:"buffer"});
+				custprop(wb1);
+				custprop(wb2);
 		});
-	});
+	}); });
 
 	describe('should preserve features', function() {
 		it('merge cells', function() {
