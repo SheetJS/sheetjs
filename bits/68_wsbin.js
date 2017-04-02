@@ -570,6 +570,7 @@ function write_ws_bin_cell(ba/*:BufArray*/, cell/*:Cell*/, R/*:number*/, C/*:num
 	/* TODO: cell style */
 	//o.s = get_cell_style(opts.cellXfs, cell, opts);
 	if(cell.l) ws['!links'].push([encode_cell(o), cell.l]);
+	if(cell.c) ws['!comments'].push([encode_cell(o), cell.c]);
 	switch(cell.t) {
 		case 's': case 'str':
 			if(opts.bookSST) {
@@ -639,12 +640,22 @@ function write_HLINKS(ba, ws/*:Worksheet*/, rels) {
 	});
 	delete ws['!links'];
 }
+function write_LEGACYDRAWING(ba, ws/*:Worksheet*/, idx/*:number*/, rels) {
+	/* [BrtLegacyDrawing] */
+	if(ws['!comments'].length > 0) {
+		var rId = add_rels(rels, -1, "../drawings/vmlDrawing" + (idx+1) + ".vml", RELS.VML);
+		write_record(ba, "BrtLegacyDrawing", write_RelID("rId" + rId));
+		ws['!legacy'] = rId;
+	}
+}
 
 function write_ws_bin(idx/*:number*/, opts, wb/*:Workbook*/, rels) {
 	var ba = buf_array();
 	var s = wb.SheetNames[idx], ws = wb.Sheets[s] || {};
 	var r = safe_decode_range(ws['!ref'] || "A1");
 	ws['!links'] = [];
+	/* passed back to write_zip and removed there */
+	ws['!comments'] = [];
 	write_record(ba, "BrtBeginSheet");
 	write_record(ba, "BrtWsProp", write_BrtWsProp(s));
 	write_record(ba, "BrtWsDim", write_BrtWsDim(r));
@@ -676,7 +687,7 @@ function write_ws_bin(idx/*:number*/, opts, wb/*:Workbook*/, rels) {
 	/* [IGNOREECS] */
 	/* [SMARTTAGS] */
 	/* [BrtDrawing] */
-	/* [BrtLegacyDrawing] */
+	write_LEGACYDRAWING(ba, ws, idx, rels);
 	/* [BrtLegacyDrawingHF] */
 	/* [BrtBkHim] */
 	/* [OLEOBJECTS] */

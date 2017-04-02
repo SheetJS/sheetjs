@@ -62,11 +62,11 @@ function write_sty(data, name/*:string*/, opts) {
 function write_sst(data/*:SST*/, name/*:string*/, opts) {
 	return (name.slice(-4)===".bin" ? write_sst_bin : write_sst_xml)(data, opts);
 }
-/*
-function write_cmnt(data, name:string, opts) {
+
+function write_cmnt(data/*:Array<any>*/, name/*:string*/, opts) {
 	return (name.slice(-4)===".bin" ? write_comments_bin : write_comments_xml)(data, opts);
 }
-
+/*
 function write_cc(data, name:string, opts) {
 	return (name.slice(-4)===".bin" ? write_cc_bin : write_cc_xml)(data, opts);
 }

@@ -3,6 +3,7 @@ var RELS = ({
 	WB: "http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument",
 	SHEET: "http://sheetjs.openxmlformats.org/officeDocument/2006/relationships/officeDocument",
 	HLINK: "http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink",
+	VML: "http://schemas.openxmlformats.org/officeDocument/2006/relationships/vmlDrawing",
 	VBA: "http://schemas.microsoft.com/office/2006/relationships/vbaProject"
 }/*:any*/);
 

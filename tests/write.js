@@ -77,9 +77,6 @@ ws['A3'].l = { Target: "http://sheetjs.com", Tooltip: "Visit us <SheetJS.com!>" 
 //ws['B2'].z = "0.0"; wb.SSF[60] = "0.0"; // Custom
 console.log("JSON Data: "); console.log(XLSX.utils.sheet_to_json(ws, {header:1}));
 
-console.log("Worksheet Model:")
-console.log(ws);
-
 /* TEST: hidden sheets */
 wb.SheetNames.push("Hidden");
 wb.Sheets["Hidden"] = XLSX.utils.aoa_to_sheet(["Hidden".split(""), [1,2,3]]);
@@ -99,6 +96,13 @@ wb.Props = {
 	LastAuthor: "Not SheetJS",
 	CreatedDate: new Date(2017,1,19)
 }
+
+/* TEST: comments */
+ws['A4'].c = [];
+ws['A4'].c.push({a:"SheetJS",t:"I'm a little comment, short and stout!"});
+
+console.log("Worksheet Model:")
+console.log(ws);
 
 /* write file */
 XLSX.writeFile(wb, 'sheetjs.xlsx', {bookSST:true});

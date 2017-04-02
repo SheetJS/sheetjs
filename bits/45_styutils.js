@@ -61,7 +61,7 @@ function cycle_width(collw) { return char2width(px2char(width2px(collw))); }
 /* XLSX/XLSB/XLS specify width in units of MDW */
 function find_mdw_colw(collw) {
 	var delta = Infinity, _MDW = MIN_MDW;
-	for(MDW=MIN_MDW; MDW<MAX_MDW; ++MDW) if(Math.abs(collw - cycle_width(collw)) < delta) { delta = Math.abs(collw - cycle_width(collw)); _MDW = MDW; }
+	for(MDW=MIN_MDW; MDW<MAX_MDW; ++MDW) if(Math.abs(collw - cycle_width(collw)) <= delta) { delta = Math.abs(collw - cycle_width(collw)); _MDW = MDW; }
 	MDW = _MDW;
 }
 /* XLML specifies width in terms of pixels */

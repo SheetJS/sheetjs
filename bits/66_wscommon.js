@@ -20,6 +20,7 @@ function col_obj_w(C/*:number*/, col) {
 	else if(col.wpx != null) width = px2char(col.wpx);
 	else if(col.wch != null) width = col.wch;
 	if(width > -1) { p.width = char2width(width); p.customWidth = 1; }
+	else p.width = col.width;
 	return p;
 }
 

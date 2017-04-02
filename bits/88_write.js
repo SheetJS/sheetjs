@@ -45,7 +45,7 @@ function write_binary_type(out, opts/*:WriteOpts*/) {
 function writeSync(wb/*:Workbook*/, opts/*:?WriteOpts*/) {
 	check_wb(wb);
 	var o = opts||{};
-	switch(o.bookType || 'xlsx') {
+	switch(o.bookType || 'xlsb') {
 		case 'xml':
 		case 'xlml': return write_string_type(write_xlml(wb, o), o);
 		case 'slk':
@@ -63,21 +63,20 @@ function writeSync(wb/*:Workbook*/, opts/*:?WriteOpts*/) {
 }
 
 function resolve_book_type(o/*?WriteFileOpts*/) {
-	if(!o.bookType) switch(o.file.slice(-5).toLowerCase()) {
+	if(!o.bookType) switch(o.file.slice(o.file.lastIndexOf(".")).toLowerCase()) {
 		case '.xlsx': o.bookType = 'xlsx'; break;
 		case '.xlsm': o.bookType = 'xlsm'; break;
 		case '.xlsb': o.bookType = 'xlsb'; break;
 		case '.fods': o.bookType = 'fods'; break;
 		case '.xlml': o.bookType = 'xlml'; break;
 		case '.sylk': o.bookType = 'sylk'; break;
-	default: switch(o.file.slice(-4).toLowerCase()) {
 		case '.xls': o.bookType = 'biff2'; break;
 		case '.xml': o.bookType = 'xml'; break;
 		case '.ods': o.bookType = 'ods'; break;
 		case '.csv': o.bookType = 'csv'; break;
 		case '.dif': o.bookType = 'dif'; break;
 		case '.slk': o.bookType = 'sylk'; break;
-	}}
+	}
 }
 
 function writeFileSync(wb/*:Workbook*/, filename/*:string*/, opts/*:?WriteFileOpts*/) {

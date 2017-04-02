@@ -22,7 +22,7 @@ With <https://rawgit.com/SheetJS/test_files/master/sheet_visibility.xlsx>:
 ```
 
 Non-Excel formats do not support the Very Hidden state.  The best way to test
-if a sheet is visible is to check if the `Hidden` property is logical negation:
+if a sheet is visible is to check if the `Hidden` property is logical truth:
 
 ```js
 > wb.Workbook.Sheets.map(function(x) { return [x.name, !x.Hidden] })

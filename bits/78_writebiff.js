@@ -58,11 +58,12 @@ function write_BIFF2LABEL(r, c, val) {
 
 function write_ws_biff_cell(ba/*:BufArray*/, cell/*:Cell*/, R/*:number*/, C/*:number*/, opts) {
 	if(cell.v != null) switch(cell.t) {
-		case 'n':
-			if((cell.v == (cell.v|0)) && (cell.v >= 0) && (cell.v < 65536))
-				write_biff_rec(ba, 0x0002, write_BIFF2INT(R, C, cell.v));
+		case 'd': case 'n':
+			var v = cell.t == 'd' ? datenum(cell.v) : cell.v;
+			if((v == (v|0)) && (v >= 0) && (v < 65536))
+				write_biff_rec(ba, 0x0002, write_BIFF2INT(R, C, v));
 			else
-				write_biff_rec(ba, 0x0003, write_BIFF2NUMBER(R,C, cell.v));
+				write_biff_rec(ba, 0x0003, write_BIFF2NUMBER(R,C, v));
 			return;
 		case 'b': case 'e': write_biff_rec(ba, 0x0005, write_BIFF2BERR(R, C, cell.v, cell.t)); return;
 		/* TODO: codepage, sst */

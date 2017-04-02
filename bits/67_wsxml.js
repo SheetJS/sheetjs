@@ -156,6 +156,7 @@ function write_ws_xml_cell(cell, ref, ws, opts, idx, wb) {
 		v = writextag('f', escapexml(cell.f), ff) + (cell.v != null ? v : "");
 	}
 	if(cell.l) ws['!links'].push([ref, cell.l]);
+	if(cell.c) ws['!comments'].push([ref, cell.c]);
 	return writextag('c', v, o);
 }
 
@@ -330,6 +331,7 @@ function write_ws_xml(idx/*:number*/, opts, wb/*:Workbook*/, rels)/*:string*/ {
 	if(ws === undefined) ws = {};
 	var ref = ws['!ref']; if(ref === undefined) ref = 'A1';
 	if(!rels) rels = {};
+	ws['!comments'] = [];
 
 	o[o.length] = (writextag('sheetPr', null, {'codeName': escapexml(wb.SheetNames[idx])}));
 	o[o.length] = (writextag('dimension', null, {'ref': ref}));
@@ -348,12 +350,12 @@ function write_ws_xml(idx/*:number*/, opts, wb/*:Workbook*/, rels)/*:string*/ {
 
 	if(ws['!merges'] != null && ws['!merges'].length > 0) o[o.length] = (write_ws_xml_merges(ws['!merges']));
 
-	var relc = -1, rel;
+	var relc = -1, rel, rId = -1;
 	if(ws['!links'].length > 0) {
 		o[o.length] = "<hyperlinks>";
 		ws['!links'].forEach(function(l) {
 			if(!l[1].Target) return;
-			var rId = add_rels(rels, -1, escapexml(l[1].Target).replace(/#.*$/, ""), RELS.HLINK);
+			rId = add_rels(rels, -1, escapexml(l[1].Target).replace(/#.*$/, ""), RELS.HLINK);
 			rel = ({"ref":l[0], "r:id":"rId"+rId}/*:any*/);
 			if((relc = l[1].Target.indexOf("#")) > -1) rel.location = escapexml(l[1].Target.substr(relc+1));
 			if(l[1].Tooltip) rel.tooltip = escapexml(l[1].Tooltip);
@@ -362,6 +364,14 @@ function write_ws_xml(idx/*:number*/, opts, wb/*:Workbook*/, rels)/*:string*/ {
 		o[o.length] = "</hyperlinks>";
 	}
 	delete ws['!links'];
+
+	if(ws['!comments'].length > 0) {
+		rId = add_rels(rels, -1, "../drawings/vmlDrawing" + (idx+1) + ".vml", RELS.VML);
+		o[o.length] = writextag("legacyDrawing", null, {"r:id":"rId" + rId});
+		ws['!legacy'] = rId;
+	}
+// <legacyDrawing r:id="rId1"/>
+
 	if(o.length>2) { o[o.length] = ('</worksheet>'); o[1]=o[1].replace("/>",">"); }
 	return o.join("");
 }

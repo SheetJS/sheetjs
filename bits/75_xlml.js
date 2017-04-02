@@ -120,7 +120,7 @@ function parse_xlml_data(xml, ss, data, cell/*:any*/, base, styles, csty, row, a
 			if(!cell.t) cell.t = 'n';
 			break;
 		case 'Error': cell.t = 'e'; cell.v = RBErr[xml]; cell.w = xml; break;
-		default: cell.t = 's'; cell.v = xlml_fixstr(ss); break;
+		default: cell.t = 's'; cell.v = xlml_fixstr(ss||xml); break;
 	}
 	safe_format_xlml(cell, nf, o);
 	if(o.cellFormula != null) {
@@ -129,7 +129,7 @@ function parse_xlml_data(xml, ss, data, cell/*:any*/, base, styles, csty, row, a
 			/* strictly speaking, the leading = is required but some writers omit */
 			if(fstr.charCodeAt(0) == 61 /* = */) fstr = fstr.substr(1);
 			cell.f = rc_to_a1(fstr, base);
-			cell.Formula = undefined;
+			delete cell.Formula;
 			if(cell.ArrayRange == "RC") cell.F = rc_to_a1("RC:RC", base);
 			else if(cell.ArrayRange) {
 				cell.F = rc_to_a1(cell.ArrayRange, base);
@@ -152,7 +152,8 @@ function parse_xlml_data(xml, ss, data, cell/*:any*/, base, styles, csty, row, a
 }
 
 function xlml_clean_comment(comment/*:any*/) {
-	comment.t = comment.v;
+	comment.t = comment.v || "";
+	comment.t = comment.t.replace(/\r\n/g,"\n").replace(/\r/g,"\n");
 	comment.v = comment.w = comment.ixfe = undefined;
 }
 
@@ -803,7 +804,14 @@ function write_ws_xlml_wsopts(ws/*:Worksheet*/, opts, idx/*:number*/, wb/*:Workb
 	if(o.length == 0) return "";
 	return writextag("WorksheetOptions", o.join(""), {xmlns:XLMLNS.x});
 }
-/* TODO */
+function write_ws_xlml_comment(comments) {
+	return comments.map(function(c) {
+		// TODO: formatted text
+		var t = xlml_unfixstr(c.t||"");
+		var d =writextag("ss:Data", t, {"xmlns":"http://www.w3.org/TR/REC-html40"});
+		return writextag("Comment", d, {"ss:Author":c.a});
+	}).join("");
+}
 function write_ws_xlml_cell(cell, ref, ws, opts, idx, wb, addr)/*:string*/{
 	if(!cell || cell.v == undefined && cell.f == undefined) return "<Cell></Cell>";
 
@@ -845,6 +853,8 @@ function write_ws_xlml_cell(cell, ref, ws, opts, idx, wb, addr)/*:string*/{
 		_v = __v;
 	}
 	var m = '<Data ss:Type="' + t + '">' + _v + '</Data>';
+
+	if((cell.c||[]).length > 0) m += write_ws_xlml_comment(cell.c);
 
 	return writextag("Cell", m, attr);
 }

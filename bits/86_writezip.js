@@ -1,4 +1,5 @@
 function write_zip(wb/*:Workbook*/, opts/*:WriteOpts*/)/*:ZIP*/ {
+	_shapeid = 1024;
 	if(opts.bookType == "ods") return write_ods(wb, opts);
 	if(wb && !wb.SSF) {
 		wb.SSF = SSF.get_table();
@@ -57,8 +58,26 @@ function write_zip(wb/*:Workbook*/, opts/*:WriteOpts*/)/*:ZIP*/ {
 		f = "xl/worksheets/sheet" + rId + "." + wbext;
 		var wsrels = {'!id':{}};
 		zip.file(f, write_ws(rId-1, f, opts, wb, wsrels));
+
 		ct.sheets.push(f);
-		add_rels(opts.wbrels, rId, "worksheets/sheet" + rId + "." + wbext, RELS.WS[0]);
+		add_rels(opts.wbrels, -1, "worksheets/sheet" + rId + "." + wbext, RELS.WS[0]);
+
+		var ws = wb.Sheets[wb.SheetNames[rId-1]];
+		if(ws) {
+			var comments = ws['!comments'];
+			if(comments && comments.length > 0) {
+				var cf = "xl/comments" + rId + "." + wbext;
+				zip.file(cf, write_cmnt(comments, cf, opts));
+				ct.comments.push(cf);
+				add_rels(wsrels, -1, "../comments" + rId + "." + wbext, RELS.CMNT);
+			}
+			if(ws['!legacy']) {
+				zip.file("xl/drawings/vmlDrawing" + (rId) + ".vml", write_comments_vml(rId, ws['!comments']));
+			}
+			delete ws['!comments'];
+			delete ws['!legacy'];
+		}
+
 		if(wsrels['!id'].rId1) zip.file(get_rels_path(f), write_rels(wsrels)); // get_rels_path('')
 	}
 
@@ -66,7 +85,7 @@ function write_zip(wb/*:Workbook*/, opts/*:WriteOpts*/)/*:ZIP*/ {
 		f = "xl/sharedStrings." + wbext;
 		zip.file(f, write_sst(opts.Strings, f, opts));
 		ct.strs.push(f);
-		add_rels(opts.wbrels, ++rId, "sharedStrings." + wbext, RELS.SST);
+		add_rels(opts.wbrels, -1, "sharedStrings." + wbext, RELS.SST);
 	}
 
 	/* TODO: something more intelligent with themes */
@@ -74,20 +93,20 @@ function write_zip(wb/*:Workbook*/, opts/*:WriteOpts*/)/*:ZIP*/ {
 	f = "xl/theme/theme1.xml";
 	zip.file(f, write_theme(wb.Themes, opts));
 	ct.themes.push(f);
-	add_rels(opts.wbrels, ++rId, "theme/theme1.xml", RELS.THEME);
+	add_rels(opts.wbrels, -1, "theme/theme1.xml", RELS.THEME);
 
 	/* TODO: something more intelligent with styles */
 
 	f = "xl/styles." + wbext;
 	zip.file(f, write_sty(wb, f, opts));
 	ct.styles.push(f);
-	add_rels(opts.wbrels, ++rId, "styles." + wbext, RELS.STY);
+	add_rels(opts.wbrels, -1, "styles." + wbext, RELS.STY);
 
 	if(wb.vbaraw && vbafmt) {
 		f = "xl/vbaProject.bin";
 		zip.file(f, wb.vbaraw);
 		ct.vba.push(f);
-		add_rels(opts.wbrels, ++rId, "vbaProject.bin", RELS.VBA);
+		add_rels(opts.wbrels, -1, "vbaProject.bin", RELS.VBA);
 	}
 
 	zip.file("[Content_Types].xml", write_ct(ct, opts));

@@ -1,3 +1,4 @@
+RELS.CMNT = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/comments";
 
 function parse_comments(zip, dirComments, sheets, sheetRels, opts) {
 	for(var i = 0; i != dirComments.length; ++i) {

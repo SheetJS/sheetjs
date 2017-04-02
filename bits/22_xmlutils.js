@@ -60,6 +60,9 @@ var xlml_fixstr/*:StringConv*/ = (function() {
 	function entrepl($$/*:string*/,$1/*:string*/)/*:string*/ { return String.fromCharCode(parseInt($1,10)); }
 	return function xlml_fixstr(str/*:string*/)/*:string*/ { return str.replace(entregex,entrepl); };
 })();
+var xlml_unfixstr/*:StringConv*/ = (function() {
+	return function xlml_unfixstr(str/*:string*/)/*:string*/ { return str.replace(/(\r\n|[\r\n])/g,"\&#10;"); };
+})();
 
 function parsexmlbool(value/*:any*/, tag/*:?string*/)/*:boolean*/ {
 	switch(value) {
@@ -184,5 +187,7 @@ var XLMLNS = ({
 	'x':    'urn:schemas-microsoft-com:office:excel',
 	'ss':   'urn:schemas-microsoft-com:office:spreadsheet',
 	'dt':   'uuid:C2F41010-65B3-11d1-A29F-00AA00C14882',
+	'mv':   'http://macVmlSchemaUri',
+	'v':    'urn:schemas-microsoft-com:vml',
 	'html': 'http://www.w3.org/TR/REC-html40'
 }/*:any*/);

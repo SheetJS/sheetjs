@@ -46,6 +46,7 @@ with a unified JS representation, and ES3/ES5 browser compatibility back to IE6.
     + [Formulae](#formulae)
     + [Column Properties](#column-properties)
     + [Hyperlinks](#hyperlinks)
+    + [Cell Comments](#cell-comments)
     + [Sheet Visibility](#sheet-visibility)
 - [Parsing Options](#parsing-options)
   * [Input Type](#input-type)
@@ -756,6 +757,23 @@ ws['A3'].l = { Target:"http://sheetjs.com", Tooltip:"Find us @ SheetJS.com!" };
 Note that Excel does not automatically style hyperlinks -- they will generally
 be displayed as normal text.
 
+#### Cell Comments
+
+Cell comments are objects stored in the `c` array of cell objects.  The actual
+contents of the comment are split into blocks based on the comment author.  The
+`a` field of each comment object is the author of the comment and the `t` field
+is the plaintext representation.
+
+For example, the following snippet appends a cell comment into cell `A1`:
+
+```js
+if(!ws.A1.c) ws.A1.c = [];
+ws.A1.c.push({a:"SheetJS", t:"I'm a little comment, short and stout!"});
+```
+
+Note: XLSB enforces a 54 character limit on the Author name.  Names longer than
+54 characters may cause issues with other formats.
+
 #### Sheet Visibility
 
 Excel enables hiding sheets in the lower tab bar.  The sheet data is stored in
@@ -780,7 +798,7 @@ With <https://rawgit.com/SheetJS/test_files/master/sheet_visibility.xlsx>:
 ```
 
 Non-Excel formats do not support the Very Hidden state.  The best way to test
-if a sheet is visible is to check if the `Hidden` property is logical negation:
+if a sheet is visible is to check if the `Hidden` property is logical truth:
 
 ```js
 > wb.Workbook.Sheets.map(function(x) { return [x.name, !x.Hidden] })
@@ -856,7 +874,7 @@ file but Excel will know how to handle it.  This library applies similar logic:
 | `0x50` | ZIP Archive   | XLSB or XLSX/M or ODS or UOS2 or plaintext          |
 | `0x49` | Plain Text    | SYLK or plaintext                                   |
 | `0x54` | Plain Text    | DIF or plaintext                                    |
-| `0xFE` | UTF8 Text     | SpreadsheetML or Flat ODS or UOS1 or plaintext      |
+| `0xFE` | UTF16 Encoded | SpreadsheetML or Flat ODS or UOS1 or plaintext      |
 
 DBF files are detected based on the first byte as well as the third and fourth
 bytes (corresponding to month and day of the file date)

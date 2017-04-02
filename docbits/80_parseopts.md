@@ -67,7 +67,7 @@ file but Excel will know how to handle it.  This library applies similar logic:
 | `0x50` | ZIP Archive   | XLSB or XLSX/M or ODS or UOS2 or plaintext          |
 | `0x49` | Plain Text    | SYLK or plaintext                                   |
 | `0x54` | Plain Text    | DIF or plaintext                                    |
-| `0xFE` | UTF8 Text     | SpreadsheetML or Flat ODS or UOS1 or plaintext      |
+| `0xFE` | UTF16 Encoded | SpreadsheetML or Flat ODS or UOS1 or plaintext      |
 
 DBF files are detected based on the first byte as well as the third and fourth
 bytes (corresponding to month and day of the file date)

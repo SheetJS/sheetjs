@@ -26,6 +26,7 @@
     + [Formulae](README.md#formulae)
     + [Column Properties](README.md#column-properties)
     + [Hyperlinks](README.md#hyperlinks)
+    + [Cell Comments](README.md#cell-comments)
     + [Sheet Visibility](README.md#sheet-visibility)
 - [Parsing Options](README.md#parsing-options)
   * [Input Type](README.md#input-type)

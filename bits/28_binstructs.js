@@ -17,7 +17,7 @@ function parse_RichStr(data, length/*:number*/)/*:XLString*/ {
 		for(var i = 0; i != dwSizeStrRun; ++i) rgsStrRun.push(parse_StrRun(data));
 		z.r = rgsStrRun;
 	}
-	else z.r = "<t>" + escapexml(str) + "</t>";
+	else z.r = [{ich:0, ifnt:0}];
 	//if((flags & 2) !== 0) { /* fExtStr */
 	//	/* TODO: phonetic string */
 	//}
@@ -26,10 +26,10 @@ function parse_RichStr(data, length/*:number*/)/*:XLString*/ {
 }
 function write_RichStr(str/*:XLString*/, o/*:?Block*/)/*:Block*/ {
 	/* TODO: formatted string */
-	if(o == null) o = new_buf(5+2*str.t.length);
+	var _null = false; if(o == null) { _null = true; o = new_buf(15+4*str.t.length); }
 	o.write_shift(1,0);
 	write_XLWideString(str.t, o);
-	return o;
+	return _null ? o.slice(0, o.l) : o;
 }
 
 /* [MS-XLSB] 2.5.9 */
@@ -59,10 +59,10 @@ function parse_XLNullableWideString(data)/*:string*/ {
 	return cchCharacters === 0 || cchCharacters === 0xFFFFFFFF ? "" : data.read_shift(cchCharacters, 'dbcs');
 }
 function write_XLNullableWideString(data/*:string*/, o) {
-	if(!o) o = new_buf(127);
+	var _null = false; if(o == null) { _null = true; o = new_buf(127); }
 	o.write_shift(4, data.length > 0 ? data.length : 0xFFFFFFFF);
 	if(data.length > 0) o.write_shift(0, data, 'dbcs');
-	return o;
+	return _null ? o.slice(0, o.l) : o;
 }
 
 /* [MS-XLSB] 2.5.168 */
@@ -71,10 +71,10 @@ function parse_XLWideString(data)/*:string*/ {
 	return cchCharacters === 0 ? "" : data.read_shift(cchCharacters, 'dbcs');
 }
 function write_XLWideString(data/*:string*/, o) {
-	if(o == null) o = new_buf(4+2*data.length);
+	var _null = false; if(o == null) { _null = true; o = new_buf(4+2*data.length); }
 	o.write_shift(4, data.length);
 	if(data.length > 0) o.write_shift(0, data, 'dbcs');
-	return o;
+	return _null ? o.slice(0, o.l) : o;
 }
 
 /* [MS-XLSB] 2.5.165 */

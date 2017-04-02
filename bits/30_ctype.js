@@ -23,10 +23,6 @@ var ct2type/*{[string]:string}*/ = ({
 	"application/vnd.openxmlformats-officedocument.customXmlProperties+xml": "TODO",
 	"application/vnd.openxmlformats-officedocument.spreadsheetml.customProperty": "TODO",
 
-	/* Comments */
-	"application/vnd.ms-excel.comments": "comments",
-	"application/vnd.openxmlformats-officedocument.spreadsheetml.comments+xml": "comments",
-
 	/* PivotTable */
 	"application/vnd.ms-excel.pivotTable": "TODO",
 	"application/vnd.openxmlformats-officedocument.spreadsheetml.pivotTable+xml": "TODO",
@@ -158,6 +154,10 @@ var CT_LIST = (function(){
 			xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml",
 			xlsb: "application/vnd.ms-excel.sharedStrings"
 		},
+		comments: { /* Comments */
+			xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.comments+xml",
+			xlsb: "application/vnd.ms-excel.comments"
+		},
 		sheets: { /* Worksheet */
 			xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml",
 			xlsb: "application/vnd.ms-excel.worksheet"
@@ -226,6 +226,7 @@ var CTYPE_XML_ROOT = writextag('Types', null, {
 var CTYPE_DEFAULTS = [
 	['xml', 'application/xml'],
 	['bin', 'application/vnd.ms-excel.sheet.binary.macroEnabled.main'],
+	['vml', 'application/vnd.openxmlformats-officedocument.vmlDrawing'],
 	/* from test files */
 	['bmp', 'image/bmp'],
 	['png', 'image/png'],
@@ -276,7 +277,7 @@ function write_ct(ct, opts)/*:string*/ {
 	['strs', 'styles'].forEach(f1);
 	['coreprops', 'extprops', 'custprops'].forEach(f3);
 	f3('vba');
-	f3('comments');
+	f2('comments');
 	if(o.length>2){ o[o.length] = ('</Types>'); o[1]=o[1].replace("/>",">"); }
 	return o.join("");
 }

@@ -32,6 +32,8 @@ var parse_content_xml = (function() {
 		var number_format_map = {};
 		var merges = [], mrange = {}, mR = 0, mC = 0;
 		var arrayf = [];
+		var comments = [], comment = {};
+		var creator = "", creatoridx = 0;
 		var rept = 1, isstub = false;
 		var i = 0;
 		xlmlregex.lastIndex = 0;
@@ -77,6 +79,7 @@ var parse_content_xml = (function() {
 					if(C < range.s.c) range.s.c = C;
 					if(R < range.s.r) range.s.r = R;
 					ctag = parsexmltag(Rn[0], false);
+					comments = []; comment = {};
 					q = ({t:ctag['数据类型'] || ctag['value-type'], v:null/*:: , z:null, w:""*/}/*:any*/);
 					if(opts.cellFormula) {
 						if(ctag.formula) ctag.formula = unescapexml(ctag.formula);
@@ -126,6 +129,7 @@ var parse_content_xml = (function() {
 						q.v = textp || '';
 						isstub = textpidx == 0;
 					}
+					if(comments.length > 0) { q.c = comments; comments = []; }
 					if(textp) q.w = textp;
 					if(!isstub || opts.sheetStubs) {
 						if(!(opts.sheetRows && opts.sheetRows < R)) {
@@ -150,6 +154,23 @@ var parse_content_xml = (function() {
 				else if(Rn[0].charAt(Rn[0].length-2) !== '/') state.push([Rn[3], true]);
 				break;
 
+			case 'annotation': // 14.1 <office:annotation>
+				if(Rn[1]==='/'){
+					if((tmp=state.pop())[0]!==Rn[3]) throw "Bad state: "+tmp;
+					comment.t = textp;
+					comment.a = creator;
+					comments.push(comment);
+				}
+				else if(Rn[0].charAt(Rn[0].length-2) !== '/') {state.push([Rn[3], false]);}
+				creator = ""; creatorpidx = 0;
+				textp = ""; textpidx = 0;
+				break;
+
+			case 'creator': // 4.3.2.7 <dc:creator>
+				if(Rn[1]==='/') { creator = str.slice(creatoridx,Rn.index); }
+				else creatoridx = Rn.index + Rn[0].length;
+				break;
+
 			/* ignore state */
 			case 'meta': case '元数据': // TODO: <office:meta> <uof:元数据> FODS/UOF
 			case 'settings': // TODO: <office:settings>
@@ -165,7 +186,6 @@ var parse_content_xml = (function() {
 			case 'list-style': // 16.30 <text:list-style>
 			case 'form': // 13.13 <form:form>
 			case 'dde-links': // 9.8 <table:dde-links>
-			case 'annotation': // 14.1 <office:annotation>
 			case 'event-listeners': // TODO
 				if(Rn[1]==='/'){if((tmp=state.pop())[0]!==Rn[3]) throw "Bad state: "+tmp;}
 				else if(Rn[0].charAt(Rn[0].length-2) !== '/') state.push([Rn[3], false]);
@@ -272,7 +292,7 @@ var parse_content_xml = (function() {
 			case 'span': break; // <text:span>
 			case 'line-break': break; // 6.1.5 <text:line-break>
 			case 'p': case '文本串':
-				if(Rn[1]==='/') textp = parse_text_p(str.slice(textpidx,Rn.index), textptag);
+				if(Rn[1]==='/') textp = (textp.length > 0 ? textp + "\n" : "") + parse_text_p(str.slice(textpidx,Rn.index), textptag);
 				else { textptag = parsexmltag(Rn[0], false); textpidx = Rn.index + Rn[0].length; }
 				break; // <text:p>
 			case 's': break; // <text:s>
@@ -326,7 +346,6 @@ var parse_content_xml = (function() {
 			case 'event-listener': // TODO
 			/* TODO: FODS Properties */
 			case 'initial-creator':
-			case 'creator':
 			case 'creation-date':
 			case 'generator':
 			case 'document-statistic':
