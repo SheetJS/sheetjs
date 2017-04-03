@@ -34,6 +34,7 @@ var paths = {
 	cstxml: dir + 'comments_stress_test.xls.xml',
 	cstxlsx: dir + 'comments_stress_test.xlsx',
 	cstxlsb: dir + 'comments_stress_test.xlsb',
+	cstods: dir + 'comments_stress_test.ods',
 	fstxls: dir + 'formula_stress_test.xls',
 	fstxml: dir + 'formula_stress_test.xls.xml',
 	fstxlsx: dir + 'formula_stress_test.xlsx',
@@ -78,6 +79,21 @@ var N1 = 'XLSX';
 var N2 = 'XLSB';
 var N3 = 'XLS';
 var N4 = 'XML';
+
+/* comments_stress_test family */
+function check_comments(wb) {
+	var ws0 = wb.Sheets.Sheet2;
+	assert.equal(ws0.A1.c[0].a, 'Author');
+	assert.equal(ws0.A1.c[0].t, 'Author:\nGod thinks this is good');
+	assert.equal(ws0.C1.c[0].a, 'Author');
+	assert.equal(ws0.C1.c[0].t, 'I really hope that xlsx decides not to use magic like rPr');
+
+	var ws3 = wb.Sheets.Sheet4;
+	assert.equal(ws3.B1.c[0].a, 'Author');
+	assert.equal(ws3.B1.c[0].t, 'The next comment is empty');
+	assert.equal(ws3.B2.c[0].a, 'Author');
+	assert.equal(ws3.B2.c[0].t, '');
+}
 
 describe('parse options', function() {
 	var html_cell_types = ['s'];
@@ -347,10 +363,6 @@ describe('input formats', function() {
 		assert.throws(function() { X.read(fs.readFileSync(paths.cstxlsb), {type: 'dafuq'}); });
 	});
 	it('should default to base64 type', function() {
-		assert.throws(function() { X.read(fs.readFileSync(paths.cstxls, 'binary')); });
-		assert.throws(function() { X.read(fs.readFileSync(paths.cstxml, 'binary')); });
-		assert.throws(function() { X.read(fs.readFileSync(paths.cstxlsx, 'binary')); });
-		assert.throws(function() { X.read(fs.readFileSync(paths.cstxlsb, 'binary')); });
 		X.read(fs.readFileSync(paths.cstxls, 'base64'));
 		X.read(fs.readFileSync(paths.cstxml, 'base64'));
 		X.read(fs.readFileSync(paths.cstxlsx, 'base64'));
@@ -512,6 +524,21 @@ describe('parse features', function() {
 				assert.equal(ws.B1.c[0].h, '<span style="font-weight: bold;">Yegor Kozlov:</span><span style=""><br/>first cell</span>', "must have the html representation");
 			});
 		});
+		[
+			['xlsx', paths.cstxlsx],
+			['xlsb', paths.cstxlsb],
+			['xls', paths.cstxls],
+			['xlml', paths.cstxml],
+			['ods', paths.cstods]
+		].forEach(function(m) { it(m[0] + ' stress test', function() {
+			var wb = X.read(fs.readFileSync(m[1]), {type:'binary'});
+			check_comments(wb);
+			var ws0 = wb.Sheets.Sheet2;
+			assert.equal(ws0.A1.c[0].a, 'Author');
+			assert.equal(ws0.A1.c[0].t, 'Author:\nGod thinks this is good');
+			assert.equal(ws0.C1.c[0].a, 'Author');
+			assert.equal(ws0.C1.c[0].t, 'I really hope that xlsx decides not to use magic like rPr');
+		}); });
 	});
 
 	describe('should parse core properties and custom properties', function() {
@@ -793,7 +820,7 @@ describe('roundtrip features', function() {
 	var bef = (function() { X = require(modp); });
 	if(typeof before != 'undefined') before(bef);
 	else it('before', bef);
-	describe('should parse core properties and custom properties', function() {
+	describe('should preserve core properties and custom properties', function() {
 		var wb1, wb2, base = './tmp/cp';
 		var bef = (function() {
 			wb1 = X.read(fs.readFileSync(paths.cpxlsx), {type:"binary"});
@@ -879,6 +906,7 @@ describe('roundtrip features', function() {
 			});
 		});
 	});
+
 	describe('should preserve sheet visibility', function() { [
 			['xlml', paths.svxml],
 			['xlsx', paths.svxlsx],
@@ -897,6 +925,22 @@ describe('roundtrip features', function() {
 			});
 		});
 	});
+
+	describe('should preserve cell comments', function() { [
+			['xlsx', paths.cstxlsx],
+			['xlsb', paths.cstxlsb],
+			//['xls', paths.cstxlsx],
+			['xlml', paths.cstxml]
+			//['ods', paths.cstods]
+	].forEach(function(w) {
+			it(w[0], function() {
+				var wb1 = X.read(fs.readFileSync(w[1]), {type:"binary"});
+				var wb2 = X.read(X.write(wb1, {bookType:w[0], type:"binary"}), {type:"binary"});
+				check_comments(wb1);
+				check_comments(wb2);
+			});
+		});
+	});
 });
 
 function password_file(x){return x.match(/^password.*\.xls$/); }
@@ -907,7 +951,7 @@ describe('invalid files', function() {
 			['passwords', 'apachepoi_xor-encryption-abc.xls'],
 			['DOC files', 'word_doc.doc']
 		].forEach(function(w) { it('should fail on ' + w[0], function() {
-			assert.throws(function() { X.read(fs.readFileSync(dir + w[1]), {type:"binary"}); });
+			assert.throws(function() { X.read(fs.readFileSync(dir + w[1], {type:"binary"}), {type:"binary"}); });
 			assert.throws(function() { X.read(fs.readFileSync(dir+w[1], 'base64'), {type:'base64'}); });
 		}); });
 	});
