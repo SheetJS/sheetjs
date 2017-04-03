@@ -13,15 +13,11 @@ digraph G {
 		xls8  [label="XLS\nBIFF8"];
 	}
 
-	subgraph OD {
-		node  [style=filled,color=yellow];
+	subgraph OLD {
+		node  [style=filled,color=cyan];
 		ods   [label="ODS"];
 		fods  [label="FODS"];
 		uos   [label="UOS"];
-	}
-
-	subgraph OLD {
-		node  [style=filled,color=cyan];
 		html  [label="HTML\nTable"];
 		csv   [label="CSV"];
 		txt   [label="TXT\nUTF-16"];
@@ -59,7 +55,9 @@ digraph G {
 		dif -> csf
 		prn -> csf
 		csf -> prn
+		csv -> csf
 		csf -> csv
+		txt -> csf
 		csf -> txt
 		dbf -> csf
 		html -> csf

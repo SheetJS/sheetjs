@@ -76,5 +76,9 @@ Plaintext format guessing follows the priority order:
 
 | Format | Test                                                                |
 |:-------|:--------------------------------------------------------------------|
+| XML    | starts with <                                                       |
+| DSV    | starts with `/sep=.$/`, separator is the specified character        |
+| TSV    | one of the first 1024 characters is a tab char `"\t"`               |
+| CSV    | one of the first 1024 characters is a comma char `","`              |
 | PRN    | (default)                                                           |
 

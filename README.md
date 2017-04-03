@@ -887,6 +887,10 @@ Plaintext format guessing follows the priority order:
 
 | Format | Test                                                                |
 |:-------|:--------------------------------------------------------------------|
+| XML    | starts with <                                                       |
+| DSV    | starts with `/sep=.$/`, separator is the specified character        |
+| TSV    | one of the first 1024 characters is a tab char `"\t"`               |
+| CSV    | one of the first 1024 characters is a comma char `","`              |
 | PRN    | (default)                                                           |
 
 ## Writing Options
@@ -1167,11 +1171,11 @@ Despite the library name `xlsx`, it supports numerous spreadsheet file formats:
 | Excel 3.0 (XLS BIFF3)                                        |  :o:  |       |
 | Excel 2.0/2.1 (XLS BIFF2)                                    |  :o:  |  :o:  |
 | **Excel Supported Text Formats**                             |:-----:|:-----:|
-| Delimiter-Separated Values (CSV/TXT)                         |       |  :o:  |
+| Delimiter-Separated Values (CSV/TXT)                         |  :o:  |  :o:  |
 | Data Interchange Format (DIF)                                |  :o:  |  :o:  |
 | Symbolic Link (SYLK/SLK)                                     |  :o:  |  :o:  |
 | Lotus Formatted Text (PRN)                                   |  :o:  |  :o:  |
-| UTF-16 Unicode Text (TXT)                                    |       |  :o:  |
+| UTF-16 Unicode Text (TXT)                                    |  :o:  |  :o:  |
 | **Other Workbook/Worksheet Formats**                         |:-----:|:-----:|
 | OpenDocument Spreadsheet (ODS)                               |  :o:  |  :o:  |
 | Flat XML ODF Spreadsheet (FODS)                              |  :o:  |  :o:  |
@@ -1243,7 +1247,7 @@ lies in the names of tags and attributes.
 
 Excel CSV deviates from RFC4180 in a number of important ways.  The generated
 CSV files should generally work in Excel although they may not work in RFC4180
-compatible readers.
+compatible readers.  The parser should generally understand Excel CSV.
 
 Excel TXT uses tab as the delimiter and codepage 1200.
 

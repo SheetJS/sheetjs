@@ -5,7 +5,7 @@
 /*exported XLSX */
 var XLSX = {};
 (function make_xlsx(XLSX){
-XLSX.version = '0.9.8';
+XLSX.version = '0.9.9';
 var current_codepage = 1200, current_cptable;
 if(typeof module !== "undefined" && typeof require !== 'undefined') {
 	if(typeof cptable === 'undefined') cptable = require('./dist/cpexcel.js');
@@ -5073,16 +5073,6 @@ var DIF = (function() {
 })();
 
 var PRN = (function() {
-	function prn_to_aoa(d, opts) {
-		switch(opts.type) {
-			case 'base64': return prn_to_aoa_str(Base64.decode(d), opts);
-			case 'binary': return prn_to_aoa_str(d, opts);
-			case 'buffer': return prn_to_aoa_str(d.toString('binary'), opts);
-			case 'array': return prn_to_aoa_str(cc2str(d), opts);
-		}
-		throw new Error("Unrecognized type " + opts.type);
-	}
-
 	function set_text_arr(data, arr, R, C) {
 		if(data === 'TRUE') arr[R][C] = true;
 		else if(data === 'FALSE') arr[R][C] = false;
@@ -5115,7 +5105,54 @@ var PRN = (function() {
 		return arr;
 	}
 
-	function prn_to_sheet(str, opts) { return aoa_to_sheet(prn_to_aoa(str, opts), opts); }
+	function dsv_to_sheet_str(str, opts) {
+		var sep = "";
+		var ws = ({});
+		var range = ({s: {c:0, r:0}, e: {c:0, r:0}});
+
+		/* known sep */
+		if(str.substr(0,4) == "sep=" && str.charCodeAt(5) == 10) { sep = str.charAt(4); str = str.substr(6); }
+		/* TODO: actually determine the separator */
+		if(str.substr(0,1024).indexOf("\t") == -1) sep = ","; else sep = "\t";
+		var R = 0, C = 0, v = 0;
+		var start = 0, end = 0, sepcc = sep.charCodeAt(0), instr = false, cc=0;
+		for(;end < str.length;++end) switch((cc=str.charCodeAt(end))) {
+			case 0x22: instr = !instr; break;
+			case sepcc: case 0x0a: if(instr) break;
+			var s = str.slice(start, end);
+			var cell = ({})
+			if(s.charCodeAt(0) == 0x3D) { cell.t = 'n'; cell.f = s.substr(1); }
+			else if(s == "TRUE") { cell.t = 'b'; cell.v = true; }
+			else if(s == "FALSE") { cell.t = 'b'; cell.v = false; }
+			else if(!isNaN(v = parseFloat(s))) { cell.t = 'n'; cell.w = s; cell.v = v; }
+			else { cell.t = 's'; cell.v = s.replace(/^"/,"").replace(/"$/,"").replace(/""/g,'"'); }
+			ws[encode_cell({c:C,r:R})] = cell;
+			start = end+1;
+			if(range.e.c < C) range.e.c = C;
+			if(range.e.r < R) range.e.r = R;
+			if(cc == sepcc) ++C; else { C = 0; ++R; }; break;
+			default: break;
+		}
+
+		ws['!ref'] = encode_range(range);
+		return ws;
+	}
+
+	function prn_to_sheet_str(str, opts) {
+		if(str.substr(0,4) == "sep=") return dsv_to_sheet_str(str, opts);
+		if(str.indexOf("\t") >= 0 || str.indexOf(",") >= 0) return dsv_to_sheet_str(str, opts);
+		return aoa_to_sheet(prn_to_aoa_str(str, opts), opts);
+	}
+
+	function prn_to_sheet(d, opts) {
+		switch(opts.type) {
+			case 'base64': return prn_to_sheet_str(Base64.decode(d), opts);
+			case 'binary': return prn_to_sheet_str(d, opts);
+			case 'buffer': return prn_to_sheet_str(d.toString('binary'), opts);
+			case 'array': return prn_to_sheet_str(cc2str(d), opts);
+		}
+		throw new Error("Unrecognized type " + opts.type);
+	}
 
 	function prn_to_workbook(str, opts) { return sheet_to_workbook(prn_to_sheet(str, opts), opts); }
 
@@ -14999,6 +15036,15 @@ var zip, d = data;
 	return parse_zip(zip, o);
 }
 
+function read_utf16(data, o) {
+	var d = data;
+	if(o.type == 'base64') d = Base64.decode(d);
+	d = cptable.utils.decode(1200, d.slice(2));
+	o.type = "binary";
+	if(d.charCodeAt(0) == 0x3C) return parse_xlml(d,o);
+	return PRN.to_workbook(d, o);
+}
+
 function readSync(data, opts) {
 	var zip, d = data, n=[0];
 	var o = opts||{};
@@ -15012,11 +15058,11 @@ function readSync(data, opts) {
 		case 0x54: if(n[1] == 0x41 && n[2] == 0x42 && n[3] == 0x4C) return DIF.to_workbook(d, o); break;
 		case 0x50: if(n[1] == 0x4B && n[2] < 0x20 && n[3] < 0x20) return read_zip(d, o); break;
 		case 0xEF: return parse_xlml(d, o);
+		case 0xFF: if(n[1] == 0xFE){ return read_utf16(d, o); } break;
 		case 0x03: case 0x83: case 0x8B: return DBF.to_workbook(d, o);
 	}
 	if(n[2] <= 12 && n[3] <= 31) return DBF.to_workbook(d, o);
 	if(0x20>n[0]||n[0]>0x7F) throw new Error("Unsupported file " + n.join("|"));
-	/* TODO: CSV / TXT */
 	return PRN.to_workbook(d, o);
 }
 

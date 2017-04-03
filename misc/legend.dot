@@ -7,16 +7,16 @@ digraph G {
 		label="Supported Format Types"
 		color="white"
 		XL[label="Excel",style=filled,color=green];
-		OD[label="ODF",style=filled,color=yellow];
+		CSF[label="JS",shape=doublecircle];
 		OLD[label="Other",style=filled,color=cyan];
-		{ edge[style=invis] XL -> OD -> OLD[constraint=false]}
+		{ edge[style=invis] XL -> CSF -> OLD[constraint=false]}
 	}
 
 	subgraph cluster_1 {
 		label="Workbook Format Conversions (blue arrow)"
 		color="white"
 		x1i[label="XLSX"]
-		c1[shape=doublecircle,label="CSF"];
+		c1[shape=doublecircle,label="JS"];
 		x1o[label="XLSB"]
 		{ edge[color=blue]
 			x1i->c1[constraint=false,label="read"]
@@ -28,7 +28,7 @@ digraph G {
 		label="Single-Worksheet Format Conversions (green arrow)"
 		color="white"
 		x2i[label="SYLK"]
-		c2[shape=doublecircle,label="CSF"];
+		c2[shape=doublecircle,label="JS"];
 		x2o[label="CSV"]
 		{ edge[color=aquamarine4]
 			x2i->c2[constraint=false,label="read"]
@@ -37,6 +37,6 @@ digraph G {
 	}
 
 	{ edge[style=invis] XL -> x1i -> x2i; }
-	{ edge[style=invis] OD -> c1 -> c2; }
+	{ edge[style=invis] CSF -> c1 -> c2; }
 	{ edge[style=invis] OLD -> x1o -> x2o; }
 }

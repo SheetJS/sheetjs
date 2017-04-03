@@ -179,7 +179,7 @@ readme: README.md ## Update README Table of Contents
 	markdown-toc -i README.md
 
 .PHONY: book
-book: readme ## Update summary for documentation
+book: readme graph ## Update summary for documentation
 	printf "# Summary\n\n- [xlsx](README.md#xlsx)\n" > misc/docs/SUMMARY.md
 	markdown-toc README.md | sed 's/(#/(README.md#/g'>> misc/docs/SUMMARY.md
 

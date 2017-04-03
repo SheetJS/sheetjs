@@ -24,6 +24,15 @@ function read_zip(data/*:RawData*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
 	return parse_zip(zip, o);
 }
 
+function read_utf16(data/*:RawData*/, o/*:ParseOpts*/)/*:Workbook*/ {
+	var d = data;
+	if(o.type == 'base64') d = Base64.decode(d);
+	d = cptable.utils.decode(1200, d.slice(2));
+	o.type = "binary";
+	if(d.charCodeAt(0) == 0x3C) return parse_xlml(d,o);
+	return PRN.to_workbook(d, o);
+}
+
 function readSync(data/*:RawData*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
 	var zip, d = data, n=[0];
 	var o = opts||{};
@@ -37,11 +46,11 @@ function readSync(data/*:RawData*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
 		case 0x54: if(n[1] == 0x41 && n[2] == 0x42 && n[3] == 0x4C) return DIF.to_workbook(d, o); break;
 		case 0x50: if(n[1] == 0x4B && n[2] < 0x20 && n[3] < 0x20) return read_zip(d, o); break;
 		case 0xEF: return parse_xlml(d, o);
+		case 0xFF: if(n[1] == 0xFE){ return read_utf16(d, o); } break;
 		case 0x03: case 0x83: case 0x8B: return DBF.to_workbook(d, o);
 	}
 	if(n[2] <= 12 && n[3] <= 31) return DBF.to_workbook(d, o);
 	if(0x20>n[0]||n[0]>0x7F) throw new Error("Unsupported file " + n.join("|"));
-	/* TODO: CSV / TXT */
 	return PRN.to_workbook(d, o);
 }
 
