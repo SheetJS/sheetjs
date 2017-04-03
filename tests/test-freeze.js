@@ -84,7 +84,7 @@ var workbook = {
         ySplit: "1",
         topLeftCell: "B2",
         activePane: "bottomRight",
-        state: "frozen"
+        state: "frozen",
       }
     }
   }
