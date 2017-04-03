@@ -437,6 +437,15 @@ The following properties are currently used when generating an XLSX file, but no
 - `ws['!rowBreaks']`: array of row break points, e.g. `[16,32]`
 - `ws['!colBreaks']`: array of col break points, e.g. `[8,16]`
 - `ws['!pageSetup']`: `{scale: '100', orientation: 'portrait'||'landscape'}
+- `ws['!printHeader']`: array of first and last row indexes for repeat header on printing, e.g. `[1,1]` to repeat just first row
+- `ws['!freeze']`:  string cell reference for breakpoint, e.g. the following will freeze the first row and first column: 
+        {
+           xSplit: "1",
+           ySplit: "1",
+           topLeftCell: "B2",
+           activePane: "bottomRight",
+           state: "frozen"
+         }
 
 
 ### Workbook Object
@@ -540,21 +549,21 @@ top-level attributes: `fill`, `font`, `numFmt`, `alignment`, and `border`.
 | font            | name           |  `"Calibri"` // default
 |                 | sz             |  `"11"` // font size in points
 |                 | color          |  `COLOR_SPEC`
-|                 | bold           |  `true || false`
-|                 | underline      |  `true || false`
-|                 | italic         |  `true || false`
-|                 | strike         |  `true || false`
-|                 | outline        |  `true || false`
-|                 | shadow         |  `true || false`
-|                 | vertAlign      |  `true || false`
+|                 | bold           |  `true` or `false`
+|                 | underline      |  `true` or `false`
+|                 | italic         |  `true` or `false`
+|                 | strike         |  `true` or `false`
+|                 | outline        |  `true` or `false`
+|                 | shadow         |  `true` or `false`
+|                 | vertAlign      |  `true` or `false`
 | numFmt          |                |  `"0"`  // integer index to built in formats, see StyleBuilder.SSF property
 |                 |                |  `"0.00%"` // string matching a built-in format, see StyleBuilder.SSF
 |                 |                |  `"0.0%"`  // string specifying a custom format
 |                 |                |  `"0.00%;\\(0.00%\\);\\-;@"` // string specifying a custom format, escaping special characters
 |                 |                |  `"m/dd/yy"` // string a date format using Excel's format notation
-| alignment       | vertical       | `"bottom"||"center"||"top"`
-|                 | horizontal     | `"bottom"||"center"||"top"`
-|                 | wrapText       |  `true || false`
+| alignment       | vertical       | `"bottom"` or `"center"` or `"top"`
+|                 | horizontal     | `"bottom"` or `"center"` or `"top"`
+|                 | wrapText       |  `true ` or ` false`
 |                 | readingOrder   |  `2` // for right-to-left
 |                 | textRotation   | Number from `0` to `180` or `255` (default is `0`)
 |                 |                |  `90` is rotated up 90 degrees
@@ -567,8 +576,8 @@ top-level attributes: `fill`, `font`, `numFmt`, `alignment`, and `border`.
 |                 | left           | `{ style: BORDER_STYLE, color: COLOR_SPEC }`
 |                 | right          | `{ style: BORDER_STYLE, color: COLOR_SPEC }`
 |                 | diagonal       | `{ style: BORDER_STYLE, color: COLOR_SPEC }`
-|                 | diagonalUp     | `true||false`
-|                 | diagonalDown   | `true||false`
+|                 | diagonalUp     | `true` or `false`
+|                 | diagonalDown   | `true` or `false`
 
 
 **COLOR_SPEC**: Colors for `fill`, `font`, and `border` are specified as objects, either:
