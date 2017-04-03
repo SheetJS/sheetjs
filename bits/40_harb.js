@@ -57,7 +57,7 @@ function dbf_to_aoa(buf, opts)/*:AOA*/ {
 	var memo = false;
 	var vfp = false;
 	switch(ft) {
-		case 0x03: break;
+		case 0x02: case 0x03: break;
 		case 0x30: vfp = true; memo = true; break;
 		case 0x31: vfp = true; break;
 		case 0x83: memo = true; break;
@@ -65,33 +65,38 @@ function dbf_to_aoa(buf, opts)/*:AOA*/ {
 		case 0xF5: memo = true; break;
 		default: throw new Error("DBF Unsupported Version: " + ft.toString(16));
 	}
-	var filedate = new Date(d.read_shift(1) + 1900, d.read_shift(1) - 1, d.read_shift(1));
-	var nrow = d.read_shift(4);
-	var fpos = d.read_shift(2);
+	var filedate = new Date(), nrow = 0, fpos = 0;
+	if(ft == 0x02) nrow = d.read_shift(2);
+	filedate = new Date(d.read_shift(1) + 1900, d.read_shift(1) - 1, d.read_shift(1));
+	if(ft != 0x02) nrow = d.read_shift(4);
+	if(ft != 0x02) fpos = d.read_shift(2);
 	var rlen = d.read_shift(2);
-	d.l+=16;
 
-	var flags = d.read_shift(1);
+	var flags = 0, current_cp = 1252;
+	if(ft != 0x02) {
+	d.l+=16;
+	flags = d.read_shift(1);
 	//if(memo && ((flags & 0x02) === 0)) throw new Error("DBF Flags " + flags.toString(16) + " ft " + ft.toString(16));
 
 	/* codepage present in FoxPro */
-	var current_cp = 1252;
 	if(d[d.l] !== 0) current_cp = dbf_codepage_map[d[d.l]];
 	d.l+=1;
 
 	d.l+=2;
+	}
 	var fields = [], field = {};
 	var hend = fpos - 10 - (vfp ? 264 : 0);
-	while(d.l < hend) {
+	while(ft == 0x02 ? d.l < d.length && d[d.l] != 0x0d: d.l < hend) {
 		field = {};
 		field.name = cptable.utils.decode(current_cp, d.slice(d.l, d.l+10)).replace(/[\u0000\r\n].*$/g,"");
 		d.l += 11;
 		field.type = String.fromCharCode(d.read_shift(1));
-		field.offset = d.read_shift(4);
+		if(ft != 0x02) field.offset = d.read_shift(4);
 		field.len = d.read_shift(1);
+		if(ft == 0x02) field.offset = d.read_shift(2);
 		field.dec = d.read_shift(1);
 		if(field.name.length) fields.push(field);
-		d.l += 14;
+		if(ft != 0x02) d.l += 14;
 		switch(field.type) {
 			// case 'B': break; // Binary
 			case 'C': break; // character
@@ -113,8 +118,11 @@ function dbf_to_aoa(buf, opts)/*:AOA*/ {
 		}
 	}
 	if(d[d.l] !== 0x0D) d.l = fpos-1;
-	if(d.read_shift(1) !== 0x0D) throw new Error("DBF Terminator not found " + d.l + " " + d[d.l]);
-	d.l = fpos;
+	else if(ft == 0x02) d.l = 0x209;
+	if(ft != 0x02) {
+		if(d.read_shift(1) !== 0x0D) throw new Error("DBF Terminator not found " + d.l + " " + d[d.l]);
+		d.l = fpos;
+	}
 	/* data */
 	var R = 0, C = 0;
 	out[0] = [];
@@ -162,7 +170,7 @@ function dbf_to_aoa(buf, opts)/*:AOA*/ {
 			}
 		}
 	}
-	if(d.l < d.length && d[d.l++] != 0x1A) throw new Error("DBF EOF Marker missing " + (d.l-1) + " of " + d.length + " " + d[d.l-1].toString(16));
+	if(ft != 0x02) if(d.l < d.length && d[d.l++] != 0x1A) throw new Error("DBF EOF Marker missing " + (d.l-1) + " of " + d.length + " " + d[d.l-1].toString(16));
 	return out;
 }
 
@@ -374,8 +382,9 @@ var PRN = (function() {
 	function set_text_arr(data/*:string*/, arr/*:AOA*/, R/*:number*/, C/*:number*/) {
 		if(data === 'TRUE') arr[R][C] = true;
 		else if(data === 'FALSE') arr[R][C] = false;
+		else if(data === ""){}
 		else if(+data == +data) arr[R][C] = +data;
-		else if(data !== "") arr[R][C] = data;
+		else arr[R][C] = data;
 	}
 
 	function prn_to_aoa_str(f/*:string*/, opts)/*:AOA*/ {
@@ -406,9 +415,27 @@ var PRN = (function() {
 
 	function prn_to_workbook(str/*:string*/, opts)/*:Workbook*/ { return sheet_to_workbook(prn_to_sheet(str, opts), opts); }
 
+	function sheet_to_prn(ws/*:Worksheet*/, opts/*:?any*/)/*:string*/ {
+		var o/*:Array<string>*/ = [];
+		var r = decode_range(ws['!ref']), cell/*:Cell*/;
+		for(var R = r.s.r; R <= r.e.r; ++R) {
+			var oo = [];
+			for(var C = r.s.c; C <= r.e.c; ++C) {
+				var coord = encode_cell({r:R,c:C});
+				if(!(cell = ws[coord]) || cell.v == null) { oo.push("          "); continue; }
+				var w = (cell.w || (format_cell(cell), cell.w) || "").substr(0,10);
+				while(w.length < 10) w += " ";
+				oo.push(w + (C == 0 ? " " : ""));
+			}
+			o.push(oo.join(""));
+		}
+		return o.join("\n");
+	}
+
 	return {
 		to_workbook: prn_to_workbook,
-		to_sheet: prn_to_sheet
+		to_sheet: prn_to_sheet,
+		from_sheet: sheet_to_prn
 	};
 })();
 

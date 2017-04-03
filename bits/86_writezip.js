@@ -34,9 +34,10 @@ function write_zip(wb/*:Workbook*/, opts/*:WriteOpts*/)/*:ZIP*/ {
 
 	/*::if(!wb.Props) throw "unreachable"; */
 	f = "docProps/app.xml";
-	if(!wb.Workbook || !wb.Workbook.Sheets) wb.Props.SheetNames = wb.SheetNames;
+	if(wb.Props && wb.Props.SheetNames){}
+	else if(!wb.Workbook || !wb.Workbook.Sheets) wb.Props.SheetNames = wb.SheetNames;
 	// $FlowIgnore
-	else wb.Props.SheetNames = wb.Workbook.Sheets.filter(function(x) { return x.Hidden != 2; }).map(function(x) { return x.name; });
+	else wb.Props.SheetNames = wb.SheetNames.map(function(x,i) { return [(wb.Workbook.Sheets[i]||{}).Hidden != 2, x];}).filter(function(x) { return x[0]; }).map(function(x) { return x[1]; });
 	wb.Props.Worksheets = wb.Props.SheetNames.length;
 	zip.file(f, write_ext_props(wb.Props, opts));
 	ct.extprops.push(f);

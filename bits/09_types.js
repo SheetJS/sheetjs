@@ -14,4 +14,6 @@ type EvertNumType = {[string]:number};
 type EvertArrType = {[string]:Array<string>};
 
 type StringConv = {(string):string};
+
+type WriteObjStrFactory = {from_sheet(ws:Worksheet, o:any):string};
 */

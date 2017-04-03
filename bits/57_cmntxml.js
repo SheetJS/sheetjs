@@ -20,8 +20,9 @@ function parse_comments_xml(data/*:string*/, opts)/*:Array<Comment>*/ {
 		var cell = decode_cell(y.ref);
 		if(opts.sheetRows && opts.sheetRows <= cell.r) return;
 		var textMatch = x.match(/<(?:\w+:)?text>([^\u2603]*)<\/(?:\w+:)?text>/);
-		var rt = (!textMatch || !textMatch[1]) ? {r:"",t:"",h:""} : parse_si(textMatch[1]);
+		var rt = !!textMatch && !!textMatch[1] && parse_si(textMatch[1]) || {r:"",t:"",h:""};
 		comment.r = rt.r;
+		if(rt.r == "<t></t>") rt.t = rt.h = "";
 		comment.t = rt.t.replace(/\r\n/g,"\n").replace(/\r/g,"\n");
 		if(opts.cellHTML) comment.h = rt.h;
 		commentList.push(comment);
@@ -48,7 +49,7 @@ function write_comments_xml(data, opts) {
 		d[1].forEach(function(c) {
 			/* 18.7.3 CT_Comment */
 			o.push('<comment ref="' + d[0] + '" authorId="' + iauthor.indexOf(escapexml(c.a)) + '"><text>');
-			o.push(writetag("t", c.t));
+			o.push(writetag("t", c.t == null ? "" : c.t));
 			o.push('</text></comment>');
 		});
 	});

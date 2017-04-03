@@ -188,6 +188,13 @@ function sheet_to_csv(sheet/*:Worksheet*/, opts/*:?Sheet2CSVOpts*/) {
 	return out;
 }
 var make_csv = sheet_to_csv;
+function sheet_to_txt(sheet/*:Worksheet*/, opts/*:?Sheet2CSVOpts*/) {
+	if(!opts) opts = {}; opts.FS = "\t"; opts.RS = "\n";
+	var s = sheet_to_csv(sheet, opts);
+	if(typeof cptable == 'undefined') return s;
+	var o = cptable.utils.encode(1200, s);
+	return "\xff\xfe" + o;
+}
 
 function sheet_to_formulae(sheet/*:Worksheet*/)/*:Array<string>*/ {
 	var y = "", x, val="";

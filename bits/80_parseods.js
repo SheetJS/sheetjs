@@ -25,7 +25,7 @@ var parse_content_xml = (function() {
 		var sheetag/*:: = {name:"", '名称':""}*/;
 		var rowtag/*:: = {'行号':""}*/;
 		var Sheets = {}, SheetNames/*:Array<string>*/ = [], ws = {};
-		var Rn, q/*:: = ({t:"", v:null, z:null, w:""}:any)*/;
+		var Rn, q/*:: = ({t:"", v:null, z:null, w:"",c:[]}:any)*/;
 		var ctag = {value:""};
 		var textp = "", textpidx = 0, textptag/*:: = {}*/;
 		var R = -1, C = -1, range = {s: {r:1000000,c:10000000}, e: {r:0, c:0}};
@@ -80,7 +80,7 @@ var parse_content_xml = (function() {
 					if(R < range.s.r) range.s.r = R;
 					ctag = parsexmltag(Rn[0], false);
 					comments = []; comment = {};
-					q = ({t:ctag['数据类型'] || ctag['value-type'], v:null/*:: , z:null, w:""*/}/*:any*/);
+					q = ({t:ctag['数据类型'] || ctag['value-type'], v:null/*:: , z:null, w:"",c:[]*/}/*:any*/);
 					if(opts.cellFormula) {
 						if(ctag.formula) ctag.formula = unescapexml(ctag.formula);
 						if(ctag['number-matrix-columns-spanned'] && ctag['number-matrix-rows-spanned']) {
@@ -138,7 +138,7 @@ var parse_content_xml = (function() {
 							if(range.e.c <= C) range.e.c = C;
 						}
 					} else { C += rept; rept = 0; }
-					q = {/*:: t:"", v:null, z:null, w:""*/};
+					q = {/*:: t:"", v:null, z:null, w:"",c:[]*/};
 					textp = "";
 				}
 				break; // 9.1.4 <table:table-cell>
@@ -162,7 +162,7 @@ var parse_content_xml = (function() {
 					comments.push(comment);
 				}
 				else if(Rn[0].charAt(Rn[0].length-2) !== '/') {state.push([Rn[3], false]);}
-				creator = ""; creatorpidx = 0;
+				creator = ""; creatoridx = 0;
 				textp = ""; textpidx = 0;
 				break;
 

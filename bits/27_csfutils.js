@@ -22,9 +22,8 @@ function aoa_to_sheet(data/*:AOA*/, opts/*:?any*/)/*:Worksheet*/ {
 			else if(typeof cell.v === 'boolean') cell.t = 'b';
 			else if(cell.v instanceof Date) {
 				cell.z = o.dateNF || SSF._table[14];
-				if(o.cellDates) cell.t = 'd';
-				else { cell.t = 'n'; cell.v = datenum(cell.v); }
-				cell.w = SSF.format(cell.z, cell.v);
+				if(o.cellDates) { cell.t = 'd'; cell.w = SSF.format(cell.z, datenum(cell.v)); }
+				else { cell.t = 'n'; cell.v = datenum(cell.v); cell.w = SSF.format(cell.z, cell.v); }
 			}
 			else cell.t = 's';
 			ws[cell_ref] = cell;

@@ -838,7 +838,7 @@ apachepoi_60273.xls
 # apachepoi_60284.xls
 apachepoi_AbnormalSharedFormulaFlag.xls
 apachepoi_AreaErrPtg.xls
-apachepoi_BOOK_in_capitals.xls
+# apachepoi_BOOK_in_capitals.xls # note: worksheet length exceeds 31 chars
 apachepoi_Basic_Expense_Template_2011.xls
 apachepoi_CodeFunctionTestCaseData.xls
 apachepoi_ColumnStyle1dp.xls

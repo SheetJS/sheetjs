@@ -29,16 +29,22 @@ output formats.  The specific file type is controlled with `bookType` option:
 | `xlsx`   | `.xlsx`  |    ZIP    | multi  | Excel 2007+ XML Format            |
 | `xlsm`   | `.xlsm`  |    ZIP    | multi  | Excel 2007+ Macro XML Format      |
 | `xlsb`   | `.xlsb`  |    ZIP    | multi  | Excel 2007+ Binary Format         |
-| `ods`    | `.ods`   |    ZIP    | multi  | OpenDocument Spreadsheet          |
 | `biff2`  | `.xls`   |   none    | single | Excel 2.0 Worksheet format        |
+| `xlml`   | `.xls`   |   none    | multi  | Excel 2003-2004 (SpreadsheetML)   |
+| `ods`    | `.ods`   |    ZIP    | multi  | OpenDocument Spreadsheet          |
 | `fods`   | `.fods`  |   none    | multi  | Flat OpenDocument Spreadsheet     |
 | `csv`    | `.csv`   |   none    | single | Comma Separated Values            |
+| `txt`    | `.txt`   |   none    | single | UTF-16 Unicode Text (TXT)         |
 | `sylk`   | `.sylk`  |   none    | single | Symbolic Link (SYLK)              |
 | `dif`    | `.dif`   |   none    | single | Data Interchange Format (DIF)     |
+| `prn`    | `.prn`   |   none    | single | Lotus Formatted Text              |
 
 - `compression` only applies to formats with ZIP containers.
 - Formats that only support a single sheet require a `sheet` option specifying
   the worksheet.  If the string is empty, the first worksheet is used.
+- `writeFile` will automatically guess the output file format based on the file
+  extension if `bookType` is not specified.  It will choose the first format in
+  the aforementioned table that matches the extension.
 
 ### Output Type
 

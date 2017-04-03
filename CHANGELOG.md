@@ -9,6 +9,7 @@ changes may not be included if they are not expected to break existing code.
 
 * default output format changed to XLSB
 * comment text line endings are now normalized
+* errors thrown on write when worksheets have invalid names
 
 ## 0.9.7 (2017-03-28)
 

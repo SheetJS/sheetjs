@@ -14,9 +14,11 @@ Despite the library name `xlsx`, it supports numerous spreadsheet file formats:
 | Excel 3.0 (XLS BIFF3)                                        |  :o:  |       |
 | Excel 2.0/2.1 (XLS BIFF2)                                    |  :o:  |  :o:  |
 | **Excel Supported Text Formats**                             |:-----:|:-----:|
-| Delimiter-Separated Values (CSV/TSV/DSV)                     |       |  :o:  |
+| Delimiter-Separated Values (CSV/TXT)                         |       |  :o:  |
 | Data Interchange Format (DIF)                                |  :o:  |  :o:  |
 | Symbolic Link (SYLK/SLK)                                     |  :o:  |  :o:  |
+| Lotus Formatted Text (PRN)                                   |  :o:  |  :o:  |
+| UTF-16 Unicode Text (TXT)                                    |       |  :o:  |
 | **Other Workbook/Worksheet Formats**                         |:-----:|:-----:|
 | OpenDocument Spreadsheet (ODS)                               |  :o:  |  :o:  |
 | Flat XML ODF Spreadsheet (FODS)                              |  :o:  |  :o:  |
@@ -72,21 +74,25 @@ in an XLSX sub-file can be mapped to XLSB records in a corresponding sub-file.
 The `MS-XLSB` specification covers the basics of the file format, and other
 specifications expand on serialization of features like properties.
 
-### OpenDocument Spreadsheet (ODS/FODS) and Uniform Office Spreadsheet (UOS1/2)
+### OpenDocument Spreadsheet (ODS/FODS)
 
 ODS is an XML-in-ZIP format akin to XLSX while FODS is an XML format akin to
 SpreadsheetML.  Both are detailed in the OASIS standard, but tools like LO/OO
 add undocumented extensions.
 
+#### Uniform Office Spreadsheet (UOS1/2)
+
 UOS is a very similar format, and it comes in 2 varieties corresponding to ODS
 and FODS respectively.  For the most part, the difference between the formats
 lies in the names of tags and attributes.
 
-### Comma-Separated Values (CSV)
+### Delimiter-Separated Values (CSV/TXT)
 
 Excel CSV deviates from RFC4180 in a number of important ways.  The generated
 CSV files should generally work in Excel although they may not work in RFC4180
 compatible readers.
+
+Excel TXT uses tab as the delimiter and codepage 1200.
 
 ### Other Single-Worksheet Formats
 
@@ -105,6 +111,12 @@ limited by the general ability to read arbitrary files in the web browser.
 
 There is no real documentation.  All knowledge was gathered by saving files in
 various versions of Excel to deduce the meaning of fields.
+
+#### Lotus Formatted Text (PRN)
+
+There is no real documentation, and in fact Excel treats PRN as an output-only
+file format.  Nevertheless we can guess the column widths and reverse-engineer
+the original layout.
 
 #### Data Interchange Format (DIF)
 

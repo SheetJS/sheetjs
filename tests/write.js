@@ -71,11 +71,12 @@ ws['!rows'] = wsrows;
 ws['A3'].l = { Target: "http://sheetjs.com", Tooltip: "Visit us <SheetJS.com!>" };
 
 /* TEST: built-in format */
-//ws['A1'].z = "0%"; wb.SSF[9] = "0%"; // Format Code 9
+ws['B1'].z = "0%"; // Format Code 9
 
 /* TEST: custom format */
 //ws['B2'].z = "0.0"; wb.SSF[60] = "0.0"; // Custom
-console.log("JSON Data: "); console.log(XLSX.utils.sheet_to_json(ws, {header:1}));
+
+console.log("JSON Data:");console.log(XLSX.utils.sheet_to_json(ws, {header:1}));
 
 /* TEST: hidden sheets */
 wb.SheetNames.push("Hidden");
@@ -99,7 +100,7 @@ wb.Props = {
 
 /* TEST: comments */
 ws['A4'].c = [];
-ws['A4'].c.push({a:"SheetJS",t:"I'm a little comment, short and stout!"});
+ws['A4'].c.push({a:"SheetJS",t:"I'm a little comment, short and stout!\n\nWell, Stout may be the wrong word"});
 
 console.log("Worksheet Model:")
 console.log(ws);
@@ -114,6 +115,8 @@ XLSX.writeFile(wb, 'sheetjs.ods');
 XLSX.writeFile(wb, 'sheetjs.fods');
 XLSX.writeFile(wb, 'sheetjs.slk');
 XLSX.writeFile(wb, 'sheetjs.csv');
+XLSX.writeFile(wb, 'sheetjs.txt');
+XLSX.writeFile(wb, 'sheetjs.prn');
 
 /* test by reading back files */
 XLSX.readFile('sheetjs.xlsx');
@@ -125,3 +128,5 @@ XLSX.readFile('sheetjs.ods');
 XLSX.readFile('sheetjs.fods');
 XLSX.readFile('sheetjs.slk');
 //XLSX.readFile('sheetjs.csv');
+//XLSX.readFile('sheetjs.txt');
+XLSX.readFile('sheetjs.prn');

@@ -510,16 +510,6 @@ describe('input formats', function() {
 		X.read(fs.readFileSync(paths.cstxlsx));
 		X.read(fs.readFileSync(paths.cstxlsb));
 	});
-	it('should default to base64 type', function() {
-		assert.throws(function() { X.read(fs.readFileSync(paths.cstxls, 'binary')); });
-		assert.throws(function() { X.read(fs.readFileSync(paths.cstxml, 'binary')); });
-		assert.throws(function() { X.read(fs.readFileSync(paths.cstxlsx, 'binary')); });
-		assert.throws(function() { X.read(fs.readFileSync(paths.cstxlsb, 'binary')); });
-		X.read(fs.readFileSync(paths.cstxls, 'base64'));
-		X.read(fs.readFileSync(paths.cstxml, 'base64'));
-		X.read(fs.readFileSync(paths.cstxlsx, 'base64'));
-		X.read(fs.readFileSync(paths.cstxlsb, 'base64'));
-	});
 });
 
 describe('output formats', function() {

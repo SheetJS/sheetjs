@@ -72,3 +72,9 @@ file but Excel will know how to handle it.  This library applies similar logic:
 DBF files are detected based on the first byte as well as the third and fourth
 bytes (corresponding to month and day of the file date)
 
+Plaintext format guessing follows the priority order:
+
+| Format | Test                                                                |
+|:-------|:--------------------------------------------------------------------|
+| PRN    | (default)                                                           |
+

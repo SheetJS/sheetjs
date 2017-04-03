@@ -1,4 +1,4 @@
-## Workbook / Worksheet / Cell Object Description
+## Common Spreadsheet Format
 
 js-xlsx conforms to the Common Spreadsheet Format (CSF):
 

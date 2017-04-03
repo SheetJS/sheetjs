@@ -21,7 +21,7 @@ program
 	.option('-Y, --ods',  'emit ODS  to <sheetname> or <file>.ods')
 	.option('-2, --biff2','emit XLS  to <sheetname> or <file>.xls (BIFF2)')
 	.option('-6, --xlml', 'emit SSML to <sheetname> or <file>.xls (2003 XML)')
-	.option('-T, --fods', 'emit FODS to <sheetname> or <file>.xls (Flat ODS)')
+	.option('-T, --fods', 'emit FODS to <sheetname> or <file>.fods (Flat ODS)')
 
 	.option('-S, --formulae', 'print formulae')
 	.option('-j, --json', 'emit formatted JSON (all fields text)')
@@ -29,6 +29,8 @@ program
 	.option('-A, --arrays', 'emit rows as JS objects (raw numbers)')
 	.option('-D, --dif', 'emit data interchange format (dif)')
 	.option('-K, --sylk', 'emit symbolic link (sylk)')
+	.option('-P, --prn', 'emit formatted text (prn)')
+	.option('-t, --txt', 'emit delimited text (txt)')
 
 	.option('-F, --field-sep <sep>', 'CSV field separator', ",")
 	.option('-R, --row-sep <sep>', 'CSV row separator', "\n")
@@ -163,10 +165,12 @@ try {
 
 if(program.perf) process.exit(0);
 
-/* single worksheet XLS formats */
+/* single worksheet formats */
 [
 	['biff2', '.xls'],
 	['sylk', '.slk'],
+	['prn', '.prn'],
+	['txt', '.txt'],
 	['dif', '.dif']
 ].forEach(function(m) { if(program[m[0]]) {
 		wopts.bookType = m[0];

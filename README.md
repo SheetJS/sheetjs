@@ -15,6 +15,7 @@ with a unified JS representation, and ES3/ES5 browser compatibility back to IE6.
 
 ![circo graph of format support](formats.png)
 
+![graph legend](legend.png)
 
 
 ## Table of Contents
@@ -32,7 +33,7 @@ with a unified JS representation, and ES3/ES5 browser compatibility back to IE6.
   * [Parsing functions](#parsing-functions)
   * [Writing functions](#writing-functions)
   * [Utilities](#utilities)
-- [Workbook / Worksheet / Cell Object Description](#workbook--worksheet--cell-object-description)
+- [Common Spreadsheet Format](#common-spreadsheet-format)
   * [General Structures](#general-structures)
   * [Cell Object](#cell-object)
     + [Data Types](#data-types)
@@ -58,7 +59,8 @@ with a unified JS representation, and ES3/ES5 browser compatibility back to IE6.
   * [Array of Arrays Input](#array-of-arrays-input)
   * [HTML Table Input](#html-table-input)
   * [Formulae Output](#formulae-output)
-  * [CSV and general DSV Output](#csv-and-general-dsv-output)
+  * [Delimiter-Separated Output](#delimiter-separated-output)
+    + [UTF-16 Unicode Text](#utf-16-unicode-text)
   * [JSON](#json)
 - [File Formats](#file-formats)
   * [Excel 2007+ XML (XLSX/XLSM)](#excel-2007-xml-xlsxxlsm)
@@ -66,11 +68,13 @@ with a unified JS representation, and ES3/ES5 browser compatibility back to IE6.
   * [Excel 97-2004 Binary (BIFF8)](#excel-97-2004-binary-biff8)
   * [Excel 2003-2004 (SpreadsheetML)](#excel-2003-2004-spreadsheetml)
   * [Excel 2007+ Binary (XLSB, BIFF12)](#excel-2007-binary-xlsb-biff12)
-  * [OpenDocument Spreadsheet (ODS/FODS) and Uniform Office Spreadsheet (UOS1/2)](#opendocument-spreadsheet-odsfods-and-uniform-office-spreadsheet-uos12)
-  * [Comma-Separated Values (CSV)](#comma-separated-values-csv)
+  * [OpenDocument Spreadsheet (ODS/FODS)](#opendocument-spreadsheet-odsfods)
+    + [Uniform Office Spreadsheet (UOS1/2)](#uniform-office-spreadsheet-uos12)
+  * [Delimiter-Separated Values (CSV/TXT)](#delimiter-separated-values-csvtxt)
   * [Other Single-Worksheet Formats](#other-single-worksheet-formats)
     + [dBASE and Visual FoxPro (DBF)](#dbase-and-visual-foxpro-dbf)
     + [Symbolic Link (SYLK)](#symbolic-link-sylk)
+    + [Lotus Formatted Text (PRN)](#lotus-formatted-text-prn)
     + [Data Interchange Format (DIF)](#data-interchange-format-dif)
     + [HTML](#html)
 - [Testing](#testing)
@@ -429,7 +433,7 @@ Exporters are described in the [Utility Functions](#utility-functions) section.
 - `{en,de}code_cell` converts cell addresses
 - `{en,de}code_range` converts cell ranges
 
-## Workbook / Worksheet / Cell Object Description
+## Common Spreadsheet Format
 
 js-xlsx conforms to the Common Spreadsheet Format (CSF):
 
@@ -879,6 +883,12 @@ file but Excel will know how to handle it.  This library applies similar logic:
 DBF files are detected based on the first byte as well as the third and fourth
 bytes (corresponding to month and day of the file date)
 
+Plaintext format guessing follows the priority order:
+
+| Format | Test                                                                |
+|:-------|:--------------------------------------------------------------------|
+| PRN    | (default)                                                           |
+
 ## Writing Options
 
 The exported `write` and `writeFile` functions accept an options argument:
@@ -910,16 +920,22 @@ output formats.  The specific file type is controlled with `bookType` option:
 | `xlsx`   | `.xlsx`  |    ZIP    | multi  | Excel 2007+ XML Format            |
 | `xlsm`   | `.xlsm`  |    ZIP    | multi  | Excel 2007+ Macro XML Format      |
 | `xlsb`   | `.xlsb`  |    ZIP    | multi  | Excel 2007+ Binary Format         |
-| `ods`    | `.ods`   |    ZIP    | multi  | OpenDocument Spreadsheet          |
 | `biff2`  | `.xls`   |   none    | single | Excel 2.0 Worksheet format        |
+| `xlml`   | `.xls`   |   none    | multi  | Excel 2003-2004 (SpreadsheetML)   |
+| `ods`    | `.ods`   |    ZIP    | multi  | OpenDocument Spreadsheet          |
 | `fods`   | `.fods`  |   none    | multi  | Flat OpenDocument Spreadsheet     |
 | `csv`    | `.csv`   |   none    | single | Comma Separated Values            |
+| `txt`    | `.txt`   |   none    | single | UTF-16 Unicode Text (TXT)         |
 | `sylk`   | `.sylk`  |   none    | single | Symbolic Link (SYLK)              |
 | `dif`    | `.dif`   |   none    | single | Data Interchange Format (DIF)     |
+| `prn`    | `.prn`   |   none    | single | Lotus Formatted Text              |
 
 - `compression` only applies to formats with ZIP containers.
 - Formats that only support a single sheet require a `sheet` option specifying
   the worksheet.  If the string is empty, the first worksheet is used.
+- `writeFile` will automatically guess the output file format based on the file
+  extension if `bookType` is not specified.  It will choose the first format in
+  the aforementioned table that matches the extension.
 
 ### Output Type
 
@@ -1013,7 +1029,7 @@ accordance with Excel.  For the example sheet:
 [ 'A1=\'S', 'F1=\'J', 'D2=4', 'B3=3', 'G3=8' ]
 ```
 
-### CSV and general DSV Output
+### Delimiter-Separated Output
 
 As an alternative to the `writeFile` CSV type, `XLSX.utils.sheet_to_csv` also
 produces CSV output.  The function takes an options argument:
@@ -1043,6 +1059,12 @@ S	h	e	e	t	J	S
 > console.log(X.utils.sheet_to_csv(_ws,{FS:":",RS:"|"}));
 S:h:e:e:t:J:S|1:2:3:4:5:6:7|2:3:4:5:6:7:8|
 ```
+
+#### UTF-16 Unicode Text
+
+The `txt` output type uses the tab character as the field separator.  If the
+codepage library is available (included in the full distribution but not core),
+the output will be encoded in codepage `1200` and the BOM will be prepended.
 
 ### JSON
 
@@ -1145,9 +1167,11 @@ Despite the library name `xlsx`, it supports numerous spreadsheet file formats:
 | Excel 3.0 (XLS BIFF3)                                        |  :o:  |       |
 | Excel 2.0/2.1 (XLS BIFF2)                                    |  :o:  |  :o:  |
 | **Excel Supported Text Formats**                             |:-----:|:-----:|
-| Delimiter-Separated Values (CSV/TSV/DSV)                     |       |  :o:  |
+| Delimiter-Separated Values (CSV/TXT)                         |       |  :o:  |
 | Data Interchange Format (DIF)                                |  :o:  |  :o:  |
 | Symbolic Link (SYLK/SLK)                                     |  :o:  |  :o:  |
+| Lotus Formatted Text (PRN)                                   |  :o:  |  :o:  |
+| UTF-16 Unicode Text (TXT)                                    |       |  :o:  |
 | **Other Workbook/Worksheet Formats**                         |:-----:|:-----:|
 | OpenDocument Spreadsheet (ODS)                               |  :o:  |  :o:  |
 | Flat XML ODF Spreadsheet (FODS)                              |  :o:  |  :o:  |
@@ -1203,21 +1227,25 @@ in an XLSX sub-file can be mapped to XLSB records in a corresponding sub-file.
 The `MS-XLSB` specification covers the basics of the file format, and other
 specifications expand on serialization of features like properties.
 
-### OpenDocument Spreadsheet (ODS/FODS) and Uniform Office Spreadsheet (UOS1/2)
+### OpenDocument Spreadsheet (ODS/FODS)
 
 ODS is an XML-in-ZIP format akin to XLSX while FODS is an XML format akin to
 SpreadsheetML.  Both are detailed in the OASIS standard, but tools like LO/OO
 add undocumented extensions.
 
+#### Uniform Office Spreadsheet (UOS1/2)
+
 UOS is a very similar format, and it comes in 2 varieties corresponding to ODS
 and FODS respectively.  For the most part, the difference between the formats
 lies in the names of tags and attributes.
 
-### Comma-Separated Values (CSV)
+### Delimiter-Separated Values (CSV/TXT)
 
 Excel CSV deviates from RFC4180 in a number of important ways.  The generated
 CSV files should generally work in Excel although they may not work in RFC4180
 compatible readers.
+
+Excel TXT uses tab as the delimiter and codepage 1200.
 
 ### Other Single-Worksheet Formats
 
@@ -1236,6 +1264,12 @@ limited by the general ability to read arbitrary files in the web browser.
 
 There is no real documentation.  All knowledge was gathered by saving files in
 various versions of Excel to deduce the meaning of fields.
+
+#### Lotus Formatted Text (PRN)
+
+There is no real documentation, and in fact Excel treats PRN as an output-only
+file format.  Nevertheless we can guess the column widths and reverse-engineer
+the original layout.
 
 #### Data Interchange Format (DIF)
 

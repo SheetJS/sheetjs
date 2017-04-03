@@ -15,5 +15,6 @@ with a unified JS representation, and ES3/ES5 browser compatibility back to IE6.
 
 ![circo graph of format support](formats.png)
 
+![graph legend](legend.png)
 
 

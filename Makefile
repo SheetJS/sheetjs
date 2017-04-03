@@ -75,9 +75,12 @@ bytes: ## display minified and gzipped file sizes
 	for i in dist/xlsx.min.js dist/xlsx.{core,full}.min.js; do printj "%-30s %7d %10d" $$i $$(wc -c < $$i) $$(gzip --best --stdout $$i | wc -c); done
 
 .PHONY: graph
-graph: formats.png ## Rebuild format conversion graph
+graph: formats.png legend.png ## Rebuild format conversion graph
 formats.png: formats.dot
 	circo -Tpng -o$@ $<
+legend.png: misc/legend.dot
+	dot -Tpng -o$@ $<
+
 
 .PHONY: nexe
 nexe: xlsx.exe ## Build nexe standalone executable
@@ -176,7 +179,7 @@ readme: README.md ## Update README Table of Contents
 	markdown-toc -i README.md
 
 .PHONY: book
-book: README.md ## Update summary for documentation
+book: readme ## Update summary for documentation
 	printf "# Summary\n\n- [xlsx](README.md#xlsx)\n" > misc/docs/SUMMARY.md
 	markdown-toc README.md | sed 's/(#/(README.md#/g'>> misc/docs/SUMMARY.md
 

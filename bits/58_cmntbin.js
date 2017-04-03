@@ -11,7 +11,7 @@ function parse_BrtBeginComment(data, length) {
 function write_BrtBeginComment(data, o) {
 	if(o == null) o = new_buf(36);
 	o.write_shift(4, data[1].iauthor);
-	write_UncheckedRfX(data[0], o);
+	write_UncheckedRfX((data[0]/*:any*/), o);
 	o.write_shift(4, 0);
 	o.write_shift(4, 0);
 	o.write_shift(4, 0);
@@ -74,7 +74,7 @@ function write_comments_bin(data, opts) {
 		data.forEach(function(comment) {
 			comment[1].forEach(function(c) {
 				c.iauthor = iauthor.indexOf(c.a);
-				var range = {s:decode_cell(comment[0])}; range.e = range.s;
+				var range = {s:decode_cell(comment[0]),e:decode_cell(comment[0])};
 				write_record(ba, "BrtBeginComment", write_BrtBeginComment([range, c]));
 				if(c.t && c.t.length > 0) write_record(ba, "BrtCommentText", write_RichStr(c));
 				write_record(ba, "BrtEndComment");

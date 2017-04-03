@@ -99,9 +99,16 @@ function parse_wb_defaults(wb) {
 	_ssfopts.date1904 = parsexmlbool(wb.WBProps.date1904, 'date1904');
 }
 
-/* TODO: validate workbook */
+function check_wb_names(N) {
+	var badchars = "][*?\/\\".split("");
+	N.forEach(function(n,i) {
+		badchars.forEach(function(c) { if(n.indexOf(c) > -1) throw new Error("Sheet name cannot contain : \\ / ? * [ ]"); });
+		if(n.length > 31) throw new Error("Sheet names cannot exceed 31 chars");
+		for(var j = 0; j < i; ++j) if(n == N[j]) throw new Error("Duplicate Sheet Name: " + n);
+	});
+}
 function check_wb(wb) {
 	if(!wb || !wb.SheetNames || !wb.Sheets) throw new Error("Invalid Workbook");
-	for(var i = 0; i < wb.SheetNames.length; ++i) for(var j = 0; j < i; ++j)
-		if(wb.SheetNames[i] == wb.SheetNames[j]) throw new Error("Duplicate Sheet Name: " + wb.SheetNames[i]);
+	check_wb_names(wb.SheetNames);
+	/* TODO: validate workbook */
 }

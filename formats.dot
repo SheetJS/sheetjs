@@ -16,7 +16,7 @@ digraph G {
 	subgraph OD {
 		node  [style=filled,color=yellow];
 		ods   [label="ODS"];
-		fods  [label="Flat\nODS"];
+		fods  [label="FODS"];
 		uos   [label="UOS"];
 	}
 
@@ -24,12 +24,14 @@ digraph G {
 		node  [style=filled,color=cyan];
 		html  [label="HTML\nTable"];
 		csv   [label="CSV"];
+		txt   [label="TXT\nUTF-16"];
 		dbf   [label="DBF"];
 		dif   [label="DIF"];
 		slk   [label="SYLK"];
+		prn   [label="PRN"];
 	}
 
-	subgraph JSXLSX {
+	subgraph WORKBOOK {
 		edge [color=blue];
 		csf -> xlsx
 		xlsx -> csf
@@ -37,22 +39,28 @@ digraph G {
 		xlsb -> csf
 		csf -> xlml
 		xlml -> csf
-		xls2 -> csf
-		csf -> xls2
-		xls3 -> csf
-		xls4 -> csf
 		xls5 -> csf
 		xls8 -> csf
-		csf -> slk
-		slk -> csf
-		csf -> dif
-		dif -> csf
-		csf -> csv
 		ods -> csf
 		csf -> ods
 		fods -> csf
 		csf -> fods
 		uos -> csf
+	}
+	subgraph WORKSHEET {
+		edge [color=aquamarine4];
+		xls2 -> csf
+		csf -> xls2
+		xls3 -> csf
+		xls4 -> csf
+		csf -> slk
+		slk -> csf
+		csf -> dif
+		dif -> csf
+		prn -> csf
+		csf -> prn
+		csf -> csv
+		csf -> txt
 		dbf -> csf
 		html -> csf
 	}
