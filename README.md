@@ -542,8 +542,8 @@ top-level attributes: `fill`, `font`, `numFmt`, `alignment`, and `border`.
 
 
 | Style Attribute | Sub Attributes | Values |
-| :-------------- | :------------- | :------------- | :----- |
-| fill            | patternType    |  `"solid"` or `"none"` |
+| :-------------- | :------------- | :------------- |
+| fill            | patternType    |  `"solid"` or `"none"`
 |                 | fgColor        |  `COLOR_SPEC`
 |                 | bgColor        |  `COLOR_SPEC`
 | font            | name           |  `"Calibri"` // default
@@ -568,7 +568,7 @@ top-level attributes: `fill`, `font`, `numFmt`, `alignment`, and `border`.
 |                 | textRotation   | Number from `0` to `180` or `255` (default is `0`)
 |                 |                |  `90` is rotated up 90 degrees
 |                 |                |  `45` is rotated up 45 degrees
-|                 |                | `135` is rotated down 45 degrees 
+|                 |                | `135` is rotated down 45 degrees
 |                 |                | `180` is rotated down 180 degrees
 |                 |                | `255` is special,  aligned vertically
 | border          | top            | `{ style: BORDER_STYLE, color: COLOR_SPEC }`
@@ -578,7 +578,6 @@ top-level attributes: `fill`, `font`, `numFmt`, `alignment`, and `border`.
 |                 | diagonal       | `{ style: BORDER_STYLE, color: COLOR_SPEC }`
 |                 | diagonalUp     | `true` or `false`
 |                 | diagonalDown   | `true` or `false`
-
 
 **COLOR_SPEC**: Colors for `fill`, `font`, and `border` are specified as objects, either:
 * `{ auto: 1}` specifying automatic values
