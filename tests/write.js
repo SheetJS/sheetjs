@@ -117,6 +117,7 @@ XLSX.writeFile(wb, 'sheetjs.slk');
 XLSX.writeFile(wb, 'sheetjs.csv');
 XLSX.writeFile(wb, 'sheetjs.txt');
 XLSX.writeFile(wb, 'sheetjs.prn');
+XLSX.writeFile(wb, 'sheetjs.dif');
 
 /* test by reading back files */
 XLSX.readFile('sheetjs.xlsx');
@@ -127,6 +128,7 @@ XLSX.readFile('sheetjs.xml.xls');
 XLSX.readFile('sheetjs.ods');
 XLSX.readFile('sheetjs.fods');
 XLSX.readFile('sheetjs.slk');
-//XLSX.readFile('sheetjs.csv');
-//XLSX.readFile('sheetjs.txt');
+XLSX.readFile('sheetjs.csv');
+XLSX.readFile('sheetjs.txt');
 XLSX.readFile('sheetjs.prn');
+XLSX.readFile('sheetjs.dif');

@@ -11,6 +11,8 @@ with a unified JS representation, and ES3/ES5 browser compatibility back to IE6.
 
 [**Commercial Support**](http://sheetjs.com/reinforcements)
 
+[**Rendered Documentation**](https://sheetjs.gitbooks.io/docs/)
+
 [**File format support for known spreadsheet data formats:**](#file-formats)
 
 ![circo graph of format support](formats.png)

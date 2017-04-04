@@ -734,6 +734,10 @@ if(CompObj) CompObjP = parse_compobj(CompObj);
 if(options.bookProps && !options.bookSheets) WorkbookP = ({}/*:any*/);
 else {
 	if(Workbook) WorkbookP = parse_workbook(Workbook.content, options, !!Workbook.find);
+	/* Quattro Pro 7-8 */
+	else if(cfb.find('PerfectOffice_MAIN')) WorkbookP = WK_.to_workbook(cfb.find('PerfectOffice_MAIN').content, options);
+	/* Quattro Pro 9 */
+	else if(cfb.find('NativeContent_MAIN')) WorkbookP = WK_.to_workbook(cfb.find('NativeContent_MAIN').content, options);
 	else throw new Error("Cannot find Workbook stream");
 }
 

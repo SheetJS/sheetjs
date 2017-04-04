@@ -7,7 +7,7 @@ v8.log
 tmp
 *.txt
 *.[cC][sS][vV]
-*.[dD][iI][fF]
+*.[dD][iIbB][fF]
 *.[pP][rR][nN]
 *.[sS][lL][kK]
 *.socialcalc
@@ -17,6 +17,9 @@ tmp
 *.[fF][oO][dD][sS]
 *.[xX][mM][lL]
 *.[uU][oO][sS]
+*.[wW][kKqQbB][S1234567890]
+*.[qQ][pP][wW]
+*.123
 *.htm
 *.html
 *.sheetjs

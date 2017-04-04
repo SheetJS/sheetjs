@@ -7,6 +7,10 @@ changes may not be included if they are not expected to break existing code.
 
 ## Unreleased
 
+*
+
+## 0.9.9 (2017-04-03)
+
 * default output format changed to XLSB
 * comment text line endings are now normalized
 * errors thrown on write when worksheets have invalid names

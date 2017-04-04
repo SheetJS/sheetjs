@@ -24,6 +24,8 @@ Despite the library name `xlsx`, it supports numerous spreadsheet file formats:
 | Flat XML ODF Spreadsheet (FODS)                              |  :o:  |  :o:  |
 | Uniform Office Format Spreadsheet (标文通 UOS1/UOS2)         |  :o:  |       |
 | dBASE II/III/IV / Visual FoxPro (DBF)                        |  :o:  |       |
+| Lotus 1-2-3 (WKS/WK1/WK2/WK3/WK4/123)                        |  :o:  |       |
+| Quattro Pro Spreadsheet (WQ1/WQ2/WB1/WB2/WB3/QPW)            |  :o:  |       |
 | **Other Common Spreadsheet Output Formats**                  |:-----:|:-----:|
 | HTML Tables                                                  |  :o:  |       |
 
@@ -74,7 +76,34 @@ in an XLSX sub-file can be mapped to XLSB records in a corresponding sub-file.
 The `MS-XLSB` specification covers the basics of the file format, and other
 specifications expand on serialization of features like properties.
 
-### OpenDocument Spreadsheet (ODS/FODS)
+### Delimiter-Separated Values (CSV/TXT)
+
+Excel CSV deviates from RFC4180 in a number of important ways.  The generated
+CSV files should generally work in Excel although they may not work in RFC4180
+compatible readers.  The parser should generally understand Excel CSV.
+
+Excel TXT uses tab as the delimiter and codepage 1200.
+
+### Other Workbook Formats
+
+Support for other formats is generally far XLS/XLSB/XLSX support, due in large
+part to a lack of publicly available documentation.  Test files were produced in
+the respective apps and compared to their XLS exports to determine structure.
+The main focus is data extraction.
+
+#### Lotus 1-2-3 (WKS/WK1/WK2/WK3/WK4/123)
+
+The Lotus formats consist of binary records similar to the BIFF structure. Lotus
+did release a whitepaper decades ago covering the original WK1 format.  Other
+features were deduced by producing files and comparing to Excel support.
+
+#### Quattro Pro (WQ1/WQ2/WB1/WB2/WB3/QPW)
+
+The Quattro Pro formats use binary records in the same way as BIFF and Lotus.
+Some of the newer formats (namely WB3 and QPW) use a CFB enclosure just like
+BIFF8 XLS.
+
+#### OpenDocument Spreadsheet (ODS/FODS)
 
 ODS is an XML-in-ZIP format akin to XLSX while FODS is an XML format akin to
 SpreadsheetML.  Both are detailed in the OASIS standard, but tools like LO/OO
@@ -85,14 +114,6 @@ add undocumented extensions.
 UOS is a very similar format, and it comes in 2 varieties corresponding to ODS
 and FODS respectively.  For the most part, the difference between the formats
 lies in the names of tags and attributes.
-
-### Delimiter-Separated Values (CSV/TXT)
-
-Excel CSV deviates from RFC4180 in a number of important ways.  The generated
-CSV files should generally work in Excel although they may not work in RFC4180
-compatible readers.  The parser should generally understand Excel CSV.
-
-Excel TXT uses tab as the delimiter and codepage 1200.
 
 ### Other Single-Worksheet Formats
 

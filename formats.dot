@@ -25,6 +25,10 @@ digraph G {
 		dif   [label="DIF"];
 		slk   [label="SYLK"];
 		prn   [label="PRN"];
+		wk1   [label="WK1/2\n123"];
+		wk3   [label="WK3/4"];
+		wqb   [label="WQ*\nWB*"];
+		qpw   [label="QPW"];
 	}
 
 	subgraph WORKBOOK {
@@ -42,6 +46,8 @@ digraph G {
 		fods -> csf
 		csf -> fods
 		uos -> csf
+		wk3 -> csf
+		qpw -> csf
 	}
 	subgraph WORKSHEET {
 		edge [color=aquamarine4];
@@ -52,6 +58,8 @@ digraph G {
 		csf -> slk
 		slk -> csf
 		csf -> dif
+		wk1 -> csf
+		wqb -> csf
 		dif -> csf
 		prn -> csf
 		csf -> prn

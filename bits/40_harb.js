@@ -412,11 +412,12 @@ var PRN = (function() {
 		if(str.substr(0,1024).indexOf("\t") == -1) sep = ","; else sep = "\t";
 		var R = 0, C = 0, v = 0;
 		var start = 0, end = 0, sepcc = sep.charCodeAt(0), instr = false, cc=0;
+		str = str.replace(/\r\n/g, "\n");
 		for(;end < str.length;++end) switch((cc=str.charCodeAt(end))) {
 			case 0x22: instr = !instr; break;
 			case sepcc: case 0x0a: if(instr) break;
 			var s = str.slice(start, end);
-			var cell = ({}/*:any*/)
+			var cell = ({}/*:any*/);
 			if(s.charCodeAt(0) == 0x3D) { cell.t = 'n'; cell.f = s.substr(1); }
 			else if(s == "TRUE") { cell.t = 'b'; cell.v = true; }
 			else if(s == "FALSE") { cell.t = 'b'; cell.v = false; }
@@ -426,7 +427,7 @@ var PRN = (function() {
 			start = end+1;
 			if(range.e.c < C) range.e.c = C;
 			if(range.e.r < R) range.e.r = R;
-			if(cc == sepcc) ++C; else { C = 0; ++R; }; break;
+			if(cc == sepcc) ++C; else { C = 0; ++R; } break;
 			default: break;
 		}
 

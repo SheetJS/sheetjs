@@ -1236,7 +1236,7 @@ var XLSRecordEnum = {
 	/*::[*/0x08c5/*::]*/: { n:"ListCF", f:parsenoop },
 	/*::[*/0x08c6/*::]*/: { n:"FMQry", f:parsenoop },
 	/*::[*/0x08c7/*::]*/: { n:"FMSQry", f:parsenoop },
-	/*::[*/0x08c8/*::]*/: { n:"PLV", f:parsenoop }, /* supposedly PLV for Excel 11 */
+	/*::[*/0x08c8/*::]*/: { n:"PLV", f:parsenoop },
 	/*::[*/0x08c9/*::]*/: { n:"LnExt", f:parsenoop },
 	/*::[*/0x08ca/*::]*/: { n:"MkrExt", f:parsenoop },
 	/*::[*/0x08cb/*::]*/: { n:"CrtCoopt", f:parsenoop },

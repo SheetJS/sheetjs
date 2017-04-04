@@ -55,6 +55,7 @@ function parse_dom_table(table/*:HTMLElement*/, opts/*:?any*/)/*:Worksheet*/ {
 			var o = {t:'s', v:v};
 			if(v != null && v.length && !isNaN(Number(v))) o = {t:'n', v:Number(v)};
 			ws[encode_cell({c:C, r:R})] = o;
+			if(range.e.c < C) range.e.c = C;
 			C += CS;
 		}
 	}
