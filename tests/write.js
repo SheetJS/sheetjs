@@ -102,6 +102,13 @@ wb.Props = {
 ws['A4'].c = [];
 ws['A4'].c.push({a:"SheetJS",t:"I'm a little comment, short and stout!\n\nWell, Stout may be the wrong word"});
 
+/* TEST: sheet protection */
+ws['!protect'] = {
+	password:"password",
+	objects:1,
+	scenarios:1
+};
+
 console.log("Worksheet Model:")
 console.log(ws);
 

@@ -574,6 +574,28 @@ In addition to the base sheet keys, worksheets also add:
   will write all cells in the merge range if they exist, so be sure that only
   the first cell (upper-left) in the range is set.
 
+- `ws['protect']`: object of write sheet protection properties.  The `password`
+  key specifies the password.  The writer uses the XOR obfuscation method.  The
+  following keys control the sheet protection (same as ECMA-376 18.3.1.85):
+
+| key                   | functionality disabled if value is true              |
+|:----------------------|:-----------------------------------------------------|
+| `selectLockedCells`   | Select locked cells                                  |
+| `selectUnlockedCells` | Select unlocked cells                                |
+| `formatCells`         | Format cells                                         |
+| `formatColumns`       | Format columns                                       |
+| `formatRows`          | Format rows                                          |
+| `insertColumns`       | Insert columns                                       |
+| `insertRows`          | Insert rows                                          |
+| `insertHyperlinks`    | Insert hyperlinks                                    |
+| `deleteColumns`       | Delete columns                                       |
+| `deleteRows`          | Delete rows                                          |
+| `sort`                | Sort                                                 |
+| `autoFilter`          | Filter                                               |
+| `pivotTables`         | Use PivotTable reports                               |
+| `objects`             | Edit objects                                         |
+| `scenarios`           | Edit scenarios                                       |
+
 #### Chartsheet Object
 
 Chartsheets are represented as standard sheets.  They are distinguished with the

@@ -9715,6 +9715,24 @@ function write_ws_xml_merges(merges) {
 	return o + '</mergeCells>';
 }
 
+/* 18.3.1.85 sheetPr CT_SheetProtection */
+function write_ws_xml_protection(sp)/*:string*/ {
+	// algorithmName, hashValue, saltValue, spinCountpassword
+	var o = ({sheet:1}/*:any*/);
+	var deffalse = ["objects", "scenarios", "selectLockedCells", "selectUnlockedCells"];
+	var deftrue = [
+		"formatColumns", "formatRows", "formatCells",
+		"insertColumns", "insertRows", "insertHyperlinks",
+		"deleteColumns", "deleteRows",
+		"sort", "autoFilter", "pivotTables"
+	];
+	deffalse.forEach(function(n) { if(sp[n] != null && sp[n]) o[n] = "1"; });
+	deftrue.forEach(function(n) { if(sp[n] != null && !sp[n]) o[n] = "0"; });
+	/* TODO: algorithm */
+	if(sp.password) o.password = crypto_CreatePasswordVerifier_Method1(sp.password).toString(16).toUpperCase();
+	return writextag('sheetProtection', null, o);
+}
+
 function parse_ws_xml_hlinks(s, data/*:Array<string>*/, rels) {
 	for(var i = 0; i != data.length; ++i) {
 		var val = parsexmltag(data[i], true);
@@ -9992,6 +10010,8 @@ function write_ws_xml(idx/*:number*/, opts, wb/*:Workbook*/, rels)/*:string*/ {
 		if(rdata.length > 0) o[o.length] = (rdata);
 	}
 	if(o.length>sidx+1) { o[o.length] = ('</sheetData>'); o[sidx]=o[sidx].replace("/>",">"); }
+
+	if(ws['!protect'] != null) o[o.length] = write_ws_xml_protection(ws['!protect']);
 
 	if(ws['!merges'] != null && ws['!merges'].length > 0) o[o.length] = (write_ws_xml_merges(ws['!merges']));
 
