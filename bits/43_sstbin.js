@@ -12,7 +12,6 @@ function parse_sst_bin(data, opts)/*:SST*/ {
 			case 'BrtBeginSst': s.Count = val[0]; s.Unique = val[1]; break;
 			case 'BrtSSTItem': s.push(val); break;
 			case 'BrtEndSst': return true;
-			/* TODO: produce a test case with a future record */
 			case 'BrtFRTBegin': pass = true; break;
 			case 'BrtFRTEnd': pass = false; break;
 			default: if(!pass || opts.WTF) throw new Error("Unexpected record " + RT + " " + R.n);
@@ -34,6 +33,7 @@ function write_sst_bin(sst, opts) {
 	var ba = buf_array();
 	write_record(ba, "BrtBeginSst", write_BrtBeginSst(sst));
 	for(var i = 0; i < sst.length; ++i) write_record(ba, "BrtSSTItem", write_BrtSSTItem(sst[i]));
+	/* FRTSST */
 	write_record(ba, "BrtEndSst");
 	return ba.end();
 }

@@ -18,13 +18,15 @@ var parse_content_xml = (function() {
 
 	return function pcx(d/*:string*/, _opts)/*:Workbook*/ {
 		var opts = _opts || {};
+		if(DENSE != null) opts.dense = DENSE;
 		var str = xlml_normalize(d);
 		var state/*:Array<any>*/ = [], tmp;
 		var tag/*:: = {}*/;
 		var NFtag = {name:""}, NF = "", pidx = 0;
 		var sheetag/*:: = {name:"", '名称':""}*/;
 		var rowtag/*:: = {'行号':""}*/;
-		var Sheets = {}, SheetNames/*:Array<string>*/ = [], ws = {};
+		var Sheets = {}, SheetNames/*:Array<string>*/ = [];
+		var ws = opts.dense ? ([]/*:any*/) : ({}/*:any*/);
 		var Rn, q/*:: = ({t:"", v:null, z:null, w:"",c:[]}:any)*/;
 		var ctag = {value:""};
 		var textp = "", textpidx = 0, textptag/*:: = {}*/;
@@ -52,7 +54,7 @@ var parse_content_xml = (function() {
 					sheetag = parsexmltag(Rn[0], false);
 					R = C = -1;
 					range.s.r = range.s.c = 10000000; range.e.r = range.e.c = 0;
-					ws = {}; merges = [];
+					ws = opts.dense ? ([]/*:any*/) : ({}/*:any*/); merges = [];
 				}
 				break;
 
@@ -63,7 +65,10 @@ var parse_content_xml = (function() {
 				C = -1; break;
 			case 'covered-table-cell': // 9.1.5 <table:covered-table-cell>
 				++C;
-				if(opts.sheetStubs) ws[encode_cell({r:R,c:C})] = {t:'z'};
+				if(opts.sheetStubs) {
+					if(opts.dense) { if(!ws[R]) ws[R] = []; ws[R][C] = {t:'z'}; }
+					else ws[encode_cell({r:R,c:C})] = {t:'z'};
+				}
 				break; /* stub */
 			case 'table-cell': case '数据':
 				if(Rn[0].charAt(Rn[0].length-2) === '/') {
@@ -133,8 +138,14 @@ var parse_content_xml = (function() {
 					if(textp) q.w = textp;
 					if(!isstub || opts.sheetStubs) {
 						if(!(opts.sheetRows && opts.sheetRows < R)) {
-							ws[encode_cell({r:R,c:C})] = q;
-							while(--rept > 0) ws[encode_cell({r:R,c:++C})] = dup(q);
+							if(opts.dense) {
+								if(!ws[R]) ws[R] = [];
+								ws[R][C] = q;
+								while(--rept > 0) ws[R][++C] = dup(q);
+							} else {
+								ws[encode_cell({r:R,c:C})] = q;
+								while(--rept > 0) ws[encode_cell({r:R,c:++C})] = dup(q);
+							}
 							if(range.e.c <= C) range.e.c = C;
 						}
 					} else { C += rept; rept = 0; }

@@ -10,8 +10,9 @@ var colregex = /<(?:\w*:)?col[^>]*[\/]?>/g;
 /* 18.3 Worksheets */
 function parse_ws_xml(data/*:?string*/, opts, rels, wb, themes, styles)/*:Worksheet*/ {
 	if(!data) return data;
+	if(DENSE != null) opts.dense = DENSE;
 	/* 18.3.1.99 worksheet CT_Worksheet */
-	var s = ({}/*:any*/);
+	var s = opts.dense ? ([]/*:any*/) : ({}/*:any*/);
 
 	/* 18.3.1.35 dimension CT_SheetDimension ? */
 	// $FlowIgnore
@@ -89,6 +90,7 @@ function write_ws_xml_protection(sp)/*:string*/ {
 }
 
 function parse_ws_xml_hlinks(s, data/*:Array<string>*/, rels) {
+	var dense = Array.isArray(s);
 	for(var i = 0; i != data.length; ++i) {
 		var val = parsexmltag(data[i], true);
 		if(!val.ref) return;
@@ -106,8 +108,14 @@ function parse_ws_xml_hlinks(s, data/*:Array<string>*/, rels) {
 		var rng = safe_decode_range(val.ref);
 		for(var R=rng.s.r;R<=rng.e.r;++R) for(var C=rng.s.c;C<=rng.e.c;++C) {
 			var addr = encode_cell({c:C,r:R});
-			if(!s[addr]) s[addr] = {t:"z",v:undefined};
-			s[addr].l = val;
+			if(dense) {
+				if(!s[R]) s[R] = [];
+				if(!s[R][C]) s[R][C] = {t:"z",v:undefined};
+				s[R][C].l = val;
+			} else {
+				if(!s[addr]) s[addr] = {t:"z",v:undefined};
+				s[addr].l = val;
+			}
 		}
 	}
 }
@@ -191,6 +199,7 @@ return function parse_ws_xml_data(sdata, s, opts, guess, themes, styles) {
 	var fmtid = 0, fillid = 0, do_format = Array.isArray(styles.CellXf), cf;
 	var arrayf = [];
 	var sharedf = [];
+	var dense = Array.isArray(s);
 	for(var marr = sdata.split(rowregex), mt = 0, marrlen = marr.length; mt != marrlen; ++mt) {
 		x = marr[mt].trim();
 		var xlen = x.length;
@@ -305,21 +314,27 @@ return function parse_ws_xml_data(sdata, s, opts, guess, themes, styles) {
 			if(opts.cellDates && do_format && p.t == 'n' && SSF.is_date(SSF._table[fmtid])) {
 				var _d = SSF.parse_date_code(p.v); if(_d) { p.t = 'd'; p.v = new Date(Date.UTC(_d.y, _d.m-1,_d.d,_d.H,_d.M,_d.S,_d.u)); }
 			}
-			s[tag.r] = p;
+			if(dense) {
+				var _r = decode_cell(tag.r);
+				if(!s[_r.r]) s[_r.r] = [];
+				s[_r.r][_r.c] = p;
+			} else s[tag.r] = p;
 		}
 	}
 }; })();
 
 function write_ws_xml_data(ws/*:Worksheet*/, opts, idx/*:number*/, wb/*:Workbook*/, rels)/*:string*/ {
 	var o = [], r = [], range = safe_decode_range(ws['!ref']), cell, ref, rr = "", cols = [], R=0, C=0, rows = ws['!rows'];
+	var dense = Array.isArray(ws);
 	for(C = range.s.c; C <= range.e.c; ++C) cols[C] = encode_col(C);
 	for(R = range.s.r; R <= range.e.r; ++R) {
 		r = [];
 		rr = encode_row(R);
 		for(C = range.s.c; C <= range.e.c; ++C) {
 			ref = cols[C] + rr;
-			if(ws[ref] === undefined) continue;
-			if((cell = write_ws_xml_cell(ws[ref], ref, ws, opts, idx, wb)) != null) r.push(cell);
+			var _cell = dense ? (ws[R]||[])[C]: ws[ref];
+			if(_cell === undefined) continue;
+			if((cell = write_ws_xml_cell(_cell, ref, ws, opts, idx, wb)) != null) r.push(cell);
 		}
 		if(r.length > 0) {
 			var params = ({r:rr}/*:any*/);
@@ -350,6 +365,7 @@ function write_ws_xml(idx/*:number*/, opts, wb/*:Workbook*/, rels)/*:string*/ {
 	var ref = ws['!ref']; if(ref === undefined) ref = 'A1';
 	if(!rels) rels = {};
 	ws['!comments'] = [];
+	ws['!drawing'] = [];
 
 	o[o.length] = (writextag('sheetPr', null, {'codeName': escapexml(wb.SheetNames[idx])}));
 	o[o.length] = (writextag('dimension', null, {'ref': ref}));
@@ -385,12 +401,20 @@ function write_ws_xml(idx/*:number*/, opts, wb/*:Workbook*/, rels)/*:string*/ {
 	}
 	delete ws['!links'];
 
+	var hfidx = o.length;
+	o[o.length] = "";
+
+	if(ws['!drawing'].length > 0) {
+		rId = add_rels(rels, -1, "../drawings/drawing" + (idx+1) + ".xml", RELS.DRAW);
+		ws['!drawing'].rid = rId;
+		o[o.length] = writextag("drawing", null, {"r:id":"rId" + rId});
+	}
+	else delete ws['!drawing'];
 	if(ws['!comments'].length > 0) {
 		rId = add_rels(rels, -1, "../drawings/vmlDrawing" + (idx+1) + ".vml", RELS.VML);
 		o[o.length] = writextag("legacyDrawing", null, {"r:id":"rId" + rId});
 		ws['!legacy'] = rId;
 	}
-// <legacyDrawing r:id="rId1"/>
 
 	if(o.length>2) { o[o.length] = ('</worksheet>'); o[1]=o[1].replace("/>",">"); }
 	return o.join("");

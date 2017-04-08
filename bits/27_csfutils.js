@@ -6,7 +6,8 @@ function sheet_to_workbook(sheet/*:Worksheet*/, opts)/*:Workbook*/ {
 
 function aoa_to_sheet(data/*:AOA*/, opts/*:?any*/)/*:Worksheet*/ {
 	var o = opts || {};
-	var ws/*:Worksheet*/ = ({}/*:any*/);
+	if(DENSE != null) o.dense = DENSE;
+	var ws/*:Worksheet*/ = o.dense ? ([]/*:any*/) : ({}/*:any*/);
 	var range/*:Range*/ = ({s: {c:10000000, r:10000000}, e: {c:0, r:0}}/*:any*/);
 	for(var R = 0; R != data.length; ++R) {
 		for(var C = 0; C != data[R].length; ++C) {
@@ -16,7 +17,6 @@ function aoa_to_sheet(data/*:AOA*/, opts/*:?any*/)/*:Worksheet*/ {
 			if(range.s.c > C) range.s.c = C;
 			if(range.e.r < R) range.e.r = R;
 			if(range.e.c < C) range.e.c = C;
-			var cell_ref = encode_cell(({c:C,r:R}/*:any*/));
 			if(cell.v === null) { if(!o.cellStubs) continue; cell.t = 'z'; }
 			else if(typeof cell.v === 'number') cell.t = 'n';
 			else if(typeof cell.v === 'boolean') cell.t = 'b';
@@ -26,7 +26,13 @@ function aoa_to_sheet(data/*:AOA*/, opts/*:?any*/)/*:Worksheet*/ {
 				else { cell.t = 'n'; cell.v = datenum(cell.v); cell.w = SSF.format(cell.z, cell.v); }
 			}
 			else cell.t = 's';
-			ws[cell_ref] = cell;
+			if(o.dense) {
+				if(!ws[R]) ws[R] = [];
+				ws[R][C] = cell;
+			} else {
+				var cell_ref = encode_cell(({c:C,r:R}/*:any*/));
+				ws[cell_ref] = cell;
+			}
 		}
 	}
 	if(range.s.c < 10000000) ws['!ref'] = encode_range(range);

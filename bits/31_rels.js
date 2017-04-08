@@ -44,11 +44,9 @@ var RELS_ROOT = writextag('Relationships', null, {
 
 /* TODO */
 function write_rels(rels)/*:string*/ {
-	var o = [];
-	o[o.length] = (XML_HEADER);
-	o[o.length] = (RELS_ROOT);
-	keys(rels['!id']).forEach(function(rid) { var rel = rels['!id'][rid];
-		o[o.length] = (writextag('Relationship', null, rel));
+	var o = [XML_HEADER, RELS_ROOT];
+	keys(rels['!id']).forEach(function(rid) {
+		o[o.length] = (writextag('Relationship', null, rels['!id'][rid]));
 	});
 	if(o.length>2){ o[o.length] = ('</Relationships>'); o[1]=o[1].replace("/>",">"); }
 	return o.join("");

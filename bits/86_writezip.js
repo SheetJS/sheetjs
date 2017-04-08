@@ -14,9 +14,12 @@ function write_zip(wb/*:Workbook*/, opts/*:WriteOpts*/)/*:ZIP*/ {
 	opts.Strings = /*::((*/[]/*:: :any):SST)*/; opts.Strings.Count = 0; opts.Strings.Unique = 0;
 	var wbext = opts.bookType == "xlsb" ? "bin" : "xml";
 	var vbafmt = opts.bookType == "xlsb" || opts.bookType == "xlsm";
-	var ct = { workbooks: [], sheets: [], calcchains: [], themes: [], styles: [],
-		coreprops: [], extprops: [], custprops: [], strs:[], comments: [], vba: [],
-		TODO:[], rels:[], xmlns: "" };
+	var ct = ({
+		workbooks:[], sheets:[], charts:[], dialogs:[], macros:[],
+		rels:[], strs:[], comments:[],
+		coreprops:[], extprops:[], custprops:[], themes:[], styles:[],
+		calcchains:[], vba: [], drawings: [],
+		TODO:[], xmlns: "" }/*:any*/);
 	fix_write_opts(opts = opts || {});
 	/*:: if(!jszip) throw new Error("JSZip is not available"); */
 	var zip = new jszip();
@@ -56,14 +59,24 @@ function write_zip(wb/*:Workbook*/, opts/*:WriteOpts*/)/*:ZIP*/ {
 	add_rels(opts.rels, 1, f, RELS.WB);
 
 	for(rId=1;rId <= wb.SheetNames.length; ++rId) {
-		f = "xl/worksheets/sheet" + rId + "." + wbext;
 		var wsrels = {'!id':{}};
-		zip.file(f, write_ws(rId-1, f, opts, wb, wsrels));
-
-		ct.sheets.push(f);
-		add_rels(opts.wbrels, -1, "worksheets/sheet" + rId + "." + wbext, RELS.WS[0]);
-
 		var ws = wb.Sheets[wb.SheetNames[rId-1]];
+		var _type = (ws || {})["!type"] || "sheet";
+		switch(_type) {
+		case "chart": /*
+			f = "xl/chartsheets/sheet" + rId + "." + wbext;
+			zip.file(f, write_cs(rId-1, f, opts, wb, wsrels));
+			ct.charts.push(f);
+			add_rels(wsrels, -1, "chartsheets/sheet" + rId + "." + wbext, RELS.CS);
+			break; */
+			/* falls through */
+		default:
+			f = "xl/worksheets/sheet" + rId + "." + wbext;
+			zip.file(f, write_ws(rId-1, f, opts, wb, wsrels));
+			ct.sheets.push(f);
+			add_rels(opts.wbrels, -1, "worksheets/sheet" + rId + "." + wbext, RELS.WS[0]);
+		}
+
 		if(ws) {
 			var comments = ws['!comments'];
 			if(comments && comments.length > 0) {
@@ -79,7 +92,7 @@ function write_zip(wb/*:Workbook*/, opts/*:WriteOpts*/)/*:ZIP*/ {
 			delete ws['!legacy'];
 		}
 
-		if(wsrels['!id'].rId1) zip.file(get_rels_path(f), write_rels(wsrels)); // get_rels_path('')
+		if(wsrels['!id'].rId1) zip.file(get_rels_path(f), write_rels(wsrels));
 	}
 
 	if(opts.Strings != null && opts.Strings.length > 0) {
@@ -111,7 +124,7 @@ function write_zip(wb/*:Workbook*/, opts/*:WriteOpts*/)/*:ZIP*/ {
 	}
 
 	zip.file("[Content_Types].xml", write_ct(ct, opts));
-	zip.file('_rels/.rels', write_rels(opts.rels)); // get_rels_path('')
-	zip.file('xl/_rels/workbook.' + wbext + '.rels', write_rels(opts.wbrels)); // get_rels_path("xl/workbook." + wbext)
+	zip.file('_rels/.rels', write_rels(opts.rels));
+	zip.file('xl/_rels/workbook.' + wbext + '.rels', write_rels(opts.wbrels));
 	return zip;
 }

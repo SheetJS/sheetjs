@@ -23,7 +23,7 @@
 <body>
 <b>JS-XLSX Live Demo</b><br />
 Output Format:
-<select name="format">
+<select name="format" onchange="setfmt()">
 <option value="csv" selected> CSV</option>
 <option value="json"> JSON</option>
 <option value="form"> FORMULAE</option>
@@ -186,7 +186,9 @@ function b64it() {
 	process_wb(wb);
 }
 
+var global_wb;
 function process_wb(wb) {
+	global_wb = wb;
 	var output = "";
 	switch(get_radio_value("format")) {
 		case "json":
@@ -202,6 +204,7 @@ function process_wb(wb) {
 	else out.innerText = output;
 	if(typeof console !== 'undefined') console.log("output", new Date());
 }
+function setfmt() {if(global_wb) process_wb(global_wb); }
 
 var drop = document.getElementById('drop');
 function handleDrop(e) {

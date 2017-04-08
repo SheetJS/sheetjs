@@ -261,10 +261,12 @@ var SYLK = (function() {
 		var preamble/*:Array<string>*/ = ["ID;PWXL;N;E"], o/*:Array<string>*/ = [];
 		preamble.push("P;PGeneral");
 		var r = decode_range(ws['!ref']), cell/*:Cell*/;
+		var dense = Array.isArray(ws);
 		for(var R = r.s.r; R <= r.e.r; ++R) {
 			for(var C = r.s.c; C <= r.e.c; ++C) {
 				var coord = encode_cell({r:R,c:C});
-				if(!(cell = ws[coord]) || cell.v == null) continue;
+				cell = dense ? (ws[R]||[])[C]: ws[coord];
+				if(!cell || cell.v == null) continue;
 				o.push(write_ws_cell_sylk(cell, ws, R, C, opts));
 			}
 		}
@@ -337,6 +339,7 @@ var DIF = (function() {
 		return function sheet_to_dif(ws/*:Worksheet*/, opts/*:?any*/)/*:string*/ {
 			var o/*:Array<string>*/ = [];
 			var r = decode_range(ws['!ref']), cell/*:Cell*/;
+			var dense = Array.isArray(ws);
 			push_field(o, "TABLE", 0, 1, "sheetjs");
 			push_field(o, "VECTORS", 0, r.e.r - r.s.r + 1,"");
 			push_field(o, "TUPLES", 0, r.e.c - r.s.c + 1,"");
@@ -345,7 +348,8 @@ var DIF = (function() {
 				push_value(o, -1, 0, "BOT");
 				for(var C = r.s.c; C <= r.e.c; ++C) {
 					var coord = encode_cell({r:R,c:C});
-					if(!(cell = ws[coord]) || cell.v == null) { push_value(o, 1, 0, ""); continue;}
+					cell = dense ? (ws[R]||[])[C] : ws[coord];
+					if(!cell || cell.v == null) { push_value(o, 1, 0, ""); continue;}
 					switch(cell.t) {
 						case 'n': push_value(o, 0, (/*cell.w ||*/ cell.v), "V"); break;
 						case 'b': push_value(o, 0, cell.v ? 1 : 0, cell.v ? "TRUE" : "FALSE"); break;
@@ -402,8 +406,10 @@ var PRN = (function() {
 	}
 
 	function dsv_to_sheet_str(str/*:string*/, opts)/*:Worksheet*/ {
+		var o = opts || {};
 		var sep = "";
-		var ws/*:Worksheet*/ = ({}/*:any*/);
+		if(DENSE != null) o.dense = DENSE;
+		var ws/*:Worksheet*/ = o.dense ? ([]/*:any*/) : ({}/*:any*/);
 		var range/*:Range*/ = ({s: {c:0, r:0}, e: {c:0, r:0}}/*:any*/);
 
 		/* known sep */
@@ -423,7 +429,8 @@ var PRN = (function() {
 			else if(s == "FALSE") { cell.t = 'b'; cell.v = false; }
 			else if(!isNaN(v = parseFloat(s))) { cell.t = 'n'; cell.w = s; cell.v = v; }
 			else { cell.t = 's'; cell.v = s.replace(/^"/,"").replace(/"$/,"").replace(/""/g,'"'); }
-			ws[encode_cell({c:C,r:R})] = cell;
+			if(o.dense) { if(!ws[R]) ws[R] = []; ws[R][C] = cell; }
+			else ws[encode_cell({c:C,r:R})] = cell;
 			start = end+1;
 			if(range.e.c < C) range.e.c = C;
 			if(range.e.r < R) range.e.r = R;
@@ -456,11 +463,13 @@ var PRN = (function() {
 	function sheet_to_prn(ws/*:Worksheet*/, opts/*:?any*/)/*:string*/ {
 		var o/*:Array<string>*/ = [];
 		var r = decode_range(ws['!ref']), cell/*:Cell*/;
+		var dense = Array.isArray(ws);
 		for(var R = r.s.r; R <= r.e.r; ++R) {
 			var oo = [];
 			for(var C = r.s.c; C <= r.e.c; ++C) {
 				var coord = encode_cell({r:R,c:C});
-				if(!(cell = ws[coord]) || cell.v == null) { oo.push("          "); continue; }
+				cell = dense ? (ws[R]||[])[C] : ws[coord];
+				if(!cell || cell.v == null) { oo.push("          "); continue; }
 				var w = (cell.w || (format_cell(cell), cell.w) || "").substr(0,10);
 				while(w.length < 10) w += " ";
 				oo.push(w + (C == 0 ? " " : ""));

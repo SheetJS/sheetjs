@@ -47,7 +47,7 @@ function parse_sty_bin(data, themes, opts) {
 	for(var y in SSF._table) styles.NumberFmt[y] = SSF._table[y];
 
 	styles.CellXf = [];
-	var state = ""; /* TODO: this should be a stack */
+	var state = [];
 	var pass = false;
 	recordhopper(data, function hopper_sty(val, R, RT) {
 		switch(R.n) {
@@ -59,7 +59,7 @@ function parse_sty_bin(data, themes, opts) {
 			case 'BrtFill': break; /* TODO */
 			case 'BrtBorder': break; /* TODO */
 			case 'BrtXF':
-				if(state === "CELLXFS") {
+				if(state[state.length - 1] == "BrtBeginCellXFs") {
 					styles.CellXf.push(val);
 				}
 				break; /* TODO */
@@ -67,48 +67,23 @@ function parse_sty_bin(data, themes, opts) {
 			case 'BrtDXF': break; /* TODO */
 			case 'BrtMRUColor': break; /* TODO */
 			case 'BrtIndexedColor': break; /* TODO */
-			case 'BrtBeginStyleSheet': break;
-			case 'BrtEndStyleSheet': break;
-			case 'BrtBeginTableStyle': break;
+
+			case 'BrtDXF14': break;
+			case 'BrtDXF15': break;
+			case 'BrtUid': break;
+			case 'BrtSlicerStyleElement': break;
 			case 'BrtTableStyleElement': break;
-			case 'BrtEndTableStyle': break;
-			case 'BrtBeginFmts': state = "FMTS"; break;
-			case 'BrtEndFmts': state = ""; break;
-			case 'BrtBeginFonts': state = "FONTS"; break;
-			case 'BrtEndFonts': state = ""; break;
-			case 'BrtACBegin': state = "ACFONTS"; break;
-			case 'BrtACEnd': state = ""; break;
-			case 'BrtBeginFills': state = "FILLS"; break;
-			case 'BrtEndFills': state = ""; break;
-			case 'BrtBeginBorders': state = "BORDERS"; break;
-			case 'BrtEndBorders': state = ""; break;
-			case 'BrtBeginCellStyleXFs': state = "CELLSTYLEXFS"; break;
-			case 'BrtEndCellStyleXFs': state = ""; break;
-			case 'BrtBeginCellXFs': state = "CELLXFS"; break;
-			case 'BrtEndCellXFs': state = ""; break;
-			case 'BrtBeginStyles': state = "STYLES"; break;
-			case 'BrtEndStyles': state = ""; break;
-			case 'BrtBeginDXFs': state = "DXFS"; break;
-			case 'BrtEndDXFs': state = ""; break;
-			case 'BrtBeginTableStyles': state = "TABLESTYLES"; break;
-			case 'BrtEndTableStyles': state = ""; break;
-			case 'BrtBeginColorPalette': state = "COLORPALETTE"; break;
-			case 'BrtEndColorPalette': state = ""; break;
-			case 'BrtBeginIndexedColors': state = "INDEXEDCOLORS"; break;
-			case 'BrtEndIndexedColors': state = ""; break;
-			case 'BrtBeginMRUColors': state = "MRUCOLORS"; break;
-			case 'BrtEndMRUColors': state = ""; break;
+			case 'BrtTimelineStyleElement': break;
+
 			case 'BrtFRTBegin': pass = true; break;
 			case 'BrtFRTEnd': pass = false; break;
-			case 'BrtBeginStyleSheetExt14': break;
-			case 'BrtBeginSlicerStyles': break;
-			case 'BrtEndSlicerStyles': break;
-			case 'BrtBeginTimelineStylesheetExt15': break;
-			case 'BrtEndTimelineStylesheetExt15': break;
-			case 'BrtBeginTimelineStyles': break;
-			case 'BrtEndTimelineStyles': break;
-			case 'BrtEndStyleSheetExt14': break;
-			default: if(!pass || opts.WTF) throw new Error("Unexpected record " + RT + " " + R.n);
+			case 'BrtACBegin': state.push(R.n); break;
+			case 'BrtACEnd': state.pop(); break;
+
+			default:
+				if((R.n||"").indexOf("Begin") > 0) state.push(R.n);
+				else if((R.n||"").indexOf("End") > 0) state.pop();
+				else if(!pass || opts.WTF) throw new Error("Unexpected record " + RT + " " + R.n);
 		}
 	});
 	return styles;

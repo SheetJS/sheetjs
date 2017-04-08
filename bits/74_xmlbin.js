@@ -51,8 +51,12 @@ function write_wb(wb, name/*:string*/, opts) {
 	return (name.slice(-4)===".bin" ? write_wb_bin : write_wb_xml)(wb, opts);
 }
 
-function write_ws(data/*:Worksheet*/, name/*:string*/, opts, wb/*:Workbook*/, rels) {
+function write_ws(data/*:number*/, name/*:string*/, opts, wb/*:Workbook*/, rels) {
 	return (name.slice(-4)===".bin" ? write_ws_bin : write_ws_xml)(data, opts, wb, rels);
+}
+
+function write_cs(data/*:number*/, name/*:string*/, opts, wb/*:Workbook*/, rels) {
+	return (name.slice(-4)===".bin" ? write_cs_bin : write_cs_xml)(data, opts, wb, rels);
 }
 
 function write_sty(data, name/*:string*/, opts) {

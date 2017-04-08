@@ -94,9 +94,10 @@ function sheet_to_json(sheet/*:Worksheet*/, opts/*:?Sheet2JSONOpts*/){
 	var cols = new Array(r.e.c-r.s.c+1);
 	var out = new Array(r.e.r-r.s.r-offset+1);
 	var outi = 0;
+	var dense = Array.isArray(sheet);
 	for(C = r.s.c; C <= r.e.c; ++C) {
 		cols[C] = encode_col(C);
-		val = sheet[cols[C] + rr];
+		val = dense ? (sheet[r.s.r] || [])[C] : sheet[cols[C] + rr];
 		switch(header) {
 			case 1: hdr[C] = C; break;
 			case 2: hdr[C] = cols[C]; break;
@@ -120,7 +121,7 @@ function sheet_to_json(sheet/*:Worksheet*/, opts/*:?Sheet2JSONOpts*/){
 			else row.__rowNum__ = R;
 		}
 		for (C = r.s.c; C <= r.e.c; ++C) {
-			val = sheet[cols[C] + rr];
+			val = dense ? (sheet[R] || [])[C] : sheet[cols[C] + rr];
 			if(val === undefined || val.t === undefined) {
 				if(defval === undefined) continue;
 				if(hdr[C] != null) { row[hdr[C]] = defval; isempty = false; }
@@ -161,13 +162,14 @@ function sheet_to_csv(sheet/*:Worksheet*/, opts/*:?Sheet2CSVOpts*/) {
 	var row = "", rr = "", cols = [];
 	var i = 0, cc = 0, val;
 	var R = 0, C = 0;
+	var dense = Array.isArray(sheet);
 	for(C = r.s.c; C <= r.e.c; ++C) cols[C] = encode_col(C);
 	for(R = r.s.r; R <= r.e.r; ++R) {
 		var isempty = true;
 		row = "";
 		rr = encode_row(R);
 		for(C = r.s.c; C <= r.e.c; ++C) {
-			val = sheet[cols[C] + rr];
+			val = dense ? (sheet[R]||[])[C]: sheet[cols[C] + rr];
 			if(val == null) txt = "";
 			else if(val.v != null) {
 				isempty = false;
@@ -187,7 +189,7 @@ function sheet_to_csv(sheet/*:Worksheet*/, opts/*:?Sheet2CSVOpts*/) {
 	}
 	return out;
 }
-var make_csv = sheet_to_csv;
+
 function sheet_to_txt(sheet/*:Worksheet*/, opts/*:?Sheet2CSVOpts*/) {
 	if(!opts) opts = {}; opts.FS = "\t"; opts.RS = "\n";
 	var s = sheet_to_csv(sheet, opts);
@@ -202,12 +204,13 @@ function sheet_to_formulae(sheet/*:Worksheet*/)/*:Array<string>*/ {
 	var r = safe_decode_range(sheet['!ref']), rr = "", cols = [], C;
 	var cmds = new Array((r.e.r-r.s.r+1)*(r.e.c-r.s.c+1));
 	var i = 0;
+	var dense = Array.isArray(sheet);
 	for(C = r.s.c; C <= r.e.c; ++C) cols[C] = encode_col(C);
 	for(var R = r.s.r; R <= r.e.r; ++R) {
 		rr = encode_row(R);
 		for(C = r.s.c; C <= r.e.c; ++C) {
 			y = cols[C] + rr;
-			x = sheet[y];
+			x = dense ? (sheet[R]||[])[C] : sheet[y];
 			val = "";
 			if(x === undefined) continue;
 			else if(x.F != null) {

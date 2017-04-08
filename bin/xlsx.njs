@@ -40,6 +40,7 @@ program
 	.option('--perf', 'do not generate output')
 	.option('--all', 'parse everything; write as much as possible')
 	.option('--dev', 'development mode')
+	.option('--sparse', 'sparse mode')
 	.option('--read', 'read but do not print out contents')
 	.option('-q, --quiet', 'quiet mode');
 
@@ -111,6 +112,7 @@ if(program.all) {
 	opts.sheetStubs = true;
 	opts.cellDates = true;
 }
+if(program.sparse) opts.dense = false; else opts.dense = true;
 
 if(program.dev) {
 	X.verbose = 2;

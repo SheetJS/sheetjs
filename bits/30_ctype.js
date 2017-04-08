@@ -122,7 +122,7 @@ var ct2type/*{[string]:string}*/ = ({
 	"application/vnd.ms-excel.Survey+xml": "TODO",
 
 	/* Drawing */
-	"application/vnd.openxmlformats-officedocument.drawing+xml": "TODO",
+	"application/vnd.openxmlformats-officedocument.drawing+xml": "drawings",
 	"application/vnd.openxmlformats-officedocument.drawingml.chart+xml": "TODO",
 	"application/vnd.openxmlformats-officedocument.drawingml.chartshapes+xml": "TODO",
 	"application/vnd.openxmlformats-officedocument.drawingml.diagramColors+xml": "TODO",
@@ -193,7 +193,7 @@ function parse_ct(data/*:?string*/, opts) {
 		workbooks:[], sheets:[], charts:[], dialogs:[], macros:[],
 		rels:[], strs:[], comments:[],
 		coreprops:[], extprops:[], custprops:[], themes:[], styles:[],
-		calcchains:[], vba: [],
+		calcchains:[], vba: [], drawings: [],
 		TODO:[], xmlns: "" }/*:any*/);
 	if(!data || !data.match) return ct;
 	var ctext = {};
@@ -256,7 +256,7 @@ function write_ct(ct, opts)/*:string*/ {
 		}
 	};
 	var f2 = function(w) {
-		ct[w].forEach(function(v) {
+		(ct[w]||[]).forEach(function(v) {
 			o[o.length] = (writextag('Override', null, {
 				'PartName': (v[0] == '/' ? "":"/") + v,
 				'ContentType': CT_LIST[w][opts.bookType || 'xlsx']
@@ -273,11 +273,13 @@ function write_ct(ct, opts)/*:string*/ {
 	};
 	f1('workbooks');
 	f2('sheets');
+	f2('charts');
 	f3('themes');
 	['strs', 'styles'].forEach(f1);
 	['coreprops', 'extprops', 'custprops'].forEach(f3);
 	f3('vba');
-	f2('comments');
+	f3('comments');
+	f3('drawings');
 	if(o.length>2){ o[o.length] = ('</Types>'); o[1]=o[1].replace("/>",">"); }
 	return o.join("");
 }

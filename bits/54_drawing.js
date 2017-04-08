@@ -1,3 +1,5 @@
+RELS.IMG = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/image";
+RELS.DRAW = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing";
 /* 20.5 DrawingML - SpreadsheetML Drawing */
 function parse_drawing(data, rels/*:any*/) {
 	if(!data) return "??";
@@ -16,3 +18,4 @@ function parse_drawing(data, rels/*:any*/) {
 
 	return rels['!id'][id].Target;
 }
+

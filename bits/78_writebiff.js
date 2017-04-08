@@ -75,21 +75,25 @@ function write_ws_biff_cell(ba/*:BufArray*/, cell/*:Cell*/, R/*:number*/, C/*:nu
 }
 
 function write_biff_ws(ba/*:BufArray*/, ws/*:Worksheet*/, idx/*:number*/, opts, wb/*:Workbook*/) {
+	var dense = Array.isArray(ws);
 	var range = safe_decode_range(ws['!ref'] || "A1"), ref, rr = "", cols = [];
 	for(var R = range.s.r; R <= range.e.r; ++R) {
 		rr = encode_row(R);
 		for(var C = range.s.c; C <= range.e.c; ++C) {
 			if(R === range.s.r) cols[C] = encode_col(C);
 			ref = cols[C] + rr;
-			if(!ws[ref]) continue;
+			var cell = dense ? ws[R][C] : ws[ref];
+			if(!cell) continue;
 			/* write cell */
-			write_ws_biff_cell(ba, ws[ref], R, C, opts);
+			write_ws_biff_cell(ba, cell, R, C, opts);
 		}
 	}
 }
 
 /* Based on test files */
-function write_biff_buf(wb/*:Workbook*/, o/*:WriteOpts*/) {
+function write_biff_buf(wb/*:Workbook*/, opts/*:WriteOpts*/) {
+	var o = opts || {};
+	if(DENSE != null) o.dense = DENSE;
 	var ba = buf_array();
 	var idx = 0;
 	for(var i=0;i<wb.SheetNames.length;++i) if(wb.SheetNames[i] == o.sheet) idx=i;

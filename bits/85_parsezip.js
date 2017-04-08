@@ -115,14 +115,14 @@ function parse_zip(zip/*:ZIP*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
 	var sheetRels = ({}/*:any*/);
 	var path, relsPath;
 
-	//if(!props.Worksheets) {
+	{
 		var wbsheets = wb.Sheets;
 		props.Worksheets = wbsheets.length;
 		props.SheetNames = [];
 		for(var j = 0; j != wbsheets.length; ++j) {
 			props.SheetNames[j] = wbsheets[j].name;
 		}
-	//}
+	}
 
 	var wbext = xlsb ? "bin" : "xml";
 	var wbrelsfile = 'xl/_rels/workbook.' + wbext + '.rels';

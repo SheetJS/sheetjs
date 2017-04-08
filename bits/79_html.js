@@ -1,6 +1,8 @@
 /* TODO: in browser attach to DOM; in node use an html parser */
-function parse_html(str/*:string*/, opts)/*:Workbook*/ {
-	var ws/*:Worksheet*/ = ({}/*:any*/);
+function parse_html(str/*:string*/, _opts)/*:Workbook*/ {
+	var opts = _opts || {};
+	if(DENSE != null) opts.dense = DENSE;
+	var ws/*:Worksheet*/ = opts.dense ? ([]/*:any*/) : ({}/*:any*/);
 	var o/*:Workbook*/ = { SheetNames: ["Sheet1"], Sheets: {Sheet1:ws} };
 	var i = str.indexOf("<table"), j = str.indexOf("</table");
 	if(i == -1 || j == -1) throw new Error("Invalid HTML: missing <table> / </table> pair");
@@ -23,10 +25,16 @@ function parse_html(str/*:string*/, opts)/*:Workbook*/ {
 			if(range.e.r < R) range.e.r = R;
 			if(range.s.c > C) range.s.c = C;
 			if(range.e.c < C) range.e.c = C;
-			var coord/*:string*/ = encode_cell({r:R, c:C});
-			/* TODO: value parsing */
-			if(Number(m) == Number(m)) ws[coord] = {t:'n', v:+m};
-			else ws[coord] = {t:'s', v:m};
+			if(opts.dense) {
+				if(!ws[R]) ws[R] = [];
+				if(Number(m) == Number(m)) ws[R][C] = {t:'n', v:+m};
+				else ws[R][C] = {t:'s', v:m};
+			} else {
+				var coord/*:string*/ = encode_cell({r:R, c:C});
+				/* TODO: value parsing */
+				if(Number(m) == Number(m)) ws[coord] = {t:'n', v:+m};
+				else ws[coord] = {t:'s', v:m};
+			}
 		}
 		++R; C = 0;
 	}
@@ -34,8 +42,10 @@ function parse_html(str/*:string*/, opts)/*:Workbook*/ {
 	return o;
 }
 
-function parse_dom_table(table/*:HTMLElement*/, opts/*:?any*/)/*:Worksheet*/ {
-	var ws/*:Worksheet*/ = ({}/*:any*/);
+function parse_dom_table(table/*:HTMLElement*/, _opts/*:?any*/)/*:Worksheet*/ {
+	var opts = _opts || {};
+	if(DENSE != null) opts.dense = DENSE;
+	var ws/*:Worksheet*/ = opts.dense ? ([]/*:any*/) : ({}/*:any*/);
 	var rows = table.getElementsByTagName('tr');
 	var range = {s:{r:0,c:0},e:{r:rows.length - 1,c:0}};
 	var merges = [], midx = 0;
@@ -54,7 +64,8 @@ function parse_dom_table(table/*:HTMLElement*/, opts/*:?any*/)/*:Worksheet*/ {
 			if((RS = +elt.getAttribute("rowspan"))>0) merges.push({s:{r:R,c:C},e:{r:R + RS - 1, c:C + CS - 1}});
 			var o = {t:'s', v:v};
 			if(v != null && v.length && !isNaN(Number(v))) o = {t:'n', v:Number(v)};
-			ws[encode_cell({c:C, r:R})] = o;
+			if(opts.dense) { if(!ws[R]) ws[R] = []; ws[R][C] = o; }
+			else ws[encode_cell({c:C, r:R})] = o;
 			if(range.e.c < C) range.e.c = C;
 			C += CS;
 		}

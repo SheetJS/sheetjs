@@ -27,8 +27,8 @@ var WK_ = (function() {
 	function lotus_to_workbook_buf(d,opts)/*:Workbook*/ {
 		if(!d) return d;
 		var o = opts || {};
-
-		var s = {}, n = "Sheet1", sidx = 0;
+		if(DENSE != null) o.dense = DENSE;
+		var s = (o.dense ? [] : {}), n = "Sheet1", sidx = 0;
 		var sheets = {}, snames = [n];
 
 		var refguess = {s: {r:0, c:0}, e: {r:0, c:0} };
@@ -45,13 +45,16 @@ var WK_ = (function() {
 					break;
 				case 0x06: refguess = val; break; /* RANGE */
 				case 0x0F: /* LABEL */
-					if(!opts.qpro) val[1].v = val[1].v.substr(1);
+					if(!o.qpro) val[1].v = val[1].v.substr(1);
 					/* falls through */
 				case 0x0D: /* INTEGER */
 				case 0x0E: /* NUMBER */
 				case 0x10: /* FORMULA */
 				case 0x33: /* STRING */
-					s[encode_cell(val[0])] = val[1];
+					if(o.dense) {
+						if(!s[val[0].r]) s[val[0].r] = [];
+						s[val[0].r][val[0].c] = val[1];
+					} else s[encode_cell(val[0])] = val[1];
 					/* TODO: FORMAT */
 					break;
 			} else switch(RT) {
@@ -67,7 +70,7 @@ var WK_ = (function() {
 					if(val[3] > sidx) {
 						s["!ref"] = encode_range(refguess);
 						sheets[n] = s;
-						s = {};
+						s = (o.dense ? [] : {});
 						refguess = {s: {r:0, c:0}, e: {r:0, c:0} };
 						sidx = val[3]; n = "Sheet" + (sidx + 1);
 						snames.push(n);

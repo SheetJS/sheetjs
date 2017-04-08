@@ -10,6 +10,7 @@ var write_content_xml/*:{(wb:any, opts:any):string}*/ = (function() {
 		o.push('      <table:table table:name="' + escapexml(wb.SheetNames[i]) + '">\n');
 		var R=0,C=0, range = decode_range(ws['!ref']);
 		var marr = ws['!merges'] || [], mi = 0;
+		var dense = Array.isArray(ws);
 		for(R = 0; R < range.s.r; ++R) o.push('        <table:table-row></table:table-row>\n');
 		for(; R <= range.e.r; ++R) {
 			o.push('        <table:table-row>\n');
@@ -26,7 +27,7 @@ var write_content_xml/*:{(wb:any, opts:any):string}*/ = (function() {
 					break;
 				}
 				if(skip) { o.push(covered_cell_xml); continue; }
-				var ref = encode_cell({r:R, c:C}), cell = ws[ref];
+				var ref = encode_cell({r:R, c:C}), cell = dense ? (ws[R]||[])[C]: ws[ref];
 				var fmla = "";
 				if(cell && cell.f) {
 					fmla = ' table:formula="' + escapexml(csf_to_ods_formula(cell.f)) + '"';

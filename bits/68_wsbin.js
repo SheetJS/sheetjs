@@ -26,7 +26,8 @@ function write_BrtRowHdr(R/*:number*/, range, ws) {
 		var first = -1, last = -1;
 		for(var j = (i<<10); j < ((i+1)<<10); ++j) {
 			caddr.c = j;
-			if(ws[encode_cell(caddr)]) { if(first < 0) first = j; last = j; }
+			var cell = Array.isArray(ws) ? (ws[caddr.r]||[])[caddr.c] : ws[encode_cell(caddr)];
+			if(cell) { if(first < 0) first = j; last = j; }
 		}
 		if(first < 0) continue;
 		++ncolspan;
@@ -289,18 +290,19 @@ function write_BrtColInfo(C/*:number*/, col, o) {
 }
 
 /* [MS-XLSB] 2.1.7.61 Worksheet */
-function parse_ws_bin(data, opts, rels, wb, themes, styles)/*:Worksheet*/ {
+function parse_ws_bin(data, _opts, rels, wb, themes, styles)/*:Worksheet*/ {
 	if(!data) return data;
+	var opts = _opts || {};
 	if(!rels) rels = {'!id':{}};
-	var s = {};
+	if(DENSE != null) opts.dense = DENSE;
+	var s = opts.dense ? [] : {};
 
 	var ref;
 	var refguess = {s: {r:2000000, c:2000000}, e: {r:0, c:0} };
 
 	var pass = false, end = false;
-	var row, p, cf, R, C, addr, sstr, rr;
+	var row, p, cf, R, C, addr, sstr, rr, cell;
 	var mergecells = [];
-	if(!opts) opts = {};
 	opts.biff = 12;
 	opts['!row'] = 0;
 
@@ -319,14 +321,14 @@ function parse_ws_bin(data, opts, rels, wb, themes, styles)/*:Worksheet*/ {
 	var defwidth = 0, defheight = 0; // twips / MDW respectively
 	var seencol = false;
 
-	recordhopper(data, function ws_parse(val, Record) {
+	recordhopper(data, function ws_parse(val, Record, RT) {
 		if(end) return;
 		switch(Record.n) {
 			case 'BrtWsDim': ref = val; break;
 			case 'BrtRowHdr':
 				row = val;
 				if(opts.sheetRows && opts.sheetRows <= row.r) end=true;
-				rr = encode_row(row.r);
+				rr = encode_row(R = row.r);
 				opts['!row'] = row.r;
 				break;
 
@@ -349,7 +351,9 @@ function parse_ws_bin(data, opts, rels, wb, themes, styles)/*:Worksheet*/ {
 					case 'str': p.t = 's'; p.v = utf8read(val[1]); break;
 				}
 				if((cf = styles.CellXf[val[0].iStyleRef])) safe_format(p,cf.ifmt,null,opts, themes, styles);
-				s[encode_col(C=val[0].c) + rr] = p;
+				C = val[0].c;
+				if(opts.dense) { if(!s[R]) s[R] = []; s[R][C] = p; }
+				else s[encode_col(C) + rr] = p;
 				if(opts.cellFormula) {
 					af = false;
 					for(ai = 0; ai < array_formulae.length; ++ai) {
@@ -370,18 +374,18 @@ function parse_ws_bin(data, opts, rels, wb, themes, styles)/*:Worksheet*/ {
 				}
 				break;
 
-			case 'BrtCellBlank': if(!opts.sheetStubs) break;
+			case 'BrtCellBlank':
+				if(!opts.sheetStubs) break;
 				p = ({t:'z',v:undefined}/*:any*/);
-				s[encode_col(C=val[0].c) + rr] = p;
+				C = val[0].c;
+				if(opts.dense) { if(!s[R]) s[R] = []; s[R][C] = p; }
+				else s[encode_col(C) + rr] = p;
 				if(refguess.s.r > row.r) refguess.s.r = row.r;
 				if(refguess.s.c > C) refguess.s.c = C;
 				if(refguess.e.r < row.r) refguess.e.r = row.r;
 				if(refguess.e.c < C) refguess.e.c = C;
 				break;
 
-			/* Merge Cells */
-			case 'BrtBeginMergeCells': break;
-			case 'BrtEndMergeCells': break;
 			case 'BrtMergeCell': mergecells.push(val); break;
 
 			case 'BrtHLink':
@@ -392,140 +396,109 @@ function parse_ws_bin(data, opts, rels, wb, themes, styles)/*:Worksheet*/ {
 					val.Rel = rel;
 				}
 				for(R=val.rfx.s.r;R<=val.rfx.e.r;++R) for(C=val.rfx.s.c;C<=val.rfx.e.c;++C) {
-					addr = encode_cell({c:C,r:R});
-					if(!s[addr]) s[addr] = {t:'s',v:undefined};
-					s[addr].l = val;
+					if(opts.dense) {
+						if(!s[R]) s[R] = [];
+						if(!s[R][C]) s[R][C] = {t:'z',v:undefined};
+						s[R][C].l = val;
+					} else {
+						addr = encode_cell({c:C,r:R});
+						if(!s[addr]) s[addr] = {t:'z',v:undefined};
+						s[addr].l = val;
+					}
 				}
 				break;
 
-			case 'BrtArrFmla': if(!opts.cellFormula) break;
+			case 'BrtArrFmla':
+				if(!opts.cellFormula) break;
 				array_formulae.push(val);
-				s[encode_col(C) + rr].f = stringify_formula(val[1], refguess, {r:row.r, c:C}, supbooks, opts);
-				s[encode_col(C) + rr].F = encode_range(val[0]);
+				cell = (opts.dense ? s[R][C] : s[encode_col(C) + rr]);
+				cell.f = stringify_formula(val[1], refguess, {r:row.r, c:C}, supbooks, opts);
+				cell.F = encode_range(val[0]);
 				break;
-			case 'BrtShrFmla': if(!opts.cellFormula) break;
-				// TODO
+			case 'BrtShrFmla':
+				if(!opts.cellFormula) break;
 				shared_formulae[encode_cell(val[0].s)] = val[1];
-				s[encode_col(C) + rr].f = stringify_formula(val[1], refguess, {r:row.r, c:C}, supbooks, opts);
+				cell = (opts.dense ? s[R][C] : s[encode_col(C) + rr]);
+				cell.f = stringify_formula(val[1], refguess, {r:row.r, c:C}, supbooks, opts);
 				break;
 
 			/* identical to 'ColInfo' in XLS */
-			case 'BrtColInfo': {
+			case 'BrtColInfo':
 				if(!opts.cellStyles) break;
 				while(val.e >= val.s) {
 					colinfo[val.e--] = { width: val.w/256 };
 					if(!seencol) { seencol = true; find_mdw_colw(val.w/256); }
 					process_col(colinfo[val.e+1]);
 				}
-			} break;
+				break;
 
-			case 'BrtBeginSheet': break;
-			case 'BrtWsProp': break; // TODO
-			case 'BrtSheetCalcProp': break; // TODO
-			case 'BrtBeginWsViews': break; // TODO
-			case 'BrtBeginWsView': break; // TODO
-			case 'BrtPane': break; // TODO
-			case 'BrtSel': break; // TODO
-			case 'BrtEndWsView': break; // TODO
-			case 'BrtEndWsViews': break; // TODO
-			case 'BrtACBegin': break; // TODO
-			case 'BrtRwDescent': break; // TODO
-			case 'BrtACEnd': break; // TODO
-			case 'BrtWsFmtInfoEx14': break; // TODO
-			case 'BrtWsFmtInfo': break; // TODO
-			case 'BrtBeginColInfos': break; // TODO
-			case 'BrtEndColInfos': break; // TODO
-			case 'BrtBeginSheetData': break; // TODO
-			case 'BrtEndSheetData': break; // TODO
-			case 'BrtSheetProtection': break; // TODO
-			case 'BrtPrintOptions': break; // TODO
-			case 'BrtMargins': break; // TODO
-			case 'BrtPageSetup': break; // TODO
+			case 'BrtAFilterDateGroupItem': break;
+			case 'BrtActiveX': break;
+			case 'BrtBigName': break;
+			case 'BrtBkHim': break;
+			case 'BrtBrk': break;
+			case 'BrtCFIcon': break;
+			case 'BrtCFRuleExt': break;
+			case 'BrtCFVO': break;
+			case 'BrtCFVO14': break;
+			case 'BrtCellIgnoreEC': break;
+			case 'BrtCellIgnoreEC14': break;
+			case 'BrtCellMeta': break;
+			case 'BrtCellSmartTagProperty': break;
+			case 'BrtCellWatch': break;
+			case 'BrtColor': break;
+			case 'BrtColor14': break;
+			case 'BrtColorFilter': break;
+			case 'BrtCustomFilter': break;
+			case 'BrtCustomFilter14': break;
+			case 'BrtDRef': break;
+			case 'BrtDVal': break;
+			case 'BrtDVal14': break;
+			case 'BrtDValList': break;
+			case 'BrtDrawing': break;
+			case 'BrtDynamicFilter': break;
+			case 'BrtFilter': break;
+			case 'BrtFilter14': break;
+			case 'BrtIconFilter': break;
+			case 'BrtIconFilter14': break;
+			case 'BrtLegacyDrawing': break;
+			case 'BrtLegacyDrawingHF': break;
+			case 'BrtListPart': break;
+			case 'BrtMargins': break;
+			case 'BrtOleObject': break;
+			case 'BrtPageSetup': break;
+			case 'BrtPane': break;
+			case 'BrtPhoneticInfo': break;
+			case 'BrtPrintOptions': break;
+			case 'BrtRangeProtection': break;
+			case 'BrtRangeProtection14': break;
+			case 'BrtRangeProtectionIso': break;
+			case 'BrtRangeProtectionIso14': break;
+			case 'BrtRwDescent': break;
+			case 'BrtSel': break;
+			case 'BrtSheetCalcProp': break;
+			case 'BrtSheetProtection': break;
+			case 'BrtSheetProtectionIso': break;
+			case 'BrtSlc': break;
+			case 'BrtSparkline': break;
+			case 'BrtTable': break;
+			case 'BrtTop10Filter': break;
+			case 'BrtUid': break;
+			case 'BrtValueMeta': break;
+			case 'BrtWebExtension': break;
+			case 'BrtWsFmtInfo': break;
+			case 'BrtWsFmtInfoEx14': break;
+			case 'BrtWsProp': break;
+
 			case 'BrtFRTBegin': pass = true; break;
 			case 'BrtFRTEnd': pass = false; break;
-			case 'BrtEndSheet': break; // TODO
-			case 'BrtDrawing': break; // TODO
-			case 'BrtLegacyDrawing': break; // TODO
-			case 'BrtLegacyDrawingHF': break; // TODO
-			case 'BrtPhoneticInfo': break; // TODO
-			case 'BrtBeginHeaderFooter': break; // TODO
-			case 'BrtEndHeaderFooter': break; // TODO
-			case 'BrtBrk': break; // TODO
-			case 'BrtBeginRwBrk': break; // TODO
-			case 'BrtEndRwBrk': break; // TODO
-			case 'BrtBeginColBrk': break; // TODO
-			case 'BrtEndColBrk': break; // TODO
-			case 'BrtBeginUserShViews': break; // TODO
-			case 'BrtBeginUserShView': break; // TODO
-			case 'BrtEndUserShView': break; // TODO
-			case 'BrtEndUserShViews': break; // TODO
-			case 'BrtBkHim': break; // TODO
-			case 'BrtBeginOleObjects': break; // TODO
-			case 'BrtOleObject': break; // TODO
-			case 'BrtEndOleObjects': break; // TODO
-			case 'BrtBeginListParts': break; // TODO
-			case 'BrtListPart': break; // TODO
-			case 'BrtEndListParts': break; // TODO
-			case 'BrtBeginSortState': break; // TODO
-			case 'BrtBeginSortCond': break; // TODO
-			case 'BrtEndSortCond': break; // TODO
-			case 'BrtEndSortState': break; // TODO
-			case 'BrtBeginConditionalFormatting': break; // TODO
-			case 'BrtEndConditionalFormatting': break; // TODO
-			case 'BrtBeginCFRule': break; // TODO
-			case 'BrtEndCFRule': break; // TODO
-			case 'BrtBeginDVals': break; // TODO
-			case 'BrtDVal': break; // TODO
-			case 'BrtEndDVals': break; // TODO
-			case 'BrtRangeProtection': break; // TODO
-			case 'BrtBeginDCon': break; // TODO
-			case 'BrtEndDCon': break; // TODO
-			case 'BrtBeginDRefs': break;
-			case 'BrtDRef': break;
-			case 'BrtEndDRefs': break;
+			case 'BrtACBegin': break;
+			case 'BrtACEnd': break;
 
-			/* ActiveX */
-			case 'BrtBeginActiveXControls': break;
-			case 'BrtActiveX': break;
-			case 'BrtEndActiveXControls': break;
-
-			/* AutoFilter */
-			case 'BrtBeginAFilter': break;
-			case 'BrtEndAFilter': break;
-			case 'BrtBeginFilterColumn': break;
-			case 'BrtBeginFilters': break;
-			case 'BrtFilter': break;
-			case 'BrtEndFilters': break;
-			case 'BrtEndFilterColumn': break;
-			case 'BrtDynamicFilter': break;
-			case 'BrtTop10Filter': break;
-			case 'BrtBeginCustomFilters': break;
-			case 'BrtCustomFilter': break;
-			case 'BrtEndCustomFilters': break;
-
-			/* Smart Tags */
-			case 'BrtBeginSmartTags': break;
-			case 'BrtBeginCellSmartTags': break;
-			case 'BrtBeginCellSmartTag': break;
-			case 'BrtCellSmartTagProperty': break;
-			case 'BrtEndCellSmartTag': break;
-			case 'BrtEndCellSmartTags': break;
-			case 'BrtEndSmartTags': break;
-
-			/* Cell Watch */
-			case 'BrtBeginCellWatches': break;
-			case 'BrtCellWatch': break;
-			case 'BrtEndCellWatches': break;
-
-			/* Table */
-			case 'BrtTable': break;
-
-			/* Ignore Cell Errors */
-			case 'BrtBeginCellIgnoreECs': break;
-			case 'BrtCellIgnoreEC': break;
-			case 'BrtEndCellIgnoreECs': break;
-
-			default: if(!pass || opts.WTF) throw new Error("Unexpected record " + Record.n);
+			default:
+				if((Record.n||"").indexOf("Begin") > 0){}
+				else if((Record.n||"").indexOf("End") > 0){}
+				else if(!pass || opts.WTF) throw new Error("Unexpected record " + RT + " " + Record.n);
 		}
 	}, opts);
 
@@ -600,6 +573,7 @@ function write_ws_bin_cell(ba/*:BufArray*/, cell/*:Cell*/, R/*:number*/, C/*:num
 function write_CELLTABLE(ba, ws/*:Worksheet*/, idx/*:number*/, opts, wb/*:Workbook*/) {
 	var range = safe_decode_range(ws['!ref'] || "A1"), ref, rr = "", cols = [];
 	write_record(ba, 'BrtBeginSheetData');
+	var dense = Array.isArray(ws);
 	for(var R = range.s.r; R <= range.e.r; ++R) {
 		rr = encode_row(R);
 		/* [ACCELLTABLE] */
@@ -609,9 +583,10 @@ function write_CELLTABLE(ba, ws/*:Worksheet*/, idx/*:number*/, opts, wb/*:Workbo
 			/* *16384CELL */
 			if(R === range.s.r) cols[C] = encode_col(C);
 			ref = cols[C] + rr;
-			if(!ws[ref]) continue;
+			var cell = dense ? (ws[R]||[])[C] : ws[ref];
+			if(!cell) continue;
 			/* write cell */
-			write_ws_bin_cell(ba, ws[ref], R, C, opts, ws);
+			write_ws_bin_cell(ba, cell, R, C, opts, ws);
 		}
 	}
 	write_record(ba, 'BrtEndSheetData');

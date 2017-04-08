@@ -222,19 +222,30 @@ describe('should parse test files', function() {
 	});
 });
 
+function get_cell(ws/*:Worksheet*/, addr/*:string*/) {
+	if(!Array.isArray(ws)) return ws[addr];
+	var a = X.utils.decode_cell(addr);
+	return (ws[a.r]||[])[a.c];
+}
+
+function each_cell(ws, f) {
+	if(Array.isArray(ws)) ws.forEach(function(row) { if(row) row.forEach(f); });
+	else Object.keys(ws).forEach(function(addr) { if(addr[0] === "!" || !ws.hasOwnProperty(addr)) return; f(ws[addr]); });
+}
+
 /* comments_stress_test family */
 function check_comments(wb) {
 	var ws0 = wb.Sheets.Sheet2;
-	assert.equal(ws0.A1.c[0].a, 'Author');
-	assert.equal(ws0.A1.c[0].t, 'Author:\nGod thinks this is good');
-	assert.equal(ws0.C1.c[0].a, 'Author');
-	assert.equal(ws0.C1.c[0].t, 'I really hope that xlsx decides not to use magic like rPr');
+	assert.equal(get_cell(ws0,"A1").c[0].a, 'Author');
+	assert.equal(get_cell(ws0,"A1").c[0].t, 'Author:\nGod thinks this is good');
+	assert.equal(get_cell(ws0,"C1").c[0].a, 'Author');
+	assert.equal(get_cell(ws0,"C1").c[0].t, 'I really hope that xlsx decides not to use magic like rPr');
 
 	var ws3 = wb.Sheets.Sheet4;
-	assert.equal(ws3.B1.c[0].a, 'Author');
-	assert.equal(ws3.B1.c[0].t, 'The next comment is empty');
-	assert.equal(ws3.B2.c[0].a, 'Author');
-	assert.equal(ws3.B2.c[0].t, '');
+	assert.equal(get_cell(ws3,"B1").c[0].a, 'Author');
+	assert.equal(get_cell(ws3,"B1").c[0].t, 'The next comment is empty');
+	assert.equal(get_cell(ws3,"B2").c[0].a, 'Author');
+	assert.equal(get_cell(ws3,"B2").c[0].t, '');
 }
 
 describe('parse options', function() {
@@ -248,17 +259,15 @@ describe('parse options', function() {
 		it('XLSX should generate HTML by default', function() {
 			var wb = X.readFile(paths.cstxlsx);
 			var ws = wb.Sheets.Sheet1;
-			Object.keys(ws).forEach(function(addr) {
-				if(addr[0] === "!" || !ws.hasOwnProperty(addr)) return;
-				assert(html_cell_types.indexOf(ws[addr].t) === -1 || ws[addr].h);
+			each_cell(ws, function(cell) {
+				assert(html_cell_types.indexOf(cell.t) === -1 || cell.h);
 			});
 		});
 		it('XLSX should not generate HTML when requested', function() {
 			var wb = X.readFile(paths.cstxlsx, {cellHTML:false});
 			var ws = wb.Sheets.Sheet1;
-			Object.keys(ws).forEach(function(addr) {
-				if(addr[0] === "!" || !ws.hasOwnProperty(addr)) return;
-				assert(typeof ws[addr].h === 'undefined');
+			each_cell(ws, function(cell) {
+				assert(typeof cell.h === 'undefined');
 			});
 		});
 		it('should generate formulae by default', function() {
@@ -267,9 +276,8 @@ describe('parse options', function() {
 				var found = false;
 				wb.SheetNames.forEach(function(s) {
 					var ws = wb.Sheets[s];
-					Object.keys(ws).forEach(function(addr) {
-						if(addr[0] === "!" || !ws.hasOwnProperty(addr)) return;
-						if(typeof ws[addr].f !== 'undefined') return (found = true);
+					each_cell(ws, function(cell) {
+						if(typeof cell.f !== 'undefined') return (found = true);
 					});
 				});
 				assert(found);
@@ -280,98 +288,95 @@ describe('parse options', function() {
 				var wb =X.readFile(p,{cellFormula:false});
 				wb.SheetNames.forEach(function(s) {
 					var ws = wb.Sheets[s];
-					Object.keys(ws).forEach(function(addr) {
-						if(addr[0] === "!" || !ws.hasOwnProperty(addr)) return;
-						assert(typeof ws[addr].f === 'undefined');
+					each_cell(ws, function(cell) {
+						assert(typeof cell.f === 'undefined');
 					});
 				});
 			});
 		});
 		it('should not generate number formats by default', function() {
-			[paths.nfxls, paths.nfxlsx].forEach(function(p) {
+			[paths.nfxls, paths.nfxlsx, paths.nfxlsb].forEach(function(p) {
 				var wb = X.readFile(p);
 				wb.SheetNames.forEach(function(s) {
 					var ws = wb.Sheets[s];
-					Object.keys(ws).forEach(function(addr) {
-						if(addr[0] === "!" || !ws.hasOwnProperty(addr)) return;
-						assert(typeof ws[addr].z === 'undefined');
+					each_cell(ws, function(cell) {
+						assert(typeof cell.z === 'undefined');
 					});
 				});
 			});
 		});
 		it('should generate number formats when requested', function() {
-			[paths.nfxls, paths.nfxlsx].forEach(function(p) {
+			[paths.nfxls, paths.nfxlsx, paths.nfxlsb].forEach(function(p) {
 				var wb = X.readFile(p, {cellNF: true});
 				wb.SheetNames.forEach(function(s) {
 					var ws = wb.Sheets[s];
-					Object.keys(ws).forEach(function(addr) {
-						if(addr[0] === "!" || !ws.hasOwnProperty(addr)) return;
-						assert(ws[addr].t!== 'n' || typeof ws[addr].z !== 'undefined');
+					each_cell(ws, function(cell) {
+						assert(cell.t!== 'n' || typeof cell.z !== 'undefined');
 					});
 				});
 			});
 		});
 		it('should not generate cell styles by default', function() {
-			[paths.cssxlsx, paths.cssxls, paths.cssxml].forEach(function(p) {
-			var wb = X.readFile(p);
-			wb.SheetNames.forEach(function(s) {
-				var ws = wb.Sheets[s];
-				Object.keys(ws).forEach(function(addr) {
-					if(addr[0] === "!" || !ws.hasOwnProperty(addr)) return;
-					assert(typeof ws[addr].s === 'undefined');
+			[paths.cssxlsx, paths.cssxlsb, paths.cssxls, paths.cssxml].forEach(function(p) {
+				var wb = X.readFile(p);
+				wb.SheetNames.forEach(function(s) {
+					var ws = wb.Sheets[s];
+					each_cell(ws, function(cell) {
+						assert(typeof cell.s === 'undefined');
+					});
 				});
-			});
 			});
 		});
 		it('should generate cell styles when requested', function() {
 			/* TODO: XLS / XLML */
-			[paths.cssxlsx /*,paths.cssxls, paths.cssxml*/].forEach(function(p) {
-			var wb = X.readFile(p, {cellStyles:true});
-			var found = false;
-			wb.SheetNames.forEach(function(s) {
-				var ws = wb.Sheets[s];
-				Object.keys(ws).forEach(function(addr) {
-					if(addr[0] === "!" || !ws.hasOwnProperty(addr)) return;
-					if(typeof ws[addr].s !== 'undefined') return (found = true);
+			[paths.cssxlsx /*, paths.cssxlsb, paths.cssxls, paths.cssxml*/].forEach(function(p) {
+				var wb = X.readFile(p, {cellStyles:true});
+				var found = false;
+				wb.SheetNames.forEach(function(s) {
+					var ws = wb.Sheets[s];
+					each_cell(ws, function(cell) {
+						if(typeof cell.s !== 'undefined') return (found = true);
+					});
 				});
-			});
-			assert(found);
+				assert(found);
 			});
 		});
 		it('should not generate cell dates by default', function() {
-			var wb = X.readFile(paths.dtxlsx);
-			wb.SheetNames.forEach(function(s) {
-				var ws = wb.Sheets[s];
-				Object.keys(ws).forEach(function(addr) {
-					if(addr[0] === "!" || !ws.hasOwnProperty(addr)) return;
-					assert(ws[addr].t !== 'd');
+			[paths.dtxlsx, paths.dtxlsb, paths.dtxls, paths.dtxml].forEach(function(p) {
+				var wb = X.readFile(p);
+				wb.SheetNames.forEach(function(s) {
+					var ws = wb.Sheets[s];
+					each_cell(ws, function(cell) {
+						assert(cell.t !== 'd');
+					});
 				});
 			});
 		});
 		it('XLSX should generate cell dates when requested', function() {
-			var wb = X.readFile(paths.dtxlsx, {cellDates: true});
-			var found = false;
-			wb.SheetNames.forEach(function(s) {
-				var ws = wb.Sheets[s];
-				Object.keys(ws).forEach(function(addr) {
-					if(addr[0] === "!" || !ws.hasOwnProperty(addr)) return;
-					if(ws[addr].t === 'd') return (found = true);
+			[paths.dtxlsx, paths.dtxlsb, paths.dtxls, paths.dtxml].forEach(function(p) {
+				var wb = X.readFile(paths.dtxlsx, {cellDates: true});
+				var found = false;
+				wb.SheetNames.forEach(function(s) {
+					var ws = wb.Sheets[s];
+					each_cell(ws, function(cell) {
+						if(cell.t === 'd') return (found = true);
+					});
 				});
+				assert(found);
 			});
-			assert(found);
 		});
 	});
 	describe('sheet', function() {
 		it('should not generate sheet stubs by default', function() {
 			[paths.mcxlsx, paths.mcxlsb, paths.mcods, paths.mcxls, paths.mcxml].forEach(function(p) {
 				var wb = X.readFile(p);
-				assert.throws(function() { return wb.Sheets.Merge.A2.v; });
+				assert.throws(function() { return get_cell(wb.Sheets.Merge, "A2").v; });
 			});
 		});
 		it('should generate sheet stubs when requested', function() {
 			[paths.mcxlsx, paths.mcxlsb, paths.mcods, paths.mcxls, paths.mcxml].forEach(function(p) {
 				var wb = X.readFile(p, {sheetStubs:true});
-				assert(wb.Sheets.Merge.A2.t == 'z');
+				assert(get_cell(wb.Sheets.Merge, "A2").t == 'z');
 			});
 		});
 		it('should handle stub cells', function() {
@@ -384,10 +389,10 @@ describe('parse options', function() {
 			});
 		});
 		function checkcells(wb, A46, B26, C16, D2) {
-			assert((typeof wb.Sheets.Text.A46 !== 'undefined') == A46);
-			assert((typeof wb.Sheets.Text.B26 !== 'undefined') == B26);
-			assert((typeof wb.Sheets.Text.C16 !== 'undefined') == C16);
-			assert((typeof wb.Sheets.Text.D2  !== 'undefined') == D2);
+			assert((typeof get_cell(wb.Sheets.Text, "A46") !== 'undefined') == A46);
+			assert((typeof get_cell(wb.Sheets.Text, "B26") !== 'undefined') == B26);
+			assert((typeof get_cell(wb.Sheets.Text, "C16") !== 'undefined') == C16);
+			assert((typeof get_cell(wb.Sheets.Text, "D2")  !== 'undefined') == D2);
 		}
 		it('should read all cells by default', function() {
 			[paths.fstxlsx, paths.fstxlsb, paths.fstods, paths.fstxls, paths.fstxml].forEach(function(p) {
@@ -604,7 +609,7 @@ var stykeys = [
 	"bgColor.rgb"
 ];
 function diffsty(ws, r1,r2) {
-	var c1 = ws[r1].s, c2 = ws[r2].s;
+	var c1 = get_cell(ws,r1).s, c2 = get_cell(ws,r2).s;
 	stykeys.forEach(function(m) {
 		var c = -1;
 		if(styexc.indexOf(r1+"|"+r2+"|"+m) > -1) c = 1;
@@ -615,14 +620,14 @@ function diffsty(ws, r1,r2) {
 
 function hlink(wb) {
 	var ws = wb.Sheets.Sheet1;
-	assert.equal(ws.A1.l.Target, "http://www.sheetjs.com");
-	assert.equal(ws.A2.l.Target, "http://oss.sheetjs.com");
-	assert.equal(ws.A3.l.Target, "http://oss.sheetjs.com#foo");
-	assert.equal(ws.A4.l.Target, "mailto:dev@sheetjs.com");
-	assert.equal(ws.A5.l.Target, "mailto:dev@sheetjs.com?subject=hyperlink");
-	assert.equal(ws.A6.l.Target, "../../sheetjs/Documents/Test.xlsx");
-	assert.equal(ws.A7.l.Target, "http://sheetjs.com");
-	assert.equal(ws.A7.l.Tooltip, "foo bar baz");
+	assert.equal(get_cell(ws, "A1").l.Target, "http://www.sheetjs.com");
+	assert.equal(get_cell(ws, "A2").l.Target, "http://oss.sheetjs.com");
+	assert.equal(get_cell(ws, "A3").l.Target, "http://oss.sheetjs.com#foo");
+	assert.equal(get_cell(ws, "A4").l.Target, "mailto:dev@sheetjs.com");
+	assert.equal(get_cell(ws, "A5").l.Target, "mailto:dev@sheetjs.com?subject=hyperlink");
+	assert.equal(get_cell(ws, "A6").l.Target, "../../sheetjs/Documents/Test.xlsx");
+	assert.equal(get_cell(ws, "A7").l.Target, "http://sheetjs.com");
+	assert.equal(get_cell(ws, "A7").l.Tooltip, "foo bar baz");
 }
 
 
@@ -668,12 +673,12 @@ describe('parse features', function() {
 			var wb4=X.readFile(paths.swcxml);
 
 			[wb1,wb2,wb3,wb4].map(function(wb) { return wb.Sheets[sheet]; }).forEach(function(ws, i) {
-				assert.equal(ws.B1.c.length, 1,"must have 1 comment");
-				assert.equal(ws.B1.c[0].a, "Yegor Kozlov","must have the same author");
-				assert.equal(ws.B1.c[0].t, "Yegor Kozlov:\nfirst cell", "must have the concatenated texts");
+				assert.equal(get_cell(ws, "B1").c.length, 1,"must have 1 comment");
+				assert.equal(get_cell(ws, "B1").c[0].a, "Yegor Kozlov","must have the same author");
+				assert.equal(get_cell(ws, "B1").c[0].t, "Yegor Kozlov:\nfirst cell", "must have the concatenated texts");
 				if(i > 0) return;
-				assert.equal(ws.B1.c[0].r, '<r><rPr><b/><sz val="8"/><color indexed="81"/><rFont val="Tahoma"/></rPr><t>Yegor Kozlov:</t></r><r><rPr><sz val="8"/><color indexed="81"/><rFont val="Tahoma"/></rPr><t xml:space="preserve">\r\nfirst cell</t></r>', "must have the rich text representation");
-				assert.equal(ws.B1.c[0].h, '<span style="font-weight: bold;">Yegor Kozlov:</span><span style=""><br/>first cell</span>', "must have the html representation");
+				assert.equal(get_cell(ws, "B1").c[0].r, '<r><rPr><b/><sz val="8"/><color indexed="81"/><rFont val="Tahoma"/></rPr><t>Yegor Kozlov:</t></r><r><rPr><sz val="8"/><color indexed="81"/><rFont val="Tahoma"/></rPr><t xml:space="preserve">\r\nfirst cell</t></r>', "must have the rich text representation");
+				assert.equal(get_cell(ws, "B1").c[0].h, '<span style="font-weight: bold;">Yegor Kozlov:</span><span style=""><br/>first cell</span>', "must have the html representation");
 			});
 		});
 		[
@@ -686,10 +691,10 @@ describe('parse features', function() {
 			var wb = X.readFile(m[1]);
 			check_comments(wb);
 			var ws0 = wb.Sheets.Sheet2;
-			assert.equal(ws0.A1.c[0].a, 'Author');
-			assert.equal(ws0.A1.c[0].t, 'Author:\nGod thinks this is good');
-			assert.equal(ws0.C1.c[0].a, 'Author');
-			assert.equal(ws0.C1.c[0].t, 'I really hope that xlsx decides not to use magic like rPr');
+			assert.equal(get_cell(ws0,"A1").c[0].a, 'Author');
+			assert.equal(get_cell(ws0,"A1").c[0].t, 'Author:\nGod thinks this is good');
+			assert.equal(get_cell(ws0,"C1").c[0].a, 'Author');
+			assert.equal(get_cell(ws0,"C1").c[0].t, 'I really hope that xlsx decides not to use magic like rPr');
 		}); });
 	});
 
@@ -871,15 +876,15 @@ describe('parse features', function() {
 			var wb, ws;
 			wb = X.readFile(f[1]);
 			ws = wb.Sheets[f[2]];
-			assert.equal(ws[f[3]].w, f[4]);
-			assert.equal(ws[f[3]].t, 'n');
+			assert.equal(get_cell(ws, f[3]).w, f[4]);
+			assert.equal(get_cell(ws, f[3]).t, 'n');
 		}); });
 		it('should generate date cells if cellDates is true', function() { fmts.forEach(function(f) {
 			var wb, ws;
 			wb = X.readFile(f[1], {cellDates:true});
 			ws = wb.Sheets[f[2]];
-			assert.equal(ws[f[3]].w, f[4]);
-			assert.equal(ws[f[3]].t, 'd');
+			assert.equal(get_cell(ws, f[3]).w, f[4]);
+			assert.equal(get_cell(ws, f[3]).t, 'd');
 		}); });
 	});
 
@@ -931,8 +936,8 @@ describe('parse features', function() {
 			  bgColor: { theme: 7, raw_rgb: '8064A2' } }
 		];
 		ranges.forEach(function(rng) {
-			it('XLS  | ' + rng,function(){cmparr(rn2(rng).map(function(x){ return wsxls[x].s; }));});
-			it('XLSX | ' + rng,function(){cmparr(rn2(rng).map(function(x){ return wsxlsx[x].s; }));});
+			it('XLS  | ' + rng,function(){cmparr(rn2(rng).map(function(x){ return get_cell(wsxls,x).s; }));});
+			it('XLSX | ' + rng,function(){cmparr(rn2(rng).map(function(x){ return get_cell(wsxlsx,x).s; }));});
 		});
 		it('different styles', function() {
 			for(var i = 0; i != ranges.length-1; ++i) {
@@ -944,8 +949,8 @@ describe('parse features', function() {
 			}
 		});
 		it('correct styles', function() {
-			var stylesxls = ranges.map(function(r) { return rn2(r)[0]; }).map(function(r) { return wsxls[r].s; });
-			var stylesxlsx = ranges.map(function(r) { return rn2(r)[0]; }).map(function(r) { return wsxlsx[r].s; });
+			var stylesxls = ranges.map(function(r) { return rn2(r)[0]; }).map(function(r) { return get_cell(wsxls,r).s; });
+			var stylesxlsx = ranges.map(function(r) { return rn2(r)[0]; }).map(function(r) { return get_cell(wsxlsx,r).s; });
 			for(var i = 0; i != exp.length; ++i) {
 				[
 					"fgColor.theme","fgColor.raw_rgb",
@@ -1023,7 +1028,7 @@ describe('roundtrip features', function() {
 				var wb1 = X.readFile(f, {cellNF: true, cellDates: di, WTF: opts.WTF});
 				var  _f = X.write(wb1, {type:'binary', cellDates:dj, WTF:opts.WTF});
 				var wb2 = X.read(_f, {type:'binary', cellDates: dk, WTF: opts.WTF});
-				var m = [wb1,wb2].map(function(x) { return x.Sheets[sheet][addr]; });
+				var m = [wb1,wb2].map(function(x) { return get_cell(x.Sheets[sheet], addr); });
 				assert.equal(m[0].w, m[1].w);
 
 				assert.equal(m[0].t, b);
@@ -1320,8 +1325,8 @@ describe('csv output', function() {
 	it('should handle dateNF', function() {
 		var baseline = "1,2,3,\nTRUE,FALSE,,sheetjs\nfoo,bar,20140219,0.3\n,,,\nbaz,,qux,\n";
 		var _ws =  X.utils.aoa_to_sheet(data, {cellDates:true});
-		delete _ws.C3.w;
-		delete _ws.C3.z;
+		delete get_cell(_ws,"C3").w;
+		delete get_cell(_ws,"C3").z;
 		assert.equal(baseline, X.utils.sheet_to_csv(_ws, {dateNF:"YYYYMMDD"}));
 	});
 	it('should handle strip', function() {
@@ -1349,8 +1354,8 @@ describe('js -> file -> js', function() {
 	if(typeof before != 'undefined') before(bef);
 	else it('before', bef);
 	function eqcell(wb1, wb2, s, a) {
-		assert.equal(wb1.Sheets[s][a].v, wb2.Sheets[s][a].v);
-		assert.equal(wb1.Sheets[s][a].t, wb2.Sheets[s][a].t);
+		assert.equal(get_cell(wb1.Sheets[s], a).v, get_cell(wb2.Sheets[s], a).v);
+		assert.equal(get_cell(wb1.Sheets[s], a).t, get_cell(wb2.Sheets[s], a).t);
 	}
 	ofmt.forEach(function(f) {
 		it(f, function() {
@@ -1386,9 +1391,9 @@ describe('corner cases', function() {
 			["baz", null, "q\"ux"]
 		];
 		var ws = X.utils.aoa_to_sheet(data);
-		ws.A1.f = ""; ws.A1.w = "";
-		delete ws.C3.w; delete ws.C3.z; ws.C3.XF = {ifmt:14};
-		ws.A4.t = "e";
+		get_cell(ws,"A1").f = ""; get_cell(ws,"A1").w = "";
+		delete get_cell(ws,"C3").w; delete get_cell(ws,"C3").z; get_cell(ws,"C3").XF = {ifmt:14};
+		get_cell(ws,"A4").t = "e";
 		X.utils.get_formulae(ws);
 		X.utils.make_csv(ws);
 		X.utils.make_json(ws);
@@ -1400,7 +1405,7 @@ describe('corner cases', function() {
 		X.write(wb, {type: "base64", bookType: 'xlsb'});
 		X.write(wb, {type: "binary", bookType: 'ods'});
 		X.write(wb, {type: "binary", bookType: 'biff2'});
-		ws.A2.t = "f";
+		get_cell(ws,"A2").t = "f";
 		assert.throws(function() { X.utils.make_json(ws); });
 	});
 	it('SSF', function() {

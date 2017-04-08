@@ -82,7 +82,8 @@ function make_cell(val, ixfe, t)/*:any*/ {
 function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 	var wb = ({opts:{}}/*:any*/);
 	var Sheets = {};
-	var out = {};
+	if(DENSE != null) options.dense = DENSE;
+	var out = (options.dense ? [] : {});
 	var Directory = {};
 	var found_sheet = false;
 	var range/*:Range*/ = ({}/*:any*/);
@@ -141,7 +142,12 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 			}
 		}
 		if(options.sheetRows && lastcell.r >= options.sheetRows) cell_valid = false;
-		else out[last_cell] = line;
+		else {
+			if(options.dense) {
+				if(!out[cell.r]) out[cell.r] = [];
+				out[cell.r][cell.c] = line;
+			} else out[last_cell] = line;
+		}
 	};
 	var opts = ({
 		enc: false, // encrypted
@@ -175,7 +181,6 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 	/* explicit override for some broken writers */
 	opts.codepage = 1200;
 	set_cp(1200);
-
 	while(blob.l < blob.length - 1) {
 		var s = blob.l;
 		var RecordType = blob.read_shift(2);
@@ -273,7 +278,7 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 						Workbook.Sheets.push(wsprops);
 					}
 					if(cur_sheet === "") Preamble = out; else Sheets[cur_sheet] = out;
-					out = {};
+					out = options.dense ? [] : {};
 				} break;
 				case 'BOF': {
 					if(opts.biff !== 8){}
@@ -286,7 +291,7 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 					else if(val.BIFFVer === 0x0007) opts.biff = 2;
 					if(file_depth++) break;
 					cell_valid = true;
-					out = {};
+					out = (options.dense ? [] : {});
 
 					if(opts.biff < 5) {
 						if(cur_sheet === "") cur_sheet = "Sheet1";
@@ -308,7 +313,7 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 				} break;
 
 				case 'Number': case 'BIFF2NUM': case 'BIFF2INT': {
-					if(out["!type"] == "chart" && out[encode_cell({c:val.c, r:val.r})]) ++val.c;
+					if(out["!type"] == "chart") if(options.dense ? (out[val.r]||[])[val.c]: out[encode_cell({c:val.c, r:val.r})]) ++val.c;
 					temp_val = {ixfe: val.ixfe, XF: XFs[val.ixfe], v:val.val, t:'n'};
 					safe_format_xf(temp_val, options, wb.opts.Date1904);
 					addcell({c:val.c, r:val.r}, temp_val, options);
@@ -341,7 +346,7 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 							var _fr = _f[0][0][1][0], _fc = _f[0][0][1][1];
 							var _fe = encode_cell({r:_fr, c:_fc});
 							if(shared_formulae[_fe]) temp_val.f = ""+stringify_formula(val.formula,range,val.cell,supbooks, opts);
-							else temp_val.F = (out[_fe] || {}).F;
+							else temp_val.F = ((options.dense ? (out[_fr]||[])[_fc]: out[_fe]) || {}).F;
 						} else temp_val.f = ""+stringify_formula(val.formula,range,val.cell,supbooks, opts);
 					}
 					safe_format_xf(temp_val, options, wb.opts.Date1904);
@@ -364,11 +369,12 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 				case 'Array': {
 					array_formulae.push(val);
 					var _arraystart = encode_cell(val[0].s);
-					if(options.cellFormula && out[_arraystart]) {
+					cc = options.dense ? (out[val[0].s.r]||[])[val[0].s.c] : out[_arraystart];
+					if(options.cellFormula && cc) {
 						if(!last_formula) break; /* technically unreachable */
-						if(!_arraystart || !out[_arraystart]) break;
-						out[_arraystart].f = ""+stringify_formula(val[1], range, val[0], supbooks, opts);
-						out[_arraystart].F = encode_range(val[0]);
+						if(!_arraystart || !cc) break;
+						cc.f = ""+stringify_formula(val[1], range, val[0], supbooks, opts);
+						cc.F = encode_range(val[0]);
 					}
 				} break;
 				case 'ShrFmla': {
@@ -378,7 +384,8 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 						/* TODO: capture range */
 						if(!last_formula) break; /* technically unreachable */
 						shared_formulae[encode_cell(last_formula.cell)]= val[0];
-						(out[encode_cell(last_formula.cell)]||{}).f = ""+stringify_formula(val[0], range, lastcell, supbooks, opts);
+						cc = options.dense ? (out[last_formula.cell.r]||[])[last_formula.cell.c] : out[encode_cell(last_formula.cell)];
+						(cc||{}).f = ""+stringify_formula(val[0], range, lastcell, supbooks, opts);
 					}
 				} break;
 				case 'LabelSst':
@@ -428,21 +435,23 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 
 				case 'HLink': {
 					for(rngR = val[0].s.r; rngR <= val[0].e.r; ++rngR)
-						for(rngC = val[0].s.c; rngC <= val[0].e.c; ++rngC)
-							if(out[encode_cell({c:rngC,r:rngR})])
-								out[encode_cell({c:rngC,r:rngR})].l = val[1];
+						for(rngC = val[0].s.c; rngC <= val[0].e.c; ++rngC) {
+							cc = options.dense ? (out[rngR]||[])[rngC] : out[encode_cell({c:rngC,r:rngR})];
+							if(cc) cc.l = val[1];
+							}
 				} break;
 				case 'HLinkTooltip': {
 					for(rngR = val[0].s.r; rngR <= val[0].e.r; ++rngR)
-						for(rngC = val[0].s.c; rngC <= val[0].e.c; ++rngC)
-							if(out[encode_cell({c:rngC,r:rngR})])
-								out[encode_cell({c:rngC,r:rngR})].l.Tooltip = val[1];
+						for(rngC = val[0].s.c; rngC <= val[0].e.c; ++rngC) {
+							cc = options.dense ? (out[rngR]||[])[rngC] : out[encode_cell({c:rngC,r:rngR})];
+							if(cc) cc.l.Tooltip = val[1];
+							}
 				} break;
 
 				/* Comments */
 				case 'Note': {
 					if(opts.biff <= 5 && opts.biff >= 2) break; /* TODO: BIFF5 */
-					cc = out[encode_cell(val[0])];
+					cc = options.dense ? (out[val[0].r]||[])[val[0].c] : out[encode_cell(val[0])];
 					var noteobj = objects[val[2]];
 					if(!cc) break;
 					if(!cc.c) cc.c = [];

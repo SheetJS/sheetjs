@@ -42,13 +42,17 @@ function parse_comments_bin(data, opts) {
 				if(opts.sheetRows && opts.sheetRows <= c.rfx.r) break;
 				if(!c.t) c.t = "";
 				delete c.rfx; out.push(c); break;
-			case 'BrtBeginComments': break;
-			case 'BrtEndComments': break;
-			case 'BrtBeginCommentAuthors': break;
-			case 'BrtEndCommentAuthors': break;
-			case 'BrtBeginCommentList': break;
-			case 'BrtEndCommentList': break;
-			default: if(!pass || opts.WTF) throw new Error("Unexpected record " + RT + " " + R.n);
+
+			case 'BrtUid': break;
+			case 'BrtFRTBegin': pass = true; break;
+			case 'BrtFRTEnd': pass = false; break;
+			case 'BrtACBegin': break;
+			case 'BrtACEnd': break;
+
+			default:
+				if((R.n||"").indexOf("Begin") > 0){}
+				else if((R.n||"").indexOf("End") > 0){}
+				else if(!pass || opts.WTF) throw new Error("Unexpected record " + RT + " " + R.n);
 		}
 	});
 	return out;
