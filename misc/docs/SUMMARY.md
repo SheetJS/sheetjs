@@ -63,6 +63,8 @@
   * [Tested Environments](README.md#tested-environments)
   * [Test Files](README.md#test-files)
 - [Contributing](README.md#contributing)
+  * [OSX/Linux](README.md#osxlinux)
+  * [Windows](README.md#windows)
 - [License](README.md#license)
 - [References](README.md#references)
 - [Badges](README.md#badges)

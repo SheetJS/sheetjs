@@ -86,6 +86,8 @@ with a unified JS representation, and ES3/ES5 browser compatibility back to IE6.
   * [Tested Environments](#tested-environments)
   * [Test Files](#test-files)
 - [Contributing](#contributing)
+  * [OSX/Linux](#osxlinux)
+  * [Windows](#windows)
 - [License](#license)
 - [References](#references)
 - [Badges](#badges)
@@ -1406,6 +1408,8 @@ Running `make init` will refresh the `test_files` submodule and get the files.
 Due to the precarious nature of the Open Specifications Promise, it is very
 important to ensure code is cleanroom.  Consult CONTRIBUTING.md
 
+### OSX/Linux
+
 The xlsx.js file is constructed from the files in the `bits` subdirectory. The
 build script (run `make`) will concatenate the individual bits to produce the
 script.  Before submitting a contribution, ensure that running make will produce
@@ -1421,7 +1425,31 @@ $ git diff xlsx.js
 To produce the dist files, run `make dist`.  The dist files are updated in each
 version release and *should not be committed between versions*.
 
+### Windows
 
+The included `make.cmd` script will build `xlsx.js` from the `bits` directory.
+Building is as simple as:
+
+```cmd
+> make.cmd
+```
+
+To prepare dev environment:
+
+```cmd
+> npm install -g mocha
+> npm install
+> mocha -t 30000
+```
+
+The normal approach uses a variety of command line tools to grab the test files.
+For windows users, please download the latest version of the test files snapshot
+from [github](https://github.com/SheetJS/test_files/releases)
+
+Latest test files snapshot:
+<https://github.com/SheetJS/test_files/releases/download/20170409/test_files.zip>
+
+Download and unzip to the `test_files` subdirectory.
 ## License
 
 Please consult the attached LICENSE file for details.  All rights not explicitly
