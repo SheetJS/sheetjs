@@ -294,7 +294,7 @@ function parse_ws_bin(data, _opts, rels, wb, themes, styles)/*:Worksheet*/ {
 	if(!data) return data;
 	var opts = _opts || {};
 	if(!rels) rels = {'!id':{}};
-	if(DENSE != null) opts.dense = DENSE;
+	if(DENSE != null && opts.dense == null) opts.dense = DENSE;
 	var s = opts.dense ? [] : {};
 
 	var ref;
@@ -321,27 +321,28 @@ function parse_ws_bin(data, _opts, rels, wb, themes, styles)/*:Worksheet*/ {
 	var defwidth = 0, defheight = 0; // twips / MDW respectively
 	var seencol = false;
 
-	recordhopper(data, function ws_parse(val, Record, RT) {
+	recordhopper(data, function ws_parse(val, R_n, RT) {
 		if(end) return;
-		switch(Record.n) {
-			case 'BrtWsDim': ref = val; break;
-			case 'BrtRowHdr':
+		switch(RT) {
+			case 0x0094: /* 'BrtWsDim' */
+				ref = val; break;
+			case 0x0000: /* 'BrtRowHdr' */
 				row = val;
 				if(opts.sheetRows && opts.sheetRows <= row.r) end=true;
 				rr = encode_row(R = row.r);
 				opts['!row'] = row.r;
 				break;
 
-			case 'BrtFmlaBool':
-			case 'BrtFmlaError':
-			case 'BrtFmlaNum':
-			case 'BrtFmlaString':
-			case 'BrtCellBool':
-			case 'BrtCellError':
-			case 'BrtCellIsst':
-			case 'BrtCellReal':
-			case 'BrtCellRk':
-			case 'BrtCellSt':
+			case 0x0002: /* 'BrtCellRk' */
+			case 0x0003: /* 'BrtCellError' */
+			case 0x0004: /* 'BrtCellBool' */
+			case 0x0005: /* 'BrtCellReal' */
+			case 0x0006: /* 'BrtCellSt' */
+			case 0x0007: /* 'BrtCellIsst' */
+			case 0x0008: /* 'BrtFmlaString' */
+			case 0x0009: /* 'BrtFmlaNum' */
+			case 0x000A: /* 'BrtFmlaBool' */
+			case 0x000B: /* 'BrtFmlaError' */
 				p = ({t:val[2]}/*:any*/);
 				switch(val[2]) {
 					case 'n': p.v = val[1]; break;
@@ -374,7 +375,7 @@ function parse_ws_bin(data, _opts, rels, wb, themes, styles)/*:Worksheet*/ {
 				}
 				break;
 
-			case 'BrtCellBlank':
+			case 0x0001: /* 'BrtCellBlank' */
 				if(!opts.sheetStubs) break;
 				p = ({t:'z',v:undefined}/*:any*/);
 				C = val[0].c;
@@ -386,9 +387,10 @@ function parse_ws_bin(data, _opts, rels, wb, themes, styles)/*:Worksheet*/ {
 				if(refguess.e.c < C) refguess.e.c = C;
 				break;
 
-			case 'BrtMergeCell': mergecells.push(val); break;
+			case 0x00B0: /* 'BrtMergeCell' */
+				mergecells.push(val); break;
 
-			case 'BrtHLink':
+			case 0x01EE: /* 'BrtHLink' */
 				var rel = rels['!id'][val.relId];
 				if(rel) {
 					val.Target = rel.Target;
@@ -408,14 +410,14 @@ function parse_ws_bin(data, _opts, rels, wb, themes, styles)/*:Worksheet*/ {
 				}
 				break;
 
-			case 'BrtArrFmla':
+			case 0x01AA: /* 'BrtArrFmla' */
 				if(!opts.cellFormula) break;
 				array_formulae.push(val);
 				cell = (opts.dense ? s[R][C] : s[encode_col(C) + rr]);
 				cell.f = stringify_formula(val[1], refguess, {r:row.r, c:C}, supbooks, opts);
 				cell.F = encode_range(val[0]);
 				break;
-			case 'BrtShrFmla':
+			case 0x01AB: /* 'BrtShrFmla' */
 				if(!opts.cellFormula) break;
 				shared_formulae[encode_cell(val[0].s)] = val[1];
 				cell = (opts.dense ? s[R][C] : s[encode_col(C) + rr]);
@@ -423,7 +425,7 @@ function parse_ws_bin(data, _opts, rels, wb, themes, styles)/*:Worksheet*/ {
 				break;
 
 			/* identical to 'ColInfo' in XLS */
-			case 'BrtColInfo':
+			case 0x003C: /* 'BrtColInfo' */
 				if(!opts.cellStyles) break;
 				while(val.e >= val.s) {
 					colinfo[val.e--] = { width: val.w/256 };
@@ -432,73 +434,75 @@ function parse_ws_bin(data, _opts, rels, wb, themes, styles)/*:Worksheet*/ {
 				}
 				break;
 
-			case 'BrtAFilterDateGroupItem': break;
-			case 'BrtActiveX': break;
-			case 'BrtBigName': break;
-			case 'BrtBkHim': break;
-			case 'BrtBrk': break;
-			case 'BrtCFIcon': break;
-			case 'BrtCFRuleExt': break;
-			case 'BrtCFVO': break;
-			case 'BrtCFVO14': break;
-			case 'BrtCellIgnoreEC': break;
-			case 'BrtCellIgnoreEC14': break;
-			case 'BrtCellMeta': break;
-			case 'BrtCellSmartTagProperty': break;
-			case 'BrtCellWatch': break;
-			case 'BrtColor': break;
-			case 'BrtColor14': break;
-			case 'BrtColorFilter': break;
-			case 'BrtCustomFilter': break;
-			case 'BrtCustomFilter14': break;
-			case 'BrtDRef': break;
-			case 'BrtDVal': break;
-			case 'BrtDVal14': break;
-			case 'BrtDValList': break;
-			case 'BrtDrawing': break;
-			case 'BrtDynamicFilter': break;
-			case 'BrtFilter': break;
-			case 'BrtFilter14': break;
-			case 'BrtIconFilter': break;
-			case 'BrtIconFilter14': break;
-			case 'BrtLegacyDrawing': break;
-			case 'BrtLegacyDrawingHF': break;
-			case 'BrtListPart': break;
-			case 'BrtMargins': break;
-			case 'BrtOleObject': break;
-			case 'BrtPageSetup': break;
-			case 'BrtPane': break;
-			case 'BrtPhoneticInfo': break;
-			case 'BrtPrintOptions': break;
-			case 'BrtRangeProtection': break;
-			case 'BrtRangeProtection14': break;
-			case 'BrtRangeProtectionIso': break;
-			case 'BrtRangeProtectionIso14': break;
-			case 'BrtRwDescent': break;
-			case 'BrtSel': break;
-			case 'BrtSheetCalcProp': break;
-			case 'BrtSheetProtection': break;
-			case 'BrtSheetProtectionIso': break;
-			case 'BrtSlc': break;
-			case 'BrtSparkline': break;
-			case 'BrtTable': break;
-			case 'BrtTop10Filter': break;
-			case 'BrtUid': break;
-			case 'BrtValueMeta': break;
-			case 'BrtWebExtension': break;
-			case 'BrtWsFmtInfo': break;
-			case 'BrtWsFmtInfoEx14': break;
-			case 'BrtWsProp': break;
+			case 0x00AF: /* 'BrtAFilterDateGroupItem' */
+			case 0x0284: /* 'BrtActiveX' */
+			case 0x0271: /* 'BrtBigName' */
+			case 0x0232: /* 'BrtBkHim' */
+			case 0x018C: /* 'BrtBrk' */
+			case 0x0458: /* 'BrtCFIcon' */
+			case 0x047A: /* 'BrtCFRuleExt' */
+			case 0x01D7: /* 'BrtCFVO' */
+			case 0x041A: /* 'BrtCFVO14' */
+			case 0x0289: /* 'BrtCellIgnoreEC' */
+			case 0x0451: /* 'BrtCellIgnoreEC14' */
+			case 0x0031: /* 'BrtCellMeta' */
+			case 0x024D: /* 'BrtCellSmartTagProperty' */
+			case 0x025F: /* 'BrtCellWatch' */
+			case 0x0234: /* 'BrtColor' */
+			case 0x041F: /* 'BrtColor14' */
+			case 0x00A8: /* 'BrtColorFilter' */
+			case 0x00AE: /* 'BrtCustomFilter' */
+			case 0x049C: /* 'BrtCustomFilter14' */
+			case 0x01F3: /* 'BrtDRef' */
+			case 0x0040: /* 'BrtDVal' */
+			case 0x041D: /* 'BrtDVal14' */
+			case 0x0226: /* 'BrtDrawing' */
+			case 0x00AB: /* 'BrtDynamicFilter' */
+			case 0x00A7: /* 'BrtFilter' */
+			case 0x0499: /* 'BrtFilter14' */
+			case 0x00A9: /* 'BrtIconFilter' */
+			case 0x049D: /* 'BrtIconFilter14' */
+			case 0x0227: /* 'BrtLegacyDrawing' */
+			case 0x0228: /* 'BrtLegacyDrawingHF' */
+			case 0x0295: /* 'BrtListPart' */
+			case 0x01DC: /* 'BrtMargins' */
+			case 0x027F: /* 'BrtOleObject' */
+			case 0x01DE: /* 'BrtPageSetup' */
+			case 0x0097: /* 'BrtPane' */
+			case 0x0219: /* 'BrtPhoneticInfo' */
+			case 0x01DD: /* 'BrtPrintOptions' */
+			case 0x0218: /* 'BrtRangeProtection' */
+			case 0x044F: /* 'BrtRangeProtection14' */
+			case 0x02A8: /* 'BrtRangeProtectionIso' */
+			case 0x0450: /* 'BrtRangeProtectionIso14' */
+			case 0x0400: /* 'BrtRwDescent' */
+			case 0x0098: /* 'BrtSel' */
+			case 0x0297: /* 'BrtSheetCalcProp' */
+			case 0x0217: /* 'BrtSheetProtection' */
+			case 0x02A6: /* 'BrtSheetProtectionIso' */
+			case 0x01F8: /* 'BrtSlc' */
+			case 0x0413: /* 'BrtSparkline' */
+			case 0x01AC: /* 'BrtTable' */
+			case 0x00AA: /* 'BrtTop10Filter' */
+			/* case 'BrtUid' */
+			case 0x0032: /* 'BrtValueMeta' */
+			case 0x0816: /* 'BrtWebExtension' */
+			case 0x01E5: /* 'BrtWsFmtInfo' */
+			case 0x0415: /* 'BrtWsFmtInfoEx14' */
+			case 0x0093: /* 'BrtWsProp' */
+				break;
 
-			case 'BrtFRTBegin': pass = true; break;
-			case 'BrtFRTEnd': pass = false; break;
-			case 'BrtACBegin': break;
-			case 'BrtACEnd': break;
+			case 0x0023: /* 'BrtFRTBegin' */
+				pass = true; break;
+			case 0x0024: /* 'BrtFRTEnd' */
+				pass = false; break;
+			case 0x0025: /* 'BrtACBegin' */ break;
+			case 0x0026: /* 'BrtACEnd' */ break;
 
 			default:
-				if((Record.n||"").indexOf("Begin") > 0){}
-				else if((Record.n||"").indexOf("End") > 0){}
-				else if(!pass || opts.WTF) throw new Error("Unexpected record " + RT + " " + Record.n);
+				if((R_n||"").indexOf("Begin") > 0){}
+				else if((R_n||"").indexOf("End") > 0){}
+				else if(!pass || opts.WTF) throw new Error("Unexpected record " + RT + " " + R_n);
 		}
 	}, opts);
 

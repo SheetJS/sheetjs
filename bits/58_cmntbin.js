@@ -31,28 +31,35 @@ function parse_comments_bin(data, opts) {
 	var authors = [];
 	var c = {};
 	var pass = false;
-	recordhopper(data, function hopper_cmnt(val, R, RT) {
-		switch(R.n) {
-			case 'BrtCommentAuthor': authors.push(val); break;
-			case 'BrtBeginComment': c = val; break;
-			case 'BrtCommentText': c.t = val.t; c.h = val.h; c.r = val.r; break;
-			case 'BrtEndComment':
+	recordhopper(data, function hopper_cmnt(val, R_n, RT) {
+		switch(RT) {
+			case 0x0278: /* 'BrtCommentAuthor' */
+				authors.push(val); break;
+			case 0x027B: /* 'BrtBeginComment' */
+				c = val; break;
+			case 0x027D: /* 'BrtCommentText' */
+				c.t = val.t; c.h = val.h; c.r = val.r; break;
+			case 0x027C: /* 'BrtEndComment' */
 				c.author = authors[c.iauthor];
 				delete c.iauthor;
 				if(opts.sheetRows && opts.sheetRows <= c.rfx.r) break;
 				if(!c.t) c.t = "";
 				delete c.rfx; out.push(c); break;
 
-			case 'BrtUid': break;
-			case 'BrtFRTBegin': pass = true; break;
-			case 'BrtFRTEnd': pass = false; break;
-			case 'BrtACBegin': break;
-			case 'BrtACEnd': break;
+			/* case 'BrtUid': */
+
+			case 0x0023: /* 'BrtFRTBegin' */
+				pass = true; break;
+			case 0x0024: /* 'BrtFRTEnd' */
+				pass = false; break;
+			case 0x0025: /* 'BrtACBegin' */ break;
+			case 0x0026: /* 'BrtACEnd' */ break;
+
 
 			default:
-				if((R.n||"").indexOf("Begin") > 0){}
-				else if((R.n||"").indexOf("End") > 0){}
-				else if(!pass || opts.WTF) throw new Error("Unexpected record " + RT + " " + R.n);
+				if((R_n||"").indexOf("Begin") > 0){}
+				else if((R_n||"").indexOf("End") > 0){}
+				else if(!pass || opts.WTF) throw new Error("Unexpected record " + RT + " " + R_n);
 		}
 	});
 	return out;

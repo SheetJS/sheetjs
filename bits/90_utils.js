@@ -75,12 +75,13 @@ function format_cell(cell/*:Cell*/, v/*:any*/, o/*:any*/) {
 }
 
 function sheet_to_json(sheet/*:Worksheet*/, opts/*:?Sheet2JSONOpts*/){
-	var val, row, range, header = 0, offset = 1, r, hdr/*:Array<any>*/ = [], isempty, R, C, v, vv;
+	if(sheet == null || sheet["!ref"] == null) return [];
+	var val = {t:'n',v:0}, header = 0, offset = 1, hdr/*:Array<any>*/ = [], isempty = true, v=0, vv="";
+	var r = {s:{r:0,c:0},e:{r:0,c:0}};
 	var o = opts != null ? opts : {};
 	var raw = o.raw;
 	var defval = o.defval;
-	if(sheet == null || sheet["!ref"] == null) return [];
-	range = o.range != null ? o.range : sheet["!ref"];
+	var range = o.range != null ? o.range : sheet["!ref"];
 	if(o.header === 1) header = 1;
 	else if(o.header === "A") header = 2;
 	else if(Array.isArray(o.header)) header = 3;
@@ -93,11 +94,13 @@ function sheet_to_json(sheet/*:Worksheet*/, opts/*:?Sheet2JSONOpts*/){
 	var rr = encode_row(r.s.r);
 	var cols = new Array(r.e.c-r.s.c+1);
 	var out = new Array(r.e.r-r.s.r-offset+1);
-	var outi = 0;
+	var outi = 0, counter = 0;
 	var dense = Array.isArray(sheet);
+	var R = r.s.r, C = 0, CC = 0;
+	if(!sheet[R]) sheet[R] = [];
 	for(C = r.s.c; C <= r.e.c; ++C) {
 		cols[C] = encode_col(C);
-		val = dense ? (sheet[r.s.r] || [])[C] : sheet[cols[C] + rr];
+		val = dense ? sheet[R][C] : sheet[cols[C] + rr];
 		switch(header) {
 			case 1: hdr[C] = C; break;
 			case 2: hdr[C] = cols[C]; break;
@@ -105,12 +108,12 @@ function sheet_to_json(sheet/*:Worksheet*/, opts/*:?Sheet2JSONOpts*/){
 			default:
 				if(val == null) continue;
 				vv = v = format_cell(val, null, o);
-				var counter = 0;
-				for(var CC = 0; CC < hdr.length; ++CC) if(hdr[CC] == vv) vv = v + "_" + (++counter);
+				counter = 0;
+				for(CC = 0; CC < hdr.length; ++CC) if(hdr[CC] == vv) vv = v + "_" + (++counter);
 				hdr[C] = vv;
 		}
 	}
-
+	var row = (header === 1) ? [] : {};
 	for (R = r.s.r + offset; R <= r.e.r; ++R) {
 		rr = encode_row(R);
 		isempty = true;
@@ -120,8 +123,8 @@ function sheet_to_json(sheet/*:Worksheet*/, opts/*:?Sheet2JSONOpts*/){
 			if(Object.defineProperty) try { Object.defineProperty(row, '__rowNum__', {value:R, enumerable:false}); } catch(e) { row.__rowNum__ = R; }
 			else row.__rowNum__ = R;
 		}
-		for (C = r.s.c; C <= r.e.c; ++C) {
-			val = dense ? (sheet[R] || [])[C] : sheet[cols[C] + rr];
+		if(!dense || sheet[R]) for (C = r.s.c; C <= r.e.c; ++C) {
+			val = dense ? sheet[R][C] : sheet[cols[C] + rr];
 			if(val === undefined || val.t === undefined) {
 				if(defval === undefined) continue;
 				if(hdr[C] != null) { row[hdr[C]] = defval; isempty = false; }

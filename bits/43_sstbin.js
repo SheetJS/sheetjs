@@ -7,14 +7,24 @@ function parse_BrtBeginSst(data, length) {
 function parse_sst_bin(data, opts)/*:SST*/ {
 	var s/*:SST*/ = ([]/*:any*/);
 	var pass = false;
-	recordhopper(data, function hopper_sst(val, R, RT) {
-		switch(R.n) {
-			case 'BrtBeginSst': s.Count = val[0]; s.Unique = val[1]; break;
-			case 'BrtSSTItem': s.push(val); break;
-			case 'BrtEndSst': return true;
-			case 'BrtFRTBegin': pass = true; break;
-			case 'BrtFRTEnd': pass = false; break;
-			default: if(!pass || opts.WTF) throw new Error("Unexpected record " + RT + " " + R.n);
+	recordhopper(data, function hopper_sst(val, R_n, RT) {
+		switch(RT) {
+			case 0x009F: /* 'BrtBeginSst' */
+				s.Count = val[0]; s.Unique = val[1]; break;
+			case 0x0013: /* 'BrtSSTItem' */
+				s.push(val); break;
+			case 0x00A0: /* 'BrtEndSst' */
+				return true;
+
+			case 0x0023: /* 'BrtFRTBegin' */
+				pass = true; break;
+			case 0x0024: /* 'BrtFRTEnd' */
+				pass = false; break;
+
+			default:
+				if(R_n.indexOf("Begin") > 0) state.push(R_n);
+				else if(R_n.indexOf("End") > 0) state.pop();
+				if(!pass || opts.WTF) throw new Error("Unexpected record " + RT + " " + R_n);
 		}
 	});
 	return s;

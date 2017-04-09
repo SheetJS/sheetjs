@@ -10,7 +10,7 @@ var WK_ = (function() {
 			var tgt = data.l + length;
 			var d = R.f(data, length, opts);
 			data.l = tgt;
-			if(cb(d, R, RT)) return;
+			if(cb(d, R.n, RT)) return;
 		}
 	}
 
@@ -27,7 +27,7 @@ var WK_ = (function() {
 	function lotus_to_workbook_buf(d,opts)/*:Workbook*/ {
 		if(!d) return d;
 		var o = opts || {};
-		if(DENSE != null) o.dense = DENSE;
+		if(DENSE != null && o.dense == null) o.dense = DENSE;
 		var s = (o.dense ? [] : {}), n = "Sheet1", sidx = 0;
 		var sheets = {}, snames = [n];
 
@@ -37,7 +37,7 @@ var WK_ = (function() {
 		else if(d[2] == 0x1a) o.Enum = WK3Enum;
 		else if(d[2] == 0x0e) { o.Enum = WK3Enum; o.qpro = true; d.l = 0; }
 		else throw new Error("Unrecognized LOTUS BOF " + d[2]);
-		lotushopper(d, function(val, R, RT) {
+		lotushopper(d, function(val, Rn, RT) {
 			if(d[2] == 0x02) switch(RT) {
 				case 0x00:
 					o.vers = val;

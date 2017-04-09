@@ -1,1 +1,1 @@
-var DENSE = false;
+var DENSE = null;

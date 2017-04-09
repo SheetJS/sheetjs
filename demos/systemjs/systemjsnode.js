@@ -11,7 +11,8 @@ SystemJS.config({
 	map: {
 		'xlsx': 'npm:xlsx/xlsx.js',
 		'fs': '@node/fs',
-		'crypto': '@node/fs'
+		'crypto': '@node/crypto',
+		'stream': '@node/stream'
 	}
 });
 SystemJS.import('./app.js');

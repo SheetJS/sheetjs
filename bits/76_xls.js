@@ -82,7 +82,7 @@ function make_cell(val, ixfe, t)/*:any*/ {
 function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 	var wb = ({opts:{}}/*:any*/);
 	var Sheets = {};
-	if(DENSE != null) options.dense = DENSE;
+	if(DENSE != null && options.dense == null) options.dense = DENSE;
 	var out = (options.dense ? [] : {});
 	var Directory = {};
 	var found_sheet = false;
@@ -728,6 +728,7 @@ fix_read_opts(options);
 reset_cp();
 var CompObj, Summary, Workbook/*:?any*/;
 if(cfb.FullPaths) {
+	if(cfb.find("EncryptedPackage")) throw new Error("File is password-protected");
 	CompObj = cfb.find('!CompObj');
 	Summary = cfb.find('!SummaryInformation');
 	Workbook = cfb.find('/Workbook');

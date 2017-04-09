@@ -408,7 +408,7 @@ var PRN = (function() {
 	function dsv_to_sheet_str(str/*:string*/, opts)/*:Worksheet*/ {
 		var o = opts || {};
 		var sep = "";
-		if(DENSE != null) o.dense = DENSE;
+		if(DENSE != null && o.dense == null) o.dense = DENSE;
 		var ws/*:Worksheet*/ = o.dense ? ([]/*:any*/) : ({}/*:any*/);
 		var range/*:Range*/ = ({s: {c:0, r:0}, e: {c:0, r:0}}/*:any*/);
 

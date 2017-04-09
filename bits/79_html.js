@@ -1,7 +1,7 @@
 /* TODO: in browser attach to DOM; in node use an html parser */
 function parse_html(str/*:string*/, _opts)/*:Workbook*/ {
 	var opts = _opts || {};
-	if(DENSE != null) opts.dense = DENSE;
+	if(DENSE != null && opts.dense == null) opts.dense = DENSE;
 	var ws/*:Worksheet*/ = opts.dense ? ([]/*:any*/) : ({}/*:any*/);
 	var o/*:Workbook*/ = { SheetNames: ["Sheet1"], Sheets: {Sheet1:ws} };
 	var i = str.indexOf("<table"), j = str.indexOf("</table");

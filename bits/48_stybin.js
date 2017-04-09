@@ -49,41 +49,47 @@ function parse_sty_bin(data, themes, opts) {
 	styles.CellXf = [];
 	var state = [];
 	var pass = false;
-	recordhopper(data, function hopper_sty(val, R, RT) {
-		switch(R.n) {
-			case 'BrtFmt':
+	recordhopper(data, function hopper_sty(val, R_n, RT) {
+		switch(RT) {
+			case 0x002C: /* 'BrtFmt' */
 				styles.NumberFmt[val[0]] = val[1]; SSF.load(val[1], val[0]);
 				break;
-			case 'BrtFont': break; /* TODO */
-			case 'BrtKnownFonts': break; /* TODO */
-			case 'BrtFill': break; /* TODO */
-			case 'BrtBorder': break; /* TODO */
-			case 'BrtXF':
+			case 0x002B: /* 'BrtFont' */ break;
+			case 0x0401: /* 'BrtKnownFonts' */ break;
+			case 0x002D: /* 'BrtFill' */ break;
+			case 0x002E: /* 'BrtBorder' */ break;
+			case 0x002F: /* 'BrtXF' */
 				if(state[state.length - 1] == "BrtBeginCellXFs") {
 					styles.CellXf.push(val);
 				}
-				break; /* TODO */
-			case 'BrtStyle': break; /* TODO */
-			case 'BrtDXF': break; /* TODO */
-			case 'BrtMRUColor': break; /* TODO */
-			case 'BrtIndexedColor': break; /* TODO */
+				break;
+			case 0x0030: /* 'BrtStyle' */
+			case 0x01FB: /* 'BrtDXF' */
+			case 0x023C: /* 'BrtMRUColor' */
+			case 0x01DB: /* 'BrtIndexedColor': */
+				break;
 
-			case 'BrtDXF14': break;
-			case 'BrtDXF15': break;
-			case 'BrtUid': break;
-			case 'BrtSlicerStyleElement': break;
-			case 'BrtTableStyleElement': break;
-			case 'BrtTimelineStyleElement': break;
+			case 0x0493: /* 'BrtDXF14' */
+			case 0x0836: /* 'BrtDXF15' */
+			case 0x046A: /* 'BrtSlicerStyleElement' */
+			case 0x0200: /* 'BrtTableStyleElement' */
+			case 0x082F: /* 'BrtTimelineStyleElement' */
+			/* case 'BrtUid' */
+				break;
 
-			case 'BrtFRTBegin': pass = true; break;
-			case 'BrtFRTEnd': pass = false; break;
-			case 'BrtACBegin': state.push(R.n); break;
-			case 'BrtACEnd': state.pop(); break;
+			case 0x0023: /* 'BrtFRTBegin' */
+				pass = true; break;
+			case 0x0024: /* 'BrtFRTEnd' */
+				pass = false; break;
+			case 0x0025: /* 'BrtACBegin' */
+				state.push(R_n); break;
+			case 0x0026: /* 'BrtACEnd' */
+				state.pop(); break;
 
 			default:
-				if((R.n||"").indexOf("Begin") > 0) state.push(R.n);
-				else if((R.n||"").indexOf("End") > 0) state.pop();
-				else if(!pass || opts.WTF) throw new Error("Unexpected record " + RT + " " + R.n);
+				if((R_n||"").indexOf("Begin") > 0) state.push(R_n);
+				else if((R_n||"").indexOf("End") > 0) state.pop();
+				else if(!pass || opts.WTF) throw new Error("Unexpected record " + RT + " " + R_n);
 		}
 	});
 	return styles;

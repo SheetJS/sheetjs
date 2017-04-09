@@ -34,30 +34,36 @@ function parse_cs_bin(data, opts, rels, wb, themes, styles)/*:Worksheet*/ {
 	var s = {'!type':"chart", '!chart':null, '!rel':""};
 	var state = [];
 	var pass = false;
-	recordhopper(data, function cs_parse(val, Record, RT) {
-		switch(Record.n) {
+	recordhopper(data, function cs_parse(val, R_n, RT) {
+		switch(RT) {
 
-			case 'BrtDrawing': s['!rel'] = val; break;
+			case 0x0226: /* 'BrtDrawing' */
+				s['!rel'] = val; break;
 
-			case 'BrtUid': break;
-			case 'BrtMargins': break; // TODO
-			case 'BrtLegacyDrawing': break; // TODO
-			case 'BrtLegacyDrawingHF': break; // TODO
-			case 'BrtBkHim': break; // TODO
-			case 'BrtCsProp': break; // TODO
-			case 'BrtCsProtection': break; // TODO
-			case 'BrtCsProtectionIso': break; // TODO
-			case 'BrtCsPageSetup': break; // TODO
+			/* case 'BrtUid': */
+			case 0x0232: /* 'BrtBkHim' */
+			case 0x028C: /* 'BrtCsPageSetup' */
+			case 0x028B: /* 'BrtCsProp' */
+			case 0x029D: /* 'BrtCsProtection' */
+			case 0x02A7: /* 'BrtCsProtectionIso' */
+			case 0x0227: /* 'BrtLegacyDrawing' */
+			case 0x0228: /* 'BrtLegacyDrawingHF' */
+			case 0x01DC: /* 'BrtMargins' */
+				break;
 
-			case 'BrtFRTBegin': pass = true; break;
-			case 'BrtFRTEnd': pass = false; break;
-			case 'BrtACBegin': state.push(R.n); break;
-			case 'BrtACEnd': state.pop(); break;
+			case 0x0023: /* 'BrtFRTBegin' */
+				pass = true; break;
+			case 0x0024: /* 'BrtFRTEnd' */
+				pass = false; break;
+			case 0x0025: /* 'BrtACBegin' */
+				state.push(R_n); break;
+			case 0x0026: /* 'BrtACEnd' */
+				state.pop(); break;
 
 			default:
-				if((Record.n||"").indexOf("Begin") > 0) state.push(Record.n);
-				else if((Record.n||"").indexOf("End") > 0) state.pop();
-				else if(!pass || opts.WTF) throw new Error("Unexpected record " + RT + " " + Record.n);
+				if((R_n||"").indexOf("Begin") > 0) state.push(R_n);
+				else if((R_n||"").indexOf("End") > 0) state.pop();
+				else if(!pass || opts.WTF) throw new Error("Unexpected record " + RT + " " + R_n);
 		}
 	}, opts);
 

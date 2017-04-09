@@ -37,7 +37,7 @@ program
 	.option('-n, --sheet-rows <num>', 'Number of rows to process (0=all rows)')
 	.option('--sst', 'generate shared string table for XLS* formats')
 	.option('--compress', 'use compression when writing XLSX/M/B and ODS')
-	.option('--perf', 'do not generate output')
+	.option('--read-only', 'do not generate output')
 	.option('--all', 'parse everything; write as much as possible')
 	.option('--dev', 'development mode')
 	.option('--sparse', 'sparse mode')
@@ -57,17 +57,6 @@ var wb_formats_2 = [
 	['xlml', 'xlml', 'xls']
 ];
 program.parse(process.argv);
-
-/* see https://github.com/SheetJS/j/issues/4 */
-if(process.version === 'v0.10.31') {
-	var msgs = [
-		"node v0.10.31 is known to crash on OSX and Linux, refusing to proceed.",
-		"see https://github.com/SheetJS/j/issues/4 for the relevant discussion.",
-		"see https://github.com/joyent/node/issues/8208 for the relevant node issue"
-	];
-	msgs.forEach(function(m) { console.error(m); });
-	process.exit(1);
-}
 
 var filename/*:?string*/, sheetname = '';
 if(program.args[0]) {
@@ -165,7 +154,7 @@ try {
 	process.exit(4);
 }
 
-if(program.perf) process.exit(0);
+if(program.readOnly) process.exit(0);
 
 /* single worksheet formats */
 [
@@ -181,14 +170,22 @@ if(program.perf) process.exit(0);
 } });
 
 var oo = "";
+var strm = false;
 if(!program.quiet) console.error(target_sheet);
 if(program.formulae) oo = X.utils.get_formulae(ws).join("\n");
 else if(program.json) oo = JSON.stringify(X.utils.sheet_to_row_object_array(ws));
 else if(program.rawJs) oo = JSON.stringify(X.utils.sheet_to_row_object_array(ws,{raw:true}));
 else if(program.arrays) oo = JSON.stringify(X.utils.sheet_to_row_object_array(ws,{raw:true, header:1}));
-else oo = X.utils.make_csv(ws, {FS:program.fieldSep, RS:program.rowSep});
+else {
+	strm = true;
+	var stream = X.stream.to_csv(ws, {FS:program.fieldSep, RS:program.rowSep});
+	if(program.output) stream.pipe(fs.createWriteStream(program.output));
+	else stream.pipe(process.stdout);
+}
 
-if(program.output) fs.writeFileSync(program.output, oo);
-else console.log(oo);
+if(!strm) {
+	if(program.output) fs.writeFileSync(program.output, oo);
+	else console.log(oo);
+}
 /*::   } */
 /*:: } */

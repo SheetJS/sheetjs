@@ -93,7 +93,7 @@ function write_biff_ws(ba/*:BufArray*/, ws/*:Worksheet*/, idx/*:number*/, opts, 
 /* Based on test files */
 function write_biff_buf(wb/*:Workbook*/, opts/*:WriteOpts*/) {
 	var o = opts || {};
-	if(DENSE != null) o.dense = DENSE;
+	if(DENSE != null && o.dense == null) o.dense = DENSE;
 	var ba = buf_array();
 	var idx = 0;
 	for(var i=0;i<wb.SheetNames.length;++i) if(wb.SheetNames[i] == o.sheet) idx=i;

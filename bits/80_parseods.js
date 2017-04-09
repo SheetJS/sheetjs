@@ -18,7 +18,7 @@ var parse_content_xml = (function() {
 
 	return function pcx(d/*:string*/, _opts)/*:Workbook*/ {
 		var opts = _opts || {};
-		if(DENSE != null) opts.dense = DENSE;
+		if(DENSE != null && opts.dense == null) opts.dense = DENSE;
 		var str = xlml_normalize(d);
 		var state/*:Array<any>*/ = [], tmp;
 		var tag/*:: = {}*/;

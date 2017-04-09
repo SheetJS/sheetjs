@@ -68,61 +68,66 @@ function parse_wb_bin(data, opts)/*:WorkbookFile*/ {
 
 	var Names = {}, NameList = [];
 
-	recordhopper(data, function hopper_wb(val, R, RT) {
-		switch(R.n) {
-			case 'BrtBundleSh': wb.Sheets.push(val); break;
+	recordhopper(data, function hopper_wb(val, R_n, RT) {
+		switch(RT) {
+			case 0x009C: /* 'BrtBundleSh' */
+				wb.Sheets.push(val); break;
 
-			case 'BrtName':
+			case 0x0027: /* 'BrtName' */
 				Names[val.Name] = val; NameList.push(val.Name);
 				break;
-			case 'BrtNameExt': break;
+			case 0x040C: /* 'BrtNameExt' */ break;
 
-			case 'BrtAbsPath15': break;
-			case 'BrtBookProtection': break;
-			case 'BrtBookProtectionIso': break;
-			case 'BrtBookView': break;
-			case 'BrtCalcProp': break;
-			case 'BrtCrashRecErr': break;
-			case 'BrtDecoupledPivotCacheID': break;
-			case 'BrtExternSheet': break;
-			case 'BrtFileRecover': break;
-			case 'BrtFileSharing': break;
-			case 'BrtFileSharingIso': break;
-			case 'BrtFileVersion': break;
-			case 'BrtFnGroup': break;
-			case 'BrtModelRelationship': break;
-			case 'BrtModelTable': break;
-			case 'BrtModelTimeGroupingCalcCol': break;
-			case 'BrtOleSize': break;
-			case 'BrtPivotTableRef': break;
-			case 'BrtPlaceholderName': break;
-			case 'BrtRevisionPtr': break;
-			case 'BrtSmartTagType': break;
-			case 'BrtSupAddin': break;
-			case 'BrtSupBookSrc': break;
-			case 'BrtSupSame': break;
-			case 'BrtSupSelf': break;
-			case 'BrtTableSlicerCacheID': break;
-			case 'BrtTableSlicerCacheIDs': break;
-			case 'BrtTimelineCachePivotCacheID': break;
-			case 'BrtUid': break;
-			case 'BrtUserBookView': break;
-			case 'BrtWbFactoid': break;
-			case 'BrtWbProp': break;
-			case 'BrtWbProp14': break;
-			case 'BrtWebOpt': break;
-			case 'BrtWorkBookPr15': break;
+			case 0x0817: /* 'BrtAbsPath15' */
+			case 0x0216: /* 'BrtBookProtection' */
+			case 0x02A5: /* 'BrtBookProtectionIso' */
+			case 0x009E: /* 'BrtBookView' */
+			case 0x009D: /* 'BrtCalcProp' */
+			case 0x0262: /* 'BrtCrashRecErr' */
+			case 0x0802: /* 'BrtDecoupledPivotCacheID' */
+			case 0x016A: /* 'BrtExternSheet' */
+			case 0x009B: /* 'BrtFileRecover' */
+			case 0x0224: /* 'BrtFileSharing' */
+			case 0x02A4: /* 'BrtFileSharingIso' */
+			case 0x0080: /* 'BrtFileVersion' */
+			case 0x0299: /* 'BrtFnGroup' */
+			case 0x0850: /* 'BrtModelRelationship' */
+			case 0x084D: /* 'BrtModelTable' */
+			/* case 'BrtModelTimeGroupingCalcCol' */
+			case 0x0225: /* 'BrtOleSize' */
+			case 0x0805: /* 'BrtPivotTableRef' */
+			case 0x0169: /* 'BrtPlaceholderName' */
+			/* case 'BrtRevisionPtr' */
+			case 0x0254: /* 'BrtSmartTagType' */
+			case 0x029B: /* 'BrtSupAddin' */
+			case 0x0163: /* 'BrtSupBookSrc' */
+			case 0x0166: /* 'BrtSupSame' */
+			case 0x0165: /* 'BrtSupSelf' */
+			case 0x081C: /* 'BrtTableSlicerCacheID' */
+			case 0x081B: /* 'BrtTableSlicerCacheIDs' */
+			case 0x0822: /* 'BrtTimelineCachePivotCacheID' */
+			/* case 'BrtUid' */
+			case 0x018D: /* 'BrtUserBookView' */
+			case 0x009A: /* 'BrtWbFactoid' */
+			case 0x0099: /* 'BrtWbProp' */
+			case 0x045D: /* 'BrtWbProp14' */
+			case 0x0229: /* 'BrtWebOpt' */
+			case 0x082B: /* 'BrtWorkBookPr15' */
+				break;
 
-			case 'BrtFRTBegin': pass = true; break;
-			case 'BrtFRTEnd': pass = false; break;
-			case 'BrtACBegin': break;
-			case 'BrtACEnd': break;
+			case 0x0023: /* 'BrtFRTBegin' */
+				pass = true; break;
+			case 0x0024: /* 'BrtFRTEnd' */
+				pass = false; break;
+			case 0x0025: /* 'BrtACBegin' */ break;
+			case 0x0026: /* 'BrtACEnd' */ break;
 
-			case 'BrtFRTArchID$': break;
+			case 0x0010: /* 'BrtFRTArchID$' */ break;
+
 			default:
-				if((R.n||"").indexOf("Begin") > 0){}
-				else if((R.n||"").indexOf("End") > 0){}
-				else if(!pass || opts.WTF) throw new Error("Unexpected record " + RT + " " + R.n);
+				if((R_n||"").indexOf("Begin") > 0){}
+				else if((R_n||"").indexOf("End") > 0){}
+				else if(!pass || opts.WTF) throw new Error("Unexpected record " + RT + " " + R_n);
 		}
 	}, opts);
 

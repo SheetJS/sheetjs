@@ -5,7 +5,7 @@
 /*exported XLSX */
 var XLSX = {};
 (function make_xlsx(XLSX){
-XLSX.version = '0.9.9';
+XLSX.version = '0.9.10';
 var current_codepage = 1200, current_cptable;
 /*:: declare var cptable:any; */
 if(typeof module !== "undefined" && typeof require !== 'undefined') {
@@ -36,7 +36,7 @@ if(typeof cptable !== 'undefined') {
 		return cptable.utils.decode(current_codepage, [x&255,x>>8])[0];
 	};
 }
-var DENSE = false;
+var DENSE = null;
 var Base64 = (function make_b64(){
 	var map = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
 	return {
@@ -103,7 +103,7 @@ declare type BufArray = {
 	push(buf:Block):void;
 };
 
-type RecordHopperCB = {(d:any, R:any, RT:number):?boolean;};
+type RecordHopperCB = {(d:any, Rn:string, RT:number):?boolean;};
 
 type EvertType = {[string]:string};
 type EvertNumType = {[string]:number};
@@ -1938,17 +1938,18 @@ function recordhopper(data, cb/*:RecordHopperCB*/, opts/*:?any*/) {
 	if(!data) return;
 	var tmpbyte, cntbyte, length;
 	prep_blob(data, data.l || 0);
-	while(data.l < data.length) {
-		var RT = data.read_shift(1);
+	var L = data.length, RT = 0, tgt = 0;
+	while(data.l < L) {
+		RT = data.read_shift(1);
 		if(RT & 0x80) RT = (RT & 0x7F) + ((data.read_shift(1) & 0x7F)<<7);
 		var R = XLSBRecordEnum[RT] || XLSBRecordEnum[0xFFFF];
 		tmpbyte = data.read_shift(1);
 		length = tmpbyte & 0x7F;
 		for(cntbyte = 1; cntbyte <4 && (tmpbyte & 0x80); ++cntbyte) length += ((tmpbyte = data.read_shift(1)) & 0x7F)<<(7*cntbyte);
-		var tgt = data.l + length;
+		tgt = data.l + length;
 		var d = R.f(data, length, opts);
 		data.l = tgt;
-		if(cb(d, R, RT)) return;
+		if(cb(d, R.n, RT)) return;
 	}
 }
 
@@ -2093,7 +2094,7 @@ function sheet_to_workbook(sheet/*:Worksheet*/, opts)/*:Workbook*/ {
 
 function aoa_to_sheet(data/*:AOA*/, opts/*:?any*/)/*:Worksheet*/ {
 	var o = opts || {};
-	if(DENSE != null) o.dense = DENSE;
+	if(DENSE != null && o.dense == null) o.dense = DENSE;
 	var ws/*:Worksheet*/ = o.dense ? ([]/*:any*/) : ({}/*:any*/);
 	var range/*:Range*/ = ({s: {c:10000000, r:10000000}, e: {c:0, r:0}}/*:any*/);
 	for(var R = 0; R != data.length; ++R) {
@@ -5175,7 +5176,7 @@ var PRN = (function() {
 	function dsv_to_sheet_str(str/*:string*/, opts)/*:Worksheet*/ {
 		var o = opts || {};
 		var sep = "";
-		if(DENSE != null) o.dense = DENSE;
+		if(DENSE != null && o.dense == null) o.dense = DENSE;
 		var ws/*:Worksheet*/ = o.dense ? ([]/*:any*/) : ({}/*:any*/);
 		var range/*:Range*/ = ({s: {c:0, r:0}, e: {c:0, r:0}}/*:any*/);
 
@@ -5265,7 +5266,7 @@ var WK_ = (function() {
 			var tgt = data.l + length;
 			var d = R.f(data, length, opts);
 			data.l = tgt;
-			if(cb(d, R, RT)) return;
+			if(cb(d, R.n, RT)) return;
 		}
 	}
 
@@ -5282,7 +5283,7 @@ var WK_ = (function() {
 	function lotus_to_workbook_buf(d,opts)/*:Workbook*/ {
 		if(!d) return d;
 		var o = opts || {};
-		if(DENSE != null) o.dense = DENSE;
+		if(DENSE != null && o.dense == null) o.dense = DENSE;
 		var s = (o.dense ? [] : {}), n = "Sheet1", sidx = 0;
 		var sheets = {}, snames = [n];
 
@@ -5292,7 +5293,7 @@ var WK_ = (function() {
 		else if(d[2] == 0x1a) o.Enum = WK3Enum;
 		else if(d[2] == 0x0e) { o.Enum = WK3Enum; o.qpro = true; d.l = 0; }
 		else throw new Error("Unrecognized LOTUS BOF " + d[2]);
-		lotushopper(d, function(val, R, RT) {
+		lotushopper(d, function(val, Rn, RT) {
 			if(d[2] == 0x02) switch(RT) {
 				case 0x00:
 					o.vers = val;
@@ -5798,14 +5799,24 @@ function parse_BrtBeginSst(data, length) {
 function parse_sst_bin(data, opts)/*:SST*/ {
 	var s/*:SST*/ = ([]/*:any*/);
 	var pass = false;
-	recordhopper(data, function hopper_sst(val, R, RT) {
-		switch(R.n) {
-			case 'BrtBeginSst': s.Count = val[0]; s.Unique = val[1]; break;
-			case 'BrtSSTItem': s.push(val); break;
-			case 'BrtEndSst': return true;
-			case 'BrtFRTBegin': pass = true; break;
-			case 'BrtFRTEnd': pass = false; break;
-			default: if(!pass || opts.WTF) throw new Error("Unexpected record " + RT + " " + R.n);
+	recordhopper(data, function hopper_sst(val, R_n, RT) {
+		switch(RT) {
+			case 0x009F: /* 'BrtBeginSst' */
+				s.Count = val[0]; s.Unique = val[1]; break;
+			case 0x0013: /* 'BrtSSTItem' */
+				s.push(val); break;
+			case 0x00A0: /* 'BrtEndSst' */
+				return true;
+
+			case 0x0023: /* 'BrtFRTBegin' */
+				pass = true; break;
+			case 0x0024: /* 'BrtFRTEnd' */
+				pass = false; break;
+
+			default:
+				if(R_n.indexOf("Begin") > 0) state.push(R_n);
+				else if(R_n.indexOf("End") > 0) state.pop();
+				if(!pass || opts.WTF) throw new Error("Unexpected record " + RT + " " + R_n);
 		}
 	});
 	return s;
@@ -6524,41 +6535,47 @@ function parse_sty_bin(data, themes, opts) {
 	styles.CellXf = [];
 	var state = [];
 	var pass = false;
-	recordhopper(data, function hopper_sty(val, R, RT) {
-		switch(R.n) {
-			case 'BrtFmt':
+	recordhopper(data, function hopper_sty(val, R_n, RT) {
+		switch(RT) {
+			case 0x002C: /* 'BrtFmt' */
 				styles.NumberFmt[val[0]] = val[1]; SSF.load(val[1], val[0]);
 				break;
-			case 'BrtFont': break; /* TODO */
-			case 'BrtKnownFonts': break; /* TODO */
-			case 'BrtFill': break; /* TODO */
-			case 'BrtBorder': break; /* TODO */
-			case 'BrtXF':
+			case 0x002B: /* 'BrtFont' */ break;
+			case 0x0401: /* 'BrtKnownFonts' */ break;
+			case 0x002D: /* 'BrtFill' */ break;
+			case 0x002E: /* 'BrtBorder' */ break;
+			case 0x002F: /* 'BrtXF' */
 				if(state[state.length - 1] == "BrtBeginCellXFs") {
 					styles.CellXf.push(val);
 				}
-				break; /* TODO */
-			case 'BrtStyle': break; /* TODO */
-			case 'BrtDXF': break; /* TODO */
-			case 'BrtMRUColor': break; /* TODO */
-			case 'BrtIndexedColor': break; /* TODO */
+				break;
+			case 0x0030: /* 'BrtStyle' */
+			case 0x01FB: /* 'BrtDXF' */
+			case 0x023C: /* 'BrtMRUColor' */
+			case 0x01DB: /* 'BrtIndexedColor': */
+				break;
 
-			case 'BrtDXF14': break;
-			case 'BrtDXF15': break;
-			case 'BrtUid': break;
-			case 'BrtSlicerStyleElement': break;
-			case 'BrtTableStyleElement': break;
-			case 'BrtTimelineStyleElement': break;
+			case 0x0493: /* 'BrtDXF14' */
+			case 0x0836: /* 'BrtDXF15' */
+			case 0x046A: /* 'BrtSlicerStyleElement' */
+			case 0x0200: /* 'BrtTableStyleElement' */
+			case 0x082F: /* 'BrtTimelineStyleElement' */
+			/* case 'BrtUid' */
+				break;
 
-			case 'BrtFRTBegin': pass = true; break;
-			case 'BrtFRTEnd': pass = false; break;
-			case 'BrtACBegin': state.push(R.n); break;
-			case 'BrtACEnd': state.pop(); break;
+			case 0x0023: /* 'BrtFRTBegin' */
+				pass = true; break;
+			case 0x0024: /* 'BrtFRTEnd' */
+				pass = false; break;
+			case 0x0025: /* 'BrtACBegin' */
+				state.push(R_n); break;
+			case 0x0026: /* 'BrtACEnd' */
+				state.pop(); break;
 
 			default:
-				if((R.n||"").indexOf("Begin") > 0) state.push(R.n);
-				else if((R.n||"").indexOf("End") > 0) state.pop();
-				else if(!pass || opts.WTF) throw new Error("Unexpected record " + RT + " " + R.n);
+				if((R_n||"").indexOf("Begin") > 0) state.push(R_n);
+				else if((R_n||"").indexOf("End") > 0) state.pop();
+				else if(!pass || opts.WTF) throw new Error("Unexpected record " + RT + " " + R_n);
 		}
 	});
 	return styles;
@@ -6983,12 +7000,15 @@ function parse_BrtCalcChainItem$(data, length) {
 function parse_cc_bin(data, opts) {
 	var out = [];
 	var pass = false;
-	recordhopper(data, function hopper_cc(val, R, RT) {
-		switch(R.n) {
-			case 'BrtCalcChainItem$': out.push(val); break;
-			case 'BrtBeginCalcChain$': break;
-			case 'BrtEndCalcChain$': break;
-			default: if(!pass || opts.WTF) throw new Error("Unexpected record " + RT + " " + R.n);
+	recordhopper(data, function hopper_cc(val, R_n, RT) {
+		switch(RT) {
+			case 0x003F: /* 'BrtCalcChainItem$' */
+				out.push(val); break;
+
+			default:
+				if((R_n||"").indexOf("Begin") > 0){}
+				else if((R_n||"").indexOf("End") > 0){}
+				else if(!pass || opts.WTF) throw new Error("Unexpected record " + RT + " " + R_n);
 		}
 	});
 	return out;
@@ -7201,28 +7221,35 @@ function parse_comments_bin(data, opts) {
 	var authors = [];
 	var c = {};
 	var pass = false;
-	recordhopper(data, function hopper_cmnt(val, R, RT) {
-		switch(R.n) {
-			case 'BrtCommentAuthor': authors.push(val); break;
-			case 'BrtBeginComment': c = val; break;
-			case 'BrtCommentText': c.t = val.t; c.h = val.h; c.r = val.r; break;
-			case 'BrtEndComment':
+	recordhopper(data, function hopper_cmnt(val, R_n, RT) {
+		switch(RT) {
+			case 0x0278: /* 'BrtCommentAuthor' */
+				authors.push(val); break;
+			case 0x027B: /* 'BrtBeginComment' */
+				c = val; break;
+			case 0x027D: /* 'BrtCommentText' */
+				c.t = val.t; c.h = val.h; c.r = val.r; break;
+			case 0x027C: /* 'BrtEndComment' */
 				c.author = authors[c.iauthor];
 				delete c.iauthor;
 				if(opts.sheetRows && opts.sheetRows <= c.rfx.r) break;
 				if(!c.t) c.t = "";
 				delete c.rfx; out.push(c); break;
 
-			case 'BrtUid': break;
-			case 'BrtFRTBegin': pass = true; break;
-			case 'BrtFRTEnd': pass = false; break;
-			case 'BrtACBegin': break;
-			case 'BrtACEnd': break;
+			/* case 'BrtUid': */
+
+			case 0x0023: /* 'BrtFRTBegin' */
+				pass = true; break;
+			case 0x0024: /* 'BrtFRTEnd' */
+				pass = false; break;
+			case 0x0025: /* 'BrtACBegin' */ break;
+			case 0x0026: /* 'BrtACEnd' */ break;
+
 
 			default:
-				if((R.n||"").indexOf("Begin") > 0){}
-				else if((R.n||"").indexOf("End") > 0){}
-				else if(!pass || opts.WTF) throw new Error("Unexpected record " + RT + " " + R.n);
+				if((R_n||"").indexOf("Begin") > 0){}
+				else if((R_n||"").indexOf("End") > 0){}
+				else if(!pass || opts.WTF) throw new Error("Unexpected record " + RT + " " + R_n);
 		}
 	});
 	return out;
@@ -9657,13 +9684,13 @@ function parse_ws_xml_dim(ws, s) {
 }
 var mergecregex = /<(?:\w:)?mergeCell ref="[A-Z0-9:]+"\s*[\/]?>/g;
 var sheetdataregex = /<(?:\w+:)?sheetData>([^\u2603]*)<\/(?:\w+:)?sheetData>/;
-var hlinkregex = /<(?:\w*:)?hyperlink [^>]*>/mg;
+var hlinkregex = /<(?:\w:)?hyperlink [^>]*>/mg;
 var dimregex = /"(\w*:\w*)"/;
-var colregex = /<(?:\w*:)?col[^>]*[\/]?>/g;
+var colregex = /<(?:\w:)?col[^>]*[\/]?>/g;
 /* 18.3 Worksheets */
 function parse_ws_xml(data/*:?string*/, opts, rels, wb, themes, styles)/*:Worksheet*/ {
 	if(!data) return data;
-	if(DENSE != null) opts.dense = DENSE;
+	if(DENSE != null && opts.dense == null) opts.dense = DENSE;
 	/* 18.3.1.99 worksheet CT_Worksheet */
 	var s = opts.dense ? ([]/*:any*/) : ({}/*:any*/);
 
@@ -10368,7 +10395,7 @@ function parse_ws_bin(data, _opts, rels, wb, themes, styles)/*:Worksheet*/ {
 	if(!data) return data;
 	var opts = _opts || {};
 	if(!rels) rels = {'!id':{}};
-	if(DENSE != null) opts.dense = DENSE;
+	if(DENSE != null && opts.dense == null) opts.dense = DENSE;
 	var s = opts.dense ? [] : {};
 
 	var ref;
@@ -10395,27 +10422,28 @@ function parse_ws_bin(data, _opts, rels, wb, themes, styles)/*:Worksheet*/ {
 	var defwidth = 0, defheight = 0; // twips / MDW respectively
 	var seencol = false;
 
-	recordhopper(data, function ws_parse(val, Record, RT) {
+	recordhopper(data, function ws_parse(val, R_n, RT) {
 		if(end) return;
-		switch(Record.n) {
-			case 'BrtWsDim': ref = val; break;
-			case 'BrtRowHdr':
+		switch(RT) {
+			case 0x0094: /* 'BrtWsDim' */
+				ref = val; break;
+			case 0x0000: /* 'BrtRowHdr' */
 				row = val;
 				if(opts.sheetRows && opts.sheetRows <= row.r) end=true;
 				rr = encode_row(R = row.r);
 				opts['!row'] = row.r;
 				break;
 
-			case 'BrtFmlaBool':
-			case 'BrtFmlaError':
-			case 'BrtFmlaNum':
-			case 'BrtFmlaString':
-			case 'BrtCellBool':
-			case 'BrtCellError':
-			case 'BrtCellIsst':
-			case 'BrtCellReal':
-			case 'BrtCellRk':
-			case 'BrtCellSt':
+			case 0x0002: /* 'BrtCellRk' */
+			case 0x0003: /* 'BrtCellError' */
+			case 0x0004: /* 'BrtCellBool' */
+			case 0x0005: /* 'BrtCellReal' */
+			case 0x0006: /* 'BrtCellSt' */
+			case 0x0007: /* 'BrtCellIsst' */
+			case 0x0008: /* 'BrtFmlaString' */
+			case 0x0009: /* 'BrtFmlaNum' */
+			case 0x000A: /* 'BrtFmlaBool' */
+			case 0x000B: /* 'BrtFmlaError' */
 				p = ({t:val[2]}/*:any*/);
 				switch(val[2]) {
 					case 'n': p.v = val[1]; break;
@@ -10448,7 +10476,7 @@ function parse_ws_bin(data, _opts, rels, wb, themes, styles)/*:Worksheet*/ {
 				}
 				break;
 
-			case 'BrtCellBlank':
+			case 0x0001: /* 'BrtCellBlank' */
 				if(!opts.sheetStubs) break;
 				p = ({t:'z',v:undefined}/*:any*/);
 				C = val[0].c;
@@ -10460,9 +10488,10 @@ function parse_ws_bin(data, _opts, rels, wb, themes, styles)/*:Worksheet*/ {
 				if(refguess.e.c < C) refguess.e.c = C;
 				break;
 
-			case 'BrtMergeCell': mergecells.push(val); break;
+			case 0x00B0: /* 'BrtMergeCell' */
+				mergecells.push(val); break;
 
-			case 'BrtHLink':
+			case 0x01EE: /* 'BrtHLink' */
 				var rel = rels['!id'][val.relId];
 				if(rel) {
 					val.Target = rel.Target;
@@ -10482,14 +10511,14 @@ function parse_ws_bin(data, _opts, rels, wb, themes, styles)/*:Worksheet*/ {
 				}
 				break;
 
-			case 'BrtArrFmla':
+			case 0x01AA: /* 'BrtArrFmla' */
 				if(!opts.cellFormula) break;
 				array_formulae.push(val);
 				cell = (opts.dense ? s[R][C] : s[encode_col(C) + rr]);
 				cell.f = stringify_formula(val[1], refguess, {r:row.r, c:C}, supbooks, opts);
 				cell.F = encode_range(val[0]);
 				break;
-			case 'BrtShrFmla':
+			case 0x01AB: /* 'BrtShrFmla' */
 				if(!opts.cellFormula) break;
 				shared_formulae[encode_cell(val[0].s)] = val[1];
 				cell = (opts.dense ? s[R][C] : s[encode_col(C) + rr]);
@@ -10497,7 +10526,7 @@ function parse_ws_bin(data, _opts, rels, wb, themes, styles)/*:Worksheet*/ {
 				break;
 
 			/* identical to 'ColInfo' in XLS */
-			case 'BrtColInfo':
+			case 0x003C: /* 'BrtColInfo' */
 				if(!opts.cellStyles) break;
 				while(val.e >= val.s) {
 					colinfo[val.e--] = { width: val.w/256 };
@@ -10506,73 +10535,75 @@ function parse_ws_bin(data, _opts, rels, wb, themes, styles)/*:Worksheet*/ {
 				}
 				break;
 
-			case 'BrtAFilterDateGroupItem': break;
-			case 'BrtActiveX': break;
-			case 'BrtBigName': break;
-			case 'BrtBkHim': break;
-			case 'BrtBrk': break;
-			case 'BrtCFIcon': break;
-			case 'BrtCFRuleExt': break;
-			case 'BrtCFVO': break;
-			case 'BrtCFVO14': break;
-			case 'BrtCellIgnoreEC': break;
-			case 'BrtCellIgnoreEC14': break;
-			case 'BrtCellMeta': break;
-			case 'BrtCellSmartTagProperty': break;
-			case 'BrtCellWatch': break;
-			case 'BrtColor': break;
-			case 'BrtColor14': break;
-			case 'BrtColorFilter': break;
-			case 'BrtCustomFilter': break;
-			case 'BrtCustomFilter14': break;
-			case 'BrtDRef': break;
-			case 'BrtDVal': break;
-			case 'BrtDVal14': break;
-			case 'BrtDValList': break;
-			case 'BrtDrawing': break;
-			case 'BrtDynamicFilter': break;
-			case 'BrtFilter': break;
-			case 'BrtFilter14': break;
-			case 'BrtIconFilter': break;
-			case 'BrtIconFilter14': break;
-			case 'BrtLegacyDrawing': break;
-			case 'BrtLegacyDrawingHF': break;
-			case 'BrtListPart': break;
-			case 'BrtMargins': break;
-			case 'BrtOleObject': break;
-			case 'BrtPageSetup': break;
-			case 'BrtPane': break;
-			case 'BrtPhoneticInfo': break;
-			case 'BrtPrintOptions': break;
-			case 'BrtRangeProtection': break;
-			case 'BrtRangeProtection14': break;
-			case 'BrtRangeProtectionIso': break;
-			case 'BrtRangeProtectionIso14': break;
-			case 'BrtRwDescent': break;
-			case 'BrtSel': break;
-			case 'BrtSheetCalcProp': break;
-			case 'BrtSheetProtection': break;
-			case 'BrtSheetProtectionIso': break;
-			case 'BrtSlc': break;
-			case 'BrtSparkline': break;
-			case 'BrtTable': break;
-			case 'BrtTop10Filter': break;
-			case 'BrtUid': break;
-			case 'BrtValueMeta': break;
-			case 'BrtWebExtension': break;
-			case 'BrtWsFmtInfo': break;
-			case 'BrtWsFmtInfoEx14': break;
-			case 'BrtWsProp': break;
+			case 0x00AF: /* 'BrtAFilterDateGroupItem' */
+			case 0x0284: /* 'BrtActiveX' */
+			case 0x0271: /* 'BrtBigName' */
+			case 0x0232: /* 'BrtBkHim' */
+			case 0x018C: /* 'BrtBrk' */
+			case 0x0458: /* 'BrtCFIcon' */
+			case 0x047A: /* 'BrtCFRuleExt' */
+			case 0x01D7: /* 'BrtCFVO' */
+			case 0x041A: /* 'BrtCFVO14' */
+			case 0x0289: /* 'BrtCellIgnoreEC' */
+			case 0x0451: /* 'BrtCellIgnoreEC14' */
+			case 0x0031: /* 'BrtCellMeta' */
+			case 0x024D: /* 'BrtCellSmartTagProperty' */
+			case 0x025F: /* 'BrtCellWatch' */
+			case 0x0234: /* 'BrtColor' */
+			case 0x041F: /* 'BrtColor14' */
+			case 0x00A8: /* 'BrtColorFilter' */
+			case 0x00AE: /* 'BrtCustomFilter' */
+			case 0x049C: /* 'BrtCustomFilter14' */
+			case 0x01F3: /* 'BrtDRef' */
+			case 0x0040: /* 'BrtDVal' */
+			case 0x041D: /* 'BrtDVal14' */
+			case 0x0226: /* 'BrtDrawing' */
+			case 0x00AB: /* 'BrtDynamicFilter' */
+			case 0x00A7: /* 'BrtFilter' */
+			case 0x0499: /* 'BrtFilter14' */
+			case 0x00A9: /* 'BrtIconFilter' */
+			case 0x049D: /* 'BrtIconFilter14' */
+			case 0x0227: /* 'BrtLegacyDrawing' */
+			case 0x0228: /* 'BrtLegacyDrawingHF' */
+			case 0x0295: /* 'BrtListPart' */
+			case 0x01DC: /* 'BrtMargins' */
+			case 0x027F: /* 'BrtOleObject' */
+			case 0x01DE: /* 'BrtPageSetup' */
+			case 0x0097: /* 'BrtPane' */
+			case 0x0219: /* 'BrtPhoneticInfo' */
+			case 0x01DD: /* 'BrtPrintOptions' */
+			case 0x0218: /* 'BrtRangeProtection' */
+			case 0x044F: /* 'BrtRangeProtection14' */
+			case 0x02A8: /* 'BrtRangeProtectionIso' */
+			case 0x0450: /* 'BrtRangeProtectionIso14' */
+			case 0x0400: /* 'BrtRwDescent' */
+			case 0x0098: /* 'BrtSel' */
+			case 0x0297: /* 'BrtSheetCalcProp' */
+			case 0x0217: /* 'BrtSheetProtection' */
+			case 0x02A6: /* 'BrtSheetProtectionIso' */
+			case 0x01F8: /* 'BrtSlc' */
+			case 0x0413: /* 'BrtSparkline' */
+			case 0x01AC: /* 'BrtTable' */
+			case 0x00AA: /* 'BrtTop10Filter' */
+			/* case 'BrtUid' */
+			case 0x0032: /* 'BrtValueMeta' */
+			case 0x0816: /* 'BrtWebExtension' */
+			case 0x01E5: /* 'BrtWsFmtInfo' */
+			case 0x0415: /* 'BrtWsFmtInfoEx14' */
+			case 0x0093: /* 'BrtWsProp' */
+				break;
 
-			case 'BrtFRTBegin': pass = true; break;
-			case 'BrtFRTEnd': pass = false; break;
-			case 'BrtACBegin': break;
-			case 'BrtACEnd': break;
+			case 0x0023: /* 'BrtFRTBegin' */
+				pass = true; break;
+			case 0x0024: /* 'BrtFRTEnd' */
+				pass = false; break;
+			case 0x0025: /* 'BrtACBegin' */ break;
+			case 0x0026: /* 'BrtACEnd' */ break;
 
 			default:
-				if((Record.n||"").indexOf("Begin") > 0){}
-				else if((Record.n||"").indexOf("End") > 0){}
-				else if(!pass || opts.WTF) throw new Error("Unexpected record " + RT + " " + Record.n);
+				if((R_n||"").indexOf("Begin") > 0){}
+				else if((R_n||"").indexOf("End") > 0){}
+				else if(!pass || opts.WTF) throw new Error("Unexpected record " + RT + " " + R_n);
 		}
 	}, opts);
 
@@ -10824,30 +10855,36 @@ function parse_cs_bin(data, opts, rels, wb, themes, styles)/*:Worksheet*/ {
 	var s = {'!type':"chart", '!chart':null, '!rel':""};
 	var state = [];
 	var pass = false;
-	recordhopper(data, function cs_parse(val, Record, RT) {
-		switch(Record.n) {
+	recordhopper(data, function cs_parse(val, R_n, RT) {
+		switch(RT) {
 
-			case 'BrtDrawing': s['!rel'] = val; break;
+			case 0x0226: /* 'BrtDrawing' */
+				s['!rel'] = val; break;
 
-			case 'BrtUid': break;
-			case 'BrtMargins': break; // TODO
-			case 'BrtLegacyDrawing': break; // TODO
-			case 'BrtLegacyDrawingHF': break; // TODO
-			case 'BrtBkHim': break; // TODO
-			case 'BrtCsProp': break; // TODO
-			case 'BrtCsProtection': break; // TODO
-			case 'BrtCsProtectionIso': break; // TODO
-			case 'BrtCsPageSetup': break; // TODO
+			/* case 'BrtUid': */
+			case 0x0232: /* 'BrtBkHim' */
+			case 0x028C: /* 'BrtCsPageSetup' */
+			case 0x028B: /* 'BrtCsProp' */
+			case 0x029D: /* 'BrtCsProtection' */
+			case 0x02A7: /* 'BrtCsProtectionIso' */
+			case 0x0227: /* 'BrtLegacyDrawing' */
+			case 0x0228: /* 'BrtLegacyDrawingHF' */
+			case 0x01DC: /* 'BrtMargins' */
+				break;
 
-			case 'BrtFRTBegin': pass = true; break;
-			case 'BrtFRTEnd': pass = false; break;
-			case 'BrtACBegin': state.push(R.n); break;
-			case 'BrtACEnd': state.pop(); break;
+			case 0x0023: /* 'BrtFRTBegin' */
+				pass = true; break;
+			case 0x0024: /* 'BrtFRTEnd' */
+				pass = false; break;
+			case 0x0025: /* 'BrtACBegin' */
+				state.push(R_n); break;
+			case 0x0026: /* 'BrtACEnd' */
+				state.pop(); break;
 
 			default:
-				if((Record.n||"").indexOf("Begin") > 0) state.push(Record.n);
-				else if((Record.n||"").indexOf("End") > 0) state.pop();
-				else if(!pass || opts.WTF) throw new Error("Unexpected record " + RT + " " + Record.n);
+				if((R_n||"").indexOf("Begin") > 0) state.push(R_n);
+				else if((R_n||"").indexOf("End") > 0) state.pop();
+				else if(!pass || opts.WTF) throw new Error("Unexpected record " + RT + " " + R_n);
 		}
 	}, opts);
 
@@ -11235,61 +11272,66 @@ function parse_wb_bin(data, opts)/*:WorkbookFile*/ {
 
 	var Names = {}, NameList = [];
 
-	recordhopper(data, function hopper_wb(val, R, RT) {
-		switch(R.n) {
-			case 'BrtBundleSh': wb.Sheets.push(val); break;
+	recordhopper(data, function hopper_wb(val, R_n, RT) {
+		switch(RT) {
+			case 0x009C: /* 'BrtBundleSh' */
+				wb.Sheets.push(val); break;
 
-			case 'BrtName':
+			case 0x0027: /* 'BrtName' */
 				Names[val.Name] = val; NameList.push(val.Name);
 				break;
-			case 'BrtNameExt': break;
+			case 0x040C: /* 'BrtNameExt' */ break;
 
-			case 'BrtAbsPath15': break;
-			case 'BrtBookProtection': break;
-			case 'BrtBookProtectionIso': break;
-			case 'BrtBookView': break;
-			case 'BrtCalcProp': break;
-			case 'BrtCrashRecErr': break;
-			case 'BrtDecoupledPivotCacheID': break;
-			case 'BrtExternSheet': break;
-			case 'BrtFileRecover': break;
-			case 'BrtFileSharing': break;
-			case 'BrtFileSharingIso': break;
-			case 'BrtFileVersion': break;
-			case 'BrtFnGroup': break;
-			case 'BrtModelRelationship': break;
-			case 'BrtModelTable': break;
-			case 'BrtModelTimeGroupingCalcCol': break;
-			case 'BrtOleSize': break;
-			case 'BrtPivotTableRef': break;
-			case 'BrtPlaceholderName': break;
-			case 'BrtRevisionPtr': break;
-			case 'BrtSmartTagType': break;
-			case 'BrtSupAddin': break;
-			case 'BrtSupBookSrc': break;
-			case 'BrtSupSame': break;
-			case 'BrtSupSelf': break;
-			case 'BrtTableSlicerCacheID': break;
-			case 'BrtTableSlicerCacheIDs': break;
-			case 'BrtTimelineCachePivotCacheID': break;
-			case 'BrtUid': break;
-			case 'BrtUserBookView': break;
-			case 'BrtWbFactoid': break;
-			case 'BrtWbProp': break;
-			case 'BrtWbProp14': break;
-			case 'BrtWebOpt': break;
-			case 'BrtWorkBookPr15': break;
+			case 0x0817: /* 'BrtAbsPath15' */
+			case 0x0216: /* 'BrtBookProtection' */
+			case 0x02A5: /* 'BrtBookProtectionIso' */
+			case 0x009E: /* 'BrtBookView' */
+			case 0x009D: /* 'BrtCalcProp' */
+			case 0x0262: /* 'BrtCrashRecErr' */
+			case 0x0802: /* 'BrtDecoupledPivotCacheID' */
+			case 0x016A: /* 'BrtExternSheet' */
+			case 0x009B: /* 'BrtFileRecover' */
+			case 0x0224: /* 'BrtFileSharing' */
+			case 0x02A4: /* 'BrtFileSharingIso' */
+			case 0x0080: /* 'BrtFileVersion' */
+			case 0x0299: /* 'BrtFnGroup' */
+			case 0x0850: /* 'BrtModelRelationship' */
+			case 0x084D: /* 'BrtModelTable' */
+			/* case 'BrtModelTimeGroupingCalcCol' */
+			case 0x0225: /* 'BrtOleSize' */
+			case 0x0805: /* 'BrtPivotTableRef' */
+			case 0x0169: /* 'BrtPlaceholderName' */
+			/* case 'BrtRevisionPtr' */
+			case 0x0254: /* 'BrtSmartTagType' */
+			case 0x029B: /* 'BrtSupAddin' */
+			case 0x0163: /* 'BrtSupBookSrc' */
+			case 0x0166: /* 'BrtSupSame' */
+			case 0x0165: /* 'BrtSupSelf' */
+			case 0x081C: /* 'BrtTableSlicerCacheID' */
+			case 0x081B: /* 'BrtTableSlicerCacheIDs' */
+			case 0x0822: /* 'BrtTimelineCachePivotCacheID' */
+			/* case 'BrtUid' */
+			case 0x018D: /* 'BrtUserBookView' */
+			case 0x009A: /* 'BrtWbFactoid' */
+			case 0x0099: /* 'BrtWbProp' */
+			case 0x045D: /* 'BrtWbProp14' */
+			case 0x0229: /* 'BrtWebOpt' */
+			case 0x082B: /* 'BrtWorkBookPr15' */
+				break;
 
-			case 'BrtFRTBegin': pass = true; break;
-			case 'BrtFRTEnd': pass = false; break;
-			case 'BrtACBegin': break;
-			case 'BrtACEnd': break;
+			case 0x0023: /* 'BrtFRTBegin' */
+				pass = true; break;
+			case 0x0024: /* 'BrtFRTEnd' */
+				pass = false; break;
+			case 0x0025: /* 'BrtACBegin' */ break;
+			case 0x0026: /* 'BrtACEnd' */ break;
 
-			case 'BrtFRTArchID$': break;
+			case 0x0010: /* 'BrtFRTArchID$' */ break;
+
 			default:
-				if((R.n||"").indexOf("Begin") > 0){}
-				else if((R.n||"").indexOf("End") > 0){}
-				else if(!pass || opts.WTF) throw new Error("Unexpected record " + RT + " " + R.n);
+				if((R_n||"").indexOf("Begin") > 0){}
+				else if((R_n||"").indexOf("End") > 0){}
+				else if(!pass || opts.WTF) throw new Error("Unexpected record " + RT + " " + R_n);
 		}
 	}, opts);
 
@@ -11659,7 +11701,7 @@ function parse_xlml_xml(d, opts)/*:Workbook*/ {
 	if(str.substr(0,1000).indexOf("<html") >= 0) return parse_html(str, opts);
 	var Rn;
 	var state = [], tmp;
-	if(DENSE != null) opts.dense = DENSE;
+	if(DENSE != null && opts.dense == null) opts.dense = DENSE;
 	var sheets = {}, sheetnames = [], cursheet = (opts.dense ? [] : {}), sheetname = "";
 	var table = {}, cell = ({}/*:any*/), row = {};
 	var dtag = xlml_parsexmltag('<Data ss:Type="String">'), didx = 0;
@@ -12501,7 +12543,7 @@ function make_cell(val, ixfe, t)/*:any*/ {
 function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 	var wb = ({opts:{}}/*:any*/);
 	var Sheets = {};
-	if(DENSE != null) options.dense = DENSE;
+	if(DENSE != null && options.dense == null) options.dense = DENSE;
 	var out = (options.dense ? [] : {});
 	var Directory = {};
 	var found_sheet = false;
@@ -13147,6 +13189,7 @@ fix_read_opts(options);
 reset_cp();
 var CompObj, Summary, Workbook/*:?any*/;
 if(cfb.FullPaths) {
+	if(cfb.find("EncryptedPackage")) throw new Error("File is password-protected");
 	CompObj = cfb.find('!CompObj');
 	Summary = cfb.find('!SummaryInformation');
 	Workbook = cfb.find('/Workbook');
@@ -14537,7 +14580,7 @@ function write_biff_ws(ba/*:BufArray*/, ws/*:Worksheet*/, idx/*:number*/, opts, 
 /* Based on test files */
 function write_biff_buf(wb/*:Workbook*/, opts/*:WriteOpts*/) {
 	var o = opts || {};
-	if(DENSE != null) o.dense = DENSE;
+	if(DENSE != null && o.dense == null) o.dense = DENSE;
 	var ba = buf_array();
 	var idx = 0;
 	for(var i=0;i<wb.SheetNames.length;++i) if(wb.SheetNames[i] == o.sheet) idx=i;
@@ -14553,7 +14596,7 @@ function write_biff_buf(wb/*:Workbook*/, opts/*:WriteOpts*/) {
 /* TODO: in browser attach to DOM; in node use an html parser */
 function parse_html(str/*:string*/, _opts)/*:Workbook*/ {
 	var opts = _opts || {};
-	if(DENSE != null) opts.dense = DENSE;
+	if(DENSE != null && opts.dense == null) opts.dense = DENSE;
 	var ws/*:Worksheet*/ = opts.dense ? ([]/*:any*/) : ({}/*:any*/);
 	var o/*:Workbook*/ = { SheetNames: ["Sheet1"], Sheets: {Sheet1:ws} };
 	var i = str.indexOf("<table"), j = str.indexOf("</table");
@@ -14650,7 +14693,7 @@ var parse_content_xml = (function() {
 
 	return function pcx(d/*:string*/, _opts)/*:Workbook*/ {
 		var opts = _opts || {};
-		if(DENSE != null) opts.dense = DENSE;
+		if(DENSE != null && opts.dense == null) opts.dense = DENSE;
 		var str = xlml_normalize(d);
 		var state/*:Array<any>*/ = [], tmp;
 		var tag/*:: = {}*/;
@@ -15784,12 +15827,13 @@ function format_cell(cell/*:Cell*/, v/*:any*/, o/*:any*/) {
 }
 
 function sheet_to_json(sheet/*:Worksheet*/, opts/*:?Sheet2JSONOpts*/){
-	var val, row, range, header = 0, offset = 1, r, hdr/*:Array<any>*/ = [], isempty, R, C, v, vv;
+	if(sheet == null || sheet["!ref"] == null) return [];
+	var val = {t:'n',v:0}, header = 0, offset = 1, hdr/*:Array<any>*/ = [], isempty = true, v=0, vv="";
+	var r = {s:{r:0,c:0},e:{r:0,c:0}};
 	var o = opts != null ? opts : {};
 	var raw = o.raw;
 	var defval = o.defval;
-	if(sheet == null || sheet["!ref"] == null) return [];
-	range = o.range != null ? o.range : sheet["!ref"];
+	var range = o.range != null ? o.range : sheet["!ref"];
 	if(o.header === 1) header = 1;
 	else if(o.header === "A") header = 2;
 	else if(Array.isArray(o.header)) header = 3;
@@ -15802,11 +15846,13 @@ function sheet_to_json(sheet/*:Worksheet*/, opts/*:?Sheet2JSONOpts*/){
 	var rr = encode_row(r.s.r);
 	var cols = new Array(r.e.c-r.s.c+1);
 	var out = new Array(r.e.r-r.s.r-offset+1);
-	var outi = 0;
+	var outi = 0, counter = 0;
 	var dense = Array.isArray(sheet);
+	var R = r.s.r, C = 0, CC = 0;
+	if(!sheet[R]) sheet[R] = [];
 	for(C = r.s.c; C <= r.e.c; ++C) {
 		cols[C] = encode_col(C);
-		val = dense ? (sheet[r.s.r] || [])[C] : sheet[cols[C] + rr];
+		val = dense ? sheet[R][C] : sheet[cols[C] + rr];
 		switch(header) {
 			case 1: hdr[C] = C; break;
 			case 2: hdr[C] = cols[C]; break;
@@ -15814,12 +15860,12 @@ function sheet_to_json(sheet/*:Worksheet*/, opts/*:?Sheet2JSONOpts*/){
 			default:
 				if(val == null) continue;
 				vv = v = format_cell(val, null, o);
-				var counter = 0;
-				for(var CC = 0; CC < hdr.length; ++CC) if(hdr[CC] == vv) vv = v + "_" + (++counter);
+				counter = 0;
+				for(CC = 0; CC < hdr.length; ++CC) if(hdr[CC] == vv) vv = v + "_" + (++counter);
 				hdr[C] = vv;
 		}
 	}
-
+	var row = (header === 1) ? [] : {};
 	for (R = r.s.r + offset; R <= r.e.r; ++R) {
 		rr = encode_row(R);
 		isempty = true;
@@ -15829,8 +15875,8 @@ function sheet_to_json(sheet/*:Worksheet*/, opts/*:?Sheet2JSONOpts*/){
 			if(Object.defineProperty) try { Object.defineProperty(row, '__rowNum__', {value:R, enumerable:false}); } catch(e) { row.__rowNum__ = R; }
 			else row.__rowNum__ = R;
 		}
-		for (C = r.s.c; C <= r.e.c; ++C) {
-			val = dense ? (sheet[R] || [])[C] : sheet[cols[C] + rr];
+		if(!dense || sheet[R]) for (C = r.s.c; C <= r.e.c; ++C) {
+			val = dense ? sheet[R][C] : sheet[cols[C] + rr];
 			if(val === undefined || val.t === undefined) {
 				if(defval === undefined) continue;
 				if(hdr[C] != null) { row[hdr[C]] = defval; isempty = false; }
@@ -15966,6 +16012,60 @@ var utils = {
 	sheet_to_formulae: sheet_to_formulae,
 	sheet_to_row_object_array: sheet_to_json
 };
+if(has_buf && typeof require != 'undefined') (function() {
+	var Readable = require('stream').Readable;
+
+	var write_csv_stream = function(sheet/*:Worksheet*/, opts/*:?Sheet2CSVOpts*/) {
+		var stream = Readable();
+		var out = "", txt = "", qreg = /"/g;
+		var o = opts == null ? {} : opts;
+		if(sheet == null || sheet["!ref"] == null) { stream.push(null); return stream; }
+		var r = safe_decode_range(sheet["!ref"]);
+		var FS = o.FS !== undefined ? o.FS : ",", fs = FS.charCodeAt(0);
+		var RS = o.RS !== undefined ? o.RS : "\n", rs = RS.charCodeAt(0);
+		var endregex = new RegExp((FS=="|" ? "\\|" : FS)+"+$");
+		var row = "", rr = "", cols = [];
+		var i = 0, cc = 0, val;
+		var R = 0, C = 0;
+		var dense = Array.isArray(sheet);
+		for(C = r.s.c; C <= r.e.c; ++C) cols[C] = encode_col(C);
+		R = r.s.r;
+		stream._read = function() {
+			if(R > r.e.r) return stream.push(null);
+			while(true) {
+			var isempty = true;
+			row = "";
+			rr = encode_row(R);
+			for(C = r.s.c; C <= r.e.c; ++C) {
+				val = dense ? (sheet[R]||[])[C]: sheet[cols[C] + rr];
+				if(val == null) txt = "";
+				else if(val.v != null) {
+					isempty = false;
+					txt = ''+format_cell(val, null, o);
+					for(i = 0, cc = 0; i !== txt.length; ++i) if((cc = txt.charCodeAt(i)) === fs || cc === rs || cc === 34) {
+						txt = "\"" + txt.replace(qreg, '""') + "\""; break; }
+				} else if(val.f != null && !val.F) {
+					isempty = false;
+					txt = '=' + val.f; if(txt.indexOf(",") >= 0) txt = '"' + txt.replace(qreg, '""') + '"';
+				} else txt = "";
+				/* NOTE: Excel CSV does not support array formulae */
+				row += (C === r.s.c ? "" : FS) + txt;
+			}
+			if(o.blankrows === false && isempty) { ++R; continue; }
+			if(o.strip) row = row.replace(endregex,"");
+			stream.push(row + RS);
+			++R;
+			break;
+			}
+		};
+		return stream;
+	};
+
+
+	XLSX.stream = {
+		to_csv: write_csv_stream
+	};
+})();
 XLSX.parse_xlscfb = parse_xlscfb;
 XLSX.parse_ods = parse_ods;
 XLSX.parse_fods = parse_fods;

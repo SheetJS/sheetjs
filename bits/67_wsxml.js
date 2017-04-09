@@ -4,13 +4,13 @@ function parse_ws_xml_dim(ws, s) {
 }
 var mergecregex = /<(?:\w:)?mergeCell ref="[A-Z0-9:]+"\s*[\/]?>/g;
 var sheetdataregex = /<(?:\w+:)?sheetData>([^\u2603]*)<\/(?:\w+:)?sheetData>/;
-var hlinkregex = /<(?:\w*:)?hyperlink [^>]*>/mg;
+var hlinkregex = /<(?:\w:)?hyperlink [^>]*>/mg;
 var dimregex = /"(\w*:\w*)"/;
-var colregex = /<(?:\w*:)?col[^>]*[\/]?>/g;
+var colregex = /<(?:\w:)?col[^>]*[\/]?>/g;
 /* 18.3 Worksheets */
 function parse_ws_xml(data/*:?string*/, opts, rels, wb, themes, styles)/*:Worksheet*/ {
 	if(!data) return data;
-	if(DENSE != null) opts.dense = DENSE;
+	if(DENSE != null && opts.dense == null) opts.dense = DENSE;
 	/* 18.3.1.99 worksheet CT_Worksheet */
 	var s = opts.dense ? ([]/*:any*/) : ({}/*:any*/);
 

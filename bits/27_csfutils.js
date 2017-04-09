@@ -6,7 +6,7 @@ function sheet_to_workbook(sheet/*:Worksheet*/, opts)/*:Workbook*/ {
 
 function aoa_to_sheet(data/*:AOA*/, opts/*:?any*/)/*:Worksheet*/ {
 	var o = opts || {};
-	if(DENSE != null) o.dense = DENSE;
+	if(DENSE != null && o.dense == null) o.dense = DENSE;
 	var ws/*:Worksheet*/ = o.dense ? ([]/*:any*/) : ({}/*:any*/);
 	var range/*:Range*/ = ({s: {c:10000000, r:10000000}, e: {c:0, r:0}}/*:any*/);
 	for(var R = 0; R != data.length; ++R) {

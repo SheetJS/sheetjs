@@ -8,7 +8,7 @@ node_modules
 _book
 book.json
 tmp
-*.txt
+*.[tT][xX][tT]
 *.[cC][sS][vV]
 *.[dD][iIbB][fF]
 *.[pP][rR][nN]

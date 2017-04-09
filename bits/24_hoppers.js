@@ -3,17 +3,18 @@ function recordhopper(data, cb/*:RecordHopperCB*/, opts/*:?any*/) {
 	if(!data) return;
 	var tmpbyte, cntbyte, length;
 	prep_blob(data, data.l || 0);
-	while(data.l < data.length) {
-		var RT = data.read_shift(1);
+	var L = data.length, RT = 0, tgt = 0;
+	while(data.l < L) {
+		RT = data.read_shift(1);
 		if(RT & 0x80) RT = (RT & 0x7F) + ((data.read_shift(1) & 0x7F)<<7);
 		var R = XLSBRecordEnum[RT] || XLSBRecordEnum[0xFFFF];
 		tmpbyte = data.read_shift(1);
 		length = tmpbyte & 0x7F;
 		for(cntbyte = 1; cntbyte <4 && (tmpbyte & 0x80); ++cntbyte) length += ((tmpbyte = data.read_shift(1)) & 0x7F)<<(7*cntbyte);
-		var tgt = data.l + length;
+		tgt = data.l + length;
 		var d = R.f(data, length, opts);
 		data.l = tgt;
-		if(cb(d, R, RT)) return;
+		if(cb(d, R.n, RT)) return;
 	}
 }
 
