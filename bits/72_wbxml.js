@@ -159,7 +159,15 @@ function safe1904(wb/*:Workbook*/)/*:string*/ {
 function write_wb_xml(wb/*:Workbook*/, opts/*:?WriteOpts*/)/*:string*/ {
 	var o = [XML_HEADER];
 	o[o.length] = WB_XML_ROOT;
+
+	/* fileVersion */
+	/* fileSharing */
+
 	o[o.length] = (writextag('workbookPr', null, {date1904:safe1904(wb), codeName:"ThisWorkbook"}));
+
+	/* workbookProtection */
+	/* bookViews */
+
 	o[o.length] = "<sheets>";
 	var sheets = wb.Workbook && wb.Workbook.Sheets || [];
 	for(var i = 0; i != wb.SheetNames.length; ++i) {
@@ -173,6 +181,21 @@ function write_wb_xml(wb/*:Workbook*/, opts/*:?WriteOpts*/)/*:string*/ {
 		o[o.length] = (writextag('sheet',null,sht));
 	}
 	o[o.length] = "</sheets>";
+
+	/* functionGroups */
+	/* externalReferences */
+	/* definedNames */
+	/* calcPr */
+	/* oleSize */
+	/* customWorkbookViews */
+	/* pivotCaches */
+	/* smartTagPr */
+	/* smartTagTypes */
+	/* webPublishing */
+	/* fileRecoveryPr */
+	/* webPublishObjects */
+	/* extLst */
+
 	if(o.length>2){ o[o.length] = '</workbook>'; o[1]=o[1].replace("/>",">"); }
 	return o.join("");
 }

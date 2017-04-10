@@ -94,7 +94,7 @@ var XLSBRecordEnum = {
 	/*::[*/0x009E/*::]*/: { n:"BrtBookView", f:parsenoop },
 	/*::[*/0x009F/*::]*/: { n:"BrtBeginSst", f:parse_BrtBeginSst },
 	/*::[*/0x00A0/*::]*/: { n:"BrtEndSst", f:parsenoop },
-	/*::[*/0x00A1/*::]*/: { n:"BrtBeginAFilter", f:parsenoop },
+	/*::[*/0x00A1/*::]*/: { n:"BrtBeginAFilter", f:parse_UncheckedRfX },
 	/*::[*/0x00A2/*::]*/: { n:"BrtEndAFilter", f:parsenoop },
 	/*::[*/0x00A3/*::]*/: { n:"BrtBeginFilterColumn", f:parsenoop },
 	/*::[*/0x00A4/*::]*/: { n:"BrtEndFilterColumn", f:parsenoop },

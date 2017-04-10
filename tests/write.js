@@ -41,7 +41,7 @@ if(typeof XLSX === "undefined") { try { XLSX = require('./'); } catch(e) { XLSX 
 var wb = { SheetNames: [], Sheets: {} };
 
 /* convert an array of arrays in JS to a CSF spreadsheet */
-var ws = XLSX.utils.aoa_to_sheet(data, {cellDates:true});
+var ws = XLSX.utils.aoa_to_sheet(data, {cellDates:true, dense:false});
 
 /* TEST: add worksheet to workbook */
 wb.SheetNames.push(ws_name);

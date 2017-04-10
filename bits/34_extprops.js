@@ -89,7 +89,7 @@ function write_ext_props(cp, opts)/*:string*/ {
 		if(cp[f[1]] === undefined) return;
 		var v;
 		switch(f[2]) {
-			case 'string': v = cp[f[1]]; break;
+			case 'string': v = String(cp[f[1]]); break;
 			case 'bool': v = cp[f[1]] ? 'true' : 'false'; break;
 		}
 		if(v !== undefined) o[o.length] = (W(f[0], v));

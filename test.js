@@ -32,6 +32,11 @@ function fixjson(x) { return x.replace(/[\r\n]+$/,""); }
 var dir = "./test_files/";
 
 var paths = {
+	afxls:  dir + 'AutoFilter.xls',
+	afxml:  dir + 'AutoFilter.xml',
+	afods:  dir + 'AutoFilter.ods',
+	afxlsx:  dir + 'AutoFilter.xlsx',
+	afxlsb:  dir + 'AutoFilter.xlsb',
 	cpxls:  dir + 'custom_properties.xls',
 	cpxml:  dir + 'custom_properties.xls.xml',
 	cpxlsx:  dir + 'custom_properties.xlsx',
@@ -888,6 +893,23 @@ describe('parse features', function() {
 		}); });
 	});
 
+	describe('auto filter', function() {
+		[
+			['xlsx', paths.afxlsx],
+			['xlsb', paths.afxlsb],
+			['xls', paths.afxls],
+			['xlml', paths.afxml],
+			['ods', paths.afods]
+		].forEach(function(m) { it(m[0], function() {
+			var wb = X.readFile(m[1]);
+			assert(wb.Sheets[wb.SheetNames[0]]['!autofilter'] == null);
+			for(var i = 1; i < wb.SheetNames.length; ++i) {
+				assert(wb.Sheets[wb.SheetNames[i]]['!autofilter'] != null);
+				assert.equal(wb.Sheets[wb.SheetNames[i]]['!autofilter'].ref,"A1:E22");
+			}
+		}); });
+	});
+
 	describe('should correctly handle styles', function() {
 		var wsxls, wsxlsx, rn, rn2;
 		var bef = (function() {
@@ -962,6 +984,47 @@ describe('parse features', function() {
 					//deepcmp(exp[i], stylesxls[i], k, i + ":"+k);
 				});
 			}
+		});
+	});
+});
+
+describe('write features', function() {
+	describe('props', function() {
+		describe('core', function() {
+			var ws, baseprops;
+			var bef = (function() {
+				X = require(modp);
+				ws = X.utils.aoa_to_sheet([["a","b","c"],[1,2,3]]);
+				baseprops = {
+					Category: "C4tegory",
+					ContentStatus: "C0ntentStatus",
+					Keywords: "K3ywords",
+					LastAuthor: "L4stAuthor",
+					LastPrinted: "L4stPrinted",
+					RevNumber: 6969,
+					AppVersion: 69,
+					Author: "4uth0r",
+					Comments: "C0mments",
+					Identifier: "1d",
+					Language: "L4nguage",
+					Subject: "Subj3ct",
+					Title: "T1tle"
+				}
+			});
+			if(typeof before != 'undefined') before(bef);
+			else it('before', bef);
+			['xlml', 'xlsx', 'xlsb'].forEach(function(w) { it(w, function() {
+				wb = {
+					Props: {},
+					SheetNames: ["Sheet1"],
+					Sheets: {Sheet1: ws}
+				};
+				Object.keys(baseprops).forEach(function(k) { wb.Props[k] = baseprops[k]; });
+				var wb2 = X.read(X.write(wb, {bookType:w, type:"buffer"}), {type:"buffer"});
+				Object.keys(baseprops).forEach(function(k) { assert.equal(baseprops[k], wb2.Props[k]); });
+				var wb3 = X.read(X.write(wb2, {bookType:w, type:"buffer", Props: {Author:"SheetJS"}}), {type:"buffer"});
+				assert.equal("SheetJS", wb3.Props.Author);
+			}); });
 		});
 	});
 });

@@ -177,6 +177,7 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 	var last_Rn = '';
 	var file_depth = 0; /* TODO: make a real stack */
 	var BIFF2Fmt = 0;
+	var FilterDatabases = []; /* TODO: sort out supbooks and process elsewhere */
 
 	/* explicit override for some broken writers */
 	opts.codepage = 1200;
@@ -252,7 +253,14 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 				case 'SupBook': supbooks[++sbc] = [val]; sbci = 0; break;
 				case 'ExternName': supbooks[sbc][++sbci] = val; break;
 				case 'Index': break; // TODO
-				case 'Lbl': supbooks[0][++sbcli] = val; break;
+				case 'Lbl':
+					supbooks[0][++sbcli] = val; // TODO: local formula storage in stringify_formula
+					if(!supbooks[val.itab]) supbooks[val.itab] = [];
+					supbooks[val.itab].push(val);
+					if(val.Name == "\r" && val.itab > 0)
+						if(val.rgce && val.rgce[0] && val.rgce[0][0] && val.rgce[0][0][0] == 'PtgArea3d')
+							FilterDatabases[val.itab - 1] = { ref: encode_range(val.rgce[0][0][1][2]) };
+					break;
 				case 'ExternSheet': supbooks[sbc] = supbooks[sbc].concat(val); sbci += val.length; break;
 
 				case 'Protect': out["!protect"] = val; break; /* for sheet or book */
@@ -712,6 +720,7 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 	wb.Directory=sheetnamesraw;
 	wb.SheetNames=sheetnamesraw;
 	if(!options.bookSheets) wb.Sheets=Sheets;
+	if(wb.Sheets) FilterDatabases.forEach(function(r,i) { wb.Sheets[wb.SheetNames[i]]['!autofilter'] = r; });
 	wb.Preamble=Preamble;
 	wb.Strings = sst;
 	wb.SSF = SSF.get_table();

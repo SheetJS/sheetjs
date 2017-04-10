@@ -306,6 +306,15 @@ var parse_content_xml = (function() {
 				if(Rn[1]==='/') textp = (textp.length > 0 ? textp + "\n" : "") + parse_text_p(str.slice(textpidx,Rn.index), textptag);
 				else { textptag = parsexmltag(Rn[0], false); textpidx = Rn.index + Rn[0].length; }
 				break; // <text:p>
+
+			case 'database-range': // 9.4.15 <table:database-range>
+				if(Rn[1]==='/') break;
+				try {
+					var AutoFilter = ods_to_csf_range_3D(parsexmltag(Rn[0])['target-range-address']);
+					Sheets[AutoFilter[0]]['!autofilter'] = { ref: AutoFilter[1] };
+				} catch(e) { }
+				break;
+
 			case 's': break; // <text:s>
 			case 'date': break; // <*:date>
 
@@ -320,7 +329,6 @@ var parse_content_xml = (function() {
 			case 'content-validation': break; // 9.4.5 <table:
 			case 'error-message': break; // 9.4.7 <table:
 			case 'database-ranges': break; // 9.4.14 <table:database-ranges>
-			case 'database-range': break; // 9.4.15 <table:database-range>
 			case 'filter': break; // 9.5.2 <table:filter>
 			case 'filter-and': break; // 9.5.3 <table:filter-and>
 			case 'filter-or': break; // 9.5.4 <table:filter-or>

@@ -351,6 +351,9 @@ function parse_xlml_xml(d, opts)/*:Workbook*/ {
 		case 'TotalTime':
 		case 'HyperlinkBase':
 		case 'Manager':
+		case 'ContentStatus':
+		case 'Identifier':
+		case 'Language':
 			if(Rn[0].slice(-2) === "/>") break;
 			else if(Rn[1]==="/") xlml_set_prop(Props, Rn[3], str.slice(pidx, Rn.index));
 			else pidx = Rn.index + Rn[0].length;
@@ -375,6 +378,15 @@ function parse_xlml_xml(d, opts)/*:Workbook*/ {
 			}
 			break;
 
+		case 'AutoFilter':
+			if(Rn[1]==='/'){if((tmp=state.pop())[0]!==Rn[3]) throw new Error("Bad state: "+tmp.join("|"));}
+			else if(Rn[0].charAt(Rn[0].length-2) !== '/') {
+				var AutoFilter = xlml_parsexmltag(Rn[0]);
+				cursheet['!autofilter'] = { ref:rc_to_a1(AutoFilter.Range).replace(/\$/g,"") };
+				state.push([Rn[3], true]);
+			}
+			break;
+
 		case 'Name': break;
 
 		case 'ComponentOptions':
@@ -388,7 +400,6 @@ function parse_xlml_xml(d, opts)/*:Workbook*/ {
 		case 'PageBreaks':
 		case 'QueryTable':
 		case 'DataValidation':
-		case 'AutoFilter':
 		case 'Sorting':
 		case 'Schema':
 		case 'data':
@@ -783,7 +794,7 @@ function parse_xlml(data, opts)/*:Workbook*/ {
 function write_props_xlml(wb, opts) {
 	var o = [];
 	/* DocumentProperties */
-	if(wb.Props) o.push(xlml_write_docprops(wb.Props));
+	if(wb.Props) o.push(xlml_write_docprops(wb.Props, opts));
 	/* CustomDocumentProperties */
 	if(wb.Custprops) o.push(xlml_write_custprops(wb.Props, wb.Custprops));
 	return o.join("");

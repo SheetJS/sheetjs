@@ -452,9 +452,10 @@ function parse_Lbl(blob, length, opts) {
 	var chKey = blob.read_shift(1);
 	var cch = blob.read_shift(1);
 	var cce = blob.read_shift(opts && opts.biff == 2 ? 1 : 2);
+	var itab = 0;
 	if(!opts || opts.biff >= 5) {
 		blob.l += 2;
-		var itab = blob.read_shift(2);
+		itab = blob.read_shift(2);
 		blob.l += 4;
 	}
 	var name = parse_XLUnicodeStringNoCch(blob, cch, opts);
@@ -463,6 +464,7 @@ function parse_Lbl(blob, length, opts) {
 	return {
 		chKey: chKey,
 		Name: name,
+		itab: itab,
 		rgce: rgce
 	};
 }

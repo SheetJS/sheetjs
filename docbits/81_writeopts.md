@@ -10,6 +10,7 @@ The exported `write` and `writeFile` functions accept an options argument:
 | bookType    | `"xlsx"` | Type of Workbook (see below for supported formats)  |
 | sheet       |     `""` | Name of Worksheet for single-sheet formats **       |
 | compression |  `false` | Use ZIP compression for ZIP-based formats **        |
+| Props       |          | Override workbook properties when writing **        |
 
 - `bookSST` is slower and more memory intensive, but has better compatibility
   with older versions of iOS Numbers
@@ -18,6 +19,8 @@ The exported `write` and `writeFile` functions accept an options argument:
 - `cellDates` only applies to XLSX output and is not guaranteed to work with
   third-party readers.  Excel itself does not usually write cells with type `d`
   so non-Excel tools may ignore the data or blow up in the presence of dates.
+- `Props` is an object mirroring the workbook `Props` field.  See the table from
+  the [Workbook File Properties](#workbook-file-properties) section.
 
 ### Supported Output Formats
 

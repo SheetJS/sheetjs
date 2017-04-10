@@ -45,3 +45,4 @@ Latest test files snapshot:
 <https://github.com/SheetJS/test_files/releases/download/20170409/test_files.zip>
 
 Download and unzip to the `test_files` subdirectory.
+

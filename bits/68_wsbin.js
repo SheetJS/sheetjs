@@ -289,6 +289,35 @@ function write_BrtColInfo(C/*:number*/, col, o) {
 	return o;
 }
 
+/* [MS-XLSB] 2.4.740 BrtSheetProtection */
+function write_BrtSheetProtection(sp, o) {
+	if(o == null) o = new_buf(16*4+2);
+	o.write_shift(2, sp.password ? crypto_CreatePasswordVerifier_Method1(sp.password) : 0);
+	o.write_shift(4, 1); // this record should not be written if no protection
+	[
+		["objects",             false], // fObjects
+		["scenarios",           false], // fScenarios
+		["formatCells",          true], // fFormatCells
+		["formatColumns",        true], // fFormatColumns
+		["formatRows",           true], // fFormatRows
+		["insertColumns",        true], // fInsertColumns
+		["insertRows",           true], // fInsertRows
+		["insertHyperlinks",     true], // fInsertHyperlinks
+		["deleteColumns",        true], // fDeleteColumns
+		["deleteRows",           true], // fDeleteRows
+		["selectLockedCells",   false], // fSelLockedCells
+		["sort",                 true], // fSort
+		["autoFilter",           true], // fAutoFilter
+		["pivotTables",          true], // fPivotTables
+		["selectUnlockedCells", false]  // fSelUnlockedCells
+	].forEach(function(n) {
+		o.write_shift(4, 1);
+		if(!n[1]) o.write_shift(4, sp[n] != null && sp[n] ? 1 : 0);
+		else     o.write_shift(4, sp[n] != null && !sp[n] ? 0 : 1);
+	});
+	return o;
+}
+
 /* [MS-XLSB] 2.1.7.61 Worksheet */
 function parse_ws_bin(data, _opts, rels, wb, themes, styles)/*:Worksheet*/ {
 	if(!data) return data;
@@ -432,6 +461,10 @@ function parse_ws_bin(data, _opts, rels, wb, themes, styles)/*:Worksheet*/ {
 					if(!seencol) { seencol = true; find_mdw_colw(val.w/256); }
 					process_col(colinfo[val.e+1]);
 				}
+				break;
+
+			case 0x00A1: /* 'BrtBeginAFilter' */
+				s['!autofilter'] = { ref:encode_range(val) };
 				break;
 
 			case 0x00AF: /* 'BrtAFilterDateGroupItem' */
@@ -628,6 +661,21 @@ function write_LEGACYDRAWING(ba, ws/*:Worksheet*/, idx/*:number*/, rels) {
 	}
 }
 
+function write_AUTOFILTER(ba, ws) {
+	if(!ws['!autofilter']) return;
+	write_record(ba, "BrtBeginAFilter", write_UncheckedRfX(decode_range(ws['!autofilter'].ref)));
+	/* *FILTERCOLUMN */
+	/* [SORTSTATE] */
+	/* BrtEndAFilter */
+	write_record(ba, "BrtEndAFilter");
+}
+
+function write_SHEETPROTECT(ba, ws) {
+	if(!ws['!protect']) return;
+	/* [BrtSheetProtectionIso] */
+	write_record(ba, "BrtSheetProtection", write_BrtSheetProtection(ws['!protect']));
+}
+
 function write_ws_bin(idx/*:number*/, opts, wb/*:Workbook*/, rels) {
 	var ba = buf_array();
 	var s = wb.SheetNames[idx], ws = wb.Sheets[s] || {};
@@ -643,10 +691,10 @@ function write_ws_bin(idx/*:number*/, opts, wb/*:Workbook*/, rels) {
 	write_COLINFOS(ba, ws, idx, opts, wb);
 	write_CELLTABLE(ba, ws, idx, opts, wb);
 	/* [BrtSheetCalcProp] */
-	/* [[BrtSheetProtectionIso] BrtSheetProtection] */
+	write_SHEETPROTECT(ba, ws);
 	/* *([BrtRangeProtectionIso] BrtRangeProtection) */
 	/* [SCENMAN] */
-	/* [AUTOFILTER] */
+	write_AUTOFILTER(ba, ws);
 	/* [SORTSTATE] */
 	/* [DCON] */
 	/* [USERSHVIEWS] */

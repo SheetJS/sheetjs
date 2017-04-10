@@ -30,3 +30,9 @@ if(!wb.Custprops) wb.Custprops = {};
 wb.Custprops["Custom Property"] = "Custom Value";
 ```
 
+Writers will process the `Props` key of the options object:
+
+```js
+/* force the Author to be "SheetJS" */
+XLSX.write(wb, {Props:{Author:"SheetJS"}});
+```

@@ -35,6 +35,14 @@ In addition to the base sheet keys, worksheets also add:
 | `objects`             | Edit objects                                         |
 | `scenarios`           | Edit scenarios                                       |
 
+- `ws['!autofilter']`: AutoFilter object following the schema:
+
+```typescript
+type AutoFilter = {
+	ref:string; // A-1 based range representing the AutoFilter table range
+}
+```
+
 #### Chartsheet Object
 
 Chartsheets are represented as standard sheets.  They are distinguished with the
