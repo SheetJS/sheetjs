@@ -3219,7 +3219,7 @@ function xlml_write_docprops(Props, opts) {
 			case 'date': m = new Date(m).toISOString(); break;
 		}
 		if(typeof m == 'number') m = String(m);
-		else if(m === true || m === false) { t = "boolean"; m = m ? "1" : "0"; }
+		else if(m === true || m === false) { m = m ? "1" : "0"; }
 		else if(m instanceof Date) m = new Date(m).toISOString();
 		o.push(writetag(XLMLDocPropsMap[p[1]] || p[1], m));
 	});
@@ -3530,13 +3530,6 @@ function parsenoop2(blob, length) { blob.read_shift(length); return null; }
 function parslurp(blob, length, cb) {
 	var arr = [], target = blob.l + length;
 	while(blob.l < target) arr.push(cb(blob, target - blob.l));
-	if(target !== blob.l) throw new Error("Slurp error");
-	return arr;
-}
-
-function parslurp2(blob, length, cb) {
-	var arr = [], target = blob.l + length, len = blob.read_shift(2);
-	while(len-- !== 0) arr.push(cb(blob, target - blob.l));
 	if(target !== blob.l) throw new Error("Slurp error");
 	return arr;
 }
@@ -4144,6 +4137,7 @@ function parse_ExternName(blob, length, opts) {
 	if(opts.sbcch === 0x3A01) body = parse_AddinUdf(blob, length-2, opts);
 	//else throw new Error("unsupported SupBook cch: " + opts.sbcch);
 	o.body = body || blob.read_shift(length-2);
+	if(typeof body === "string") o.Name = body;
 	return o;
 }
 
@@ -4174,13 +4168,21 @@ function parse_Lbl(blob, length, opts) {
 /* 2.4.106 TODO: verify supbook manipulation */
 function parse_ExternSheet(blob, length, opts) {
 	if(opts.biff < 8) return parse_ShortXLUnicodeString(blob, length, opts);
-	var o = parslurp2(blob,length,parse_XTI);
+	var o = [], target = blob.l + length, len = blob.read_shift(2);
+	while(len-- !== 0) o.push(parse_XTI(blob, 6));
+		// [iSupBook, itabFirst, itabLast];
 	var oo = [];
-	if(opts.sbcch === 0x0401) {
-		for(var i = 0; i != o.length; ++i) oo.push(opts.snames[o[i][1]]);
-		return oo;
-	}
-	else return o;
+	return o;
+}
+
+/* 2.4.176 TODO: check older biff */
+function parse_NameCmt(blob, length, opts) {
+	if(opts.biff < 8) { blob.l += length; return; }
+	var cchName = blob.read_shift(2);
+	var cchComment = blob.read_shift(2);
+	var name = parse_XLUnicodeStringNoCch(blob, cchName, opts);
+	var comment = parse_XLUnicodeStringNoCch(blob, cchComment, opts);
+	return [name, comment];
 }
 
 /* 2.4.260 */
@@ -4596,7 +4598,6 @@ var parse_TableStyles = parsenoop;
 var parse_TableStyle = parsenoop;
 var parse_TableStyleElement = parsenoop;
 var parse_NamePublish = parsenoop;
-var parse_NameCmt = parsenoop;
 var parse_SortData = parsenoop;
 var parse_GUIDTypeLib = parsenoop;
 var parse_FnGrp12 = parsenoop;
@@ -8073,13 +8074,13 @@ function stringify_formula(formula/*Array<any>*/, range, cell, supbooks, opts) {
 				break;
 			/* 2.5.198.88 */
 			case 'PtgRefN':
-				type = f[1][0]; c = shift_cell_xls(f[1][1], cell, opts);
+				type = f[1][0]; c = cell ? shift_cell_xls(f[1][1], cell, opts) : f[1][1];
 				stack.push(encode_cell_xls(c));
 				break;
 			case 'PtgRef3d': // TODO: lots of stuff
 				type = f[1][0]; ixti = f[1][1]; c = shift_cell_xls(f[1][2], _range, opts);
-				sname = (supbooks && supbooks[1] ? supbooks[1][ixti+1] : "**MISSING**");
-				stack.push(sname + "!" + encode_cell(c));
+				sname = supbooks.SheetNames[ixti];
+				stack.push(sname + "!" + encode_cell_xls(c));
 				break;
 
 			/* 2.5.198.62 */
@@ -8135,7 +8136,7 @@ function stringify_formula(formula/*Array<any>*/, range, cell, supbooks, opts) {
 			case 'PtgName':
 				/* f[1] = type, 0, nameindex */
 				nameidx = f[1][2];
-				var lbl = supbooks[0][nameidx];
+				var lbl = (supbooks.names||[])[nameidx-1] || (supbooks[0]||[])[nameidx];
 				var name = lbl ? lbl.Name : "**MISSING**" + String(nameidx);
 				if(name in XLSXFutureFunctions) name = XLSXFutureFunctions[name];
 				stack.push(name);
@@ -8147,15 +8148,27 @@ function stringify_formula(formula/*Array<any>*/, range, cell, supbooks, opts) {
 				var bookidx = (f[1][1]); nameidx = f[1][2]; var externbook;
 				/* TODO: Properly handle missing values */
 				//console.log(bookidx, supbooks);
-				if(opts.biff == 5) {
+				if(opts.biff <= 5) {
 					if(bookidx < 0) bookidx = -bookidx;
 					if(supbooks[bookidx]) externbook = supbooks[bookidx][nameidx];
 				} else {
-					if(supbooks[bookidx+1]) externbook = supbooks[bookidx+1][nameidx];
-					else if(supbooks[bookidx-1]) externbook = supbooks[bookidx-1][nameidx];
+					var pnxname = supbooks.SheetNames[bookidx];
+					var o = "";
+					if(((supbooks[bookidx]||[])[0]||[])[0] == 0x3A01){}
+					else if(((supbooks[bookidx]||[])[0]||[])[0] == 0x0401){
+						if(supbooks[bookidx][nameidx] && supbooks[bookidx][nameidx].itab > 0) {
+							o = supbooks.SheetNames[supbooks[bookidx][nameidx].itab-1] + "!";
+						}
+					}
+					else o = supbooks.SheetNames[nameidx-1]+ "!";
+					if(supbooks[bookidx] && supbooks[bookidx][nameidx]) o += supbooks[bookidx][nameidx].Name;
+					else if(supbooks[0] && supbooks[0][nameidx]) o += supbooks[0][nameidx].Name;
+					else o += "??NAMEX??";
+					stack.push(o);
+					break;
 				}
-				if(!externbook) externbook = {body: "??NAMEX??"};
-				stack.push(externbook.body);
+				if(!externbook) externbook = {Name: "??NAMEX??"};
+				stack.push(externbook.Name);
 				break;
 
 			/* 2.5.198.80 */
@@ -8240,6 +8253,9 @@ function stringify_formula(formula/*Array<any>*/, range, cell, supbooks, opts) {
 
 			/* 2.5.198.29 */
 			case 'PtgAreaErr': stack.push("#REF!"); break;
+
+			/* 2.5.198.30 */
+			case 'PtgAreaErr3d': stack.push("#REF!"); break;
 
 			/* 2.5.198.72 TODO */
 			case 'PtgMemFunc': break;
@@ -10471,9 +10487,9 @@ function parse_ws_bin(data, _opts, rels, wb, themes, styles) {
 	var supbooks = ([[]]);
 	supbooks.sharedf = shared_formulae;
 	supbooks.arrayf = array_formulae;
+	supbooks.SheetNames = wb.SheetNames || wb.Sheets.map(function(x) { return x.name; });
 	opts.supbooks = supbooks;
-
-	for(var i = 0; i < wb.Names['!names'].length; ++i) supbooks[0][i+1] = wb.Names[wb.Names['!names'][i]];
+	for(var i = 0; i < wb.Names.length; ++i) supbooks[0][i+1] = wb.Names[i];
 
 	var colinfo = [], rowinfo = [];
 	var defwidth = 0, defheight = 0; // twips / MDW respectively
@@ -11104,7 +11120,7 @@ function check_wb(wb) {
 var wbnsregex = /<\w+:workbook/;
 function parse_wb_xml(data, opts) {
 	if(!data) throw new Error("Could not find file");
-	var wb = { AppVersion:{}, WBProps:{}, WBView:[], Sheets:[], CalcPr:{}, Names:{'!names':[]}, xmlns: "" };
+	var wb = { AppVersion:{}, WBProps:{}, WBView:[], Sheets:[], CalcPr:{}, Names:[], xmlns: "" };
 	var pass = false, xmlns = "xmlns";
 	var dname = {}, dnstart = 0;
 	/*(data.match(tagregex)||[]).forEach */
@@ -11175,12 +11191,12 @@ function parse_wb_xml(data, opts) {
 				dname = {};
 				dname.Name = y.name;
 				if(y.comment) dname.Comment = y.comment;
+				if(y.localSheetId) dname.Sheet = +y.localSheetId;
 				dnstart = idx + x.length;
 			}	break;
 			case '</definedName>': {
 				dname.Ref = data.slice(dnstart, idx);
-				wb.Names[dname.Name] = dname;
-				wb.Names['!names'].push(dname.Name);
+				wb.Names.push(dname);
 			} break;
 			case '<definedName/>': break;
 
@@ -11286,7 +11302,19 @@ function write_wb_xml(wb, opts) {
 
 	/* functionGroups */
 	/* externalReferences */
-	/* definedNames */
+
+	if(wb.Workbook && (wb.Workbook.Names||[]).length > 0) {
+		o[o.length] = "<definedNames>";
+		wb.Workbook.Names.forEach(function(n) {
+			var d = {name:n.Name};
+			if(n.Comment) d.comment = n.Comment;
+			if(n.Sheet != null) d.localSheetId = ""+n.Sheet;
+			if(!n.Ref) return;
+			o[o.length] = writextag('definedName', String(n.Ref), d);
+		});
+		o[o.length] = "</definedNames>";
+	}
+
 	/* calcPr */
 	/* oleSize */
 	/* customWorkbookViews */
@@ -11358,7 +11386,9 @@ function parse_BrtName(data, length, opts) {
 		// unusedstring2: XLNullableWideString
 	//}
 	data.l = end;
-	return {Name:name, Ptg:formula, Comment:comment};
+	var out = ({Name:name, Ptg:formula, Comment:comment});
+	if(itab < 0xFFFFFFF) out.Sheet = itab;
+	return out;
 }
 
 /* [MS-XLSB] 2.1.7.60 Workbook */
@@ -11369,15 +11399,20 @@ function parse_wb_bin(data, opts) {
 	if(!opts) opts = {};
 	opts.biff = 12;
 
-	var Names = {}, NameList = [];
+	var Names = [];
+	var supbooks = [];
+	supbooks.SheetNames = [];
 
 	recordhopper(data, function hopper_wb(val, R_n, RT) {
 		switch(RT) {
 			case 0x009C: /* 'BrtBundleSh' */
+				supbooks.SheetNames.push(val.name);
 				wb.Sheets.push(val); break;
 
 			case 0x0027: /* 'BrtName' */
-				Names[val.Name] = val; NameList.push(val.Name);
+				val.Ref = stringify_formula(val.Ptg, null, null, supbooks, opts);
+				delete val.Ptg;
+				Names.push(val);
 				break;
 			case 0x040C: /* 'BrtNameExt' */ break;
 
@@ -11436,7 +11471,6 @@ function parse_wb_bin(data, opts) {
 
 	parse_wb_defaults(wb);
 
-	Names['!names'] = NameList;
 	// $FlowIgnore
 	wb.Names = Names;
 
@@ -11935,7 +11969,17 @@ for(var cma = c; cma <= cc; ++cma) {
 			for(var i = 0; i < +csty.Span; ++i) cstys[cstys.length] = dup(csty);
 			break;
 
-		case 'NamedRange': break;
+		case 'NamedRange':
+			if(!Workbook.Names) Workbook.Names = [];
+			var _NamedRange = parsexmltag(Rn[0]);
+			var _DefinedName = {
+				Name: _NamedRange.Name,
+				Ref: rc_to_a1(_NamedRange.RefersTo.substr(1))
+			};
+			if(Workbook.Sheets.length>0) _DefinedName.Sheet=Workbook.Sheets.length-1;
+			Workbook.Names.push(_DefinedName);
+			break;
+
 		case 'NamedCell': break;
 		case 'B': break;
 		case 'I': break;
@@ -12418,7 +12462,7 @@ function write_props_xlml(wb, opts) {
 	/* DocumentProperties */
 	if(wb.Props) o.push(xlml_write_docprops(wb.Props, opts));
 	/* CustomDocumentProperties */
-	if(wb.Custprops) o.push(xlml_write_custprops(wb.Props, wb.Custprops));
+	if(wb.Custprops) o.push(xlml_write_custprops(wb.Props, wb.Custprops, opts));
 	return o.join("");
 }
 /* TODO */
@@ -12736,15 +12780,17 @@ function parse_workbook(blob, options) {
 	var colinfo = [], rowinfo = [];
 	var defwidth = 0, defheight = 0; // twips / MDW respectively
 	var seencol = false;
-	var supbooks = ([[]]); // 1-indexed, will hold extern names
-	var sbc = 0, sbci = 0, sbcli = 0;
+	var supbooks = ([]); // 1-indexed, will hold extern names
 	supbooks.SheetNames = opts.snames;
 	supbooks.sharedf = opts.sharedf;
 	supbooks.arrayf = opts.arrayf;
+	supbooks.names = [];
+	supbooks.XTI = [];
 	var last_Rn = '';
 	var file_depth = 0; /* TODO: make a real stack */
 	var BIFF2Fmt = 0;
 	var FilterDatabases = []; /* TODO: sort out supbooks and process elsewhere */
+	var last_lbl;
 
 	/* explicit override for some broken writers */
 	opts.codepage = 1200;
@@ -12817,18 +12863,35 @@ function parse_workbook(blob, options) {
 				case 'RichTextStream': break;
 				case 'BkHim': break;
 
-				case 'SupBook': supbooks[++sbc] = [val]; sbci = 0; break;
-				case 'ExternName': supbooks[sbc][++sbci] = val; break;
+				case 'SupBook':
+					supbooks.push([val]);
+					supbooks[supbooks.length-1].XTI = [];
+					break;
+				case 'ExternName':
+					supbooks[supbooks.length-1].push(val);
+					break;
 				case 'Index': break; // TODO
 				case 'Lbl':
-					supbooks[0][++sbcli] = val; // TODO: local formula storage in stringify_formula
-					if(!supbooks[val.itab]) supbooks[val.itab] = [];
-					supbooks[val.itab].push(val);
+					last_lbl = {
+						Name: val.Name,
+						Ref: stringify_formula(val.rgce,range,null,supbooks,opts)
+					};
+					if(val.itab > 0) last_lbl.Sheet = val.itab - 1;
+					supbooks.names.push(last_lbl);
+					if(!supbooks[0]) supbooks[0] = [];
+					supbooks[supbooks.length-1].push(val);
 					if(val.Name == "\r" && val.itab > 0)
 						if(val.rgce && val.rgce[0] && val.rgce[0][0] && val.rgce[0][0][0] == 'PtgArea3d')
 							FilterDatabases[val.itab - 1] = { ref: encode_range(val.rgce[0][0][1][2]) };
 					break;
-				case 'ExternSheet': supbooks[sbc] = supbooks[sbc].concat(val); sbci += val.length; break;
+				case 'ExternSheet':
+					if(supbooks.length == 0) { supbooks[0] = []; supbooks[0].XTI = []; }
+					supbooks[supbooks.length - 1].XTI = supbooks[supbooks.length - 1].XTI.concat(val); supbooks.XTI = supbooks.XTI.concat(val); break;
+				case 'NameCmt':
+					/* TODO: search for correct name */
+					if(opts.biff < 8) break;
+					last_lbl.Comment = val[1];
+					break;
 
 				case 'Protect': out["!protect"] = val; break; /* for sheet or book */
 				case 'Password': if(val !== 0 && opts.WTF) console.error("Password verifier: " + val); break;
@@ -13051,7 +13114,6 @@ function parse_workbook(blob, options) {
 				} break;
 				case 'Row': break; // TODO
 
-				case 'NameCmt': break;
 				case 'Header': break; // TODO
 				case 'Footer': break; // TODO
 				case 'HCenter': break; // TODO
@@ -13294,6 +13356,7 @@ function parse_workbook(blob, options) {
 	if(opts.enc) wb.Encryption = opts.enc;
 	wb.Metadata = {};
 	if(country !== undefined) wb.Metadata.Country = country;
+	if(supbooks.names.length > 0) Workbook.Names = supbooks.names;
 	wb.Workbook = Workbook;
 	return wb;
 }
@@ -14454,7 +14517,7 @@ var XLSRecordEnum = {
 0x0890: { n:"TableStyleElement", f:parse_TableStyleElement },
 0x0892: { n:"StyleExt", f:parse_StyleExt },
 0x0893: { n:"NamePublish", f:parse_NamePublish },
-0x0894: { n:"NameCmt", f:parse_NameCmt },
+0x0894: { n:"NameCmt", f:parse_NameCmt, r:12 },
 0x0895: { n:"SortData", f:parse_SortData },
 0x0896: { n:"Theme", f:parse_Theme, r:12 },
 0x0897: { n:"GUIDTypeLib", f:parse_GUIDTypeLib },

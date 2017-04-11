@@ -312,7 +312,17 @@ function parse_xlml_xml(d, opts)/*:Workbook*/ {
 			for(var i = 0; i < +csty.Span; ++i) cstys[cstys.length] = dup(csty);
 			break;
 
-		case 'NamedRange': break;
+		case 'NamedRange':
+			if(!Workbook.Names) Workbook.Names = [];
+			var _NamedRange = parsexmltag(Rn[0]);
+			var _DefinedName = {
+				Name: _NamedRange.Name,
+				Ref: rc_to_a1(_NamedRange.RefersTo.substr(1))
+			};
+			if(Workbook.Sheets.length>0) _DefinedName.Sheet=Workbook.Sheets.length-1;
+			Workbook.Names.push(_DefinedName);
+			break;
+
 		case 'NamedCell': break;
 		case 'B': break;
 		case 'I': break;
@@ -796,7 +806,7 @@ function write_props_xlml(wb, opts) {
 	/* DocumentProperties */
 	if(wb.Props) o.push(xlml_write_docprops(wb.Props, opts));
 	/* CustomDocumentProperties */
-	if(wb.Custprops) o.push(xlml_write_custprops(wb.Props, wb.Custprops));
+	if(wb.Custprops) o.push(xlml_write_custprops(wb.Props, wb.Custprops, opts));
 	return o.join("");
 }
 /* TODO */

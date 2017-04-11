@@ -769,13 +769,13 @@ function stringify_formula(formula/*Array<any>*/, range, cell/*:any*/, supbooks,
 				break;
 			/* 2.5.198.88 */
 			case 'PtgRefN':
-				type = f[1][0]; c = shift_cell_xls(f[1][1], cell, opts);
+				type = f[1][0]; c = cell ? shift_cell_xls(f[1][1], cell, opts) : f[1][1];
 				stack.push(encode_cell_xls(c));
 				break;
 			case 'PtgRef3d': // TODO: lots of stuff
 				type = f[1][0]; ixti = /*::Number(*/f[1][1]/*::)*/; c = shift_cell_xls(f[1][2], _range, opts);
-				sname = (supbooks && supbooks[1] ? supbooks[1][ixti+1] : "**MISSING**");
-				stack.push(sname + "!" + encode_cell(c));
+				sname = supbooks.SheetNames[ixti];
+				stack.push(sname + "!" + encode_cell_xls(c));
 				break;
 
 			/* 2.5.198.62 */
@@ -831,7 +831,7 @@ function stringify_formula(formula/*Array<any>*/, range, cell/*:any*/, supbooks,
 			case 'PtgName':
 				/* f[1] = type, 0, nameindex */
 				nameidx = f[1][2];
-				var lbl = supbooks[0][nameidx];
+				var lbl = (supbooks.names||[])[nameidx-1] || (supbooks[0]||[])[nameidx];
 				var name = lbl ? lbl.Name : "**MISSING**" + String(nameidx);
 				if(name in XLSXFutureFunctions) name = XLSXFutureFunctions[name];
 				stack.push(name);
@@ -843,15 +843,27 @@ function stringify_formula(formula/*Array<any>*/, range, cell/*:any*/, supbooks,
 				var bookidx/*:number*/ = (f[1][1]/*:any*/); nameidx = f[1][2]; var externbook;
 				/* TODO: Properly handle missing values */
 				//console.log(bookidx, supbooks);
-				if(opts.biff == 5) {
+				if(opts.biff <= 5) {
 					if(bookidx < 0) bookidx = -bookidx;
 					if(supbooks[bookidx]) externbook = supbooks[bookidx][nameidx];
 				} else {
-					if(supbooks[bookidx+1]) externbook = supbooks[bookidx+1][nameidx];
-					else if(supbooks[bookidx-1]) externbook = supbooks[bookidx-1][nameidx];
+					var pnxname = supbooks.SheetNames[bookidx];
+					var o = "";
+					if(((supbooks[bookidx]||[])[0]||[])[0] == 0x3A01){}
+					else if(((supbooks[bookidx]||[])[0]||[])[0] == 0x0401){
+						if(supbooks[bookidx][nameidx] && supbooks[bookidx][nameidx].itab > 0) {
+							o = supbooks.SheetNames[supbooks[bookidx][nameidx].itab-1] + "!";
+						}
+					}
+					else o = supbooks.SheetNames[nameidx-1]+ "!";
+					if(supbooks[bookidx] && supbooks[bookidx][nameidx]) o += supbooks[bookidx][nameidx].Name;
+					else if(supbooks[0] && supbooks[0][nameidx]) o += supbooks[0][nameidx].Name;
+					else o += "??NAMEX??";
+					stack.push(o);
+					break;
 				}
-				if(!externbook) externbook = {body: "??NAMEX??"};
-				stack.push(externbook.body);
+				if(!externbook) externbook = {Name: "??NAMEX??"};
+				stack.push(externbook.Name);
 				break;
 
 			/* 2.5.198.80 */
@@ -936,6 +948,9 @@ function stringify_formula(formula/*Array<any>*/, range, cell/*:any*/, supbooks,
 
 			/* 2.5.198.29 */
 			case 'PtgAreaErr': stack.push("#REF!"); break;
+
+			/* 2.5.198.30 */
+			case 'PtgAreaErr3d': stack.push("#REF!"); break;
 
 			/* 2.5.198.72 TODO */
 			case 'PtgMemFunc': break;

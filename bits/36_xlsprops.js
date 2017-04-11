@@ -39,7 +39,7 @@ function xlml_write_docprops(Props, opts) {
 			case 'date': m = new Date(m).toISOString(); break;
 		}
 		if(typeof m == 'number') m = String(m);
-		else if(m === true || m === false) { t = "boolean"; m = m ? "1" : "0"; }
+		else if(m === true || m === false) { m = m ? "1" : "0"; }
 		else if(m instanceof Date) m = new Date(m).toISOString();
 		o.push(writetag(XLMLDocPropsMap[p[1]] || p[1], m));
 	});

@@ -22,6 +22,8 @@
     + [Chartsheet Object](README.md#chartsheet-object)
   * [Workbook Object](README.md#workbook-object)
     + [Workbook File Properties](README.md#workbook-file-properties)
+  * [Workbook-Level Attributes](README.md#workbook-level-attributes)
+    + [Defined Names](README.md#defined-names)
   * [Document Features](README.md#document-features)
     + [Formulae](README.md#formulae)
     + [Column Properties](README.md#column-properties)

@@ -1103,7 +1103,7 @@ var XLSRecordEnum = {
 	/*::[*/0x0890/*::]*/: { n:"TableStyleElement", f:parse_TableStyleElement },
 	/*::[*/0x0892/*::]*/: { n:"StyleExt", f:parse_StyleExt },
 	/*::[*/0x0893/*::]*/: { n:"NamePublish", f:parse_NamePublish },
-	/*::[*/0x0894/*::]*/: { n:"NameCmt", f:parse_NameCmt },
+	/*::[*/0x0894/*::]*/: { n:"NameCmt", f:parse_NameCmt, r:12 },
 	/*::[*/0x0895/*::]*/: { n:"SortData", f:parse_SortData },
 	/*::[*/0x0896/*::]*/: { n:"Theme", f:parse_Theme, r:12 },
 	/*::[*/0x0897/*::]*/: { n:"GUIDTypeLib", f:parse_GUIDTypeLib },

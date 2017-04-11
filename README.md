@@ -45,6 +45,8 @@ with a unified JS representation, and ES3/ES5 browser compatibility back to IE6.
     + [Chartsheet Object](#chartsheet-object)
   * [Workbook Object](#workbook-object)
     + [Workbook File Properties](#workbook-file-properties)
+  * [Workbook-Level Attributes](#workbook-level-attributes)
+    + [Defined Names](#defined-names)
   * [Document Features](#document-features)
     + [Formulae](#formulae)
     + [Column Properties](#column-properties)
@@ -669,6 +671,26 @@ Writers will process the `Props` key of the options object:
 /* force the Author to be "SheetJS" */
 XLSX.write(wb, {Props:{Author:"SheetJS"}});
 ```
+
+### Workbook-Level Attributes
+
+`wb.Workbook` stores workbook level attributes.
+
+#### Defined Names
+
+`wb.Workbook.Names` is an array of defined name objects which have the keys:
+
+| Key       | Description                                                      |
+|:----------|:-----------------------------------------------------------------|
+| `Sheet`   | Name scope.  Sheet Index (0 = first sheet) or `null` (Workbook)  |
+| `Name`    | Case-sensitive name.  Standard rules apply **                    |
+| `Ref`     | A1-style Reference (e.g. `"Sheet1!$A$1:$D$20"`)                  |
+| `Comment` | Comment (only applicable for XLS/XLSX/XLSB)                      |
+
+Excel allows two sheet-scoped defined names to share the same name.  However, a
+sheet-scoped name cannot collide with a workbook-scope name.  Workbook writers
+may not enforce this constraint.
+
 ### Document Features
 
 Even for basic features like date storage, the official Excel formats store the

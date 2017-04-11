@@ -1,7 +1,10 @@
 # This file controls the multiformat tests
+# vim: set ts=4:
 # Format: <basename> <ext> <ext> [ext..]
+# yes-formula
 AutoFilter              	.xls .xlsb .xlsx .xml
-#BlankSheetTypes         	.xls .xlsb .xlsx .xml
+# note: XLML only supports sheets, ods does not support dialog
+BlankSheetTypes         	.xls .xlsb .xlsm
 NumberFormatCondition   	.xls .xlsb .xlsm .xml
 RkNumber                	.xls .xlsb .xlsx .xls.xml .xlsb.xml .xlsx.xml
 #calendar_stress_test    	.xls .xlsb .xlsx .xml
@@ -10,17 +13,15 @@ cell_style_simple       	.xls .xlsb .xlsx .xml
 comments_stress_test    	.xls .xlsb .xlsx .xls.xml .xlsb.xml .xlsx.xml
 # yes-csv
 custom_properties       	.xls .xlsb .xlsx .xls.xml .xlsb.xml .xlsx.xml
-# no-formula (defined names)
 defined_names_simple    	.xls .xlsb .xlsx .xml
-# yes-formula
 # no-csv (randbetween) note: ODS does not support many XLSX functions 
-formula_stress_test     	.xls .xlsb .xlsx .xls.xml .xlsb.xml .xlsx.xml
+formula_stress_test     	.xls .xlsb .xlsx .xlsb.xml
 # yes-csv
 formulae_test_simple    	.xls .xlsb .xlsx .xml
 hyperlink_stress_test_2011	.xls .xlsb .xlsx .xml
 #large_strings           	.xls .xlsb .xlsx .xls.xml .xlsb.xml .xlsx.xml
 merge_cells             	.xls .xlsb .xlsx .xls.xml .xlsb.xml .xlsx.xml
-# no-formula (defined names)
+# no-formula (filename-references in XLSX encoding as [0])
 named_ranges_2011       	.xls .xlsb .xlsx .xls.xml .xlsb.xml .xlsx.xml
 # yes-formula
 # no-csv (macro serialization in xml)

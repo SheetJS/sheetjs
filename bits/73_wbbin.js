@@ -55,7 +55,9 @@ function parse_BrtName(data, length, opts) {
 		// unusedstring2: XLNullableWideString
 	//}
 	data.l = end;
-	return {Name:name, Ptg:formula, Comment:comment};
+	var out = ({Name:name, Ptg:formula, Comment:comment}/*:any*/);
+	if(itab < 0xFFFFFFF) out.Sheet = itab;
+	return out;
 }
 
 /* [MS-XLSB] 2.1.7.60 Workbook */
@@ -66,15 +68,20 @@ function parse_wb_bin(data, opts)/*:WorkbookFile*/ {
 	if(!opts) opts = {};
 	opts.biff = 12;
 
-	var Names = {}, NameList = [];
+	var Names = [];
+	var supbooks = [];
+	supbooks.SheetNames = [];
 
 	recordhopper(data, function hopper_wb(val, R_n, RT) {
 		switch(RT) {
 			case 0x009C: /* 'BrtBundleSh' */
+				supbooks.SheetNames.push(val.name);
 				wb.Sheets.push(val); break;
 
 			case 0x0027: /* 'BrtName' */
-				Names[val.Name] = val; NameList.push(val.Name);
+				val.Ref = stringify_formula(val.Ptg, null, null, supbooks, opts);
+				delete val.Ptg;
+				Names.push(val);
 				break;
 			case 0x040C: /* 'BrtNameExt' */ break;
 
@@ -133,7 +140,6 @@ function parse_wb_bin(data, opts)/*:WorkbookFile*/ {
 
 	parse_wb_defaults(wb);
 
-	Names['!names'] = NameList;
 	// $FlowIgnore
 	wb.Names = Names;
 

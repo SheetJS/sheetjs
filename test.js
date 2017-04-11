@@ -50,6 +50,10 @@ var paths = {
 	cstxlsx: dir + 'comments_stress_test.xlsx',
 	cstxlsb: dir + 'comments_stress_test.xlsb',
 	cstods: dir + 'comments_stress_test.ods',
+	dnsxls: dir + 'defined_names_simple.xls',
+	dnsxml: dir + 'defined_names_simple.xml',
+	dnsxlsx: dir + 'defined_names_simple.xlsx',
+	dnsxlsb: dir + 'defined_names_simple.xlsb',
 	fstxls: dir + 'formula_stress_test.xls',
 	fstxml: dir + 'formula_stress_test.xls.xml',
 	fstxlsx: dir + 'formula_stress_test.xlsx',
@@ -890,6 +894,29 @@ describe('parse features', function() {
 			ws = wb.Sheets[f[2]];
 			assert.equal(get_cell(ws, f[3]).w, f[4]);
 			assert.equal(get_cell(ws, f[3]).t, 'd');
+		}); });
+	});
+
+	describe('defined names', function() {
+		[
+			/* desc     path        cmnt */
+			['xlsx', paths.dnsxlsx,  true],
+			['xlsb', paths.dnsxlsb,  true],
+			['xls',  paths.dnsxls,   true],
+			['xlml', paths.dnsxml,  false],
+		].forEach(function(m) { it(m[0], function() {
+			var wb = X.readFile(m[1]);
+			var names = wb.Workbook.Names;
+			for(var i = 0; i < names.length; ++i) if(names[i].Name == "SheetJS") break;
+			assert(i < names.length, "Missing name");
+			assert.equal(names[i].Sheet, null);
+			assert.equal(names[i].Ref, "Sheet1!$A$1");
+			if(m[2]) assert.equal(names[i].Comment, "defined names just suck  excel formulae are bad  MS should feel bad");
+
+			for(i = 0; i < names.length; ++i) if(names[i].Name == "SHEETjs") break;
+			assert(i < names.length, "Missing name");
+			assert.equal(names[i].Sheet, 0);
+			assert.equal(names[i].Ref, "Sheet1!$A$2");
 		}); });
 	});
 

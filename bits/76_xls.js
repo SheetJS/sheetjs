@@ -169,15 +169,17 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 	var colinfo = [], rowinfo = [];
 	var defwidth = 0, defheight = 0; // twips / MDW respectively
 	var seencol = false;
-	var supbooks = ([[]]/*:any*/); // 1-indexed, will hold extern names
-	var sbc = 0, sbci = 0, sbcli = 0;
+	var supbooks = ([]/*:any*/); // 1-indexed, will hold extern names
 	supbooks.SheetNames = opts.snames;
 	supbooks.sharedf = opts.sharedf;
 	supbooks.arrayf = opts.arrayf;
+	supbooks.names = [];
+	supbooks.XTI = [];
 	var last_Rn = '';
 	var file_depth = 0; /* TODO: make a real stack */
 	var BIFF2Fmt = 0;
 	var FilterDatabases = []; /* TODO: sort out supbooks and process elsewhere */
+	var last_lbl;
 
 	/* explicit override for some broken writers */
 	opts.codepage = 1200;
@@ -250,18 +252,35 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 				case 'RichTextStream': break;
 				case 'BkHim': break;
 
-				case 'SupBook': supbooks[++sbc] = [val]; sbci = 0; break;
-				case 'ExternName': supbooks[sbc][++sbci] = val; break;
+				case 'SupBook':
+					supbooks.push([val]);
+					supbooks[supbooks.length-1].XTI = [];
+					break;
+				case 'ExternName':
+					supbooks[supbooks.length-1].push(val);
+					break;
 				case 'Index': break; // TODO
 				case 'Lbl':
-					supbooks[0][++sbcli] = val; // TODO: local formula storage in stringify_formula
-					if(!supbooks[val.itab]) supbooks[val.itab] = [];
-					supbooks[val.itab].push(val);
+					last_lbl = {
+						Name: val.Name,
+						Ref: stringify_formula(val.rgce,range,null,supbooks,opts)
+					};
+					if(val.itab > 0) last_lbl.Sheet = val.itab - 1;
+					supbooks.names.push(last_lbl);
+					if(!supbooks[0]) supbooks[0] = [];
+					supbooks[supbooks.length-1].push(val);
 					if(val.Name == "\r" && val.itab > 0)
 						if(val.rgce && val.rgce[0] && val.rgce[0][0] && val.rgce[0][0][0] == 'PtgArea3d')
 							FilterDatabases[val.itab - 1] = { ref: encode_range(val.rgce[0][0][1][2]) };
 					break;
-				case 'ExternSheet': supbooks[sbc] = supbooks[sbc].concat(val); sbci += val.length; break;
+				case 'ExternSheet':
+					if(supbooks.length == 0) { supbooks[0] = []; supbooks[0].XTI = []; }
+					supbooks[supbooks.length - 1].XTI = supbooks[supbooks.length - 1].XTI.concat(val); supbooks.XTI = supbooks.XTI.concat(val); break;
+				case 'NameCmt':
+					/* TODO: search for correct name */
+					if(opts.biff < 8) break;
+					last_lbl.Comment = val[1];
+					break;
 
 				case 'Protect': out["!protect"] = val; break; /* for sheet or book */
 				case 'Password': if(val !== 0 && opts.WTF) console.error("Password verifier: " + val); break;
@@ -484,7 +503,6 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 				} break;
 				case 'Row': break; // TODO
 
-				case 'NameCmt': break;
 				case 'Header': break; // TODO
 				case 'Footer': break; // TODO
 				case 'HCenter': break; // TODO
@@ -727,6 +745,7 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 	if(opts.enc) wb.Encryption = opts.enc;
 	wb.Metadata = {};
 	if(country !== undefined) wb.Metadata.Country = country;
+	if(supbooks.names.length > 0) Workbook.Names = supbooks.names;
 	wb.Workbook = Workbook;
 	return wb;
 }

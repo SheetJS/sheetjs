@@ -278,13 +278,6 @@ function parslurp(blob, length, cb) {
 	return arr;
 }
 
-function parslurp2(blob, length, cb) {
-	var arr = [], target = blob.l + length, len = blob.read_shift(2);
-	while(len-- !== 0) arr.push(cb(blob, target - blob.l));
-	if(target !== blob.l) throw new Error("Slurp error");
-	return arr;
-}
-
 function parsebool(blob, length) { return blob.read_shift(length) === 0x1; }
 
 function parseuint16(blob) { return blob.read_shift(2, 'u'); }

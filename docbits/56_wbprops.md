@@ -36,3 +36,4 @@ Writers will process the `Props` key of the options object:
 /* force the Author to be "SheetJS" */
 XLSX.write(wb, {Props:{Author:"SheetJS"}});
 ```
+

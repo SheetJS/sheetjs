@@ -2,7 +2,7 @@
 var wbnsregex = /<\w+:workbook/;
 function parse_wb_xml(data, opts)/*:WorkbookFile*/ {
 	if(!data) throw new Error("Could not find file");
-	var wb = { AppVersion:{}, WBProps:{}, WBView:[], Sheets:[], CalcPr:{}, Names:{'!names':[]}, xmlns: "" };
+	var wb = { AppVersion:{}, WBProps:{}, WBView:[], Sheets:[], CalcPr:{}, Names:[], xmlns: "" };
 	var pass = false, xmlns = "xmlns";
 	var dname = {}, dnstart = 0;
 	/*(data.match(tagregex)||[]).forEach */
@@ -73,12 +73,12 @@ function parse_wb_xml(data, opts)/*:WorkbookFile*/ {
 				dname = {};
 				dname.Name = y.name;
 				if(y.comment) dname.Comment = y.comment;
+				if(y.localSheetId) dname.Sheet = +y.localSheetId;
 				dnstart = idx + x.length;
 			}	break;
 			case '</definedName>': {
 				dname.Ref = data.slice(dnstart, idx);
-				wb.Names[dname.Name] = dname;
-				wb.Names['!names'].push(dname.Name);
+				wb.Names.push(dname);
 			} break;
 			case '<definedName/>': break;
 
@@ -184,7 +184,19 @@ function write_wb_xml(wb/*:Workbook*/, opts/*:?WriteOpts*/)/*:string*/ {
 
 	/* functionGroups */
 	/* externalReferences */
-	/* definedNames */
+
+	if(wb.Workbook && (wb.Workbook.Names||[]).length > 0) {
+		o[o.length] = "<definedNames>";
+		wb.Workbook.Names.forEach(function(n) {
+			var d = {name:n.Name};
+			if(n.Comment) d.comment = n.Comment;
+			if(n.Sheet != null) d.localSheetId = ""+n.Sheet;
+			if(!n.Ref) return;
+			o[o.length] = writextag('definedName', String(n.Ref), d);
+		});
+		o[o.length] = "</definedNames>";
+	}
+
 	/* calcPr */
 	/* oleSize */
 	/* customWorkbookViews */

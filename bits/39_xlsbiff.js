@@ -442,6 +442,7 @@ function parse_ExternName(blob, length, opts) {
 	if(opts.sbcch === 0x3A01) body = parse_AddinUdf(blob, length-2, opts);
 	//else throw new Error("unsupported SupBook cch: " + opts.sbcch);
 	o.body = body || blob.read_shift(length-2);
+	if(typeof body === "string") o.Name = body;
 	return o;
 }
 
@@ -472,13 +473,21 @@ function parse_Lbl(blob, length, opts) {
 /* 2.4.106 TODO: verify supbook manipulation */
 function parse_ExternSheet(blob, length, opts) {
 	if(opts.biff < 8) return parse_ShortXLUnicodeString(blob, length, opts);
-	var o = parslurp2(blob,length,parse_XTI);
+	var o = [], target = blob.l + length, len = blob.read_shift(2);
+	while(len-- !== 0) o.push(parse_XTI(blob, 6));
+		// [iSupBook, itabFirst, itabLast];
 	var oo = [];
-	if(opts.sbcch === 0x0401) {
-		for(var i = 0; i != o.length; ++i) oo.push(opts.snames[o[i][1]]);
-		return oo;
-	}
-	else return o;
+	return o;
+}
+
+/* 2.4.176 TODO: check older biff */
+function parse_NameCmt(blob, length, opts) {
+	if(opts.biff < 8) { blob.l += length; return; }
+	var cchName = blob.read_shift(2);
+	var cchComment = blob.read_shift(2);
+	var name = parse_XLUnicodeStringNoCch(blob, cchName, opts);
+	var comment = parse_XLUnicodeStringNoCch(blob, cchComment, opts);
+	return [name, comment];
 }
 
 /* 2.4.260 */
@@ -894,7 +903,6 @@ var parse_TableStyles = parsenoop;
 var parse_TableStyle = parsenoop;
 var parse_TableStyleElement = parsenoop;
 var parse_NamePublish = parsenoop;
-var parse_NameCmt = parsenoop;
 var parse_SortData = parsenoop;
 var parse_GUIDTypeLib = parsenoop;
 var parse_FnGrp12 = parsenoop;
