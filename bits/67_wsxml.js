@@ -318,7 +318,7 @@ return function parse_ws_xml_data(sdata, s, opts, guess, themes, styles) {
 				case 'str':
 					p.t = "s";
 					p.v = (p.v!=null) ? utf8read(p.v) : '';
-					if(opts.cellHTML) p.h = p.v;
+					if(opts.cellHTML) p.h = escapehtml(p.v);
 					break;
 				case 'inlineStr':
 					cref = d.match(isregex);

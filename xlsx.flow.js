@@ -1605,6 +1605,11 @@ function escapexml(text/*:string*/, xml/*:?boolean*/)/*:string*/{
 }
 function escapexmltag(text/*:string*/)/*:string*/{ return escapexml(text).replace(/ /g,"_x0020_"); }
 
+function escapehtml(text){
+	var s = text + '';
+	return s.replace(decregex, function(y) { return rencoding[y]; });
+}
+
 /* TODO: handle codepages */
 var xlml_fixstr/*:StringConv*/ = (function() {
 	var entregex = /&#(\d+);/g;
@@ -5774,7 +5779,7 @@ function parse_si(x, opts) {
 	if(x.match(/^\s*<(?:\w+:)?t[^>]*>/)) {
 		z.t = utf8read(unescapexml(x.substr(x.indexOf(">")+1).split(/<\/(?:\w+:)?t>/)[0]));
 		z.r = utf8read(x);
-		if(html) z.h = z.t;
+		if(html) z.h = escapehtml(z.t);
 	}
 	/* 18.4.4 r CT_RElt (Rich Text Run) */
 	else if((y = x.match(sirregex))) {
@@ -10190,7 +10195,7 @@ return function parse_ws_xml_data(sdata, s, opts, guess, themes, styles) {
 				case 'str':
 					p.t = "s";
 					p.v = (p.v!=null) ? utf8read(p.v) : '';
-					if(opts.cellHTML) p.h = p.v;
+					if(opts.cellHTML) p.h = escapehtml(p.v);
 					break;
 				case 'inlineStr':
 					cref = d.match(isregex);

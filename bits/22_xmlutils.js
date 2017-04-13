@@ -54,6 +54,11 @@ function escapexml(text/*:string*/, xml/*:?boolean*/)/*:string*/{
 }
 function escapexmltag(text/*:string*/)/*:string*/{ return escapexml(text).replace(/ /g,"_x0020_"); }
 
+function escapehtml(text){
+	var s = text + '';
+	return s.replace(decregex, function(y) { return rencoding[y]; });
+}
+
 /* TODO: handle codepages */
 var xlml_fixstr/*:StringConv*/ = (function() {
 	var entregex = /&#(\d+);/g;

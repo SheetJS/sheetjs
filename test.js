@@ -956,6 +956,25 @@ describe('parse features', function() {
 		}); });
 	});
 
+	describe('HTML', function() {
+		var ws, wb;
+		var bef = (function() {
+			ws = X.utils.aoa_to_sheet([
+				["a","b","c"],
+				["&","<",">"]
+			]);
+			wb = {SheetNames:["Sheet1"],Sheets:{Sheet1:ws}};
+		});
+		if(typeof before != 'undefined') before(bef);
+		else it('before', bef);
+		['xlsx'].forEach(function(m) { it(m, function() {
+			var wb2 = X.read(X.write(wb, {bookType:m, type:"binary"}),{type:"binary", cellHTML:true});
+			assert.equal(get_cell(wb2.Sheets.Sheet1, "A2").h, "&amp;");
+			assert.equal(get_cell(wb2.Sheets.Sheet1, "B2").h, "&lt;");
+			assert.equal(get_cell(wb2.Sheets.Sheet1, "C2").h, "&gt;");
+		}); });
+	});
+
 	describe('page margins', function() {
 		function check_margin(margins, exp) {
 			assert.equal(margins.left, exp[0]);
