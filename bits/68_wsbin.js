@@ -289,6 +289,29 @@ function write_BrtColInfo(C/*:number*/, col, o) {
 	return o;
 }
 
+/* [MS-XLSB] 2.4.672 BrtMargins */
+function parse_BrtMargins(data, length, opts) {
+	return {
+		left: parse_Xnum(data, 8),
+		right: parse_Xnum(data, 8),
+		top: parse_Xnum(data, 8),
+		bottom: parse_Xnum(data, 8),
+		header: parse_Xnum(data, 8),
+		footer: parse_Xnum(data, 8)
+	};
+}
+function write_BrtMargins(margins, o) {
+	if(o == null) o = new_buf(6*8);
+	default_margins(margins);
+	write_Xnum(margins.left, o);
+	write_Xnum(margins.right, o);
+	write_Xnum(margins.top, o);
+	write_Xnum(margins.bottom, o);
+	write_Xnum(margins.header, o);
+	write_Xnum(margins.footer, o);
+	return o;
+}
+
 /* [MS-XLSB] 2.4.740 BrtSheetProtection */
 function write_BrtSheetProtection(sp, o) {
 	if(o == null) o = new_buf(16*4+2);
@@ -467,6 +490,10 @@ function parse_ws_bin(data, _opts, rels, wb, themes, styles)/*:Worksheet*/ {
 				s['!autofilter'] = { ref:encode_range(val) };
 				break;
 
+			case 0x01DC: /* 'BrtMargins' */
+				s['!margins'] = val;
+				break;
+
 			case 0x00AF: /* 'BrtAFilterDateGroupItem' */
 			case 0x0284: /* 'BrtActiveX' */
 			case 0x0271: /* 'BrtBigName' */
@@ -498,7 +525,6 @@ function parse_ws_bin(data, _opts, rels, wb, themes, styles)/*:Worksheet*/ {
 			case 0x0227: /* 'BrtLegacyDrawing' */
 			case 0x0228: /* 'BrtLegacyDrawingHF' */
 			case 0x0295: /* 'BrtListPart' */
-			case 0x01DC: /* 'BrtMargins' */
 			case 0x027F: /* 'BrtOleObject' */
 			case 0x01DE: /* 'BrtPageSetup' */
 			case 0x0097: /* 'BrtPane' */
@@ -704,7 +730,7 @@ function write_ws_bin(idx/*:number*/, opts, wb/*:Workbook*/, rels) {
 	/* [DVALS] */
 	write_HLINKS(ba, ws, rels);
 	/* [BrtPrintOptions] */
-	/* [BrtMargins] */
+	if(ws['!margins']) write_record(ba, "BrtMargins", write_BrtMargins(ws['!margins']));
 	/* [BrtPageSetup] */
 	/* [HEADERFOOTER] */
 	/* [RWBRK] */

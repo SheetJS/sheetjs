@@ -24,6 +24,18 @@ function col_obj_w(C/*:number*/, col) {
 	return p;
 }
 
+function default_margins(margins, mode) {
+	if(!margins) return;
+	var defs = [0.7, 0.7, 0.75, 0.75, 0.3, 0.3];
+	if(mode == 'xlml') defs = [1, 1, 1, 1, 0.5, 0.5];
+	if(margins.left   == null) margins.left   = defs[0];
+	if(margins.right  == null) margins.right  = defs[1];
+	if(margins.top    == null) margins.top    = defs[2];
+	if(margins.bottom == null) margins.bottom = defs[3];
+	if(margins.header == null) margins.header = defs[4];
+	if(margins.footer == null) margins.footer = defs[5];
+}
+
 function get_cell_style(styles, cell, opts) {
 	var z = opts.revssf[cell.z != null ? cell.z : "General"];
 	for(var i = 0, len = styles.length; i != len; ++i) if(styles[i].numFmtId === z) return i;

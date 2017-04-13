@@ -10,6 +10,11 @@ function firstbyte(f/*:RawData*/,o/*:?TypeOpts*/)/*:Array<number>*/ {
 	return [x.charCodeAt(0), x.charCodeAt(1), x.charCodeAt(2), x.charCodeAt(3)];
 }
 
+function read_cfb(cfb, opts/*:?ParseOpts*/)/*:Workbook*/ {
+	if(cfb.find("EncryptedPackage")) return parse_xlsxcfb(cfb, opts);
+	return parse_xlscfb(cfb, opts);
+}
+
 function read_zip(data/*:RawData*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
 	/*:: if(!jszip) throw new Error("JSZip is not available"); */
 	var zip, d = data;
@@ -39,7 +44,7 @@ function readSync(data/*:RawData*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
 	if(!o.type) o.type = (has_buf && Buffer.isBuffer(data)) ? "buffer" : "base64";
 	if(o.type == "file") { o.type = "buffer"; d = _fs.readFileSync(data); }
 	switch((n = firstbyte(d, o))[0]) {
-		case 0xD0: return parse_xlscfb(CFB.read(d, o), o);
+		case 0xD0: return read_cfb(CFB.read(d, o), o);
 		case 0x09: return parse_xlscfb(s2a(o.type === 'base64' ? Base64.decode(d) : d), o);
 		case 0x3C: return parse_xlml(d, o);
 		case 0x49: if(n[1] == 0x44) return SYLK.to_workbook(d, o); break;

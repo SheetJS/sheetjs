@@ -6,38 +6,154 @@ function _JS2ANSI(str/*:string*/)/*:Array<number>*/ {
 }
 
 /* [MS-OFFCRYPTO] 2.1.4 Version */
-function parse_Version(blob, length/*:number*/) {
+function parse_CRYPTOVersion(blob, length/*:number*/) {
 	var o = {};
 	o.Major = blob.read_shift(2);
 	o.Minor = blob.read_shift(2);
 	return o;
 }
+
+/* [MS-OFFCRYPTO] 2.1.5 DataSpaceVersionInfo */
+function parse_DataSpaceVersionInfo(blob, length) {
+	var o = {};
+	o.id = blob.read_shift(0, 'lpp4');
+	o.R = parse_CRYPTOVersion(blob, 4);
+	o.U = parse_CRYPTOVersion(blob, 4);
+	o.W = parse_CRYPTOVersion(blob, 4);
+	return o;
+}
+
+/* [MS-OFFCRYPTO] 2.1.6.1 DataSpaceMapEntry Structure */
+function parse_DataSpaceMapEntry(blob) {
+	var len = blob.read_shift(4);
+	var end = blob.l + len - 4;
+	var o = {};
+	var cnt = blob.read_shift(4);
+	var comps = [];
+	while(cnt-- > 0) {
+		/* [MS-OFFCRYPTO] 2.1.6.2 DataSpaceReferenceComponent Structure */
+		var rc = {};
+		rc.t = blob.read_shift(4);
+		rc.v = blob.read_shift(0, 'lpp4');
+		comps.push(rc);
+	}
+	o.name = blob.read_shift(0, 'lpp4');
+	o.comps = comps;
+	return o;
+}
+
+/* [MS-OFFCRYPTO] 2.1.6 DataSpaceMap */
+function parse_DataSpaceMap(blob, length) {
+	var o = [];
+	blob.l += 4; // must be 0x8
+	var cnt = blob.read_shift(4);
+	while(cnt-- > 0) o.push(parse_DataSpaceMapEntry(blob));
+	return o;
+}
+
+/* [MS-OFFCRYPTO] 2.1.7 DataSpaceDefinition */
+function parse_DataSpaceDefinition(blob, length) {
+	var o = [];
+	blob.l += 4; // must be 0x8
+	var cnt = blob.read_shift(4);
+	while(cnt-- > 0) o.push(blob.read_shift(0, 'lpp4'));
+	return o;
+}
+
+/* [MS-OFFCRYPTO] 2.1.8 DataSpaceDefinition */
+function parse_TransformInfoHeader(blob, length) {
+	var o = {};
+	var len = blob.read_shift(4);
+	var tgt = blob.l + len - 4;
+	blob.l += 4; // must be 0x1
+	o.id = blob.read_shift(0, 'lpp4');
+	// tgt == len
+	o.name = blob.read_shift(0, 'lpp4');
+	o.R = parse_CRYPTOVersion(blob, 4);
+	o.U = parse_CRYPTOVersion(blob, 4);
+	o.W = parse_CRYPTOVersion(blob, 4);
+	return o;
+}
+
+function parse_Primary(blob, length) {
+	/* [MS-OFFCRYPTO] 2.2.6 IRMDSTransformInfo */
+	var hdr = parse_TransformInfoHeader(blob);
+	/* [MS-OFFCRYPTO] 2.1.9 EncryptionTransformInfo */
+	hdr.ename = blob.read_shift(0, '8lpp4');
+	hdr.blksz = blob.read_shift(4);
+	hdr.cmode = blob.read_shift(4);
+	if(blob.read_shift(4) != 0x04) throw new Error("Bad !Primary record");
+	return hdr;
+}
+
 /* [MS-OFFCRYPTO] 2.3.2 Encryption Header */
 function parse_EncryptionHeader(blob, length/*:number*/) {
+	var tgt = blob.l + length;
 	var o = {};
-	o.Flags = blob.read_shift(4);
-
-	// Check if SizeExtra is 0x00000000
-	var tmp = blob.read_shift(4);
-	if(tmp !== 0) throw 'Unrecognized SizeExtra: ' + tmp;
-
+	o.Flags = (blob.read_shift(4) & 0x3F);
+	blob.l += 4;
 	o.AlgID = blob.read_shift(4);
+	var valid = false;
 	switch(o.AlgID) {
-		case 0: case 0x6801: case 0x660E: case 0x660F: case 0x6610: break;
+		case 0x660E: case 0x660F: case 0x6610: valid = (o.Flags == 0x24); break;
+		case 0x6801: valid = (o.Flags == 0x04); break;
+		case 0: valid = (o.Flags == 0x10 || o.Flags == 0x04 || o.Flags == 0x24); break;
 		default: throw 'Unrecognized encryption algorithm: ' + o.AlgID;
 	}
-	parsenoop(blob, length-12);
+	if(!valid) throw new Error("Encryption Flags/AlgID mismatch");
+	o.AlgIDHash = blob.read_shift(4);
+	o.KeySize = blob.read_shift(4);
+	o.ProviderType = blob.read_shift(4);
+	blob.l += 8;
+	o.CSPName = blob.read_shift((tgt-blob.l)>>1, 'utf16le').slice(0,-1);
+	blob.l = tgt;
 	return o;
 }
 
 /* [MS-OFFCRYPTO] 2.3.3 Encryption Verifier */
 function parse_EncryptionVerifier(blob, length/*:number*/) {
-	return parsenoop(blob, length);
+	var o = {};
+	blob.l += 4; // SaltSize must be 0x10
+	o.Salt = blob.slice(blob.l, blob.l+16); blob.l += 16;
+	o.Verifier = blob.slice(blob.l, blob.l+16); blob.l += 16;
+	var sz = blob.read_shift(4);
+	o.VerifierHash = blob.slice(blob.l, blob.l + sz); blob.l += sz;
+	return o;
 }
+
+/* [MS-OFFCRYPTO] 2.3.4.* EncryptionInfo Stream */
+function parse_EncryptionInfo(blob, length) {
+	var vers = parse_CRYPTOVersion(blob);
+	switch(vers.Minor) {
+		case 0x02: return parse_EncInfoStd(blob, vers);
+		case 0x03: return parse_EncInfoExt(blob, vers);
+		case 0x04: return parse_EncInfoAgl(blob, vers);
+	}
+	throw new Error("ECMA-376 Encryped file unrecognized Version: " + vers.Minor);
+}
+
+/* [MS-OFFCRYPTO] 2.3.4.5  EncryptionInfo Stream (Standard Encryption) */
+function parse_EncInfoStd(blob, vers) {
+	var flags = blob.read_shift(4);
+	if((flags & 0x3F) != 0x24) throw new Error("EncryptionInfo mismatch");
+	var sz = blob.read_shift(4);
+	var tgt = blob.l + sz;
+	var hdr = parse_EncryptionHeader(blob, sz);
+	var verifier = parse_EncryptionVerifier(blob, blob.length - blob.l);
+	return { t:"Std", h:hdr, v:verifier };
+}
+/* [MS-OFFCRYPTO] 2.3.4.6  EncryptionInfo Stream (Extensible Encryption) */
+function parse_EncInfoExt(blob, vers) { throw new Error("File is password-protected: ECMA-376 Extensible"); }
+/* [MS-OFFCRYPTO] 2.3.4.10 EncryptionInfo Stream (Agile Encryption) */
+function parse_EncInfoAgl(blob, vers) { throw new Error("File is password-protected: ECMA-376 Agile"); }
+
+
+
+
 /* [MS-OFFCRYPTO] 2.3.5.1 RC4 CryptoAPI Encryption Header */
 function parse_RC4CryptoHeader(blob, length/*:number*/) {
 	var o = {};
-	var vers = o.EncryptionVersionInfo = parse_Version(blob, 4); length -= 4;
+	var vers = o.EncryptionVersionInfo = parse_CRYPTOVersion(blob, 4); length -= 4;
 	if(vers.Minor != 2) throw 'unrecognized minor version code: ' + vers.Minor;
 	if(vers.Major > 4 || vers.Major < 2) throw 'unrecognized major version code: ' + vers.Major;
 	o.Flags = blob.read_shift(4); length -= 4;
@@ -49,7 +165,7 @@ function parse_RC4CryptoHeader(blob, length/*:number*/) {
 /* [MS-OFFCRYPTO] 2.3.6.1 RC4 Encryption Header */
 function parse_RC4Header(blob, length/*:number*/) {
 	var o = {};
-	var vers = o.EncryptionVersionInfo = parse_Version(blob, 4); length -= 4;
+	var vers = o.EncryptionVersionInfo = parse_CRYPTOVersion(blob, 4); length -= 4;
 	if(vers.Major != 1 || vers.Minor != 1) throw 'unrecognized version code ' + vers.Major + ' : ' + vers.Minor;
 	o.Salt = blob.read_shift(16);
 	o.EncryptedVerifier = blob.read_shift(16);

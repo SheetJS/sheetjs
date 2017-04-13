@@ -8,6 +8,7 @@ var hlinkregex = /<(?:\w:)?hyperlink [^>]*>/mg;
 var dimregex = /"(\w*:\w*)"/;
 var colregex = /<(?:\w:)?col[^>]*[\/]?>/g;
 var afregex = /<(?:\w:)?autoFilter[^>]*([\/]|>([^\u2603]*)<\/(?:\w:)?autoFilter)>/g;
+var marginregex= /<(?:\w:)?pageMargins[^>]*\/>/g;
 /* 18.3 Worksheets */
 function parse_ws_xml(data/*:?string*/, opts, rels, wb, themes, styles)/*:Worksheet*/ {
 	if(!data) return data;
@@ -56,6 +57,10 @@ function parse_ws_xml(data/*:?string*/, opts, rels, wb, themes, styles)/*:Worksh
 	/* 18.3.1.48 hyperlinks CT_Hyperlinks */
 	var hlink = data2.match(hlinkregex);
 	if(hlink) parse_ws_xml_hlinks(s, hlink, rels);
+
+	/* 18.3.1.62 pageMargins CT_PageMargins */
+	var margins = data2.match(marginregex);
+	if(margins) s['!margins'] = parse_ws_xml_margins(parsexmltag(margins[0]));
 
 	if(!s["!ref"] && refguess.e.c >= refguess.s.c && refguess.e.r >= refguess.s.r) s["!ref"] = encode_range(refguess);
 	if(opts.sheetRows > 0 && s["!ref"]) {
@@ -129,6 +134,14 @@ function parse_ws_xml_hlinks(s, data/*:Array<string>*/, rels) {
 			}
 		}
 	}
+}
+
+function parse_ws_xml_margins(margin) {
+	var o = {};
+	["left", "right", "top", "bottom", "header", "footer"].forEach(function(k) {
+		if(margin[k]) o[k] = parseFloat(margin[k]);
+	});
+	return o;
 }
 
 function parse_ws_xml_cols(columns, cols) {

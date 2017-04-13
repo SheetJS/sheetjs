@@ -655,6 +655,16 @@ function parse_ColInfo(blob, length, opts) {
 	return {s:colFirst, e:colLast, w:coldx, ixfe:ixfe, flags:flags};
 }
 
+/* 2.4.257 */
+function parse_Setup(blob, length, opts) {
+	var o = {};
+	blob.l += 16;
+	o.header = parse_Xnum(blob, 8);
+	o.footer = parse_Xnum(blob, 8);
+	blob.l += 2;
+	return o;
+}
+
 /* 2.4.261 */
 function parse_ShtProps(blob, length, opts) {
 	var def = {area:false};
@@ -663,7 +673,6 @@ function parse_ShtProps(blob, length, opts) {
 	if((d & 0x10)) def.area = true;
 	return def;
 }
-
 
 var parse_Style = parsenoop;
 var parse_StyleExt = parsenoop;
@@ -747,7 +756,6 @@ var parse_FnGroupName = parsenoop;
 var parse_FilterMode = parsenoop;
 var parse_AutoFilterInfo = parsenoop;
 var parse_AutoFilter = parsenoop;
-var parse_Setup = parsenoop;
 var parse_ScenMan = parsenoop;
 var parse_SCENARIO = parsenoop;
 var parse_SxView = parsenoop;

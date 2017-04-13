@@ -37,57 +37,76 @@ var paths = {
 	afods:  dir + 'AutoFilter.ods',
 	afxlsx:  dir + 'AutoFilter.xlsx',
 	afxlsb:  dir + 'AutoFilter.xlsb',
+
 	cpxls:  dir + 'custom_properties.xls',
 	cpxml:  dir + 'custom_properties.xls.xml',
 	cpxlsx:  dir + 'custom_properties.xlsx',
 	cpxlsb:  dir + 'custom_properties.xlsb',
+
 	cssxls: dir + 'cell_style_simple.xls',
 	cssxml: dir + 'cell_style_simple.xml',
 	cssxlsx: dir + 'cell_style_simple.xlsx',
 	cssxlsb: dir + 'cell_style_simple.xlsb',
+
 	cstxls: dir + 'comments_stress_test.xls',
 	cstxml: dir + 'comments_stress_test.xls.xml',
 	cstxlsx: dir + 'comments_stress_test.xlsx',
 	cstxlsb: dir + 'comments_stress_test.xlsb',
 	cstods: dir + 'comments_stress_test.ods',
-	dnsxls: dir + 'defined_names_simple.xls',
-	dnsxml: dir + 'defined_names_simple.xml',
-	dnsxlsx: dir + 'defined_names_simple.xlsx',
-	dnsxlsb: dir + 'defined_names_simple.xlsb',
-	fstxls: dir + 'formula_stress_test.xls',
-	fstxml: dir + 'formula_stress_test.xls.xml',
-	fstxlsx: dir + 'formula_stress_test.xlsx',
-	fstxlsb: dir + 'formula_stress_test.xlsb',
-	fstods: dir + 'formula_stress_test.ods',
-	hlxls:  dir + 'hyperlink_stress_test_2011.xls',
-	hlxml:  dir + 'hyperlink_stress_test_2011.xml',
-	hlxlsx:  dir + 'hyperlink_stress_test_2011.xlsx',
-	hlxlsb:  dir + 'hyperlink_stress_test_2011.xlsb',
-	lonxls: dir + 'LONumbers.xls',
-	lonxlsx: dir + 'LONumbers.xlsx',
-	mcxls:  dir + 'merge_cells.xls',
-	mcxml:  dir + 'merge_cells.xls.xml',
-	mcxlsx:  dir + 'merge_cells.xlsx',
-	mcxlsb:  dir + 'merge_cells.xlsb',
-	mcods:  dir + 'merge_cells.ods',
-	nfxls:  dir + 'number_format.xls',
-	nfxml:  dir + 'number_format.xls.xml',
-	nfxlsx:  dir + 'number_format.xlsm',
-	nfxlsb:  dir + 'number_format.xlsb',
-	dtxls:  dir + 'xlsx-stream-d-date-cell.xls',
-	dtxml:  dir + 'xlsx-stream-d-date-cell.xls.xml',
-	dtxlsx:  dir + 'xlsx-stream-d-date-cell.xlsx',
-	dtxlsb:  dir + 'xlsx-stream-d-date-cell.xlsb',
+
 	cwxls:  dir + 'column_width.xlsx',
 	cwxls5:  dir + 'column_width.biff5',
 	cwxml:  dir + 'column_width.xml',
 	cwxlsx:  dir + 'column_width.xlsx',
 	cwxlsb:  dir + 'column_width.xlsx',
+
+	dnsxls: dir + 'defined_names_simple.xls',
+	dnsxml: dir + 'defined_names_simple.xml',
+	dnsxlsx: dir + 'defined_names_simple.xlsx',
+	dnsxlsb: dir + 'defined_names_simple.xlsb',
+
+	dtxls:  dir + 'xlsx-stream-d-date-cell.xls',
+	dtxml:  dir + 'xlsx-stream-d-date-cell.xls.xml',
+	dtxlsx:  dir + 'xlsx-stream-d-date-cell.xlsx',
+	dtxlsb:  dir + 'xlsx-stream-d-date-cell.xlsb',
+
+	fstxls: dir + 'formula_stress_test.xls',
+	fstxml: dir + 'formula_stress_test.xls.xml',
+	fstxlsx: dir + 'formula_stress_test.xlsx',
+	fstxlsb: dir + 'formula_stress_test.xlsb',
+	fstods: dir + 'formula_stress_test.ods',
+
+	hlxls:  dir + 'hyperlink_stress_test_2011.xls',
+	hlxml:  dir + 'hyperlink_stress_test_2011.xml',
+	hlxlsx:  dir + 'hyperlink_stress_test_2011.xlsx',
+	hlxlsb:  dir + 'hyperlink_stress_test_2011.xlsb',
+
+	lonxls: dir + 'LONumbers.xls',
+	lonxlsx: dir + 'LONumbers.xlsx',
+
+	mcxls:  dir + 'merge_cells.xls',
+	mcxml:  dir + 'merge_cells.xls.xml',
+	mcxlsx:  dir + 'merge_cells.xlsx',
+	mcxlsb:  dir + 'merge_cells.xlsb',
+	mcods:  dir + 'merge_cells.ods',
+
+	nfxls:  dir + 'number_format.xls',
+	nfxml:  dir + 'number_format.xls.xml',
+	nfxlsx:  dir + 'number_format.xlsm',
+	nfxlsb:  dir + 'number_format.xlsb',
+
+	pmxls:  dir + 'page_margins_2016.xls',
+	pmxls5: dir + 'page_margins_2016_5.xls',
+	pmxml:  dir + 'page_margins_2016.xml',
+	pmxlsx: dir + 'page_margins_2016.xlsx',
+	pmxlsb: dir + 'page_margins_2016.xlsb',
+
 	svxls:  dir + 'sheet_visibility.xls',
 	svxls5: dir + 'sheet_visibility.xls',
 	svxml:  dir + 'sheet_visibility.xml',
 	svxlsx: dir + 'sheet_visibility.xlsx',
 	svxlsb: dir + 'sheet_visibility.xlsb',
+
 	swcxls: dir + 'apachepoi_SimpleWithComments.xls',
 	swcxml: dir + '2011/apachepoi_SimpleWithComments.xls.xml',
 	swcxlsx: dir + 'apachepoi_SimpleWithComments.xlsx',
@@ -935,6 +954,49 @@ describe('parse features', function() {
 				assert.equal(wb.Sheets[wb.SheetNames[i]]['!autofilter'].ref,"A1:E22");
 			}
 		}); });
+	});
+
+	describe('page margins', function() {
+		function check_margin(margins, exp) {
+			assert.equal(margins.left, exp[0]);
+			assert.equal(margins.right, exp[1]);
+			assert.equal(margins.top, exp[2]);
+			assert.equal(margins.bottom, exp[3]);
+			assert.equal(margins.header, exp[4]);
+			assert.equal(margins.footer, exp[5]);
+		}
+		var wb1, wb2, wb3, wb4, wb5, wbs;
+		var bef = (function() {
+			wb1 = X.readFile(paths.pmxls);
+			wb2 = X.readFile(paths.pmxls5);
+			wb3 = X.readFile(paths.pmxml);
+			wb4 = X.readFile(paths.pmxlsx);
+			wb5 = X.readFile(paths.pmxlsb);
+			wbs = [wb1, wb2, wb3, wb4, wb5];
+		});
+		if(typeof before != 'undefined') before(bef);
+		else it('before', bef);
+		it('should parse normal margin', function() {
+			wbs.forEach(function(wb) {
+				check_margin(wb.Sheets["Normal"]["!margins"], [0.7, 0.7, 0.75, 0.75, 0.3, 0.3]);
+			});
+		});
+		it('should parse wide margins ', function() {
+			wbs.forEach(function(wb) {
+				check_margin(wb.Sheets["Wide"]["!margins"], [1, 1, 1, 1, 0.5, 0.5]);
+			});
+		});
+		it('should parse narrow margins ', function() {
+			wbs.forEach(function(wb) {
+				check_margin(wb.Sheets["Narrow"]["!margins"], [0.25, 0.25, 0.75, 0.75, 0.3, 0.3]);
+			});
+		});
+		it('should parse custom margins ', function() {
+			wbs.forEach(function(wb) {
+				check_margin(wb.Sheets["Custom 1 Inch Centered"]["!margins"], [1, 1, 1, 1, 0.3, 0.3]);
+				check_margin(wb.Sheets["1 Inch HF"]["!margins"], [0.7, 0.7, 0.75, 0.75, 1, 1]);
+			});
+		});
 	});
 
 	describe('should correctly handle styles', function() {

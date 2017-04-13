@@ -406,7 +406,7 @@ var XLSBRecordEnum = {
 	/*::[*/0x01D9/*::]*/: { n:"BrtBeginColorPalette", f:parsenoop },
 	/*::[*/0x01DA/*::]*/: { n:"BrtEndColorPalette", f:parsenoop },
 	/*::[*/0x01DB/*::]*/: { n:"BrtIndexedColor", f:parsenoop },
-	/*::[*/0x01DC/*::]*/: { n:"BrtMargins", f:parsenoop },
+	/*::[*/0x01DC/*::]*/: { n:"BrtMargins", f:parse_BrtMargins },
 	/*::[*/0x01DD/*::]*/: { n:"BrtPrintOptions", f:parsenoop },
 	/*::[*/0x01DE/*::]*/: { n:"BrtPageSetup", f:parsenoop },
 	/*::[*/0x01DF/*::]*/: { n:"BrtBeginHeaderFooter", f:parsenoop },

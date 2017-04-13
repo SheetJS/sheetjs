@@ -528,6 +528,22 @@ function parse_xlml_xml(d, opts)/*:Workbook*/ {
 						}
 						else pidx = Rn.index + Rn[0].length;
 						break;
+					case 'Header':
+						if(!cursheet['!margins']) default_margins(cursheet['!margins']={}, 'xlml');
+						cursheet['!margins'].header = parsexmltag(Rn[0]).Margin;
+						break;
+					case 'Footer':
+						if(!cursheet['!margins']) default_margins(cursheet['!margins']={}, 'xlml');
+						cursheet['!margins'].footer = parsexmltag(Rn[0]).Margin;
+						break;
+					case 'PageMargins':
+						var pagemargins = parsexmltag(Rn[0]);
+						if(!cursheet['!margins']) default_margins(cursheet['!margins']={},'xlml');
+						if(pagemargins.Top) cursheet['!margins'].top = pagemargins.Top;
+						if(pagemargins.Left) cursheet['!margins'].left = pagemargins.Left;
+						if(pagemargins.Right) cursheet['!margins'].right = pagemargins.Right;
+						if(pagemargins.Bottom) cursheet['!margins'].bottom = pagemargins.Bottom;
+						break;
 					case 'Unsynced': break;
 					case 'Print': break;
 					case 'Panes': break;
@@ -535,10 +551,7 @@ function parse_xlml_xml(d, opts)/*:Workbook*/ {
 					case 'Pane': break;
 					case 'Number': break;
 					case 'Layout': break;
-					case 'Header': break;
-					case 'Footer': break;
 					case 'PageSetup': break;
-					case 'PageMargins': break;
 					case 'Selected': break;
 					case 'ProtectObjects': break;
 					case 'EnableSelection': break;

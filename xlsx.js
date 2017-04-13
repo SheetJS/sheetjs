@@ -1729,6 +1729,10 @@ var __lpstr, ___lpstr;
 __lpstr = ___lpstr = function lpstr_(b,i) { var len = __readUInt32LE(b,i); return len > 0 ? __utf8(b, i+4,i+4+len-1) : "";};
 var __lpwstr, ___lpwstr;
 __lpwstr = ___lpwstr = function lpwstr_(b,i) { var len = 2*__readUInt32LE(b,i); return len > 0 ? __utf8(b, i+4,i+4+len-1) : "";};
+var __lpp4, ___lpp4;
+__lpp4 = ___lpp4 = function lpp4_(b,i) { var len = __readUInt32LE(b,i); return len > 0 ? __utf16le(b, i+4,i+4+len) : "";};
+var __8lpp4, ___8lpp4;
+__8lpp4 = ___8lpp4 = function lpp4_8(b,i) { var len = __readUInt32LE(b,i); return len > 0 ? __utf8(b, i+4,i+4+len) : "";};
 var __double, ___double;
 __double = ___double = function(b, idx) { return read_double_le(b, idx);};
 
@@ -1738,6 +1742,8 @@ if(has_buf) {
 	__hexlify = function(b,s,l) { return Buffer.isBuffer(b) ? b.toString('hex',s,s+l) : ___hexlify(b,s,l); };
 	__lpstr = function lpstr_b(b,i) { if(!Buffer.isBuffer(b)) return ___lpstr(b, i); var len = b.readUInt32LE(i); return len > 0 ? b.toString('utf8',i+4,i+4+len-1) : "";};
 	__lpwstr = function lpwstr_b(b,i) { if(!Buffer.isBuffer(b)) return ___lpwstr(b, i); var len = 2*b.readUInt32LE(i); return b.toString('utf16le',i+4,i+4+len-1);};
+	__lpp4 = function lpp4_b(b,i) { if(!Buffer.isBuffer(b)) return ___lpp4(b, i); var len = b.readUInt32LE(i); return b.toString('utf16le',i+4,i+4+len);};
+	__8lpp4 = function lpp4_8b(b,i) { if(!Buffer.isBuffer(b)) return ___8lpp4(b, i); var len = b.readUInt32LE(i); return b.toString('utf8',i+4,i+4+len);};
 	__utf8 = function utf8_b(b, s,e) { return b.toString('utf8',s,e); };
 	__toBuffer = function(bufs) { return (bufs[0].length > 0 && Buffer.isBuffer(bufs[0][0])) ? Buffer.concat(bufs[0]) : ___toBuffer(bufs);};
 	bconcat = function(bufs) { return Buffer.isBuffer(bufs[0]) ? Buffer.concat(bufs) : [].concat.apply([], bufs); };
@@ -1751,6 +1757,8 @@ if(typeof cptable !== 'undefined') {
 	__utf8 = function(b,s,e) { return cptable.utils.decode(65001, b.slice(s,e)); };
 	__lpstr = function(b,i) { var len = __readUInt32LE(b,i); return len > 0 ? cptable.utils.decode(current_codepage, b.slice(i+4, i+4+len-1)) : "";};
 	__lpwstr = function(b,i) { var len = 2*__readUInt32LE(b,i); return len > 0 ? cptable.utils.decode(1200, b.slice(i+4,i+4+len-1)) : "";};
+	__lpp4 = function(b,i) { var len = __readUInt32LE(b,i); return len > 0 ? cptable.utils.decode(1200, b.slice(i+4,i+4+len)) : "";};
+	__8lpp4 = function(b,i) { var len = __readUInt32LE(b,i); return len > 0 ? cptable.utils.decode(65001, b.slice(i+4,i+4+len)) : "";};
 }
 
 var __readUInt8 = function(b, idx) { return b[idx]; };
@@ -1784,6 +1792,10 @@ function ReadShift(size, t) {
 		case 'lpstr': o = __lpstr(this, this.l); size = 5 + o.length; break;
 		/* [MS-OLEDS] 2.1.5 LengthPrefixedUnicodeString */
 		case 'lpwstr': o = __lpwstr(this, this.l); size = 5 + o.length; if(o[o.length-1] == '\u0000') size += 2; break;
+		/* [MS-OFFCRYPTO] 2.1.2 Length-Prefixed Padded Unicode String (UNICODE-LP-P4) */
+		case 'lpp4': size = 4 +  __readUInt32LE(this, this.l); o = __lpp4(this, this.l); if(size & 0x02) size += 2; break;
+		/* [MS-OFFCRYPTO] 2.1.3 Length-Prefixed UTF-8 String (UTF-8-LP-P4) */
+		case '8lpp4': size = 4 +  __readUInt32LE(this, this.l); o = __8lpp4(this, this.l); if(size & 0x03) size += 4 - (size & 0x03); break;
 
 		case 'cstr': size = 0; o = "";
 			while((w=__readUInt8(this, this.l + size++))!==0) oo.push(_getchar(w));
@@ -4350,6 +4362,16 @@ function parse_ColInfo(blob, length, opts) {
 	return {s:colFirst, e:colLast, w:coldx, ixfe:ixfe, flags:flags};
 }
 
+/* 2.4.257 */
+function parse_Setup(blob, length, opts) {
+	var o = {};
+	blob.l += 16;
+	o.header = parse_Xnum(blob, 8);
+	o.footer = parse_Xnum(blob, 8);
+	blob.l += 2;
+	return o;
+}
+
 /* 2.4.261 */
 function parse_ShtProps(blob, length, opts) {
 	var def = {area:false};
@@ -4358,7 +4380,6 @@ function parse_ShtProps(blob, length, opts) {
 	if((d & 0x10)) def.area = true;
 	return def;
 }
-
 
 var parse_Style = parsenoop;
 var parse_StyleExt = parsenoop;
@@ -4442,7 +4463,6 @@ var parse_FnGroupName = parsenoop;
 var parse_FilterMode = parsenoop;
 var parse_AutoFilterInfo = parsenoop;
 var parse_AutoFilter = parsenoop;
-var parse_Setup = parsenoop;
 var parse_ScenMan = parsenoop;
 var parse_SCENARIO = parsenoop;
 var parse_SxView = parsenoop;
@@ -5814,38 +5834,154 @@ function _JS2ANSI(str) {
 }
 
 /* [MS-OFFCRYPTO] 2.1.4 Version */
-function parse_Version(blob, length) {
+function parse_CRYPTOVersion(blob, length) {
 	var o = {};
 	o.Major = blob.read_shift(2);
 	o.Minor = blob.read_shift(2);
 	return o;
 }
+
+/* [MS-OFFCRYPTO] 2.1.5 DataSpaceVersionInfo */
+function parse_DataSpaceVersionInfo(blob, length) {
+	var o = {};
+	o.id = blob.read_shift(0, 'lpp4');
+	o.R = parse_CRYPTOVersion(blob, 4);
+	o.U = parse_CRYPTOVersion(blob, 4);
+	o.W = parse_CRYPTOVersion(blob, 4);
+	return o;
+}
+
+/* [MS-OFFCRYPTO] 2.1.6.1 DataSpaceMapEntry Structure */
+function parse_DataSpaceMapEntry(blob) {
+	var len = blob.read_shift(4);
+	var end = blob.l + len - 4;
+	var o = {};
+	var cnt = blob.read_shift(4);
+	var comps = [];
+	while(cnt-- > 0) {
+		/* [MS-OFFCRYPTO] 2.1.6.2 DataSpaceReferenceComponent Structure */
+		var rc = {};
+		rc.t = blob.read_shift(4);
+		rc.v = blob.read_shift(0, 'lpp4');
+		comps.push(rc);
+	}
+	o.name = blob.read_shift(0, 'lpp4');
+	o.comps = comps;
+	return o;
+}
+
+/* [MS-OFFCRYPTO] 2.1.6 DataSpaceMap */
+function parse_DataSpaceMap(blob, length) {
+	var o = [];
+	blob.l += 4; // must be 0x8
+	var cnt = blob.read_shift(4);
+	while(cnt-- > 0) o.push(parse_DataSpaceMapEntry(blob));
+	return o;
+}
+
+/* [MS-OFFCRYPTO] 2.1.7 DataSpaceDefinition */
+function parse_DataSpaceDefinition(blob, length) {
+	var o = [];
+	blob.l += 4; // must be 0x8
+	var cnt = blob.read_shift(4);
+	while(cnt-- > 0) o.push(blob.read_shift(0, 'lpp4'));
+	return o;
+}
+
+/* [MS-OFFCRYPTO] 2.1.8 DataSpaceDefinition */
+function parse_TransformInfoHeader(blob, length) {
+	var o = {};
+	var len = blob.read_shift(4);
+	var tgt = blob.l + len - 4;
+	blob.l += 4; // must be 0x1
+	o.id = blob.read_shift(0, 'lpp4');
+	// tgt == len
+	o.name = blob.read_shift(0, 'lpp4');
+	o.R = parse_CRYPTOVersion(blob, 4);
+	o.U = parse_CRYPTOVersion(blob, 4);
+	o.W = parse_CRYPTOVersion(blob, 4);
+	return o;
+}
+
+function parse_Primary(blob, length) {
+	/* [MS-OFFCRYPTO] 2.2.6 IRMDSTransformInfo */
+	var hdr = parse_TransformInfoHeader(blob);
+	/* [MS-OFFCRYPTO] 2.1.9 EncryptionTransformInfo */
+	hdr.ename = blob.read_shift(0, '8lpp4');
+	hdr.blksz = blob.read_shift(4);
+	hdr.cmode = blob.read_shift(4);
+	if(blob.read_shift(4) != 0x04) throw new Error("Bad !Primary record");
+	return hdr;
+}
+
 /* [MS-OFFCRYPTO] 2.3.2 Encryption Header */
 function parse_EncryptionHeader(blob, length) {
+	var tgt = blob.l + length;
 	var o = {};
-	o.Flags = blob.read_shift(4);
-
-	// Check if SizeExtra is 0x00000000
-	var tmp = blob.read_shift(4);
-	if(tmp !== 0) throw 'Unrecognized SizeExtra: ' + tmp;
-
+	o.Flags = (blob.read_shift(4) & 0x3F);
+	blob.l += 4;
 	o.AlgID = blob.read_shift(4);
+	var valid = false;
 	switch(o.AlgID) {
-		case 0: case 0x6801: case 0x660E: case 0x660F: case 0x6610: break;
+		case 0x660E: case 0x660F: case 0x6610: valid = (o.Flags == 0x24); break;
+		case 0x6801: valid = (o.Flags == 0x04); break;
+		case 0: valid = (o.Flags == 0x10 || o.Flags == 0x04 || o.Flags == 0x24); break;
 		default: throw 'Unrecognized encryption algorithm: ' + o.AlgID;
 	}
-	parsenoop(blob, length-12);
+	if(!valid) throw new Error("Encryption Flags/AlgID mismatch");
+	o.AlgIDHash = blob.read_shift(4);
+	o.KeySize = blob.read_shift(4);
+	o.ProviderType = blob.read_shift(4);
+	blob.l += 8;
+	o.CSPName = blob.read_shift((tgt-blob.l)>>1, 'utf16le').slice(0,-1);
+	blob.l = tgt;
 	return o;
 }
 
 /* [MS-OFFCRYPTO] 2.3.3 Encryption Verifier */
 function parse_EncryptionVerifier(blob, length) {
-	return parsenoop(blob, length);
+	var o = {};
+	blob.l += 4; // SaltSize must be 0x10
+	o.Salt = blob.slice(blob.l, blob.l+16); blob.l += 16;
+	o.Verifier = blob.slice(blob.l, blob.l+16); blob.l += 16;
+	var sz = blob.read_shift(4);
+	o.VerifierHash = blob.slice(blob.l, blob.l + sz); blob.l += sz;
+	return o;
 }
+
+/* [MS-OFFCRYPTO] 2.3.4.* EncryptionInfo Stream */
+function parse_EncryptionInfo(blob, length) {
+	var vers = parse_CRYPTOVersion(blob);
+	switch(vers.Minor) {
+		case 0x02: return parse_EncInfoStd(blob, vers);
+		case 0x03: return parse_EncInfoExt(blob, vers);
+		case 0x04: return parse_EncInfoAgl(blob, vers);
+	}
+	throw new Error("ECMA-376 Encryped file unrecognized Version: " + vers.Minor);
+}
+
+/* [MS-OFFCRYPTO] 2.3.4.5  EncryptionInfo Stream (Standard Encryption) */
+function parse_EncInfoStd(blob, vers) {
+	var flags = blob.read_shift(4);
+	if((flags & 0x3F) != 0x24) throw new Error("EncryptionInfo mismatch");
+	var sz = blob.read_shift(4);
+	var tgt = blob.l + sz;
+	var hdr = parse_EncryptionHeader(blob, sz);
+	var verifier = parse_EncryptionVerifier(blob, blob.length - blob.l);
+	return { t:"Std", h:hdr, v:verifier };
+}
+/* [MS-OFFCRYPTO] 2.3.4.6  EncryptionInfo Stream (Extensible Encryption) */
+function parse_EncInfoExt(blob, vers) { throw new Error("File is password-protected: ECMA-376 Extensible"); }
+/* [MS-OFFCRYPTO] 2.3.4.10 EncryptionInfo Stream (Agile Encryption) */
+function parse_EncInfoAgl(blob, vers) { throw new Error("File is password-protected: ECMA-376 Agile"); }
+
+
+
+
 /* [MS-OFFCRYPTO] 2.3.5.1 RC4 CryptoAPI Encryption Header */
 function parse_RC4CryptoHeader(blob, length) {
 	var o = {};
-	var vers = o.EncryptionVersionInfo = parse_Version(blob, 4); length -= 4;
+	var vers = o.EncryptionVersionInfo = parse_CRYPTOVersion(blob, 4); length -= 4;
 	if(vers.Minor != 2) throw 'unrecognized minor version code: ' + vers.Minor;
 	if(vers.Major > 4 || vers.Major < 2) throw 'unrecognized major version code: ' + vers.Major;
 	o.Flags = blob.read_shift(4); length -= 4;
@@ -5857,7 +5993,7 @@ function parse_RC4CryptoHeader(blob, length) {
 /* [MS-OFFCRYPTO] 2.3.6.1 RC4 Encryption Header */
 function parse_RC4Header(blob, length) {
 	var o = {};
-	var vers = o.EncryptionVersionInfo = parse_Version(blob, 4); length -= 4;
+	var vers = o.EncryptionVersionInfo = parse_CRYPTOVersion(blob, 4); length -= 4;
 	if(vers.Major != 1 || vers.Minor != 1) throw 'unrecognized version code ' + vers.Major + ' : ' + vers.Minor;
 	o.Salt = blob.read_shift(16);
 	o.EncryptedVerifier = blob.read_shift(16);
@@ -9617,6 +9753,18 @@ function col_obj_w(C, col) {
 	return p;
 }
 
+function default_margins(margins, mode) {
+	if(!margins) return;
+	var defs = [0.7, 0.7, 0.75, 0.75, 0.3, 0.3];
+	if(mode == 'xlml') defs = [1, 1, 1, 1, 0.5, 0.5];
+	if(margins.left   == null) margins.left   = defs[0];
+	if(margins.right  == null) margins.right  = defs[1];
+	if(margins.top    == null) margins.top    = defs[2];
+	if(margins.bottom == null) margins.bottom = defs[3];
+	if(margins.header == null) margins.header = defs[4];
+	if(margins.footer == null) margins.footer = defs[5];
+}
+
 function get_cell_style(styles, cell, opts) {
 	var z = opts.revssf[cell.z != null ? cell.z : "General"];
 	for(var i = 0, len = styles.length; i != len; ++i) if(styles[i].numFmtId === z) return i;
@@ -9675,6 +9823,7 @@ var hlinkregex = /<(?:\w:)?hyperlink [^>]*>/mg;
 var dimregex = /"(\w*:\w*)"/;
 var colregex = /<(?:\w:)?col[^>]*[\/]?>/g;
 var afregex = /<(?:\w:)?autoFilter[^>]*([\/]|>([^\u2603]*)<\/(?:\w:)?autoFilter)>/g;
+var marginregex= /<(?:\w:)?pageMargins[^>]*\/>/g;
 /* 18.3 Worksheets */
 function parse_ws_xml(data, opts, rels, wb, themes, styles) {
 	if(!data) return data;
@@ -9723,6 +9872,10 @@ function parse_ws_xml(data, opts, rels, wb, themes, styles) {
 	/* 18.3.1.48 hyperlinks CT_Hyperlinks */
 	var hlink = data2.match(hlinkregex);
 	if(hlink) parse_ws_xml_hlinks(s, hlink, rels);
+
+	/* 18.3.1.62 pageMargins CT_PageMargins */
+	var margins = data2.match(marginregex);
+	if(margins) s['!margins'] = parse_ws_xml_margins(parsexmltag(margins[0]));
 
 	if(!s["!ref"] && refguess.e.c >= refguess.s.c && refguess.e.r >= refguess.s.r) s["!ref"] = encode_range(refguess);
 	if(opts.sheetRows > 0 && s["!ref"]) {
@@ -9796,6 +9949,14 @@ function parse_ws_xml_hlinks(s, data, rels) {
 			}
 		}
 	}
+}
+
+function parse_ws_xml_margins(margin) {
+	var o = {};
+	["left", "right", "top", "bottom", "header", "footer"].forEach(function(k) {
+		if(margin[k]) o[k] = parseFloat(margin[k]);
+	});
+	return o;
 }
 
 function parse_ws_xml_cols(columns, cols) {
@@ -10434,6 +10595,29 @@ function write_BrtColInfo(C, col, o) {
 	return o;
 }
 
+/* [MS-XLSB] 2.4.672 BrtMargins */
+function parse_BrtMargins(data, length, opts) {
+	return {
+		left: parse_Xnum(data, 8),
+		right: parse_Xnum(data, 8),
+		top: parse_Xnum(data, 8),
+		bottom: parse_Xnum(data, 8),
+		header: parse_Xnum(data, 8),
+		footer: parse_Xnum(data, 8)
+	};
+}
+function write_BrtMargins(margins, o) {
+	if(o == null) o = new_buf(6*8);
+	default_margins(margins);
+	write_Xnum(margins.left, o);
+	write_Xnum(margins.right, o);
+	write_Xnum(margins.top, o);
+	write_Xnum(margins.bottom, o);
+	write_Xnum(margins.header, o);
+	write_Xnum(margins.footer, o);
+	return o;
+}
+
 /* [MS-XLSB] 2.4.740 BrtSheetProtection */
 function write_BrtSheetProtection(sp, o) {
 	if(o == null) o = new_buf(16*4+2);
@@ -10612,6 +10796,10 @@ function parse_ws_bin(data, _opts, rels, wb, themes, styles) {
 				s['!autofilter'] = { ref:encode_range(val) };
 				break;
 
+			case 0x01DC: /* 'BrtMargins' */
+				s['!margins'] = val;
+				break;
+
 			case 0x00AF: /* 'BrtAFilterDateGroupItem' */
 			case 0x0284: /* 'BrtActiveX' */
 			case 0x0271: /* 'BrtBigName' */
@@ -10643,7 +10831,6 @@ function parse_ws_bin(data, _opts, rels, wb, themes, styles) {
 			case 0x0227: /* 'BrtLegacyDrawing' */
 			case 0x0228: /* 'BrtLegacyDrawingHF' */
 			case 0x0295: /* 'BrtListPart' */
-			case 0x01DC: /* 'BrtMargins' */
 			case 0x027F: /* 'BrtOleObject' */
 			case 0x01DE: /* 'BrtPageSetup' */
 			case 0x0097: /* 'BrtPane' */
@@ -10849,7 +11036,7 @@ function write_ws_bin(idx, opts, wb, rels) {
 	/* [DVALS] */
 	write_HLINKS(ba, ws, rels);
 	/* [BrtPrintOptions] */
-	/* [BrtMargins] */
+	if(ws['!margins']) write_record(ba, "BrtMargins", write_BrtMargins(ws['!margins']));
 	/* [BrtPageSetup] */
 	/* [HEADERFOOTER] */
 	/* [RWBRK] */
@@ -12185,6 +12372,22 @@ for(var cma = c; cma <= cc; ++cma) {
 						}
 						else pidx = Rn.index + Rn[0].length;
 						break;
+					case 'Header':
+						if(!cursheet['!margins']) default_margins(cursheet['!margins']={}, 'xlml');
+						cursheet['!margins'].header = parsexmltag(Rn[0]).Margin;
+						break;
+					case 'Footer':
+						if(!cursheet['!margins']) default_margins(cursheet['!margins']={}, 'xlml');
+						cursheet['!margins'].footer = parsexmltag(Rn[0]).Margin;
+						break;
+					case 'PageMargins':
+						var pagemargins = parsexmltag(Rn[0]);
+						if(!cursheet['!margins']) default_margins(cursheet['!margins']={},'xlml');
+						if(pagemargins.Top) cursheet['!margins'].top = pagemargins.Top;
+						if(pagemargins.Left) cursheet['!margins'].left = pagemargins.Left;
+						if(pagemargins.Right) cursheet['!margins'].right = pagemargins.Right;
+						if(pagemargins.Bottom) cursheet['!margins'].bottom = pagemargins.Bottom;
+						break;
 					case 'Unsynced': break;
 					case 'Print': break;
 					case 'Panes': break;
@@ -12192,10 +12395,7 @@ for(var cma = c; cma <= cc; ++cma) {
 					case 'Pane': break;
 					case 'Number': break;
 					case 'Layout': break;
-					case 'Header': break;
-					case 'Footer': break;
 					case 'PageSetup': break;
-					case 'PageMargins': break;
 					case 'Selected': break;
 					case 'ProtectObjects': break;
 					case 'EnableSelection': break;
@@ -13114,12 +13314,30 @@ function parse_workbook(blob, options) {
 				} break;
 				case 'Row': break; // TODO
 
+				case 'LeftMargin':
+				case 'RightMargin':
+				case 'TopMargin':
+				case 'BottomMargin':
+					if(!out['!margins']) default_margins(out['!margins'] = {});
+					switch(Rn) {
+						case 'LeftMargin': out['!margins'].left = val; break;
+						case 'RightMargin': out['!margins'].right = val; break;
+						case 'TopMargin': out['!margins'].top = val; break;
+						case 'BottomMargin': out['!margins'].bottom = val; break;
+					}
+					break;
+
+				case 'Setup': // TODO
+					if(!out['!margins']) default_margins(out['!margins'] = {});
+					out['!margins'].header = val.header;
+					out['!margins'].footer = val.footer;
+					break;
+
 				case 'Header': break; // TODO
 				case 'Footer': break; // TODO
 				case 'HCenter': break; // TODO
 				case 'VCenter': break; // TODO
 				case 'Pls': break; // TODO
-				case 'Setup': break; // TODO
 				case 'GCW': break;
 				case 'LHRecord': break;
 				case 'DBCell': break; // TODO
@@ -13314,7 +13532,6 @@ function parse_workbook(blob, options) {
 				case 'WebPub': case 'AutoWebPub':
 
 				/* Print Stuff */
-				case 'RightMargin': case 'LeftMargin': case 'TopMargin': case 'BottomMargin':
 				case 'HeaderFooter': case 'HFPicture': case 'PLV':
 				case 'HorizontalPageBreaks': case 'VerticalPageBreaks':
 				/* Behavioral */
@@ -13367,7 +13584,6 @@ fix_read_opts(options);
 reset_cp();
 var CompObj, Summary, Workbook;
 if(cfb.FullPaths) {
-	if(cfb.find("EncryptedPackage")) throw new Error("File is password-protected");
 	CompObj = cfb.find('!CompObj');
 	Summary = cfb.find('!SummaryInformation');
 	Workbook = cfb.find('/Workbook');
@@ -13820,7 +14036,7 @@ var XLSBRecordEnum = {
 0x01D9: { n:"BrtBeginColorPalette", f:parsenoop },
 0x01DA: { n:"BrtEndColorPalette", f:parsenoop },
 0x01DB: { n:"BrtIndexedColor", f:parsenoop },
-0x01DC: { n:"BrtMargins", f:parsenoop },
+0x01DC: { n:"BrtMargins", f:parse_BrtMargins },
 0x01DD: { n:"BrtPrintOptions", f:parsenoop },
 0x01DE: { n:"BrtPageSetup", f:parsenoop },
 0x01DF: { n:"BrtBeginHeaderFooter", f:parsenoop },
@@ -15630,6 +15846,44 @@ function parse_zip(zip, opts) {
 	}
 	return out;
 }
+
+/* references to [MS-OFFCRYPTO] */
+function parse_xlsxcfb(cfb, opts) {
+	var f = 'Version';
+	var data = cfb.find(f);
+	if(!data) throw new Error("ECMA-376 Encrypted file missing " + f);
+	var version = parse_DataSpaceVersionInfo(data.content);
+
+	/* 2.3.4.1 */
+	f = 'DataSpaceMap';
+	data = cfb.find(f);
+	if(!data) throw new Error("ECMA-376 Encrypted file missing " + f);
+	var dsm = parse_DataSpaceMap(data.content);
+	if(dsm.length != 1 || dsm[0].comps.length != 1 || dsm[0].comps[0].t != 0 ||
+	   dsm[0].name != "StrongEncryptionDataSpace" || dsm[0].comps[0].v != "EncryptedPackage")
+		throw new Error("ECMA-376 Encrypted file bad " + f);
+
+	f = 'StrongEncryptionDataSpace';
+	data = cfb.find(f);
+	if(!data) throw new Error("ECMA-376 Encrypted file missing " + f);
+	var seds = parse_DataSpaceDefinition(data.content);
+	if(seds.length != 1 || seds[0] != "StrongEncryptionTransform")
+		throw new Error("ECMA-376 Encrypted file bad " + f);
+
+	/* 2.3.4.3 */
+	f = '!Primary';
+	data = cfb.find(f);
+	if(!data) throw new Error("ECMA-376 Encrypted file missing " + f);
+	var hdr = parse_Primary(data.content);
+
+	f = 'EncryptionInfo';
+	data = cfb.find(f);
+	if(!data) throw new Error("ECMA-376 Encrypted file missing " + f);
+	var einfo = parse_EncryptionInfo(data.content);
+
+	throw new Error("File is password-protected");
+}
+
 function write_zip(wb, opts) {
 	_shapeid = 1024;
 	if(opts.bookType == "ods") return write_ods(wb, opts);
@@ -15770,6 +16024,11 @@ function firstbyte(f,o) {
 	return [x.charCodeAt(0), x.charCodeAt(1), x.charCodeAt(2), x.charCodeAt(3)];
 }
 
+function read_cfb(cfb, opts) {
+	if(cfb.find("EncryptedPackage")) return parse_xlsxcfb(cfb, opts);
+	return parse_xlscfb(cfb, opts);
+}
+
 function read_zip(data, opts) {
 var zip, d = data;
 	var o = opts||{};
@@ -15798,7 +16057,7 @@ function readSync(data, opts) {
 	if(!o.type) o.type = (has_buf && Buffer.isBuffer(data)) ? "buffer" : "base64";
 	if(o.type == "file") { o.type = "buffer"; d = _fs.readFileSync(data); }
 	switch((n = firstbyte(d, o))[0]) {
-		case 0xD0: return parse_xlscfb(CFB.read(d, o), o);
+		case 0xD0: return read_cfb(CFB.read(d, o), o);
 		case 0x09: return parse_xlscfb(s2a(o.type === 'base64' ? Base64.decode(d) : d), o);
 		case 0x3C: return parse_xlml(d, o);
 		case 0x49: if(n[1] == 0x44) return SYLK.to_workbook(d, o); break;

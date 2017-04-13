@@ -76,6 +76,9 @@ ws['B1'].z = "0%"; // Format Code 9
 /* TEST: custom format */
 //ws['B2'].z = "0.0"; wb.SSF[60] = "0.0"; // Custom
 
+/* TEST: page margins */
+ws['!margins'] =  { left:1.0, right:1.0, top:1.0, bottom:1.0, header:0.5, footer:0.5 };
+
 console.log("JSON Data:");console.log(XLSX.utils.sheet_to_json(ws, {header:1}));
 
 /* TEST: hidden sheets */

@@ -503,12 +503,30 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 				} break;
 				case 'Row': break; // TODO
 
+				case 'LeftMargin':
+				case 'RightMargin':
+				case 'TopMargin':
+				case 'BottomMargin':
+					if(!out['!margins']) default_margins(out['!margins'] = {});
+					switch(Rn) {
+						case 'LeftMargin': out['!margins'].left = val; break;
+						case 'RightMargin': out['!margins'].right = val; break;
+						case 'TopMargin': out['!margins'].top = val; break;
+						case 'BottomMargin': out['!margins'].bottom = val; break;
+					}
+					break;
+
+				case 'Setup': // TODO
+					if(!out['!margins']) default_margins(out['!margins'] = {});
+					out['!margins'].header = val.header;
+					out['!margins'].footer = val.footer;
+					break;
+
 				case 'Header': break; // TODO
 				case 'Footer': break; // TODO
 				case 'HCenter': break; // TODO
 				case 'VCenter': break; // TODO
 				case 'Pls': break; // TODO
-				case 'Setup': break; // TODO
 				case 'GCW': break;
 				case 'LHRecord': break;
 				case 'DBCell': break; // TODO
@@ -703,7 +721,6 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 				case 'WebPub': case 'AutoWebPub':
 
 				/* Print Stuff */
-				case 'RightMargin': case 'LeftMargin': case 'TopMargin': case 'BottomMargin':
 				case 'HeaderFooter': case 'HFPicture': case 'PLV':
 				case 'HorizontalPageBreaks': case 'VerticalPageBreaks':
 				/* Behavioral */
@@ -756,7 +773,6 @@ fix_read_opts(options);
 reset_cp();
 var CompObj, Summary, Workbook/*:?any*/;
 if(cfb.FullPaths) {
-	if(cfb.find("EncryptedPackage")) throw new Error("File is password-protected");
 	CompObj = cfb.find('!CompObj');
 	Summary = cfb.find('!SummaryInformation');
 	Workbook = cfb.find('/Workbook');
