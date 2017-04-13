@@ -95,6 +95,7 @@ test mocha: test.js ## Run test suite
 	mocha -R spec -t 20000
 
 #*                      To run tests for one format, make test_<fmt>
+#*                      To run the core test suite, make test_misc
 TESTFMT=$(patsubst %,test_%,$(FMT))
 .PHONY: $(TESTFMT)
 $(TESTFMT): test_%:

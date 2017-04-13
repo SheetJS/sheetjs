@@ -1,16 +1,19 @@
 ## Testing
 
+### Node
+
 `make test` will run the node-based tests.  By default it runs tests on files in
 every supported format.  To test a specific file type, set `FMTS` to the format
 you want to test.  Feature-specific tests are avaialble with `make test_misc`
 
 ```bash
+$ make test_misc   # run core tests
 $ make test        # run full tests
 $ make test_xls    # only use the XLS test files
 $ make test_xlsx   # only use the XLSX test files
 $ make test_xlsb   # only use the XLSB test files
-$ make test_xml    # only use the XLSB test files
-$ make test_ods    # only use the XLSB test files
+$ make test_xml    # only use the XML test files
+$ make test_ods    # only use the ODS test files
 ```
 
 To enable all errors, set the environment variable `WTF=1`:
@@ -27,8 +30,14 @@ $ make lint        # JSHint and JSCS checks
 $ make flow        # make lint + Flow checking
 ```
 
-The core in-browser tests are available at `tests/test.html` within this repo.
+### Browser
+
+The core in-browser tests are available at `tests/index.html` within this repo.
 Start a local server and navigate to that directory to run the tests.
+`make ctestserv` will start a server on port 8000.
+
+`make ctest` will generate the browser fixtures.  To add more files, edit the
+`tests/fixtures.lst` file and add the paths.
 
 To run the full in-browser tests, clone the repo for
 [oss.sheetjs.com](https://github.com/SheetJS/SheetJS.github.io) and replace
