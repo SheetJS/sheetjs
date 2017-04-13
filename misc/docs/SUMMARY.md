@@ -62,6 +62,8 @@
     + [Data Interchange Format (DIF)](README.md#data-interchange-format-dif)
     + [HTML](README.md#html)
 - [Testing](README.md#testing)
+  * [Node](README.md#node)
+  * [Browser](README.md#browser)
   * [Tested Environments](README.md#tested-environments)
   * [Test Files](README.md#test-files)
 - [Contributing](README.md#contributing)

@@ -85,6 +85,8 @@ with a unified JS representation, and ES3/ES5 browser compatibility back to IE6.
     + [Data Interchange Format (DIF)](#data-interchange-format-dif)
     + [HTML](#html)
 - [Testing](#testing)
+  * [Node](#node)
+  * [Browser](#browser)
   * [Tested Environments](#tested-environments)
   * [Test Files](#test-files)
 - [Contributing](#contributing)
@@ -1151,7 +1153,7 @@ S,h,e,e,t,J,S
 S	h	e	e	t	J	S
 1	2	3	4	5	6	7
 2	3	4	5	6	7	8
-> console.log(X.utils.sheet_to_csv(_ws,{FS:":",RS:"|"}));
+> console.log(XLSX.utils.sheet_to_csv(ws,{FS:":",RS:"|"}));
 S:h:e:e:t:J:S|1:2:3:4:5:6:7|2:3:4:5:6:7:8|
 ```
 
@@ -1202,7 +1204,7 @@ generate different types of JS objects.  The function takes an options argument:
 
 | `header`         | Description                                               |
 | :--------------- | :-------------------------------------------------------- |
-| `1`              | Generate an array of arrays                               |
+| `1`              | Generate an array of arrays ("2D Array")                  |
 | `"A"`            | Row object keys are literal column labels                 |
 | array of strings | Use specified strings as keys in row objects              |
 | (default)        | Read and disambiguate first row as keys                   |
@@ -1213,34 +1215,34 @@ If header is not `1`, the row object will contain the non-enumerable property
 For the example sheet:
 
 ```js
-> console.log(X.utils.sheet_to_json(_ws));
+> console.log(XLSX.utils.sheet_to_json(ws));
 [ { S: 1, h: 2, e: 3, e_1: 4, t: 5, J: 6, S_1: 7 },
   { S: 2, h: 3, e: 4, e_1: 5, t: 6, J: 7, S_1: 8 } ]
 
-> console.log(X.utils.sheet_to_json(_ws, {header:1}));
+> console.log(XLSX.utils.sheet_to_json(ws, {header:1}));
 [ [ 'S', 'h', 'e', 'e', 't', 'J', 'S' ],
-  [ 1, 2, 3, 4, 5, 6, 7 ],
-  [ 2, 3, 4, 5, 6, 7, 8 ] ]
+  [ '1', '2', '3', '4', '5', '6', '7' ],
+  [ '2', '3', '4', '5', '6', '7', '8' ] ]
 
-> console.log(X.utils.sheet_to_json(_ws, {header:"A"}));
+> console.log(XLSX.utils.sheet_to_json(ws, {header:"A"}));
 [ { A: 'S', B: 'h', C: 'e', D: 'e', E: 't', F: 'J', G: 'S' },
-  { A: 1, B: 2, C: 3, D: 4, E: 5, F: 6, G: 7 },
-  { A: 2, B: 3, C: 4, D: 5, E: 6, F: 7, G: 8 } ]
-> console.log(X.utils.sheet_to_json(_ws, {header:["A","E","I","O","U","6","9"]}));
+  { A: '1', B: '2', C: '3', D: '4', E: '5', F: '6', G: '7' },
+  { A: '2', B: '3', C: '4', D: '5', E: '6', F: '7', G: '8' } ]
+> console.log(XLSX.utils.sheet_to_json(ws, {header:["A","E","I","O","U","6","9"]}));
 [ { '6': 'J', '9': 'S', A: 'S', E: 'h', I: 'e', O: 'e', U: 't' },
-  { '6': 6, '9': 7, A: 1, E: 2, I: 3, O: 4, U: 5 },
-  { '6': 7, '9': 8, A: 2, E: 3, I: 4, O: 5, U: 6 } ]
+  { '6': '6', '9': '7', A: '1', E: '2', I: '3', O: '4', U: '5' },
+  { '6': '7', '9': '8', A: '2', E: '3', I: '4', O: '5', U: '6' } ]
 ```
 
 Example showing the effect of `raw`:
 
 ```js
-> _ws['A2'].w = "1";                         // set A2 formatted string value
-> console.log(X.utils.sheet_to_json(_ws, {header:1}));
+> ws['A2'].w = "3";                          // set A2 formatted string value
+> console.log(XLSX.utils.sheet_to_json(ws, {header:1}));
 [ [ 'S', 'h', 'e', 'e', 't', 'J', 'S' ],
-  [ '1', 2, 3, 4, 5, 6, 7 ],                 // <-- A2 uses the formatted string
-  [ 2, 3, 4, 5, 6, 7, 8 ] ]
-> console.log(X.utils.sheet_to_json(_ws, {header:1, raw:true}));
+  [ '3', '2', '3', '4', '5', '6', '7' ],     // <-- A2 uses the formatted string
+  [ '2', '3', '4', '5', '6', '7', '8' ] ]
+> console.log(XLSX.utils.sheet_to_json(ws, {header:1, raw:true}));
 [ [ 'S', 'h', 'e', 'e', 't', 'J', 'S' ],
   [ 1, 2, 3, 4, 5, 6, 7 ],                   // <-- A2 uses the raw value
   [ 2, 3, 4, 5, 6, 7, 8 ] ]
@@ -1401,17 +1403,20 @@ the metadata the output is valid HTML, although it does accept bare `&` symbols.
 
 ## Testing
 
+### Node
+
 `make test` will run the node-based tests.  By default it runs tests on files in
 every supported format.  To test a specific file type, set `FMTS` to the format
 you want to test.  Feature-specific tests are avaialble with `make test_misc`
 
 ```bash
+$ make test_misc   # run core tests
 $ make test        # run full tests
 $ make test_xls    # only use the XLS test files
 $ make test_xlsx   # only use the XLSX test files
 $ make test_xlsb   # only use the XLSB test files
-$ make test_xml    # only use the XLSB test files
-$ make test_ods    # only use the XLSB test files
+$ make test_xml    # only use the XML test files
+$ make test_ods    # only use the ODS test files
 ```
 
 To enable all errors, set the environment variable `WTF=1`:
@@ -1428,8 +1433,14 @@ $ make lint        # JSHint and JSCS checks
 $ make flow        # make lint + Flow checking
 ```
 
-The core in-browser tests are available at `tests/test.html` within this repo.
+### Browser
+
+The core in-browser tests are available at `tests/index.html` within this repo.
 Start a local server and navigate to that directory to run the tests.
+`make ctestserv` will start a server on port 8000.
+
+`make ctest` will generate the browser fixtures.  To add more files, edit the
+`tests/fixtures.lst` file and add the paths.
 
 To run the full in-browser tests, clone the repo for
 [oss.sheetjs.com](https://github.com/SheetJS/SheetJS.github.io) and replace
