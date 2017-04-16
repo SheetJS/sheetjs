@@ -28,8 +28,35 @@ if(has_buf && typeof require != 'undefined') (function() {
 		return stream;
 	};
 
+	var HTML_BEGIN = "<html><body><table>";
+	var HTML_END = "</table></body></html>";
+
+	var write_html_stream = function(sheet/*:Worksheet*/, opts) {
+		var stream = Readable();
+
+		var o/*:Array<string>*/ = [];
+		var r = decode_range(sheet['!ref']), cell/*:Cell*/;
+		o.dense = Array.isArray(sheet);
+		stream.push(HTML_BEGIN);
+
+		var R = r.s.r;
+		var end = false;
+		stream._read = function() {
+			if(R > r.e.r) {
+				if(!end) { end = true; stream.push(HTML_END); }
+				return stream.push(null);
+			}
+			while(R <= r.e.r) {
+				stream.push(HTML_._row(sheet, r, R, o));
+				++R;
+				break;
+			}
+		};
+		return stream;
+	};
 
 	XLSX.stream = {
+		to_html: write_html_stream,
 		to_csv: write_csv_stream
 	};
 })();

@@ -5,7 +5,7 @@
 /*exported XLSX */
 var XLSX = {};
 (function make_xlsx(XLSX){
-XLSX.version = '0.9.10';
+XLSX.version = '0.9.11';
 var current_codepage = 1200, current_cptable;
 if(typeof module !== "undefined" && typeof require !== 'undefined') {
 	if(typeof cptable === 'undefined') cptable = require('./dist/cpexcel.js');
@@ -15050,40 +15050,42 @@ var HTML_ = (function() {
 	function html_to_book(str, opts) {
 		return sheet_to_workbook(html_to_sheet(str, opts), opts);
 	}
+	function make_html_row(ws, r, R, o) {
+		var M = (ws['!merges'] ||[]);
+		var oo = [];
+		for(var C = r.s.c; C <= r.e.c; ++C) {
+			var RS = 0, CS = 0;
+			for(var j = 0; j < M.length; ++j) {
+				if(M[j].s.r > R || M[j].s.c > C) continue;
+				if(M[j].e.r < R || M[j].e.c < C) continue;
+				if(M[j].s.r < R || M[j].s.c < C) { RS = -1; break; }
+				RS = M[j].e.r - M[j].s.r + 1; CS = M[j].e.c - M[j].s.c + 1; break;
+			}
+			if(RS < 0) continue;
+			var coord = encode_cell({r:R,c:C});
+			var cell = o.dense ? (ws[R]||[])[C] : ws[coord];
+			if(!cell || cell.v == null) { oo.push("<td></td>"); continue; }
+			/* TODO: html entities */
+			var w = cell.h || escapexml(cell.w || (format_cell(cell), cell.w) || "");
+			var sp = {};
+			if(RS > 1) sp.rowspan = RS;
+			if(CS > 1) sp.colspan = CS;
+			oo.push(writextag('td', w, sp));
+		}
+		return "<tr>" + oo.join("") + "</tr>";
+	}
 	function sheet_to_html(ws, opts) {
 		var o = [];
-		var r = decode_range(ws['!ref']), cell;
-		var dense = Array.isArray(ws);
-		var M = (ws['!merges'] ||[]);
-		for(var R = r.s.r; R <= r.e.r; ++R) {
-			var oo = [];
-			for(var C = r.s.c; C <= r.e.c; ++C) {
-				var RS = 0, CS = 0;
-				for(var j = 0; j < M.length; ++j) {
-					if(M[j].s.r > R || M[j].s.c > C) continue;
-					if(M[j].e.r < R || M[j].e.c < C) continue;
-					if(M[j].s.r < R || M[j].s.c < C) { RS = -1; break; }
-					RS = M[j].e.r - M[j].s.r + 1; CS = M[j].e.c - M[j].s.c + 1; break;
-				}
-				if(RS < 0) continue;
-				var coord = encode_cell({r:R,c:C});
-				cell = dense ? (ws[R]||[])[C] : ws[coord];
-				if(!cell || cell.v == null) { oo.push("<td></td>"); continue; }
-				/* TODO: html entities */
-				var w = cell.h || escapexml(cell.w || (format_cell(cell), cell.w) || "");
-				var sp = {};
-				if(RS > 1) sp.rowspan = RS;
-				if(CS > 1) sp.colspan = CS;
-				oo.push(writextag('td', w, sp));
-			}
-			o.push("<tr>" + oo.join("") + "</tr>");
-		}
+		var r = decode_range(ws['!ref']);
+		o.dense = Array.isArray(ws);
+		for(var R = r.s.r; R <= r.e.r; ++R) o.push(make_html_row(ws, r, R, o));
 		return "<html><body><table>" + o.join("") + "</table></body></html>";
 	}
 
 	return {
 		to_workbook: html_to_book,
 		to_sheet: html_to_sheet,
+		_row: make_html_row,
 		from_sheet: sheet_to_html
 	};
 })();
@@ -16544,8 +16546,35 @@ if(has_buf && typeof require != 'undefined') (function() {
 		return stream;
 	};
 
+	var HTML_BEGIN = "<html><body><table>";
+	var HTML_END = "</table></body></html>";
+
+	var write_html_stream = function(sheet, opts) {
+		var stream = Readable();
+
+		var o = [];
+		var r = decode_range(sheet['!ref']), cell;
+		o.dense = Array.isArray(sheet);
+		stream.push(HTML_BEGIN);
+
+		var R = r.s.r;
+		var end = false;
+		stream._read = function() {
+			if(R > r.e.r) {
+				if(!end) { end = true; stream.push(HTML_END); }
+				return stream.push(null);
+			}
+			while(R <= r.e.r) {
+				stream.push(HTML_._row(sheet, r, R, o));
+				++R;
+				break;
+			}
+		};
+		return stream;
+	};
 
 	XLSX.stream = {
+		to_html: write_html_stream,
 		to_csv: write_csv_stream
 	};
 })();

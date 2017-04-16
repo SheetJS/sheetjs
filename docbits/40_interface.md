@@ -23,6 +23,8 @@ Parse options are described in the [Parsing Options](#parsing-options) section.
 `XLSX.writeFileAsync(filename, wb, o, cb)` attempts to write `wb` to `filename`.
 If `o` is omitted, the writer will use the third argument as the callback.
 
+`XLSX.stream` contains a set of streaming write functions.
+
 Write options are described in the [Writing Options](#writing-options) section.
 
 ### Utilities

@@ -410,10 +410,14 @@ saveAs(new Blob([s2ab(wbout)],{type:"application/octet-stream"}), "test.xlsx");
 
 ### Streaming Write
 
-`XLSX.stream.to_csv` is the streaming version of `XLSX.utils.sheet_to_csv`.  It
-takes the same arguments but returns a readable stream.
+The streaming write functions are available in the `XLSX.stream` object.  They
+take the same arguments as the normal write functions but return a readable
+stream.  They are only exposed in node.
 
-<https://github.com/sheetjs/sheetaki> pipes CSV write stream to nodejs response.
+- `XLSX.stream.to_csv` is the streaming version of `XLSX.utils.sheet_to_csv`.
+- `XLSX.stream.to_html` is the streaming version of the HTML output type.
+
+<https://github.com/sheetjs/sheetaki> pipes write streams to nodejs response.
 ## Interface
 
 `XLSX` is the exposed variable in the browser and the exported node variable
@@ -438,6 +442,8 @@ Parse options are described in the [Parsing Options](#parsing-options) section.
 
 `XLSX.writeFileAsync(filename, wb, o, cb)` attempts to write `wb` to `filename`.
 If `o` is omitted, the writer will use the third argument as the callback.
+
+`XLSX.stream` contains a set of streaming write functions.
 
 Write options are described in the [Writing Options](#writing-options) section.
 
