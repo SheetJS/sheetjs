@@ -45,7 +45,7 @@ worksheet['C1'] = { t:'n', f: "SUM(A1:A3*B1:B3)", F:"C1:C1" };
 ```
 
 For a multi-cell array formula, every cell has the same array range but only the
-first cell has content.  Consider `D1:D3=A1:A3*B1:B3`:
+first cell specifies the formula.  Consider `D1:D3=A1:A3*B1:B3`:
 
 ```js
 worksheet['D1'] = { t:'n', F:"D1:D3", f:"A1:A3*B1:B3" };

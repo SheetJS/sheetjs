@@ -28,7 +28,7 @@ var WK_ = (function() {
 		if(!d) return d;
 		var o = opts || {};
 		if(DENSE != null && o.dense == null) o.dense = DENSE;
-		var s = (o.dense ? [] : {}), n = "Sheet1", sidx = 0;
+		var s/*:Worksheet*/ = ((o.dense ? [] : {})/*:any*/), n = "Sheet1", sidx = 0;
 		var sheets = {}, snames = [n];
 
 		var refguess = {s: {r:0, c:0}, e: {r:0, c:0} };

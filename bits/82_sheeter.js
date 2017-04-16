@@ -8,6 +8,7 @@ function write_obj_str(factory/*:WriteObjStrFactory*/) {
 	};
 }
 
+var write_htm_str = write_obj_str(HTML_);
 var write_csv_str = write_obj_str({from_sheet:sheet_to_csv});
 var write_slk_str = write_obj_str(SYLK);
 var write_dif_str = write_obj_str(DIF);

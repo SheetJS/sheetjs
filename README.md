@@ -29,8 +29,10 @@ with a unified JS representation, and ES3/ES5 browser compatibility back to IE6.
   * [Optional Modules](#optional-modules)
   * [ECMAScript 5 Compatibility](#ecmascript-5-compatibility)
 - [Parsing Workbooks](#parsing-workbooks)
+  * [Note on Streaming Read](#note-on-streaming-read)
 - [Working with the Workbook](#working-with-the-workbook)
 - [Writing Workbooks](#writing-workbooks)
+  * [Streaming Write](#streaming-write)
 - [Interface](#interface)
   * [Parsing functions](#parsing-functions)
   * [Writing functions](#writing-functions)
@@ -298,6 +300,39 @@ function handleFile(e) {
 input_dom_element.addEventListener('change', handleFile, false);
 ```
 
+**Complete examples:**
+
+- <http://oss.sheetjs.com/js-xlsx/> HTML5 File API / Base64 Text / Web Workers
+
+Note that older versions of IE do not support HTML5 File API, so the base64 mode
+is used for testing.  On OSX you can get the base64 encoding with:
+
+```bash
+$ <target_file base64 | pbcopy
+```
+
+On Windows XP and up you can get the base64 encoding using `certutil`:
+
+```cmd
+> certutil -encode target_file target_file.b64
+```
+
+(note: You have to open the file and remove the header and footer lines)
+
+- <http://oss.sheetjs.com/js-xlsx/ajax.html> XMLHttpRequest
+
+### Note on Streaming Read
+
+The most common and interesting formats (XLS, XLSX/M, XLSB, ODS) are ultimately
+ZIP or CFB containers of files.  Neither format puts the directory structure at
+the beginning of the file: ZIP files place the Central Directory records at the
+end of the logical file, while CFB files can place the FAT structure anywhere in
+the file! As a result, to properly handle these formats, a streaming function
+would have to buffer the entire file before commencing.  That belies the
+expectations of streaming, so we do not provide any streaming read API.  If you
+really want to stream, there are node modules like `concat-stream` that will do
+the buffering for you.
+
 ## Working with the Workbook
 
 The full object format is described later in this README.
@@ -319,25 +354,6 @@ var desired_value = (desired_cell ? desired_cell.v : undefined);
 ```
 
 **Complete examples:**
-
-- <http://oss.sheetjs.com/js-xlsx/> HTML5 File API / Base64 Text / Web Workers
-
-Note that older versions of IE do not support HTML5 File API, so the base64 mode
-is used for testing.  On OSX you can get the base64 encoding with:
-
-```bash
-$ <target_file base64 | pbcopy
-```
-
-On Windows XP and up you can get the base64 encoding using `certutil`:
-
-```cmd
-> certutil -encode target_file target_file.b64
-```
-
-(note: You have to open the file and remove the header and footer lines)
-
-- <http://oss.sheetjs.com/js-xlsx/ajax.html> XMLHttpRequest
 
 - <https://github.com/SheetJS/js-xlsx/blob/master/bin/xlsx.njs> node
 
@@ -392,6 +408,12 @@ saveAs(new Blob([s2ab(wbout)],{type:"application/octet-stream"}), "test.xlsx");
 - <http://git.io/WEK88Q> writing an array of arrays in nodejs
 - <http://sheetjs.com/demos/table.html> exporting an HTML table
 
+### Streaming Write
+
+`XLSX.stream.to_csv` is the streaming version of `XLSX.utils.sheet_to_csv`.  It
+takes the same arguments but returns a readable stream.
+
+<https://github.com/sheetjs/sheetaki> pipes CSV write stream to nodejs response.
 ## Interface
 
 `XLSX` is the exposed variable in the browser and the exported node variable
@@ -769,7 +791,7 @@ worksheet['C1'] = { t:'n', f: "SUM(A1:A3*B1:B3)", F:"C1:C1" };
 ```
 
 For a multi-cell array formula, every cell has the same array range but only the
-first cell has content.  Consider `D1:D3=A1:A3*B1:B3`:
+first cell specifies the formula.  Consider `D1:D3=A1:A3*B1:B3`:
 
 ```js
 worksheet['D1'] = { t:'n', F:"D1:D3", f:"A1:A3*B1:B3" };
@@ -977,7 +999,8 @@ Plaintext format guessing follows the priority order:
 
 | Format | Test                                                                |
 |:-------|:--------------------------------------------------------------------|
-| XML    | starts with <                                                       |
+| HTML   | starts with \<html                                                  |
+| XML    | starts with \<                                                      |
 | DSV    | starts with `/sep=.$/`, separator is the specified character        |
 | TSV    | one of the first 1024 characters is a tab char `"\t"`               |
 | CSV    | one of the first 1024 characters is a comma char `","`              |
@@ -1024,6 +1047,7 @@ output formats.  The specific file type is controlled with `bookType` option:
 | `csv`    | `.csv`   |   none    | single | Comma Separated Values            |
 | `txt`    | `.txt`   |   none    | single | UTF-16 Unicode Text (TXT)         |
 | `sylk`   | `.sylk`  |   none    | single | Symbolic Link (SYLK)              |
+| `html`   | `.html`  |   none    | single | HTML Document                     |
 | `dif`    | `.dif`   |   none    | single | Data Interchange Format (DIF)     |
 | `prn`    | `.prn`   |   none    | single | Lotus Formatted Text              |
 
@@ -1277,7 +1301,7 @@ Despite the library name `xlsx`, it supports numerous spreadsheet file formats:
 | Lotus 1-2-3 (WKS/WK1/WK2/WK3/WK4/123)                        |  :o:  |       |
 | Quattro Pro Spreadsheet (WQ1/WQ2/WB1/WB2/WB3/QPW)            |  :o:  |       |
 | **Other Common Spreadsheet Output Formats**                  |:-----:|:-----:|
-| HTML Tables                                                  |  :o:  |       |
+| HTML Tables                                                  |  :o:  |  :o:  |
 
 ### Excel 2007+ XML (XLSX/XLSM)
 

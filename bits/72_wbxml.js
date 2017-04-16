@@ -160,6 +160,8 @@ function write_wb_xml(wb/*:Workbook*/, opts/*:?WriteOpts*/)/*:string*/ {
 	var o = [XML_HEADER];
 	o[o.length] = WB_XML_ROOT;
 
+	var write_names = (wb.Workbook && (wb.Workbook.Names||[]).length > 0);
+
 	/* fileVersion */
 	/* fileSharing */
 
@@ -185,9 +187,9 @@ function write_wb_xml(wb/*:Workbook*/, opts/*:?WriteOpts*/)/*:string*/ {
 	/* functionGroups */
 	/* externalReferences */
 
-	if(wb.Workbook && (wb.Workbook.Names||[]).length > 0) {
+	if(write_names) {
 		o[o.length] = "<definedNames>";
-		wb.Workbook.Names.forEach(function(n) {
+		if(wb.Workbook && wb.Workbook.Names) wb.Workbook.Names.forEach(function(n) {
 			var d = {name:n.Name};
 			if(n.Comment) d.comment = n.Comment;
 			if(n.Sheet != null) d.localSheetId = ""+n.Sheet;

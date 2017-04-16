@@ -20,25 +20,6 @@ var desired_value = (desired_cell ? desired_cell.v : undefined);
 
 **Complete examples:**
 
-- <http://oss.sheetjs.com/js-xlsx/> HTML5 File API / Base64 Text / Web Workers
-
-Note that older versions of IE do not support HTML5 File API, so the base64 mode
-is used for testing.  On OSX you can get the base64 encoding with:
-
-```bash
-$ <target_file base64 | pbcopy
-```
-
-On Windows XP and up you can get the base64 encoding using `certutil`:
-
-```cmd
-> certutil -encode target_file target_file.b64
-```
-
-(note: You have to open the file and remove the header and footer lines)
-
-- <http://oss.sheetjs.com/js-xlsx/ajax.html> XMLHttpRequest
-
 - <https://github.com/SheetJS/js-xlsx/blob/master/bin/xlsx.njs> node
 
 The node version installs a command line tool `xlsx` which can read spreadsheet

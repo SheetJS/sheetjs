@@ -69,5 +69,6 @@ digraph G {
 		csf -> txt
 		dbf -> csf
 		html -> csf
+		csf -> html
 	}
 }

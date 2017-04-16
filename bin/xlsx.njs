@@ -27,6 +27,7 @@ program
 	.option('-j, --json', 'emit formatted JSON (all fields text)')
 	.option('-J, --raw-js', 'emit raw JS object (raw numbers)')
 	.option('-A, --arrays', 'emit rows as JS objects (raw numbers)')
+	.option('-H, --html', 'emit HTML')
 	.option('-D, --dif', 'emit data interchange format (dif)')
 	.option('-K, --sylk', 'emit symbolic link (sylk)')
 	.option('-P, --prn', 'emit formatted text (prn)')
@@ -160,6 +161,7 @@ if(program.readOnly) process.exit(0);
 [
 	['biff2', '.xls'],
 	['sylk', '.slk'],
+	['html', '.html'],
 	['prn', '.prn'],
 	['txt', '.txt'],
 	['dif', '.dif']

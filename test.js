@@ -961,7 +961,7 @@ describe('parse features', function() {
 		var bef = (function() {
 			ws = X.utils.aoa_to_sheet([
 				["a","b","c"],
-				["&","<",">"]
+				["&","<",">","\n"]
 			]);
 			wb = {SheetNames:["Sheet1"],Sheets:{Sheet1:ws}};
 		});
@@ -972,6 +972,7 @@ describe('parse features', function() {
 			assert.equal(get_cell(wb2.Sheets.Sheet1, "A2").h, "&amp;");
 			assert.equal(get_cell(wb2.Sheets.Sheet1, "B2").h, "&lt;");
 			assert.equal(get_cell(wb2.Sheets.Sheet1, "C2").h, "&gt;");
+			assert.equal(get_cell(wb2.Sheets.Sheet1, "D2").h, "&#x000a;");
 		}); });
 	});
 
@@ -1133,6 +1134,15 @@ describe('write features', function() {
 				var wb3 = X.read(X.write(wb2, {bookType:w, type:"buffer", Props: {Author:"SheetJS"}}), {type:"buffer"});
 				assert.equal("SheetJS", wb3.Props.Author);
 			}); });
+		});
+	});
+	describe('HTML', function() {
+		it('should use `h` value when present', function() {
+			var sheet = X.utils.aoa_to_sheet([["abc"]]);
+			get_cell(sheet, "A1").h = "<b>abc</b>";
+			var wb = {SheetNames:["Sheet1"], Sheets:{Sheet1:sheet}};
+			var str = X.write(wb, {bookType:"html", type:"binary"});
+			assert(str.indexOf("<b>abc</b>") > 0);
 		});
 	});
 });

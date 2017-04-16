@@ -27,7 +27,7 @@ Despite the library name `xlsx`, it supports numerous spreadsheet file formats:
 | Lotus 1-2-3 (WKS/WK1/WK2/WK3/WK4/123)                        |  :o:  |       |
 | Quattro Pro Spreadsheet (WQ1/WQ2/WB1/WB2/WB3/QPW)            |  :o:  |       |
 | **Other Common Spreadsheet Output Formats**                  |:-----:|:-----:|
-| HTML Tables                                                  |  :o:  |       |
+| HTML Tables                                                  |  :o:  |  :o:  |
 
 ### Excel 2007+ XML (XLSX/XLSM)
 

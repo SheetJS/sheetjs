@@ -39,6 +39,7 @@ output formats.  The specific file type is controlled with `bookType` option:
 | `csv`    | `.csv`   |   none    | single | Comma Separated Values            |
 | `txt`    | `.txt`   |   none    | single | UTF-16 Unicode Text (TXT)         |
 | `sylk`   | `.sylk`  |   none    | single | Symbolic Link (SYLK)              |
+| `html`   | `.html`  |   none    | single | HTML Document                     |
 | `dif`    | `.dif`   |   none    | single | Data Interchange Format (DIF)     |
 | `prn`    | `.prn`   |   none    | single | Lotus Formatted Text              |
 

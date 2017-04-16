@@ -154,42 +154,47 @@ function sheet_to_json(sheet/*:Worksheet*/, opts/*:?Sheet2JSONOpts*/){
 	return out;
 }
 
-function sheet_to_csv(sheet/*:Worksheet*/, opts/*:?Sheet2CSVOpts*/) {
-	var out = "", txt = "", qreg = /"/g;
+var qreg = /"/g;
+function make_csv_row(sheet/*:Worksheet*/, r/*:Range*/, R/*:number*/, cols/*:Array<string>*/, fs/*:number*/, rs/*:number*/, FS/*:string*/, o/*:Sheet2CSVOpts*/)/*:?string*/ {
+	var isempty = true;
+	var row = "", txt = "", rr = encode_row(R);
+	for(var C = r.s.c; C <= r.e.c; ++C) {
+		var val = o.dense ? (sheet[R]||[])[C]: sheet[cols[C] + rr];
+		if(val == null) txt = "";
+		else if(val.v != null) {
+			isempty = false;
+			txt = ''+format_cell(val, null, o);
+			for(var i = 0, cc = 0; i !== txt.length; ++i) if((cc = txt.charCodeAt(i)) === fs || cc === rs || cc === 34) {
+				txt = "\"" + txt.replace(qreg, '""') + "\""; break; }
+		} else if(val.f != null && !val.F) {
+			isempty = false;
+			txt = '=' + val.f; if(txt.indexOf(",") >= 0) txt = '"' + txt.replace(qreg, '""') + '"';
+		} else txt = "";
+		/* NOTE: Excel CSV does not support array formulae */
+		row += (C === r.s.c ? "" : FS) + txt;
+	}
+	if(o.blankrows === false && isempty) return null;
+	return row;
+}
+
+function sheet_to_csv(sheet/*:Worksheet*/, opts/*:?Sheet2CSVOpts*/)/*:string*/ {
+	var out = "";
 	var o = opts == null ? {} : opts;
 	if(sheet == null || sheet["!ref"] == null) return "";
 	var r = safe_decode_range(sheet["!ref"]);
 	var FS = o.FS !== undefined ? o.FS : ",", fs = FS.charCodeAt(0);
 	var RS = o.RS !== undefined ? o.RS : "\n", rs = RS.charCodeAt(0);
 	var endregex = new RegExp((FS=="|" ? "\\|" : FS)+"+$");
-	var row = "", rr = "", cols = [];
-	var i = 0, cc = 0, val;
-	var R = 0, C = 0;
-	var dense = Array.isArray(sheet);
-	for(C = r.s.c; C <= r.e.c; ++C) cols[C] = encode_col(C);
-	for(R = r.s.r; R <= r.e.r; ++R) {
-		var isempty = true;
-		row = "";
-		rr = encode_row(R);
-		for(C = r.s.c; C <= r.e.c; ++C) {
-			val = dense ? (sheet[R]||[])[C]: sheet[cols[C] + rr];
-			if(val == null) txt = "";
-			else if(val.v != null) {
-				isempty = false;
-				txt = ''+format_cell(val, null, o);
-				for(i = 0, cc = 0; i !== txt.length; ++i) if((cc = txt.charCodeAt(i)) === fs || cc === rs || cc === 34) {
-					txt = "\"" + txt.replace(qreg, '""') + "\""; break; }
-			} else if(val.f != null && !val.F) {
-				isempty = false;
-				txt = '=' + val.f; if(txt.indexOf(",") >= 0) txt = '"' + txt.replace(qreg, '""') + '"';
-			} else txt = "";
-			/* NOTE: Excel CSV does not support array formulae */
-			row += (C === r.s.c ? "" : FS) + txt;
-		}
-		if(o.blankrows === false && isempty) continue;
+	var row = "", cols = [];
+	o.dense = Array.isArray(sheet);
+	for(var C = r.s.c; C <= r.e.c; ++C) cols[C] = encode_col(C);
+	for(var R = r.s.r; R <= r.e.r; ++R) {
+		row = make_csv_row(sheet, r, R, cols, fs, rs, FS, o);
+		if(row == null) { continue; }
 		if(o.strip) row = row.replace(endregex,"");
 		out += row + RS;
 	}
+	delete o.dense;
 	return out;
 }
 

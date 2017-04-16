@@ -171,7 +171,7 @@ function parse_xlml_xml(d, opts)/*:Workbook*/ {
 	make_ssf(SSF);
 	var str = debom(xlml_normalize(d));
 	if(opts && opts.type == 'binary' && typeof cptable !== 'undefined') str = cptable.utils.decode(65001, char_codes(str));
-	if(str.substr(0,1000).indexOf("<html") >= 0) return parse_html(str, opts);
+	if(str.substr(0,1000).indexOf("<html") >= 0) return HTML_.to_workbook(str, opts);
 	var Rn;
 	var state = [], tmp;
 	if(DENSE != null && opts.dense == null) opts.dense = DENSE;
