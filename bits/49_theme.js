@@ -111,6 +111,7 @@ function parse_theme_xml(data/*:string*/, opts) {
 }
 
 function write_theme(Themes, opts)/*:string*/ {
+	if(opts && opts.themeXLSX) return opts.themeXLSX;
 	var o = [XML_HEADER];
 	o[o.length] = '<a:theme xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" name="Office Theme">';
 	o[o.length] =  '<a:themeElements>';

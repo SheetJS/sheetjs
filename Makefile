@@ -143,7 +143,12 @@ demo-systemjs: ## Run systemjs demo build
 ## Code Checking
 
 .PHONY: lint
-lint: $(TARGET) $(AUXTARGETS) ## Run jshint and jscs checks
+lint: $(TARGET) $(AUXTARGETS) ## Run eslint checks
+	@eslint --ext .js,.njs,.json,.html,.htm $(TARGET) $(AUXTARGETS) $(CMDS) $(HTMLLINT) package.json bower.json
+	if [ -e $(CLOSURE) ]; then java -jar $(CLOSURE) $(REQS) $(FLOWTARGET) --jscomp_warning=reportUnknownTypes >/dev/null; fi
+
+.PHONY: old-lint
+old-lint: $(TARGET) $(AUXTARGETS) ## Run jshint and jscs checks
 	@jshint --show-non-errors $(TARGET) $(AUXTARGETS)
 	@jshint --show-non-errors $(CMDS)
 	@jshint --show-non-errors package.json bower.json

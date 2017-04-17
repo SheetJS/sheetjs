@@ -264,7 +264,7 @@ return function parse_ws_xml_data(sdata, s, opts, guess, themes, styles) {
 			} else ++tagc;
 			for(i = 0; i != x.length; ++i) if(x.charCodeAt(i) === 62) break; ++i;
 			tag = parsexmltag(x.substr(0,i), true);
-			if(!tag.r) tag.r = utils.encode_cell({r:tagr-1, c:tagc});
+			if(!tag.r) tag.r = encode_cell({r:tagr-1, c:tagc});
 			d = x.substr(i);
 			p = ({t:""}/*:any*/);
 

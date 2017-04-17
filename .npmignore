@@ -28,9 +28,11 @@ tmp
 *.sheetjs
 *.exe
 .gitignore
+.eslintrc
 .jshintrc
 CONTRIBUTING.md
 Makefile
+make.cmd
 *.lst
 .npmignore
 xlsworker.js
