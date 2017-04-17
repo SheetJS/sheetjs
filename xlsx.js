@@ -10038,6 +10038,10 @@ function parse_ws_xml_margins(margin) {
 	});
 	return o;
 }
+function write_ws_xml_margins(margin) {
+	default_margins(margin);
+	return writextag('pageMargins', null, margin);
+}
 
 function parse_ws_xml_cols(columns, cols) {
 	var seencol = false;
@@ -10347,7 +10351,7 @@ function write_ws_xml(idx, opts, wb, rels) {
 	delete ws['!links'];
 
 	/* printOptions */
-	/* pageMargins */
+	if (ws['!margins'] != null) o[o.length] =  write_ws_xml_margins(ws['!margins'])
 	/* pageSetup */
 
 	var hfidx = o.length;
