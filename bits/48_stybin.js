@@ -47,6 +47,7 @@ function parse_sty_bin(data, themes, opts) {
 	for(var y in SSF._table) styles.NumberFmt[y] = SSF._table[y];
 
 	styles.CellXf = [];
+	styles.Fonts = [];
 	var state = [];
 	var pass = false;
 	recordhopper(data, function hopper_sty(val, R_n, RT) {
@@ -54,7 +55,9 @@ function parse_sty_bin(data, themes, opts) {
 			case 0x002C: /* 'BrtFmt' */
 				styles.NumberFmt[val[0]] = val[1]; SSF.load(val[1], val[0]);
 				break;
-			case 0x002B: /* 'BrtFont' */ break;
+			case 0x002B: /* 'BrtFont' */
+				styles.Fonts.push(val);
+				break;
 			case 0x0401: /* 'BrtKnownFonts' */ break;
 			case 0x002D: /* 'BrtFill' */ break;
 			case 0x002E: /* 'BrtBorder' */ break;

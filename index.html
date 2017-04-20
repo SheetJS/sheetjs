@@ -18,26 +18,34 @@
 #b64data{
 	width:100%;
 }
+a { text-decoration: none }
 </style>
 </head>
 <body>
-<b>JS-XLSX Live Demo</b><br />
-Output Format:
-<select name="format" onchange="setfmt()">
+<pre>
+<b><a href="http://sheetjs.com">SheetJS Data Preview Live Demo</a></b>
+(Base64 text works back to IE6; drag and drop works back to IE10)
+
+<a href="https://github.com/SheetJS/js-xlsx">Source Code Repo</a>
+<a href="https://github.com/SheetJS/js-xlsx/issues">Issues?  Something look weird?  Click here and report an issue</a>
+Output Format: <select name="format" onchange="setfmt()">
 <option value="csv" selected> CSV</option>
 <option value="json"> JSON</option>
 <option value="form"> FORMULAE</option>
+<option value="html"> HTML</option>
 </select><br />
-
 <div id="drop">Drop a spreadsheet file here to see sheet data</div>
-<p><input type="file" name="xlfile" id="xlf" /> ... or click here to select a file</p>
+<input type="file" name="xlfile" id="xlf" /> ... or click here to select a file
+
 <textarea id="b64data">... or paste a base64-encoding here</textarea>
 <input type="button" id="dotext" value="Click here to process the base64 text" onclick="b64it();"/><br />
-Advanced Demo Options: <br />
-Use Web Workers: (when available) <input type="checkbox" name="useworker" checked><br />
-Use Transferrables: (when available) <input type="checkbox" name="xferable" checked><br />
-Use readAsBinaryString: (when available) <input type="checkbox" name="userabs" checked><br />
+<b>Advanced Demo Options:</b>
+Use Web Workers: (when available) <input type="checkbox" name="useworker" checked>
+Use Transferrables: (when available) <input type="checkbox" name="xferable" checked>
+Use readAsBinaryString: (when available) <input type="checkbox" name="userabs" checked>
+</pre>
 <pre id="out"></pre>
+<div id="htmlout"></div>
 <br />
 <!-- uncomment the next line here and in xlsxworker.js for encoding support -->
 <script src="dist/cpexcel.js"></script>
@@ -179,6 +187,15 @@ function to_formulae(workbook) {
 	return result.join("\n");
 }
 
+function to_html(workbook) {
+	document.getElementById('htmlout').innerHTML = "";
+	var result = [];
+	workbook.SheetNames.forEach(function(sheetName) {
+		var htmlstr = X.write(workbook, {sheet:sheetName, type:'binary', bookType:'html'});
+		document.getElementById('htmlout').innerHTML += htmlstr;
+	});
+}
+
 var tarea = document.getElementById('b64data');
 function b64it() {
 	if(typeof console !== 'undefined') console.log("onload", new Date());
@@ -197,6 +214,7 @@ function process_wb(wb) {
 		case "form":
 			output = to_formulae(wb);
 			break;
+		case "html": return to_html(wb);
 		default:
 			output = to_csv(wb);
 	}
@@ -282,6 +300,17 @@ function handleFile(e) {
 }
 
 if(xlf.addEventListener) xlf.addEventListener('change', handleFile, false);
+</script>
+<script type="text/javascript">
+	var _gaq = _gaq || [];
+	_gaq.push(['_setAccount', 'UA-36810333-1']);
+	_gaq.push(['_trackPageview']);
+
+	(function() {
+		var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+		ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+		var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+	})();
 </script>
 </body>
 </html>

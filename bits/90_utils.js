@@ -102,7 +102,7 @@ function make_csv_row(sheet/*:Worksheet*/, r/*:Range*/, R/*:number*/, cols/*:Arr
 }
 
 function sheet_to_csv(sheet/*:Worksheet*/, opts/*:?Sheet2CSVOpts*/)/*:string*/ {
-	var out = "";
+	var out = [];
 	var o = opts == null ? {} : opts;
 	if(sheet == null || sheet["!ref"] == null) return "";
 	var r = safe_decode_range(sheet["!ref"]);
@@ -116,10 +116,10 @@ function sheet_to_csv(sheet/*:Worksheet*/, opts/*:?Sheet2CSVOpts*/)/*:string*/ {
 		row = make_csv_row(sheet, r, R, cols, fs, rs, FS, o);
 		if(row == null) { continue; }
 		if(o.strip) row = row.replace(endregex,"");
-		out += row + RS;
+		out.push(row + RS);
 	}
 	delete o.dense;
-	return out;
+	return out.join("");
 }
 
 function sheet_to_txt(sheet/*:Worksheet*/, opts/*:?Sheet2CSVOpts*/) {

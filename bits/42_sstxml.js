@@ -27,7 +27,7 @@ var parse_rs = (function parse_rs_factory() {
 	var tregex = matchtag("t"), rpregex = matchtag("rPr"), rregex = /<(?:\w+:)?r>/g, rend = /<\/(?:\w+:)?r>/, nlregex = /\r\n/g;
 	/* 18.4.7 rPr CT_RPrElt */
 	var parse_rpr = function parse_rpr(rpr, intro, outro) {
-		var font = {}, cp = 65001;
+		var font = {}, cp = 65001, align = "";
 		var m = rpr.match(tagregex), i = 0;
 		if(m) for(;i!=m.length; ++i) {
 			var y = parsexmltag(m[i]);
@@ -41,9 +41,11 @@ var parse_rs = (function parse_rs_factory() {
 				/* 18.8.36 shadow CT_BooleanProperty */
 				/* ** not required . */
 				case '<shadow':
+					if(!y.val) break;
 					/* falls through */
 				case '<shadow>':
-				case '<shadow/>': break;
+				case '<shadow/>': font.shadow = 1; break;
+				case '</shadow>': break;
 
 				/* 18.4.1 charset CT_IntProperty TODO */
 				case '<charset':
@@ -53,9 +55,11 @@ var parse_rs = (function parse_rs_factory() {
 
 				/* 18.4.2 outline CT_BooleanProperty TODO */
 				case '<outline':
+					if(!y.val) break;
 					/* falls through */
 				case '<outline>':
-				case '<outline/>': break;
+				case '<outline/>': font.outline = 1; break;
+				case '</outline>': break;
 
 				/* 18.4.5 rFont CT_FontName */
 				case '<rFont': font.name = y.val; break;
@@ -73,7 +77,12 @@ var parse_rs = (function parse_rs_factory() {
 
 				/* 18.4.13 u CT_UnderlineProperty */
 				case '<u':
-					if(y.val == '0') break;
+					if(!y.val) break;
+					switch(y.val) {
+						case 'double': font.uval = "double"; break;
+						case 'singleAccounting': font.uval = "single-accounting"; break;
+						case 'doubleAccounting': font.uval = "double-accounting"; break;
+					}
 					/* falls through */
 				case '<u>':
 				case '<u/>': font.u = 1; break;
@@ -104,7 +113,7 @@ var parse_rs = (function parse_rs_factory() {
 				case '<family': font.family = y.val; break;
 
 				/* 18.4.14 vertAlign CT_VerticalAlignFontProperty TODO */
-				case '<vertAlign': break;
+				case '<vertAlign': align = y.val; break;
 
 				/* 18.8.35 scheme CT_FontScheme TODO */
 				case '<scheme': break;
@@ -114,9 +123,22 @@ var parse_rs = (function parse_rs_factory() {
 			}
 		}
 		var style = [];
-		if(font.b) style.push("font-weight: bold;");
-		if(font.i) style.push("font-style: italic;");
+
+		if(font.u) style.push("text-decoration: underline;");
+		if(font.uval) style.push("text-underline-style:" + font.uval + ";");
+		if(font.sz) style.push("font-size:" + font.sz + ";");
+		if(font.outline) style.push("text-effect: outline;");
+		if(font.shadow) style.push("text-shadow: auto;");
 		intro.push('<span style="' + style.join("") + '">');
+
+		if(font.b) { intro.push("<b>"); outro.push("</b>"); }
+		if(font.i) { intro.push("<i>"); outro.push("</i>"); }
+		if(font.strike) { intro.push("<s>"); outro.push("</s>"); }
+
+		if(align == "superscript") align = "sup";
+		else if(align == "subscript") align = "sub";
+		if(align != "") { intro.push("<" + align + ">"); outro.push("</" + align + ">"); }
+
 		outro.push("</span>");
 		return cp;
 	};
