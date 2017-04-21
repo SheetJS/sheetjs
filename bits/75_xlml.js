@@ -59,7 +59,7 @@ function xlml_set_custprop(Custprops, Rn, cp, val/*:string*/) {
 
 function safe_format_xlml(cell/*:Cell*/, nf, o) {
 	if(cell.t === 'z') return;
-	try {
+	if(!o || o.cellText !== false) try {
 		if(cell.t === 'e') { cell.w = cell.w || BErr[cell.v]; }
 		else if(nf === "General") {
 			if(cell.t === 'n') {
@@ -69,6 +69,8 @@ function safe_format_xlml(cell/*:Cell*/, nf, o) {
 			else cell.w = SSF._general(cell.v);
 		}
 		else cell.w = xlml_format(nf||"General", cell.v);
+	} catch(e) { if(o.WTF) throw e; }
+	try {
 		var z = XLMLFormatMap[nf]||nf||"General";
 		if(o.cellNF) cell.z = z;
 		if(o.cellDates && cell.t == 'n' && SSF.is_date(z)) {

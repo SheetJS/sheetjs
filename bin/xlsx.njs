@@ -98,6 +98,7 @@ if(program.all) {
 	opts.cellFormula = true;
 	opts.bookVBA = true;
 	opts.cellNF = true;
+	opts.cellHTML = true;
 	opts.cellStyles = true;
 	opts.sheetStubs = true;
 	opts.cellDates = true;

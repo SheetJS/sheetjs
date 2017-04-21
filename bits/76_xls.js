@@ -58,6 +58,7 @@ function safe_format_xf(p/*:any*/, opts/*:ParseOpts*/, date1904/*:?boolean*/) {
 	if(!p.XF) return;
 	try {
 		var fmtid = p.XF.ifmt||0;
+		if(opts.cellNF) p.z = SSF._table[fmtid];
 		if(p.t === 'e'){}
 		else if(fmtid === 0) {
 			if(p.t === 'n') {
@@ -70,7 +71,6 @@ function safe_format_xf(p/*:any*/, opts/*:ParseOpts*/, date1904/*:?boolean*/) {
 		if(opts.cellDates && fmtid && p.t == 'n' && SSF.is_date(SSF._table[fmtid])) {
 			var _d = SSF.parse_date_code(p.v); if(_d) { p.t = 'd'; p.v = new Date(Date.UTC(_d.y, _d.m-1,_d.d,_d.H,_d.M,_d.S,_d.u)); }
 		}
-		if(opts.cellNF) p.z = SSF._table[fmtid];
 	} catch(e) { if(opts.WTF) throw e; }
 }
 

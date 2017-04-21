@@ -5,7 +5,7 @@
 /*exported XLSX */
 var XLSX = {};
 (function make_xlsx(XLSX){
-XLSX.version = '0.9.11';
+XLSX.version = '0.9.12';
 var current_codepage = 1200, current_cptable;
 if(typeof module !== "undefined" && typeof require !== 'undefined') {
 	if(typeof cptable === 'undefined') cptable = require('./dist/cpexcel.js');
@@ -9888,6 +9888,9 @@ function safe_format(p, fmtid, fillid, opts, themes, styles) {
 	if(p.t === 'z') return;
 	if(p.t === 'd' && typeof p.v === 'string') p.v = parseDate(p.v);
 	try {
+		if(opts.cellNF) p.z = SSF._table[fmtid];
+	} catch(e) { if(opts.WTF) throw e; }
+	if(!opts || opts.cellText !== false) try {
 		if(p.t === 'e') p.w = p.w || BErr[p.v];
 		else if(fmtid === 0) {
 			if(p.t === 'n') {
@@ -9904,7 +9907,6 @@ function safe_format(p, fmtid, fillid, opts, themes, styles) {
 		}
 		else if(p.t === 'd') p.w = SSF.format(fmtid,datenum(p.v),_ssfopts);
 		else p.w = SSF.format(fmtid,p.v,_ssfopts);
-		if(opts.cellNF) p.z = SSF._table[fmtid];
 	} catch(e) { if(opts.WTF) throw e; }
 	if(fillid) try {
 		p.s = styles.Fills[fillid];
@@ -10254,7 +10256,9 @@ return function parse_ws_xml_data(sdata, s, opts, guess, themes, styles) {
 					if(!opts.cellDates) { p.v = datenum(parseDate(p.v)); p.t = 'n'; }
 					break;
 				/* error string in .w, number in .v */
-				case 'e': p.w = p.v; p.v = RBErr[p.v]; break;
+				case 'e':
+					if(opts && opts.cellText === false) p.w = p.v;
+					p.v = RBErr[p.v]; break;
 			}
 			/* formatting */
 			fmtid = fillid = 0;
@@ -12015,7 +12019,7 @@ function xlml_set_custprop(Custprops, Rn, cp, val) {
 
 function safe_format_xlml(cell, nf, o) {
 	if(cell.t === 'z') return;
-	try {
+	if(!o || o.cellText !== false) try {
 		if(cell.t === 'e') { cell.w = cell.w || BErr[cell.v]; }
 		else if(nf === "General") {
 			if(cell.t === 'n') {
@@ -12025,6 +12029,8 @@ function safe_format_xlml(cell, nf, o) {
 			else cell.w = SSF._general(cell.v);
 		}
 		else cell.w = xlml_format(nf||"General", cell.v);
+	} catch(e) { if(o.WTF) throw e; }
+	try {
 		var z = XLMLFormatMap[nf]||nf||"General";
 		if(o.cellNF) cell.z = z;
 		if(o.cellDates && cell.t == 'n' && SSF.is_date(z)) {
@@ -12980,6 +12986,7 @@ function safe_format_xf(p, opts, date1904) {
 	if(!p.XF) return;
 	try {
 		var fmtid = p.XF.ifmt||0;
+		if(opts.cellNF) p.z = SSF._table[fmtid];
 		if(p.t === 'e'){}
 		else if(fmtid === 0) {
 			if(p.t === 'n') {
@@ -12992,7 +12999,6 @@ function safe_format_xf(p, opts, date1904) {
 		if(opts.cellDates && fmtid && p.t == 'n' && SSF.is_date(SSF._table[fmtid])) {
 			var _d = SSF.parse_date_code(p.v); if(_d) { p.t = 'd'; p.v = new Date(Date.UTC(_d.y, _d.m-1,_d.d,_d.H,_d.M,_d.S,_d.u)); }
 		}
-		if(opts.cellNF) p.z = SSF._table[fmtid];
 	} catch(e) { if(opts.WTF) throw e; }
 }
 
@@ -15810,6 +15816,7 @@ var fix_read_opts = fix_opts_func([
 	['cellHTML', true], /* emit html string as .h */
 	['cellFormula', true], /* emit formulae as .f */
 	['cellStyles', false], /* emits style/theme as .s */
+	['cellText', true], /* emit formatted text as .w */
 	['cellDates', false], /* emit date cells with type `d` */
 
 	['sheetStubs', false], /* emit empty cells */

@@ -6,9 +6,10 @@ The exported `read` and `readFile` functions accept an options argument:
 | :---------- | ------: | :--------------------------------------------------- |
 | type        |         | Input data encoding (see Input Type below)           |
 | cellFormula | true    | Save formulae to the .f field                        |
-| cellHTML    | true    | Parse rich text and save HTML to the .h field        |
-| cellNF      | false   | Save number format string to the .z field            |
-| cellStyles  | false   | Save style/theme info to the .s field                |
+| cellHTML    | true    | Parse rich text and save HTML to the `.h` field      |
+| cellNF      | false   | Save number format string to the `.z` field          |
+| cellStyles  | false   | Save style/theme info to the `.s` field              |
+| cellText    | true    | Generated formatted text to the `.w` field           |
 | cellDates   | false   | Store dates as type `d` (default is `n`)             |
 | sheetStubs  | false   | Create cell objects of type `z` for stub cells       |
 | sheetRows   | 0       | If >0, read the first `sheetRows` rows **            |

@@ -1,4 +1,4 @@
-# [:green_book: SheetJS js-xlsx](http://sheetjs.com)
+# [SheetJS js-xlsx](http://sheetjs.com)
 
 Parser and writer for various spreadsheet formats.  Pure-JS cleanroom
 implementation from official specifications, related documents, and test files.

@@ -334,7 +334,9 @@ return function parse_ws_xml_data(sdata, s, opts, guess, themes, styles) {
 					if(!opts.cellDates) { p.v = datenum(parseDate(p.v)); p.t = 'n'; }
 					break;
 				/* error string in .w, number in .v */
-				case 'e': p.w = p.v; p.v = RBErr[p.v]; break;
+				case 'e':
+					if(opts && opts.cellText === false) p.w = p.v;
+					p.v = RBErr[p.v]; break;
 			}
 			/* formatting */
 			fmtid = fillid = 0;
