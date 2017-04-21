@@ -5,7 +5,7 @@
 /*exported XLSX */
 var XLSX = {};
 (function make_xlsx(XLSX){
-XLSX.version = '0.9.11';
+XLSX.version = '0.9.12';
 var current_codepage = 1200, current_cptable;
 if(typeof module !== "undefined" && typeof require !== 'undefined') {
 	if(typeof cptable === 'undefined') cptable = require('./dist/cpexcel.js');
@@ -2051,6 +2051,77 @@ var make_offcrypto = function(O, _crypto) {
 	};
 };
 make_offcrypto(OFFCRYPTO, typeof crypto !== "undefined" ? crypto : undefined);
+
+function decode_row(rowstr) { return parseInt(unfix_row(rowstr),10) - 1; }
+function encode_row(row) { return "" + (row + 1); }
+function fix_row(cstr) { return cstr.replace(/([A-Z]|^)(\d+)$/,"$1$$$2"); }
+function unfix_row(cstr) { return cstr.replace(/\$(\d+)$/,"$1"); }
+
+function decode_col(colstr) { var c = unfix_col(colstr), d = 0, i = 0; for(; i !== c.length; ++i) d = 26*d + c.charCodeAt(i) - 64; return d - 1; }
+function encode_col(col) { var s=""; for(++col; col; col=Math.floor((col-1)/26)) s = String.fromCharCode(((col-1)%26) + 65) + s; return s; }
+function fix_col(cstr) { return cstr.replace(/^([A-Z])/,"$$$1"); }
+function unfix_col(cstr) { return cstr.replace(/^\$([A-Z])/,"$1"); }
+
+function split_cell(cstr) { return cstr.replace(/(\$?[A-Z]*)(\$?\d*)/,"$1,$2").split(","); }
+function decode_cell(cstr) { var splt = split_cell(cstr); return { c:decode_col(splt[0]), r:decode_row(splt[1]) }; }
+function encode_cell(cell) { return encode_col(cell.c) + encode_row(cell.r); }
+function fix_cell(cstr) { return fix_col(fix_row(cstr)); }
+function unfix_cell(cstr) { return unfix_col(unfix_row(cstr)); }
+function decode_range(range) { var x =range.split(":").map(decode_cell); return {s:x[0],e:x[x.length-1]}; }
+function encode_range(cs,ce) {
+	if(typeof ce === 'undefined' || typeof ce === 'number') {
+return encode_range(cs.s, cs.e);
+	}
+if(typeof cs !== 'string') cs = encode_cell((cs));
+	if(typeof ce !== 'string') ce = encode_cell((ce));
+return cs == ce ? cs : cs + ":" + ce;
+}
+
+function safe_decode_range(range) {
+	var o = {s:{c:0,r:0},e:{c:0,r:0}};
+	var idx = 0, i = 0, cc = 0;
+	var len = range.length;
+	for(idx = 0; i < len; ++i) {
+		if((cc=range.charCodeAt(i)-64) < 1 || cc > 26) break;
+		idx = 26*idx + cc;
+	}
+	o.s.c = --idx;
+
+	for(idx = 0; i < len; ++i) {
+		if((cc=range.charCodeAt(i)-48) < 0 || cc > 9) break;
+		idx = 10*idx + cc;
+	}
+	o.s.r = --idx;
+
+	if(i === len || range.charCodeAt(++i) === 58) { o.e.c=o.s.c; o.e.r=o.s.r; return o; }
+
+	for(idx = 0; i != len; ++i) {
+		if((cc=range.charCodeAt(i)-64) < 1 || cc > 26) break;
+		idx = 26*idx + cc;
+	}
+	o.e.c = --idx;
+
+	for(idx = 0; i != len; ++i) {
+		if((cc=range.charCodeAt(i)-48) < 0 || cc > 9) break;
+		idx = 10*idx + cc;
+	}
+	o.e.r = --idx;
+	return o;
+}
+
+function safe_format_cell(cell, v) {
+	var q = (cell.t == 'd' && v instanceof Date);
+	if(cell.z != null) try { return (cell.w = SSF.format(cell.z, q ? datenum(v) : v)); } catch(e) { }
+	try { return (cell.w = SSF.format((cell.XF||{}).ifmt||(q ? 14 : 0),  q ? datenum(v) : v)); } catch(e) { return ''+v; }
+}
+
+function format_cell(cell, v, o) {
+	if(cell == null || cell.t == null || cell.t == 'z') return "";
+	if(cell.w !== undefined) return cell.w;
+	if(cell.t == 'd' && !cell.z && o && o.dateNF) cell.z = o.dateNF;
+	if(v == undefined) return safe_format_cell(cell, cell.v, o);
+	return safe_format_cell(cell, v, o);
+}
 
 function sheet_to_workbook(sheet, opts) {
 	var n = opts && opts.sheet ? opts.sheet : "Sheet1";
@@ -5601,7 +5672,7 @@ var parse_rs = (function parse_rs_factory() {
 	var tregex = matchtag("t"), rpregex = matchtag("rPr"), rregex = /<(?:\w+:)?r>/g, rend = /<\/(?:\w+:)?r>/, nlregex = /\r\n/g;
 	/* 18.4.7 rPr CT_RPrElt */
 	var parse_rpr = function parse_rpr(rpr, intro, outro) {
-		var font = {}, cp = 65001;
+		var font = {}, cp = 65001, align = "";
 		var m = rpr.match(tagregex), i = 0;
 		if(m) for(;i!=m.length; ++i) {
 			var y = parsexmltag(m[i]);
@@ -5615,9 +5686,11 @@ var parse_rs = (function parse_rs_factory() {
 				/* 18.8.36 shadow CT_BooleanProperty */
 				/* ** not required . */
 				case '<shadow':
+					if(!y.val) break;
 					/* falls through */
 				case '<shadow>':
-				case '<shadow/>': break;
+				case '<shadow/>': font.shadow = 1; break;
+				case '</shadow>': break;
 
 				/* 18.4.1 charset CT_IntProperty TODO */
 				case '<charset':
@@ -5627,9 +5700,11 @@ var parse_rs = (function parse_rs_factory() {
 
 				/* 18.4.2 outline CT_BooleanProperty TODO */
 				case '<outline':
+					if(!y.val) break;
 					/* falls through */
 				case '<outline>':
-				case '<outline/>': break;
+				case '<outline/>': font.outline = 1; break;
+				case '</outline>': break;
 
 				/* 18.4.5 rFont CT_FontName */
 				case '<rFont': font.name = y.val; break;
@@ -5647,7 +5722,12 @@ var parse_rs = (function parse_rs_factory() {
 
 				/* 18.4.13 u CT_UnderlineProperty */
 				case '<u':
-					if(y.val == '0') break;
+					if(!y.val) break;
+					switch(y.val) {
+						case 'double': font.uval = "double"; break;
+						case 'singleAccounting': font.uval = "single-accounting"; break;
+						case 'doubleAccounting': font.uval = "double-accounting"; break;
+					}
 					/* falls through */
 				case '<u>':
 				case '<u/>': font.u = 1; break;
@@ -5678,7 +5758,7 @@ var parse_rs = (function parse_rs_factory() {
 				case '<family': font.family = y.val; break;
 
 				/* 18.4.14 vertAlign CT_VerticalAlignFontProperty TODO */
-				case '<vertAlign': break;
+				case '<vertAlign': align = y.val; break;
 
 				/* 18.8.35 scheme CT_FontScheme TODO */
 				case '<scheme': break;
@@ -5688,9 +5768,22 @@ var parse_rs = (function parse_rs_factory() {
 			}
 		}
 		var style = [];
-		if(font.b) style.push("font-weight: bold;");
-		if(font.i) style.push("font-style: italic;");
+
+		if(font.u) style.push("text-decoration: underline;");
+		if(font.uval) style.push("text-underline-style:" + font.uval + ";");
+		if(font.sz) style.push("font-size:" + font.sz + ";");
+		if(font.outline) style.push("text-effect: outline;");
+		if(font.shadow) style.push("text-shadow: auto;");
 		intro.push('<span style="' + style.join("") + '">');
+
+		if(font.b) { intro.push("<b>"); outro.push("</b>"); }
+		if(font.i) { intro.push("<i>"); outro.push("</i>"); }
+		if(font.strike) { intro.push("<s>"); outro.push("</s>"); }
+
+		if(align == "superscript") align = "sup";
+		else if(align == "subscript") align = "sub";
+		if(align != "") { intro.push("<" + align + ">"); outro.push("</" + align + ">"); }
+
 		outro.push("</span>");
 		return cp;
 	};
@@ -6644,6 +6737,7 @@ function parse_sty_bin(data, themes, opts) {
 	for(var y in SSF._table) styles.NumberFmt[y] = SSF._table[y];
 
 	styles.CellXf = [];
+	styles.Fonts = [];
 	var state = [];
 	var pass = false;
 	recordhopper(data, function hopper_sty(val, R_n, RT) {
@@ -6651,7 +6745,9 @@ function parse_sty_bin(data, themes, opts) {
 			case 0x002C: /* 'BrtFmt' */
 				styles.NumberFmt[val[0]] = val[1]; SSF.load(val[1], val[0]);
 				break;
-			case 0x002B: /* 'BrtFont' */ break;
+			case 0x002B: /* 'BrtFont' */
+				styles.Fonts.push(val);
+				break;
 			case 0x0401: /* 'BrtKnownFonts' */ break;
 			case 0x002D: /* 'BrtFill' */ break;
 			case 0x002E: /* 'BrtBorder' */ break;
@@ -6823,6 +6919,7 @@ function parse_theme_xml(data, opts) {
 }
 
 function write_theme(Themes, opts) {
+	if(opts && opts.themeXLSX) return opts.themeXLSX;
 	var o = [XML_HEADER];
 	o[o.length] = '<a:theme xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" name="Office Theme">';
 	o[o.length] =  '<a:themeElements>';
@@ -9791,6 +9888,9 @@ function safe_format(p, fmtid, fillid, opts, themes, styles) {
 	if(p.t === 'z') return;
 	if(p.t === 'd' && typeof p.v === 'string') p.v = parseDate(p.v);
 	try {
+		if(opts.cellNF) p.z = SSF._table[fmtid];
+	} catch(e) { if(opts.WTF) throw e; }
+	if(!opts || opts.cellText !== false) try {
 		if(p.t === 'e') p.w = p.w || BErr[p.v];
 		else if(fmtid === 0) {
 			if(p.t === 'n') {
@@ -9807,7 +9907,6 @@ function safe_format(p, fmtid, fillid, opts, themes, styles) {
 		}
 		else if(p.t === 'd') p.w = SSF.format(fmtid,datenum(p.v),_ssfopts);
 		else p.w = SSF.format(fmtid,p.v,_ssfopts);
-		if(opts.cellNF) p.z = SSF._table[fmtid];
 	} catch(e) { if(opts.WTF) throw e; }
 	if(fillid) try {
 		p.s = styles.Fills[fillid];
@@ -9966,6 +10065,10 @@ function parse_ws_xml_margins(margin) {
 	});
 	return o;
 }
+function write_ws_xml_margins(margin) {
+	default_margins(margin);
+	return writextag('pageMargins', null, margin);
+}
 
 function parse_ws_xml_cols(columns, cols) {
 	var seencol = false;
@@ -10087,7 +10190,7 @@ return function parse_ws_xml_data(sdata, s, opts, guess, themes, styles) {
 			} else ++tagc;
 			for(i = 0; i != x.length; ++i) if(x.charCodeAt(i) === 62) break; ++i;
 			tag = parsexmltag(x.substr(0,i), true);
-			if(!tag.r) tag.r = utils.encode_cell({r:tagr-1, c:tagc});
+			if(!tag.r) tag.r = encode_cell({r:tagr-1, c:tagc});
 			d = x.substr(i);
 			p = ({t:""});
 
@@ -10153,7 +10256,9 @@ return function parse_ws_xml_data(sdata, s, opts, guess, themes, styles) {
 					if(!opts.cellDates) { p.v = datenum(parseDate(p.v)); p.t = 'n'; }
 					break;
 				/* error string in .w, number in .v */
-				case 'e': p.w = p.v; p.v = RBErr[p.v]; break;
+				case 'e':
+					if(opts && opts.cellText === false) p.w = p.v;
+					p.v = RBErr[p.v]; break;
 			}
 			/* formatting */
 			fmtid = fillid = 0;
@@ -10275,7 +10380,7 @@ function write_ws_xml(idx, opts, wb, rels) {
 	delete ws['!links'];
 
 	/* printOptions */
-	/* pageMargins */
+	if (ws['!margins'] != null) o[o.length] =  write_ws_xml_margins(ws['!margins'])
 	/* pageSetup */
 
 	var hfidx = o.length;
@@ -11914,7 +12019,7 @@ function xlml_set_custprop(Custprops, Rn, cp, val) {
 
 function safe_format_xlml(cell, nf, o) {
 	if(cell.t === 'z') return;
-	try {
+	if(!o || o.cellText !== false) try {
 		if(cell.t === 'e') { cell.w = cell.w || BErr[cell.v]; }
 		else if(nf === "General") {
 			if(cell.t === 'n') {
@@ -11924,6 +12029,8 @@ function safe_format_xlml(cell, nf, o) {
 			else cell.w = SSF._general(cell.v);
 		}
 		else cell.w = xlml_format(nf||"General", cell.v);
+	} catch(e) { if(o.WTF) throw e; }
+	try {
 		var z = XLMLFormatMap[nf]||nf||"General";
 		if(o.cellNF) cell.z = z;
 		if(o.cellDates && cell.t == 'n' && SSF.is_date(z)) {
@@ -12879,6 +12986,7 @@ function safe_format_xf(p, opts, date1904) {
 	if(!p.XF) return;
 	try {
 		var fmtid = p.XF.ifmt||0;
+		if(opts.cellNF) p.z = SSF._table[fmtid];
 		if(p.t === 'e'){}
 		else if(fmtid === 0) {
 			if(p.t === 'n') {
@@ -12891,7 +12999,6 @@ function safe_format_xf(p, opts, date1904) {
 		if(opts.cellDates && fmtid && p.t == 'n' && SSF.is_date(SSF._table[fmtid])) {
 			var _d = SSF.parse_date_code(p.v); if(_d) { p.t = 'd'; p.v = new Date(Date.UTC(_d.y, _d.m-1,_d.d,_d.H,_d.M,_d.S,_d.u)); }
 		}
-		if(opts.cellNF) p.z = SSF._table[fmtid];
 	} catch(e) { if(opts.WTF) throw e; }
 }
 
@@ -15709,6 +15816,7 @@ var fix_read_opts = fix_opts_func([
 	['cellHTML', true], /* emit html string as .h */
 	['cellFormula', true], /* emit formulae as .f */
 	['cellStyles', false], /* emits style/theme as .s */
+	['cellText', true], /* emit formatted text as .w */
 	['cellDates', false], /* emit date cells with type `d` */
 
 	['sheetStubs', false], /* emit empty cells */
@@ -16254,77 +16362,6 @@ function writeFileAsync(filename, wb, opts, cb) {
 	var _cb = cb; if(!(_cb instanceof Function)) _cb = (opts);
 	return _fs.writeFile(filename, writeSync(wb, o), _cb);
 }
-function decode_row(rowstr) { return parseInt(unfix_row(rowstr),10) - 1; }
-function encode_row(row) { return "" + (row + 1); }
-function fix_row(cstr) { return cstr.replace(/([A-Z]|^)(\d+)$/,"$1$$$2"); }
-function unfix_row(cstr) { return cstr.replace(/\$(\d+)$/,"$1"); }
-
-function decode_col(colstr) { var c = unfix_col(colstr), d = 0, i = 0; for(; i !== c.length; ++i) d = 26*d + c.charCodeAt(i) - 64; return d - 1; }
-function encode_col(col) { var s=""; for(++col; col; col=Math.floor((col-1)/26)) s = String.fromCharCode(((col-1)%26) + 65) + s; return s; }
-function fix_col(cstr) { return cstr.replace(/^([A-Z])/,"$$$1"); }
-function unfix_col(cstr) { return cstr.replace(/^\$([A-Z])/,"$1"); }
-
-function split_cell(cstr) { return cstr.replace(/(\$?[A-Z]*)(\$?\d*)/,"$1,$2").split(","); }
-function decode_cell(cstr) { var splt = split_cell(cstr); return { c:decode_col(splt[0]), r:decode_row(splt[1]) }; }
-function encode_cell(cell) { return encode_col(cell.c) + encode_row(cell.r); }
-function fix_cell(cstr) { return fix_col(fix_row(cstr)); }
-function unfix_cell(cstr) { return unfix_col(unfix_row(cstr)); }
-function decode_range(range) { var x =range.split(":").map(decode_cell); return {s:x[0],e:x[x.length-1]}; }
-function encode_range(cs,ce) {
-	if(typeof ce === 'undefined' || typeof ce === 'number') {
-return encode_range(cs.s, cs.e);
-	}
-if(typeof cs !== 'string') cs = encode_cell((cs));
-	if(typeof ce !== 'string') ce = encode_cell((ce));
-return cs == ce ? cs : cs + ":" + ce;
-}
-
-function safe_decode_range(range) {
-	var o = {s:{c:0,r:0},e:{c:0,r:0}};
-	var idx = 0, i = 0, cc = 0;
-	var len = range.length;
-	for(idx = 0; i < len; ++i) {
-		if((cc=range.charCodeAt(i)-64) < 1 || cc > 26) break;
-		idx = 26*idx + cc;
-	}
-	o.s.c = --idx;
-
-	for(idx = 0; i < len; ++i) {
-		if((cc=range.charCodeAt(i)-48) < 0 || cc > 9) break;
-		idx = 10*idx + cc;
-	}
-	o.s.r = --idx;
-
-	if(i === len || range.charCodeAt(++i) === 58) { o.e.c=o.s.c; o.e.r=o.s.r; return o; }
-
-	for(idx = 0; i != len; ++i) {
-		if((cc=range.charCodeAt(i)-64) < 1 || cc > 26) break;
-		idx = 26*idx + cc;
-	}
-	o.e.c = --idx;
-
-	for(idx = 0; i != len; ++i) {
-		if((cc=range.charCodeAt(i)-48) < 0 || cc > 9) break;
-		idx = 10*idx + cc;
-	}
-	o.e.r = --idx;
-	return o;
-}
-
-function safe_format_cell(cell, v) {
-	var q = (cell.t == 'd' && v instanceof Date);
-	if(cell.z != null) try { return (cell.w = SSF.format(cell.z, q ? datenum(v) : v)); } catch(e) { }
-	try { return (cell.w = SSF.format((cell.XF||{}).ifmt||(q ? 14 : 0),  q ? datenum(v) : v)); } catch(e) { return ''+v; }
-}
-
-function format_cell(cell, v, o) {
-	if(cell == null || cell.t == null || cell.t == 'z') return "";
-	if(cell.w !== undefined) return cell.w;
-	if(cell.t == 'd' && !cell.z && o && o.dateNF) cell.z = o.dateNF;
-	if(v == undefined) return safe_format_cell(cell, cell.v, o);
-	return safe_format_cell(cell, v, o);
-}
-
 function sheet_to_json(sheet, opts){
 	if(sheet == null || sheet["!ref"] == null) return [];
 	var val = {t:'n',v:0}, header = 0, offset = 1, hdr = [], isempty = true, v=0, vv="";
@@ -16429,7 +16466,7 @@ function make_csv_row(sheet, r, R, cols, fs, rs, FS, o) {
 }
 
 function sheet_to_csv(sheet, opts) {
-	var out = "";
+	var out = [];
 	var o = opts == null ? {} : opts;
 	if(sheet == null || sheet["!ref"] == null) return "";
 	var r = safe_decode_range(sheet["!ref"]);
@@ -16443,10 +16480,10 @@ function sheet_to_csv(sheet, opts) {
 		row = make_csv_row(sheet, r, R, cols, fs, rs, FS, o);
 		if(row == null) { continue; }
 		if(o.strip) row = row.replace(endregex,"");
-		out += row + RS;
+		out.push(row + RS);
 	}
 	delete o.dense;
-	return out;
+	return out.join("");
 }
 
 function sheet_to_txt(sheet, opts) {
