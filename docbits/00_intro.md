@@ -12,8 +12,6 @@ enhancements and additional features by request.
 
 [**Commercial Support**](http://sheetjs.com/support)
 
-[**Rendered Documentation**](https://sheetjs.gitbooks.io/docs/)
-
 [**In-Browser Demos**](http://sheetjs.com/demos)
 
 [**Source Code**](http://git.io/xlsx)
