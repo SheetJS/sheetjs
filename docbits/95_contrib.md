@@ -26,15 +26,24 @@ The included `make.cmd` script will build `xlsx.js` from the `bits` directory.
 Building is as simple as:
 
 ```cmd
-> make.cmd
+> make
 ```
 
 To prepare dev environment:
 
 ```cmd
-> npm install -g mocha
-> npm install
-> mocha -t 30000
+> make init
+```
+
+The full list of commands available in Windows are displayed in `make help`:
+
+```
+make init -- install deps and global modules
+make lint -- run eslint linter
+make test -- run mocha test suite
+make misc -- run smaller test suite
+make book -- rebuild README and summary
+make help -- display this message
 ```
 
 The normal approach uses a variety of command line tools to grab the test files.

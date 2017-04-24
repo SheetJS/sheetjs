@@ -19,8 +19,8 @@ if(process.env.FMTS) ex=process.env.FMTS.split(":").map(function(x){return x[0]=
 var exp = ex.map(function(x){ return x + ".pending"; });
 function test_file(x){ return ex.indexOf(x.substr(-5))>=0||exp.indexOf(x.substr(-13))>=0 || ex.indexOf(x.substr(-4))>=0||exp.indexOf(x.substr(-12))>=0; }
 
-var files = (fs.existsSync('tests.lst') ? fs.readFileSync('tests.lst', 'utf-8').split("\n") : fs.readdirSync('test_files')).filter(test_file);
-var fileA = (fs.existsSync('testA.lst') ? fs.readFileSync('testA.lst', 'utf-8').split("\n") : []).filter(test_file);
+var files = (fs.existsSync('tests.lst') ? fs.readFileSync('tests.lst', 'utf-8').split("\n").map(function(x) { return x.trim(); }) : fs.readdirSync('test_files')).filter(test_file);
+var fileA = (fs.existsSync('testA.lst') ? fs.readFileSync('testA.lst', 'utf-8').split("\n").map(function(x) { return x.trim(); }) : []).filter(test_file);
 
 /* Excel enforces 31 character sheet limit, although technical file limit is 255 */
 function fixsheetname(x) { return x.substr(0,31); }
@@ -987,6 +987,7 @@ describe('parse features', function() {
 	describe('page margins', function() {
 		var wb1, wb2, wb3, wb4, wb5, wbs;
 		var bef = (function() {
+			if(!fs.existsSync(paths.pmxls)) return wbs=[];
 			wb1 = X.readFile(paths.pmxls);
 			wb2 = X.readFile(paths.pmxls5);
 			wb3 = X.readFile(paths.pmxml);
@@ -1251,7 +1252,7 @@ describe('roundtrip features', function() {
 		});
 	});
 
-	describe('should preserve page margins', function() {[
+	(fs.existsSync(paths.pmxlsx) ? describe : describe.skip)('should preserve page margins', function() {[
 			//['xlml', paths.pmxml],
 			['xlsx', paths.pmxlsx],
 			['xlsb', paths.pmxlsb]
@@ -1654,7 +1655,7 @@ describe('encryption', function() {
 
 describe('multiformat tests', function() {
 var mfopts = opts;
-var mft = fs.readFileSync('multiformat.lst','utf-8').split("\n");
+var mft = fs.readFileSync('multiformat.lst','utf-8').split("\n").map(function(x) { return x.trim(); });
 var csv = true, formulae = false;
 mft.forEach(function(x) {
 	if(x[0]!="#") describe('MFT ' + x, function() {
