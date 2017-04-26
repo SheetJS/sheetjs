@@ -1516,6 +1516,15 @@ describe('json output', function() {
 		assert.equal(json5.length, 2); // = 2 records
 		assert.equal(json6.length, 3); // = 4 sheet rows - 1 blank row
 	});
+	it('should have an index that starts with zero when selecting range', function() {
+		var _data = [["S","h","e","e","t","J","S"],[1,2,3,4,5,6,7],[7,6,5,4,3,2,1],[2,3,4,5,6,7,8]];
+		var _ws = X.utils.aoa_to_sheet(_data);
+		var json1 = X.utils.sheet_to_json(_ws, { header:1, raw: true, range: "B1:F3" });
+		assert.equal(json1[0][3], "t");
+		assert.equal(json1[1][0], 2);
+		assert.equal(json1[2][1], 5);
+		assert.equal(json1[2][3], 3);
+	});
 });
 
 describe('csv output', function() {

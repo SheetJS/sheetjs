@@ -16492,7 +16492,7 @@ function sheet_to_json(sheet, opts){
 		cols[C] = encode_col(C);
 		val = dense ? sheet[R][C] : sheet[cols[C] + rr];
 		switch(header) {
-			case 1: hdr[C] = C; break;
+			case 1: hdr[C] = C - r.s.c; break;
 			case 2: hdr[C] = cols[C]; break;
 			case 3: hdr[C] = o.header[C - r.s.c]; break;
 			default:
