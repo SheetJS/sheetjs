@@ -1,25 +1,35 @@
 /* Common Name -> XLML Name */
 var XLMLDocPropsMap = {
-	Category: 'Category',
-	ContentStatus: 'ContentStatus', /* NOTE: missing from schema */
-	Keywords: 'Keywords',
-	LastAuthor: 'LastAuthor',
-	LastPrinted: 'LastPrinted',
-	RevNumber: 'Revision',
-	Author: 'Author',
-	Comments: 'Description',
-	Identifier: 'Identifier', /* NOTE: missing from schema */
-	Language: 'Language', /* NOTE: missing from schema */
-	Subject: 'Subject',
 	Title: 'Title',
+	Subject: 'Subject',
+	Author: 'Author',
+	Keywords: 'Keywords',
+	Comments: 'Description',
+	LastAuthor: 'LastAuthor',
+	RevNumber: 'Revision',
+	Application: 'AppName',
+	/* TotalTime: 'TotalTime', */
+	LastPrinted: 'LastPrinted',
 	CreatedDate: 'Created',
 	ModifiedDate: 'LastSaved',
-
-	Application: 'AppName',
-	AppVersion: 'Version',
-	TotalTime: 'TotalTime',
+	/* Pages */
+	/* Words */
+	/* Characters */
+	Category: 'Category',
+	/* PresentationFormat */
 	Manager: 'Manager',
-	Company: 'Company'
+	Company: 'Company',
+	/* Guid */
+	/* HyperlinkBase */
+	/* Bytes */
+	/* Lines */
+	/* Paragraphs */
+	/* CharactersWithSpaces */
+	AppVersion: 'Version',
+
+	ContentStatus: 'ContentStatus', /* NOTE: missing from schema */
+	Identifier: 'Identifier', /* NOTE: missing from schema */
+	Language: 'Language' /* NOTE: missing from schema */
 };
 var evert_XLMLDPM = evert(XLMLDocPropsMap);
 
@@ -28,19 +38,21 @@ function xlml_set_prop(Props, tag/*:string*/, val) {
 	Props[tag] = val;
 }
 
-
-/* TODO: verify */
 function xlml_write_docprops(Props, opts) {
 	var o = [];
-	CORE_PROPS.concat(EXT_PROPS).forEach(function(p) {
+	keys(XLMLDocPropsMap).map(function(m) {
+		for(var i = 0; i < CORE_PROPS.length; ++i) if(CORE_PROPS[i][1] == m) return CORE_PROPS[i];
+		for(i = 0; i < EXT_PROPS.length; ++i) if(EXT_PROPS[i][1] == m) return EXT_PROPS[i];
+		throw m;
+	}).forEach(function(p) {
 		if(Props[p[1]] == null) return;
 		var m = opts && opts.Props && opts.Props[p[1]] != null ? opts.Props[p[1]] : Props[p[1]];
 		switch(p[2]) {
-			case 'date': m = new Date(m).toISOString(); break;
+			case 'date': m = new Date(m).toISOString().replace(/\.\d*Z/,"Z"); break;
 		}
 		if(typeof m == 'number') m = String(m);
 		else if(m === true || m === false) { m = m ? "1" : "0"; }
-		else if(m instanceof Date) m = new Date(m).toISOString();
+		else if(m instanceof Date) m = new Date(m).toISOString().replace(/\.\d*Z/,"");
 		o.push(writetag(XLMLDocPropsMap[p[1]] || p[1], m));
 	});
 	return writextag('DocumentProperties', o.join(""), {xmlns:XLMLNS.o });

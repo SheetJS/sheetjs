@@ -244,8 +244,7 @@ return function parse_ws_xml_data(sdata, s, opts, guess, themes, styles) {
 		/* 18.3.1.73 row CT_Row */
 		for(ri = 0; ri < xlen; ++ri) if(x.charCodeAt(ri) === 62) break; ++ri;
 		tag = parsexmltag(x.substr(0,ri), true);
-		/* SpreadSheetGear uses implicit r/c */
-		tagr = typeof tag.r !== 'undefined' ? parseInt(tag.r, 10) : tagr+1; tagc = -1;
+		tagr = tag.r != null ? parseInt(tag.r, 10) : tagr+1; tagc = -1;
 		if(opts.sheetRows && opts.sheetRows < tagr) continue;
 		if(guess.s.r > tagr - 1) guess.s.r = tagr - 1;
 		if(guess.e.r < tagr - 1) guess.e.r = tagr - 1;
@@ -297,7 +296,7 @@ return function parse_ws_xml_data(sdata, s, opts, guess, themes, styles) {
 							p.F = arrayf[i][1];
 			}
 
-			if(tag.t === undefined && p.v === undefined) {
+			if(tag.t == null && p.v === undefined) {
 				if(!opts.sheetStubs) continue;
 				p.t = "z";
 			}
@@ -335,7 +334,7 @@ return function parse_ws_xml_data(sdata, s, opts, guess, themes, styles) {
 					break;
 				/* error string in .w, number in .v */
 				case 'e':
-					if(opts && opts.cellText === false) p.w = p.v;
+					if(!opts || opts.cellText !== false) p.w = p.v;
 					p.v = RBErr[p.v]; break;
 			}
 			/* formatting */

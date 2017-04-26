@@ -135,7 +135,7 @@ var parse_content_xml = (function() {
 						isstub = textpidx == 0;
 					}
 					if(comments.length > 0) { q.c = comments; comments = []; }
-					if(textp) q.w = textp;
+					if(textp && opts.cellText !== false) q.w = textp;
 					if(!isstub || opts.sheetStubs) {
 						if(!(opts.sheetRows && opts.sheetRows < R)) {
 							if(opts.dense) {

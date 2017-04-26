@@ -121,11 +121,11 @@ function parse_xlml_data(xml, ss, data, cell/*:any*/, base, styles, csty, row, a
 			if(cell.v === undefined) cell.v=+xml;
 			if(!cell.t) cell.t = 'n';
 			break;
-		case 'Error': cell.t = 'e'; cell.v = RBErr[xml]; cell.w = xml; break;
+		case 'Error': cell.t = 'e'; cell.v = RBErr[xml]; if(o.cellText !== false) cell.w = xml; break;
 		default: cell.t = 's'; cell.v = xlml_fixstr(ss||xml); break;
 	}
 	safe_format_xlml(cell, nf, o);
-	if(o.cellFormula != null) {
+	if(o.cellFormula !== false) {
 		if(cell.Formula) {
 			var fstr = unescapexml(cell.Formula);
 			/* strictly speaking, the leading = is required but some writers omit */
@@ -837,17 +837,107 @@ function write_sty_xlml(wb, opts)/*:string*/ {
 }
 /* WorksheetOptions */
 function write_ws_xlml_wsopts(ws/*:Worksheet*/, opts, idx/*:number*/, wb/*:Workbook*/)/*:string*/ {
+	if(!ws) return "";
 	var o = [];
+	/* NOTE: spec technically allows any order, but stick with implied order */
+
+	/* FitToPage */
+	/* DoNotDisplayColHeaders */
+	/* DoNotDisplayRowHeaders */
+	/* ViewableRange */
+	/* Selection */
+	/* GridlineColor */
+	/* Name */
+	/* ExcelWorksheetType */
+	/* IntlMacro */
+	/* Unsynced */
+	/* Selected */
+	/* CodeName */
+
+	if(ws['!margins']) {
+		o.push("<PageSetup>");
+		if(ws['!margins'].header) o.push(writextag("Header", null, {'x:Margin':ws['!margins'].header}));
+		if(ws['!margins'].footer) o.push(writextag("Footer", null, {'x:Margin':ws['!margins'].footer}));
+		o.push(writextag("PageMargins", null, {
+			'x:Bottom': ws['!margins'].bottom || "0.75",
+			'x:Left': ws['!margins'].left || "0.7",
+			'x:Right': ws['!margins'].right || "0.7",
+			'x:Top': ws['!margins'].top || "0.75"
+		}));
+		o.push("</PageSetup>");
+	}
+
 	/* PageSetup */
+	/* DisplayPageBreak */
+	/* TransitionExpressionEvaluation */
+	/* TransitionFormulaEntry */
+	/* Print */
+	/* Zoom */
+	/* PageLayoutZoom */
+	/* PageBreakZoom */
+	/* ShowPageBreakZoom */
+	/* DefaultRowHeight */
+	/* DefaultColumnWidth */
+	/* StandardWidth */
+
 	if(wb && wb.Workbook && wb.Workbook.Sheets && wb.Workbook.Sheets[idx]) {
 		/* Visible */
-		if(!!wb.Workbook.Sheets[idx].Hidden) o.push("<Visible>" + (wb.Workbook.Sheets[idx].Hidden == 1 ? "SheetHidden" : "SheetVeryHidden") + "</Visible>");
+		if(!!wb.Workbook.Sheets[idx].Hidden) o.push(writextag("Visible", (wb.Workbook.Sheets[idx].Hidden == 1 ? "SheetHidden" : "SheetVeryHidden"), {}));
 		else {
 			/* Selected */
 			for(var i = 0; i < idx; ++i) if(wb.Workbook.Sheets[i] && !wb.Workbook.Sheets[i].Hidden) break;
 			if(i == idx) o.push("<Selected/>");
 		}
 	}
+
+	/* LeftColumnVisible */
+	/* DisplayRightToLeft */
+	/* GridlineColorIndex */
+	/* DisplayFormulas */
+	/* DoNotDisplayGridlines */
+	/* DoNotDisplayHeadings */
+	/* DoNotDisplayOutline */
+	/* ApplyAutomaticOutlineStyles */
+	/* NoSummaryRowsBelowDetail */
+	/* NoSummaryColumnsRightDetail */
+	/* DoNotDisplayZeros */
+	/* ActiveRow */
+	/* ActiveColumn */
+	/* FilterOn */
+	/* RangeSelection */
+	/* TopRowVisible */
+	/* TopRowBottomPane */
+	/* LeftColumnRightPane */
+	/* ActivePane */
+	/* SplitHorizontal */
+	/* SplitVertical */
+	/* FreezePanes */
+	/* FrozenNoSplit */
+	/* TabColorIndex */
+	/* Panes */
+
+	/* NOTE: Password not supported in XLML Format */
+	if(ws['!protect']) {
+		o.push(writetag("ProtectContents", "True"));
+		if(ws['!protect'].objects) o.push(writetag("ProtectObjects", "True"));
+		if(ws['!protect'].scenarios) o.push(writetag("ProtectScenarios", "True"));
+		if(ws['!protect'].selectLockedCells != null && !ws['!protect'].selectLockedCells) o.push(writetag("EnableSelection", "NoSelection"));
+		else if(ws['!protect'].selectUnlockedCells != null && !ws['!protect'].selectUnlockedCells) o.push(writetag("EnableSelection", "UnlockedCells"));
+	[
+		[ "formatColumns", "AllowFormatCells" ],
+		[ "formatRows", "AllowSizeCols" ],
+		[ "formatCells", "AllowSizeRows" ],
+		[ "insertColumns", "AllowInsertCols" ],
+		[ "insertRows", "AllowInsertRows" ],
+		[ "insertHyperlinks", "AllowInsertHyperlinks" ],
+		[ "deleteColumns", "AllowDeleteCols" ],
+		[ "deleteRows", "AllowDeleteRows" ],
+		[ "sort", "AllowSort" ],
+		[ "autoFilter", "AllowFilter" ],
+		[ "pivotTables", "AllowUsePivotTables" ]
+	].forEach(function(x) { if(ws['!protect'][x[0]]) o.push("<"+x[1]+"/>"); });
+	}
+
 	if(o.length == 0) return "";
 	return writextag("WorksheetOptions", o.join(""), {xmlns:XLMLNS.x});
 }

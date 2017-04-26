@@ -54,12 +54,13 @@ function slurp(R, blob, length/*:number*/, opts) {
 
 function safe_format_xf(p/*:any*/, opts/*:ParseOpts*/, date1904/*:?boolean*/) {
 	if(p.t === 'z') return;
-	if(p.t === 'e') { p.w = p.w || BErr[p.v]; }
 	if(!p.XF) return;
 	try {
 		var fmtid = p.XF.ifmt||0;
 		if(opts.cellNF) p.z = SSF._table[fmtid];
-		if(p.t === 'e'){}
+	} catch(e) { if(opts.WTF) throw e; }
+	if(!opts || opts.cellText !== false) try {
+		if(p.t === 'e') { p.w = p.w || BErr[p.v]; }
 		else if(fmtid === 0) {
 			if(p.t === 'n') {
 				if((p.v|0) === p.v) p.w = SSF._general_int(p.v);

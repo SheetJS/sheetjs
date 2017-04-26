@@ -3,7 +3,7 @@
 	"title": "SheetJS js-xlsx",
 	"author": "sheetjs",
 	"gitbook": "3.2.2",
-	"plugins": ["anchorjs", "ga", "sidebar-ad", "-sharing", "advanced-emoji"],
+	"plugins": ["anchorjs", "ga", "sidebar-ad", "-sharing", "-search", "advanced-emoji"],
 	"pluginsConfig": {
 		"anchorjs": {
 			"icon": "#",

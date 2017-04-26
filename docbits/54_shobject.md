@@ -14,8 +14,9 @@ In addition to the base sheet keys, worksheets also add:
   the first cell (upper-left) in the range is set.
 
 - `ws['protect']`: object of write sheet protection properties.  The `password`
-  key specifies the password.  The writer uses the XOR obfuscation method.  The
-  following keys control the sheet protection (same as ECMA-376 18.3.1.85):
+  key specifies the password for formats that support password-protected sheets
+  (XLSX/XLSB/XLS).  The writer uses the XOR obfuscation method.  The following
+  keys control the sheet protection (same as ECMA-376 18.3.1.85):
 
 | key                   | functionality disabled if value is true              |
 |:----------------------|:-----------------------------------------------------|
@@ -39,7 +40,7 @@ In addition to the base sheet keys, worksheets also add:
 
 ```typescript
 type AutoFilter = {
-	ref:string; // A-1 based range representing the AutoFilter table range
+  ref:string; // A-1 based range representing the AutoFilter table range
 }
 ```
 

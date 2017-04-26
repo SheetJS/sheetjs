@@ -284,6 +284,7 @@ describe('parse options', function() {
 	if(typeof before != 'undefined') before(bef);
 	else it('before', bef);
 	describe('cell', function() {
+		var FSTPaths = [paths.fstxls, paths.fstxml, paths.fstxlsx, paths.fstxlsb, paths.fstods];
 		it('XLSX should generate HTML by default', function() {
 			var wb = X.readFile(paths.cstxlsx);
 			var ws = wb.Sheets.Sheet1;
@@ -299,7 +300,7 @@ describe('parse options', function() {
 			});
 		});
 		it('should generate formulae by default', function() {
-			[paths.fstxls, paths.fstxlsb].forEach(function(p) {
+			FSTPaths.forEach(function(p) {
 				var wb = X.readFile(p);
 				var found = false;
 				wb.SheetNames.forEach(function(s) {
@@ -312,12 +313,36 @@ describe('parse options', function() {
 			});
 		});
 		it('should not generate formulae when requested', function() {
-			[paths.fstxls, paths.fstxlsb].forEach(function(p) {
+			FSTPaths.forEach(function(p) {
 				var wb =X.readFile(p,{cellFormula:false});
 				wb.SheetNames.forEach(function(s) {
 					var ws = wb.Sheets[s];
 					each_cell(ws, function(cell) {
 						assert(typeof cell.f === 'undefined');
+					});
+				});
+			});
+		});
+		it('should generate formatted text by default', function() {
+			FSTPaths.forEach(function(p) {
+				var wb = X.readFile(p);
+				var found = false;
+				wb.SheetNames.forEach(function(s) {
+					var ws = wb.Sheets[s];
+					each_cell(ws, function(cell) {
+						if(typeof cell.w !== 'undefined') return (found = true);
+					});
+				});
+				assert(found);
+			});
+		});
+		it('should not generate formatted text when requested', function() {
+			FSTPaths.forEach(function(p) {
+				var wb =X.readFile(p,{cellText:false});
+				wb.SheetNames.forEach(function(s) {
+					var ws = wb.Sheets[s];
+					each_cell(ws, function(cell) {
+						assert(typeof cell.w === 'undefined');
 					});
 				});
 			});
@@ -1218,7 +1243,7 @@ describe('roundtrip features', function() {
 
 				if(m[0].t === 'n' && m[1].t === 'n') assert.equal(m[0].v, m[1].v);
 				else if(m[0].t === 'd' && m[1].t === 'd') assert.equal(m[0].v.toString(), m[1].v.toString());
-				else if(m[1].t === 'n') assert(Math.abs(datenum(new Date(m[0].v)) - m[1].v) < 0.01); /* TODO: 1sec adjustment */
+				else if(m[1].t === 'n') assert(Math.abs(datenum(new Date(m[0].v)) - m[1].v) < 0.01);
 			});
 		});
 	});
@@ -1253,7 +1278,7 @@ describe('roundtrip features', function() {
 	});
 
 	(fs.existsSync(paths.pmxlsx) ? describe : describe.skip)('should preserve page margins', function() {[
-			//['xlml', paths.pmxml],
+			['xlml', paths.pmxml],
 			['xlsx', paths.pmxlsx],
 			['xlsb', paths.pmxlsb]
 		].forEach(function(w) { it(w[0], function() {
