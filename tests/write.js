@@ -16,14 +16,15 @@ var ws_name = "SheetJS";
 var wscols = [
 	{wch:6}, // "characters"
 	{wpx:50}, // "pixels"
-	{wch:10},
-	{wpx:125}
+	/*{wch:10}*/,
+	{hidden:true}
 ];
 
+/* At 96 PPI, 1 pt = 1 px */
 var wsrows = [];
 wsrows[0] = {hpt: 12}; // "points"
 wsrows[1] = {hpx: 16}; // "pixels"
-wsrows[2] = {hpt: 18};
+//wsrows[2] = {hpt: 18};
 wsrows[3] = {hpx: 24};
 wsrows[4] = {hidden:true}; // hide row
 wsrows[5] = {hidden:false};
@@ -108,6 +109,10 @@ ws['A4'].c.push({a:"SheetJS",t:"I'm a little comment, short and stout!\n\nWell, 
 /* TEST: sheet protection */
 ws['!protect'] = {
 	password:"password",
+	/* enable formatting rows and columns */
+	formatRows:0,
+	formatColumns:0,
+	/* disable editing objects and scenarios */
 	objects:1,
 	scenarios:1
 };

@@ -13,6 +13,7 @@
 		"curly": 0,
 		"comma-style": [ 2, "last" ],
 		"no-trailing-spaces": 2,
+		"semi": [ 2, "always" ],
 		"comma-dangle": [ 2, "never" ]
 	}
 }

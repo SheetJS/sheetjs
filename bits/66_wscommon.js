@@ -14,13 +14,14 @@ function get_sst_id(sst/*:SST*/, str/*:string*/)/*:number*/ {
 function col_obj_w(C/*:number*/, col) {
 	var p = ({min:C+1,max:C+1}/*:any*/);
 	/* wch (chars), wpx (pixels) */
-	var width = -1;
+	var wch = -1;
 	if(col.MDW) MDW = col.MDW;
 	if(col.width != null) p.customWidth = 1;
-	else if(col.wpx != null) width = px2char(col.wpx);
-	else if(col.wch != null) width = col.wch;
-	if(width > -1) { p.width = char2width(width); p.customWidth = 1; }
-	else p.width = col.width;
+	else if(col.wpx != null) wch = px2char(col.wpx);
+	else if(col.wch != null) wch = col.wch;
+	if(wch > -1) { p.width = char2width(wch); p.customWidth = 1; }
+	else if(col.width != null) p.width = col.width;
+	if(col.hidden) p.hidden = true;
 	return p;
 }
 

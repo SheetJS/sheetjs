@@ -85,13 +85,17 @@ function process_col(coll/*:ColInfo*/) {
 		coll.wch = px2char(coll.wpx);
 		coll.width = char2width(coll.wch);
 		coll.MDW = MDW;
+	} else if(typeof coll.wch == 'number') {
+		coll.width = char2width(coll.wch);
+		coll.wpx = width2px(coll.width);
+		coll.MDW = MDW;
 	}
 	if(coll.customWidth) delete coll.customWidth;
 }
 
-var DEF_DPI = 96, DPI = DEF_DPI;
-function px2pt(px) { return px * 72 / DPI; }
-function pt2px(pt) { return pt * DPI / 72; }
+var DEF_PPI = 96, PPI = DEF_PPI;
+function px2pt(px) { return px * 96 / PPI; }
+function pt2px(pt) { return pt * PPI / 96; }
 
 /* [MS-EXSPXML3] 2.4.54 ST_enmPattern */
 var XLMLPatternTypeMap = {

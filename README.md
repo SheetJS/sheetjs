@@ -57,6 +57,7 @@ enhancements and additional features by request.
   * [Document Features](#document-features)
     + [Formulae](#formulae)
     + [Column Properties](#column-properties)
+    + [Row Properties](#row-properties)
     + [Hyperlinks](#hyperlinks)
     + [Cell Comments](#cell-comments)
     + [Sheet Visibility](#sheet-visibility)
@@ -97,6 +98,7 @@ enhancements and additional features by request.
   * [Tested Environments](#tested-environments)
   * [Test Files](#test-files)
 - [Contributing](#contributing)
+  * [Tests](#tests)
   * [OSX/Linux](#osxlinux)
   * [Windows](#windows)
 - [License](#license)
@@ -630,33 +632,37 @@ In addition to the base sheet keys, worksheets also add:
   parsed, the column objects store the pixel width in the `wpx` field, character
   width in the `wch` field, and the maximum digit width in the `MDW` field.
 
+- `ws['!rows']`: array of row properties objects as explained later in the docs.
+  Each row object encodes properties including row height and visibility.
+
 - `ws['!merges']`: array of range objects corresponding to the merged cells in
   the worksheet.  Plaintext utilities are unaware of merge cells.  CSV export
   will write all cells in the merge range if they exist, so be sure that only
   the first cell (upper-left) in the range is set.
 
-- `ws['protect']`: object of write sheet protection properties.  The `password`
+- `ws['!protect']`: object of write sheet protection properties.  The `password`
   key specifies the password for formats that support password-protected sheets
   (XLSX/XLSB/XLS).  The writer uses the XOR obfuscation method.  The following
-  keys control the sheet protection (same as ECMA-376 18.3.1.85):
+  keys control the sheet protection -- set to `false` to enable a feature when
+  sheet is locked or set to `true` to disable a feature:
 
-| key                   | functionality disabled if value is true              |
-|:----------------------|:-----------------------------------------------------|
-| `selectLockedCells`   | Select locked cells                                  |
-| `selectUnlockedCells` | Select unlocked cells                                |
-| `formatCells`         | Format cells                                         |
-| `formatColumns`       | Format columns                                       |
-| `formatRows`          | Format rows                                          |
-| `insertColumns`       | Insert columns                                       |
-| `insertRows`          | Insert rows                                          |
-| `insertHyperlinks`    | Insert hyperlinks                                    |
-| `deleteColumns`       | Delete columns                                       |
-| `deleteRows`          | Delete rows                                          |
-| `sort`                | Sort                                                 |
-| `autoFilter`          | Filter                                               |
-| `pivotTables`         | Use PivotTable reports                               |
-| `objects`             | Edit objects                                         |
-| `scenarios`           | Edit scenarios                                       |
+| key                   | feature (true=disabled / false=enabled) | default    |
+|:----------------------|:----------------------------------------|:-----------|
+| `selectLockedCells`   | Select locked cells                     | enabled    |
+| `selectUnlockedCells` | Select unlocked cells                   | enabled    |
+| `formatCells`         | Format cells                            | disabled   |
+| `formatColumns`       | Format columns                          | disabled   |
+| `formatRows`          | Format rows                             | disabled   |
+| `insertColumns`       | Insert columns                          | disabled   |
+| `insertRows`          | Insert rows                             | disabled   |
+| `insertHyperlinks`    | Insert hyperlinks                       | disabled   |
+| `deleteColumns`       | Delete columns                          | disabled   |
+| `deleteRows`          | Delete rows                             | disabled   |
+| `sort`                | Sort                                    | disabled   |
+| `autoFilter`          | Filter                                  | disabled   |
+| `pivotTables`         | Use PivotTable reports                  | disabled   |
+| `objects`             | Edit objects                            | enabled    |
+| `scenarios`           | Edit scenarios                          | enabled    |
 
 - `ws['!autofilter']`: AutoFilter object following the schema:
 
@@ -835,6 +841,7 @@ Since Excel prohibits named cells from colliding with names of A1 or RC style
 cell references, a (not-so-simple) regex conversion is possible.  BIFF Parsed
 formulae have to be explicitly unwound.  OpenFormula formulae can be converted
 with regexes for the most part.
+
 #### Column Properties
 
 Excel internally stores column widths in a nebulous "Max Digit Width" form.  The
@@ -853,10 +860,11 @@ objects which have the following properties:
 
 ```typescript
 type ColInfo = {
-	MDW?:number;  // Excel's "Max Digit Width" unit, always integral
-	width:number; // width in Excel's "Max Digit Width", width*256 is integral
-	wpx?:number;  // width in screen pixels
-	wch?:number;  // intermediate character calculation
+	MDW?:number;     // Excel's "Max Digit Width" unit, always integral
+	width:number;    // width in Excel's "Max Digit Width", width*256 is integral
+	wpx?:number;     // width in screen pixels
+	wch?:number;     // intermediate character calculation
+	hidden:?boolean; // if true, the column is hidden
 };
 ```
 
@@ -866,6 +874,29 @@ follow the priority order:
 1) use `width` field if available
 2) use `wpx` pixel width if available
 3) use `wch` character count if available
+
+#### Row Properties
+
+Excel internally stores row heights in points.  The default resolution is 72 DPI
+or 96 PPI, so the pixel and point size should agree.  For different resolutions
+they may not agree, so the library separates the concepts.
+
+The `!rows` array in each worksheet, if present, is a collection of `RowInfo`
+objects which have the following properties:
+
+```typescript
+type RowInfo = {
+	hpx?:number;     // height in screen pixels
+	hpt?:number;     // height in points
+	hidden:?boolean; // if true, the row is hidden
+};
+```
+
+Even though all of the information is made available, writers are expected to
+follow the priority order:
+
+1) use `hpx` pixel height if available
+2) use `hpt` point height if available
 
 #### Hyperlinks
 
@@ -1519,6 +1550,25 @@ Running `make init` will refresh the `test_files` submodule and get the files.
 
 Due to the precarious nature of the Open Specifications Promise, it is very
 important to ensure code is cleanroom.  Consult CONTRIBUTING.md
+
+### Tests
+
+The `test_misc` target (`make test_misc` on Linux/OSX / `make misc` on Windows)
+runs the targeted feature tests.  It should take 5-10 seconds to perform feature
+tests without testing against the entire test battery.  New features should be
+accompanied with tests for the relevant file formats and features.
+
+For tests involving the read side, an appropriate feature test would involve
+reading an existing file and checking the resulting workbook object.  If a
+parameter is involved, files should be read with different values for the param
+to verify that the feature is working as expected.
+
+For tests involving a new write feature which can already be parsed, appropriate
+feature tests would involve writing a workbook with the feature and then opening
+and verifying that the feature is preserved.
+
+For tests involving a new write feature without an existing read ability, please
+add a feature test to the kitchen sink `tests/write.js`.
 
 ### OSX/Linux
 

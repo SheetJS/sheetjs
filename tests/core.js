@@ -80,6 +80,17 @@ var N2 = 'XLSB';
 var N3 = 'XLS';
 var N4 = 'XML';
 
+function get_cell(ws/*:Worksheet*/, addr/*:string*/) {
+	if(!Array.isArray(ws)) return ws[addr];
+	var a = X.utils.decode_cell(addr);
+	return (ws[a.r]||[])[a.c];
+}
+
+function each_cell(ws, f) {
+	if(Array.isArray(ws)) ws.forEach(function(row) { if(row) row.forEach(f); });
+	else Object.keys(ws).forEach(function(addr) { if(addr[0] === "!" || !ws.hasOwnProperty(addr)) return; f(ws[addr]); });
+}
+
 /* comments_stress_test family */
 function check_comments(wb) {
 	var ws0 = wb.Sheets.Sheet2;
@@ -516,12 +527,12 @@ describe('parse features', function() {
 			var wb4=X.read(fs.readFileSync(paths.swcxml), {type:"binary"});
 
 			[wb1,wb2,wb3,wb4].map(function(wb) { return wb.Sheets[sheet]; }).forEach(function(ws, i) {
-				assert.equal(ws.B1.c.length, 1,"must have 1 comment");
-				assert.equal(ws.B1.c[0].a, "Yegor Kozlov","must have the same author");
-				assert.equal(ws.B1.c[0].t.replace(/\r\n/g,"\n").replace(/\r/g,"\n"), "Yegor Kozlov:\nfirst cell", "must have the concatenated texts");
+				assert.equal(get_cell(ws, "B1").c.length, 1,"must have 1 comment");
+				assert.equal(get_cell(ws, "B1").c[0].a, "Yegor Kozlov","must have the same author");
+				assert.equal(get_cell(ws, "B1").c[0].t, "Yegor Kozlov:\nfirst cell", "must have the concatenated texts");
 				if(i > 0) return;
-				assert.equal(ws.B1.c[0].r, '<r><rPr><b/><sz val="8"/><color indexed="81"/><rFont val="Tahoma"/></rPr><t>Yegor Kozlov:</t></r><r><rPr><sz val="8"/><color indexed="81"/><rFont val="Tahoma"/></rPr><t xml:space="preserve">\r\nfirst cell</t></r>', "must have the rich text representation");
-				assert.equal(ws.B1.c[0].h, '<span style="font-weight: bold;">Yegor Kozlov:</span><span style=""><br/>first cell</span>', "must have the html representation");
+				assert.equal(get_cell(ws, "B1").c[0].r, '<r><rPr><b/><sz val="8"/><color indexed="81"/><rFont val="Tahoma"/></rPr><t>Yegor Kozlov:</t></r><r><rPr><sz val="8"/><color indexed="81"/><rFont val="Tahoma"/></rPr><t xml:space="preserve">\r\nfirst cell</t></r>', "must have the rich text representation");
+				assert.equal(get_cell(ws, "B1").c[0].h, '<span style="font-size:8;"><b>Yegor Kozlov:</b></span><span style="font-size:8;"><br/>first cell</span>', "must have the html representation");
 			});
 		});
 		[
@@ -612,11 +623,7 @@ describe('parse features', function() {
 		if(typeof before != 'undefined') before(bef);
 		else it('before', bef);
 		it('should have "!cols"', function() {
-			assert(wb1.Sheets.Sheet1['!cols']);
-			assert(wb2.Sheets.Sheet1['!cols']);
-			assert(wb3.Sheets.Sheet1['!cols']);
-			assert(wb4.Sheets.Sheet1['!cols']);
-			assert(wb5.Sheets.Sheet1['!cols']);
+			[wb1, wb2, wb3, wb4, wb5].forEach(function(wb) { assert(wb.Sheets.Sheet1['!cols']); });
 		});
 		it('should have correct widths', function() {
 			[wb1, wb2, wb3, wb4, wb5].map(function(x) { return x.Sheets.Sheet1['!cols']; }).forEach(function(x) {
@@ -809,6 +816,56 @@ describe('parse features', function() {
 	});
 });
 
+describe('write features', function() {
+	describe('props', function() {
+		describe('core', function() {
+			var ws, baseprops;
+			var bef = (function() {
+				X = require(modp);
+				ws = X.utils.aoa_to_sheet([["a","b","c"],[1,2,3]]);
+				baseprops = {
+					Category: "C4tegory",
+					ContentStatus: "C0ntentStatus",
+					Keywords: "K3ywords",
+					LastAuthor: "L4stAuthor",
+					LastPrinted: "L4stPrinted",
+					RevNumber: 6969,
+					AppVersion: 69,
+					Author: "4uth0r",
+					Comments: "C0mments",
+					Identifier: "1d",
+					Language: "L4nguage",
+					Subject: "Subj3ct",
+					Title: "T1tle"
+				};
+			});
+			if(typeof before != 'undefined') before(bef);
+			else it('before', bef);
+			['xlml', 'xlsx', 'xlsb'].forEach(function(w) { it(w, function() {
+				wb = {
+					Props: {},
+					SheetNames: ["Sheet1"],
+					Sheets: {Sheet1: ws}
+				};
+				Object.keys(baseprops).forEach(function(k) { wb.Props[k] = baseprops[k]; });
+				var wb2 = X.read(X.write(wb, {bookType:w, type:"binary"}), {type:"binary"});
+				Object.keys(baseprops).forEach(function(k) { assert.equal(baseprops[k], wb2.Props[k]); });
+				var wb3 = X.read(X.write(wb2, {bookType:w, type:"binary", Props: {Author:"SheetJS"}}), {type:"binary"});
+				assert.equal("SheetJS", wb3.Props.Author);
+			}); });
+		});
+	});
+	describe('HTML', function() {
+		it('should use `h` value when present', function() {
+			var sheet = X.utils.aoa_to_sheet([["abc"]]);
+			get_cell(sheet, "A1").h = "<b>abc</b>";
+			var wb = {SheetNames:["Sheet1"], Sheets:{Sheet1:sheet}};
+			var str = X.write(wb, {bookType:"html", type:"binary"});
+			assert(str.indexOf("<b>abc</b>") > 0);
+		});
+	});
+});
+
 function seq(end, start) {
 	var s = start || 0;
 	var o = new Array(end - s);
@@ -895,8 +952,8 @@ describe('roundtrip features', function() {
 
 	describe('should preserve hyperlink', function() { [
 			['xlml', paths.hlxml],
-			//['xlsx', paths.hlxlsx], // TODO
-			//['xlsb', paths.hlxlsb] // TODO
+			['xlsx', paths.hlxlsx],
+			['xlsb', paths.hlxlsb]
 		].forEach(function(w) {
 			it(w[0], function() {
 				var wb1 = X.read(fs.readFileSync(w[1]), {type:"binary"});
@@ -924,6 +981,39 @@ describe('roundtrip features', function() {
 				}
 			});
 		});
+	});
+
+	describe('should preserve column properties', function() { [
+			'xlml', /*'biff2', */ 'xlsx', 'xlsb', 'slk'
+		].forEach(function(w) { it(w, function() {
+				var ws1 = X.utils.aoa_to_sheet([["hpx12", "hpt24", "hpx48", "hidden"]]);
+				ws1['!cols'] = [{wch:9},{wpx:100},{width:80},{hidden:true}];
+				var wb1 = {SheetNames:["Sheet1"], Sheets:{Sheet1:ws1}};
+				var wb2 = X.read(X.write(wb1, {bookType:w, type:"binary"}), {type:"binary", cellStyles:true});
+				var ws2 = wb2.Sheets.Sheet1;
+				assert.equal(ws2['!cols'][3].hidden, true);
+				assert.equal(ws2['!cols'][0].wch, 9);
+				if(w == 'slk') return;
+				assert.equal(ws2['!cols'][1].wpx, 100);
+				/* xlml stores integral pixels -> approximate width */
+				if(w == 'xlml') assert.equal(Math.round(ws2['!cols'][2].width), 80);
+				else assert.equal(ws2['!cols'][2].width, 80);
+		}); });
+	});
+
+	describe('should preserve row properties', function() { [
+			'xlml', /*'biff2', */ 'xlsx', 'xlsb', 'slk'
+		].forEach(function(w) { it(w, function() {
+				var ws1 = X.utils.aoa_to_sheet([["hpx12"],["hpt24"],["hpx48"],["hidden"]]);
+				ws1['!rows'] = [{hpx:12},{hpt:24},{hpx:48},{hidden:true}];
+				var wb1 = {SheetNames:["Sheet1"], Sheets:{Sheet1:ws1}};
+				var wb2 = X.read(X.write(wb1, {bookType:w, type:"binary"}), {type:"binary", cellStyles:true});
+				var ws2 = wb2.Sheets.Sheet1;
+				assert.equal(ws2['!rows'][0].hpx, 12);
+				assert.equal(ws2['!rows'][1].hpt, 24);
+				assert.equal(ws2['!rows'][2].hpx, 48);
+				assert.equal(ws2['!rows'][3].hidden, true);
+		}); });
 	});
 
 	describe('should preserve cell comments', function() { [

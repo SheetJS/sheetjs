@@ -210,14 +210,19 @@ function parse_ExtSST(blob, length) {
 }
 
 
-/* 2.4.221 TODO*/
+/* 2.4.221 TODO: check BIFF2-4 */
 function parse_Row(blob, length) {
-	var rw = blob.read_shift(2), col = blob.read_shift(2), Col = blob.read_shift(2), rht = blob.read_shift(2);
-	blob.read_shift(4); // reserved(2), unused(2)
+	var z = ({}/*:any*/);
+	z.r = blob.read_shift(2);
+	z.c = blob.read_shift(2);
+	z.cnt = blob.read_shift(2) - z.c;
+	var miyRw = blob.read_shift(2);
+	blob.l += 4; // reserved(2), unused(2)
 	var flags = blob.read_shift(1); // various flags
-	blob.read_shift(1); // reserved
-	blob.read_shift(2); //ixfe, other flags
-	return {r:rw, c:col, cnt:Col-col};
+	blob.l += 3; // reserved(8), ixfe(12), flags(4)
+	if(flags & 0x20) z.hidden = true;
+	if(flags & 0x40) z.hpt = miyRw / 20;
+	return z;
 }
 
 

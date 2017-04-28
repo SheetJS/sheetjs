@@ -3,6 +3,25 @@
 Due to the precarious nature of the Open Specifications Promise, it is very
 important to ensure code is cleanroom.  Consult CONTRIBUTING.md
 
+### Tests
+
+The `test_misc` target (`make test_misc` on Linux/OSX / `make misc` on Windows)
+runs the targeted feature tests.  It should take 5-10 seconds to perform feature
+tests without testing against the entire test battery.  New features should be
+accompanied with tests for the relevant file formats and features.
+
+For tests involving the read side, an appropriate feature test would involve
+reading an existing file and checking the resulting workbook object.  If a
+parameter is involved, files should be read with different values for the param
+to verify that the feature is working as expected.
+
+For tests involving a new write feature which can already be parsed, appropriate
+feature tests would involve writing a workbook with the feature and then opening
+and verifying that the feature is preserved.
+
+For tests involving a new write feature without an existing read ability, please
+add a feature test to the kitchen sink `tests/write.js`.
+
 ### OSX/Linux
 
 The xlsx.js file is constructed from the files in the `bits` subdirectory. The

@@ -502,7 +502,14 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 						process_col(colinfo[val.e+1]);
 					}
 				} break;
-				case 'Row': break; // TODO
+				case 'Row': {
+					var rowobj = {};
+					if(val.hidden) { rowinfo[val.r] = rowobj; rowobj.hidden = true; }
+					if(val.hpt) {
+						rowinfo[val.r] = rowobj;
+						rowobj.hpt = val.hpt; rowobj.hpx = pt2px(val.hpt);
+					}
+				} break;
 
 				case 'LeftMargin':
 				case 'RightMargin':

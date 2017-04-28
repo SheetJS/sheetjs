@@ -189,7 +189,7 @@ function parse_xlml_xml(d, opts)/*:Workbook*/ {
 	var comments = [], comment = {};
 	var cstys = [], csty, seencol = false;
 	var arrayf = [];
-	var rowinfo = [];
+	var rowinfo = [], rowobj = {};
 	var Workbook = { Sheets:[] }, wsprops = {};
 	xlmlregex.lastIndex = 0;
 	str = str.replace(/<!--([^\u2603]*?)-->/mg,"");
@@ -254,6 +254,12 @@ function parse_xlml_xml(d, opts)/*:Workbook*/ {
 			} else {
 				row = xlml_parsexmltag(Rn[0]);
 				if(row.Index) r = +row.Index - 1;
+				rowobj = {};
+				if(row.AutoFitHeight == "0") {
+					rowobj.hpx = parseInt(row.Height, 10); rowobj.hpt = px2pt(rowobj.hpx);
+					rowinfo[r] = rowobj;
+				}
+				if(row.Hidden == "1") { rowobj.hidden = true; rowinfo[r] = rowobj; }
 			}
 			break;
 		case 'Worksheet': /* TODO: read range from FullRows/FullColumns */
@@ -304,9 +310,10 @@ function parse_xlml_xml(d, opts)/*:Workbook*/ {
 		case 'Column':
 			if(state[state.length-1][0] !== 'Table') break;
 			csty = xlml_parsexmltag(Rn[0]);
-			csty.wpx = parseInt(csty.Width, 10);
+			if(csty.Hidden) { csty.hidden = true; delete csty.Hidden; }
+			if(csty.Width) csty.wpx = parseInt(csty.Width, 10);
 			if(!seencol && csty.wpx > 10) {
-				seencol = true; find_mdw_wpx(csty.wpx);
+				seencol = true; MDW = DEF_MDW; //find_mdw_wpx(csty.wpx);
 				for(var _col = 0; _col < cstys.length; ++_col) if(cstys[_col]) process_col(cstys[_col]);
 			}
 			if(seencol) process_col(csty);
@@ -443,7 +450,7 @@ function parse_xlml_xml(d, opts)/*:Workbook*/ {
 					case 'Color': break;
 					case 'Index': break;
 					case 'RGB': break;
-					case 'PixelsPerInch': break;
+					case 'PixelsPerInch': break; // TODO: set PPI
 					case 'TargetScreenSize': break;
 					case 'ReadOnlyRecommended': break;
 					default: seen = false;
@@ -995,6 +1002,15 @@ function write_ws_xlml_cell(cell, ref, ws, opts, idx, wb, addr)/*:string*/{
 
 	return writextag("Cell", m, attr);
 }
+function write_ws_xlml_row(R/*:number*/, row)/*:string*/ {
+	var o = '<Row ss:Index="' + (R+1) + '"';
+	if(row) {
+		if(row.hpt && !row.hpx) row.hpx = pt2px(row.hpt);
+		if(row.hpx) o += ' ss:AutoFitHeight="0" ss:Height="' + row.hpx + '"';
+		if(row.hidden) o += ' ss:Hidden="1"';
+	}
+	return o + '>';
+}
 /* TODO */
 function write_ws_xlml_table(ws/*:Worksheet*/, opts, idx/*:number*/, wb/*:Workbook*/)/*:string*/ {
 	if(!ws['!ref']) return "";
@@ -1002,12 +1018,17 @@ function write_ws_xlml_table(ws/*:Worksheet*/, opts, idx/*:number*/, wb/*:Workbo
 	var marr = ws['!merges'] || [], mi = 0;
 	var o = [];
 	if(ws['!cols']) ws['!cols'].forEach(function(n, i) {
+		process_col(n);
+		var w = !!n.width;
 		var p = col_obj_w(i, n);
-		o.push(writextag("Column",null, {"ss:Index":i+1, "ss:Width":width2px(p.width)}));
+		var k = {"ss:Index":i+1};
+		if(w) k['ss:Width'] = width2px(p.width);
+		if(n.hidden) k['ss:Hidden']="1";
+		o.push(writextag("Column",null,k));
 	});
 	var dense = Array.isArray(ws);
 	for(var R = range.s.r; R <= range.e.r; ++R) {
-		var row = ['<Row ss:Index="' + (R+1) + '">'];
+		var row = [write_ws_xlml_row(R, (ws['!rows']||[])[R])];
 		for(var C = range.s.c; C <= range.e.c; ++C) {
 			var skip = false;
 			for(mi = 0; mi != marr.length; ++mi) {

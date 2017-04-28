@@ -77,3 +77,4 @@ Since Excel prohibits named cells from colliding with names of A1 or RC style
 cell references, a (not-so-simple) regex conversion is possible.  BIFF Parsed
 formulae have to be explicitly unwound.  OpenFormula formulae can be converted
 with regexes for the most part.
+

@@ -206,19 +206,19 @@ var SYLK = (function() {
 		var records = str.split(/[\n\r]+/), R = -1, C = -1, ri = 0, rj = 0, arr = [];
 		var formats = [];
 		var next_cell_format = null;
+		var sht = {}, rowinfo = [], colinfo = [], cw = [];
+		var Mval = 0, j;
 		for (; ri !== records.length; ++ri) {
+			Mval = 0;
 			var record = records[ri].trim().split(";");
 			var RT = record[0], val;
-			if(RT === 'P') for(rj=1; rj<record.length; ++rj) switch(record[rj].charAt(0)) {
-				case 'P':
-					formats.push(record[rj].substr(1));
-					break;
-			}
-			else if(RT !== 'C' && RT !== 'F') continue;
-			else for(rj=1; rj<record.length; ++rj) switch(record[rj].charAt(0)) {
+			switch(RT) {
+			case 'P': if(record[1].charAt(0) == 'P') formats.push(records[ri].trim().substr(3).replace(/;;/g, ";"));
+				break;
+			case 'C': case 'F': for(rj=1; rj<record.length; ++rj) switch(record[rj].charAt(0)) {
 				case 'Y':
 					R = parseInt(record[rj].substr(1))-1; C = 0;
-					for(var j = arr.length; j <= R; ++j) arr[j] = [];
+					for(j = arr.length; j <= R; ++j) arr[j] = [];
 					break;
 				case 'X': C = parseInt(record[rj].substr(1))-1; break;
 				case 'K':
@@ -228,7 +228,7 @@ var SYLK = (function() {
 					else if(val === 'FALSE') val = false;
 					else if(+val === +val) {
 						val = +val;
-						if(next_cell_format !== null && next_cell_format.match(/[ymdhmsYMDHMS]/)) val = numdate(val);
+						if(next_cell_format !== null && SSF.is_date(next_cell_format)) val = numdate(val);
 					}
 					arr[R][C] = val;
 					next_cell_format = null;
@@ -236,12 +236,37 @@ var SYLK = (function() {
 				case 'P':
 					if(RT !== 'F') break;
 					next_cell_format = formats[parseInt(record[rj].substr(1))];
+					break;
+				case 'M': Mval = parseInt(record[rj].substr(1)) / 20; break;
+				case 'W':
+					if(RT !== 'F') break;
+					cw = record[rj].substr(1).split(" ");
+					for(j = parseInt(cw[0], 10); j <= parseInt(cw[1], 10); ++j) {
+						Mval = parseInt(cw[2], 10);
+						colinfo[j-1] = Mval == 0 ? {hidden:true}: {wch:Mval}; process_col(colinfo[j-1]);
+					} break;
+				case 'R':
+					R = parseInt(record[rj].substr(1))-1;
+					rowinfo[R] = {};
+					if(Mval > 0) { rowinfo[R].hpt = Mval; rowinfo[R].hpx = pt2px(Mval); }
+					else if(Mval == 0) rowinfo[R].hidden = true;
+			} break;
+			default: break;
 			}
 		}
+		if(rowinfo.length > 0) sht['!rows'] = rowinfo;
+		if(colinfo.length > 0) sht['!cols'] = colinfo;
+		arr[arr.length] = sht;
 		return arr;
 	}
 
-	function sylk_to_sheet(str/*:string*/, opts)/*:Worksheet*/ { return aoa_to_sheet(sylk_to_aoa(str, opts), opts); }
+	function sylk_to_sheet(str/*:string*/, opts)/*:Worksheet*/ {
+		var aoa = sylk_to_aoa(str, opts);
+		var ws = aoa.pop();
+		var o = aoa_to_sheet(aoa, opts);
+		keys(ws).forEach(function(k) { o[k] = ws[k]; });
+		return o;
+	}
 
 	function sylk_to_workbook(str/*:string*/, opts)/*:Workbook*/ { return sheet_to_workbook(sylk_to_sheet(str, opts), opts); }
 
@@ -257,11 +282,40 @@ var SYLK = (function() {
 		return o;
 	}
 
+	function write_ws_cols_sylk(out, cols) {
+		cols.forEach(function(col, i) {
+			var rec = "F;W" + (i+1) + " " + (i+1) + " ";
+			if(col.hidden) rec += "0";
+			else {
+				if(typeof col.width == 'number') col.wpx = width2px(col.width);
+				if(typeof col.wpx == 'number') col.wch = px2char(col.wpx);
+				if(typeof col.wch == 'number') rec += Math.round(col.wch);
+			}
+			if(rec.charAt(rec.length - 1) != " ") out.push(rec);
+		});
+	}
+
+	function write_ws_rows_sylk(out, rows) {
+		rows.forEach(function(row, i) {
+			var rec = "F;";
+			if(row.hidden) rec += "M0;";
+			else if(row.hpt) rec += "M" + 20 * row.hpt + ";";
+			else if(row.hpx) rec += "M" + 20 * px2pt(row.hpx) + ";";
+			if(rec.length > 2) out.push(rec + "R" + (i+1));
+		});
+	}
+
 	function sheet_to_sylk(ws/*:Worksheet*/, opts/*:?any*/)/*:string*/ {
 		var preamble/*:Array<string>*/ = ["ID;PWXL;N;E"], o/*:Array<string>*/ = [];
-		preamble.push("P;PGeneral");
 		var r = decode_range(ws['!ref']), cell/*:Cell*/;
 		var dense = Array.isArray(ws);
+		var RS = "\r\n";
+
+		preamble.push("P;PGeneral");
+		preamble.push("F;P0;DG0G8;M255");
+		if(ws['!cols']) write_ws_cols_sylk(preamble, ws['!cols']);
+		if(ws['!rows']) write_ws_rows_sylk(preamble, ws['!rows']);
+
 		for(var R = r.s.r; R <= r.e.r; ++R) {
 			for(var C = r.s.c; C <= r.e.c; ++C) {
 				var coord = encode_cell({r:R,c:C});
@@ -270,8 +324,6 @@ var SYLK = (function() {
 				o.push(write_ws_cell_sylk(cell, ws, R, C, opts));
 			}
 		}
-		preamble.push("F;P0;DG0G8;M255");
-		var RS = "\r\n";
 		return preamble.join(RS) + RS + o.join(RS) + RS + "E" + RS;
 	}
 
