@@ -5,7 +5,7 @@
 /*exported XLSX */
 var XLSX = {};
 (function make_xlsx(XLSX){
-XLSX.version = '0.9.12';
+XLSX.version = '0.9.13';
 var current_codepage = 1200, current_cptable;
 /*:: declare var cptable:any; */
 if(typeof module !== "undefined" && typeof require !== 'undefined') {
@@ -37,6 +37,7 @@ if(typeof cptable !== 'undefined') {
 	};
 }
 var DENSE = null;
+var DIF_XL = true;
 var Base64 = (function make_b64(){
 	var map = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
 	return {
@@ -117,7 +118,7 @@ type WriteObjStrFactory = {from_sheet(ws:Worksheet, o:any):string};
 /*jshint -W041 */
 var SSF = {};
 var make_ssf = function make_ssf(SSF){
-SSF.version = '0.9.0';
+SSF.version = '0.9.1';
 function _strrev(x/*:string*/)/*:string*/ { var o = "", i = x.length-1; while(i>=0) o += x.charAt(i--); return o; }
 function fill(c/*:string*/,l/*:number*/)/*:string*/ { var o = ""; while(o.length < l) o+=c; return o; }
 function pad0(v/*:any*/,d/*:number*/)/*:string*/{var t=""+v; return t.length>=d?t:fill('0',d-t.length)+t;}
@@ -138,38 +139,6 @@ function fixopts(o){
 	for(var y = 0; y != opts_fmt.length; ++y) if(o[opts_fmt[y][0]]===undefined) o[opts_fmt[y][0]]=opts_fmt[y][1];
 }
 SSF.opts = opts_fmt;
-var table_fmt = {
-	/*::[*/0/*::]*/:  'General',
-	/*::[*/1/*::]*/:  '0',
-	/*::[*/2/*::]*/:  '0.00',
-	/*::[*/3/*::]*/:  '#,##0',
-	/*::[*/4/*::]*/:  '#,##0.00',
-	/*::[*/9/*::]*/:  '0%',
-	/*::[*/10/*::]*/: '0.00%',
-	/*::[*/11/*::]*/: '0.00E+00',
-	/*::[*/12/*::]*/: '# ?/?',
-	/*::[*/13/*::]*/: '# ??/??',
-	/*::[*/14/*::]*/: 'm/d/yy',
-	/*::[*/15/*::]*/: 'd-mmm-yy',
-	/*::[*/16/*::]*/: 'd-mmm',
-	/*::[*/17/*::]*/: 'mmm-yy',
-	/*::[*/18/*::]*/: 'h:mm AM/PM',
-	/*::[*/19/*::]*/: 'h:mm:ss AM/PM',
-	/*::[*/20/*::]*/: 'h:mm',
-	/*::[*/21/*::]*/: 'h:mm:ss',
-	/*::[*/22/*::]*/: 'm/d/yy h:mm',
-	/*::[*/37/*::]*/: '#,##0 ;(#,##0)',
-	/*::[*/38/*::]*/: '#,##0 ;[Red](#,##0)',
-	/*::[*/39/*::]*/: '#,##0.00;(#,##0.00)',
-	/*::[*/40/*::]*/: '#,##0.00;[Red](#,##0.00)',
-	/*::[*/45/*::]*/: 'mm:ss',
-	/*::[*/46/*::]*/: '[h]:mm:ss',
-	/*::[*/47/*::]*/: 'mmss.0',
-	/*::[*/48/*::]*/: '##0.0E+0',
-	/*::[*/49/*::]*/: '@',
-	/*::[*/56/*::]*/: '"上午/下午 "hh"時"mm"分"ss"秒 "',
-	/*::[*/65535/*::]*/: 'General'
-};
 var days/*:Array<Array<string> >*/ = [
 	['Sun', 'Sunday'],
 	['Mon', 'Monday'],
@@ -193,7 +162,42 @@ var months/*:Array<Array<string> >*/ = [
 	['N', 'Nov', 'November'],
 	['D', 'Dec', 'December']
 ];
-function frac(x, D, mixed) {
+function init_table(t/*:any*/) {
+	t[0]=  'General';
+	t[1]=  '0';
+	t[2]=  '0.00';
+	t[3]=  '#,##0';
+	t[4]=  '#,##0.00';
+	t[9]=  '0%';
+	t[10]= '0.00%';
+	t[11]= '0.00E+00';
+	t[12]= '# ?/?';
+	t[13]= '# ??/??';
+	t[14]= 'm/d/yy';
+	t[15]= 'd-mmm-yy';
+	t[16]= 'd-mmm';
+	t[17]= 'mmm-yy';
+	t[18]= 'h:mm AM/PM';
+	t[19]= 'h:mm:ss AM/PM';
+	t[20]= 'h:mm';
+	t[21]= 'h:mm:ss';
+	t[22]= 'm/d/yy h:mm';
+	t[37]= '#,##0 ;(#,##0)';
+	t[38]= '#,##0 ;[Red](#,##0)';
+	t[39]= '#,##0.00;(#,##0.00)';
+	t[40]= '#,##0.00;[Red](#,##0.00)';
+	t[45]= 'mm:ss';
+	t[46]= '[h]:mm:ss';
+	t[47]= 'mmss.0';
+	t[48]= '##0.0E+0';
+	t[49]= '@';
+	t[56]= '"上午/下午 "hh"時"mm"分"ss"秒 "';
+	t[65535]= 'General';
+}
+
+var table_fmt = {};
+init_table(table_fmt);
+function frac(x/*:number*/, D/*:number*/, mixed/*:?boolean*/)/*:Array<number>*/ {
 	var sgn = x < 0 ? -1 : 1;
 	var B = x * sgn;
 	var P_2 = 0, P_1 = 1, P = 0;
@@ -203,15 +207,13 @@ function frac(x, D, mixed) {
 		A = Math.floor(B);
 		P = A * P_1 + P_2;
 		Q = A * Q_1 + Q_2;
-		if((B - A) < 0.0000000005) break;
+		if((B - A) < 0.00000005) break;
 		B = 1 / (B - A);
 		P_2 = P_1; P_1 = P;
 		Q_2 = Q_1; Q_1 = Q;
 	}
-	if(Q > D) { Q = Q_1; P = P_1; }
-	if(Q > D) { Q = Q_2; P = P_2; }
+	if(Q > D) { if(Q_1 > D) { Q = Q_2; P = P_2; } else { Q = Q_1; P = P_1; } }
 	if(!mixed) return [0, sgn * P, Q];
-	if(Q===0) throw "Unexpected state: "+P+" "+P_1+" "+P_2+" "+Q+" "+Q_1+" "+Q_2;
 	var q = Math.floor(sgn * P/Q);
 	return [q, sgn*P - q*Q, Q];
 }
@@ -253,6 +255,8 @@ function general_fmt(v/*:any*/, opts/*:?any*/) {
 		case 'string': return v;
 		case 'boolean': return v ? "TRUE" : "FALSE";
 		case 'number': return (v|0) === v ? general_fmt_int(v, opts) : general_fmt_num(v, opts);
+		case 'undefined': return "";
+		case 'object': if(v == null) return "";
 	}
 	throw new Error("unsupported value in General format: " + v);
 }
@@ -567,10 +571,10 @@ function write_num_int(type/*:string*/, fmt/*:string*/, val/*:number*/)/*:string
 	if((r = fmt.match(frac1))) return write_num_f2(r, aval, sign);
 	if(fmt.match(/^#+0+$/)) return sign + pad0(aval,fmt.length - fmt.indexOf("0"));
 	if((r = fmt.match(dec1))) {
-		/*:: if(!Array.isArray(r)) throw "unreachable"; */
+		/*:: if(!Array.isArray(r)) throw new Error("unreachable"); */
 		o = (""+val).replace(/^([^\.]+)$/,"$1."+r[1]).replace(/\.$/,"."+r[1]);
 		o = o.replace(/\.(\d*)$/,function($$, $1) {
-		/*:: if(!Array.isArray(r)) throw "unreachable"; */
+		/*:: if(!Array.isArray(r)) throw new Error("unreachable"); */
 			return "." + $1 + fill("0", r[1].length-$1.length); });
 		return fmt.indexOf("0.") !== -1 ? o : o.replace(/^0\./,".");
 	}
@@ -678,13 +682,13 @@ function fmt_is_date(fmt/*:string*/)/*:boolean*/ {
 			case '.':
 				/* falls through */
 			case '0': case '#':
-				while(i < fmt.length && ("0#?.,E+-%".indexOf(c=fmt.charAt(++i)) > -1 || c=='\\' && fmt.charAt(i+1) == "-" && "0#".indexOf(fmt.charAt(i+2))>-1));
+				while(i < fmt.length && ("0#?.,E+-%".indexOf(c=fmt.charAt(++i)) > -1 || c=='\\' && fmt.charAt(i+1) == "-" && "0#".indexOf(fmt.charAt(i+2))>-1)){}
 				break;
-			case '?': while(fmt.charAt(++i) === c); break;
+			case '?': while(fmt.charAt(++i) === c){} break;
 			case '*': ++i; if(fmt.charAt(i) == ' ' || fmt.charAt(i) == '*') ++i; break;
 			case '(': case ')': ++i; break;
 			case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':
-				while(i < fmt.length && "0123456789".indexOf(fmt.charAt(++i)) > -1); break;
+				while(i < fmt.length && "0123456789".indexOf(fmt.charAt(++i)) > -1){} break;
 			case ' ': ++i; break;
 			default: ++i; break;
 		}
@@ -740,7 +744,10 @@ function eval_fmt(fmt/*:string*/, v/*:any*/, opts/*:any*/, flen/*:number*/) {
 				if(o.match(abstime)) {
 					if(dt==null) { dt=parse_date_code(v, opts); if(dt==null) return ""; }
 					out[out.length] = {t:'Z', v:o.toLowerCase()};
-				} else { o=""; }
+				} else if(o.indexOf("$") > -1) {
+					o = (o.match(/\$([^-\[\]]*)/)||[])[1]||"$";
+					if(!fmt_is_date(fmt)) out[out.length] = {t:'t',v:o};
+				}
 				break;
 			/* Numbers */
 			case '.':
@@ -776,7 +783,7 @@ function eval_fmt(fmt/*:string*/, v/*:any*/, opts/*:any*/, flen/*:number*/) {
 			/* falls through */
 			case 'd': case 'y': case 'M': case 'e': lst=out[i].t; break;
 			case 'm': if(lst === 's') { out[i].t = 'M'; if(bt < 2) bt = 2; } break;
-			case 'X': if(out[i].v === "B2");
+			case 'X': /*if(out[i].v === "B2");*/
 				break;
 			case 'Z':
 				if(bt < 1 && out[i].v.match(/[Hh]/)) bt = 1;
@@ -826,11 +833,20 @@ function eval_fmt(fmt/*:string*/, v/*:any*/, opts/*:any*/, flen/*:number*/) {
 	}
 	var vv = "", myv, ostr;
 	if(nstr.length > 0) {
-		myv = (v<0&&nstr.charCodeAt(0) === 45 ? -v : v); /* '-' */
-		ostr = write_num(nstr.charCodeAt(0) === 40 ? '(' : 'n', nstr, myv); /* '(' */
+		if(nstr.charCodeAt(0) == 40) /* '(' */ {
+			myv = (v<0&&nstr.charCodeAt(0) === 45 ? -v : v);
+			ostr = write_num('(', nstr, myv);
+		} else {
+			myv = (v<0 && flen > 1 ? -v : v);
+			ostr = write_num('n', nstr, myv);
+			if(myv < 0 && out[0] && out[0].t == 't') {
+				ostr = ostr.substr(1);
+				out[0].v = "-" + out[0].v;
+			}
+		}
 		jj=ostr.length-1;
 		var decpt = out.length;
-		for(i=0; i < out.length; ++i) if(out[i] != null && out[i].v.indexOf(".") > -1) { decpt = i; break; }
+		for(i=0; i < out.length; ++i) if(out[i] != null && out[i].t != 't' && out[i].v.indexOf(".") > -1) { decpt = i; break; }
 		var lasti=out.length;
 		if(decpt === out.length && ostr.indexOf("E") === -1) {
 			for(i=out.length-1; i>= 0;--i) {
@@ -918,11 +934,18 @@ function choose_fmt(f/*:string*/, v) {
 	return [l, ff];
 }
 function format(fmt/*:string|number*/,v/*:any*/,o/*:?any*/) {
-	fixopts(o != null ? o : (o=[]));
+	if(o == null) o = {};
+	//fixopts(o != null ? o : (o=[]));
 	var sfmt = "";
 	switch(typeof fmt) {
-		case "string": sfmt = fmt; break;
-		case "number": sfmt = (o.table != null ? (o.table/*:any*/) : table_fmt)[fmt]; break;
+		case "string":
+			if(fmt == "m/d/yy" && o.dateNF) sfmt = o.dateNF;
+			else sfmt = fmt;
+			break;
+		case "number":
+			if(fmt == 14 && o.dateNF) sfmt = o.dateNF;
+			else sfmt = (o.table != null ? (o.table/*:any*/) : table_fmt)[fmt];
+			break;
 	}
 	if(isgeneral(sfmt,0)) return general_fmt(v, o);
 	var f = choose_fmt(sfmt, v);
@@ -936,6 +959,7 @@ SSF.load = function load_entry(fmt/*:string*/, idx/*:number*/) { table_fmt[idx] 
 SSF.format = format;
 SSF.get_table = function get_table() { return table_fmt; };
 SSF.load_table = function load_table(tbl/*:{[n:number]:string}*/) { for(var i=0; i!=0x0188; ++i) if(tbl[i] !== undefined) SSF.load(tbl[i], i); };
+SSF.init_table = init_table;
 };
 make_ssf(SSF);
 /* map from xlml named formats to SSF TODO: localize */
@@ -5185,7 +5209,9 @@ var SYLK = (function() {
 	function write_ws_cell_sylk(cell/*:Cell*/, ws/*:Worksheet*/, R/*:number*/, C/*:number*/, opts)/*:string*/ {
 		var o = "C;Y" + (R+1) + ";X" + (C+1) + ";K";
 		switch(cell.t) {
-			case 'n': o += cell.v; break;
+			case 'n':
+				o += (cell.v||0);
+				if(cell.f && !cell.F) o += ";E" + a1_to_rc(cell.f, {r:R, c:C}); break;
 			case 'b': o += cell.v ? "TRUE" : "FALSE"; break;
 			case 'e': o += cell.w || cell.v; break;
 			case 'd': o += '"' + (cell.w || cell.v) + '"'; break;
@@ -5232,7 +5258,7 @@ var SYLK = (function() {
 			for(var C = r.s.c; C <= r.e.c; ++C) {
 				var coord = encode_cell({r:R,c:C});
 				cell = dense ? (ws[R]||[])[C]: ws[coord];
-				if(!cell || cell.v == null) continue;
+				if(!cell || cell.v == null && (!cell.f || cell.F)) continue;
 				o.push(write_ws_cell_sylk(cell, ws, R, C, opts));
 			}
 		}
@@ -5274,7 +5300,7 @@ var DIF = (function() {
 					if(data === 'TRUE') arr[R][C] = true;
 					else if(data === 'FALSE') arr[R][C] = false;
 					else if(+value == +value) arr[R][C] = +value;
-					else if(!isNaN(new Date(value).getDate())) arr[R][C] = new Date(value);
+					else if(!isNaN(new Date(value).getDate())) arr[R][C] = parseDate(value);
 					else arr[R][C] = value;
 					++C; break;
 				case 1:
@@ -5313,11 +5339,28 @@ var DIF = (function() {
 				for(var C = r.s.c; C <= r.e.c; ++C) {
 					var coord = encode_cell({r:R,c:C});
 					cell = dense ? (ws[R]||[])[C] : ws[coord];
-					if(!cell || cell.v == null) { push_value(o, 1, 0, ""); continue;}
+					if(!cell) { push_value(o, 1, 0, ""); continue;}
 					switch(cell.t) {
-						case 'n': push_value(o, 0, (/*cell.w ||*/ cell.v), "V"); break;
-						case 'b': push_value(o, 0, cell.v ? 1 : 0, cell.v ? "TRUE" : "FALSE"); break;
-						case 's': push_value(o, 1, 0, cell.v); break;
+						case 'n':
+							var val = DIF_XL ? cell.w : cell.v;
+							if(!val && cell.v != null) val = cell.v;
+							if(val == null) {
+								if(DIF_XL && cell.f && !cell.F) push_value(o, 1, 0, "=" + cell.f);
+								else push_value(o, 1, 0, "");
+							}
+							else push_value(o, 0, val, "V");
+							break;
+						case 'b':
+							push_value(o, 0, cell.v ? 1 : 0, cell.v ? "TRUE" : "FALSE");
+							break;
+						case 's':
+							push_value(o, 1, 0, (!DIF_XL || isNaN(cell.v)) ? cell.v : '="' + cell.v + '"');
+							break;
+						case 'd':
+							if(!cell.w) cell.w = SSF.format(cell.z || SSF._table[14], datenum(parseDate(cell.v)));
+							if(DIF_XL) push_value(o, 0, cell.w, "V");
+							else push_value(o, 1, 0, cell.w);
+							break;
 						default: push_value(o, 1, 0, "");
 					}
 				}
@@ -14026,6 +14069,17 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 	return wb;
 }
 
+/* TODO: WTF */
+function parse_props(cfb) {
+	/* [MS-OSHARED] 2.3.3.2.2 Document Summary Information Property Set */
+	var DSI = cfb.find('!DocumentSummaryInformation');
+	if(DSI) try { cfb.DocSummary = parse_PropertySetStream(DSI, DocSummaryPIDDSI); } catch(e) {}
+
+	/* [MS-OSHARED] 2.3.3.2.1 Summary Information Property Set*/
+	var SI = cfb.find('!SummaryInformation');
+	if(SI) try { cfb.Summary = parse_PropertySetStream(SI, SummaryPIDSI); } catch(e) {}
+}
+
 function parse_xlscfb(cfb/*:any*/, options/*:?ParseOpts*/)/*:Workbook*/ {
 if(!options) options = {};
 fix_read_opts(options);
@@ -14063,17 +14117,6 @@ WorkbookP.Props = WorkbookP.Custprops = props; /* TODO: split up properties */
 if(options.bookFiles) WorkbookP.cfb = cfb;
 /*WorkbookP.CompObjP = CompObjP; // TODO: storage? */
 return WorkbookP;
-}
-
-/* TODO: WTF */
-function parse_props(cfb) {
-	/* [MS-OSHARED] 2.3.3.2.2 Document Summary Information Property Set */
-	var DSI = cfb.find('!DocumentSummaryInformation');
-	if(DSI) try { cfb.DocSummary = parse_PropertySetStream(DSI, DocSummaryPIDDSI); } catch(e) {}
-
-	/* [MS-OSHARED] 2.3.3.2.1 Summary Information Property Set*/
-	var SI = cfb.find('!SummaryInformation');
-	if(SI) try { cfb.Summary = parse_PropertySetStream(SI, SummaryPIDSI); } catch(e) {}
 }
 
 /* [MS-XLSB] 2.3 Record Enumeration */
@@ -16005,9 +16048,6 @@ var parse_content_xml = (function() {
 var write_content_xml/*:{(wb:any, opts:any):string}*/ = (function() {
 	var null_cell_xml = '          <table:table-cell />\n';
 	var covered_cell_xml = '          <table:covered-table-cell/>\n';
-	var cell_begin = '          <table:table-cell ', cell_end = '</table:table-cell>\n';
-	var vt = 'office:value-type=';
-	var p_begin = '<text:p>', p_end = '</text:p>';
 	var write_ws = function(ws, wb, i/*:number*/, opts)/*:string*/ {
 		/* Section 9 Tables */
 		var o = [];
@@ -16020,37 +16060,55 @@ var write_content_xml/*:{(wb:any, opts:any):string}*/ = (function() {
 			o.push('        <table:table-row>\n');
 			for(C=0; C < range.s.c; ++C) o.push(null_cell_xml);
 			for(; C <= range.e.c; ++C) {
-				var skip = false, mxml = "";
+				var skip = false, ct = {}, textp = "";
 				for(mi = 0; mi != marr.length; ++mi) {
 					if(marr[mi].s.c > C) continue;
 					if(marr[mi].s.r > R) continue;
 					if(marr[mi].e.c < C) continue;
 					if(marr[mi].e.r < R) continue;
 					if(marr[mi].s.c != C || marr[mi].s.r != R) skip = true;
-					mxml = 'table:number-columns-spanned="' + (marr[mi].e.c - marr[mi].s.c + 1) + '" table:number-rows-spanned="' + (marr[mi].e.r - marr[mi].s.r + 1) + '" ';
+					ct['table:number-columns-spanned'] = (marr[mi].e.c - marr[mi].s.c + 1);
+					ct['table:number-rows-spanned'] =    (marr[mi].e.r - marr[mi].s.r + 1);
 					break;
 				}
 				if(skip) { o.push(covered_cell_xml); continue; }
 				var ref = encode_cell({r:R, c:C}), cell = dense ? (ws[R]||[])[C]: ws[ref];
-				var fmla = "";
 				if(cell && cell.f) {
-					fmla = ' table:formula="' + escapexml(csf_to_ods_formula(cell.f)) + '"';
+					ct['table:formula'] = escapexml(csf_to_ods_formula(cell.f));
 					if(cell.F) {
 						if(cell.F.substr(0, ref.length) == ref) {
 							var _Fref = decode_range(cell.F);
-							fmla += ' table:number-matrix-columns-spanned="' + (_Fref.e.c - _Fref.s.c + 1)+ '"';
-							fmla += ' table:number-matrix-rows-spanned="' + (_Fref.e.r - _Fref.s.r + 1) + '"';
-						} else fmla = "";
+							ct['table:number-matrix-columns-spanned'] = (_Fref.e.c - _Fref.s.c + 1);
+							ct['table:number-matrix-rows-spanned'] =    (_Fref.e.r - _Fref.s.r + 1);
+						}
 					}
 				}
-				if(cell) switch(cell.t) {
-					case 'b': o.push(cell_begin + mxml + vt + '"boolean" office:boolean-value="' + (cell.v ? 'true' : 'false') + '"' + fmla + '>' + p_begin + (cell.v ? 'TRUE' : 'FALSE') + p_end + cell_end); break;
-					case 'n': o.push(cell_begin + mxml + vt + '"float" office:value="' + cell.v + '"' + fmla + '>' + p_begin + (cell.w||cell.v) + p_end + cell_end); break;
-					case 's': case 'str': o.push(cell_begin + mxml + vt + '"string"' + fmla + '>' + p_begin + escapexml(cell.v) + p_end + cell_end); break;
-					case 'd': o.push(cell_begin + mxml + vt + '"date" office:date-value="' + (parseDate(cell.v).toISOString()) + '"' + fmla + '>' + p_begin + (cell.w||(parseDate(cell.v).toISOString())) + p_end + cell_end); break;
+				if(!cell) { o.push(null_cell_xml); continue; }
+				switch(cell.t) {
+					case 'b':
+						textp = (cell.v ? 'TRUE' : 'FALSE');
+						ct['office:value-type'] = "boolean";
+						ct['office:boolean-value'] = (cell.v ? 'true' : 'false');
+						break;
+					case 'n':
+						textp = (cell.w||String(cell.v||0));
+						ct['office:value-type'] = "float";
+						ct['office:value'] = (cell.v||0);
+						break;
+					case 's': case 'str':
+						textp = escapexml(cell.v);
+						ct['office:value-type'] = "string";
+						break;
+					case 'd':
+						textp = (cell.w||(parseDate(cell.v).toISOString()));
+						ct['office:value-type'] = "date";
+						ct['office:date-value'] = (parseDate(cell.v).toISOString());
+						ct['table:style-name'] = "ce1";
+						break;
 					//case 'e':
-					default: o.push(null_cell_xml);
-				} else o.push(null_cell_xml);
+					default: o.push(null_cell_xml); continue;
+				}
+				o.push(writextag('table:table-cell', writextag('text:p', textp, {}), ct));
 			}
 			o.push('        </table:table-row>\n');
 		}
@@ -16058,11 +16116,70 @@ var write_content_xml/*:{(wb:any, opts:any):string}*/ = (function() {
 		return o.join("");
 	};
 
+	var write_automatic_styles_ods = function(o/*:Array<string>*/) {
+		o.push(' <office:automatic-styles>\n');
+		o.push('  <number:date-style style:name="N37" number:automatic-order="true">\n');
+		o.push('   <number:month number:style="long"/>\n');
+		o.push('   <number:text>/</number:text>\n');
+		o.push('   <number:day number:style="long"/>\n');
+		o.push('   <number:text>/</number:text>\n');
+		o.push('   <number:year/>\n');
+		o.push('  </number:date-style>\n');
+		o.push('  <style:style style:name="ce1" style:family="table-cell" style:parent-style-name="Default" style:data-style-name="N37"/>\n');
+		o.push(' </office:automatic-styles>\n');
+	};
+
 	return function wcx(wb, opts) {
 		var o = [XML_HEADER];
 		/* 3.1.3.2 */
-		if(opts.bookType == "fods") o.push('<office:document xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0" xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0" xmlns:table="urn:oasis:names:tc:opendocument:xmlns:table:1.0" xmlns:draw="urn:oasis:names:tc:opendocument:xmlns:drawing:1.0" xmlns:fo="urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:meta="urn:oasis:names:tc:opendocument:xmlns:meta:1.0" xmlns:number="urn:oasis:names:tc:opendocument:xmlns:datastyle:1.0" xmlns:presentation="urn:oasis:names:tc:opendocument:xmlns:presentation:1.0" xmlns:svg="urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0" xmlns:chart="urn:oasis:names:tc:opendocument:xmlns:chart:1.0" xmlns:dr3d="urn:oasis:names:tc:opendocument:xmlns:dr3d:1.0" xmlns:math="http://www.w3.org/1998/Math/MathML" xmlns:form="urn:oasis:names:tc:opendocument:xmlns:form:1.0" xmlns:script="urn:oasis:names:tc:opendocument:xmlns:script:1.0" xmlns:config="urn:oasis:names:tc:opendocument:xmlns:config:1.0" xmlns:ooo="http://openoffice.org/2004/office" xmlns:ooow="http://openoffice.org/2004/writer" xmlns:oooc="http://openoffice.org/2004/calc" xmlns:dom="http://www.w3.org/2001/xml-events" xmlns:xforms="http://www.w3.org/2002/xforms" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:rpt="http://openoffice.org/2005/report" xmlns:of="urn:oasis:names:tc:opendocument:xmlns:of:1.2" xmlns:xhtml="http://www.w3.org/1999/xhtml" xmlns:grddl="http://www.w3.org/2003/g/data-view#" xmlns:tableooo="http://openoffice.org/2009/table" xmlns:drawooo="http://openoffice.org/2010/draw" xmlns:calcext="urn:org:documentfoundation:names:experimental:calc:xmlns:calcext:1.0" xmlns:loext="urn:org:documentfoundation:names:experimental:office:xmlns:loext:1.0" xmlns:field="urn:openoffice:names:experimental:ooo-ms-interop:xmlns:field:1.0" xmlns:formx="urn:openoffice:names:experimental:ooxml-odf-interop:xmlns:form:1.0" xmlns:css3t="http://www.w3.org/TR/css3-text/" office:version="1.2" office:mimetype="application/vnd.oasis.opendocument.spreadsheet">');
-		else o.push('<office:document-content office:version="1.2" xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" xmlns:table="urn:oasis:names:tc:opendocument:xmlns:table:1.0" xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0" xmlns:of="urn:oasis:names:tc:opendocument:xmlns:of:1.2">\n'); // TODO
+		var attr = wxt_helper({
+			'xmlns:office':       "urn:oasis:names:tc:opendocument:xmlns:office:1.0",
+			'xmlns:table':        "urn:oasis:names:tc:opendocument:xmlns:table:1.0",
+			'xmlns:style':        "urn:oasis:names:tc:opendocument:xmlns:style:1.0",
+			'xmlns:text':         "urn:oasis:names:tc:opendocument:xmlns:text:1.0",
+			'xmlns:draw':         "urn:oasis:names:tc:opendocument:xmlns:drawing:1.0",
+			'xmlns:fo':           "urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0",
+			'xmlns:xlink':        "http://www.w3.org/1999/xlink",
+			'xmlns:dc':           "http://purl.org/dc/elements/1.1/",
+			'xmlns:meta':         "urn:oasis:names:tc:opendocument:xmlns:meta:1.0",
+			'xmlns:number':       "urn:oasis:names:tc:opendocument:xmlns:datastyle:1.0",
+			'xmlns:presentation': "urn:oasis:names:tc:opendocument:xmlns:presentation:1.0",
+			'xmlns:svg':          "urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0",
+			'xmlns:chart':        "urn:oasis:names:tc:opendocument:xmlns:chart:1.0",
+			'xmlns:dr3d':         "urn:oasis:names:tc:opendocument:xmlns:dr3d:1.0",
+			'xmlns:math':         "http://www.w3.org/1998/Math/MathML",
+			'xmlns:form':         "urn:oasis:names:tc:opendocument:xmlns:form:1.0",
+			'xmlns:script':       "urn:oasis:names:tc:opendocument:xmlns:script:1.0",
+			'xmlns:ooo':          "http://openoffice.org/2004/office",
+			'xmlns:ooow':         "http://openoffice.org/2004/writer",
+			'xmlns:oooc':         "http://openoffice.org/2004/calc",
+			'xmlns:dom':          "http://www.w3.org/2001/xml-events",
+			'xmlns:xforms':       "http://www.w3.org/2002/xforms",
+			'xmlns:xsd':          "http://www.w3.org/2001/XMLSchema",
+			'xmlns:xsi':          "http://www.w3.org/2001/XMLSchema-instance",
+			'xmlns:sheet':        "urn:oasis:names:tc:opendocument:sh33tjs:1.0",
+			'xmlns:rpt':          "http://openoffice.org/2005/report",
+			'xmlns:of':           "urn:oasis:names:tc:opendocument:xmlns:of:1.2",
+			'xmlns:xhtml':        "http://www.w3.org/1999/xhtml",
+			'xmlns:grddl':        "http://www.w3.org/2003/g/data-view#",
+			'xmlns:tableooo':     "http://openoffice.org/2009/table",
+			'xmlns:drawooo':      "http://openoffice.org/2010/draw",
+			'xmlns:calcext':      "urn:org:documentfoundation:names:experimental:calc:xmlns:calcext:1.0",
+			'xmlns:loext':        "urn:org:documentfoundation:names:experimental:office:xmlns:loext:1.0",
+			'xmlns:field':        "urn:openoffice:names:experimental:ooo-ms-interop:xmlns:field:1.0",
+			'xmlns:formx':        "urn:openoffice:names:experimental:ooxml-odf-interop:xmlns:form:1.0",
+			'xmlns:css3t':        "http://www.w3.org/TR/css3-text/",
+			'office:version':     "1.2"
+		});
+
+		var fods = wxt_helper({
+			'xmlns:config':"urn:oasis:names:tc:opendocument:xmlns:config:1.0",
+			'office:mimetype':"application/vnd.oasis.opendocument.spreadsheet"
+		});
+
+		if(opts.bookType == "fods") o.push('<office:document' + attr + fods + '>\n');
+		else o.push('<office:document-content' + attr  + '>\n');
+		write_automatic_styles_ods(o);
 		o.push('  <office:body>\n');
 		o.push('    <office:spreadsheet>\n');
 		for(var i = 0; i != wb.SheetNames.length; ++i) o.push(write_ws(wb.Sheets[wb.SheetNames[i]], wb, i, opts));
@@ -16557,6 +16674,8 @@ function read_utf16(data/*:RawData*/, o/*:ParseOpts*/)/*:Workbook*/ {
 function readSync(data/*:RawData*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
 	var zip, d = data, n=[0];
 	var o = opts||{};
+	_ssfopts = {};
+	if(o.dateNF) _ssfopts.dateNF = o.dateNF;
 	if(!o.type) o.type = (has_buf && Buffer.isBuffer(data)) ? "buffer" : "base64";
 	if(o.type == "file") { o.type = "buffer"; d = _fs.readFileSync(data); }
 	switch((n = firstbyte(d, o))[0]) {

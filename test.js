@@ -5,6 +5,7 @@ var modp = './';
 //var modp = 'xlsx';
 var fs = require('fs'), assert = require('assert');
 describe('source',function(){it('should load',function(){X=require(modp);});});
+var DIF_XL = true;
 
 var opts = {cellNF: true};
 if(process.env.WTF) {
@@ -1683,11 +1684,12 @@ describe('js -> file -> js', function() {
 			eqcell(wb, newwb, 'Sheet1', 'D2');
 			eqcell(wb, newwb, 'Sheet1', 'A3');
 			eqcell(wb, newwb, 'Sheet1', 'B3');
-			eqcell(wb, newwb, 'Sheet1', 'D3');
 			eqcell(wb, newwb, 'Sheet1', 'A4');
 			eqcell(wb, newwb, 'Sheet1', 'C4');
+			if(DIF_XL && f == "dif") assert.equal(get_cell(newwb.Sheets["Sheet1"], 'D3').v, '=""0.3""');// dif forces string formula
+			else eqcell(wb, newwb, 'Sheet1', 'D3');
 			/* date */
-			eqcell(wb, newwb, 'Sheet1', 'C3');
+			if(!DIF_XL) eqcell(wb, newwb, 'Sheet1', 'C3');
 		});
 	});
 });

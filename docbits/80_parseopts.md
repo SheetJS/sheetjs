@@ -11,6 +11,7 @@ The exported `read` and `readFile` functions accept an options argument:
 | cellStyles  | false   | Save style/theme info to the `.s` field              |
 | cellText    | true    | Generated formatted text to the `.w` field           |
 | cellDates   | false   | Store dates as type `d` (default is `n`)             |
+| dateNF      |         | If specified, use the string for date code 14 **     |
 | sheetStubs  | false   | Create cell objects of type `z` for stub cells       |
 | sheetRows   | 0       | If >0, read the first `sheetRows` rows **            |
 | bookDeps    | false   | If true, parse calculation chains                    |

@@ -16,18 +16,19 @@ var ws_name = "SheetJS";
 var wscols = [
 	{wch:6}, // "characters"
 	{wpx:50}, // "pixels"
-	/*{wch:10}*/,
-	{hidden:true}
+	,
+	{hidden:true} // hide column
 ];
 
 /* At 96 PPI, 1 pt = 1 px */
-var wsrows = [];
-wsrows[0] = {hpt: 12}; // "points"
-wsrows[1] = {hpx: 16}; // "pixels"
-//wsrows[2] = {hpt: 18};
-wsrows[3] = {hpx: 24};
-wsrows[4] = {hidden:true}; // hide row
-wsrows[5] = {hidden:false};
+var wsrows = [
+	{hpt: 12}, // "points"
+	{hpx: 16}, // "pixels"
+	,
+	{hpx: 24},
+	{hidden:true}, // hide row
+	{hidden:false}
+]
 
 console.log("Sheet Name: " + ws_name);
 console.log("Data: "); for(var i=0; i!=data.length; ++i) console.log(data[i]);
@@ -42,7 +43,7 @@ if(typeof XLSX === "undefined") { try { XLSX = require('./'); } catch(e) { XLSX 
 var wb = { SheetNames: [], Sheets: {} };
 
 /* convert an array of arrays in JS to a CSF spreadsheet */
-var ws = XLSX.utils.aoa_to_sheet(data, {cellDates:true, dense:false});
+var ws = XLSX.utils.aoa_to_sheet(data, {cellDates:true});
 
 /* TEST: add worksheet to workbook */
 wb.SheetNames.push(ws_name);
@@ -75,7 +76,8 @@ ws['A3'].l = { Target: "http://sheetjs.com", Tooltip: "Visit us <SheetJS.com!>" 
 ws['B1'].z = "0%"; // Format Code 9
 
 /* TEST: custom format */
-//ws['B2'].z = "0.0"; wb.SSF[60] = "0.0"; // Custom
+wb.SSF = XLSX.SSF.get_table(); // <-- this will change in the future
+ws['C2'].z = "0.0"; wb.SSF[60] = "0.0"; // Custom
 
 /* TEST: page margins */
 ws['!margins'] =  { left:1.0, right:1.0, top:1.0, bottom:1.0, header:0.5, footer:0.5 };

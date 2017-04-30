@@ -2,7 +2,7 @@
 /*jshint -W041 */
 var SSF = {};
 var make_ssf = function make_ssf(SSF){
-SSF.version = '0.9.0';
+SSF.version = '0.9.1';
 function _strrev(x/*:string*/)/*:string*/ { var o = "", i = x.length-1; while(i>=0) o += x.charAt(i--); return o; }
 function fill(c/*:string*/,l/*:number*/)/*:string*/ { var o = ""; while(o.length < l) o+=c; return o; }
 function pad0(v/*:any*/,d/*:number*/)/*:string*/{var t=""+v; return t.length>=d?t:fill('0',d-t.length)+t;}
@@ -23,38 +23,6 @@ function fixopts(o){
 	for(var y = 0; y != opts_fmt.length; ++y) if(o[opts_fmt[y][0]]===undefined) o[opts_fmt[y][0]]=opts_fmt[y][1];
 }
 SSF.opts = opts_fmt;
-var table_fmt = {
-	/*::[*/0/*::]*/:  'General',
-	/*::[*/1/*::]*/:  '0',
-	/*::[*/2/*::]*/:  '0.00',
-	/*::[*/3/*::]*/:  '#,##0',
-	/*::[*/4/*::]*/:  '#,##0.00',
-	/*::[*/9/*::]*/:  '0%',
-	/*::[*/10/*::]*/: '0.00%',
-	/*::[*/11/*::]*/: '0.00E+00',
-	/*::[*/12/*::]*/: '# ?/?',
-	/*::[*/13/*::]*/: '# ??/??',
-	/*::[*/14/*::]*/: 'm/d/yy',
-	/*::[*/15/*::]*/: 'd-mmm-yy',
-	/*::[*/16/*::]*/: 'd-mmm',
-	/*::[*/17/*::]*/: 'mmm-yy',
-	/*::[*/18/*::]*/: 'h:mm AM/PM',
-	/*::[*/19/*::]*/: 'h:mm:ss AM/PM',
-	/*::[*/20/*::]*/: 'h:mm',
-	/*::[*/21/*::]*/: 'h:mm:ss',
-	/*::[*/22/*::]*/: 'm/d/yy h:mm',
-	/*::[*/37/*::]*/: '#,##0 ;(#,##0)',
-	/*::[*/38/*::]*/: '#,##0 ;[Red](#,##0)',
-	/*::[*/39/*::]*/: '#,##0.00;(#,##0.00)',
-	/*::[*/40/*::]*/: '#,##0.00;[Red](#,##0.00)',
-	/*::[*/45/*::]*/: 'mm:ss',
-	/*::[*/46/*::]*/: '[h]:mm:ss',
-	/*::[*/47/*::]*/: 'mmss.0',
-	/*::[*/48/*::]*/: '##0.0E+0',
-	/*::[*/49/*::]*/: '@',
-	/*::[*/56/*::]*/: '"上午/下午 "hh"時"mm"分"ss"秒 "',
-	/*::[*/65535/*::]*/: 'General'
-};
 var days/*:Array<Array<string> >*/ = [
 	['Sun', 'Sunday'],
 	['Mon', 'Monday'],
@@ -78,7 +46,42 @@ var months/*:Array<Array<string> >*/ = [
 	['N', 'Nov', 'November'],
 	['D', 'Dec', 'December']
 ];
-function frac(x, D, mixed) {
+function init_table(t/*:any*/) {
+	t[0]=  'General';
+	t[1]=  '0';
+	t[2]=  '0.00';
+	t[3]=  '#,##0';
+	t[4]=  '#,##0.00';
+	t[9]=  '0%';
+	t[10]= '0.00%';
+	t[11]= '0.00E+00';
+	t[12]= '# ?/?';
+	t[13]= '# ??/??';
+	t[14]= 'm/d/yy';
+	t[15]= 'd-mmm-yy';
+	t[16]= 'd-mmm';
+	t[17]= 'mmm-yy';
+	t[18]= 'h:mm AM/PM';
+	t[19]= 'h:mm:ss AM/PM';
+	t[20]= 'h:mm';
+	t[21]= 'h:mm:ss';
+	t[22]= 'm/d/yy h:mm';
+	t[37]= '#,##0 ;(#,##0)';
+	t[38]= '#,##0 ;[Red](#,##0)';
+	t[39]= '#,##0.00;(#,##0.00)';
+	t[40]= '#,##0.00;[Red](#,##0.00)';
+	t[45]= 'mm:ss';
+	t[46]= '[h]:mm:ss';
+	t[47]= 'mmss.0';
+	t[48]= '##0.0E+0';
+	t[49]= '@';
+	t[56]= '"上午/下午 "hh"時"mm"分"ss"秒 "';
+	t[65535]= 'General';
+}
+
+var table_fmt = {};
+init_table(table_fmt);
+function frac(x/*:number*/, D/*:number*/, mixed/*:?boolean*/)/*:Array<number>*/ {
 	var sgn = x < 0 ? -1 : 1;
 	var B = x * sgn;
 	var P_2 = 0, P_1 = 1, P = 0;
@@ -88,15 +91,13 @@ function frac(x, D, mixed) {
 		A = Math.floor(B);
 		P = A * P_1 + P_2;
 		Q = A * Q_1 + Q_2;
-		if((B - A) < 0.0000000005) break;
+		if((B - A) < 0.00000005) break;
 		B = 1 / (B - A);
 		P_2 = P_1; P_1 = P;
 		Q_2 = Q_1; Q_1 = Q;
 	}
-	if(Q > D) { Q = Q_1; P = P_1; }
-	if(Q > D) { Q = Q_2; P = P_2; }
+	if(Q > D) { if(Q_1 > D) { Q = Q_2; P = P_2; } else { Q = Q_1; P = P_1; } }
 	if(!mixed) return [0, sgn * P, Q];
-	if(Q===0) throw "Unexpected state: "+P+" "+P_1+" "+P_2+" "+Q+" "+Q_1+" "+Q_2;
 	var q = Math.floor(sgn * P/Q);
 	return [q, sgn*P - q*Q, Q];
 }
@@ -138,6 +139,8 @@ function general_fmt(v/*:any*/, opts/*:?any*/) {
 		case 'string': return v;
 		case 'boolean': return v ? "TRUE" : "FALSE";
 		case 'number': return (v|0) === v ? general_fmt_int(v, opts) : general_fmt_num(v, opts);
+		case 'undefined': return "";
+		case 'object': if(v == null) return "";
 	}
 	throw new Error("unsupported value in General format: " + v);
 }
@@ -452,10 +455,10 @@ function write_num_int(type/*:string*/, fmt/*:string*/, val/*:number*/)/*:string
 	if((r = fmt.match(frac1))) return write_num_f2(r, aval, sign);
 	if(fmt.match(/^#+0+$/)) return sign + pad0(aval,fmt.length - fmt.indexOf("0"));
 	if((r = fmt.match(dec1))) {
-		/*:: if(!Array.isArray(r)) throw "unreachable"; */
+		/*:: if(!Array.isArray(r)) throw new Error("unreachable"); */
 		o = (""+val).replace(/^([^\.]+)$/,"$1."+r[1]).replace(/\.$/,"."+r[1]);
 		o = o.replace(/\.(\d*)$/,function($$, $1) {
-		/*:: if(!Array.isArray(r)) throw "unreachable"; */
+		/*:: if(!Array.isArray(r)) throw new Error("unreachable"); */
 			return "." + $1 + fill("0", r[1].length-$1.length); });
 		return fmt.indexOf("0.") !== -1 ? o : o.replace(/^0\./,".");
 	}
@@ -563,13 +566,13 @@ function fmt_is_date(fmt/*:string*/)/*:boolean*/ {
 			case '.':
 				/* falls through */
 			case '0': case '#':
-				while(i < fmt.length && ("0#?.,E+-%".indexOf(c=fmt.charAt(++i)) > -1 || c=='\\' && fmt.charAt(i+1) == "-" && "0#".indexOf(fmt.charAt(i+2))>-1));
+				while(i < fmt.length && ("0#?.,E+-%".indexOf(c=fmt.charAt(++i)) > -1 || c=='\\' && fmt.charAt(i+1) == "-" && "0#".indexOf(fmt.charAt(i+2))>-1)){}
 				break;
-			case '?': while(fmt.charAt(++i) === c); break;
+			case '?': while(fmt.charAt(++i) === c){} break;
 			case '*': ++i; if(fmt.charAt(i) == ' ' || fmt.charAt(i) == '*') ++i; break;
 			case '(': case ')': ++i; break;
 			case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':
-				while(i < fmt.length && "0123456789".indexOf(fmt.charAt(++i)) > -1); break;
+				while(i < fmt.length && "0123456789".indexOf(fmt.charAt(++i)) > -1){} break;
 			case ' ': ++i; break;
 			default: ++i; break;
 		}
@@ -625,7 +628,10 @@ function eval_fmt(fmt/*:string*/, v/*:any*/, opts/*:any*/, flen/*:number*/) {
 				if(o.match(abstime)) {
 					if(dt==null) { dt=parse_date_code(v, opts); if(dt==null) return ""; }
 					out[out.length] = {t:'Z', v:o.toLowerCase()};
-				} else { o=""; }
+				} else if(o.indexOf("$") > -1) {
+					o = (o.match(/\$([^-\[\]]*)/)||[])[1]||"$";
+					if(!fmt_is_date(fmt)) out[out.length] = {t:'t',v:o};
+				}
 				break;
 			/* Numbers */
 			case '.':
@@ -661,7 +667,7 @@ function eval_fmt(fmt/*:string*/, v/*:any*/, opts/*:any*/, flen/*:number*/) {
 			/* falls through */
 			case 'd': case 'y': case 'M': case 'e': lst=out[i].t; break;
 			case 'm': if(lst === 's') { out[i].t = 'M'; if(bt < 2) bt = 2; } break;
-			case 'X': if(out[i].v === "B2");
+			case 'X': /*if(out[i].v === "B2");*/
 				break;
 			case 'Z':
 				if(bt < 1 && out[i].v.match(/[Hh]/)) bt = 1;
@@ -711,11 +717,20 @@ function eval_fmt(fmt/*:string*/, v/*:any*/, opts/*:any*/, flen/*:number*/) {
 	}
 	var vv = "", myv, ostr;
 	if(nstr.length > 0) {
-		myv = (v<0&&nstr.charCodeAt(0) === 45 ? -v : v); /* '-' */
-		ostr = write_num(nstr.charCodeAt(0) === 40 ? '(' : 'n', nstr, myv); /* '(' */
+		if(nstr.charCodeAt(0) == 40) /* '(' */ {
+			myv = (v<0&&nstr.charCodeAt(0) === 45 ? -v : v);
+			ostr = write_num('(', nstr, myv);
+		} else {
+			myv = (v<0 && flen > 1 ? -v : v);
+			ostr = write_num('n', nstr, myv);
+			if(myv < 0 && out[0] && out[0].t == 't') {
+				ostr = ostr.substr(1);
+				out[0].v = "-" + out[0].v;
+			}
+		}
 		jj=ostr.length-1;
 		var decpt = out.length;
-		for(i=0; i < out.length; ++i) if(out[i] != null && out[i].v.indexOf(".") > -1) { decpt = i; break; }
+		for(i=0; i < out.length; ++i) if(out[i] != null && out[i].t != 't' && out[i].v.indexOf(".") > -1) { decpt = i; break; }
 		var lasti=out.length;
 		if(decpt === out.length && ostr.indexOf("E") === -1) {
 			for(i=out.length-1; i>= 0;--i) {
@@ -803,11 +818,18 @@ function choose_fmt(f/*:string*/, v) {
 	return [l, ff];
 }
 function format(fmt/*:string|number*/,v/*:any*/,o/*:?any*/) {
-	fixopts(o != null ? o : (o=[]));
+	if(o == null) o = {};
+	//fixopts(o != null ? o : (o=[]));
 	var sfmt = "";
 	switch(typeof fmt) {
-		case "string": sfmt = fmt; break;
-		case "number": sfmt = (o.table != null ? (o.table/*:any*/) : table_fmt)[fmt]; break;
+		case "string":
+			if(fmt == "m/d/yy" && o.dateNF) sfmt = o.dateNF;
+			else sfmt = fmt;
+			break;
+		case "number":
+			if(fmt == 14 && o.dateNF) sfmt = o.dateNF;
+			else sfmt = (o.table != null ? (o.table/*:any*/) : table_fmt)[fmt];
+			break;
 	}
 	if(isgeneral(sfmt,0)) return general_fmt(v, o);
 	var f = choose_fmt(sfmt, v);
@@ -821,5 +843,6 @@ SSF.load = function load_entry(fmt/*:string*/, idx/*:number*/) { table_fmt[idx] 
 SSF.format = format;
 SSF.get_table = function get_table() { return table_fmt; };
 SSF.load_table = function load_table(tbl/*:{[n:number]:string}*/) { for(var i=0; i!=0x0188; ++i) if(tbl[i] !== undefined) SSF.load(tbl[i], i); };
+SSF.init_table = init_table;
 };
 make_ssf(SSF);

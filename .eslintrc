@@ -7,7 +7,7 @@
 	"plugins": [ "html", "json" ],
 	"rules": {
 		"no-use-before-define": [ 1, {
-			"functions":true, "classes":true, "variables":true
+			"functions":false, "classes":true, "variables":false
 		}],
 		"no-bitwise": 0,
 		"curly": 0,

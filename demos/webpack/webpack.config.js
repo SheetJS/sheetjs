@@ -8,6 +8,7 @@ module.exports = {
 	},
 	node: {
 		fs: false,
+		process: false,
 		Buffer: false
 	}
 }

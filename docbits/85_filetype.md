@@ -80,7 +80,8 @@ specifications expand on serialization of features like properties.
 
 Excel CSV deviates from RFC4180 in a number of important ways.  The generated
 CSV files should generally work in Excel although they may not work in RFC4180
-compatible readers.  The parser should generally understand Excel CSV.
+compatible readers.  The parser should generally understand Excel CSV. The
+writer proactively generates cells for formulae if values are unavailable.
 
 Excel TXT uses tab as the delimiter and codepage 1200.
 
@@ -107,7 +108,8 @@ BIFF8 XLS.
 
 ODS is an XML-in-ZIP format akin to XLSX while FODS is an XML format akin to
 SpreadsheetML.  Both are detailed in the OASIS standard, but tools like LO/OO
-add undocumented extensions.
+add undocumented extensions.  The parsers and writers do not implement the full
+standard, instead focusing on parts necessary to extract and store raw data.
 
 #### Uniform Office Spreadsheet (UOS1/2)
 
@@ -131,19 +133,29 @@ limited by the general ability to read arbitrary files in the web browser.
 #### Symbolic Link (SYLK)
 
 There is no real documentation.  All knowledge was gathered by saving files in
-various versions of Excel to deduce the meaning of fields.
+various versions of Excel to deduce the meaning of fields.  Notes:
+
+- Plain formulae are stored in the RC form.
+- Column widths are rounded to integral characters.
 
 #### Lotus Formatted Text (PRN)
 
 There is no real documentation, and in fact Excel treats PRN as an output-only
 file format.  Nevertheless we can guess the column widths and reverse-engineer
-the original layout.
+the original layout.  Excel's 240-character width limitation is not enforced.
 
 #### Data Interchange Format (DIF)
 
 There is no unified definition.  Visicalc DIF differs from Lotus DIF, and both
 differ from Excel DIF.  Where ambiguous, the parser/writer follows the expected
-behavior from Excel.
+behavior from Excel.  In particular, Excel extends DIF in incompatible ways:
+
+- Since Excel automatically converts numbers-as-strings to numbers, numeric
+  string constants are converted to formulae: `"0.3" -> "=""0.3""`
+- DIF technically expects numeric cells to hold the raw numeric data, but Excel
+  permits formatted numbers (including dates)
+- DIF technically has no support for formulae, but Excel will automatically
+  convert plain formulae.  Array formulae are not preserved.
 
 #### HTML
 

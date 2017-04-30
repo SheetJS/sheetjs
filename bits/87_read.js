@@ -41,6 +41,8 @@ function read_utf16(data/*:RawData*/, o/*:ParseOpts*/)/*:Workbook*/ {
 function readSync(data/*:RawData*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
 	var zip, d = data, n=[0];
 	var o = opts||{};
+	_ssfopts = {};
+	if(o.dateNF) _ssfopts.dateNF = o.dateNF;
 	if(!o.type) o.type = (has_buf && Buffer.isBuffer(data)) ? "buffer" : "base64";
 	if(o.type == "file") { o.type = "buffer"; d = _fs.readFileSync(data); }
 	switch((n = firstbyte(d, o))[0]) {

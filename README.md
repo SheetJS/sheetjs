@@ -58,6 +58,7 @@ enhancements and additional features by request.
     + [Formulae](#formulae)
     + [Column Properties](#column-properties)
     + [Row Properties](#row-properties)
+    + [Number Formats](#number-formats)
     + [Hyperlinks](#hyperlinks)
     + [Cell Comments](#cell-comments)
     + [Sheet Visibility](#sheet-visibility)
@@ -898,6 +899,81 @@ follow the priority order:
 1) use `hpx` pixel height if available
 2) use `hpt` point height if available
 
+#### Number Formats
+
+The `cell.w` formatted text for each cell is produced from `cell.v` and `cell.z`
+format.  If the format is not specified, the Excel `General` format is used.
+The format can either be specified as a string or as an index into the format
+table.  Parsers are expected to populate `workbook.SSF` with the number format
+table.  Writers are expected to serialize the table.
+
+Custom tools should ensure that the local table has each used format string
+somewhere in the table.  Excel convention mandates that the custom formats start
+at index 164.  The following example creates a custom format from scratch:
+
+```js
+var tbl = {};
+XLSX.SSF.init_table(tbl); // <-- load builtin formats
+tbl[164] = "\"T\"\ #0.00";
+var wb = {
+	SSF: tbl,
+	SheetNames: ["Sheet1"],
+	Sheets: {
+		Sheet1: {
+			"!ref":"A1:C1",
+			A1: { t:"n", v:10000 },             // <-- General format
+			B1: { t:"n", v:10000, z: tbl[4] },  // <-- Builtin format
+			C1: { t:"n", v:10000, z: tbl[164] } // <-- Custom format
+		}
+	}
+}
+```
+
+The rules are slightly different from how Excel displays custom number formats.
+In particular, literal characters must be wrapped in double quotes or preceded
+by a backslash. For more info, see the Excel documentation article
+[`Create or delete a custom number format`](https://support.office.com/en-us/article/78f2a361-936b-4c03-8772-09fab54be7f4)
+or ECMA-376 18.8.31 (Number Formats)
+
+The default formats are listed in ECMA-376 18.8.30:
+
+| ID | Format                     |
+|---:|:---------------------------|
+|  0 | `General`                  |
+|  1 | `0`                        |
+|  2 | `0.00`                     |
+|  3 | `#,##0`                    |
+|  4 | `#,##0.00`                 |
+|  9 | `0%`                       |
+| 10 | `0.00%`                    |
+| 11 | `0.00E+00`                 |
+| 12 | `# ?/?`                    |
+| 13 | `# ??/??`                  |
+| 14 | `m/d/yy` (see below)       |
+| 15 | `d-mmm-yy`                 |
+| 16 | `d-mmm`                    |
+| 17 | `mmm-yy`                   |
+| 18 | `h:mm AM/PM`               |
+| 19 | `h:mm:ss AM/PM`            |
+| 20 | `h:mm`                     |
+| 21 | `h:mm:ss`                  |
+| 22 | `m/d/yy h:mm`              |
+| 37 | `#,##0 ;(#,##0)`           |
+| 38 | `#,##0 ;[Red](#,##0)`      |
+| 39 | `#,##0.00;(#,##0.00)`      |
+| 40 | `#,##0.00;[Red](#,##0.00)` |
+| 45 | `mm:ss`                    |
+| 46 | `[h]:mm:ss`                |
+| 47 | `mmss.0`                   |
+| 48 | `##0.0E+0`                 |
+| 49 | `@`                        |
+
+Format 14 (`m/d/yy`) is localized by Excel: even though the file specifies that
+number format, it will be drawn differently based on system settings.  It makes
+sense when the producer and consumer of files are in the same locale, but that
+is not always the case over the Internet.  To get around this ambiguity, parse
+functions accept the `dateNF` option to override the interpretation of that
+specific format string.
 #### Hyperlinks
 
 Hyperlinks are stored in the `l` key of cell objects.  The `Target` field of the
@@ -976,6 +1052,7 @@ The exported `read` and `readFile` functions accept an options argument:
 | cellStyles  | false   | Save style/theme info to the `.s` field              |
 | cellText    | true    | Generated formatted text to the `.w` field           |
 | cellDates   | false   | Store dates as type `d` (default is `n`)             |
+| dateNF      |         | If specified, use the string for date code 14 **     |
 | sheetStubs  | false   | Create cell objects of type `z` for stub cells       |
 | sheetRows   | 0       | If >0, read the first `sheetRows` rows **            |
 | bookDeps    | false   | If true, parse calculation chains                    |
@@ -1401,7 +1478,8 @@ specifications expand on serialization of features like properties.
 
 Excel CSV deviates from RFC4180 in a number of important ways.  The generated
 CSV files should generally work in Excel although they may not work in RFC4180
-compatible readers.  The parser should generally understand Excel CSV.
+compatible readers.  The parser should generally understand Excel CSV. The
+writer proactively generates cells for formulae if values are unavailable.
 
 Excel TXT uses tab as the delimiter and codepage 1200.
 
@@ -1428,7 +1506,8 @@ BIFF8 XLS.
 
 ODS is an XML-in-ZIP format akin to XLSX while FODS is an XML format akin to
 SpreadsheetML.  Both are detailed in the OASIS standard, but tools like LO/OO
-add undocumented extensions.
+add undocumented extensions.  The parsers and writers do not implement the full
+standard, instead focusing on parts necessary to extract and store raw data.
 
 #### Uniform Office Spreadsheet (UOS1/2)
 
@@ -1452,19 +1531,29 @@ limited by the general ability to read arbitrary files in the web browser.
 #### Symbolic Link (SYLK)
 
 There is no real documentation.  All knowledge was gathered by saving files in
-various versions of Excel to deduce the meaning of fields.
+various versions of Excel to deduce the meaning of fields.  Notes:
+
+- Plain formulae are stored in the RC form.
+- Column widths are rounded to integral characters.
 
 #### Lotus Formatted Text (PRN)
 
 There is no real documentation, and in fact Excel treats PRN as an output-only
 file format.  Nevertheless we can guess the column widths and reverse-engineer
-the original layout.
+the original layout.  Excel's 240-character width limitation is not enforced.
 
 #### Data Interchange Format (DIF)
 
 There is no unified definition.  Visicalc DIF differs from Lotus DIF, and both
 differ from Excel DIF.  Where ambiguous, the parser/writer follows the expected
-behavior from Excel.
+behavior from Excel.  In particular, Excel extends DIF in incompatible ways:
+
+- Since Excel automatically converts numbers-as-strings to numbers, numeric
+  string constants are converted to formulae: `"0.3" -> "=""0.3""`
+- DIF technically expects numeric cells to hold the raw numeric data, but Excel
+  permits formatted numbers (including dates)
+- DIF technically has no support for formulae, but Excel will automatically
+  convert plain formulae.  Array formulae are not preserved.
 
 #### HTML
 

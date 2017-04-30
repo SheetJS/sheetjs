@@ -30,6 +30,7 @@
     + [Formulae](README.md#formulae)
     + [Column Properties](README.md#column-properties)
     + [Row Properties](README.md#row-properties)
+    + [Number Formats](README.md#number-formats)
     + [Hyperlinks](README.md#hyperlinks)
     + [Cell Comments](README.md#cell-comments)
     + [Sheet Visibility](README.md#sheet-visibility)
