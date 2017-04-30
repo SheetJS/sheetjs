@@ -1,0 +1,19 @@
+{
+	"env": { "shared-node-browser":true },
+	"globals": {},
+	"parserOptions": {
+		"ecmaVersion": 3,
+	},
+	"plugins": [ "html", "json" ],
+	"rules": {
+		"no-use-before-define": [ 1, {
+			"functions":false, "classes":true, "variables":false
+		}],
+		"no-bitwise": 0,
+		"curly": 0,
+		"comma-style": [ 2, "last" ],
+		"no-trailing-spaces": 2,
+		"semi": [ 2, "always" ],
+		"comma-dangle": [ 2, "never" ]
+	}
+}

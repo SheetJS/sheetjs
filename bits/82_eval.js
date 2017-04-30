@@ -46,7 +46,10 @@ function eval_fmt(fmt/*:string*/, v/*:any*/, opts/*:any*/, flen/*:number*/) {
 				if(o.match(abstime)) {
 					if(dt==null) { dt=parse_date_code(v, opts); if(dt==null) return ""; }
 					out[out.length] = {t:'Z', v:o.toLowerCase()};
-				} else { o=""; }
+				} else if(o.indexOf("$") > -1) {
+					o = (o.match(/\$([^-\[\]]*)/)||[])[1]||"$";
+					if(!fmt_is_date(fmt)) out[out.length] = {t:'t',v:o};
+				}
 				break;
 			/* Numbers */
 			case '.':
@@ -82,7 +85,7 @@ function eval_fmt(fmt/*:string*/, v/*:any*/, opts/*:any*/, flen/*:number*/) {
 			/* falls through */
 			case 'd': case 'y': case 'M': case 'e': lst=out[i].t; break;
 			case 'm': if(lst === 's') { out[i].t = 'M'; if(bt < 2) bt = 2; } break;
-			case 'X': if(out[i].v === "B2");
+			case 'X': /*if(out[i].v === "B2");*/
 				break;
 			case 'Z':
 				if(bt < 1 && out[i].v.match(/[Hh]/)) bt = 1;
@@ -132,11 +135,20 @@ function eval_fmt(fmt/*:string*/, v/*:any*/, opts/*:any*/, flen/*:number*/) {
 	}
 	var vv = "", myv, ostr;
 	if(nstr.length > 0) {
-		myv = (v<0&&nstr.charCodeAt(0) === 45 ? -v : v); /* '-' */
-		ostr = write_num(nstr.charCodeAt(0) === 40 ? '(' : 'n', nstr, myv); /* '(' */
+		if(nstr.charCodeAt(0) == 40) /* '(' */ {
+			myv = (v<0&&nstr.charCodeAt(0) === 45 ? -v : v);
+			ostr = write_num('(', nstr, myv);
+		} else {
+			myv = (v<0 && flen > 1 ? -v : v);
+			ostr = write_num('n', nstr, myv);
+			if(myv < 0 && out[0] && out[0].t == 't') {
+				ostr = ostr.substr(1);
+				out[0].v = "-" + out[0].v;
+			}
+		}
 		jj=ostr.length-1;
 		var decpt = out.length;
-		for(i=0; i < out.length; ++i) if(out[i] != null && out[i].v.indexOf(".") > -1) { decpt = i; break; }
+		for(i=0; i < out.length; ++i) if(out[i] != null && out[i].t != 't' && out[i].v.indexOf(".") > -1) { decpt = i; break; }
 		var lasti=out.length;
 		if(decpt === out.length && ostr.indexOf("E") === -1) {
 			for(i=out.length-1; i>= 0;--i) {

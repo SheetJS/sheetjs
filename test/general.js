@@ -10,7 +10,7 @@ describe('General format', function() {
       assert.equal(SSF.format(d[1], d[0], {}), d[2]);
     });
   });
-  it.skip('should handle special values', function() {
+  it('should handle special values', function() {
     assert.equal(SSF.format("General", true), "TRUE");
     assert.equal(SSF.format("General", undefined), "");
     assert.equal(SSF.format("General", null), "");

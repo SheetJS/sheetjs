@@ -20,11 +20,18 @@ function choose_fmt(f/*:string*/, v) {
 	return [l, ff];
 }
 function format(fmt/*:string|number*/,v/*:any*/,o/*:?any*/) {
-	fixopts(o != null ? o : (o=[]));
+	if(o == null) o = {};
+	//fixopts(o != null ? o : (o=[]));
 	var sfmt = "";
 	switch(typeof fmt) {
-		case "string": sfmt = fmt; break;
-		case "number": sfmt = (o.table != null ? (o.table/*:any*/) : table_fmt)[fmt]; break;
+		case "string":
+			if(fmt == "m/d/yy" && o.dateNF) sfmt = o.dateNF;
+			else sfmt = fmt;
+			break;
+		case "number":
+			if(fmt == 14 && o.dateNF) sfmt = o.dateNF;
+			else sfmt = (o.table != null ? (o.table/*:any*/) : table_fmt)[fmt];
+			break;
 	}
 	if(isgeneral(sfmt,0)) return general_fmt(v, o);
 	var f = choose_fmt(sfmt, v);

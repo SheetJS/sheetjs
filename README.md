@@ -1,4 +1,4 @@
-# SSF
+# [SheetJS SSF](http://sheetjs.com)
 
 ssf (SpreadSheet Format) is a pure-JS library to format data using ECMA-376
 spreadsheet format codes (used in popular spreadsheet software packages).

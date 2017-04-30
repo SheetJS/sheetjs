@@ -36,6 +36,8 @@ function general_fmt(v/*:any*/, opts/*:?any*/) {
 		case 'string': return v;
 		case 'boolean': return v ? "TRUE" : "FALSE";
 		case 'number': return (v|0) === v ? general_fmt_int(v, opts) : general_fmt_num(v, opts);
+		case 'undefined': return "";
+		case 'object': if(v == null) return "";
 	}
 	throw new Error("unsupported value in General format: " + v);
 }

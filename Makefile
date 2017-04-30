@@ -1,5 +1,8 @@
 SHELL=/bin/bash
 LIB=ssf
+REQS=
+ADDONS=
+AUXTARGETS=
 CMDS=bin/ssf.njs
 HTMLLINT=
 
@@ -11,6 +14,7 @@ FLOWAUX=$(patsubst %.js,%.flow.js,$(AUXTARGETS))
 AUXSCPTS=
 FLOWTGTS=$(TARGET) $(AUXTARGETS) $(AUXSCPTS)
 UGLIFYOPTS=--support-ie8
+CLOSURE=/usr/local/lib/node_modules/google-closure-compiler/compiler.jar
 
 ## Main Targets
 
@@ -37,8 +41,8 @@ clean: ## Remove targets and build artifacts
 test mocha: ## Run test suite
 	mocha -R spec -t 30000
 
-.PHONY: test_min
-test_min:
+.PHONY: test_misc
+test_misc:
 	MINTEST=1 npm test
 
 .PHONY: travis
@@ -47,18 +51,29 @@ travis: ## Run test suite with minimal output
 
 .PHONY: ctest
 ctest:
-	browserify -t brfs test/{exp,fraction,general,implied,oddities,utilities,comma}.js > ctest/test.js
+	browserify -t brfs test/{dateNF,exp,fraction,general,implied,oddities,utilities,comma}.js > ctest/test.js
+
+.PHONY: ctestserv
+ctestserv: ## Start a test server on port 8000
+	@cd ctest && python -mSimpleHTTPServer
+
 
 ## Code Checking
 
 .PHONY: lint
-lint: $(TARGET) $(AUXTARGETS) ## Run jshint and jscs checks
+lint: $(TARGET) $(AUXTARGETS) ## Run eslint checks
+	@eslint --ext .js,.njs,.json,.html,.htm $(TARGET) $(AUXTARGETS) $(CMDS) $(HTMLLINT) package.json bower.json
+	if [ -e $(CLOSURE) ]; then java -jar $(CLOSURE) $(REQS) $(FLOWTARGET) --jscomp_warning=reportUnknownTypes >/dev/null; fi
+
+.PHONY: old-lint
+old-lint: $(TARGET) $(AUXTARGETS) ## Run jshint and jscs checks
 	@jshint --show-non-errors $(TARGET) $(AUXTARGETS)
 	@jshint --show-non-errors test/
 	@jshint --show-non-errors $(CMDS)
 	@jshint --show-non-errors package.json
 	@jshint --show-non-errors --extract=always $(HTMLLINT)
 	@jscs $(TARGET) $(AUXTARGETS)
+	if [ -e $(CLOSURE) ]; then java -jar $(CLOSURE) $(REQS) $(FLOWTARGET) --jscomp_warning=reportUnknownTypes >/dev/null; fi
 
 .PHONY: flow
 flow: lint ## Run flow checker
