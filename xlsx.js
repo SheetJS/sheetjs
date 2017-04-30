@@ -8437,6 +8437,7 @@ function stringify_formula(formula/*Array<any>*/, range, cell, supbooks, opts) {
 			case 'PtgRef3d': // TODO: lots of stuff
 				type = f[1][0]; ixti = f[1][1]; c = shift_cell_xls(f[1][2], _range, opts);
 				sname = supbooks.SheetNames[ixti];
+				var w = sname;
 				stack.push(sname + "!" + encode_cell_xls(c));
 				break;
 

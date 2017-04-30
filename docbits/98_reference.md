@@ -1,8 +1,7 @@
 ## References
 
-ISO/IEC 29500:2012(E) "Information technology — Document description and processing languages — Office Open XML File Formats"
-
-OSP-covered specifications:
+<details>
+	<summary><b>OSP-covered Specifications</b> (click to show)</summary>
 
  - [MS-XLSB]: Excel (.xlsb) Binary File Format
  - [MS-XLSX]: Excel (.xlsx) Extensions to the Office Open XML SpreadsheetML File Format
@@ -23,8 +22,10 @@ OSP-covered specifications:
  - [XLS]: Microsoft Office Excel 97-2007 Binary File Format Specification
  - [MS-OI29500]: Office Implementation Information for ISO/IEC 29500 Standards Support
 
-Open Document Format for Office Applications Version 1.2 (29 September 2011)
+</details>
 
-Worksheet File Format (From Lotus) December 1984
+- ISO/IEC 29500:2012(E) "Information technology — Document description and processing languages — Office Open XML File Formats"
+- Open Document Format for Office Applications Version 1.2 (29 September 2011)
+- Worksheet File Format (From Lotus) December 1984
 
 

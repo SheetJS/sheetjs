@@ -56,6 +56,9 @@ tells the library how to parse the data argument:
 
 ### Guessing File Type
 
+<details>
+	<summary><b>Implementation Details</b> (click to show)</summary>
+
 Excel and other spreadsheet tools read the first few bytes and apply other
 heuristics to determine a file type.  This enables file type punning: renaming
 files with the `.xls` extension will tell your computer to use Excel to open the
@@ -85,4 +88,5 @@ Plaintext format guessing follows the priority order:
 | TSV    | one of the first 1024 characters is a tab char `"\t"`               |
 | CSV    | one of the first 1024 characters is a comma char `","`              |
 | PRN    | (default)                                                           |
+</details>
 

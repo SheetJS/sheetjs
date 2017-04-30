@@ -5,7 +5,8 @@ For writing, the first step is to generate output data.  The helper functions
 dissemination.  The second step is to actual share the data with the end point.
 Assuming `workbook` is a workbook object:
 
-- nodejs write to file:
+<details>
+	<summary><b>nodejs write a file</b> (click to show)</summary>
 
 ```js
 /* output format determined by filename */
@@ -13,11 +14,16 @@ XLSX.writeFile(workbook, 'out.xlsx');
 /* at this point, out.xlsx is a file that you can distribute */
 ```
 
-- browser generate binary blob and "download" to client
-  (using [FileSaver.js](https://github.com/eligrey/FileSaver.js/) for download):
+</details>
+
+<details>
+	<summary><b>Browser download file</b> (click to show)</summary>
+
+Note: browser generates binary blob and forces a "download" to client.  This
+example uses [FileSaver.js](https://github.com/eligrey/FileSaver.js/):
 
 ```js
-/* bookType can be 'xlsx' or 'xlsm' or 'xlsb' or 'ods' */
+/* bookType can be any supported output type */ 
 var wopts = { bookType:'xlsx', bookSST:false, type:'binary' };
 
 var wbout = XLSX.write(workbook,wopts);
@@ -32,10 +38,10 @@ function s2ab(s) {
 /* the saveAs call downloads a file on the local machine */
 saveAs(new Blob([s2ab(wbout)],{type:"application/octet-stream"}), "test.xlsx");
 ```
+</details>
 
-**Complete examples:**
+### Complete Examples
 
-- <http://sheetjs.com/demos/writexlsx.html> generates a simple file
-- <http://git.io/WEK88Q> writing an array of arrays in nodejs
 - <http://sheetjs.com/demos/table.html> exporting an HTML table
+- <http://sheetjs.com/demos/writexlsx.html> generates a simple file
 

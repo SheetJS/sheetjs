@@ -28,6 +28,9 @@ other values are stored as strings.  The function takes an options argument:
 | cellDates   |  false   | Store dates as type `d` (default is `n`)            |
 | sheetStubs  |  false   | Create cell objects of type `z` for `null` values   |
 
+<details>
+	<summary><b>Examples</b> (click to show)</summary>
+
 To generate the example sheet:
 
 ```js
@@ -37,6 +40,7 @@ var ws = XLSX.utils.aoa_to_sheet([
 	[2,3,4,5,6,7,8]
 ]);
 ```
+</details>
 
 ### HTML Table Input
 
@@ -45,6 +49,9 @@ resembling the input table.  Numbers are parsed.  All other data will be stored
 as strings.
 
 `XLSX.utils.table_to_book` produces a minimal workbook based on the worksheet.
+
+<details>
+	<summary><b>Examples</b> (click to show)</summary>
 
 To generate the example sheet, start with the HTML table:
 
@@ -62,6 +69,7 @@ To process the table:
 var tbl = document.getElementById('sheetjs');
 var wb = XLSX.utils.table_to_book(tbl);
 ```
+</details>
 
 Note: `XLSX.read` can handle HTML represented as strings.
 
@@ -70,13 +78,19 @@ Note: `XLSX.read` can handle HTML represented as strings.
 `XLSX.utils.sheet_to_formulae` generates an array of commands that represent
 how a person would enter data into an application.  Each entry is of the form
 `A1-cell-address=formula-or-value`.  String literals are prefixed with a `'` in
-accordance with Excel.  For the example sheet:
+accordance with Excel.
+
+<details>
+	<summary><b>Examples</b> (click to show)</summary>
+
+For the example sheet:
 
 ```js
 > var o = XLSX.utils.sheet_to_formulae(ws);
 > o.filter(function(v, i) { return i % 5 === 0; });
 [ 'A1=\'S', 'F1=\'J', 'D2=4', 'B3=3', 'G3=8' ]
 ```
+</details>
 
 ### Delimiter-Separated Output
 
@@ -94,6 +108,9 @@ produces CSV output.  The function takes an options argument:
 - `strip` will remove trailing commas from each line under default `FS/RS`
 - blankrows must be set to `false` to skip blank lines.
 
+<details>
+	<summary><b>Examples</b> (click to show)</summary>
+
 For the example sheet:
 
 ```js
@@ -108,6 +125,7 @@ S	h	e	e	t	J	S
 > console.log(XLSX.utils.sheet_to_csv(ws,{FS:":",RS:"|"}));
 S:h:e:e:t:J:S|1:2:3:4:5:6:7|2:3:4:5:6:7:8|
 ```
+</details>
 
 #### UTF-16 Unicode Text
 
@@ -164,6 +182,9 @@ generate different types of JS objects.  The function takes an options argument:
 If header is not `1`, the row object will contain the non-enumerable property
 `__rowNum__` that represents the row of the sheet corresponding to the entry.
 
+<details>
+	<summary><b>Examples</b> (click to show)</summary>
+
 For the example sheet:
 
 ```js
@@ -199,4 +220,5 @@ Example showing the effect of `raw`:
   [ 1, 2, 3, 4, 5, 6, 7 ],                   // <-- A2 uses the raw value
   [ 2, 3, 4, 5, 6, 7, 8 ] ]
 ```
+</details>
 

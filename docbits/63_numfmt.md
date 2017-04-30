@@ -10,6 +10,9 @@ Custom tools should ensure that the local table has each used format string
 somewhere in the table.  Excel convention mandates that the custom formats start
 at index 164.  The following example creates a custom format from scratch:
 
+<details>
+	<summary><b>New worksheet with custom format</b> (click to show)</summary>
+
 ```js
 var tbl = {};
 XLSX.SSF.init_table(tbl); // <-- load builtin formats
@@ -27,12 +30,16 @@ var wb = {
 	}
 }
 ```
+</details>
 
 The rules are slightly different from how Excel displays custom number formats.
 In particular, literal characters must be wrapped in double quotes or preceded
 by a backslash. For more info, see the Excel documentation article
 [`Create or delete a custom number format`](https://support.office.com/en-us/article/78f2a361-936b-4c03-8772-09fab54be7f4)
 or ECMA-376 18.8.31 (Number Formats)
+
+<details>
+	<summary><b>Default Number Formats</b> (click to show)</summary>
 
 The default formats are listed in ECMA-376 18.8.30:
 
@@ -66,6 +73,8 @@ The default formats are listed in ECMA-376 18.8.30:
 | 47 | `mmss.0`                   |
 | 48 | `##0.0E+0`                 |
 | 49 | `@`                        |
+
+</details>
 
 Format 14 (`m/d/yy`) is localized by Excel: even though the file specifies that
 number format, it will be drawn differently based on system settings.  It makes

@@ -5,6 +5,9 @@ important to ensure code is cleanroom.  Consult CONTRIBUTING.md
 
 ### Tests
 
+<details>
+	<summary>(click to show)</summary>
+
 The `test_misc` target (`make test_misc` on Linux/OSX / `make misc` on Windows)
 runs the targeted feature tests.  It should take 5-10 seconds to perform feature
 tests without testing against the entire test battery.  New features should be
@@ -21,8 +24,12 @@ and verifying that the feature is preserved.
 
 For tests involving a new write feature without an existing read ability, please
 add a feature test to the kitchen sink `tests/write.js`.
+</details>
 
 ### OSX/Linux
+
+<details>
+	<summary>(click to show)</summary>
 
 The xlsx.js file is constructed from the files in the `bits` subdirectory. The
 build script (run `make`) will concatenate the individual bits to produce the
@@ -38,8 +45,12 @@ $ git diff xlsx.js
 
 To produce the dist files, run `make dist`.  The dist files are updated in each
 version release and *should not be committed between versions*.
+</details>
 
 ### Windows
+
+<details>
+	<summary>(click to show)</summary>
 
 The included `make.cmd` script will build `xlsx.js` from the `bits` directory.
 Building is as simple as:
@@ -73,4 +84,5 @@ Latest test files snapshot:
 <https://github.com/SheetJS/test_files/releases/download/20170409/test_files.zip>
 
 Download and unzip to the `test_files` subdirectory.
+</details>
 

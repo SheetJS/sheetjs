@@ -4,7 +4,7 @@ Each key that does not start with `!` maps to a cell (using `A-1` notation)
 
 `sheet[address]` returns the cell object for the specified address.
 
-Special sheet keys (accessible as `sheet[key]`, each starting with `!`):
+**Special sheet keys (accessible as `sheet[key]`, each starting with `!`):**
 
 - `sheet['!ref']`: A-1 based range representing the sheet range. Functions that
   work with sheets should use this parameter to determine the range.  Cells that
@@ -24,6 +24,9 @@ Special sheet keys (accessible as `sheet[key]`, each starting with `!`):
   follow Excel's "normal" preset.  Excel also has a "wide" and a "narrow" preset
   but they are stored as raw measurements. The main properties are listed below:
 
+<details>
+	<summary><b>Page margin details</b> (click to show)</summary>
+
 | key      | description            | "normal" | "wide" | "narrow" |
 |----------|------------------------|:---------|:-------|:-------- |
 | `left`   | left margin (inches)   | `0.7`    | `1.0`  | `0.25`   |
@@ -41,4 +44,5 @@ sheet["!margins"] = { left:1.0, right:1.0, top:1.0, bottom:1.0, header:0.5, foot
 /* Set worksheet sheet to "narrow" */
 sheet["!margins"] = { left:0.25, right:0.25, top:0.75, bottom:0.75, header:0.3, footer:0.3 }
 ```
+</details>
 

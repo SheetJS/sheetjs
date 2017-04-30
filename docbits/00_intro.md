@@ -22,6 +22,10 @@ enhancements and additional features by request.
 
 ![circo graph of format support](formats.png)
 
+<details>
+	<summary>Graph Legend</summary>
+
 ![graph legend](legend.png)
 
+</details>
 

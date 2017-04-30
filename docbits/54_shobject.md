@@ -22,6 +22,9 @@ In addition to the base sheet keys, worksheets also add:
   keys control the sheet protection -- set to `false` to enable a feature when
   sheet is locked or set to `true` to disable a feature:
 
+<details>
+	<summary><b>Worksheet Protection Details</b> (click to show)</summary>
+
 | key                   | feature (true=disabled / false=enabled) | default    |
 |:----------------------|:----------------------------------------|:-----------|
 | `selectLockedCells`   | Select locked cells                     | enabled    |
@@ -39,6 +42,7 @@ In addition to the base sheet keys, worksheets also add:
 | `pivotTables`         | Use PivotTable reports                  | disabled   |
 | `objects`             | Edit objects                            | enabled    |
 | `scenarios`           | Edit scenarios                          | enabled    |
+</details>
 
 - `ws['!autofilter']`: AutoFilter object following the schema:
 

@@ -18,7 +18,7 @@ var desired_cell = worksheet[address_of_cell];
 var desired_value = (desired_cell ? desired_cell.v : undefined);
 ```
 
-**Complete examples:**
+### Complete Examples
 
 - <https://github.com/SheetJS/js-xlsx/blob/master/bin/xlsx.njs> node
 

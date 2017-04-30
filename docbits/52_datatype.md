@@ -6,6 +6,9 @@ Type `b` is the Boolean type.  `v` is interpreted according to JS truth tables.
 
 Type `e` is the Error type. `v` holds the number and `w` holds the common name:
 
+<details>
+	<summary><b>Error values and interpretation</b> (click to show)</summary>
+
 |  Value | Error Meaning   |
 | -----: | :-------------- |
 | `0x00` | `#NULL!`        |
@@ -16,6 +19,8 @@ Type `e` is the Error type. `v` holds the number and `w` holds the common name:
 | `0x24` | `#NUM!`         |
 | `0x2A` | `#N/A`          |
 | `0x2B` | `#GETTING_DATA` |
+
+</details>
 
 Type `n` is the Number type. This includes all forms of data that Excel stores
 as numbers, such as dates/times and Boolean fields.  Excel exclusively uses data

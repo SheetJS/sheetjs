@@ -419,7 +419,7 @@ describe('parse options', function() {
 		});
 		it('should generate cell dates when requested', function() {
 			DTPaths.forEach(function(p) {
-				var wb = X.readFile(paths.dtxlsx, {cellDates: true});
+				var wb = X.readFile(p, {cellDates: true});
 				var found = false;
 				wb.SheetNames.forEach(function(s) {
 					var ws = wb.Sheets[s];
@@ -1302,7 +1302,7 @@ describe('roundtrip features', function() {
 		].forEach(function(w) {
 			it(w[0], function() {
 				var wb1 = X.readFile(w[1], {cellFormula:true});
-				var wb2 = X.read(X.write(wb1, {bookType:w[0], type:"buffer"}), {type:"buffer"});
+				var wb2 = X.read(X.write(wb1, {bookType:w[0], type:"buffer"}), {cellFormula:true, type:"buffer"});
 				wb1.SheetNames.forEach(function(n) {
 					assert.equal( X.utils.sheet_to_formulae(wb1.Sheets[n]).sort().join("\n"), X.utils.sheet_to_formulae(wb2.Sheets[n]).sort().join("\n") );
 				});

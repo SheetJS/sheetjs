@@ -3,6 +3,9 @@
 The various file formats use different internal names for file properties.  The
 workbook `Props` object normalizes the names:
 
+<details>
+	<summary><b>File Properties</b> (click to show)</summary>
+
 | JS Name     | Excel Description              |
 |:------------|:-------------------------------|
 | Title       | Summary tab "Title"            |
@@ -15,6 +18,7 @@ workbook `Props` object normalizes the names:
 | Comments    | Summary tab "Comments"         |
 | LastAuthor  | Statistics tab "Last saved by" |
 | CreatedDate | Statistics tab "Created"       |
+</details>
 
 For example, to set the workbook title property:
 

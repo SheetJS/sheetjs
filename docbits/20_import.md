@@ -3,7 +3,8 @@
 For parsing, the first step is to read the file.  This involves acquiring the
 data and feeding it into the library.  Here are a few common scenarios:
 
-- node readFile:
+<details>
+	<summary><b>nodejs read a file</b> (click to show)</summary>
 
 ```js
 if(typeof require !== 'undefined') XLSX = require('xlsx');
@@ -11,15 +12,23 @@ var workbook = XLSX.readFile('test.xlsx');
 /* DO SOMETHING WITH workbook HERE */
 ```
 
-- Browser DOM Table element:
+</details>
+
+<details>
+	<summary><b>Browser read TABLE element from page</b> (click to show)</summary>
 
 ```js
 var worksheet = XLSX.utils.table_to_book(document.getElementById('tableau'));
 /* DO SOMETHING WITH workbook HERE */
 ```
 
-- ajax (for a more complete example that works in older browsers, check the demo
-  at <http://oss.sheetjs.com/js-xlsx/ajax.html>):
+</details>
+
+<details>
+	<summary><b>Browser download file (ajax)</b> (click to show)</summary>
+
+Note: for a more complete example that works in older browsers, check the demo
+at <http://oss.sheetjs.com/js-xlsx/ajax.html>):
 
 ```js
 /* set up XMLHttpRequest */
@@ -46,9 +55,14 @@ oReq.onload = function(e) {
 oReq.send();
 ```
 
-- HTML5 drag-and-drop using readAsBinaryString or readAsArrayBuffer:
-  note: readAsBinaryString and readAsArrayBuffer may not be available in every
-  browser.  Use dynamic feature tests to determine which method to use.
+</details>
+
+<details>
+	<summary><b>Browser drag-and-drop</b> (click to show)</summary>
+
+Drag-and-drop uses FileReader with readAsBinaryString or readAsArrayBuffer.
+Note: readAsBinaryString and readAsArrayBuffer may not be available in every
+browser.  Use dynamic feature tests to determine which method to use.
 
 ```js
 /* processing array buffers, only required for readAsArrayBuffer */
@@ -92,7 +106,10 @@ function handleDrop(e) {
 drop_dom_element.addEventListener('drop', handleDrop, false);
 ```
 
-- HTML5 input file element using readAsBinaryString or readAsArrayBuffer:
+</details>
+
+<details>
+	<summary><b>Browser file upload form element</b> (click to show)</summary>
 
 ```js
 /* fixdata and rABS are defined in the drag and drop example */
@@ -124,7 +141,10 @@ function handleFile(e) {
 input_dom_element.addEventListener('change', handleFile, false);
 ```
 
-**Complete examples:**
+</details>
+
+
+### Complete Examples
 
 - <http://oss.sheetjs.com/js-xlsx/> HTML5 File API / Base64 Text / Web Workers
 
