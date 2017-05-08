@@ -21,7 +21,6 @@ function choose_fmt(f/*:string*/, v) {
 }
 function format(fmt/*:string|number*/,v/*:any*/,o/*:?any*/) {
 	if(o == null) o = {};
-	//fixopts(o != null ? o : (o=[]));
 	var sfmt = "";
 	switch(typeof fmt) {
 		case "string":

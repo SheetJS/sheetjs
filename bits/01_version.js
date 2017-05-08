@@ -1,1 +1,1 @@
-SSF.version = '0.9.1';
+SSF.version = '0.9.2';

@@ -25,7 +25,7 @@ function write_num_flt(type/*:string*/, fmt/*:string*/, val/*:number*/)/*:string
 	if((r = fmt.match(/^(0*)\.(#*)$/))) {
 		return sign + rnd(aval, r[2].length).replace(/\.(\d*[1-9])0*$/,".$1").replace(/^(-?\d*)$/,"$1.").replace(/^0\./,r[1].length?"0.":".");
 	}
-	if((r = fmt.match(/^#,##0(\.?)$/))) return sign + commaify(pad0r(aval,0));
+	if((r = fmt.match(/^#{1,3},##0(\.?)$/))) return sign + commaify(pad0r(aval,0));
 	if((r = fmt.match(/^#,##0\.([#0]*0)$/))) {
 		return val < 0 ? "-" + write_num_flt(type, fmt, -val) : commaify(""+(Math.floor(val) + carry(val, r[1].length))) + "." + pad0(dec(val, r[1].length),r[1].length);
 	}
@@ -73,7 +73,12 @@ function write_num_flt(type/*:string*/, fmt/*:string*/, val/*:number*/)/*:string
 		return val < 0 ? "-" + write_num_flt(type, fmt, -val) : commaify(flr(val)).replace(/^\d,\d{3}$/,"0$&").replace(/^\d*$/,function($$) { return "00," + ($$.length < 3 ? pad0(0,3-$$.length) : "") + $$; }) + "." + pad0(ri,r[1].length);
 	}
 	switch(fmt) {
+		case "###,##0.00": return write_num_flt(type, "#,##0.00", val);
+		case "###,###":
+		case "##,###":
 		case "#,###": var x = commaify(pad0r(aval,0)); return x !== "0" ? sign + x : "";
+		case "###,###.00": return write_num_flt(type, "###,##0.00",val).replace(/^0\./,".");
+		case "#,###.00": return write_num_flt(type, "#,##0.00",val).replace(/^0\./,".");
 		default:
 	}
 	throw new Error("unsupported format |" + fmt + "|");

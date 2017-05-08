@@ -9,7 +9,7 @@ function write_num_int(type/*:string*/, fmt/*:string*/, val/*:number*/)/*:string
 	if(fmt.indexOf('E') !== -1) return write_num_exp2(fmt, val);
 	if(fmt.charCodeAt(0) === 36) return "$"+write_num_int(type,fmt.substr(fmt.charAt(1)==' '?2:1),val);
 	var o;
-	var r, ri, ff, aval = Math.abs(val), sign = val < 0 ? "-" : "";
+	var r/*:?Array<string>*/, ri, ff, aval = Math.abs(val), sign = val < 0 ? "-" : "";
 	if(fmt.match(/^00+$/)) return sign + pad0(aval,fmt.length);
 	if(fmt.match(/^[#?]+$/)) {
 		o = (""+val); if(val === 0) o = "";
@@ -29,7 +29,7 @@ function write_num_int(type/*:string*/, fmt/*:string*/, val/*:number*/)/*:string
 	if((r = fmt.match(/^(0*)\.(#*)$/))) {
 		return sign + (""+aval).replace(/\.(\d*[1-9])0*$/,".$1").replace(/^(-?\d*)$/,"$1.").replace(/^0\./,r[1].length?"0.":".");
 	}
-	if((r = fmt.match(/^#,##0(\.?)$/))) return sign + commaify((""+aval));
+	if((r = fmt.match(/^#{1,3},##0(\.?)$/))) return sign + commaify((""+aval));
 	if((r = fmt.match(/^#,##0\.([#0]*0)$/))) {
 		return val < 0 ? "-" + write_num_int(type, fmt, -val) : commaify((""+val)) + "." + fill('0',r[1].length);
 	}
@@ -45,12 +45,12 @@ function write_num_int(type/*:string*/, fmt/*:string*/, val/*:number*/)/*:string
 	}
 	var oa = "";
 	if((r = fmt.match(/^([#0?]+)( ?)\/( ?)([#0?]+)/))) {
-		ri = Math.min(r[4].length,7);
+		ri = Math.min(/*::String(*/r[4]/*::)*/.length,7);
 		ff = frac(aval, Math.pow(10,ri)-1, false);
 		o = "" + sign;
-		oa = write_num("n", r[1], ff[1]);
+		oa = write_num("n", /*::String(*/r[1]/*::)*/, ff[1]);
 		if(oa.charAt(oa.length-1) == " ") oa = oa.substr(0,oa.length-1) + "0";
-		o += oa + r[2] + "/" + r[3];
+		o += oa + /*::String(*/r[2]/*::)*/ + "/" + /*::String(*/r[3]/*::)*/;
 		oa = rpad_(ff[2],ri);
 		if(oa.length < r[4].length) oa = hashq(r[4].substr(r[4].length-oa.length)) + oa;
 		o += oa;
@@ -76,8 +76,12 @@ function write_num_int(type/*:string*/, fmt/*:string*/, val/*:number*/)/*:string
 		return val < 0 ? "-" + write_num_int(type, fmt, -val) : commaify(""+val).replace(/^\d,\d{3}$/,"0$&").replace(/^\d*$/,function($$) { return "00," + ($$.length < 3 ? pad0(0,3-$$.length) : "") + $$; }) + "." + pad0(0,r[1].length);
 	}
 	switch(fmt) {
+		case "###,###":
+		case "##,###":
 		case "#,###": var x = commaify(""+aval); return x !== "0" ? sign + x : "";
 		default:
+			if(fmt.slice(-3) == ".00") return write_num_int(type, fmt.slice(0,-3), val) + ".00";
+			if(fmt.slice(-2) == ".0") return write_num_int(type, fmt.slice(0,-2), val) + ".0";
 	}
 	throw new Error("unsupported format |" + fmt + "|");
 }

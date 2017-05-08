@@ -7,12 +7,14 @@ function write_num_exp(fmt/*:string*/, val/*:number*/)/*:string*/{
 	var o/*:string*/;
 	var idx = fmt.indexOf("E") - fmt.indexOf(".") - 1;
 	if(fmt.match(/^#+0.0E\+0$/)) {
+		if(val == 0) return "0.0E+0";
+		else if(val < 0) return "-" + write_num_exp(fmt, -val);
 		var period = fmt.indexOf("."); if(period === -1) period=fmt.indexOf('E');
-		var ee = Math.floor(Math.log(Math.abs(val))*Math.LOG10E)%period;
+		var ee = Math.floor(Math.log(val)*Math.LOG10E)%period;
 		if(ee < 0) ee += period;
 		o = (val/Math.pow(10,ee)).toPrecision(idx+1+(period+ee)%period);
 		if(o.indexOf("e") === -1) {
-			var fakee = Math.floor(Math.log(Math.abs(val))*Math.LOG10E);
+			var fakee = Math.floor(Math.log(val)*Math.LOG10E);
 			if(o.indexOf(".") === -1) o = o.charAt(0) + "." + o.substr(1) + "E+" + (fakee - o.length+ee);
 			else o += "E+" + (fakee - ee);
 			while(o.substr(0,2) === "0.") {
