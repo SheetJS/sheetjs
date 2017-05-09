@@ -138,30 +138,47 @@ function parse_fonts(t, styles, themes, opts) {
 			case '<name': if(y.val) font.name = y.val; break;
 			case '<name/>': case '</name>': break;
 
-			/* 18.8.2 b CT_BooleanProperty */
-			case '<b': break; // TODO: read val (0 = off)
-			case '<b/>': font.bold = true; break;
+			/* 18.8.2  b CT_BooleanProperty */
+			case '<b': font.bold = y.val ? parsexmlbool(y.val) : 1; break;
+			case '<b/>': font.bold = 1; break;
 
 			/* 18.8.26 i CT_BooleanProperty */
-			case '<i': break; // TODO: read val (0 = off)
-			case '<i/>': font.italic = true; break;
+			case '<i': font.italic = y.val ? parsexmlbool(y.val) : 1; break;
+			case '<i/>': font.italic = 1; break;
 
 			/* 18.4.13 u CT_UnderlineProperty */
-			case '<u': font.underline = true; break; // TODO: double underline
-			case '<u/>': font.underline = true; break;
+			case '<u':
+				switch(y.val) {
+					case "none": font.underline = 0x00; break;
+					case "single": font.underline = 0x01; break;
+					case "double": font.underline = 0x02; break;
+					case "singleAccounting": font.underline = 0x21; break;
+					case "doubleAccounting": font.underline = 0x22; break;
+				} break;
+			case '<u/>': font.underline = 1; break;
 
 			/* 18.4.10 strike CT_BooleanProperty */
-			case '<strike': break; // TODO: read val (0 = off)
-			case '<strike/>': font.strike = true; break;
+			case '<strike': font.strike = y.val ? parsexmlbool(y.val) : 1; break;
+			case '<strike/>': font.strike = 1; break;
 
-			/* 18.4.2 outline CT_BooleanProperty */
-			case '<outline/>': font.outline = true; break;
+			/* 18.4.2  outline CT_BooleanProperty */
+			case '<outline': font.outline = y.val ? parsexmlbool(y.val) : 1; break;
+			case '<outline/>': font.outline = 1; break;
 
 			/* 18.8.36 shadow CT_BooleanProperty */
-			case '<shadow/>': font.shadow = true; break;
+			case '<shadow': font.shadow = y.val ? parsexmlbool(y.val) : 1; break;
+			case '<shadow/>': font.shadow = 1; break;
+
+			/* 18.8.12 condense CT_BooleanProperty */
+			case '<condense': font.condense = y.val ? parsexmlbool(y.val) : 1; break;
+			case '<condense/>': font.condense = 1; break;
+
+			/* 18.8.17 extend CT_BooleanProperty */
+			case '<extend': font.extend = y.val ? parsexmlbool(y.val) : 1; break;
+			case '<extend/>': font.extend = 1; break;
 
 			/* 18.4.11 sz CT_FontSize */
-			case '<sz': if(y.val) font.sz = y.val; break;
+			case '<sz': if(y.val) font.sz = +y.val; break;
 			case '<sz/>': case '</sz>': break;
 
 			/* 18.4.14 vertAlign CT_VerticalAlignFontProperty */
@@ -169,28 +186,39 @@ function parse_fonts(t, styles, themes, opts) {
 			case '<vertAlign/>': case '</vertAlign>': break;
 
 			/* 18.8.18 family CT_FontFamily */
-			case '<family': if(y.val) font.family = y.val; break;
+			case '<family': if(y.val) font.family = parseInt(y.val,10); break;
 			case '<family/>': case '</family>': break;
 
 			/* 18.8.35 scheme CT_FontScheme */
 			case '<scheme': if(y.val) font.scheme = y.val; break;
 			case '<scheme/>': case '</scheme>': break;
 
-			/* 18.4.1 charset CT_IntProperty TODO */
+			/* 18.4.1 charset CT_IntProperty */
 			case '<charset':
 				if(y.val == '1') break;
 				y.codepage = CS2CP[parseInt(y.val, 10)];
 				break;
 
-			/* 18.?.? color CT_Color TODO */
+			/* 18.?.? color CT_Color */
 			case '<color':
 				if(!font.color) font.color = {};
-				if(y.theme) font.color.theme = y.theme;
-				if(y.tint) font.color.tint = y.tint;
-				if(y.theme && themes.themeElements && themes.themeElements.clrScheme) {
-					font.color.rgb = rgb_tint(themes.themeElements.clrScheme[font.color.theme].rgb, font.color.tint || 0);
-				}
+				if(y.auto) font.color.auto = parsexmlbool(y.auto);
+
 				if(y.rgb) font.color.rgb = y.rgb;
+				else if(y.indexed) {
+					font.color.index = parseInt(y.indexed, 10);
+					var icv = XLSIcv[font.color.index];
+					if(font.color.index == 81) icv = XLSIcv[1];
+					if(!icv) throw new Error(x);
+					font.color.rgb = icv[0].toString(16) + icv[1].toString(16) + icv[2].toString(16);
+				} else if(y.theme) {
+					font.color.theme = parseInt(y.theme, 10);
+					if(y.tint) font.color.tint = parseFloat(y.tint);
+					if(y.theme && themes.themeElements && themes.themeElements.clrScheme) {
+						font.color.rgb = rgb_tint(themes.themeElements.clrScheme[font.color.theme].rgb, font.color.tint || 0);
+					}
+				}
+
 				break;
 			case '<color/>': case '</color>': break;
 
@@ -302,17 +330,18 @@ return function parse_sty_xml(data, themes, opts) {
 	/* 18.8.23 fonts CT_Fonts ? */
 	if((t=data.match(fontsRegex))) parse_fonts(t, styles, themes, opts);
 
-	/* 18.8.21 fills CT_Fills */
+	/* 18.8.21 fills CT_Fills ? */
 	if((t=data.match(fillsRegex))) parse_fills(t, styles, themes, opts);
 
-	/* 18.8.5 borders CT_Borders ? */
+	/* 18.8.5  borders CT_Borders ? */
 	if((t=data.match(bordersRegex))) parse_borders(t, styles, themes, opts);
 
-	/* 18.8.9 cellStyleXfs CT_CellStyleXfs ? */
+	/* 18.8.9  cellStyleXfs CT_CellStyleXfs ? */
 
 	/* 18.8.10 cellXfs CT_CellXfs ? */
 	if((t=data.match(cellXfRegex))) parse_cellXfs(t, styles, opts);
 
+	/* 18.8.8  cellStyles CT_CellStyles ? */
 	/* 18.8.15 dxfs CT_Dxfs ? */
 	/* 18.8.42 tableStyles CT_TableStyles ? */
 	/* 18.8.11 colors CT_Colors ? */

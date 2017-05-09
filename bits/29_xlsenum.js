@@ -1,40 +1,40 @@
 /* [MS-OLEPS] 2.2 PropertyType */
 {
-	var VT_EMPTY    = 0x0000;
-	var VT_NULL     = 0x0001;
+	//var VT_EMPTY    = 0x0000;
+	//var VT_NULL     = 0x0001;
 	var VT_I2       = 0x0002;
 	var VT_I4       = 0x0003;
-	var VT_R4       = 0x0004;
-	var VT_R8       = 0x0005;
-	var VT_CY       = 0x0006;
-	var VT_DATE     = 0x0007;
-	var VT_BSTR     = 0x0008;
-	var VT_ERROR    = 0x000A;
+	//var VT_R4       = 0x0004;
+	//var VT_R8       = 0x0005;
+	//var VT_CY       = 0x0006;
+	//var VT_DATE     = 0x0007;
+	//var VT_BSTR     = 0x0008;
+	//var VT_ERROR    = 0x000A;
 	var VT_BOOL     = 0x000B;
 	var VT_VARIANT  = 0x000C;
-	var VT_DECIMAL  = 0x000E;
-	var VT_I1       = 0x0010;
-	var VT_UI1      = 0x0011;
-	var VT_UI2      = 0x0012;
+	//var VT_DECIMAL  = 0x000E;
+	//var VT_I1       = 0x0010;
+	//var VT_UI1      = 0x0011;
+	//var VT_UI2      = 0x0012;
 	var VT_UI4      = 0x0013;
-	var VT_I8       = 0x0014;
+	//var VT_I8       = 0x0014;
 	var VT_UI8      = 0x0015;
-	var VT_INT      = 0x0016;
-	var VT_UINT     = 0x0017;
+	//var VT_INT      = 0x0016;
+	//var VT_UINT     = 0x0017;
 	var VT_LPSTR    = 0x001E;
-	var VT_LPWSTR   = 0x001F;
+	//var VT_LPWSTR   = 0x001F;
 	var VT_FILETIME = 0x0040;
-	var VT_BLOB     = 0x0041;
-	var VT_STREAM   = 0x0042;
-	var VT_STORAGE  = 0x0043;
-	var VT_STREAMED_Object  = 0x0044;
-	var VT_STORED_Object    = 0x0045;
-	var VT_BLOB_Object      = 0x0046;
+	//var VT_BLOB     = 0x0041;
+	//var VT_STREAM   = 0x0042;
+	//var VT_STORAGE  = 0x0043;
+	//var VT_STREAMED_Object  = 0x0044;
+	//var VT_STORED_Object    = 0x0045;
+	//var VT_BLOB_Object      = 0x0046;
 	var VT_CF       = 0x0047;
-	var VT_CLSID    = 0x0048;
-	var VT_VERSIONED_STREAM = 0x0049;
+	//var VT_CLSID    = 0x0048;
+	//var VT_VERSIONED_STREAM = 0x0049;
 	var VT_VECTOR   = 0x1000;
-	var VT_ARRAY    = 0x2000;
+	//var VT_ARRAY    = 0x2000;
 
 	var VT_STRING   = 0x0050; // 2.3.3.1.11 VtString
 	var VT_USTR     = 0x0051; // 2.3.3.1.12 VtUnalignedString
@@ -186,6 +186,7 @@ var XLSFillPattern = [
 function rgbify(arr) { return arr.map(function(x) { return [(x>>16)&255,(x>>8)&255,x&255]; }); }
 
 /* [MS-XLS] 2.5.161 */
+/* [MS-XLSB] 2.5.75 */
 var XLSIcv = rgbify([
 	/* Color Constants */
 	0x000000,
@@ -197,7 +198,7 @@ var XLSIcv = rgbify([
 	0xFF00FF,
 	0x00FFFF,
 
-	/* Defaults */
+	/* Overridable Defaults */
 	0x000000,
 	0xFFFFFF,
 	0xFF0000,
@@ -258,8 +259,24 @@ var XLSIcv = rgbify([
 	0x333399,
 	0x333333,
 
-	/* Sheet */
-	0xFFFFFF,
-	0x000000
+	/* Other entries to appease BIFF8/12 */
+	0xFFFFFF, /* 0x40 icvForeground ?? */
+	0x000000, /* 0x41 icvBackground ?? */
+	0x000000, /* 0x42 icvFrame ?? */
+	0x000000, /* 0x43 icv3D ?? */
+	0x000000, /* 0x44 icv3DText ?? */
+	0x000000, /* 0x45 icv3DHilite ?? */
+	0x000000, /* 0x46 icv3DShadow ?? */
+	0x000000, /* 0x47 icvHilite ?? */
+	0x000000, /* 0x48 icvCtlText ?? */
+	0x000000, /* 0x49 icvCtlScrl ?? */
+	0x000000, /* 0x4A icvCtlInv ?? */
+	0x000000, /* 0x4B icvCtlBody ?? */
+	0x000000, /* 0x4C icvCtlFrame ?? */
+	0x000000, /* 0x4D icvCtlFore ?? */
+	0x000000, /* 0x4E icvCtlBack ?? */
+	0x000000, /* 0x4F icvCtlNeutral */
+	0x000000, /* 0x50 icvInfoBk ?? */
+	0x000000 /* 0x51 icvInfoText ?? */
 ]);
 

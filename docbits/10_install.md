@@ -1,15 +1,15 @@
 ## Installation
 
+In the browser, just add a script tag:
+
+```html
+<script lang="javascript" src="dist/xlsx.full.min.js"></script>
+```
+
 With [npm](https://www.npmjs.org/package/xlsx):
 
 ```bash
 $ npm install xlsx
-```
-
-In the browser:
-
-```html
-<script lang="javascript" src="dist/xlsx.core.min.js"></script>
 ```
 
 With [bower](http://bower.io/search/?q=js-xlsx):

@@ -54,6 +54,9 @@ Use readAsBinaryString: (when available) <input type="checkbox" name="userabs" c
 <script src="xlsx.js"></script>
 <script>
 /*jshint browser:true */
+/* eslint-env browser */
+/* eslint no-use-before-define:0 */
+/*global Uint8Array, Uint16Array, ArrayBuffer */
 /*global XLSX */
 var X = XLSX;
 var XW = {
@@ -124,7 +127,7 @@ function xw_xfer(data, cb) {
 		switch(e.data.t) {
 			case 'ready': break;
 			case 'e': console.error(e.data.d); break;
-			default: xx=ab2str(e.data).replace(/\n/g,"\\n").replace(/\r/g,"\\r"); console.log("done"); cb(JSON.parse(xx)); break;
+			default: var xx=ab2str(e.data).replace(/\n/g,"\\n").replace(/\r/g,"\\r"); console.log("done"); cb(JSON.parse(xx)); break;
 		}
 	};
 	if(rABS) {
@@ -153,7 +156,7 @@ function get_radio_value( radioName ) {
 function to_json(workbook) {
 	var result = {};
 	workbook.SheetNames.forEach(function(sheetName) {
-		var roa = X.utils.sheet_to_row_object_array(workbook.Sheets[sheetName]);
+		var roa = X.utils.sheet_to_json(workbook.Sheets[sheetName]);
 		if(roa.length > 0){
 			result[sheetName] = roa;
 		}
@@ -187,12 +190,12 @@ function to_formulae(workbook) {
 	return result.join("\n");
 }
 
+var HTMLOUT = document.getElementById('htmlout');
 function to_html(workbook) {
-	document.getElementById('htmlout').innerHTML = "";
-	var result = [];
+	HTMLOUT.innerHTML = "";
 	workbook.SheetNames.forEach(function(sheetName) {
 		var htmlstr = X.write(workbook, {sheet:sheetName, type:'binary', bookType:'html'});
-		document.getElementById('htmlout').innerHTML += htmlstr;
+		HTMLOUT.innerHTML += htmlstr;
 	});
 }
 
@@ -202,7 +205,9 @@ function b64it() {
 	var wb = X.read(tarea.value, {type: 'base64',WTF:wtf_mode});
 	process_wb(wb);
 }
+window.b64it = b64it;
 
+var OUT = document.getElementById('out');
 var global_wb;
 function process_wb(wb) {
 	global_wb = wb;
@@ -218,11 +223,12 @@ function process_wb(wb) {
 		default:
 			output = to_csv(wb);
 	}
-	if(out.innerText === undefined) out.textContent = output;
-	else out.innerText = output;
+	if(OUT.innerText === undefined) OUT.textContent = output;
+	else OUT.innerText = output;
 	if(typeof console !== 'undefined') console.log("output", new Date());
 }
 function setfmt() {if(global_wb) process_wb(global_wb); }
+window.setfmt = setfmt;
 
 var drop = document.getElementById('drop');
 function handleDrop(e) {
@@ -234,7 +240,7 @@ function handleDrop(e) {
 	var f = files[0];
 	{
 		var reader = new FileReader();
-		var name = f.name;
+		//var name = f.name;
 		reader.onload = function(e) {
 			if(typeof console !== 'undefined') console.log("onload", new Date(), rABS, use_worker);
 			var data = e.target.result;
@@ -277,7 +283,7 @@ function handleFile(e) {
 	var f = files[0];
 	{
 		var reader = new FileReader();
-		var name = f.name;
+		//var name = f.name;
 		reader.onload = function(e) {
 			if(typeof console !== 'undefined') console.log("onload", new Date(), rABS, use_worker);
 			var data = e.target.result;

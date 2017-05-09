@@ -15,17 +15,14 @@ at index 164.  The following example creates a custom format from scratch:
 
 ```js
 var tbl = {};
-XLSX.SSF.init_table(tbl); // <-- load builtin formats
-tbl[164] = "\"T\"\ #0.00";
 var wb = {
-	SSF: tbl,
 	SheetNames: ["Sheet1"],
 	Sheets: {
 		Sheet1: {
 			"!ref":"A1:C1",
-			A1: { t:"n", v:10000 },             // <-- General format
-			B1: { t:"n", v:10000, z: tbl[4] },  // <-- Builtin format
-			C1: { t:"n", v:10000, z: tbl[164] } // <-- Custom format
+			A1: { t:"n", v:10000 },                    // <-- General format
+			B1: { t:"n", v:10000, z: "0%" },           // <-- Builtin format
+			C1: { t:"n", v:10000, z: "\"T\"\ #0.00" }  // <-- Custom format
 		}
 	}
 }

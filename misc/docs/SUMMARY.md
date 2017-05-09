@@ -5,6 +5,7 @@
   * [JS Ecosystem Demos](README.md#js-ecosystem-demos)
   * [Optional Modules](README.md#optional-modules)
   * [ECMAScript 5 Compatibility](README.md#ecmascript-5-compatibility)
+- [Philosophy](README.md#philosophy)
 - [Parsing Workbooks](README.md#parsing-workbooks)
   * [Complete Examples](README.md#complete-examples)
   * [Note on Streaming Read](README.md#note-on-streaming-read)
@@ -79,4 +80,3 @@
   * [Windows](README.md#windows)
 - [License](README.md#license)
 - [References](README.md#references)
-- [Badges](README.md#badges)

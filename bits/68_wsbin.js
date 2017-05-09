@@ -69,6 +69,9 @@ function write_row_header(ba, ws, range, R) {
 var parse_BrtWsDim = parse_UncheckedRfX;
 var write_BrtWsDim = write_UncheckedRfX;
 
+/* [MS-XLSB] 2.4.813 BrtWsFmtInfo */
+//function write_BrtWsFmtInfo(ws, o) { }
+
 /* [MS-XLSB] 2.4.815 BrtWsProp */
 function parse_BrtWsProp(data, length) {
 	var z = {};
@@ -78,8 +81,9 @@ function parse_BrtWsProp(data, length) {
 	return z;
 }
 function write_BrtWsProp(str, o) {
-	if(o == null) o = new_buf(80+4*str.length);
-	for(var i = 0; i < 11; ++i) o.write_shift(1,0);
+	if(o == null) o = new_buf(84+4*str.length);
+	for(var i = 0; i < 3; ++i) o.write_shift(1,0);
+	write_BrtColor({auto:1}, o);
 	o.write_shift(-4,-1);
 	o.write_shift(-4,-1);
 	write_XLSBCodeName(str, o);
@@ -260,8 +264,8 @@ function write_BrtHLink(l, rId, o) {
 	write_UncheckedRfX({s:decode_cell(l[0]), e:decode_cell(l[0])}, o);
 	write_RelID("rId" + rId, o);
 	var locidx = l[1].Target.indexOf("#");
-	var location = locidx == -1 ? "" : l[1].Target.substr(locidx+1);
-	write_XLWideString(location || "", o);
+	var loc = locidx == -1 ? "" : l[1].Target.substr(locidx+1);
+	write_XLWideString(loc || "", o);
 	write_XLWideString(l[1].Tooltip || "", o);
 	write_XLWideString("", o);
 	return o.slice(0, o.l);
@@ -536,6 +540,7 @@ function parse_ws_bin(data, _opts, rels, wb, themes, styles)/*:Worksheet*/ {
 				s['!margins'] = val;
 				break;
 
+			/* case 'BrtUid' */
 			case 0x00AF: /* 'BrtAFilterDateGroupItem' */
 			case 0x0284: /* 'BrtActiveX' */
 			case 0x0271: /* 'BrtBigName' */
@@ -585,7 +590,6 @@ function parse_ws_bin(data, _opts, rels, wb, themes, styles)/*:Worksheet*/ {
 			case 0x0413: /* 'BrtSparkline' */
 			case 0x01AC: /* 'BrtTable' */
 			case 0x00AA: /* 'BrtTop10Filter' */
-			/* case 'BrtUid' */
 			case 0x0032: /* 'BrtValueMeta' */
 			case 0x0816: /* 'BrtWebExtension' */
 			case 0x01E5: /* 'BrtWsFmtInfo' */
@@ -601,8 +605,8 @@ function parse_ws_bin(data, _opts, rels, wb, themes, styles)/*:Worksheet*/ {
 			case 0x0026: /* 'BrtACEnd' */ break;
 
 			default:
-				if((R_n||"").indexOf("Begin") > 0){}
-				else if((R_n||"").indexOf("End") > 0){}
+				if((R_n||"").indexOf("Begin") > 0){/* empty */}
+				else if((R_n||"").indexOf("End") > 0){/* empty */}
 				else if(!pass || opts.WTF) throw new Error("Unexpected record " + RT + " " + R_n);
 		}
 	}, opts);
@@ -646,7 +650,7 @@ function write_ws_bin_cell(ba/*:BufArray*/, cell/*:Cell*/, R/*:number*/, C/*:num
 	}
 	var o/*:any*/ = ({r:R, c:C}/*:any*/);
 	/* TODO: cell style */
-	//o.s = get_cell_style(opts.cellXfs, cell, opts);
+	o.s = get_cell_style(opts.cellXfs, cell, opts);
 	if(cell.l) ws['!links'].push([encode_cell(o), cell.l]);
 	if(cell.c) ws['!comments'].push([encode_cell(o), cell.c]);
 	switch(cell.t) {
@@ -753,6 +757,11 @@ function write_WSVIEWS2(ba, ws) {
 	write_record(ba, "BrtEndWsViews");
 }
 
+function write_WSFMTINFO(ba, ws) {
+	/* [ACWSFMTINFO] */
+	//write_record(ba, "BrtWsFmtInfo", write_BrtWsFmtInfo(ws));
+}
+
 function write_SHEETPROTECT(ba, ws) {
 	if(!ws['!protect']) return;
 	/* [BrtSheetProtectionIso] */
@@ -770,7 +779,7 @@ function write_ws_bin(idx/*:number*/, opts, wb/*:Workbook*/, rels) {
 	write_record(ba, "BrtWsProp", write_BrtWsProp(s));
 	write_record(ba, "BrtWsDim", write_BrtWsDim(r));
 	write_WSVIEWS2(ba, ws);
-	/* [WSFMTINFO] */
+	write_WSFMTINFO(ba, ws);
 	write_COLINFOS(ba, ws, idx, opts, wb);
 	write_CELLTABLE(ba, ws, idx, opts, wb);
 	/* [BrtSheetCalcProp] */

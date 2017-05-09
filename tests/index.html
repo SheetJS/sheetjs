@@ -46,7 +46,7 @@
     <script src="mocha.js"></script>
     <script>
       window.initMochaPhantomJS && window.initMochaPhantomJS();
-      mocha.setup('bdd');
+      mocha.setup({ui:'bdd', timeout:10000});
     </script>
     <script src="core.js"></script>
     <script>

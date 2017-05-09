@@ -12,7 +12,7 @@ if(process.env.WTF) {
 	opts.WTF = true;
 	opts.cellStyles = true;
 }
-var fullex = [".xlsb", ".xlsm", ".xlsx"/*, ".xlml"*/];
+var fullex = [".xlsb", /*".xlsm",*/ ".xlsx"/*, ".xlml"*/];
 var ofmt = ["xlsb", "xlsm", "xlsx", "ods", "biff2", "xlml", "sylk", "dif"];
 var ex = fullex.slice(); ex = ex.concat([".ods", ".xls", ".xml", ".fods"]);
 if(process.env.FMTS === "full") process.env.FMTS = ex.join(":");
@@ -1607,7 +1607,7 @@ describe('json output', function() {
 	});
 });
 
-describe('csv output', function() {
+describe('csv', function() {
 	var data, ws;
 	var bef = (function() {
 		data = [
@@ -1647,6 +1647,15 @@ describe('csv output', function() {
 	it('should handle blankrows', function() {
 		var baseline = "1,2,3,\nTRUE,FALSE,,sheetjs\nfoo,bar,2/19/14,0.3\nbaz,,qux,\n";
 		assert.equal(baseline, X.utils.sheet_to_csv(ws, {blankrows:false}));
+	});
+	it('should handle various line endings', function() {
+		var data = ["1,a", "2,b", "3,c"];
+		[ "\r", "\n", "\r\n" ].forEach(function(RS) {
+			var wb = X.read(data.join(RS), {type:'binary'});
+			assert.equal(get_cell(wb.Sheets.Sheet1, "A1").v, 1);
+			assert.equal(get_cell(wb.Sheets.Sheet1, "B3").v, "c");
+			assert.equal(wb.Sheets.Sheet1['!ref'], "A1:B3");
+		});
 	});
 });
 

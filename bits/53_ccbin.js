@@ -22,8 +22,8 @@ function parse_cc_bin(data, opts) {
 				out.push(val); break;
 
 			default:
-				if((R_n||"").indexOf("Begin") > 0){}
-				else if((R_n||"").indexOf("End") > 0){}
+				if((R_n||"").indexOf("Begin") > 0){/* empty */}
+				else if((R_n||"").indexOf("End") > 0){/* empty */}
 				else if(!pass || opts.WTF) throw new Error("Unexpected record " + RT + " " + R_n);
 		}
 	});

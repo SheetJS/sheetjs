@@ -9,7 +9,7 @@ var DIF_XL = true;
 
 var opts = {cellNF: true};
 opts.type = "binary";
-var fullex = [".xlsb", ".xlsm", ".xlsx"/*, ".xlml"*/];
+var fullex = [".xlsb", /*".xlsm",*/ ".xlsx"/*, ".xlml"*/];
 var ofmt = ["xlsb", "xlsm", "xlsx", "ods", "biff2", "xlml", "sylk", "dif"];
 var ex = fullex.slice(); ex = ex.concat([".ods", ".xls", ".xml", ".fods"]);
 var exp = ex.map(function(x){ return x + ".pending"; });
@@ -1005,7 +1005,7 @@ describe('parse features', function() {
 			for(var i = 0; i < names.length; ++i) if(names[i].Name == "SheetJS") break;
 			assert(i < names.length, "Missing name");
 			assert.equal(names[i].Sheet, null);
-			//assert.equal(names[i].Ref, "Sheet1!$A$1");
+			assert.equal(names[i].Ref, "Sheet1!$A$1");
 			if(m[2]) assert.equal(names[i].Comment, "defined names just suck  excel formulae are bad  MS should feel bad");
 
 			for(i = 0; i < names.length; ++i) if(names[i].Name == "SHEETjs") break;
@@ -1481,7 +1481,7 @@ describe('json output', function() {
 		data = [
 			[1,2,3],
 			[true, false, null, "sheetjs"],
-			["foo","bar", parseDate("2014-02-19T14:30:00.000Z"), "0.3"],
+			["foo", "bar", parseDate("2014-02-19T14:30:00.000Z"), "0.3"],
 			["baz", undefined, "qux"]
 		];
 		ws = X.utils.aoa_to_sheet(data);
@@ -1610,7 +1610,7 @@ describe('json output', function() {
 	});
 });
 
-describe('csv output', function() {
+describe('csv', function() {
 	var data, ws;
 	var bef = (function() {
 		data = [
@@ -1650,6 +1650,15 @@ describe('csv output', function() {
 	it('should handle blankrows', function() {
 		var baseline = "1,2,3,\nTRUE,FALSE,,sheetjs\nfoo,bar,2/19/14,0.3\nbaz,,qux,\n";
 		assert.equal(baseline, X.utils.sheet_to_csv(ws, {blankrows:false}));
+	});
+	it('should handle various line endings', function() {
+		var data = ["1,a", "2,b", "3,c"];
+		[ "\r", "\n", "\r\n" ].forEach(function(RS) {
+			var wb = X.read(data.join(RS), {type:'binary'});
+			assert.equal(get_cell(wb.Sheets.Sheet1, "A1").v, 1);
+			assert.equal(get_cell(wb.Sheets.Sheet1, "B3").v, "c");
+			assert.equal(wb.Sheets.Sheet1['!ref'], "A1:B3");
+		});
 	});
 });
 

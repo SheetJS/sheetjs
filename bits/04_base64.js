@@ -1,7 +1,7 @@
 var Base64 = (function make_b64(){
 	var map = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
 	return {
-		encode: function(input/*:string*/, utf8)/*:string*/ {
+		encode: function(input/*:string*/)/*:string*/ {
 			var o = "";
 			var c1, c2, c3, e1, e2, e3, e4;
 			for(var i = 0; i < input.length; ) {
@@ -18,7 +18,7 @@ var Base64 = (function make_b64(){
 			}
 			return o;
 		},
-		decode: function b64_decode(input/*:string*/, utf8)/*:string*/ {
+		decode: function b64_decode(input/*:string*/)/*:string*/ {
 			var o = "";
 			var c1, c2, c3;
 			var e1, e2, e3, e4;

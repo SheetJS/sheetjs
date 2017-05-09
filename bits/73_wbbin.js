@@ -24,7 +24,7 @@ function parse_BrtWbProp(data, length) {
 	return [dwThemeVersion, strName];
 }
 function write_BrtWbProp(data, o) {
-	if(!o) o = new_buf(68);
+	if(!o) o = new_buf(72);
 	o.write_shift(4, 0);
 	o.write_shift(4, 0);
 	write_XLSBCodeName("ThisWorkbook", o);
@@ -85,6 +85,9 @@ function parse_wb_bin(data, opts)/*:WorkbookFile*/ {
 				break;
 			case 0x040C: /* 'BrtNameExt' */ break;
 
+			/* case 'BrtModelTimeGroupingCalcCol' */
+			/* case 'BrtRevisionPtr' */
+			/* case 'BrtUid' */
 			case 0x0817: /* 'BrtAbsPath15' */
 			case 0x0216: /* 'BrtBookProtection' */
 			case 0x02A5: /* 'BrtBookProtectionIso' */
@@ -100,11 +103,9 @@ function parse_wb_bin(data, opts)/*:WorkbookFile*/ {
 			case 0x0299: /* 'BrtFnGroup' */
 			case 0x0850: /* 'BrtModelRelationship' */
 			case 0x084D: /* 'BrtModelTable' */
-			/* case 'BrtModelTimeGroupingCalcCol' */
 			case 0x0225: /* 'BrtOleSize' */
 			case 0x0805: /* 'BrtPivotTableRef' */
 			case 0x0169: /* 'BrtPlaceholderName' */
-			/* case 'BrtRevisionPtr' */
 			case 0x0254: /* 'BrtSmartTagType' */
 			case 0x029B: /* 'BrtSupAddin' */
 			case 0x0163: /* 'BrtSupBookSrc' */
@@ -113,7 +114,6 @@ function parse_wb_bin(data, opts)/*:WorkbookFile*/ {
 			case 0x081C: /* 'BrtTableSlicerCacheID' */
 			case 0x081B: /* 'BrtTableSlicerCacheIDs' */
 			case 0x0822: /* 'BrtTimelineCachePivotCacheID' */
-			/* case 'BrtUid' */
 			case 0x018D: /* 'BrtUserBookView' */
 			case 0x009A: /* 'BrtWbFactoid' */
 			case 0x0099: /* 'BrtWbProp' */
@@ -132,8 +132,8 @@ function parse_wb_bin(data, opts)/*:WorkbookFile*/ {
 			case 0x0010: /* 'BrtFRTArchID$' */ break;
 
 			default:
-				if((R_n||"").indexOf("Begin") > 0){}
-				else if((R_n||"").indexOf("End") > 0){}
+				if((R_n||"").indexOf("Begin") > 0){/* empty */}
+				else if((R_n||"").indexOf("End") > 0){/* empty */}
 				else if(!pass || opts.WTF) throw new Error("Unexpected record " + RT + " " + R_n);
 		}
 	}, opts);

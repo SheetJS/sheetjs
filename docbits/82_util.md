@@ -135,8 +135,8 @@ the output will be encoded in codepage `1200` and the BOM will be prepended.
 
 ### JSON
 
-`XLSX.utils.sheet_to_json` and the alias `XLSX.utils.sheet_to_row_object_array`
-generate different types of JS objects.  The function takes an options argument:
+`XLSX.utils.sheet_to_json` generates different types of JS objects. The function
+takes an options argument:
 
 | Option Name |  Default | Description                                         |
 | :---------- | :------: | :-------------------------------------------------- |

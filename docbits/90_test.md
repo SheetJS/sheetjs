@@ -61,6 +61,9 @@ $ open -a Chromium.app http://localhost:8000/stress.html
 
 ### Tested Environments
 
+<details>
+	<summary>(click to show)</summary>
+
  - NodeJS 0.8, 0.9, 0.10, 0.11, 0.12, 4.x, 5.x, 6.x, 7.x
  - IE 6/7/8/9/10/11 (IE6-9 browsers require shims for interacting with client)
  - Chrome 24+
@@ -73,6 +76,8 @@ Tests utilize the mocha testing framework.  Travis-CI and Sauce Labs links:
  - <https://semaphoreci.com/sheetjs/js-xlsx> for XLSX module in nodejs
  - <https://travis-ci.org/SheetJS/SheetJS.github.io> for XLS\* modules
  - <https://saucelabs.com/u/sheetjs> for XLS\* modules using Sauce Labs
+
+</details>
 
 ### Test Files
 

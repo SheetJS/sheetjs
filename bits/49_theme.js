@@ -7,50 +7,41 @@ function parse_clrScheme(t, themes, opts) {
 	(t[0].match(tagregex)||[]).forEach(function(x) {
 		var y = parsexmltag(x);
 		switch(y[0]) {
+			/* 20.1.6.2 clrScheme (Color Scheme) CT_ColorScheme */
 			case '<a:clrScheme': case '</a:clrScheme>': break;
 
 			/* 20.1.2.3.32 srgbClr CT_SRgbColor */
-			case '<a:srgbClr': color.rgb = y.val; break;
+			case '<a:srgbClr':
+				color.rgb = y.val; break;
 
 			/* 20.1.2.3.33 sysClr CT_SystemColor */
-			case '<a:sysClr': color.rgb = y.lastClr; break;
+			case '<a:sysClr':
+				color.rgb = y.lastClr; break;
 
-			/* 20.1.4.1.9 dk1 (Dark 1) */
-			case '<a:dk1>':
-			case '</a:dk1>':
-			/* 20.1.4.1.10 dk2 (Dark 2) */
-			case '<a:dk2>':
-			case '</a:dk2>':
-			/* 20.1.4.1.22 lt1 (Light 1) */
-			case '<a:lt1>':
-			case '</a:lt1>':
-			/* 20.1.4.1.23 lt2 (Light 2) */
-			case '<a:lt2>':
-			case '</a:lt2>':
 			/* 20.1.4.1.1 accent1 (Accent 1) */
-			case '<a:accent1>':
-			case '</a:accent1>':
 			/* 20.1.4.1.2 accent2 (Accent 2) */
-			case '<a:accent2>':
-			case '</a:accent2>':
 			/* 20.1.4.1.3 accent3 (Accent 3) */
-			case '<a:accent3>':
-			case '</a:accent3>':
 			/* 20.1.4.1.4 accent4 (Accent 4) */
-			case '<a:accent4>':
-			case '</a:accent4>':
 			/* 20.1.4.1.5 accent5 (Accent 5) */
-			case '<a:accent5>':
-			case '</a:accent5>':
 			/* 20.1.4.1.6 accent6 (Accent 6) */
-			case '<a:accent6>':
-			case '</a:accent6>':
-			/* 20.1.4.1.19 hlink (Hyperlink) */
-			case '<a:hlink>':
-			case '</a:hlink>':
+			/* 20.1.4.1.9 dk1 (Dark 1) */
+			/* 20.1.4.1.10 dk2 (Dark 2) */
 			/* 20.1.4.1.15 folHlink (Followed Hyperlink) */
-			case '<a:folHlink>':
-			case '</a:folHlink>':
+			/* 20.1.4.1.19 hlink (Hyperlink) */
+			/* 20.1.4.1.22 lt1 (Light 1) */
+			/* 20.1.4.1.23 lt2 (Light 2) */
+			case '<a:dk1>': case '</a:dk1>':
+			case '<a:lt1>': case '</a:lt1>':
+			case '<a:dk2>': case '</a:dk2>':
+			case '<a:lt2>': case '</a:lt2>':
+			case '<a:accent1>': case '</a:accent1>':
+			case '<a:accent2>': case '</a:accent2>':
+			case '<a:accent3>': case '</a:accent3>':
+			case '<a:accent4>': case '</a:accent4>':
+			case '<a:accent5>': case '</a:accent5>':
+			case '<a:accent6>': case '</a:accent6>':
+			case '<a:hlink>': case '</a:hlink>':
+			case '<a:folHlink>': case '</a:folHlink>':
 				if (y[0][1] === '/') {
 					themes.themeElements.clrScheme.push(color);
 					color = {};

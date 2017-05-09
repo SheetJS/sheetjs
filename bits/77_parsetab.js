@@ -1192,9 +1192,10 @@ var XLSRecordEnum = {
 	/*::[*/0x0007/*::]*/: { n:"String", f:parse_BIFF2STRING },
 	/*::[*/0x0008/*::]*/: { n:"BIFF2ROW", f:parsenoop },
 	/*::[*/0x000b/*::]*/: { n:"Index", f:parse_Index },
+	/*::[*/0x0016/*::]*/: { n:"ExternCount", f:parsenoop },
 	/*::[*/0x001e/*::]*/: { n:"BIFF2FORMAT", f:parse_BIFF2Format },
 	/*::[*/0x001f/*::]*/: { n:"BIFF2FMTCNT", f:parsenoop }, /* 16-bit cnt of BIFF2FORMAT records */
-	/*::[*/0x0016/*::]*/: { n:"ExternCount", f:parsenoop },
+	/*::[*/0x0020/*::]*/: { n:"BIFF2COLINFO", f:parsenoop },
 	/*::[*/0x0021/*::]*/: { n:"Array", f:parse_Array },
 	/*::[*/0x0025/*::]*/: { n:"DefaultRowHeight", f:parse_DefaultRowHeight },
 	/*::[*/0x0032/*::]*/: { n:"BIFF2FONTXTRA", f:parse_BIFF2FONTXTRA },
@@ -1202,7 +1203,7 @@ var XLSRecordEnum = {
 	/*::[*/0x0045/*::]*/: { n:"BIFF2FONTCLR", f:parsenoop },
 	/*::[*/0x0056/*::]*/: { n:"BIFF4FMTCNT", f:parsenoop }, /* 16-bit cnt, similar to BIFF2 */
 	/*::[*/0x007e/*::]*/: { n:"RK", f:parsenoop }, /* Not necessarily same as 0x027e */
-	/*::[*/0x007f/*::]*/: { n:"ImData", f:parsenoop },
+	/*::[*/0x007f/*::]*/: { n:"ImData", f:parse_ImData },
 	/*::[*/0x0087/*::]*/: { n:"Addin", f:parsenoop },
 	/*::[*/0x0088/*::]*/: { n:"Edg", f:parsenoop },
 	/*::[*/0x0089/*::]*/: { n:"Pub", f:parsenoop },

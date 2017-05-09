@@ -22,8 +22,8 @@ function parse_sst_bin(data, opts)/*:SST*/ {
 				pass = false; break;
 
 			default:
-				if(R_n.indexOf("Begin") > 0){}
-				else if(R_n.indexOf("End") > 0){}
+				if(R_n.indexOf("Begin") > 0){/* empty */}
+				else if(R_n.indexOf("End") > 0){/* empty */}
 				if(!pass || opts.WTF) throw new Error("Unexpected record " + RT + " " + R_n);
 		}
 	});

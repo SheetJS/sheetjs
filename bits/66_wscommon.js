@@ -39,7 +39,16 @@ function default_margins(margins, mode) {
 
 function get_cell_style(styles, cell, opts) {
 	var z = opts.revssf[cell.z != null ? cell.z : "General"];
-	for(var i = 0, len = styles.length; i != len; ++i) if(styles[i].numFmtId === z) return i;
+	var i = 0x3c, len = styles.length;
+	if(z == null && opts.ssf) {
+		for(; i < 0x188; ++i) if(opts.ssf[i] == null) {
+			SSF.load(cell.z, i);
+			opts.ssf[i] = cell.z;
+			opts.revssf[cell.z] = z = i;
+			break;
+		}
+	}
+	for(i = 0; i != len; ++i) if(styles[i].numFmtId === z) return i;
 	styles[len] = {
 		numFmtId:z,
 		fontId:0,
@@ -77,7 +86,7 @@ function safe_format(p, fmtid, fillid, opts, themes, styles) {
 	} catch(e) { if(opts.WTF) throw e; }
 	if(fillid) try {
 		p.s = styles.Fills[fillid];
-		if (p.s.fgColor && p.s.fgColor.theme) {
+		if (p.s.fgColor && p.s.fgColor.theme && !p.s.fgColor.rgb) {
 			p.s.fgColor.rgb = rgb_tint(themes.themeElements.clrScheme[p.s.fgColor.theme].rgb, p.s.fgColor.tint || 0);
 			if(opts.WTF) p.s.fgColor.raw_rgb = themes.themeElements.clrScheme[p.s.fgColor.theme].rgb;
 		}

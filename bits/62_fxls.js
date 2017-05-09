@@ -1,7 +1,7 @@
 /* --- formula references point to MS-XLS --- */
 /* Small helpers */
 function parseread(l) { return function(blob, length) { blob.l+=l; return; }; }
-function parseread1(blob, length) { blob.l+=1; return; }
+function parseread1(blob) { blob.l+=1; return; }
 
 /* Rgce Helpers */
 
@@ -25,7 +25,7 @@ function parse_RgceArea(blob, length, opts) {
 	return { s:{r:r, c:c[0], cRel:c[1], rRel:c[2]}, e:{r:R, c:C[0], cRel:C[1], rRel:C[2]} };
 }
 /* BIFF 2-5 encodes flags in the row field */
-function parse_RgceArea_BIFF2(blob, length, opts) {
+function parse_RgceArea_BIFF2(blob/*, length, opts*/) {
 	var r=parse_ColRelU(blob, 2), R=parse_ColRelU(blob, 2);
 	var c=blob.read_shift(1);
 	var C=blob.read_shift(1);
@@ -33,7 +33,7 @@ function parse_RgceArea_BIFF2(blob, length, opts) {
 }
 
 /* 2.5.198.105 TODO */
-function parse_RgceAreaRel(blob, length, opts) {
+function parse_RgceAreaRel(blob, length/*, opts*/) {
 	var r=blob.read_shift(length == 12 ? 4 : 2), R=blob.read_shift(length == 12 ? 4 : 2);
 	var c=parse_ColRelU(blob, 2);
 	var C=parse_ColRelU(blob, 2);
@@ -701,12 +701,12 @@ function stringify_formula(formula/*Array<any>*/, range, cell/*:any*/, supbooks,
 		var f = formula[0][ff];
 		//console.log("++",f, stack)
 		switch(f[0]) {
-			/* 2.5.198.93 */
-			case 'PtgUminus': stack.push("-" + stack.pop()); break;
-			/* 2.5.198.95 */
-			case 'PtgUplus': stack.push("+" + stack.pop()); break;
-			/* 2.5.198.81 */
-			case 'PtgPercent': stack.push(stack.pop() + "%"); break;
+			case 'PtgUminus': /* 2.5.198.93 */
+				stack.push("-" + stack.pop()); break;
+			case 'PtgUplus': /* 2.5.198.95 */
+				stack.push("+" + stack.pop()); break;
+			case 'PtgPercent': /* 2.5.198.81 */
+				stack.push(stack.pop() + "%"); break;
 
 			case 'PtgAdd':    /* 2.5.198.26 */
 			case 'PtgConcat': /* 2.5.198.43 */
@@ -723,10 +723,12 @@ function stringify_formula(formula/*Array<any>*/, range, cell/*:any*/, supbooks,
 				e1 = stack.pop(); e2 = stack.pop();
 				if(last_sp >= 0) {
 					switch(formula[0][last_sp][1][0]) {
-						// $FlowIgnore
-						case 0: sp = fill(" ", formula[0][last_sp][1][1]); break;
-						// $FlowIgnore
-						case 1: sp = fill("\r", formula[0][last_sp][1][1]); break;
+						case 0:
+							// $FlowIgnore
+							sp = fill(" ", formula[0][last_sp][1][1]); break;
+						case 1:
+							// $FlowIgnore
+							sp = fill("\r", formula[0][last_sp][1][1]); break;
 						default:
 							sp = "";
 							// $FlowIgnore
@@ -738,51 +740,46 @@ function stringify_formula(formula/*Array<any>*/, range, cell/*:any*/, supbooks,
 				stack.push(e2+PtgBinOp[f[0]]+e1);
 				break;
 
-			/* 2.5.198.67 */
-			case 'PtgIsect':
+			case 'PtgIsect': /* 2.5.198.67 */
 				e1 = stack.pop(); e2 = stack.pop();
 				stack.push(e2+" "+e1);
 				break;
-			case 'PtgUnion':
+			case 'PtgUnion': /* 2.5.198.94 */
 				e1 = stack.pop(); e2 = stack.pop();
 				stack.push(e2+","+e1);
 				break;
-			case 'PtgRange':
+			case 'PtgRange': /* 2.5.198.83 */
 				e1 = stack.pop(); e2 = stack.pop();
 				stack.push(e2+":"+e1);
 				break;
 
-			/* 2.5.198.34 */
-			case 'PtgAttrChoose': break;
-			/* 2.5.198.35 */
-			case 'PtgAttrGoto': break;
-			/* 2.5.198.36 */
-			case 'PtgAttrIf': break;
-			/* [MS-XLSB] 2.5.97.28 */
-			case 'PtgAttrIfError': break;
+			case 'PtgAttrChoose': /* 2.5.198.34 */
+				break;
+			case 'PtgAttrGoto': /* 2.5.198.35 */
+				break;
+			case 'PtgAttrIf': /* 2.5.198.36 */
+				break;
+			case 'PtgAttrIfError': /* [MS-XLSB] 2.5.97.28 */
+				break;
 
 
-			/* 2.5.198.84 */
-			case 'PtgRef':
+			case 'PtgRef': /* 2.5.198.84 */
 				type = f[1][0]; c = shift_cell_xls(f[1][1], _range, opts);
 				stack.push(encode_cell_xls(c));
 				break;
-			/* 2.5.198.88 */
-			case 'PtgRefN':
+			case 'PtgRefN': /* 2.5.198.88 */
 				type = f[1][0]; c = cell ? shift_cell_xls(f[1][1], cell, opts) : f[1][1];
 				stack.push(encode_cell_xls(c));
 				break;
-			case 'PtgRef3d': // TODO: lots of stuff
+			case 'PtgRef3d': /* 2.5.198.85 */
 				type = f[1][0]; ixti = /*::Number(*/f[1][1]/*::)*/; c = shift_cell_xls(f[1][2], _range, opts);
 				sname = supbooks.SheetNames[ixti];
 				var w = sname; /* IE9 fails on defined names */
 				stack.push(sname + "!" + encode_cell_xls(c));
 				break;
 
-			/* 2.5.198.62 */
-			case 'PtgFunc':
-			/* 2.5.198.63 */
-			case 'PtgFuncVar':
+			case 'PtgFunc': /* 2.5.198.62 */
+			case 'PtgFuncVar': /* 2.5.198.63 */
 				//console.log(f[1]);
 				/* f[1] = [argc, func, type] */
 				var argc/*:number*/ = f[1][0], func/*:string*/ = f[1][1];
@@ -793,43 +790,38 @@ function stringify_formula(formula/*Array<any>*/, range, cell/*:any*/, supbooks,
 				stack.push(func + "(" + args.join(",") + ")");
 				break;
 
-			/* 2.5.198.42 */
-			case 'PtgBool': stack.push(f[1] ? "TRUE" : "FALSE"); break;
-			/* 2.5.198.66 */
-			case 'PtgInt': stack.push(/*::String(*/f[1]/*::)*/); break;
-			/* 2.5.198.79 TODO: precision? */
-			case 'PtgNum': stack.push(String(f[1])); break;
-			/* 2.5.198.89 */
-			// $FlowIgnore
-			case 'PtgStr': stack.push('"' + f[1] + '"'); break;
-			/* 2.5.198.57 */
-			case 'PtgErr': stack.push(/*::String(*/f[1]/*::)*/); break;
-			/* 2.5.198.31 TODO */
-			case 'PtgAreaN':
+			case 'PtgBool': /* 2.5.198.42 */
+				stack.push(f[1] ? "TRUE" : "FALSE"); break;
+			case 'PtgInt': /* 2.5.198.66 */
+				stack.push(/*::String(*/f[1]/*::)*/); break;
+			case 'PtgNum': /* 2.5.198.79 TODO: precision? */
+				stack.push(String(f[1])); break;
+			case 'PtgStr': /* 2.5.198.89 */
+				// $FlowIgnore
+				stack.push('"' + f[1] + '"'); break;
+			case 'PtgErr': /* 2.5.198.57 */
+				stack.push(/*::String(*/f[1]/*::)*/); break;
+			case 'PtgAreaN': /* 2.5.198.31 TODO */
 				type = f[1][0]; r = shift_range_xls(f[1][1], _range, opts);
 				stack.push(encode_range_xls((r/*:any*/), opts));
 				break;
-			/* 2.5.198.27 TODO: fixed points */
-			case 'PtgArea':
+			case 'PtgArea': /* 2.5.198.27 TODO: fixed points */
 				type = f[1][0]; r = shift_range_xls(f[1][1], _range, opts);
 				stack.push(encode_range_xls((r/*:any*/), opts));
 				break;
-			/* 2.5.198.28 */
-			case 'PtgArea3d': // TODO: lots of stuff
+			case 'PtgArea3d': /* 2.5.198.28 TODO */
 				type = f[1][0]; ixti = /*::Number(*/f[1][1]/*::)*/; r = f[1][2];
 				sname = (supbooks && supbooks[1] ? supbooks[1][ixti+1] : "**MISSING**");
 				stack.push(sname + "!" + encode_range((r/*:any*/)));
 				break;
-			/* 2.5.198.41 */
-			case 'PtgAttrSum':
+			case 'PtgAttrSum': /* 2.5.198.41 */
 				stack.push("SUM(" + stack.pop() + ")");
 				break;
 
-			/* 2.5.198.37 */
-			case 'PtgAttrSemi': break;
+			case 'PtgAttrSemi': /* 2.5.198.37 */
+				break;
 
-			/* 2.5.97.60 TODO: do something different for revisions */
-			case 'PtgName':
+			case 'PtgName': /* 2.5.97.60 TODO: revisions */
 				/* f[1] = type, 0, nameindex */
 				nameidx = f[1][2];
 				var lbl = (supbooks.names||[])[nameidx-1] || (supbooks[0]||[])[nameidx];
@@ -838,8 +830,7 @@ function stringify_formula(formula/*Array<any>*/, range, cell/*:any*/, supbooks,
 				stack.push(name);
 				break;
 
-			/* 2.5.97.61 TODO: do something different for revisions */
-			case 'PtgNameX':
+			case 'PtgNameX': /* 2.5.97.61 TODO: revisions */
 				/* f[1] = type, ixti, nameindex */
 				var bookidx/*:number*/ = (f[1][1]/*:any*/); nameidx = f[1][2]; var externbook;
 				/* TODO: Properly handle missing values */
@@ -850,7 +841,7 @@ function stringify_formula(formula/*Array<any>*/, range, cell/*:any*/, supbooks,
 				} else {
 					var pnxname = supbooks.SheetNames[bookidx];
 					var o = "";
-					if(((supbooks[bookidx]||[])[0]||[])[0] == 0x3A01){}
+					if(((supbooks[bookidx]||[])[0]||[])[0] == 0x3A01){/* empty */}
 					else if(((supbooks[bookidx]||[])[0]||[])[0] == 0x0401){
 						if(supbooks[bookidx][nameidx] && supbooks[bookidx][nameidx].itab > 0) {
 							o = supbooks.SheetNames[supbooks[bookidx][nameidx].itab-1] + "!";
@@ -867,8 +858,7 @@ function stringify_formula(formula/*Array<any>*/, range, cell/*:any*/, supbooks,
 				stack.push(externbook.Name);
 				break;
 
-			/* 2.5.198.80 */
-			case 'PtgParen':
+			case 'PtgParen': /* 2.5.198.80 */
 				var lp = '(', rp = ')';
 				if(last_sp >= 0) {
 					sp = "";
@@ -889,15 +879,13 @@ function stringify_formula(formula/*Array<any>*/, range, cell/*:any*/, supbooks,
 				}
 				stack.push(lp + stack.pop() + rp); break;
 
-			/* 2.5.198.86 */
-			case 'PtgRefErr': stack.push('#REF!'); break;
+			case 'PtgRefErr': /* 2.5.198.86 */
+				stack.push('#REF!'); break;
 
-			/* 2.5.198.87 */
-			case 'PtgRefErr3d': stack.push('#REF!'); break;
+			case 'PtgRefErr3d': /* 2.5.198.87 */
+				stack.push('#REF!'); break;
 
-		/* */
-			/* 2.5.198.58 TODO */
-			case 'PtgExp':
+			case 'PtgExp': /* 2.5.198.58 TODO */
 				c = {c:f[1][1],r:f[1][0]};
 				var q = ({c: cell.c, r:cell.r}/*:any*/);
 				if(supbooks.sharedf[encode_cell(c)]) {
@@ -919,42 +907,37 @@ function stringify_formula(formula/*Array<any>*/, range, cell/*:any*/, supbooks,
 				}
 				break;
 
-			/* 2.5.198.32 TODO */
-			case 'PtgArray':
+			case 'PtgArray': /* 2.5.198.32 TODO */
 				stack.push("{" + stringify_array(f[1]) + "}");
 				break;
 
-			/* 2.5.198.70 TODO: confirm this is a non-display */
-			case 'PtgMemArea':
+			case 'PtgMemArea': /* 2.5.198.70 TODO: confirm this is a non-display */
 				//stack.push("(" + f[2].map(encode_range).join(",") + ")");
 				break;
 
-			/* 2.5.198.38 */
-			case 'PtgAttrSpace':
-			/* 2.5.198.39 */
-			case 'PtgAttrSpaceSemi':
+			case 'PtgAttrSpace': /* 2.5.198.38 */
+			case 'PtgAttrSpaceSemi': /* 2.5.198.39 */
 				last_sp = ff;
 				break;
 
-			/* 2.5.198.92 TODO */
-			case 'PtgTbl': break;
+			case 'PtgTbl': /* 2.5.198.92 TODO */
+				break;
 
-			/* 2.5.198.71 */
-			case 'PtgMemErr': break;
+			case 'PtgMemErr': /* 2.5.198.71 */
+				break;
 
-			/* 2.5.198.74 */
-			case 'PtgMissArg':
+			case 'PtgMissArg': /* 2.5.198.74 */
 				stack.push("");
 				break;
 
-			/* 2.5.198.29 */
-			case 'PtgAreaErr': stack.push("#REF!"); break;
+			case 'PtgAreaErr': /* 2.5.198.29 */
+				stack.push("#REF!"); break;
 
-			/* 2.5.198.30 */
-			case 'PtgAreaErr3d': stack.push("#REF!"); break;
+			case 'PtgAreaErr3d': /* 2.5.198.30 */
+				stack.push("#REF!"); break;
 
-			/* 2.5.198.72 TODO */
-			case 'PtgMemFunc': break;
+			case 'PtgMemFunc': /* 2.5.198.72 TODO */
+				break;
 
 			default: throw new Error('Unrecognized Formula Token: ' + String(f));
 		}
@@ -966,12 +949,14 @@ function stringify_formula(formula/*Array<any>*/, range, cell/*:any*/, supbooks,
 				/* note: some bad XLSB files omit the PtgParen */
 				case 4: _left = false;
 				/* falls through */
-				// $FlowIgnore
-				case 0: sp = fill(" ", f[1][1]); break;
+				case 0:
+					// $FlowIgnore
+					sp = fill(" ", f[1][1]); break;
 				case 5: _left = false;
 				/* falls through */
-				// $FlowIgnore
-				case 1: sp = fill("\r", f[1][1]); break;
+				case 1:
+					// $FlowIgnore
+					sp = fill("\r", f[1][1]); break;
 				default:
 					sp = "";
 					// $FlowIgnore

@@ -6,7 +6,8 @@ Emphasis on parsing and writing robustness, cross-format feature compatibility
 with a unified JS representation, and ES3/ES5 browser compatibility back to IE6.
 
 This is the community version.  We also offer a pro version with performance
-enhancements and additional features by request.
+enhancements, additional features by request, and dedicated support.
+
 
 [**Pro Version**](http://sheetjs.com/pro)
 
@@ -18,16 +19,32 @@ enhancements and additional features by request.
 
 [**Source Code**](http://git.io/xlsx)
 
+[**Issues and Bug Reports**](https://github.com/sheetjs/js-xlsx/issues)
+
+[**Other General Support Issues**](https://discourse.sheetjs.com)
+
 [**File format support for known spreadsheet data formats:**](#file-formats)
 
-![circo graph of format support](formats.png)
-
 <details>
-	<summary>Graph Legend</summary>
+	<summary><b>Graph of supported formats</b> (click to show)</summary>
+
+![circo graph of format support](formats.png)
 
 ![graph legend](legend.png)
 
 </details>
+
+[**Browser Test**](http://oss.sheetjs.com/js-xlsx/tests/)
+
+[![Build Status](https://saucelabs.com/browser-matrix/sheetjs.svg)](https://saucelabs.com/u/sheetjs)
+
+[![Build Status](https://travis-ci.org/SheetJS/js-xlsx.svg?branch=master)](https://travis-ci.org/SheetJS/js-xlsx)
+[![Build Status](https://semaphoreci.com/api/v1/sheetjs/js-xlsx/branches/master/shields_badge.svg)](https://semaphoreci.com/sheetjs/js-xlsx)
+[![Coverage Status](http://img.shields.io/coveralls/SheetJS/js-xlsx/master.svg)](https://coveralls.io/r/SheetJS/js-xlsx?branch=master)
+[![Dependencies Status](https://david-dm.org/sheetjs/js-xlsx/status.svg)](https://david-dm.org/sheetjs/js-xlsx)
+[![NPM Downloads](https://img.shields.io/npm/dt/xlsx.svg)](https://npmjs.org/package/xlsx)
+[![ghit.me](https://ghit.me/badge.svg?repo=sheetjs/js-xlsx)](https://ghit.me/repo/sheetjs/js-xlsx)
+[![Analytics](https://ga-beacon.appspot.com/UA-36810333-1/SheetJS/js-xlsx?pixel)](https://github.com/SheetJS/js-xlsx)
 
 ## Table of Contents
 
@@ -40,6 +57,7 @@ enhancements and additional features by request.
   * [JS Ecosystem Demos](#js-ecosystem-demos)
   * [Optional Modules](#optional-modules)
   * [ECMAScript 5 Compatibility](#ecmascript-5-compatibility)
+- [Philosophy](#philosophy)
 - [Parsing Workbooks](#parsing-workbooks)
   * [Complete Examples](#complete-examples)
   * [Note on Streaming Read](#note-on-streaming-read)
@@ -114,7 +132,6 @@ enhancements and additional features by request.
   * [Windows](#windows)
 - [License](#license)
 - [References](#references)
-- [Badges](#badges)
 
 <!-- tocstop -->
 
@@ -122,16 +139,16 @@ enhancements and additional features by request.
 
 ## Installation
 
+In the browser, just add a script tag:
+
+```html
+<script lang="javascript" src="dist/xlsx.full.min.js"></script>
+```
+
 With [npm](https://www.npmjs.org/package/xlsx):
 
 ```bash
 $ npm install xlsx
-```
-
-In the browser:
-
-```html
-<script lang="javascript" src="dist/xlsx.core.min.js"></script>
 ```
 
 With [bower](http://bower.io/search/?q=js-xlsx):
@@ -193,6 +210,41 @@ To use the shim, add the shim before the script tag that loads xlsx.js:
 ```html
 <script type="text/javascript" src="/path/to/shim.js"></script>
 ```
+
+## Philosophy
+
+<details>
+	<summary><b>Philosophy</b> (click to show)</summary>
+
+Prior to SheetJS, APIs for processing spreadsheet files were format-specific.
+Third-party libraries either supported one format, or they involved a separate
+set of classes for each supported file type.  Even though XLSB was introduced in
+Excel 2007, nothing outside of SheetJS or Excel supported the format.
+
+To promote a format-agnostic view, js-xlsx starts from a pure-JS representation
+that we call the ["Common Spreadsheet Format"](#common-spreadsheet-format).
+Emphasizing a uniform object representation enables radical features like format
+conversion (e.g. reading an XLSX template and saving as XLS) and circumvents the
+"class trap".  By abstracting the complexities of the various formats, tools
+need not worry about the specific file type!
+
+A simple object representation combined with careful coding practices enables
+use cases in older browsers and in alternative environments like ExtendScript
+and Web Workers. It is always tempting to use the latest and greatest features,
+but they tend to require the latest versions of browsers, limiting usability.
+
+Utility functions capture common use cases like generating JS objects or HTML.
+Most simple operations should only require a few lines of code.  More complex
+operations generally should be straightforward to implement.
+
+Excel pushes the XLSX format as default starting in Excel 2007.  However, there
+are other formats with more appealing properties.  For example, the XLSB format
+is spiritually similar to XLSX but files often tend up taking less than half the
+space and open much faster!  Even though an XLSX writer is available, other
+format writers are available so users can take advantage of the unique
+characteristics of each format.
+
+</details>
 
 ## Parsing Workbooks
 
@@ -505,7 +557,6 @@ Utilities are available in the `XLSX.utils` object:
 **Exporting:**
 
 - `sheet_to_json` converts a worksheet object to an array of JSON objects.
-  `sheet_to_row_object_array` is an alias that will be removed in the future.
 - `sheet_to_csv` generates delimiter-separated-values output.
 - `sheet_to_formulae` generates a list of the formulae (with value fallbacks).
 
@@ -1008,17 +1059,14 @@ at index 164.  The following example creates a custom format from scratch:
 
 ```js
 var tbl = {};
-XLSX.SSF.init_table(tbl); // <-- load builtin formats
-tbl[164] = "\"T\"\ #0.00";
 var wb = {
-	SSF: tbl,
 	SheetNames: ["Sheet1"],
 	Sheets: {
 		Sheet1: {
 			"!ref":"A1:C1",
-			A1: { t:"n", v:10000 },             // <-- General format
-			B1: { t:"n", v:10000, z: tbl[4] },  // <-- Builtin format
-			C1: { t:"n", v:10000, z: tbl[164] } // <-- Custom format
+			A1: { t:"n", v:10000 },                    // <-- General format
+			B1: { t:"n", v:10000, z: "0%" },           // <-- Builtin format
+			C1: { t:"n", v:10000, z: "\"T\"\ #0.00" }  // <-- Custom format
 		}
 	}
 }
@@ -1439,8 +1487,8 @@ the output will be encoded in codepage `1200` and the BOM will be prepended.
 
 ### JSON
 
-`XLSX.utils.sheet_to_json` and the alias `XLSX.utils.sheet_to_row_object_array`
-generate different types of JS objects.  The function takes an options argument:
+`XLSX.utils.sheet_to_json` generates different types of JS objects. The function
+takes an options argument:
 
 | Option Name |  Default | Description                                         |
 | :---------- | :------: | :-------------------------------------------------- |
@@ -1834,6 +1882,9 @@ $ open -a Chromium.app http://localhost:8000/stress.html
 
 ### Tested Environments
 
+<details>
+	<summary>(click to show)</summary>
+
  - NodeJS 0.8, 0.9, 0.10, 0.11, 0.12, 4.x, 5.x, 6.x, 7.x
  - IE 6/7/8/9/10/11 (IE6-9 browsers require shims for interacting with client)
  - Chrome 24+
@@ -1846,6 +1897,8 @@ Tests utilize the mocha testing framework.  Travis-CI and Sauce Labs links:
  - <https://semaphoreci.com/sheetjs/js-xlsx> for XLSX module in nodejs
  - <https://travis-ci.org/SheetJS/SheetJS.github.io> for XLS\* modules
  - <https://saucelabs.com/u/sheetjs> for XLS\* modules using Sauce Labs
+
+</details>
 
 ### Test Files
 
@@ -1980,20 +2033,3 @@ granted by the Apache 2.0 License are reserved by the Original Author.
 - Worksheet File Format (From Lotus) December 1984
 
 
-## Badges
-
-[![Build Status](https://saucelabs.com/browser-matrix/sheetjs.svg)](https://saucelabs.com/u/sheetjs)
-
-[![Build Status](https://travis-ci.org/SheetJS/js-xlsx.svg?branch=master)](https://travis-ci.org/SheetJS/js-xlsx)
-
-[![Build Status](https://semaphoreci.com/api/v1/sheetjs/js-xlsx/branches/master/shields_badge.svg)](https://semaphoreci.com/sheetjs/js-xlsx)
-
-[![Coverage Status](http://img.shields.io/coveralls/SheetJS/js-xlsx/master.svg)](https://coveralls.io/r/SheetJS/js-xlsx?branch=master)
-
-[![NPM Downloads](https://img.shields.io/npm/dt/xlsx.svg)](https://npmjs.org/package/xlsx)
-
-[![Dependencies Status](https://david-dm.org/sheetjs/js-xlsx/status.svg)](https://david-dm.org/sheetjs/js-xlsx)
-
-[![ghit.me](https://ghit.me/badge.svg?repo=sheetjs/js-xlsx)](https://ghit.me/repo/sheetjs/js-xlsx)
-
-[![Analytics](https://ga-beacon.appspot.com/UA-36810333-1/SheetJS/js-xlsx?pixel)](https://github.com/SheetJS/js-xlsx)

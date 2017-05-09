@@ -38,7 +38,6 @@ Utilities are available in the `XLSX.utils` object:
 **Exporting:**
 
 - `sheet_to_json` converts a worksheet object to an array of JSON objects.
-  `sheet_to_row_object_array` is an alias that will be removed in the future.
 - `sheet_to_csv` generates delimiter-separated-values output.
 - `sheet_to_formulae` generates a list of the formulae (with value fallbacks).
 

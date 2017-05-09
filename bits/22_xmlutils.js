@@ -37,7 +37,7 @@ var encodings = {
 	'&amp;': '&'
 };
 var rencoding = evert(encodings);
-var rencstr = "&<>'\"".split("");
+//var rencstr = "&<>'\"".split("");
 
 // TODO: CP remap (need to read file version to determine OS)
 var unescapexml/*:StringConv*/ = (function() {

@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 /* xlsx.js (C) 2013-present  SheetJS -- http://sheetjs.com */
+/* eslint-env node */
 var n = "xlsx";
 /* vim: set ts=2 ft=javascript: */
 var X = require('../');
@@ -176,9 +177,9 @@ var oo = "";
 var strm = false;
 if(!program.quiet) console.error(target_sheet);
 if(program.formulae) oo = X.utils.get_formulae(ws).join("\n");
-else if(program.json) oo = JSON.stringify(X.utils.sheet_to_row_object_array(ws));
-else if(program.rawJs) oo = JSON.stringify(X.utils.sheet_to_row_object_array(ws,{raw:true}));
-else if(program.arrays) oo = JSON.stringify(X.utils.sheet_to_row_object_array(ws,{raw:true, header:1}));
+else if(program.json) oo = JSON.stringify(X.utils.sheet_to_json(ws));
+else if(program.rawJs) oo = JSON.stringify(X.utils.sheet_to_json(ws,{raw:true}));
+else if(program.arrays) oo = JSON.stringify(X.utils.sheet_to_json(ws,{raw:true, header:1}));
 else {
 	strm = true;
 	var stream = X.stream.to_csv(ws, {FS:program.fieldSep, RS:program.rowSep});

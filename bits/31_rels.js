@@ -55,7 +55,7 @@ function write_rels(rels)/*:string*/ {
 function add_rels(rels, rId, f, type, relobj)/*:number*/ {
 	if(!relobj) relobj = {};
 	if(!rels['!id']) rels['!id'] = {};
-	if(rId < 0) for(rId = 1; rels['!id']['rId' + rId]; ++rId){}
+	if(rId < 0) for(rId = 1; rels['!id']['rId' + rId]; ++rId){/* empty */}
 	relobj.Id = 'rId' + rId;
 	relobj.Type = type;
 	relobj.Target = f;

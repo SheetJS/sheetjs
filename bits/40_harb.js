@@ -210,17 +210,23 @@ var SYLK = (function() {
 		var Mval = 0, j;
 		for (; ri !== records.length; ++ri) {
 			Mval = 0;
-			var record = records[ri].trim().split(";");
-			var RT = record[0], val;
-			switch(RT) {
-			case 'P': if(record[1].charAt(0) == 'P') formats.push(records[ri].trim().substr(3).replace(/;;/g, ";"));
+			var rstr=records[ri].trim(), record=rstr.split(";"), RT=record[0], val;
+			if(rstr.length > 0) switch(RT) {
+			case 'ID': break; /* header */
+			case 'E': break; /* EOF */
+			case 'B': break; /* dimensions */
+			case 'O': break; /* options? */
+			case 'P':
+				if(record[1].charAt(0) == 'P')
+					formats.push(rstr.substr(3).replace(/;;/g, ";"));
 				break;
-			case 'C': case 'F': for(rj=1; rj<record.length; ++rj) switch(record[rj].charAt(0)) {
+			case 'C':
+			for(rj=1; rj<record.length; ++rj) switch(record[rj].charAt(0)) {
+				case 'X': C = parseInt(record[rj].substr(1))-1; break;
 				case 'Y':
 					R = parseInt(record[rj].substr(1))-1; C = 0;
 					for(j = arr.length; j <= R; ++j) arr[j] = [];
 					break;
-				case 'X': C = parseInt(record[rj].substr(1))-1; break;
 				case 'K':
 					val = record[rj].substr(1);
 					if(val.charAt(0) === '"') val = val.substr(1,val.length - 2);
@@ -233,13 +239,27 @@ var SYLK = (function() {
 					arr[R][C] = val;
 					next_cell_format = null;
 					break;
-				case 'P':
-					if(RT !== 'F') break;
-					next_cell_format = formats[parseInt(record[rj].substr(1))];
+				case 'E':
+					/* formula = record[rj].substr(1); */
+					break; /* TODO: formula */
+				default: if(opts && opts.WTF) throw new Error("SYLK bad record " + rstr);
+			} break;
+			case 'F':
+			for(rj=1; rj<record.length; ++rj) switch(record[rj].charAt(0)) {
+				case 'X': C = parseInt(record[rj].substr(1))-1; break;
+				case 'Y':
+					R = parseInt(record[rj].substr(1))-1; C = 0;
+					for(j = arr.length; j <= R; ++j) arr[j] = [];
 					break;
 				case 'M': Mval = parseInt(record[rj].substr(1)) / 20; break;
+				case 'F': break; /* ??? */
+				case 'P':
+					next_cell_format = formats[parseInt(record[rj].substr(1))];
+					break;
+				case 'S': break; /* cell style */
+				case 'D': break; /* column */
+				case 'N': break; /* font */
 				case 'W':
-					if(RT !== 'F') break;
 					cw = record[rj].substr(1).split(" ");
 					for(j = parseInt(cw[0], 10); j <= parseInt(cw[1], 10); ++j) {
 						Mval = parseInt(cw[2], 10);
@@ -250,8 +270,10 @@ var SYLK = (function() {
 					rowinfo[R] = {};
 					if(Mval > 0) { rowinfo[R].hpt = Mval; rowinfo[R].hpx = pt2px(Mval); }
 					else if(Mval == 0) rowinfo[R].hidden = true;
+					break;
+				default: if(opts && opts.WTF) throw new Error("SYLK bad record " + rstr);
 			} break;
-			default: break;
+			default: if(opts && opts.WTF) throw new Error("SYLK bad record " + rstr);
 			}
 		}
 		if(rowinfo.length > 0) sht['!rows'] = rowinfo;
@@ -297,7 +319,7 @@ var SYLK = (function() {
 		});
 	}
 
-	function write_ws_rows_sylk(out, rows) {
+	function write_ws_rows_sylk(out/*:Array<string>*/, rows/*:Array<RowInfo>*/) {
 		rows.forEach(function(row, i) {
 			var rec = "F;";
 			if(row.hidden) rec += "M0;";
@@ -318,6 +340,7 @@ var SYLK = (function() {
 		if(ws['!cols']) write_ws_cols_sylk(preamble, ws['!cols']);
 		if(ws['!rows']) write_ws_rows_sylk(preamble, ws['!rows']);
 
+		preamble.push("B;Y" + (r.e.r - r.s.r + 1) + ";X" + (r.e.c - r.s.c + 1) + ";D" + [r.s.c,r.s.r,r.e.c,r.e.r].join(" "));
 		for(var R = r.s.r; R <= r.e.r; ++R) {
 			for(var C = r.s.c; C <= r.e.c; ++C) {
 				var coord = encode_cell({r:R,c:C});
@@ -447,7 +470,7 @@ var PRN = (function() {
 	function set_text_arr(data/*:string*/, arr/*:AOA*/, R/*:number*/, C/*:number*/) {
 		if(data === 'TRUE') arr[R][C] = true;
 		else if(data === 'FALSE') arr[R][C] = false;
-		else if(data === ""){}
+		else if(data === ""){/* empty */}
 		else if(+data == +data) arr[R][C] = +data;
 		else arr[R][C] = data;
 	}
@@ -485,29 +508,36 @@ var PRN = (function() {
 
 		/* known sep */
 		if(str.substr(0,4) == "sep=" && str.charCodeAt(5) == 10) { sep = str.charAt(4); str = str.substr(6); }
-		/* TODO: actually determine the separator */
-		if(str.substr(0,1024).indexOf("\t") == -1) sep = ","; else sep = "\t";
+		else if(str.substr(0,1024).indexOf("\t") == -1) sep = ","; else sep = "\t";
 		var R = 0, C = 0, v = 0;
 		var start = 0, end = 0, sepcc = sep.charCodeAt(0), instr = false, cc=0;
-		str = str.replace(/\r\n/g, "\n");
-		for(;end < str.length;++end) switch((cc=str.charCodeAt(end))) {
-			case 0x22: instr = !instr; break;
-			case sepcc: case 0x0a: if(instr) break;
+		str = str.replace(/\r\n/mg, "\n");
+		function finish_cell() {
 			var s = str.slice(start, end);
 			var cell = ({}/*:any*/);
 			if(s.charCodeAt(0) == 0x3D) { cell.t = 'n'; cell.f = s.substr(1); }
 			else if(s == "TRUE") { cell.t = 'b'; cell.v = true; }
 			else if(s == "FALSE") { cell.t = 'b'; cell.v = false; }
-			else if(!isNaN(v = parseFloat(s))) { cell.t = 'n'; cell.w = s; cell.v = v; }
-			else { cell.t = 's'; cell.v = s.replace(/^"/,"").replace(/"$/,"").replace(/""/g,'"'); }
+			else if(!isNaN(v = +s)) { cell.t = 'n'; cell.w = s; cell.v = v; }
+			else if(!isNaN(new Date(s).getDate())) { cell.t = 'd'; cell.v = parseDate(s); }
+			else {
+				cell.t = 's';
+				if(s.charAt(0) == '"' && s.charAt(s.length - 1) == '"') s = s.slice(1,-1).replace(/""/g,'"');
+				cell.v = s;
+			}
 			if(o.dense) { if(!ws[R]) ws[R] = []; ws[R][C] = cell; }
 			else ws[encode_cell({c:C,r:R})] = cell;
 			start = end+1;
 			if(range.e.c < C) range.e.c = C;
 			if(range.e.r < R) range.e.r = R;
-			if(cc == sepcc) ++C; else { C = 0; ++R; } break;
+			if(cc == sepcc) ++C; else { C = 0; ++R; }
+		}
+		for(;end < str.length;++end) switch((cc=str.charCodeAt(end))) {
+			case 0x22: if(instr || (end - start == 0)) instr = !instr; break;
+			case sepcc: case 0x0a: case 0x0d: if(!instr) finish_cell(); break;
 			default: break;
 		}
+		if(end - start > 0) finish_cell();
 
 		ws['!ref'] = encode_range(range);
 		return ws;

@@ -56,7 +56,7 @@ function safe_format_xf(p/*:any*/, opts/*:ParseOpts*/, date1904/*:?boolean*/) {
 	if(p.t === 'z') return;
 	if(!p.XF) return;
 	try {
-		var fmtid = p.XF.ifmt||0;
+		var fmtid = p.z || p.XF.ifmt || 0;
 		if(opts.cellNF) p.z = SSF._table[fmtid];
 	} catch(e) { if(opts.WTF) throw e; }
 	if(!opts || opts.cellText !== false) try {
@@ -179,6 +179,7 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 	var last_Rn = '';
 	var file_depth = 0; /* TODO: make a real stack */
 	var BIFF2Fmt = 0;
+	var BIFF2FmtTable = [];
 	var FilterDatabases = []; /* TODO: sort out supbooks and process elsewhere */
 	var last_lbl;
 
@@ -309,7 +310,7 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 					out = options.dense ? [] : {};
 				} break;
 				case 'BOF': {
-					if(opts.biff !== 8){}
+					if(opts.biff !== 8){/* empty */}
 					else if(RecordType  === 0x0009) opts.biff = 2;
 					else if(RecordType  === 0x0209) opts.biff = 3;
 					else if(RecordType  === 0x0409) opts.biff = 4;
@@ -342,17 +343,20 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 
 				case 'Number': case 'BIFF2NUM': case 'BIFF2INT': {
 					if(out["!type"] == "chart") if(options.dense ? (out[val.r]||[])[val.c]: out[encode_cell({c:val.c, r:val.r})]) ++val.c;
-					temp_val = {ixfe: val.ixfe, XF: XFs[val.ixfe], v:val.val, t:'n'};
+					temp_val = {ixfe: val.ixfe, XF: XFs[val.ixfe]||{}, v:val.val, t:'n'};
+					if(BIFF2Fmt > 0) temp_val.z = BIFF2FmtTable[(temp_val.ixfe>>8) & 0x1F];
 					safe_format_xf(temp_val, options, wb.opts.Date1904);
 					addcell({c:val.c, r:val.r}, temp_val, options);
 				} break;
 				case 'BoolErr': {
 					temp_val = {ixfe: val.ixfe, XF: XFs[val.ixfe], v:val.val, t:val.t};
+					if(BIFF2Fmt > 0) temp_val.z = BIFF2FmtTable[(temp_val.ixfe>>8) & 0x1F];
 					safe_format_xf(temp_val, options, wb.opts.Date1904);
 					addcell({c:val.c, r:val.r}, temp_val, options);
 				} break;
 				case 'RK': {
 					temp_val = {ixfe: val.ixfe, XF: XFs[val.ixfe], v:val.rknum, t:'n'};
+					if(BIFF2Fmt > 0) temp_val.z = BIFF2FmtTable[(temp_val.ixfe>>8) & 0x1F];
 					safe_format_xf(temp_val, options, wb.opts.Date1904);
 					addcell({c:val.c, r:val.r}, temp_val, options);
 				} break;
@@ -360,6 +364,7 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 					for(var j = val.c; j <= val.C; ++j) {
 						var ixfe = val.rkrec[j-val.c][0];
 						temp_val= {ixfe:ixfe, XF:XFs[ixfe], v:val.rkrec[j-val.c][1], t:'n'};
+						if(BIFF2Fmt > 0) temp_val.z = BIFF2FmtTable[(temp_val.ixfe>>8) & 0x1F];
 						safe_format_xf(temp_val, options, wb.opts.Date1904);
 						addcell({c:j, r:val.r}, temp_val, options);
 					}
@@ -377,6 +382,7 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 							else temp_val.F = ((options.dense ? (out[_fr]||[])[_fc]: out[_fe]) || {}).F;
 						} else temp_val.f = ""+stringify_formula(val.formula,range,val.cell,supbooks, opts);
 					}
+					if(BIFF2Fmt > 0) temp_val.z = BIFF2FmtTable[(temp_val.ixfe>>8) & 0x1F];
 					safe_format_xf(temp_val, options, wb.opts.Date1904);
 					addcell(val.cell, temp_val, options);
 					last_formula = val;
@@ -389,6 +395,7 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 						if(options.cellFormula) {
 							temp_val.f = ""+stringify_formula(last_formula.formula, range, last_formula.cell, supbooks, opts);
 						}
+						if(BIFF2Fmt > 0) temp_val.z = BIFF2FmtTable[(temp_val.ixfe>>8) & 0x1F];
 						safe_format_xf(temp_val, options, wb.opts.Date1904);
 						addcell(last_formula.cell, temp_val, options);
 						last_formula = null;
@@ -419,11 +426,13 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 				case 'LabelSst':
 					temp_val=make_cell(sst[val.isst].t, val.ixfe, 's');
 					temp_val.XF = XFs[temp_val.ixfe];
+					if(BIFF2Fmt > 0) temp_val.z = BIFF2FmtTable[(temp_val.ixfe>>8) & 0x1F];
 					safe_format_xf(temp_val, options, wb.opts.Date1904);
 					addcell({c:val.c, r:val.r}, temp_val, options);
 					break;
 				case 'Blank': if(options.sheetStubs) {
 					temp_val = {ixfe: val.ixfe, XF: XFs[val.ixfe], t:'z'};
+					if(BIFF2Fmt > 0) temp_val.z = BIFF2FmtTable[(temp_val.ixfe>>8) & 0x1F];
 					safe_format_xf(temp_val, options, wb.opts.Date1904);
 					addcell({c:val.c, r:val.r}, temp_val, options);
 				} break;
@@ -431,6 +440,7 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 					for(var _j = val.c; _j <= val.C; ++_j) {
 						var _ixfe = val.ixfe[_j-val.c];
 						temp_val= {ixfe:_ixfe, XF:XFs[_ixfe], t:'z'};
+						if(BIFF2Fmt > 0) temp_val.z = BIFF2FmtTable[(temp_val.ixfe>>8) & 0x1F];
 						safe_format_xf(temp_val, options, wb.opts.Date1904);
 						addcell({c:_j, r:val.r}, temp_val, options);
 					}
@@ -439,6 +449,7 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 				case 'Label': case 'BIFF2STR':
 					temp_val=make_cell(val.val, val.ixfe, 's');
 					temp_val.XF = XFs[temp_val.ixfe];
+					if(BIFF2Fmt > 0) temp_val.z = BIFF2FmtTable[(temp_val.ixfe>>8) & 0x1F];
 					safe_format_xf(temp_val, options, wb.opts.Date1904);
 					addcell({c:val.c, r:val.r}, temp_val, options);
 					break;
@@ -453,20 +464,23 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 					SSF.load(val[1], val[0]);
 				} break;
 				case 'BIFF2FORMAT': {
-					SSF.load(val, BIFF2Fmt++);
+					BIFF2FmtTable[BIFF2Fmt++] = val;
+					for(var b2idx = 0; b2idx < BIFF2Fmt + 163; ++b2idx) if(SSF._table[b2idx] == val) break;
+					if(b2idx >= 163) SSF.load(val, BIFF2Fmt + 163);
 				} break;
 
 				case 'MergeCells': mergecells = mergecells.concat(val); break;
 
 				case 'Obj': objects[val.cmo[0]] = opts.lastobj = val; break;
 				case 'TxO': opts.lastobj.TxO = val; break;
+				case 'ImData': opts.lastobj.ImData = val; break;
 
 				case 'HLink': {
 					for(rngR = val[0].s.r; rngR <= val[0].e.r; ++rngR)
 						for(rngC = val[0].s.c; rngC <= val[0].e.c; ++rngC) {
 							cc = options.dense ? (out[rngR]||[])[rngC] : out[encode_cell({c:rngC,r:rngR})];
 							if(cc) cc.l = val[1];
-							}
+						}
 				} break;
 				case 'HLinkTooltip': {
 					for(rngR = val[0].s.r; rngR <= val[0].e.r; ++rngR)
@@ -611,24 +625,24 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 					//console.log("Zoom Level:", val[0]/val[1],val);
 				} break;
 				case 'SheetExt': {
-
+					/* empty */
 				} break;
 				case 'SheetExtOptional': {
-
+					/* empty */
 				} break;
 
 				/* VBA */
 				case 'ObNoMacros': {
-
+					/* empty */
 				} break;
 				case 'ObProj': {
-
+					/* empty */
 				} break;
 				case 'CodeName': {
-
+					/* empty */
 				} break;
 				case 'GUIDTypeLib': {
-
+					/* empty */
 				} break;
 
 				case 'WOpt': break; // TODO: WTF?
@@ -657,7 +671,7 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 				/* Explicitly Ignored */
 				case 'Excel9File': break;
 				case 'Units': break;
-				case 'InterfaceHdr': case 'Mms': case 'InterfaceEnd': case 'DSF': case 'BuiltInFnGroupCount':
+				case 'InterfaceHdr': case 'Mms': case 'InterfaceEnd': case 'DSF': case 'BuiltInFnGroupCount': break;
 				/* View Stuff */
 				case 'Window1': case 'Window2': case 'HideObj': case 'GridSet': case 'Guts':
 				case 'UserBView': case 'UserSViewBegin': case 'UserSViewEnd':
@@ -724,13 +738,12 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 				/* Drawing */
 				case 'ShapePropsStream': break;
 				case 'MsoDrawing': case 'MsoDrawingGroup': case 'MsoDrawingSelection': break;
-				case 'ImData': break;
 				/* Pub Stuff */
-				case 'WebPub': case 'AutoWebPub':
+				case 'WebPub': case 'AutoWebPub': break;
 
 				/* Print Stuff */
 				case 'HeaderFooter': case 'HFPicture': case 'PLV':
-				case 'HorizontalPageBreaks': case 'VerticalPageBreaks':
+				case 'HorizontalPageBreaks': case 'VerticalPageBreaks': break;
 				/* Behavioral */
 				case 'Backup': case 'CompressPictures': case 'Compat12': break;
 
@@ -779,11 +792,11 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 function parse_props(cfb) {
 	/* [MS-OSHARED] 2.3.3.2.2 Document Summary Information Property Set */
 	var DSI = cfb.find('!DocumentSummaryInformation');
-	if(DSI) try { cfb.DocSummary = parse_PropertySetStream(DSI, DocSummaryPIDDSI); } catch(e) {}
+	if(DSI) try { cfb.DocSummary = parse_PropertySetStream(DSI, DocSummaryPIDDSI); } catch(e) {/* empty */}
 
 	/* [MS-OSHARED] 2.3.3.2.1 Summary Information Property Set*/
 	var SI = cfb.find('!SummaryInformation');
-	if(SI) try { cfb.Summary = parse_PropertySetStream(SI, SummaryPIDSI); } catch(e) {}
+	if(SI) try { cfb.Summary = parse_PropertySetStream(SI, SummaryPIDSI); } catch(e) {/* empty */}
 }
 
 function parse_xlscfb(cfb/*:any*/, options/*:?ParseOpts*/)/*:Workbook*/ {

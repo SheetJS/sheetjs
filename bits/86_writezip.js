@@ -9,6 +9,7 @@ function write_zip(wb/*:Workbook*/, opts/*:WriteOpts*/)/*:ZIP*/ {
 		make_ssf(SSF); SSF.load_table(wb.SSF);
 		// $FlowIgnore
 		opts.revssf = evert_num(wb.SSF); opts.revssf[wb.SSF[65535]] = 0;
+		opts.ssf = wb.SSF;
 	}
 	opts.rels = {}; opts.wbrels = {};
 	opts.Strings = /*::((*/[]/*:: :any):SST)*/; opts.Strings.Count = 0; opts.Strings.Unique = 0;
@@ -37,7 +38,7 @@ function write_zip(wb/*:Workbook*/, opts/*:WriteOpts*/)/*:ZIP*/ {
 
 	/*::if(!wb.Props) throw "unreachable"; */
 	f = "docProps/app.xml";
-	if(wb.Props && wb.Props.SheetNames){}
+	if(wb.Props && wb.Props.SheetNames){/* empty */}
 	else if(!wb.Workbook || !wb.Workbook.Sheets) wb.Props.SheetNames = wb.SheetNames;
 	// $FlowIgnore
 	else wb.Props.SheetNames = wb.SheetNames.map(function(x,i) { return [(wb.Workbook.Sheets[i]||{}).Hidden != 2, x];}).filter(function(x) { return x[0]; }).map(function(x) { return x[1]; });
@@ -126,5 +127,7 @@ function write_zip(wb/*:Workbook*/, opts/*:WriteOpts*/)/*:ZIP*/ {
 	zip.file("[Content_Types].xml", write_ct(ct, opts));
 	zip.file('_rels/.rels', write_rels(opts.rels));
 	zip.file('xl/_rels/workbook.' + wbext + '.rels', write_rels(opts.wbrels));
+
+	delete opts.revssf; delete opts.ssf;
 	return zip;
 }

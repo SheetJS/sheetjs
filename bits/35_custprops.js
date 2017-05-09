@@ -39,7 +39,7 @@ function parse_cust_props(data/*:string*/, opts) {
 					default:
 						if(opts.WTF && typeof console !== 'undefined') console.warn('Unexpected', x, type, toks);
 				}
-			} else if(x.substr(0,2) === "</") {
+			} else if(x.substr(0,2) === "</") {/* empty */
 			} else if(opts.WTF) throw new Error(x);
 		}
 	}

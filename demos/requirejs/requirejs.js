@@ -41,7 +41,7 @@ function get_radio_value( radioName ) {
 function to_json(workbook) {
 	var result = {};
 	workbook.SheetNames.forEach(function(sheetName) {
-		var roa = X.utils.sheet_to_row_object_array(workbook.Sheets[sheetName]);
+		var roa = X.utils.sheet_to_json(workbook.Sheets[sheetName]);
 		if(roa.length > 0){
 			result[sheetName] = roa;
 		}

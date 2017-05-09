@@ -21,7 +21,7 @@ function parse_frtHeader(blob) {
 function parse_OptXLUnicodeString(blob, length, opts) { return length === 0 ? "" : parse_XLUnicodeString2(blob, length, opts); }
 
 /* 2.5.158 */
-var HIDEOBJENUM = ['SHOWALL', 'SHOWPLACEHOLDER', 'HIDEALL'];
+//var HIDEOBJENUM = ['SHOWALL', 'SHOWPLACEHOLDER', 'HIDEALL'];
 var parse_HideObjEnum = parseuint16;
 
 /* 2.5.344 */
@@ -99,35 +99,39 @@ function parse_FtCf(blob, length) {
 }
 
 /* 2.5.140 - 2.5.154 and friends */
+function parse_FtSkip(blob, length) { blob.l += 2; blob.l += blob.read_shift(2); }
 var FtTab = {
-	/*::[*/0x15/*::]*/: parse_FtCmo,
-	/*::[*/0x13/*::]*/: parsenoop,                                /* FtLbsData */
-	/*::[*/0x12/*::]*/: function(blob, length) { blob.l += 12; }, /* FtCblsData */
-	/*::[*/0x11/*::]*/: function(blob, length) { blob.l += 8; },  /* FtRboData */
-	/*::[*/0x10/*::]*/: parsenoop,                                /* FtEdoData */
-	/*::[*/0x0F/*::]*/: parsenoop,                                /* FtGboData */
-	/*::[*/0x0D/*::]*/: parse_FtNts,                              /* FtNts */
-	/*::[*/0x0C/*::]*/: function(blob, length) { blob.l += 24; }, /* FtSbs */
-	/*::[*/0x0B/*::]*/: function(blob, length) { blob.l += 10; }, /* FtRbo */
-	/*::[*/0x0A/*::]*/: function(blob, length) { blob.l += 16; }, /* FtCbls */
-	/*::[*/0x09/*::]*/: parsenoop,                                /* FtPictFmla */
-	/*::[*/0x08/*::]*/: function(blob, length) { blob.l += 6; },  /* FtPioGrbit */
-	/*::[*/0x07/*::]*/: parse_FtCf,                               /* FtCf */
-	/*::[*/0x06/*::]*/: function(blob, length) { blob.l += 6; },  /* FtGmo */
-	/*::[*/0x04/*::]*/: parsenoop,                                /* FtMacro */
-	/*::[*/0x00/*::]*/: function(blob, length) { blob.l += 4; }   /* FtEnding */
+	/*::[*/0x00/*::]*/: parse_FtSkip,      /* FtEnd */
+	/*::[*/0x04/*::]*/: parse_FtSkip,      /* FtMacro */
+	/*::[*/0x05/*::]*/: parse_FtSkip,      /* FtButton */
+	/*::[*/0x06/*::]*/: parse_FtSkip,      /* FtGmo */
+	/*::[*/0x07/*::]*/: parse_FtCf,        /* FtCf */
+	/*::[*/0x08/*::]*/: parse_FtSkip,      /* FtPioGrbit */
+	/*::[*/0x09/*::]*/: parse_FtSkip,      /* FtPictFmla */
+	/*::[*/0x0A/*::]*/: parse_FtSkip,      /* FtCbls */
+	/*::[*/0x0B/*::]*/: parse_FtSkip,      /* FtRbo */
+	/*::[*/0x0C/*::]*/: parse_FtSkip,      /* FtSbs */
+	/*::[*/0x0D/*::]*/: parse_FtNts,       /* FtNts */
+	/*::[*/0x0E/*::]*/: parse_FtSkip,      /* FtSbsFmla */
+	/*::[*/0x0F/*::]*/: parse_FtSkip,      /* FtGboData */
+	/*::[*/0x10/*::]*/: parse_FtSkip,      /* FtEdoData */
+	/*::[*/0x11/*::]*/: parse_FtSkip,      /* FtRboData */
+	/*::[*/0x12/*::]*/: parse_FtSkip,      /* FtCblsData */
+	/*::[*/0x13/*::]*/: parse_FtSkip,      /* FtLbsData */
+	/*::[*/0x14/*::]*/: parse_FtSkip,      /* FtCblsFmla */
+	/*::[*/0x15/*::]*/: parse_FtCmo
 };
 function parse_FtArray(blob, length, ot) {
-	var s = blob.l;
+	var tgt = blob.l + length;
 	var fts = [];
-	while(blob.l < s + length) {
+	while(blob.l < tgt) {
 		var ft = blob.read_shift(2);
 		blob.l-=2;
 		try {
-			fts.push(FtTab[ft](blob, s + length - blob.l));
-		} catch(e) { blob.l = s + length; return fts; }
+			fts.push(FtTab[ft](blob, tgt - blob.l));
+		} catch(e) { blob.l = tgt; return fts; }
 	}
-	if(blob.l != s + length) blob.l = s + length; //throw new Error("bad Object Ft-sequence");
+	if(blob.l != tgt) blob.l = tgt; //throw new Error("bad Object Ft-sequence");
 	return fts;
 }
 
@@ -158,7 +162,7 @@ function parse_BOF(blob, length) {
 function parse_InterfaceHdr(blob, length) {
 	if(length === 0) return 0x04b0;
 	var q;
-	if((q=blob.read_shift(2))!==0x04b0){}
+	if((q=blob.read_shift(2))!==0x04b0){/* empty */}
 	return 0x04b0;
 }
 
@@ -246,11 +250,16 @@ function parse_RecalcId(blob, length) {
 }
 
 /* 2.4.87 */
-function parse_DefaultRowHeight(blob, length) {
-	var f = blob.read_shift(2);
-	var fl = {Unsynced:f&1,DyZero:(f&2)>>1,ExAsc:(f&4)>>2,ExDsc:(f&8)>>3};
-	/* char is misleading, miyRw and miyRwHidden overlap */
+function parse_DefaultRowHeight(blob, length, opts) {
+	var f = 0;
+	if(!(opts && opts.biff == 2)) {
+		f = blob.read_shift(2);
+	}
 	var miyRw = blob.read_shift(2);
+	if((opts && opts.biff == 2)) {
+		f = 1 - (miyRw >> 15); miyRw &= 0x7fff;
+	}
+	var fl = {Unsynced:f&1,DyZero:(f&2)>>1,ExAsc:(f&4)>>2,ExDsc:(f&8)>>3};
 	return [fl, miyRw];
 }
 
@@ -265,9 +274,17 @@ function parse_Window1(blob, length) {
 
 /* 2.4.122 TODO */
 function parse_Font(blob, length, opts) {
-	blob.l += 14;
-	var name = parse_ShortXLUnicodeString(blob, 0, opts);
-	return name;
+	var o = {
+		dyHeight: blob.read_shift(2),
+		fl: blob.read_shift(2)
+	};
+	switch(opts && opts.biff || 8) {
+		case 2: break;
+		case 3: case 4: blob.l += 2; break;
+		default: blob.l += 10; break;
+	}
+	o.name = parse_ShortXLUnicodeString(blob, 0, opts);
+	return o;
 }
 
 /* 2.4.149 */
@@ -299,8 +316,8 @@ var parse_BIFF2Format = parse_XLUnicodeString2;
 function parse_Dimensions(blob, length, opts) {
 	var end = blob.l + length;
 	var w = opts.biff == 8 || !opts.biff ? 4 : 2;
-	var r = blob.read_shift(w), R = blob.read_shift(w),
-	    c = blob.read_shift(2), C = blob.read_shift(2);
+	var r = blob.read_shift(w), R = blob.read_shift(w);
+	var c = blob.read_shift(2), C = blob.read_shift(2);
 	blob.l = end;
 	return {s: {r:r, c:c}, e: {r:R, c:C}};
 }
@@ -549,10 +566,48 @@ function parse_MergeCells(blob, length) {
 }
 
 /* 2.4.181 TODO: parse all the things! */
-function parse_Obj(blob, length) {
+function parse_Obj(blob, length, opts) {
+	if(opts && opts.biff < 8) return parse_BIFF5Obj(blob, length, opts);
 	var cmo = parse_FtCmo(blob, 22); // id, ot, flags
 	var fts = parse_FtArray(blob, length-22, cmo[1]);
 	return { cmo: cmo, ft:fts };
+}
+/* from older spec */
+var parse_BIFF5OT = [];
+parse_BIFF5OT[0x08] = function(blob, length, opts) {
+	var tgt = blob.l + length;
+	blob.l += 10; // todo
+	var cf = blob.read_shift(2);
+	blob.l += 4;
+	var cbPictFmla = blob.read_shift(2);
+	blob.l += 2;
+	var grbit = blob.read_shift(2);
+	blob.l += 4;
+	var cchName = blob.read_shift(1);
+	blob.l += cchName; // TODO: stName
+	blob.l = tgt; // TODO: fmla
+	return { fmt:cf };
+};
+
+function parse_BIFF5Obj(blob, length, opts) {
+	var cnt = blob.read_shift(4);
+	var ot = blob.read_shift(2);
+	var id = blob.read_shift(2);
+	var grbit = blob.read_shift(2);
+	var colL = blob.read_shift(2);
+	var dxL = blob.read_shift(2);
+	var rwT = blob.read_shift(2);
+	var dyT = blob.read_shift(2);
+	var colR = blob.read_shift(2);
+	var dxR = blob.read_shift(2);
+	var rwB = blob.read_shift(2);
+	var dyB = blob.read_shift(2);
+	var cbMacro = blob.read_shift(2);
+	blob.l += 6;
+	length -= 36;
+	var fts = [];
+	fts.push((parse_BIFF5OT[ot]||parsenoop)(blob, length, opts));
+	return { cmo: [id, ot, grbit], ft:fts };
 }
 
 /* 2.4.329 TODO: parse properly */
@@ -683,7 +738,6 @@ var parse_Style = parsenoop;
 var parse_StyleExt = parsenoop;
 
 var parse_Window2 = parsenoop;
-
 
 var parse_Backup = parsebool; /* 2.4.14 */
 var parse_Blank = parse_XLSCell; /* 2.4.20 Just the cell */
@@ -991,6 +1045,16 @@ var parse_BopPopCustom = parsenoop;
 var parse_Fbi2 = parsenoop;
 
 /* --- Specific to versions before BIFF8 --- */
+function parse_ImData(blob, length, opts) {
+	var tgt = blob.l + length;
+	var cf = blob.read_shift(2);
+	var env = blob.read_shift(2);
+	var lcb = blob.read_shift(4);
+	var o = {fmt:cf, env:env, len:lcb, data:blob.slice(blob.l,blob.l+lcb)};
+	blob.l += lcb;
+	return o;
+}
+
 function parse_BIFF5String(blob) {
 	var len = blob.read_shift(1);
 	return blob.read_shift(len, 'sbcs-cont');
@@ -1037,7 +1101,7 @@ function parse_BIFF2FONTXTRA(blob, length) {
 	blob.l += 1; // charset
 	blob.l += 3; // unknown
 	blob.l += 1; // font family
-	blob.l += length - 9;
+	blob.l += length - 13;
 }
 
 /* TODO: parse rich text runs */

@@ -34,6 +34,7 @@ function write_comments_vml(rId, comments) {
 			writetag('x:AutoFill', "False"),
 			writetag('x:Row', String(c.r)),
 			writetag('x:Column', String(c.c)),
+			'<x:Visible/>',
 		'</x:ClientData>',
 	'</v:shape>'
 	]); });

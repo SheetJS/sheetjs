@@ -312,7 +312,7 @@ var parse_content_xml = (function() {
 				try {
 					var AutoFilter = ods_to_csf_range_3D(parsexmltag(Rn[0])['target-range-address']);
 					Sheets[AutoFilter[0]]['!autofilter'] = { ref: AutoFilter[1] };
-				} catch(e) { }
+				} catch(e) {/* empty */}
 				break;
 
 			case 's': break; // <text:s>
@@ -362,7 +362,8 @@ var parse_content_xml = (function() {
 			case 'sheet-name': // 7.3.9
 				break;
 
-			case 'event-listener': // TODO
+			case 'event-listener':
+				break;
 			/* TODO: FODS Properties */
 			case 'initial-creator':
 			case 'creation-date':

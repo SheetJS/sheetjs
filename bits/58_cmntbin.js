@@ -22,9 +22,6 @@ function write_BrtBeginComment(data, o) {
 /* [MS-XLSB] 2.4.324 BrtCommentAuthor */
 var parse_BrtCommentAuthor = parse_XLWideString;
 
-/* [MS-XLSB] 2.4.325 BrtCommentText */
-var parse_BrtCommentText = parse_RichStr;
-
 /* [MS-XLSB] 2.1.7.8 Comments */
 function parse_comments_bin(data, opts) {
 	var out = [];
@@ -57,8 +54,8 @@ function parse_comments_bin(data, opts) {
 
 
 			default:
-				if((R_n||"").indexOf("Begin") > 0){}
-				else if((R_n||"").indexOf("End") > 0){}
+				if((R_n||"").indexOf("Begin") > 0){/* empty */}
+				else if((R_n||"").indexOf("End") > 0){/* empty */}
 				else if(!pass || opts.WTF) throw new Error("Unexpected record " + RT + " " + R_n);
 		}
 	});
@@ -87,7 +84,7 @@ function write_comments_bin(data, opts) {
 				c.iauthor = iauthor.indexOf(c.a);
 				var range = {s:decode_cell(comment[0]),e:decode_cell(comment[0])};
 				write_record(ba, "BrtBeginComment", write_BrtBeginComment([range, c]));
-				if(c.t && c.t.length > 0) write_record(ba, "BrtCommentText", write_RichStr(c));
+				if(c.t && c.t.length > 0) write_record(ba, "BrtCommentText", write_BrtCommentText(c));
 				write_record(ba, "BrtEndComment");
 				delete c.iauthor;
 			});

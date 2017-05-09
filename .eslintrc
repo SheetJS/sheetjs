@@ -5,10 +5,12 @@
 		"ecmaVersion": 3,
 	},
 	"plugins": [ "html", "json" ],
+	"!extends": "eslint:recommended",
 	"rules": {
 		"no-use-before-define": [ 1, {
 			"functions":false, "classes":true, "variables":false
 		}],
+		"no-console": 0,
 		"no-bitwise": 0,
 		"curly": 0,
 		"comma-style": [ 2, "last" ],

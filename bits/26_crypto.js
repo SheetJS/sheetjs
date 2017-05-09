@@ -33,5 +33,6 @@ var make_offcrypto = function(O, _crypto) {
 	};
 };
 /*:: declare var crypto:any; */
+/*global crypto:true */
 make_offcrypto(OFFCRYPTO, typeof crypto !== "undefined" ? crypto : undefined);
 

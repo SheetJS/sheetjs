@@ -53,6 +53,7 @@ function getzipstr(zip, file/*:string*/, safe/*:?boolean*/)/*:?string*/ {
 
 var _fs, jszip;
 /*:: declare var JSZip:any; */
+/*global JSZip:true */
 if(typeof JSZip !== 'undefined') jszip = JSZip;
 if (typeof exports !== 'undefined') {
 	if (typeof module !== 'undefined' && module.exports) {

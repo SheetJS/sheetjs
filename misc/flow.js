@@ -76,12 +76,23 @@ type SST = {
 
 type Comment = any;
 
-type ColInfo = {
-	MDW?:number;  // Excel's "Max Digit Width" unit, always integral
-	width:number; // width in Excel's "Max Digit Width", width*256 is integral 
-	wpx?:number;  // width in screen pixels
-	wch?:number;  // intermediate character calculation
+type RowInfo = {
+	hidden:?boolean; // if true, the row is hidden
+
+	hpx?:number;     // height in screen pixels
+	hpt?:number;     // height in points
 };
+
+type ColInfo = {
+	hidden:?boolean; // if true, the column is hidden
+
+	wpx?:number;     // width in screen pixels
+	width:number;    // width in Excel's "Max Digit Width", width*256 is integral
+	wch?:number;     // width in characters
+
+	MDW?:number;     // Excel's "Max Digit Width" unit, always integral
+};
+
 
 type AOA = Array<Array<any> >;
 */

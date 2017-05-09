@@ -174,28 +174,25 @@ function parse_PropertySet(blob, PIDSI) {
 			if(piddsi.n == "CodePage") switch(PropH[piddsi.n]) {
 				case 0: PropH[piddsi.n] = 1252;
 					/* falls through */
-				case 10000: // OSX Roman
-				case 1252: // Windows Latin
-
-				case 874: // SB Windows Thai
-				case 1250: // SB Windows Central Europe
-				case 1251: // SB Windows Cyrillic
-				case 1253: // SB Windows Greek
-				case 1254: // SB Windows Turkish
-				case 1255: // SB Windows Hebrew
-				case 1256: // SB Windows Arabic
-				case 1257: // SB Windows Baltic
-				case 1258: // SB Windows Vietnam
-
-				case 932: // DB Windows Japanese Shift-JIS
-				case 936: // DB Windows Simplified Chinese GBK
-				case 949: // DB Windows Korean
-				case 950: // DB Windows Traditional Chinese Big5
-
-				case 1200: // UTF16LE
-				case 1201: // UTF16BE
-				case 65000: case -536: // UTF-7
-				case 65001: case -535: // UTF-8
+				case 874:
+				case 932:
+				case 936:
+				case 949:
+				case 950:
+				case 1250:
+				case 1251:
+				case 1253:
+				case 1254:
+				case 1255:
+				case 1256:
+				case 1257:
+				case 1258:
+				case 10000:
+				case 1200:
+				case 1201:
+				case 1252:
+				case 65000: case -536:
+				case 65001: case -535:
 					set_cp(CodePage = PropH[piddsi.n]); break;
 				default: throw new Error("Unsupported CodePage: " + PropH[piddsi.n]);
 			}
@@ -262,7 +259,7 @@ function parse_PropertySetStream(file, PIDSI) {
 	if(NumSets === 1) return rval;
 	if(blob.l !== Offset1) throw new Error("Length mismatch 2: " + blob.l + " !== " + Offset1);
 	var PSet1;
-	try { PSet1 = parse_PropertySet(blob, null); } catch(e) { }
+	try { PSet1 = parse_PropertySet(blob, null); } catch(e) {/* empty */}
 	for(y in PSet1) rval[y] = PSet1[y];
 	rval.FMTID = [FMTID0, FMTID1]; // TODO: verify FMTID0/1
 	return rval;
@@ -363,7 +360,7 @@ function parse_XLUnicodeString2(blob, length, opts) {
 var parse_ControlInfo = parsenoop;
 
 /* [MS-OSHARED] 2.3.7.6 URLMoniker TODO: flags */
-var parse_URLMoniker = function(blob, length) {
+var parse_URLMoniker = function(blob/*, length, opts*/) {
 	var len = blob.read_shift(4), start = blob.l;
 	var extra = false;
 	if(len > 24) {

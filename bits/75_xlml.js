@@ -530,7 +530,7 @@ function parse_xlml_xml(d, opts)/*:Workbook*/ {
 				/* WorksheetOptions */
 				case 'WorksheetOptions': switch(Rn[3]) {
 					case 'Visible':
-						if(Rn[0].slice(-2) === "/>"){}
+						if(Rn[0].slice(-2) === "/>"){/* empty */}
 						else if(Rn[1]==="/") switch(str.slice(pidx, Rn.index)) {
 							case "SheetHidden": wsprops.Hidden = 1; break;
 							case "SheetVeryHidden": wsprops.Hidden = 2; break;
@@ -729,12 +729,10 @@ function parse_xlml_xml(d, opts)/*:Workbook*/ {
 					default: seen = false;
 				} break;
 
-				/* Sorting */
 				case 'Sorting':
-				/* ConditionalFormatting */
 				case 'ConditionalFormatting':
-				/* DataValidation */
-				case 'DataValidation': switch(Rn[3]) {
+				case 'DataValidation':
+				switch(Rn[3]) {
 					case 'Range': break;
 					case 'Type': break;
 					case 'Min': break;
@@ -889,7 +887,7 @@ function write_ws_xlml_wsopts(ws/*:Worksheet*/, opts, idx/*:number*/, wb/*:Workb
 
 	if(wb && wb.Workbook && wb.Workbook.Sheets && wb.Workbook.Sheets[idx]) {
 		/* Visible */
-		if(!!wb.Workbook.Sheets[idx].Hidden) o.push(writextag("Visible", (wb.Workbook.Sheets[idx].Hidden == 1 ? "SheetHidden" : "SheetVeryHidden"), {}));
+		if(wb.Workbook.Sheets[idx].Hidden) o.push(writextag("Visible", (wb.Workbook.Sheets[idx].Hidden == 1 ? "SheetHidden" : "SheetVeryHidden"), {}));
 		else {
 			/* Selected */
 			for(var i = 0; i < idx; ++i) if(wb.Workbook.Sheets[i] && !wb.Workbook.Sheets[i].Hidden) break;

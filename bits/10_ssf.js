@@ -2,7 +2,7 @@
 /*jshint -W041 */
 var SSF = {};
 var make_ssf = function make_ssf(SSF){
-SSF.version = '0.9.1';
+SSF.version = '0.9.2';
 function _strrev(x/*:string*/)/*:string*/ { var o = "", i = x.length-1; while(i>=0) o += x.charAt(i--); return o; }
 function fill(c/*:string*/,l/*:number*/)/*:string*/ { var o = ""; while(o.length < l) o+=c; return o; }
 function pad0(v/*:any*/,d/*:number*/)/*:string*/{var t=""+v; return t.length>=d?t:fill('0',d-t.length)+t;}
@@ -270,12 +270,14 @@ function write_num_exp(fmt/*:string*/, val/*:number*/)/*:string*/{
 	var o/*:string*/;
 	var idx = fmt.indexOf("E") - fmt.indexOf(".") - 1;
 	if(fmt.match(/^#+0.0E\+0$/)) {
+		if(val == 0) return "0.0E+0";
+		else if(val < 0) return "-" + write_num_exp(fmt, -val);
 		var period = fmt.indexOf("."); if(period === -1) period=fmt.indexOf('E');
-		var ee = Math.floor(Math.log(Math.abs(val))*Math.LOG10E)%period;
+		var ee = Math.floor(Math.log(val)*Math.LOG10E)%period;
 		if(ee < 0) ee += period;
 		o = (val/Math.pow(10,ee)).toPrecision(idx+1+(period+ee)%period);
 		if(o.indexOf("e") === -1) {
-			var fakee = Math.floor(Math.log(Math.abs(val))*Math.LOG10E);
+			var fakee = Math.floor(Math.log(val)*Math.LOG10E);
 			if(o.indexOf(".") === -1) o = o.charAt(0) + "." + o.substr(1) + "E+" + (fakee - o.length+ee);
 			else o += "E+" + (fakee - ee);
 			while(o.substr(0,2) === "0.") {
@@ -353,7 +355,7 @@ function write_num_flt(type/*:string*/, fmt/*:string*/, val/*:number*/)/*:string
 	if((r = fmt.match(/^(0*)\.(#*)$/))) {
 		return sign + rnd(aval, r[2].length).replace(/\.(\d*[1-9])0*$/,".$1").replace(/^(-?\d*)$/,"$1.").replace(/^0\./,r[1].length?"0.":".");
 	}
-	if((r = fmt.match(/^#,##0(\.?)$/))) return sign + commaify(pad0r(aval,0));
+	if((r = fmt.match(/^#{1,3},##0(\.?)$/))) return sign + commaify(pad0r(aval,0));
 	if((r = fmt.match(/^#,##0\.([#0]*0)$/))) {
 		return val < 0 ? "-" + write_num_flt(type, fmt, -val) : commaify(""+(Math.floor(val) + carry(val, r[1].length))) + "." + pad0(dec(val, r[1].length),r[1].length);
 	}
@@ -401,7 +403,12 @@ function write_num_flt(type/*:string*/, fmt/*:string*/, val/*:number*/)/*:string
 		return val < 0 ? "-" + write_num_flt(type, fmt, -val) : commaify(flr(val)).replace(/^\d,\d{3}$/,"0$&").replace(/^\d*$/,function($$) { return "00," + ($$.length < 3 ? pad0(0,3-$$.length) : "") + $$; }) + "." + pad0(ri,r[1].length);
 	}
 	switch(fmt) {
+		case "###,##0.00": return write_num_flt(type, "#,##0.00", val);
+		case "###,###":
+		case "##,###":
 		case "#,###": var x = commaify(pad0r(aval,0)); return x !== "0" ? sign + x : "";
+		case "###,###.00": return write_num_flt(type, "###,##0.00",val).replace(/^0\./,".");
+		case "#,###.00": return write_num_flt(type, "#,##0.00",val).replace(/^0\./,".");
 		default:
 	}
 	throw new Error("unsupported format |" + fmt + "|");
@@ -419,12 +426,14 @@ function write_num_exp2(fmt/*:string*/, val/*:number*/)/*:string*/{
 	var o/*:string*/;
 	var idx = fmt.indexOf("E") - fmt.indexOf(".") - 1;
 	if(fmt.match(/^#+0.0E\+0$/)) {
+		if(val == 0) return "0.0E+0";
+		else if(val < 0) return "-" + write_num_exp2(fmt, -val);
 		var period = fmt.indexOf("."); if(period === -1) period=fmt.indexOf('E');
-		var ee = Math.floor(Math.log(Math.abs(val))*Math.LOG10E)%period;
+		var ee = Math.floor(Math.log(val)*Math.LOG10E)%period;
 		if(ee < 0) ee += period;
 		o = (val/Math.pow(10,ee)).toPrecision(idx+1+(period+ee)%period);
 		if(!o.match(/[Ee]/)) {
-			var fakee = Math.floor(Math.log(Math.abs(val))*Math.LOG10E);
+			var fakee = Math.floor(Math.log(val)*Math.LOG10E);
 			if(o.indexOf(".") === -1) o = o.charAt(0) + "." + o.substr(1) + "E+" + (fakee - o.length+ee);
 			else o += "E+" + (fakee - ee);
 			o = o.replace(/\+-/,"-");
@@ -446,7 +455,7 @@ function write_num_int(type/*:string*/, fmt/*:string*/, val/*:number*/)/*:string
 	if(fmt.indexOf('E') !== -1) return write_num_exp2(fmt, val);
 	if(fmt.charCodeAt(0) === 36) return "$"+write_num_int(type,fmt.substr(fmt.charAt(1)==' '?2:1),val);
 	var o;
-	var r, ri, ff, aval = Math.abs(val), sign = val < 0 ? "-" : "";
+	var r/*:?Array<string>*/, ri, ff, aval = Math.abs(val), sign = val < 0 ? "-" : "";
 	if(fmt.match(/^00+$/)) return sign + pad0(aval,fmt.length);
 	if(fmt.match(/^[#?]+$/)) {
 		o = (""+val); if(val === 0) o = "";
@@ -466,7 +475,7 @@ function write_num_int(type/*:string*/, fmt/*:string*/, val/*:number*/)/*:string
 	if((r = fmt.match(/^(0*)\.(#*)$/))) {
 		return sign + (""+aval).replace(/\.(\d*[1-9])0*$/,".$1").replace(/^(-?\d*)$/,"$1.").replace(/^0\./,r[1].length?"0.":".");
 	}
-	if((r = fmt.match(/^#,##0(\.?)$/))) return sign + commaify((""+aval));
+	if((r = fmt.match(/^#{1,3},##0(\.?)$/))) return sign + commaify((""+aval));
 	if((r = fmt.match(/^#,##0\.([#0]*0)$/))) {
 		return val < 0 ? "-" + write_num_int(type, fmt, -val) : commaify((""+val)) + "." + fill('0',r[1].length);
 	}
@@ -482,12 +491,12 @@ function write_num_int(type/*:string*/, fmt/*:string*/, val/*:number*/)/*:string
 	}
 	var oa = "";
 	if((r = fmt.match(/^([#0?]+)( ?)\/( ?)([#0?]+)/))) {
-		ri = Math.min(r[4].length,7);
+		ri = Math.min(/*::String(*/r[4]/*::)*/.length,7);
 		ff = frac(aval, Math.pow(10,ri)-1, false);
 		o = "" + sign;
-		oa = write_num("n", r[1], ff[1]);
+		oa = write_num("n", /*::String(*/r[1]/*::)*/, ff[1]);
 		if(oa.charAt(oa.length-1) == " ") oa = oa.substr(0,oa.length-1) + "0";
-		o += oa + r[2] + "/" + r[3];
+		o += oa + /*::String(*/r[2]/*::)*/ + "/" + /*::String(*/r[3]/*::)*/;
 		oa = rpad_(ff[2],ri);
 		if(oa.length < r[4].length) oa = hashq(r[4].substr(r[4].length-oa.length)) + oa;
 		o += oa;
@@ -513,8 +522,12 @@ function write_num_int(type/*:string*/, fmt/*:string*/, val/*:number*/)/*:string
 		return val < 0 ? "-" + write_num_int(type, fmt, -val) : commaify(""+val).replace(/^\d,\d{3}$/,"0$&").replace(/^\d*$/,function($$) { return "00," + ($$.length < 3 ? pad0(0,3-$$.length) : "") + $$; }) + "." + pad0(0,r[1].length);
 	}
 	switch(fmt) {
+		case "###,###":
+		case "##,###":
 		case "#,###": var x = commaify(""+aval); return x !== "0" ? sign + x : "";
 		default:
+			if(fmt.slice(-3) == ".00") return write_num_int(type, fmt.slice(0,-3), val) + ".00";
+			if(fmt.slice(-2) == ".0") return write_num_int(type, fmt.slice(0,-2), val) + ".0";
 	}
 	throw new Error("unsupported format |" + fmt + "|");
 }
@@ -610,7 +623,7 @@ function eval_fmt(fmt/*:string*/, v/*:any*/, opts/*:any*/, flen/*:number*/) {
 				if(v < 0) return "";
 				if(dt==null) { dt=parse_date_code(v, opts); if(dt==null) return ""; }
 				o = c; while(++i<fmt.length && fmt.charAt(i).toLowerCase() === c) o+=c;
-				if(c === 'm' && lst.toLowerCase() === 'h') c = 'M'; /* m = minute */
+				if(c === 'm' && lst.toLowerCase() === 'h') c = 'M';
 				if(c === 'h') c = hr;
 				out[out.length] = {t:c, v:o}; lst = c; break;
 			case 'A':
@@ -628,6 +641,7 @@ function eval_fmt(fmt/*:string*/, v/*:any*/, opts/*:any*/, flen/*:number*/) {
 				if(o.match(abstime)) {
 					if(dt==null) { dt=parse_date_code(v, opts); if(dt==null) return ""; }
 					out[out.length] = {t:'Z', v:o.toLowerCase()};
+					lst = o.charAt(1);
 				} else if(o.indexOf("$") > -1) {
 					o = (o.match(/\$([^-\[\]]*)/)||[])[1]||"$";
 					if(!fmt_is_date(fmt)) out[out.length] = {t:'t',v:o};
@@ -641,7 +655,7 @@ function eval_fmt(fmt/*:string*/, v/*:any*/, opts/*:any*/, flen/*:number*/) {
 				}
 				/* falls through */
 			case '0': case '#':
-				o = c; while(++i < fmt.length && "0#?.,E+-%".indexOf(c=fmt.charAt(i)) > -1 || c=='\\' && fmt.charAt(i+1) == "-" && "0#".indexOf(fmt.charAt(i+2))>-1) o += c;
+				o = c; while(++i < fmt.length && "0#?.,E+-%".indexOf(c=fmt.charAt(i)) > -1 || c=='\\' && fmt.charAt(i+1) == "-" && i < fmt.length - 2 && "0#".indexOf(fmt.charAt(i+2))>-1) o += c;
 				out[out.length] = {t:'n', v:o}; break;
 			case '?':
 				o = c; while(fmt.charAt(++i) === c) o+=c;
@@ -705,7 +719,7 @@ function eval_fmt(fmt/*:string*/, v/*:any*/, opts/*:any*/, flen/*:number*/) {
 					(c=out[jj].t) === "?" || c === "D" ||
 					(c === " " || c === "t") && out[jj+1] != null && (out[jj+1].t === '?' || out[jj+1].t === "t" && out[jj+1].v === '/') ||
 					out[i].t === '(' && (c === ' ' || c === 'n' || c === ')') ||
-					c === 't' && (out[jj].v === '/' || '$€'.indexOf(out[jj].v) > -1 || out[jj].v === ' ' && out[jj+1] != null && out[jj+1].t == '?')
+					c === 't' && (out[jj].v === '/' || out[jj].v === ' ' && out[jj+1] != null && out[jj+1].t == '?')
 				)) {
 					out[i].v += out[jj].v;
 					out[jj] = {v:"", t:";"}; ++jj;
@@ -819,7 +833,6 @@ function choose_fmt(f/*:string*/, v) {
 }
 function format(fmt/*:string|number*/,v/*:any*/,o/*:?any*/) {
 	if(o == null) o = {};
-	//fixopts(o != null ? o : (o=[]));
 	var sfmt = "";
 	switch(typeof fmt) {
 		case "string":
