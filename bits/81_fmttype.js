@@ -1,10 +1,10 @@
 var abstime = /\[[HhMmSs]*\]/;
 function fmt_is_date(fmt/*:string*/)/*:boolean*/ {
-	var i = 0, cc = 0, c = "", o = "";
+	var i = 0, /*cc = 0,*/ c = "", o = "";
 	while(i < fmt.length) {
 		switch((c = fmt.charAt(i))) {
 			case 'G': if(isgeneral(fmt, i)) i+= 6; i++; break;
-			case '"': for(;(cc=fmt.charCodeAt(++i)) !== 34 && i < fmt.length;) ++i; ++i; break;
+			case '"': for(;(/*cc=*/fmt.charCodeAt(++i)) !== 34 && i < fmt.length;) ++i; ++i; break;
 			case '\\': i+=2; break;
 			case '_': i+=2; break;
 			case '@': ++i; break;
@@ -26,13 +26,13 @@ function fmt_is_date(fmt/*:string*/)/*:boolean*/ {
 			case '.':
 				/* falls through */
 			case '0': case '#':
-				while(i < fmt.length && ("0#?.,E+-%".indexOf(c=fmt.charAt(++i)) > -1 || c=='\\' && fmt.charAt(i+1) == "-" && "0#".indexOf(fmt.charAt(i+2))>-1)){}
+				while(i < fmt.length && ("0#?.,E+-%".indexOf(c=fmt.charAt(++i)) > -1 || (c=='\\' && fmt.charAt(i+1) == "-" && "0#".indexOf(fmt.charAt(i+2))>-1))){/* empty */}
 				break;
-			case '?': while(fmt.charAt(++i) === c){} break;
+			case '?': while(fmt.charAt(++i) === c){/* empty */} break;
 			case '*': ++i; if(fmt.charAt(i) == ' ' || fmt.charAt(i) == '*') ++i; break;
 			case '(': case ')': ++i; break;
 			case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':
-				while(i < fmt.length && "0123456789".indexOf(fmt.charAt(++i)) > -1){} break;
+				while(i < fmt.length && "0123456789".indexOf(fmt.charAt(++i)) > -1){/* empty */} break;
 			case ' ': ++i; break;
 			default: ++i; break;
 		}

@@ -80,8 +80,7 @@ function write_num_int(type/*:string*/, fmt/*:string*/, val/*:number*/)/*:string
 		case "##,###":
 		case "#,###": var x = commaify(""+aval); return x !== "0" ? sign + x : "";
 		default:
-			if(fmt.slice(-3) == ".00") return write_num_int(type, fmt.slice(0,-3), val) + ".00";
-			if(fmt.slice(-2) == ".0") return write_num_int(type, fmt.slice(0,-2), val) + ".0";
+			if(fmt.match(/\.[0#?]*$/)) return write_num_int(type, fmt.slice(0,fmt.lastIndexOf(".")), val) + hashq(fmt.slice(fmt.lastIndexOf(".")));
 	}
 	throw new Error("unsupported format |" + fmt + "|");
 }

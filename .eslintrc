@@ -5,6 +5,7 @@
 		"ecmaVersion": 3,
 	},
 	"plugins": [ "html", "json" ],
+	"extends": "eslint:recommended",
 	"rules": {
 		"no-use-before-define": [ 1, {
 			"functions":false, "classes":true, "variables":false

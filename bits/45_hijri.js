@@ -1,1 +1,1 @@
-function fix_hijri(date, o) { return 0; }
+function fix_hijri(/*date, o*/) { return 0; }

@@ -1,4 +1,4 @@
-function general_fmt_int(v/*:number*/, opts/*:?any*/)/*:string*/ { return ""+v; }
+function general_fmt_int(v/*:number*/)/*:string*/ { return ""+v; }
 SSF._general_int = general_fmt_int;
 var general_fmt_num = (function make_general_fmt_num() {
 var gnr1 = /\.(\d*[1-9])0+$/, gnr2 = /\.0*$/, gnr4 = /\.(\d*[1-9])0+/, gnr5 = /\.0*[Ee]/, gnr6 = /(E[+-])(\d)$/;
@@ -18,11 +18,9 @@ function gfn4(o) {
 	return o;
 }
 function gfn5(o) {
-	//for(var i = 0; i != o.length; ++i) if(o.charCodeAt(i) === 46) return o.replace(gnr2,"").replace(gnr1,".$1");
-	//return o;
 	return o.indexOf(".") > -1 ? o.replace(gnr2,"").replace(gnr1,".$1") : o;
 }
-return function general_fmt_num(v/*:number*/, opts/*:?any*/)/*:string*/ {
+return function general_fmt_num(v/*:number*/)/*:string*/ {
 	var V = Math.floor(Math.log(Math.abs(v))*Math.LOG10E), o;
 	if(V >= -4 && V <= -1) o = v.toPrecision(10+V);
 	else if(Math.abs(V) <= 9) o = gfn2(v);
@@ -31,11 +29,11 @@ return function general_fmt_num(v/*:number*/, opts/*:?any*/)/*:string*/ {
 	return gfn5(gfn4(o));
 };})();
 SSF._general_num = general_fmt_num;
-function general_fmt(v/*:any*/, opts/*:?any*/) {
+function general_fmt(v/*:any*/) {
 	switch(typeof v) {
 		case 'string': return v;
 		case 'boolean': return v ? "TRUE" : "FALSE";
-		case 'number': return (v|0) === v ? general_fmt_int(v, opts) : general_fmt_num(v, opts);
+		case 'number': return (v|0) === v ? general_fmt_int(v/*, opts*/) : general_fmt_num(v/*, opts*/);
 		case 'undefined': return "";
 		case 'object': if(v == null) return "";
 	}
