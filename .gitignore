@@ -1,7 +1,8 @@
+node_modules
 test_files/
-node_modules/
+*.[tT][xX][tT]
 *.[cC][sS][vV]
-*.[dD][iI][fF]
+*.[dD][iIbB][fF]
 *.[pP][rR][nN]
 *.[sS][lL][kK]
 *.socialcalc
@@ -11,4 +12,8 @@ node_modules/
 *.[fF][oO][dD][sS]
 *.[xX][mM][lL]
 *.[uU][oO][sS]
+*.[wW][kKqQbB][S1234567890]
+*.[qQ][pP][wW]
+*.123
 *.sheetjs
+*.exe

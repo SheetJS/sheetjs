@@ -543,16 +543,19 @@ describe('input formats', function() {
 		X.read(fs.readFileSync(paths.cstxlsb, 'binary'), {type: 'binary'});
 		X.read(fs.readFileSync(paths.cstxls, 'binary'), {type: 'binary'});
 		X.read(fs.readFileSync(paths.cstxml, 'binary'), {type: 'binary'});
+		X.read(fs.readFileSync(paths.cstods, 'binary'), {type: 'binary'});
 	});
 	it('should read base64 strings', function() {
 		X.read(fs.readFileSync(paths.cstxls, 'base64'), {type: 'base64'});
 		X.read(fs.readFileSync(paths.cstxml, 'base64'), {type: 'base64'});
+		X.read(fs.readFileSync(paths.cstods, 'base64'), {type: 'base64'});
 		X.read(fs.readFileSync(paths.cstxlsx, 'base64'), {type: 'base64'});
 		X.read(fs.readFileSync(paths.cstxlsb, 'base64'), {type: 'base64'});
 	});
 	(typeof UInt8Array !== 'undefined' ? it : it.skip)('should read arrays', function() {
 		X.read(fs.readFileSync(paths.cstxls, 'buffer'), {type: 'array'});
 		X.read(fs.readFileSync(paths.cstxml, 'buffer'), {type: 'array'});
+		X.read(fs.readFileSync(paths.cstods, 'buffer'), {type: 'array'});
 		X.read(fs.readFileSync(paths.cstxlsx, 'buffer'), {type: 'array'});
 		X.read(fs.readFileSync(paths.cstxlsb, 'buffer'), {type: 'array'});
 	});
@@ -566,12 +569,14 @@ describe('input formats', function() {
 	it('should throw if format is unknown', function() {
 		assert.throws(function() { X.read(fs.readFileSync(paths.cstxls), {type: 'dafuq'}); });
 		assert.throws(function() { X.read(fs.readFileSync(paths.cstxml), {type: 'dafuq'}); });
+		assert.throws(function() { X.read(fs.readFileSync(paths.cstods), {type: 'dafuq'}); });
 		assert.throws(function() { X.read(fs.readFileSync(paths.cstxlsx), {type: 'dafuq'}); });
 		assert.throws(function() { X.read(fs.readFileSync(paths.cstxlsb), {type: 'dafuq'}); });
 	});
 	it('should default to base64 type', function() {
 		X.read(fs.readFileSync(paths.cstxls, 'base64'));
 		X.read(fs.readFileSync(paths.cstxml, 'base64'));
+		X.read(fs.readFileSync(paths.cstods, 'base64'));
 		X.read(fs.readFileSync(paths.cstxlsx, 'base64'));
 		X.read(fs.readFileSync(paths.cstxlsb, 'base64'));
 	});
@@ -816,8 +821,9 @@ describe('parse features', function() {
 			var wb2 = X.read(fs.readFileSync(paths.cstxlsb), opts);
 			var wb3 = X.read(fs.readFileSync(paths.cstxls), opts);
 			var wb4 = X.read(fs.readFileSync(paths.cstxml), opts);
+			var wb5 = X.read(fs.readFileSync(paths.cstods), opts);
 			/* TODO */
-			[wb1, wb2 /*, wb3, wb4 */].forEach(function(wb) {
+			[wb1, wb2 /*, wb3, wb4, wb5 */].forEach(function(wb) {
 				assert.equal(wb.Sheets.Sheet7["!fullref"],"A1:N34");
 				assert.equal(wb.Sheets.Sheet7["!ref"],"A1");
 			});
@@ -1401,10 +1407,29 @@ describe('roundtrip features', function() {
 			});
 		});
 	});
+
+	it('should preserve js objects', function() {
+		var data = [
+			{a:1},
+			{b:2,c:3},
+			{b:"a",d:"b"},
+			{a:true, c:false},
+			{c:new Date("2017-02-19T14:30Z")}
+		];
+		var wb = X.utils.json_to_sheet(data);
+		var out = X.utils.sheet_to_json(wb, {raw:true});
+		data.forEach(function(row, i) {
+			Object.keys(row).forEach(function(k) { assert.equal(row[k], out[i][k]); });
+		});
+	});
 });
 
-function password_file(x){return x.match(/^password.*\.xls$/); }
-var password_files = fs.readdirSync('test_files').filter(password_file);
+//function password_file(x){return x.match(/^password.*\.xls$/); }
+//var password_files = fs.readdirSync('test_files').filter(password_file);
+var password_files = [
+	//"password_2002_40_972000.xls",
+	"password_2002_40_xor.xls"
+];
 describe('invalid files', function() {
 	describe('parse', function() { [
 			['password', 'apachepoi_password.xls'],
@@ -1768,10 +1793,20 @@ describe('encryption', function() {
 	password_files.forEach(function(x) {
 		describe(x, function() {
 			it('should throw with no password', function() {assert.throws(function() { X.read(fs.readFileSync(dir + x), {type:"binary"}); }); });
-			it('should throw with wrong password', function() {assert.throws(function() { X.read(fs.readFileSync(dir + x), {type:"binary",password:'passwor',WTF:opts.WTF}); }); });
+			it('should throw with wrong password', function() {
+				try {
+					X.read(fs.readFileSync(dir + x), {type:"binary",password:'passwor',WTF:opts.WTF});
+					throw new Error("incorrect password was accepted");
+				} catch(e) {
+					if(e.message != "Password is incorrect") throw e;
+				}
+			});
 			it('should recognize correct password', function() {
-				try { X.read(fs.readFileSync(dir + x), {type:"binary",password:'password',WTF:opts.WTF}); }
-				catch(e) { if(e.message == "Password is incorrect") throw e; }
+				try {
+					X.read(fs.readFileSync(dir + x), {type:"binary",password:'password',WTF:opts.WTF});
+				} catch(e) {
+					if(e.message == "Password is incorrect") throw e;
+				}
 			});
 			it.skip('should decrypt file', function() {
 				var wb = X.read(fs.readFileSync(dir + x), {type:"binary",password:'password',WTF:opts.WTF});
