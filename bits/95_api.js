@@ -92,11 +92,11 @@ utils.sheet_set_array_formula = function(ws/*:Worksheet*/, range, formula/*:stri
 		var cell = ws_get_cell_stub(ws, R, C);
 		cell.t = 'n';
 		cell.F = rngstr;
-		delete cell.v; 
+		delete cell.v;
 		if(R == rng.s.r && C == rng.s.c) cell.f = formula;
 	}
 	return ws;
-}
+};
 
 return utils;
 })(utils);

@@ -42,6 +42,25 @@ var ws = XLSX.utils.aoa_to_sheet([
 ```
 </details>
 
+### Array of Objects Input
+
+`XLSX.utils.json_to_sheet` takes an array of objects and returns a worksheet
+with automatically-generated "headers" based on the keys of the objects.
+
+<details>
+	<summary><b>Examples</b> (click to show)</summary>
+
+The original sheet cannot be reproduced because JS object keys must be unique.
+After replacing the second `e` and `S` with `e_1` and `S_1`:
+
+```js
+var ws = XLSX.utils.json_to_sheet([
+	{S:1,h:2,e:3,e_1:4,t:5,J:6,S_1:7},
+	{S:2,h:3,e:4,e_1:5,t:6,J:7,S_1:8}
+]);
+```
+</details>
+
 ### HTML Table Input
 
 `XLSX.utils.table_to_sheet` takes a table DOM element and returns a worksheet

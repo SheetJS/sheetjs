@@ -88,8 +88,8 @@ function make_csv_row(sheet/*:Worksheet*/, r/*:Range*/, R/*:number*/, cols/*:Arr
 		else if(val.v != null) {
 			isempty = false;
 			txt = ''+format_cell(val, null, o);
-			for(var i = 0, cc = 0; i !== txt.length; ++i) if((cc = txt.charCodeAt(i)) === fs || cc === rs || cc === 34) {
-				txt = "\"" + txt.replace(qreg, '""') + "\""; break; }
+			for(var i = 0, cc = 0; i !== txt.length; ++i) if((cc = txt.charCodeAt(i)) === fs || cc === rs || cc === 34) {txt = "\"" + txt.replace(qreg, '""') + "\""; break; }
+			if(txt == "ID") txt = '"ID"';
 		} else if(val.f != null && !val.F) {
 			isempty = false;
 			txt = '=' + val.f; if(txt.indexOf(",") >= 0) txt = '"' + txt.replace(qreg, '""') + '"';
@@ -166,6 +166,30 @@ function sheet_to_formulae(sheet/*:Worksheet*/)/*:Array<string>*/ {
 	return cmds;
 }
 
+function json_to_sheet(js/*:Array<any>*/, opts)/*:Worksheet*/ {
+	var o = opts || {};
+	var ws = ({}/*:any*/);
+	var range/*:Range*/ = ({s: {c:0, r:0}, e: {c:0, r:js.length}}/*:any*/);
+	var hdr = o.header || [], C = 0;
+
+	for(var R = 0; R != js.length; ++R) {
+		Object.keys(js[R]).filter(function(x) { return js[R].hasOwnProperty(x); }).forEach(function(k) {
+			if((C=hdr.indexOf(k)) == -1) hdr[C=hdr.length] = k;
+			var v = js[R][k];
+			var t = 'z';
+			if(typeof v == 'number') t = 'n';
+			else if(typeof v == 'boolean') t = 'b';
+			else if(typeof v == 'string') t = 's';
+			else if(v instanceof Date) t = 'd';
+			ws[encode_cell({c:C,r:R+1})] = {t:t, v:v};
+		});
+	}
+	range.e.c = hdr.length - 1;
+	for(C = 0; C < hdr.length; ++C) ws[encode_col(C) + "1"] = {t:'s', v:hdr[C]};
+	ws['!ref'] = encode_range(range);
+	return ws;
+}
+
 var utils = {
 	encode_col: encode_col,
 	encode_row: encode_row,
@@ -182,6 +206,7 @@ var utils = {
 	make_json: sheet_to_json,
 	make_formulae: sheet_to_formulae,
 	aoa_to_sheet: aoa_to_sheet,
+	json_to_sheet: json_to_sheet,
 	table_to_sheet: parse_dom_table,
 	table_to_book: table_to_book,
 	sheet_to_csv: sheet_to_csv,

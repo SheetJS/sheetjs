@@ -46,6 +46,7 @@
   * [Output Type](README.md#output-type)
 - [Utility Functions](README.md#utility-functions)
   * [Array of Arrays Input](README.md#array-of-arrays-input)
+  * [Array of Objects Input](README.md#array-of-objects-input)
   * [HTML Table Input](README.md#html-table-input)
   * [Formulae Output](README.md#formulae-output)
   * [Delimiter-Separated Output](README.md#delimiter-separated-output)

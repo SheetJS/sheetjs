@@ -599,3 +599,17 @@ var PRN = (function() {
 	};
 })();
 
+/* Excel defaults to SYLK but warns if data is not valid */
+function read_wb_ID(d, opts) {
+	var o = opts || {}, OLD_WTF = !!o.WTF; o.WTF = true;
+	try {
+		var out = SYLK.to_workbook(d, o);
+		o.WTF = OLD_WTF;
+		return out;
+	} catch(e) {
+		o.WTF = OLD_WTF;
+		if(!e.message.match(/SYLK bad record ID/) && OLD_WTF) throw e;
+		return PRN.to_workbook(d, opts);
+	}
+}
+

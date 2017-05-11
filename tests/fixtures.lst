@@ -70,3 +70,4 @@
 ./test_files/2011/apachepoi_SimpleWithComments.xls.xml
 ./test_files/apachepoi_SimpleWithComments.xlsx
 ./test_files/2013/apachepoi_SimpleWithComments.xlsx.xlsb
+./test_files/password_2002_40_xor.xls

@@ -1413,6 +1413,21 @@ describe('roundtrip features', function() {
 			});
 		});
 	});
+
+	it('should preserve js objects', function() {
+		var data = [
+			{a:1},
+			{b:2,c:3},
+			{b:"a",d:"b"},
+			{a:true, c:false},
+			{c:new Date("2017-02-19T14:30Z")}
+		];
+		var wb = X.utils.json_to_sheet(data);
+		var out = X.utils.sheet_to_json(wb, {raw:true});
+		data.forEach(function(row, i) {
+			Object.keys(row).forEach(function(k) { assert.equal(row[k], out[i][k]); });
+		});
+	});
 });
 
 //function password_file(x){return x.match(/^password.*\.xls$/); }

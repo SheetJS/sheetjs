@@ -6,7 +6,7 @@
 /*global exports, module, require:false, process:false, Buffer:false */
 var XLSX = {};
 (function make_xlsx(XLSX){
-XLSX.version = '0.10.0';
+XLSX.version = '0.10.1';
 var current_codepage = 1200;
 /*:: declare var cptable:any; */
 /*global cptable:true */
@@ -5735,6 +5735,20 @@ var PRN = (function() {
 		from_sheet: sheet_to_prn
 	};
 })();
+
+/* Excel defaults to SYLK but warns if data is not valid */
+function read_wb_ID(d, opts) {
+	var o = opts || {}, OLD_WTF = !!o.WTF; o.WTF = true;
+	try {
+		var out = SYLK.to_workbook(d, o);
+		o.WTF = OLD_WTF;
+		return out;
+	} catch(e) {
+		o.WTF = OLD_WTF;
+		if(!e.message.match(/SYLK bad record ID/) && OLD_WTF) throw e;
+		return PRN.to_workbook(d, opts);
+	}
+}
 
 var WK_ = (function() {
 	function lotushopper(data, cb/*:RecordHopperCB*/, opts/*:any*/) {
@@ -17260,7 +17274,7 @@ function readSync(data/*:RawData*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
 		case 0xD0: return read_cfb(CFB.read(d, o), o);
 		case 0x09: return parse_xlscfb(s2a(o.type === 'base64' ? Base64.decode(d) : d), o);
 		case 0x3C: return parse_xlml(d, o);
-		case 0x49: if(n[1] == 0x44) return SYLK.to_workbook(d, o); break;
+		case 0x49: if(n[1] == 0x44) return read_wb_ID(d, o); break;
 		case 0x54: if(n[1] == 0x41 && n[2] == 0x42 && n[3] == 0x4C) return DIF.to_workbook(d, o); break;
 		case 0x50: if(n[1] == 0x4B && n[2] < 0x20 && n[3] < 0x20) return read_zip(d, o); break;
 		case 0xEF: return n[3] == 0x3C ? parse_xlml(d, o) : PRN.to_workbook(d,o);
@@ -17484,8 +17498,8 @@ function make_csv_row(sheet/*:Worksheet*/, r/*:Range*/, R/*:number*/, cols/*:Arr
 		else if(val.v != null) {
 			isempty = false;
 			txt = ''+format_cell(val, null, o);
-			for(var i = 0, cc = 0; i !== txt.length; ++i) if((cc = txt.charCodeAt(i)) === fs || cc === rs || cc === 34) {
-				txt = "\"" + txt.replace(qreg, '""') + "\""; break; }
+			for(var i = 0, cc = 0; i !== txt.length; ++i) if((cc = txt.charCodeAt(i)) === fs || cc === rs || cc === 34) {txt = "\"" + txt.replace(qreg, '""') + "\""; break; }
+			if(txt == "ID") txt = '"ID"';
 		} else if(val.f != null && !val.F) {
 			isempty = false;
 			txt = '=' + val.f; if(txt.indexOf(",") >= 0) txt = '"' + txt.replace(qreg, '""') + '"';
@@ -17562,6 +17576,30 @@ function sheet_to_formulae(sheet/*:Worksheet*/)/*:Array<string>*/ {
 	return cmds;
 }
 
+function json_to_sheet(js/*:Array<any>*/, opts)/*:Worksheet*/ {
+	var o = opts || {};
+	var ws = ({}/*:any*/);
+	var range/*:Range*/ = ({s: {c:0, r:0}, e: {c:0, r:js.length}}/*:any*/);
+	var hdr = o.header || [], C = 0;
+
+	for(var R = 0; R != js.length; ++R) {
+		Object.keys(js[R]).filter(function(x) { return js[R].hasOwnProperty(x); }).forEach(function(k) {
+			if((C=hdr.indexOf(k)) == -1) hdr[C=hdr.length] = k;
+			var v = js[R][k];
+			var t = 'z';
+			if(typeof v == 'number') t = 'n';
+			else if(typeof v == 'boolean') t = 'b';
+			else if(typeof v == 'string') t = 's';
+			else if(v instanceof Date) t = 'd';
+			ws[encode_cell({c:C,r:R+1})] = {t:t, v:v};
+		});
+	}
+	range.e.c = hdr.length - 1;
+	for(C = 0; C < hdr.length; ++C) ws[encode_col(C) + "1"] = {t:'s', v:hdr[C]};
+	ws['!ref'] = encode_range(range);
+	return ws;
+}
+
 var utils = {
 	encode_col: encode_col,
 	encode_row: encode_row,
@@ -17578,6 +17616,7 @@ var utils = {
 	make_json: sheet_to_json,
 	make_formulae: sheet_to_formulae,
 	aoa_to_sheet: aoa_to_sheet,
+	json_to_sheet: json_to_sheet,
 	table_to_sheet: parse_dom_table,
 	table_to_book: table_to_book,
 	sheet_to_csv: sheet_to_csv,
@@ -17680,11 +17719,11 @@ utils.sheet_set_array_formula = function(ws/*:Worksheet*/, range, formula/*:stri
 		var cell = ws_get_cell_stub(ws, R, C);
 		cell.t = 'n';
 		cell.F = rngstr;
-		delete cell.v; 
+		delete cell.v;
 		if(R == rng.s.r && C == rng.s.c) cell.f = formula;
 	}
 	return ws;
-}
+};
 
 return utils;
 })(utils);

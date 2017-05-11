@@ -34,6 +34,7 @@ Utilities are available in the `XLSX.utils` object:
 **Importing:**
 
 - `aoa_to_sheet` converts an array of arrays of JS data to a worksheet.
+- `json_to_sheet` converts an array of JS objects to a worksheet.
 
 **Exporting:**
 
@@ -41,7 +42,7 @@ Utilities are available in the `XLSX.utils` object:
 - `sheet_to_csv` generates delimiter-separated-values output.
 - `sheet_to_formulae` generates a list of the formulae (with value fallbacks).
 
-Exporters are described in the [Utility Functions](#utility-functions) section.
+These utilities are described in [Utility Functions](#utility-functions) below.
 
 
 **Cell and cell address manipulation:**
