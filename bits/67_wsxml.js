@@ -198,8 +198,8 @@ function write_ws_xml_cell(cell, ref, ws, opts, idx, wb) {
 			else {
 				cell.t = 'n';
 				vv = ''+(cell.v = datenum(parseDate(cell.v)));
-				if(typeof cell.z === 'undefined') cell.z = SSF._table[14];
 			}
+			if(typeof cell.z === 'undefined') cell.z = SSF._table[14];
 			break;
 		default: vv = cell.v; break;
 	}
@@ -312,8 +312,10 @@ return function parse_ws_xml_data(sdata, s, opts, guess, themes, styles) {
 			}
 
 			if(tag.t == null && p.v === undefined) {
-				if(!opts.sheetStubs) continue;
-				p.t = "z";
+				if(p.f || p.F) {
+					p.v = 0; p.t = "n";
+				} else if(!opts.sheetStubs) continue;
+				else p.t = "z";
 			}
 			else p.t = tag.t || "n";
 			if(guess.s.c > idx) guess.s.c = idx;

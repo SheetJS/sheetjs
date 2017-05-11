@@ -219,7 +219,7 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 					opts.enc = val;
 					if(opts.WTF) console.error(val);
 					if(!options.password) throw new Error("File is password-protected");
-					if(val.Type !== 0) throw new Error("Encryption scheme unsupported");
+					if(val.valid == null) throw new Error("Encryption scheme unsupported");
 					if(!val.valid) throw new Error("Password is incorrect");
 					break;
 				case 'WriteAccess': opts.lastuser = val; break;
@@ -236,7 +236,7 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 				case 'Template': break; // TODO
 				case 'RefreshAll': wb.opts.RefreshAll = val; break;
 				case 'BookBool': break; // TODO
-				case 'UsesELFs': /* if(val) console.error("Unsupported ELFs"); */ break;
+				case 'UsesELFs': break;
 				case 'MTRSettings': break;
 				case 'CalcCount': wb.opts.CalcCount = val; break;
 				case 'CalcDelta': wb.opts.CalcDelta = val; break;

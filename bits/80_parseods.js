@@ -1,3 +1,4 @@
+/* OpenDocument */
 var parse_content_xml = (function() {
 
 	var parse_text_p = function(text, tag) {
@@ -437,3 +438,16 @@ var parse_content_xml = (function() {
 		return out;
 	};
 })();
+
+function parse_ods(zip/*:ZIPFile*/, opts/*:?ParseOpts*/) {
+	opts = opts || ({}/*:any*/);
+	var ods = !!safegetzipfile(zip, 'objectdata');
+	if(ods) var manifest = parse_manifest(getzipdata(zip, 'META-INF/manifest.xml'), opts);
+	var content = getzipstr(zip, 'content.xml');
+	if(!content) throw new Error("Missing content.xml in " + (ods ? "ODS" : "UOF")+ " file");
+	return parse_content_xml(ods ? content : utf8read(content), opts);
+}
+function parse_fods(data/*:string*/, opts/*:?ParseOpts*/) {
+	return parse_content_xml(data, opts);
+}
+

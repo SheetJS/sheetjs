@@ -548,16 +548,19 @@ describe('input formats', function() {
 		X.read(fs.readFileSync(paths.cstxlsb, 'binary'), {type: 'binary'});
 		X.read(fs.readFileSync(paths.cstxls, 'binary'), {type: 'binary'});
 		X.read(fs.readFileSync(paths.cstxml, 'binary'), {type: 'binary'});
+		X.read(fs.readFileSync(paths.cstods, 'binary'), {type: 'binary'});
 	});
 	it('should read base64 strings', function() {
 		X.read(fs.readFileSync(paths.cstxls, 'base64'), {type: 'base64'});
 		X.read(fs.readFileSync(paths.cstxml, 'base64'), {type: 'base64'});
+		X.read(fs.readFileSync(paths.cstods, 'base64'), {type: 'base64'});
 		X.read(fs.readFileSync(paths.cstxlsx, 'base64'), {type: 'base64'});
 		X.read(fs.readFileSync(paths.cstxlsb, 'base64'), {type: 'base64'});
 	});
 	it('should read buffers', function() {
 		X.read(fs.readFileSync(paths.cstxls), {type: 'buffer'});
 		X.read(fs.readFileSync(paths.cstxml), {type: 'buffer'});
+		X.read(fs.readFileSync(paths.cstods), {type: 'buffer'});
 		X.read(fs.readFileSync(paths.cstxlsx), {type: 'buffer'});
 		X.read(fs.readFileSync(paths.cstxlsb), {type: 'buffer'});
 	});
@@ -571,12 +574,14 @@ describe('input formats', function() {
 	it('should throw if format is unknown', function() {
 		assert.throws(function() { X.read(fs.readFileSync(paths.cstxls), {type: 'dafuq'}); });
 		assert.throws(function() { X.read(fs.readFileSync(paths.cstxml), {type: 'dafuq'}); });
+		assert.throws(function() { X.read(fs.readFileSync(paths.cstods), {type: 'dafuq'}); });
 		assert.throws(function() { X.read(fs.readFileSync(paths.cstxlsx), {type: 'dafuq'}); });
 		assert.throws(function() { X.read(fs.readFileSync(paths.cstxlsb), {type: 'dafuq'}); });
 	});
 	it('should infer buffer type', function() {
 		X.read(fs.readFileSync(paths.cstxls));
 		X.read(fs.readFileSync(paths.cstxml));
+		X.read(fs.readFileSync(paths.cstods));
 		X.read(fs.readFileSync(paths.cstxlsx));
 		X.read(fs.readFileSync(paths.cstxlsb));
 	});
@@ -809,8 +814,9 @@ describe('parse features', function() {
 			var wb2 = X.readFile(paths.fstxlsb, opts);
 			var wb3 = X.readFile(paths.fstxls, opts);
 			var wb4 = X.readFile(paths.fstxml, opts);
+			var wb5 = X.readFile(paths.fstods, opts);
 			/* TODO */
-			[wb1, wb2 /*, wb3, wb4 */].forEach(function(wb) {
+			[wb1, wb2 /*, wb3, wb4, wb5 */].forEach(function(wb) {
 				assert.equal(wb.Sheets.Text["!fullref"],"A1:F49");
 				assert.equal(wb.Sheets.Text["!ref"],"A1:F10");
 			});
@@ -821,8 +827,9 @@ describe('parse features', function() {
 			var wb2 = X.readFile(paths.cstxlsb, opts);
 			var wb3 = X.readFile(paths.cstxls, opts);
 			var wb4 = X.readFile(paths.cstxml, opts);
+			var wb5 = X.readFile(paths.cstods, opts);
 			/* TODO */
-			[wb1, wb2 /*, wb3, wb4 */].forEach(function(wb) {
+			[wb1, wb2 /*, wb3, wb4, wb5 */].forEach(function(wb) {
 				assert.equal(wb.Sheets.Sheet7["!fullref"],"A1:N34");
 				assert.equal(wb.Sheets.Sheet7["!ref"],"A1");
 			});
@@ -1408,8 +1415,12 @@ describe('roundtrip features', function() {
 	});
 });
 
-function password_file(x){return x.match(/^password.*\.xls$/); }
-var password_files = fs.readdirSync('test_files').filter(password_file);
+//function password_file(x){return x.match(/^password.*\.xls$/); }
+//var password_files = fs.readdirSync('test_files').filter(password_file);
+var password_files = [
+	//"password_2002_40_972000.xls",
+	"password_2002_40_xor.xls"
+];
 describe('invalid files', function() {
 	describe('parse', function() { [
 			['password', 'apachepoi_password.xls'],
@@ -1765,10 +1776,20 @@ describe('encryption', function() {
 	password_files.forEach(function(x) {
 		describe(x, function() {
 			it('should throw with no password', function() {assert.throws(function() { X.readFile(dir + x); }); });
-			it('should throw with wrong password', function() {assert.throws(function() { X.readFile(dir + x, {password:'passwor',WTF:opts.WTF}); }); });
-			it.skip('should recognize correct password', function() {
-				try { X.readFile(dir + x, {password:'password',WTF:opts.WTF}); }
-				catch(e) { if(e.message == "Password is incorrect") throw e; }
+			it('should throw with wrong password', function() {
+				try {
+					X.readFile(dir + x, {password:'passwor',WTF:opts.WTF});
+					throw new Error("incorrect password was accepted");
+				} catch(e) {
+					if(e.message != "Password is incorrect") throw e;
+				}
+			});
+			it('should recognize correct password', function() {
+				try {
+					X.readFile(dir + x, {password:'password',WTF:opts.WTF});
+				} catch(e) {
+					if(e.message == "Password is incorrect") throw e;
+				}
 			});
 			it.skip('should decrypt file', function() {
 				var wb = X.readFile(dir + x, {password:'password',WTF:opts.WTF});

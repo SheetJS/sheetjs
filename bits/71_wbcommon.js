@@ -99,11 +99,20 @@ function parse_wb_defaults(wb) {
 	_ssfopts.date1904 = parsexmlbool(wb.WBProps.date1904, 'date1904');
 }
 
+var badchars = "][*?\/\\".split("");
+function check_ws_name(n/*:string*/, safe/*:boolean*/)/*:boolean*/ {
+	if(n.length > 31) { if(safe) return false; throw new Error("Sheet names cannot exceed 31 chars"); }
+	var _good = true;
+	badchars.forEach(function(c) {
+		if(n.indexOf(c) == -1) return;
+		if(!safe) throw new Error("Sheet name cannot contain : \\ / ? * [ ]");
+		_good = false;
+	});
+	return _good;
+}
 function check_wb_names(N) {
-	var badchars = "][*?\/\\".split("");
 	N.forEach(function(n,i) {
-		badchars.forEach(function(c) { if(n.indexOf(c) > -1) throw new Error("Sheet name cannot contain : \\ / ? * [ ]"); });
-		if(n.length > 31) throw new Error("Sheet names cannot exceed 31 chars");
+		check_ws_name(n);
 		for(var j = 0; j < i; ++j) if(n == N[j]) throw new Error("Duplicate Sheet Name: " + n);
 	});
 }

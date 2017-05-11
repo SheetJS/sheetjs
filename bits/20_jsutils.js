@@ -104,3 +104,16 @@ function dup(o/*:any*/)/*:any*/ {
 }
 
 function fill(c/*:string*/,l/*:number*/)/*:string*/ { var o = ""; while(o.length < l) o+=c; return o; }
+
+/* TODO: stress test */
+function fuzzydate(s/*:string*/)/*:Date*/ {
+	var o = new Date(s), n = new Date(NaN);
+	var y = o.getYear(), m = o.getMonth(), d = o.getDate();
+	if(isNaN(d)) return n;
+	if(y < 0 || y > 8099) return n;
+	if((m > 0 || d > 1) && y != 101) return o;
+	if(s.toLowerCase().match(/jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec/)) return o;
+	if(!s.match(/[a-zA-Z]/)) return o;
+	return n;
+}
+

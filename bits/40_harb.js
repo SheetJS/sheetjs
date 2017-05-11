@@ -160,7 +160,7 @@ function dbf_to_aoa(buf, opts)/*:AOA*/ {
 				case 'T':
 					var day = dd.read_shift(4), ms = dd.read_shift(4);
 					throw new Error(day + " | " + ms);
-					//out[R][C] = new Date(); // FIXME!!!
+					//out[R][C] = new Date(); // TODO
 					//break;
 				case 'Y': out[R][C] = dd.read(4,'i')/1e4; break;
 				case '0':
@@ -210,7 +210,9 @@ var SYLK = (function() {
 		var Mval = 0, j;
 		for (; ri !== records.length; ++ri) {
 			Mval = 0;
-			var rstr=records[ri].trim(), record=rstr.split(";"), RT=record[0], val;
+			var rstr=records[ri].trim();
+			var record=rstr.replace(/;;/g, "\u0001").split(";").map(function(x) { return x.replace(/\u0001/g, ";"); });
+			var RT=record[0], val;
 			if(rstr.length > 0) switch(RT) {
 			case 'ID': break; /* header */
 			case 'E': break; /* EOF */
@@ -240,17 +242,19 @@ var SYLK = (function() {
 					next_cell_format = null;
 					break;
 				case 'E':
-					/* formula = record[rj].substr(1); */
-					break; /* TODO: formula */
+					formula = rc_to_a1(record[rj].substr(1), {r:R,c:C});
+					arr[R][C] = [arr[R][C], formula];
+					break;
 				default: if(opts && opts.WTF) throw new Error("SYLK bad record " + rstr);
 			} break;
 			case 'F':
+			var F_seen = 0;
 			for(rj=1; rj<record.length; ++rj) switch(record[rj].charAt(0)) {
-				case 'X': C = parseInt(record[rj].substr(1))-1; break;
+				case 'X': C = parseInt(record[rj].substr(1))-1; ++F_seen; break;
 				case 'Y':
-					R = parseInt(record[rj].substr(1))-1; C = 0;
+					R = parseInt(record[rj].substr(1))-1; /*C = 0;*/
 					for(j = arr.length; j <= R; ++j) arr[j] = [];
-					break;
+					++F_seen; break;
 				case 'M': Mval = parseInt(record[rj].substr(1)) / 20; break;
 				case 'F': break; /* ??? */
 				case 'P':
@@ -265,14 +269,19 @@ var SYLK = (function() {
 						Mval = parseInt(cw[2], 10);
 						colinfo[j-1] = Mval == 0 ? {hidden:true}: {wch:Mval}; process_col(colinfo[j-1]);
 					} break;
-				case 'R':
+				case 'C': /* default column format */
+					C = parseInt(record[rj].substr(1))-1;
+					if(!colinfo[C]) colinfo[C] = {};
+					break;
+				case 'R': /* row properties */
 					R = parseInt(record[rj].substr(1))-1;
-					rowinfo[R] = {};
+					if(!rowinfo[R]) rowinfo[R] = {};
 					if(Mval > 0) { rowinfo[R].hpt = Mval; rowinfo[R].hpx = pt2px(Mval); }
 					else if(Mval == 0) rowinfo[R].hidden = true;
 					break;
 				default: if(opts && opts.WTF) throw new Error("SYLK bad record " + rstr);
-			} break;
+			}
+			if(F_seen < 2) next_cell_format = null; break;
 			default: if(opts && opts.WTF) throw new Error("SYLK bad record " + rstr);
 			}
 		}
@@ -387,7 +396,7 @@ var DIF = (function() {
 					if(data === 'TRUE') arr[R][C] = true;
 					else if(data === 'FALSE') arr[R][C] = false;
 					else if(+value == +value) arr[R][C] = +value;
-					else if(!isNaN(new Date(value).getDate())) arr[R][C] = parseDate(value);
+					else if(!isNaN(fuzzydate(value).getDate())) arr[R][C] = parseDate(value);
 					else arr[R][C] = value;
 					++C; break;
 				case 1:
@@ -519,7 +528,7 @@ var PRN = (function() {
 			else if(s == "TRUE") { cell.t = 'b'; cell.v = true; }
 			else if(s == "FALSE") { cell.t = 'b'; cell.v = false; }
 			else if(!isNaN(v = +s)) { cell.t = 'n'; cell.w = s; cell.v = v; }
-			else if(!isNaN(new Date(s).getDate())) { cell.t = 'd'; cell.v = parseDate(s); }
+			else if(!isNaN(fuzzydate(s).getDate())) { cell.t = 'd'; cell.v = parseDate(s); }
 			else {
 				cell.t = 's';
 				if(s.charAt(0) == '"' && s.charAt(s.length - 1) == '"') s = s.slice(1,-1).replace(/""/g,'"');
@@ -550,13 +559,16 @@ var PRN = (function() {
 	}
 
 	function prn_to_sheet(d/*:RawData*/, opts)/*:Worksheet*/ {
+		var str = "", bytes = firstbyte(d, opts);
 		switch(opts.type) {
-			case 'base64': return prn_to_sheet_str(Base64.decode(d), opts);
-			case 'binary': return prn_to_sheet_str(d, opts);
-			case 'buffer': return prn_to_sheet_str(d.toString('binary'), opts);
-			case 'array': return prn_to_sheet_str(cc2str(d), opts);
+			case 'base64': str = Base64.decode(d); break;
+			case 'binary': str = d; break;
+			case 'buffer': str = d.toString('binary'); break;
+			case 'array': str = cc2str(d); break;
+			default: throw new Error("Unrecognized type " + opts.type);
 		}
-		throw new Error("Unrecognized type " + opts.type);
+		if(bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF) str = utf8read(str);
+		return prn_to_sheet_str(str, opts);
 	}
 
 	function prn_to_workbook(str/*:string*/, opts)/*:Workbook*/ { return sheet_to_workbook(prn_to_sheet(str, opts), opts); }

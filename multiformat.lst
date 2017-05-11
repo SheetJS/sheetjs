@@ -26,8 +26,8 @@ named_ranges_2011       	.xls .xlsb .xlsx .xls.xml .xlsb.xml .xlsx.xml
 # yes-formula
 # no-csv (macro serialization in xml)
 number_format           	.xls .xlsb .xlsm .xls.xml .xlsb.xml .xlsm.xml
-number_format_entities  	.xls .xlsb .xlsx .xml
 # yes-csv
+number_format_entities  	.xls .xlsb .xlsx .xml
 pivot_table_named_range 	.xls .xlsb .xlsx .xml
 pivot_table_test        	.xls .xlsb .xlsm
 rich_text_stress        	.xls .xlsb .xlsx .xls.xml .xlsb.xml .xlsx.xml

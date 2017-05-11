@@ -101,7 +101,7 @@ function frac(x/*:number*/, D/*:number*/, mixed/*:?boolean*/)/*:Array<number>*/ 
 	var q = Math.floor(sgn * P/Q);
 	return [q, sgn*P - q*Q, Q];
 }
-function general_fmt_int(v/*:number*/, opts/*:?any*/)/*:string*/ { return ""+v; }
+function general_fmt_int(v/*:number*/)/*:string*/ { return ""+v; }
 SSF._general_int = general_fmt_int;
 var general_fmt_num = (function make_general_fmt_num() {
 var gnr1 = /\.(\d*[1-9])0+$/, gnr2 = /\.0*$/, gnr4 = /\.(\d*[1-9])0+/, gnr5 = /\.0*[Ee]/, gnr6 = /(E[+-])(\d)$/;
@@ -121,11 +121,9 @@ function gfn4(o) {
 	return o;
 }
 function gfn5(o) {
-	//for(var i = 0; i != o.length; ++i) if(o.charCodeAt(i) === 46) return o.replace(gnr2,"").replace(gnr1,".$1");
-	//return o;
 	return o.indexOf(".") > -1 ? o.replace(gnr2,"").replace(gnr1,".$1") : o;
 }
-return function general_fmt_num(v/*:number*/, opts/*:?any*/)/*:string*/ {
+return function general_fmt_num(v/*:number*/)/*:string*/ {
 	var V = Math.floor(Math.log(Math.abs(v))*Math.LOG10E), o;
 	if(V >= -4 && V <= -1) o = v.toPrecision(10+V);
 	else if(Math.abs(V) <= 9) o = gfn2(v);
@@ -134,18 +132,18 @@ return function general_fmt_num(v/*:number*/, opts/*:?any*/)/*:string*/ {
 	return gfn5(gfn4(o));
 };})();
 SSF._general_num = general_fmt_num;
-function general_fmt(v/*:any*/, opts/*:?any*/) {
+function general_fmt(v/*:any*/) {
 	switch(typeof v) {
 		case 'string': return v;
 		case 'boolean': return v ? "TRUE" : "FALSE";
-		case 'number': return (v|0) === v ? general_fmt_int(v, opts) : general_fmt_num(v, opts);
+		case 'number': return (v|0) === v ? general_fmt_int(v/*, opts*/) : general_fmt_num(v/*, opts*/);
 		case 'undefined': return "";
 		case 'object': if(v == null) return "";
 	}
 	throw new Error("unsupported value in General format: " + v);
 }
 SSF._general = general_fmt;
-function fix_hijri(date, o) { return 0; }
+function fix_hijri(/*date, o*/) { return 0; }
 function parse_date_code(v/*:number*/,opts/*:?any*/,b2/*:?boolean*/) {
 	if(v > 2958465 || v < 0) return null;
 	var date = (v|0), time = Math.floor(86400 * (v - date)), dow=0;
@@ -526,8 +524,7 @@ function write_num_int(type/*:string*/, fmt/*:string*/, val/*:number*/)/*:string
 		case "##,###":
 		case "#,###": var x = commaify(""+aval); return x !== "0" ? sign + x : "";
 		default:
-			if(fmt.slice(-3) == ".00") return write_num_int(type, fmt.slice(0,-3), val) + ".00";
-			if(fmt.slice(-2) == ".0") return write_num_int(type, fmt.slice(0,-2), val) + ".0";
+			if(fmt.match(/\.[0#?]*$/)) return write_num_int(type, fmt.slice(0,fmt.lastIndexOf(".")), val) + hashq(fmt.slice(fmt.lastIndexOf(".")));
 	}
 	throw new Error("unsupported format |" + fmt + "|");
 }
@@ -536,8 +533,8 @@ return function write_num(type/*:string*/, fmt/*:string*/, val/*:number*/)/*:str
 };})();
 function split_fmt(fmt/*:string*/)/*:Array<string>*/ {
 	var out/*:Array<string>*/ = [];
-	var in_str = false, cc;
-	for(var i = 0, j = 0; i < fmt.length; ++i) switch((cc=fmt.charCodeAt(i))) {
+	var in_str = false/*, cc*/;
+	for(var i = 0, j = 0; i < fmt.length; ++i) switch((/*cc=*/fmt.charCodeAt(i))) {
 		case 34: /* '"' */
 			in_str = !in_str; break;
 		case 95: case 42: case 92: /* '_' '*' '\\' */
@@ -553,11 +550,11 @@ function split_fmt(fmt/*:string*/)/*:Array<string>*/ {
 SSF._split = split_fmt;
 var abstime = /\[[HhMmSs]*\]/;
 function fmt_is_date(fmt/*:string*/)/*:boolean*/ {
-	var i = 0, cc = 0, c = "", o = "";
+	var i = 0, /*cc = 0,*/ c = "", o = "";
 	while(i < fmt.length) {
 		switch((c = fmt.charAt(i))) {
 			case 'G': if(isgeneral(fmt, i)) i+= 6; i++; break;
-			case '"': for(;(cc=fmt.charCodeAt(++i)) !== 34 && i < fmt.length;) ++i; ++i; break;
+			case '"': for(;(/*cc=*/fmt.charCodeAt(++i)) !== 34 && i < fmt.length;) ++i; ++i; break;
 			case '\\': i+=2; break;
 			case '_': i+=2; break;
 			case '@': ++i; break;
@@ -579,13 +576,13 @@ function fmt_is_date(fmt/*:string*/)/*:boolean*/ {
 			case '.':
 				/* falls through */
 			case '0': case '#':
-				while(i < fmt.length && ("0#?.,E+-%".indexOf(c=fmt.charAt(++i)) > -1 || c=='\\' && fmt.charAt(i+1) == "-" && "0#".indexOf(fmt.charAt(i+2))>-1)){}
+				while(i < fmt.length && ("0#?.,E+-%".indexOf(c=fmt.charAt(++i)) > -1 || (c=='\\' && fmt.charAt(i+1) == "-" && "0#".indexOf(fmt.charAt(i+2))>-1))){/* empty */}
 				break;
-			case '?': while(fmt.charAt(++i) === c){} break;
+			case '?': while(fmt.charAt(++i) === c){/* empty */} break;
 			case '*': ++i; if(fmt.charAt(i) == ' ' || fmt.charAt(i) == '*') ++i; break;
 			case '(': case ')': ++i; break;
 			case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':
-				while(i < fmt.length && "0123456789".indexOf(fmt.charAt(++i)) > -1){} break;
+				while(i < fmt.length && "0123456789".indexOf(fmt.charAt(++i)) > -1){/* empty */} break;
 			case ' ': ++i; break;
 			default: ++i; break;
 		}
@@ -655,7 +652,7 @@ function eval_fmt(fmt/*:string*/, v/*:any*/, opts/*:any*/, flen/*:number*/) {
 				}
 				/* falls through */
 			case '0': case '#':
-				o = c; while(++i < fmt.length && "0#?.,E+-%".indexOf(c=fmt.charAt(i)) > -1 || c=='\\' && fmt.charAt(i+1) == "-" && i < fmt.length - 2 && "0#".indexOf(fmt.charAt(i+2))>-1) o += c;
+				o = c; while((++i < fmt.length && "0#?.,E+-%".indexOf(c=fmt.charAt(i)) > -1) || (c=='\\' && fmt.charAt(i+1) == "-" && i < fmt.length - 2 && "0#".indexOf(fmt.charAt(i+2))>-1)) o += c;
 				out[out.length] = {t:'n', v:o}; break;
 			case '?':
 				o = c; while(fmt.charAt(++i) === c) o+=c;
@@ -717,9 +714,9 @@ function eval_fmt(fmt/*:string*/, v/*:any*/, opts/*:any*/, flen/*:number*/) {
 				jj = i+1;
 				while(out[jj] != null && (
 					(c=out[jj].t) === "?" || c === "D" ||
-					(c === " " || c === "t") && out[jj+1] != null && (out[jj+1].t === '?' || out[jj+1].t === "t" && out[jj+1].v === '/') ||
-					out[i].t === '(' && (c === ' ' || c === 'n' || c === ')') ||
-					c === 't' && (out[jj].v === '/' || out[jj].v === ' ' && out[jj+1] != null && out[jj+1].t == '?')
+					((c === " " || c === "t") && out[jj+1] != null && (out[jj+1].t === '?' || out[jj+1].t === "t" && out[jj+1].v === '/')) ||
+					(out[i].t === '(' && (c === ' ' || c === 'n' || c === ')')) ||
+					(c === 't' && (out[jj].v === '/' || out[jj].v === ' ' && out[jj+1] != null && out[jj+1].t == '?'))
 				)) {
 					out[i].v += out[jj].v;
 					out[jj] = {v:"", t:";"}; ++jj;
@@ -773,7 +770,7 @@ function eval_fmt(fmt/*:string*/, v/*:any*/, opts/*:any*/, flen/*:number*/) {
 			if(jj>=0 && lasti<out.length) out[lasti].v = ostr.substr(0,jj+1) + out[lasti].v;
 			jj = ostr.indexOf(".")+1;
 			for(i=decpt; i<out.length; ++i) {
-				if(out[i] == null || 'n?('.indexOf(out[i].t) === -1 && i !== decpt ) continue;
+				if(out[i] == null || ('n?('.indexOf(out[i].t) === -1 && i !== decpt)) continue;
 				j=out[i].v.indexOf(".")>-1&&i===decpt?out[i].v.indexOf(".")+1:0;
 				vv = out[i].v.substr(0,j);
 				for(; j<out[i].v.length; ++j) {
