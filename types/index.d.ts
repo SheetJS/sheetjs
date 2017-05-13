@@ -1,5 +1,6 @@
 // Project: https://github.com/SheetJS/js-xlsx
 // Definitions by: themauveavenger <https://github.com/themauveavenger/>, Wolfgang Faust <https://github.com/wolfgang42>
+// TypeScript Version: 2.2
 
 /** Attempts to read filename and parse */
 export function readFile(filename: string, opts?: IParsingOptions): IWorkBook;
@@ -377,12 +378,12 @@ export interface IWorkSheetCell {
     /**
      * Cell hyperlink object (.Target holds link, .tooltip is tooltip)
      */
-    l?: Object;
+    l?: object;
 
     /**
      * The style/theme of the cell (if applicable)
      */
-    s?: Object;
+    s?: object;
 }
 
 export interface ICell {
