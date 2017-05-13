@@ -75,12 +75,13 @@ var HTML_ = (function() {
 		}
 		return "<tr>" + oo.join("") + "</tr>";
 	}
-	function sheet_to_html(ws/*:Worksheet*/, opts)/*:string*/ {
-		var o/*:Array<string>*/ = [];
+	function sheet_to_html(ws/*:Worksheet*/, opts/*:Sheet2HTMLOpts*/)/*:string*/ {
+		var o = opts || {};
+		var out/*:Array<string>*/ = [];
 		var r = decode_range(ws['!ref']);
 		o.dense = Array.isArray(ws);
-		for(var R = r.s.r; R <= r.e.r; ++R) o.push(make_html_row(ws, r, R, o));
-		return "<html><body><table>" + o.join("") + "</table></body></html>";
+		for(var R = r.s.r; R <= r.e.r; ++R) out.push(make_html_row(ws, r, R, o));
+		return "<html><body><table>" + out.join("") + "</table></body></html>";
 	}
 
 	return {

@@ -1,4 +1,4 @@
-function get_sheet_type(n) {
+function get_sheet_type(n/*:string*/)/*:string*/ {
 	if(RELS.WS.indexOf(n) > -1) return "sheet";
 	if(RELS.CS && n == RELS.CS) return "chart";
 	if(RELS.DS && n == RELS.DS) return "dialog";
@@ -181,8 +181,7 @@ function parse_xlsxcfb(cfb, opts/*:?ParseOpts*/)/*:Workbook*/ {
 	data = cfb.find(f);
 	if(!data) throw new Error("ECMA-376 Encrypted file missing " + f);
 	var dsm = parse_DataSpaceMap(data.content);
-	if(dsm.length != 1 || dsm[0].comps.length != 1 || dsm[0].comps[0].t != 0 ||
-	   dsm[0].name != "StrongEncryptionDataSpace" || dsm[0].comps[0].v != "EncryptedPackage")
+	if(dsm.length != 1 || dsm[0].comps.length != 1 || dsm[0].comps[0].t != 0 || dsm[0].name != "StrongEncryptionDataSpace" || dsm[0].comps[0].v != "EncryptedPackage")
 		throw new Error("ECMA-376 Encrypted file bad " + f);
 
 	f = 'StrongEncryptionDataSpace';

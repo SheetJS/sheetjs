@@ -100,7 +100,7 @@ function parse_wb_defaults(wb) {
 }
 
 var badchars = "][*?\/\\".split("");
-function check_ws_name(n/*:string*/, safe/*:boolean*/)/*:boolean*/ {
+function check_ws_name(n/*:string*/, safe/*:?boolean*/)/*:boolean*/ {
 	if(n.length > 31) { if(safe) return false; throw new Error("Sheet names cannot exceed 31 chars"); }
 	var _good = true;
 	badchars.forEach(function(c) {

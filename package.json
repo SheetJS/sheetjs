@@ -27,7 +27,7 @@
 	"devDependencies": {
 		"mocha":"",
 		"xlsjs":"",
-		"uglify-js":""
+		"@sheetjs/uglify-js":""
 	},
 	"repository": { "type":"git", "url":"git://github.com/SheetJS/js-xlsx.git" },
 	"scripts": {

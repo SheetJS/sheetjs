@@ -6,10 +6,12 @@ function _JS2ANSI(str/*:string*/)/*:Array<number>*/ {
 }
 
 /* [MS-OFFCRYPTO] 2.1.4 Version */
-function parse_CRYPTOVersion(blob, length/*:number*/) {
-	var o = {};
+function parse_CRYPTOVersion(blob, length/*:?number*/) {
+	var o/*:any*/ = {};
 	o.Major = blob.read_shift(2);
 	o.Minor = blob.read_shift(2);
+	/*:: if(length == null) return o; */
+	if(length >= 4) blob.l += length - 4;
 	return o;
 }
 

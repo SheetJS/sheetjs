@@ -1,8 +1,8 @@
 (function(utils) {
 utils.consts = utils.consts || {};
-function add_consts(R) { R.forEach(function(a){ utils.consts[a[0]] = a[1]; }); }
+function add_consts(R/*Array<any>*/) { R.forEach(function(a){ utils.consts[a[0]] = a[1]; }); }
 
-function get_default(x, y, z) { return x[y] != null ? x[y] : (x[y] = z); }
+function get_default(x/*:any*/, y/*:any*/, z/*:any*/)/*:any*/ { return x[y] != null ? x[y] : (x[y] = z); }
 
 /* get cell, creating a stub if necessary */
 function ws_get_cell_stub(ws/*:Worksheet*/, R, C/*:?number*/)/*:Cell*/ {
@@ -11,7 +11,7 @@ function ws_get_cell_stub(ws/*:Worksheet*/, R, C/*:?number*/)/*:Cell*/ {
 	/* cell address object */
 	if(typeof R != "number") return ws_get_cell_stub(ws, encode_cell(R));
 	/* R and C are 0-based indices */
-	return ws_get_cell_stub(ws, encode_cell({r:R,c:C}));
+	return ws_get_cell_stub(ws, encode_cell({r:R,c:C||0}));
 }
 
 /* find sheet index for given name / validate index */
@@ -33,7 +33,8 @@ utils.book_new = function()/*:Workbook*/ {
 
 /* add a worksheet to the end of a given workbook */
 utils.book_append_sheet = function(wb/*:Workbook*/, ws/*:Worksheet*/, name/*:?string*/) {
-	if(!name) for(var i = 1; i <= 0xFFFF; ++i) if(wb.SheetNames.indexOf("Sheet" + i) == -1) break;
+	if(!name) for(var i = 1; i <= 0xFFFF; ++i) if(wb.SheetNames.indexOf(name = "Sheet" + i) == -1) break;
+	if(!name) throw new Error("Too many worksheets");
 	check_ws_name(name);
 	if(wb.SheetNames.indexOf(name) >= 0) throw new Error("Worksheet with name |" + name + "| already exists!");
 
@@ -47,12 +48,14 @@ utils.book_set_sheet_visibility = function(wb/*:Workbook*/, sh/*:number|string*/
 	get_default(wb.Workbook,"Sheets",[]);
 
 	var idx = wb_sheet_idx(wb, sh);
+	// $FlowIgnore
 	get_default(wb.Workbook.Sheets,idx, {});
 
 	switch(vis) {
 		case 0: case 1: case 2: break;
 		default: throw new Error("Bad sheet visibility setting " + vis);
 	}
+	// $FlowIgnore
 	wb.Workbook.Sheets[idx].Hidden = vis;
 };
 add_consts([
@@ -72,7 +75,7 @@ utils.cell_set_hyperlink = function(cell/*:Cell*/, target/*:string*/, tooltip/*:
 	if(!target) {
 		delete cell.l;
 	} else {
-		cell.l = { Target: target };
+		cell.l = ({ Target: target }/*:Hyperlink*/);
 		if(tooltip) cell.l.Tooltip = tooltip;
 	}
 	return cell;

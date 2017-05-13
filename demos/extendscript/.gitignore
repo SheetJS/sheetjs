@@ -1,3 +1,5 @@
 jszip.js
 shim.js
 xlsx.flow.js
+xlsx.core.min.js
+xlsx.full.min.js

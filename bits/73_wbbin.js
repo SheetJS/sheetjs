@@ -69,7 +69,7 @@ function parse_wb_bin(data, opts)/*:WorkbookFile*/ {
 	opts.biff = 12;
 
 	var Names = [];
-	var supbooks = [];
+	var supbooks = ([]/*:any*/);
 	supbooks.SheetNames = [];
 
 	recordhopper(data, function hopper_wb(val, R_n, RT) {

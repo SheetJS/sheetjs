@@ -377,6 +377,7 @@ function write_BrtSheetProtection(sp, o) {
 		["pivotTables",          true], // fPivotTables
 		["selectUnlockedCells", false]  // fSelUnlockedCells
 	].forEach(function(n) {
+		/*:: if(o == null) throw "unreachable"; */
 		if(n[1]) o.write_shift(4, sp[n[0]] != null && !sp[n[0]] ? 1 : 0);
 		else      o.write_shift(4, sp[n[0]] != null && sp[n[0]] ? 0 : 1);
 	});
@@ -389,13 +390,13 @@ function parse_ws_bin(data, _opts, rels, wb, themes, styles)/*:Worksheet*/ {
 	var opts = _opts || {};
 	if(!rels) rels = {'!id':{}};
 	if(DENSE != null && opts.dense == null) opts.dense = DENSE;
-	var s = opts.dense ? [] : {};
+	var s/*:Worksheet*/ = (opts.dense ? [] : {});
 
 	var ref;
 	var refguess = {s: {r:2000000, c:2000000}, e: {r:0, c:0} };
 
 	var pass = false, end = false;
-	var row, p, cf, R, C, addr, sstr, rr, cell;
+	var row, p, cf, R, C, addr, sstr, rr, cell/*:Cell*/;
 	var mergecells = [];
 	opts.biff = 12;
 	opts['!row'] = 0;
@@ -511,7 +512,7 @@ function parse_ws_bin(data, _opts, rels, wb, themes, styles)/*:Worksheet*/ {
 			case 0x01AA: /* 'BrtArrFmla' */
 				if(!opts.cellFormula) break;
 				array_formulae.push(val);
-				cell = (opts.dense ? s[R][C] : s[encode_col(C) + rr]);
+				cell = ((opts.dense ? s[R][C] : s[encode_col(C) + rr])/*:any*/);
 				cell.f = stringify_formula(val[1], refguess, {r:row.r, c:C}, supbooks, opts);
 				cell.F = encode_range(val[0]);
 				break;

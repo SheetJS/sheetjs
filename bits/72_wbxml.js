@@ -7,7 +7,7 @@ function parse_wb_xml(data, opts)/*:WorkbookFile*/ {
 	var dname = {}, dnstart = 0;
 	/*(data.match(tagregex)||[]).forEach */
 	data.replace(tagregex, function xml_wb(x, idx) {
-		var y = parsexmltag(x);
+		var y/*:any*/ = parsexmltag(x);
 		switch(strip_ns(y[0])) {
 			case '<?xml': break;
 
@@ -190,7 +190,7 @@ function write_wb_xml(wb/*:Workbook*/, opts/*:?WriteOpts*/)/*:string*/ {
 	if(write_names) {
 		o[o.length] = "<definedNames>";
 		if(wb.Workbook && wb.Workbook.Names) wb.Workbook.Names.forEach(function(n) {
-			var d = {name:n.Name};
+			var d/*:any*/ = {name:n.Name};
 			if(n.Comment) d.comment = n.Comment;
 			if(n.Sheet != null) d.localSheetId = ""+n.Sheet;
 			if(!n.Ref) return;

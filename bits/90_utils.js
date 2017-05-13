@@ -190,7 +190,7 @@ function json_to_sheet(js/*:Array<any>*/, opts)/*:Worksheet*/ {
 	return ws;
 }
 
-var utils = {
+var utils/*:any*/ = {
 	encode_col: encode_col,
 	encode_row: encode_row,
 	encode_cell: encode_cell,

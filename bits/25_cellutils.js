@@ -1,5 +1,5 @@
 /* XLS ranges enforced */
-function shift_cell_xls(cell, tgt/*:any*/, opts/*:?any*/) {
+function shift_cell_xls(cell/*:CellAddress*/, tgt/*:any*/, opts/*:?any*/)/*:CellAddress*/ {
 	var out = dup(cell);
 	if(tgt.s) {
 		if(out.cRel) out.c += tgt.s.c;
@@ -22,7 +22,7 @@ function shift_range_xls(cell, range, opts) {
 	return out;
 }
 
-function encode_cell_xls(c)/*:string*/ {
+function encode_cell_xls(c/*:CellAddress*/)/*:string*/ {
 	var s = encode_cell(c);
 	if(c.cRel === 0) s = fix_col(s);
 	if(c.rRel === 0) s = fix_row(s);

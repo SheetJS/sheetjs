@@ -55,8 +55,9 @@ function slurp(R, blob, length/*:number*/, opts) {
 function safe_format_xf(p/*:any*/, opts/*:ParseOpts*/, date1904/*:?boolean*/) {
 	if(p.t === 'z') return;
 	if(!p.XF) return;
+	var fmtid = 0;
 	try {
-		var fmtid = p.z || p.XF.ifmt || 0;
+		fmtid = p.z || p.XF.ifmt || 0;
 		if(opts.cellNF) p.z = SSF._table[fmtid];
 	} catch(e) { if(opts.WTF) throw e; }
 	if(!opts || opts.cellText !== false) try {
@@ -75,7 +76,7 @@ function safe_format_xf(p/*:any*/, opts/*:ParseOpts*/, date1904/*:?boolean*/) {
 	} catch(e) { if(opts.WTF) throw e; }
 }
 
-function make_cell(val, ixfe, t)/*:any*/ {
+function make_cell(val, ixfe, t)/*:Cell*/ {
 	return ({v:val, ixfe:ixfe, t:t}/*:any*/);
 }
 
@@ -84,7 +85,7 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 	var wb = ({opts:{}}/*:any*/);
 	var Sheets = {};
 	if(DENSE != null && options.dense == null) options.dense = DENSE;
-	var out = (options.dense ? [] : {});
+	var out/*:Worksheet*/ = ((options.dense ? [] : {})/*:any*/);
 	var Directory = {};
 	var found_sheet = false;
 	var range/*:Range*/ = ({}/*:any*/);
@@ -95,12 +96,12 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 	var lastcell, last_cell = "", cc, cmnt, rng, rngC, rngR;
 	var shared_formulae = {};
 	var array_formulae = []; /* TODO: something more clever */
-	var temp_val;
+	var temp_val/*:Cell*/;
 	var country;
 	var cell_valid = true;
 	var XFs = []; /* XF records */
 	var palette = [];
-	var Workbook = { Sheets:[] }, wsprops = {};
+	var Workbook/*:WBWBProps*/ = ({ Sheets:[] }/*:any*/), wsprops = {};
 	var get_rgb = function getrgb(icv) {
 		if(icv < 8) return XLSIcv[icv];
 		if(icv < 64) return palette[icv-8] || XLSIcv[icv];
@@ -179,9 +180,9 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 	var last_Rn = '';
 	var file_depth = 0; /* TODO: make a real stack */
 	var BIFF2Fmt = 0;
-	var BIFF2FmtTable = [];
+	var BIFF2FmtTable/*:Array<string>*/ = [];
 	var FilterDatabases = []; /* TODO: sort out supbooks and process elsewhere */
-	var last_lbl;
+	var last_lbl/*:?DefinedName*/;
 
 	/* explicit override for some broken writers */
 	opts.codepage = 1200;
@@ -263,10 +264,10 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 					break;
 				case 'Index': break; // TODO
 				case 'Lbl':
-					last_lbl = {
+					last_lbl = ({
 						Name: val.Name,
 						Ref: stringify_formula(val.rgce,range,null,supbooks,opts)
-					};
+					}/*:DefinedName*/);
 					if(val.itab > 0) last_lbl.Sheet = val.itab - 1;
 					supbooks.names.push(last_lbl);
 					if(!supbooks[0]) supbooks[0] = [];
@@ -281,7 +282,7 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 				case 'NameCmt':
 					/* TODO: search for correct name */
 					if(opts.biff < 8) break;
-					last_lbl.Comment = val[1];
+					if(last_lbl != null) last_lbl.Comment = val[1];
 					break;
 
 				case 'Protect': out["!protect"] = val; break; /* for sheet or book */
@@ -307,7 +308,7 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 						Workbook.Sheets.push(wsprops);
 					}
 					if(cur_sheet === "") Preamble = out; else Sheets[cur_sheet] = out;
-					out = options.dense ? [] : {};
+					out = ((options.dense ? [] : {})/*:any*/);
 				} break;
 				case 'BOF': {
 					if(opts.biff !== 8){/* empty */}
@@ -320,7 +321,7 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 					else if(val.BIFFVer === 0x0007) opts.biff = 2;
 					if(file_depth++) break;
 					cell_valid = true;
-					out = (options.dense ? [] : {});
+					out = ((options.dense ? [] : {})/*:any*/);
 
 					if(opts.biff < 5) {
 						if(cur_sheet === "") cur_sheet = "Sheet1";
@@ -343,19 +344,19 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 
 				case 'Number': case 'BIFF2NUM': case 'BIFF2INT': {
 					if(out["!type"] == "chart") if(options.dense ? (out[val.r]||[])[val.c]: out[encode_cell({c:val.c, r:val.r})]) ++val.c;
-					temp_val = {ixfe: val.ixfe, XF: XFs[val.ixfe]||{}, v:val.val, t:'n'};
+					temp_val = ({ixfe: val.ixfe, XF: XFs[val.ixfe]||{}, v:val.val, t:'n'}/*:any*/);
 					if(BIFF2Fmt > 0) temp_val.z = BIFF2FmtTable[(temp_val.ixfe>>8) & 0x1F];
 					safe_format_xf(temp_val, options, wb.opts.Date1904);
 					addcell({c:val.c, r:val.r}, temp_val, options);
 				} break;
 				case 'BoolErr': {
-					temp_val = {ixfe: val.ixfe, XF: XFs[val.ixfe], v:val.val, t:val.t};
+					temp_val = ({ixfe: val.ixfe, XF: XFs[val.ixfe], v:val.val, t:val.t}/*:any*/);
 					if(BIFF2Fmt > 0) temp_val.z = BIFF2FmtTable[(temp_val.ixfe>>8) & 0x1F];
 					safe_format_xf(temp_val, options, wb.opts.Date1904);
 					addcell({c:val.c, r:val.r}, temp_val, options);
 				} break;
 				case 'RK': {
-					temp_val = {ixfe: val.ixfe, XF: XFs[val.ixfe], v:val.rknum, t:'n'};
+					temp_val = ({ixfe: val.ixfe, XF: XFs[val.ixfe], v:val.rknum, t:'n'}/*:any*/);
 					if(BIFF2Fmt > 0) temp_val.z = BIFF2FmtTable[(temp_val.ixfe>>8) & 0x1F];
 					safe_format_xf(temp_val, options, wb.opts.Date1904);
 					addcell({c:val.c, r:val.r}, temp_val, options);
@@ -363,7 +364,7 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 				case 'MulRk': {
 					for(var j = val.c; j <= val.C; ++j) {
 						var ixfe = val.rkrec[j-val.c][0];
-						temp_val= {ixfe:ixfe, XF:XFs[ixfe], v:val.rkrec[j-val.c][1], t:'n'};
+						temp_val= ({ixfe:ixfe, XF:XFs[ixfe], v:val.rkrec[j-val.c][1], t:'n'}/*:any*/);
 						if(BIFF2Fmt > 0) temp_val.z = BIFF2FmtTable[(temp_val.ixfe>>8) & 0x1F];
 						safe_format_xf(temp_val, options, wb.opts.Date1904);
 						addcell({c:j, r:val.r}, temp_val, options);
@@ -371,7 +372,7 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 				} break;
 				case 'Formula': {
 					if(val.val == 'String') { last_formula = val; break; }
-					temp_val = ({v:val.val, ixfe:val.cell.ixfe, t:val.tt}/*:any*/);
+					temp_val = make_cell(val.val, val.cell.ixfe, val.tt);
 					temp_val.XF = XFs[temp_val.ixfe];
 					if(options.cellFormula) {
 						var _f = val.formula;
@@ -390,7 +391,7 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 				case 'String': {
 					if(last_formula) { /* technically always true */
 						last_formula.val = val;
-						temp_val = ({v:val, ixfe:last_formula.cell.ixfe, t:'s'}/*:any*/);
+						temp_val = make_cell(val, last_formula.cell.ixfe, 's');
 						temp_val.XF = XFs[temp_val.ixfe];
 						if(options.cellFormula) {
 							temp_val.f = ""+stringify_formula(last_formula.formula, range, last_formula.cell, supbooks, opts);
@@ -431,7 +432,7 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 					addcell({c:val.c, r:val.r}, temp_val, options);
 					break;
 				case 'Blank': if(options.sheetStubs) {
-					temp_val = {ixfe: val.ixfe, XF: XFs[val.ixfe], t:'z'};
+					temp_val = ({ixfe: val.ixfe, XF: XFs[val.ixfe], t:'z'}/*:any*/);
 					if(BIFF2Fmt > 0) temp_val.z = BIFF2FmtTable[(temp_val.ixfe>>8) & 0x1F];
 					safe_format_xf(temp_val, options, wb.opts.Date1904);
 					addcell({c:val.c, r:val.r}, temp_val, options);
@@ -439,7 +440,7 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 				case 'MulBlank': if(options.sheetStubs) {
 					for(var _j = val.c; _j <= val.C; ++_j) {
 						var _ixfe = val.ixfe[_j-val.c];
-						temp_val= {ixfe:_ixfe, XF:XFs[_ixfe], t:'z'};
+						temp_val= ({ixfe:_ixfe, XF:XFs[_ixfe], t:'z'}/*:any*/);
 						if(BIFF2Fmt > 0) temp_val.z = BIFF2FmtTable[(temp_val.ixfe>>8) & 0x1F];
 						safe_format_xf(temp_val, options, wb.opts.Date1904);
 						addcell({c:_j, r:val.r}, temp_val, options);
@@ -530,12 +531,7 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 				case 'TopMargin':
 				case 'BottomMargin':
 					if(!out['!margins']) default_margins(out['!margins'] = {});
-					switch(Rn) {
-						case 'LeftMargin': out['!margins'].left = val; break;
-						case 'RightMargin': out['!margins'].right = val; break;
-						case 'TopMargin': out['!margins'].top = val; break;
-						case 'BottomMargin': out['!margins'].bottom = val; break;
-					}
+					out['!margins'][Rn.slice(0,-6).toLowerCase()] = val;
 					break;
 
 				case 'Setup': // TODO

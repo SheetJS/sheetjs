@@ -10,7 +10,7 @@ if(has_buf && typeof require != 'undefined') (function() {
 		var FS = o.FS !== undefined ? o.FS : ",", fs = FS.charCodeAt(0);
 		var RS = o.RS !== undefined ? o.RS : "\n", rs = RS.charCodeAt(0);
 		var endregex = new RegExp((FS=="|" ? "\\|" : FS)+"+$");
-		var row = "", cols = [];
+		var row/*:?string*/ = "", cols = [];
 		o.dense = Array.isArray(sheet);
 		for(var C = r.s.c; C <= r.e.c; ++C) cols[C] = encode_col(C);
 		var R = r.s.r;
@@ -18,11 +18,12 @@ if(has_buf && typeof require != 'undefined') (function() {
 			if(R > r.e.r) return stream.push(null);
 			while(R <= r.e.r) {
 				row = make_csv_row(sheet, r, R, cols, fs, rs, FS, o);
-				if(row == null) { ++R; continue; }
-				if(o.strip) row = row.replace(endregex,"");
-				stream.push(row + RS);
 				++R;
-				break;
+				if(row != null) {
+					if(o.strip) row = row.replace(endregex,"");
+					stream.push(row + RS);
+					break;
+				}
 			}
 		};
 		return stream;
@@ -31,10 +32,10 @@ if(has_buf && typeof require != 'undefined') (function() {
 	var HTML_BEGIN = "<html><body><table>";
 	var HTML_END = "</table></body></html>";
 
-	var write_html_stream = function(sheet/*:Worksheet*/, opts) {
+	var write_html_stream = function(sheet/*:Worksheet*/, opts/*:?Sheet2HTMLOpts*/) {
 		var stream = Readable();
 
-		var o/*:Array<string>*/ = [];
+		var o = opts == null ? {} : opts;
 		var r = decode_range(sheet['!ref']), cell/*:Cell*/;
 		o.dense = Array.isArray(sheet);
 		stream.push(HTML_BEGIN);

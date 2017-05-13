@@ -693,7 +693,7 @@ var PtgBinOp = {
 function stringify_formula(formula/*Array<any>*/, range, cell/*:any*/, supbooks, opts) {
 	//console.log(formula);
 	var _range = /*range != null ? range :*/ {s:{c:0, r:0},e:{c:0, r:0}};
-	var stack/*:Array<string>*/ = [], e1, e2, type, c, ixti=0, nameidx=0, r, sname="";
+	var stack/*:Array<string>*/ = [], e1, e2, type, c/*:CellAddress*/, ixti=0, nameidx=0, r, sname="";
 	if(!formula[0] || !formula[0][0]) return "";
 	var last_sp = -1, sp = "";
 	//console.log("--",cell,formula[0])
@@ -764,15 +764,15 @@ function stringify_formula(formula/*Array<any>*/, range, cell/*:any*/, supbooks,
 
 
 			case 'PtgRef': /* 2.5.198.84 */
-				type = f[1][0]; c = shift_cell_xls(f[1][1], _range, opts);
+				type = f[1][0]; c = shift_cell_xls((f[1][1]/*:any*/), _range, opts);
 				stack.push(encode_cell_xls(c));
 				break;
 			case 'PtgRefN': /* 2.5.198.88 */
-				type = f[1][0]; c = cell ? shift_cell_xls(f[1][1], cell, opts) : f[1][1];
+				type = f[1][0]; c = cell ? shift_cell_xls((f[1][1]/*:any*/), cell, opts) : (f[1][1]/*:any*/);
 				stack.push(encode_cell_xls(c));
 				break;
 			case 'PtgRef3d': /* 2.5.198.85 */
-				type = f[1][0]; ixti = /*::Number(*/f[1][1]/*::)*/; c = shift_cell_xls(f[1][2], _range, opts);
+				type = f[1][0]; ixti = /*::Number(*/f[1][1]/*::)*/; c = shift_cell_xls((f[1][2]/*:any*/), _range, opts);
 				sname = supbooks.SheetNames[ixti];
 				var w = sname; /* IE9 fails on defined names */
 				stack.push(sname + "!" + encode_cell_xls(c));
@@ -823,7 +823,7 @@ function stringify_formula(formula/*Array<any>*/, range, cell/*:any*/, supbooks,
 
 			case 'PtgName': /* 2.5.97.60 TODO: revisions */
 				/* f[1] = type, 0, nameindex */
-				nameidx = f[1][2];
+				nameidx = (f[1][2]/*:any*/);
 				var lbl = (supbooks.names||[])[nameidx-1] || (supbooks[0]||[])[nameidx];
 				var name = lbl ? lbl.Name : "**MISSING**" + String(nameidx);
 				if(name in XLSXFutureFunctions) name = XLSXFutureFunctions[name];
@@ -832,7 +832,7 @@ function stringify_formula(formula/*Array<any>*/, range, cell/*:any*/, supbooks,
 
 			case 'PtgNameX': /* 2.5.97.61 TODO: revisions */
 				/* f[1] = type, ixti, nameindex */
-				var bookidx/*:number*/ = (f[1][1]/*:any*/); nameidx = f[1][2]; var externbook;
+				var bookidx/*:number*/ = (f[1][1]/*:any*/); nameidx = (f[1][2]/*:any*/); var externbook;
 				/* TODO: Properly handle missing values */
 				//console.log(bookidx, supbooks);
 				if(opts.biff <= 5) {

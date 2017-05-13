@@ -274,7 +274,7 @@ function parse_Window1(blob, length) {
 
 /* 2.4.122 TODO */
 function parse_Font(blob, length, opts) {
-	var o = {
+	var o/*:any*/ = {
 		dyHeight: blob.read_shift(2),
 		fl: blob.read_shift(2)
 	};

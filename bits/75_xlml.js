@@ -177,7 +177,7 @@ function parse_xlml_xml(d, opts)/*:Workbook*/ {
 	var Rn;
 	var state = [], tmp;
 	if(DENSE != null && opts.dense == null) opts.dense = DENSE;
-	var sheets = {}, sheetnames = [], cursheet = (opts.dense ? [] : {}), sheetname = "";
+	var sheets = {}, sheetnames = [], cursheet/*:Worksheet*/ = (opts.dense ? [] : {}), sheetname = "";
 	var table = {}, cell = ({}/*:any*/), row = {};
 	var dtag = xlml_parsexmltag('<Data ss:Type="String">'), didx = 0;
 	var c = 0, r = 0;
@@ -190,7 +190,7 @@ function parse_xlml_xml(d, opts)/*:Workbook*/ {
 	var cstys = [], csty, seencol = false;
 	var arrayf = [];
 	var rowinfo = [], rowobj = {};
-	var Workbook = { Sheets:[] }, wsprops = {};
+	var Workbook/*:WBWBProps*/ = { Sheets:[] }, wsprops = {};
 	xlmlregex.lastIndex = 0;
 	str = str.replace(/<!--([^\u2603]*?)-->/mg,"");
 	while((Rn = xlmlregex.exec(str))) switch(Rn[3]) {
@@ -324,12 +324,12 @@ function parse_xlml_xml(d, opts)/*:Workbook*/ {
 		case 'NamedRange':
 			if(!Workbook.Names) Workbook.Names = [];
 			var _NamedRange = parsexmltag(Rn[0]);
-			var _DefinedName = {
+			var _DefinedName/*:DefinedName*/ = ({
 				Name: _NamedRange.Name,
 				Ref: rc_to_a1(_NamedRange.RefersTo.substr(1))
-			};
+			}/*:any*/);
 			if(Workbook.Sheets.length>0) _DefinedName.Sheet=Workbook.Sheets.length-1;
-			Workbook.Names.push(_DefinedName);
+			/*:: if(Workbook.Names) */Workbook.Names.push(_DefinedName);
 			break;
 
 		case 'NamedCell': break;
@@ -1019,7 +1019,7 @@ function write_ws_xlml_table(ws/*:Worksheet*/, opts, idx/*:number*/, wb/*:Workbo
 		process_col(n);
 		var w = !!n.width;
 		var p = col_obj_w(i, n);
-		var k = {"ss:Index":i+1};
+		var k/*:any*/ = {"ss:Index":i+1};
 		if(w) k['ss:Width'] = width2px(p.width);
 		if(n.hidden) k['ss:Hidden']="1";
 		o.push(writextag("Column",null,k));

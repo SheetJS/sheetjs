@@ -19,16 +19,13 @@ type Workbook = {
 
 	Workbook?: WBWBProps;
 
-	SSF?: {[n:number]:string};
+	SSF?: SSFTable;
 	cfb?: any;
 };
 
-type WorkbookProps = {
-	SheetNames?: Array<string>;
-}
-
 type WBWBProps = {
 	Sheets: Array<WBWSProp>;
+	Names?: Array<any>;
 };
 
 type WBWSProp = {
@@ -52,6 +49,7 @@ type Worksheet = any;
 
 type Sheet2CSVOpts = any;
 type Sheet2JSONOpts = any;
+type Sheet2HTMLOpts = any;
 
 type ParseOpts = any;
 
@@ -77,22 +75,44 @@ type SST = {
 type Comment = any;
 
 type RowInfo = {
-	hidden:?boolean; // if true, the row is hidden
+	hidden?:boolean; // if true, the row is hidden
 
 	hpx?:number;     // height in screen pixels
 	hpt?:number;     // height in points
 };
 
 type ColInfo = {
-	hidden:?boolean; // if true, the column is hidden
+	hidden?:boolean; // if true, the column is hidden
 
 	wpx?:number;     // width in screen pixels
-	width:number;    // width in Excel's "Max Digit Width", width*256 is integral
+	width?:number;    // width in Excel's "Max Digit Width", width*256 is integral
 	wch?:number;     // width in characters
 
 	MDW?:number;     // Excel's "Max Digit Width" unit, always integral
 };
 
+interface Margins {
+	left?:number;
+	right?:number;
+	top?:number;
+	bottom?:number;
+	header?:number;
+	footer?:number;
+};
+
+interface DefinedName {
+	Name:string;
+	Ref:string;
+	Sheet?:number;
+	Comment?:string;
+};
+
+interface Hyperlink {
+	Target:string;
+	Tooltip?:string;
+};
+
+type SSFTable = any;
 
 type AOA = Array<Array<any> >;
 */

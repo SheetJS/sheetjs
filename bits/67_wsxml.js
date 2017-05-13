@@ -19,7 +19,7 @@ function parse_ws_xml(data/*:?string*/, opts, rels, wb, themes, styles)/*:Worksh
 	var refguess/*:Range*/ = ({s: {r:2000000, c:2000000}, e: {r:0, c:0} }/*:any*/);
 
 	var data1 = "", data2 = "";
-	var mtch=data.match(sheetdataregex);
+	var mtch/*:?any*/ =data.match(sheetdataregex);
 	if(mtch) {
 		data1 = data.substr(0, mtch.index);
 		data2 = data.substr(mtch.index + mtch[0].length);
@@ -490,7 +490,6 @@ function write_ws_xml(idx/*:number*/, opts, wb/*:Workbook*/, rels)/*:string*/ {
 
 	if(ws['!drawing'].length > 0) {
 		rId = add_rels(rels, -1, "../drawings/drawing" + (idx+1) + ".xml", RELS.DRAW);
-		ws['!drawing'].rid = rId;
 		o[o.length] = writextag("drawing", null, {"r:id":"rId" + rId});
 	}
 	else delete ws['!drawing'];

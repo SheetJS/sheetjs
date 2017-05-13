@@ -10,7 +10,7 @@ type ColInfo = {
 
 	/* column width is specified in one of the following ways: */
 	wpx?:number;     // width in screen pixels
-	width:number;    // width in Excel's "Max Digit Width", width*256 is integral
+	width?:number;    // width in Excel's "Max Digit Width", width*256 is integral
 	wch?:number;     // width in characters
 
 	/* other fields for preserving features from files */
@@ -49,7 +49,7 @@ objects which have the following properties:
 ```typescript
 type RowInfo = {
 	/* visibility */
-	hidden:?boolean; // if true, the row is hidden
+	hidden?:boolean; // if true, the row is hidden
 
 	/* row height is specified in one of the following ways: */
 	hpx?:number;     // height in screen pixels

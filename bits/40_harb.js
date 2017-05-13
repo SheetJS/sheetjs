@@ -193,7 +193,7 @@ function dbf_to_workbook(buf, opts)/*:Workbook*/ {
 
 var SYLK = (function() {
 	/* TODO: find an actual specification */
-	function sylk_to_aoa(d/*:RawData*/, opts)/*:AOA*/ {
+	function sylk_to_aoa(d/*:RawData*/, opts)/*:[AOA, Worksheet]*/ {
 		switch(opts.type) {
 			case 'base64': return sylk_to_aoa_str(Base64.decode(d), opts);
 			case 'binary': return sylk_to_aoa_str(d, opts);
@@ -202,7 +202,7 @@ var SYLK = (function() {
 		}
 		throw new Error("Unrecognized type " + opts.type);
 	}
-	function sylk_to_aoa_str(str/*:string*/, opts)/*:AOA*/ {
+	function sylk_to_aoa_str(str/*:string*/, opts)/*:[AOA, Worksheet]*/ {
 		var records = str.split(/[\n\r]+/), R = -1, C = -1, ri = 0, rj = 0, arr = [];
 		var formats = [];
 		var next_cell_format = null;
@@ -242,7 +242,7 @@ var SYLK = (function() {
 					next_cell_format = null;
 					break;
 				case 'E':
-					formula = rc_to_a1(record[rj].substr(1), {r:R,c:C});
+					var formula = rc_to_a1(record[rj].substr(1), {r:R,c:C});
 					arr[R][C] = [arr[R][C], formula];
 					break;
 				default: if(opts && opts.WTF) throw new Error("SYLK bad record " + rstr);
@@ -287,13 +287,12 @@ var SYLK = (function() {
 		}
 		if(rowinfo.length > 0) sht['!rows'] = rowinfo;
 		if(colinfo.length > 0) sht['!cols'] = colinfo;
-		arr[arr.length] = sht;
-		return arr;
+		return [arr, sht];
 	}
 
 	function sylk_to_sheet(str/*:string*/, opts)/*:Worksheet*/ {
-		var aoa = sylk_to_aoa(str, opts);
-		var ws = aoa.pop();
+		var aoasht = sylk_to_aoa(str, opts);
+		var aoa = aoasht[0], ws = aoasht[1];
 		var o = aoa_to_sheet(aoa, opts);
 		keys(ws).forEach(function(k) { o[k] = ws[k]; });
 		return o;
@@ -418,7 +417,7 @@ var DIF = (function() {
 			o.push(v + "," + n);
 			o.push('"' + s.replace(/"/g,'""') + '"');
 		};
-		var push_value = function po(o/*:Array<string>*/, type/*:number*/, v/*:number*/, s/*:string*/) {
+		var push_value = function po(o/*:Array<string>*/, type/*:number*/, v/*:any*/, s/*:string*/) {
 			o.push(type + "," + v);
 			o.push(type == 1 ? '"' + s.replace(/"/g,'""') + '"' : s);
 		};
@@ -528,8 +527,12 @@ var PRN = (function() {
 			else if(s == "TRUE") { cell.t = 'b'; cell.v = true; }
 			else if(s == "FALSE") { cell.t = 'b'; cell.v = false; }
 			else if(!isNaN(v = +s)) { cell.t = 'n'; cell.w = s; cell.v = v; }
-			else if(!isNaN(fuzzydate(s).getDate())) { cell.t = 'd'; cell.v = parseDate(s); }
-			else {
+			else if(!isNaN(fuzzydate(s).getDate())) {
+				cell.z = o.dateNF || SSF._table[14];
+				if(o.cellDates) { cell.t = 'd'; cell.v = parseDate(s); }
+				else { cell.t = 'n'; cell.v = datenum(parseDate(s)); }
+				cell.w = SSF.format(cell.z, cell.v instanceof Date ? datenum(cell.v):cell.v);
+			} else {
 				cell.t = 's';
 				if(s.charAt(0) == '"' && s.charAt(s.length - 1) == '"') s = s.slice(1,-1).replace(/""/g,'"');
 				cell.v = s;

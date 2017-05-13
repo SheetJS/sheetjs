@@ -6,33 +6,41 @@ AutoFilter              	.xls .xlsb .xlsx .xml
 # note: XLML only supports sheets, ods does not support dialog
 BlankSheetTypes         	.xls .xlsb .xlsm
 NumberFormatCondition   	.xls .xlsb .xlsm .xml
-RkNumber                	.xls .xlsb .xlsx .xls.xml .xlsb.xml .xlsx.xml
+#RkNumber                	.xls .xlsb .xlsx .xls.xml .xlsb.xml .xlsx.xml
+RkNumber                	.xls .xlsb .xlsx .xls.xml
 #calendar_stress_test    	.xls .xlsb .xlsx .xml
 cell_style_simple       	.xls .xlsb .xlsx .xml
 # no-csv (newline character \r vs \n)
-comments_stress_test    	.xls .xlsb .xlsx .xls.xml .xlsb.xml .xlsx.xml
+#comments_stress_test    	.xls .xlsb .xlsx .xls.xml .xlsb.xml .xlsx.xml
+comments_stress_test    	.xls .xlsb .xlsx .xls.xml
 # yes-csv
-custom_properties       	.xls .xlsb .xlsx .xls.xml .xlsb.xml .xlsx.xml
+#custom_properties       	.xls .xlsb .xlsx .xls.xml .xlsb.xml .xlsx.xml
+custom_properties       	.xls .xlsb .xlsx .xls.xml
 defined_names_simple    	.xls .xlsb .xlsx .xml
 # no-csv (randbetween) note: ODS does not support many XLSX functions 
-formula_stress_test     	.xls .xlsb .xlsx .xlsb.xml
+formula_stress_test     	.xls .xlsb .xlsx .xls.xml
 # yes-csv
 formulae_test_simple    	.xls .xlsb .xlsx .xml
 hyperlink_stress_test_2011	.xls .xlsb .xlsx .xml
 #large_strings           	.xls .xlsb .xlsx .xls.xml .xlsb.xml .xlsx.xml
-merge_cells             	.xls .xlsb .xlsx .xls.xml .xlsb.xml .xlsx.xml
+#merge_cells             	.xls .xlsb .xlsx .xls.xml .xlsb.xml .xlsx.xml
+merge_cells             	.xls .xlsb .xlsx .xls.xml
 # no-formula (filename-references in XLSX encoding as [0])
-named_ranges_2011       	.xls .xlsb .xlsx .xls.xml .xlsb.xml .xlsx.xml
+#named_ranges_2011       	.xls .xlsb .xlsx .xls.xml .xlsb.xml .xlsx.xml
+named_ranges_2011       	.xls .xlsb .xlsx .xls.xml
 # yes-formula
 # no-csv (macro serialization in xml)
-number_format           	.xls .xlsb .xlsm .xls.xml .xlsb.xml .xlsm.xml
+#number_format           	.xls .xlsb .xlsm .xls.xml .xlsb.xml .xlsm.xml
+number_format           	.xls .xlsb .xlsm .xls.xml
 # yes-csv
 number_format_entities  	.xls .xlsb .xlsx .xml
 pivot_table_named_range 	.xls .xlsb .xlsx .xml
 pivot_table_test        	.xls .xlsb .xlsm
-rich_text_stress        	.xls .xlsb .xlsx .xls.xml .xlsb.xml .xlsx.xml
+#rich_text_stress        	.xls .xlsb .xlsx .xls.xml .xlsb.xml .xlsx.xml
+rich_text_stress        	.xls .xlsb .xlsx .xls.xml
 smart_tags_2007         	.xls .xlsb .xlsx .xml
 sushi                   	.xls .xlsb .xlsx .xml
 text_and_numbers        	.xls .xlsb .xlsx .xml
 #time_stress_test_1      	.xls .xlsb .xlsx .xml
-xlsx-stream-d-date-cell 	.xls .xlsb .xlsx .xls.xml .xlsb.xml .xlsx.xml
+#xlsx-stream-d-date-cell 	.xls .xlsb .xlsx .xls.xml .xlsb.xml .xlsx.xml
+xlsx-stream-d-date-cell 	.xls .xlsb .xlsx .xls.xml

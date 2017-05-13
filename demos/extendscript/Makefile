@@ -7,8 +7,7 @@ all: deps $(TARGETS)
 .PHONY: deps
 deps:
 	cp ../../shim.js .
-	cp ../../jszip.js .
-	cp ../../xlsx.flow.js .
+	cp ../../dist/xlsx.core.min.js .
 
 %.base:
 	echo "#target $*" > $@

@@ -2,7 +2,7 @@ var current_codepage = 1200;
 /*:: declare var cptable:any; */
 /*global cptable:true */
 if(typeof module !== "undefined" && typeof require !== 'undefined') {
-	if(typeof cptable === 'undefined') cptable = require('./dist/cpexcel.js');
+	if(typeof cptable === 'undefined') global.cptable = require('./dist/cpexcel.js');
 }
 function reset_cp() { set_cp(1200); }
 var set_cp = function(cp) { current_codepage = cp; };
