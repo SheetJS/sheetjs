@@ -8,6 +8,7 @@
 		"xlsx": "./bin/xlsx.njs"
 	},
 	"main": "./xlsx",
+	"types": "types",
 	"browser": {
 		"node": false,
 		"crypto": false,
@@ -27,12 +28,15 @@
 	"devDependencies": {
 		"mocha":"",
 		"xlsjs":"",
-		"@sheetjs/uglify-js":""
+		"@sheetjs/uglify-js":"",
+		"dtslint": "^0.1.2",
+		"typescript": "^2.2.0"
 	},
 	"repository": { "type":"git", "url":"git://github.com/SheetJS/js-xlsx.git" },
 	"scripts": {
 		"pretest": "git submodule init && git submodule update",
-		"test": "make travis"
+		"test": "make travis",
+		"dtslint": "dtslint types"
 	},
 	"config": {
 		"blanket": {

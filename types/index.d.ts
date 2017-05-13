@@ -1,7 +1,5 @@
-// Type definitions for xlsx
 // Project: https://github.com/SheetJS/js-xlsx
 // Definitions by: themauveavenger <https://github.com/themauveavenger/>, Wolfgang Faust <https://github.com/wolfgang42>
-// Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
 
 /** Attempts to read filename and parse */
 export function readFile(filename: string, opts?: IParsingOptions): IWorkBook;
