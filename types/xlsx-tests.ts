@@ -1,6 +1,6 @@
 import xlsx = require('xlsx');
 
-const options: xlsx.IParsingOptions = {
+const options: xlsx.ParsingOptions = {
     cellDates: true
 };
 
@@ -15,11 +15,11 @@ const firstworksheet = workbook.Sheets[firstsheet];
 
 console.log(firstworksheet["A1"]);
 
-interface ITester {
+interface Tester {
     name: string;
     age: number;
 }
 
-const jsonvalues: ITester[] = xlsx.utils.sheet_to_json<ITester>(firstworksheet);
+const jsonvalues: Tester[] = xlsx.utils.sheet_to_json<Tester>(firstworksheet);
 const csv = xlsx.utils.sheet_to_csv(firstworksheet);
 const formulae = xlsx.utils.sheet_to_formulae(firstworksheet);

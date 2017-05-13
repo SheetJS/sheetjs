@@ -3,17 +3,17 @@
 // TypeScript Version: 2.2
 
 /** Attempts to read filename and parse */
-export function readFile(filename: string, opts?: IParsingOptions): IWorkBook;
+export function readFile(filename: string, opts?: ParsingOptions): WorkBook;
 /** Attempts to parse data */
-export function read(data: any, opts?: IParsingOptions): IWorkBook;
+export function read(data: any, opts?: ParsingOptions): WorkBook;
 /** Attempts to write workbook data to filename */
-export function writeFile(data: IWorkBook, filename: string, opts?: IWritingOptions): any;
+export function writeFile(data: WorkBook, filename: string, opts?: WritingOptions): any;
 /** Attempts to write the workbook data */
-export function write(data: IWorkBook, opts?: IWritingOptions): any;
+export function write(data: WorkBook, opts?: WritingOptions): any;
 
-export const utils: IUtils;
+export const utils: Utils;
 
-export interface IProperties {
+export interface Properties {
     LastAuthor?: string;
     Author?: string;
     CreatedDate?: Date;
@@ -31,7 +31,7 @@ export interface IProperties {
     SheetNames?: string[];
 }
 
-export interface IParsingOptions {
+export interface ParsingOptions {
     /**
      * Input data encoding
      */
@@ -116,7 +116,7 @@ export interface IParsingOptions {
     password?: string;
 }
 
-export interface IWritingOptions {
+export interface WritingOptions {
     /**
      * Output data encoding
      */
@@ -153,12 +153,12 @@ export interface IWritingOptions {
     compression?: boolean;
 }
 
-export interface IWorkBook {
+export interface WorkBook {
     /**
      * A dictionary of the worksheets in the workbook.
      * Use SheetNames to reference these.
      */
-    Sheets: { [sheet: string]: IWorkSheet };
+    Sheets: { [sheet: string]: WorkSheet };
 
     /**
      * ordered list of the sheet names in the workbook
@@ -169,10 +169,10 @@ export interface IWorkBook {
      * an object storing the standard properties. wb.Custprops stores custom properties.
      * Since the XLS standard properties deviate from the XLSX standard, XLS parsing stores core properties in both places.
      */
-    Props: IProperties;
+    Props: Properties;
 }
 
-export interface IColInfo {
+export interface ColInfo {
     /**
      * Excel's "Max Digit Width" unit, always integral
      */
@@ -194,7 +194,7 @@ export interface IColInfo {
      */
     hidden?: boolean;
 }
-export interface IRowInfo {
+export interface RowInfo {
     /**
      * height in screen pixels
      */
@@ -212,7 +212,7 @@ export interface IRowInfo {
 /**
  * Write sheet protection properties.
  */
-export interface IProtectInfo {
+export interface ProtectInfo {
     /**
      * The password for formats that support password-protected sheets
      * (XLSX/XLSB/XLS). The writer uses the XOR obfuscation method.
@@ -298,7 +298,7 @@ export interface IProtectInfo {
 /**
  * object representing any sheet (worksheet or chartsheet)
  */
-export interface ISheet {
+export interface Sheet {
     '!ref'?: string;
     '!margins'?: {
         left: number,
@@ -313,12 +313,12 @@ export interface ISheet {
 /**
  * object representing the worksheet
  */
-export interface IWorkSheet extends ISheet {
-    [cell: string]: IWorkSheetCell | any;
-    '!cols'?: IColInfo[];
-    '!rows'?: IRowInfo[];
-    '!merges'?: IRange[];
-    '!protect'?: IProtectInfo;
+export interface WorkSheet extends Sheet {
+    [cell: string]: WorkSheetCell | any;
+    '!cols'?: ColInfo[];
+    '!rows'?: RowInfo[];
+    '!merges'?: Range[];
+    '!protect'?: ProtectInfo;
     '!autofilter'?: {ref: string};
 }
 
@@ -328,7 +328,7 @@ export interface IWorkSheet extends ISheet {
  */
 export type ExcelDataType = 'b' | 'n' | 'e' | 's' | 'd';
 
-export interface IWorkSheetCell {
+export interface WorkSheetCell {
     /**
      * The raw value of the cell.
      */
@@ -386,50 +386,50 @@ export interface IWorkSheetCell {
     s?: object;
 }
 
-export interface ICell {
+export interface Cell {
     /** Column number */
     c: number;
     /** Row number */
     r: number;
 }
 
-export interface IRange {
+export interface Range {
     /** Starting cell */
-    s: ICell;
+    s: Cell;
     /** Ending cell */
-    e: ICell;
+    e: Cell;
 }
 
-export interface IUtils {
+export interface Utils {
     /** converts an array of arrays of JS data to a worksheet. */
-    aoa_to_sheet<T>(data: T[], opts?: any): IWorkSheet;
+    aoa_to_sheet<T>(data: T[], opts?: any): WorkSheet;
 
     /** Converts a worksheet object to an array of JSON objects */
-    sheet_to_json<T>(worksheet: IWorkSheet, opts?: {
+    sheet_to_json<T>(worksheet: WorkSheet, opts?: {
         raw?: boolean;
         range?: any;
         header?: "A"|number|string[];
     }): T[];
     /** Generates delimiter-separated-values output */
-    sheet_to_csv(worksheet: IWorkSheet, options?: { FS: string, RS: string }): string;
+    sheet_to_csv(worksheet: WorkSheet, options?: { FS: string, RS: string }): string;
     /** Generates a list of the formulae (with value fallbacks) */
-    sheet_to_formulae(worksheet: IWorkSheet): any;
+    sheet_to_formulae(worksheet: WorkSheet): any;
 
     /** Converts 0-indexed cell address to A1 form */
-    encode_cell(cell: ICell): string;
+    encode_cell(cell: Cell): string;
     /** Converts 0-indexed row to A1 form */
     encode_row(row: number): string;
     /** Converts 0-indexed column to A1 form */
     encode_col(col: number): string;
     /** Converts 0-indexed range to A1 form */
-    encode_range(s: ICell, e: ICell): string;
+    encode_range(s: Cell, e: Cell): string;
 
     /** Converts A1 cell address to 0-indexed form */
-    decode_cell(address: string): ICell;
+    decode_cell(address: string): Cell;
     /** Converts A1 row to 0-indexed form */
     decode_row(row: string): number;
     /** Converts A1 column to 0-indexed form */
     decode_col(col: string): number;
     /** Converts A1 range to 0-indexed form */
-    decode_range(range: string): IRange;
+    decode_range(range: string): Range;
 }
