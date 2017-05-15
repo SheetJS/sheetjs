@@ -1,11 +1,11 @@
-import xlsx = require('xlsx');
+import XLSX = require('xlsx');
 
-const options: xlsx.ParsingOptions = {
+const options: XLSX.ParsingOptions = {
     cellDates: true
 };
 
-const workbook = xlsx.readFile('test.xlsx', options);
-const otherworkbook = xlsx.readFile('test.xlsx', {type: 'file'});
+const workbook = XLSX.readFile('test.xlsx', options);
+const otherworkbook = XLSX.readFile('test.xlsx', {type: 'file'});
 
 console.log(workbook.Props.Author);
 
@@ -20,6 +20,6 @@ interface Tester {
     age: number;
 }
 
-const jsonvalues: Tester[] = xlsx.utils.sheet_to_json<Tester>(firstworksheet);
-const csv = xlsx.utils.sheet_to_csv(firstworksheet);
-const formulae = xlsx.utils.sheet_to_formulae(firstworksheet);
+const jsonvalues: Tester[] = XLSX.utils.sheet_to_json<Tester>(firstworksheet);
+const csv = XLSX.utils.sheet_to_csv(firstworksheet);
+const formulae = XLSX.utils.sheet_to_formulae(firstworksheet);

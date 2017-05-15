@@ -1,5 +1,4 @@
-// Project: https://github.com/SheetJS/js-xlsx
-// Definitions by: themauveavenger <https://github.com/themauveavenger/>, Wolfgang Faust <https://github.com/wolfgang42>
+/* index.d.ts (C) 2015-present SheetJS and contributors */
 // TypeScript Version: 2.2
 
 /** Attempts to read filename and parse */
@@ -14,15 +13,20 @@ export function write(data: WorkBook, opts?: WritingOptions): any;
 export const utils: Utils;
 
 export interface Properties {
-    LastAuthor?: string;
+    Title?: string;
+    Subject?: string;
     Author?: string;
+    Manager?: string;
+    Company?: string;
+    Category?: string;
+    Keywords?: string;
+    Comments?: string;
+    LastAuthor?: string;
     CreatedDate?: Date;
     ModifiedDate?: Date;
     Application?: string;
     AppVersion?: string;
-    Company?: string;
     DocSecurity?: string;
-    Manager?: string;
     HyperlinksChanged?: boolean;
     SharedDoc?: boolean;
     LinksUpToDate?: boolean;
@@ -138,7 +142,7 @@ export interface WritingOptions {
      * Type of Workbook
      * @default 'xlsx'
      */
-    bookType?: 'xlsx' | 'xlsm' | 'xlsb' | 'ods' | 'biff2' | 'fods' | 'csv';
+    bookType?: 'xlsx' | 'xlsm' | 'xlsb' | 'biff2' | 'xlml' | 'ods' | 'fods' | 'csv' | 'txt' | 'sylk' | 'html' | 'dif' | 'prn';
 
     /**
      * Name of Worksheet for single-sheet formats
@@ -169,7 +173,13 @@ export interface WorkBook {
      * an object storing the standard properties. wb.Custprops stores custom properties.
      * Since the XLS standard properties deviate from the XLSX standard, XLS parsing stores core properties in both places.
      */
-    Props: Properties;
+    Props?: Properties;
+
+    Workbook?: WBProps;
+}
+
+export interface WBProps {
+    Sheets?: any[];
 }
 
 export interface ColInfo {
@@ -180,7 +190,7 @@ export interface ColInfo {
     /**
      * width in Excel's "Max Digit Width", width*256 is integral
      */
-    width: number;
+    width?: number;
     /**
      * width in screen pixels
      */
@@ -314,7 +324,7 @@ export interface Sheet {
  * object representing the worksheet
  */
 export interface WorkSheet extends Sheet {
-    [cell: string]: WorkSheetCell | any;
+    [cell: string]: CellObject | any;
     '!cols'?: ColInfo[];
     '!rows'?: RowInfo[];
     '!merges'?: Range[];
@@ -326,9 +336,9 @@ export interface WorkSheet extends Sheet {
  * The Excel data type for a cell.
  * b Boolean, n Number, e error, s String, d Date
  */
-export type ExcelDataType = 'b' | 'n' | 'e' | 's' | 'd';
+export type ExcelDataType = 'b' | 'n' | 'e' | 's' | 'd' | 'z';
 
-export interface WorkSheetCell {
+export interface CellObject {
     /**
      * The raw value of the cell.
      */
@@ -386,7 +396,7 @@ export interface WorkSheetCell {
     s?: object;
 }
 
-export interface Cell {
+export interface CellAddress {
     /** Column number */
     c: number;
     /** Row number */
@@ -395,12 +405,14 @@ export interface Cell {
 
 export interface Range {
     /** Starting cell */
-    s: Cell;
+    s: CellAddress;
     /** Ending cell */
-    e: Cell;
+    e: CellAddress;
 }
 
 export interface Utils {
+    /* --- Cell Address Utilities --- */
+
     /** converts an array of arrays of JS data to a worksheet. */
     aoa_to_sheet<T>(data: T[], opts?: any): WorkSheet;
 
@@ -410,26 +422,36 @@ export interface Utils {
         range?: any;
         header?: "A"|number|string[];
     }): T[];
+
     /** Generates delimiter-separated-values output */
     sheet_to_csv(worksheet: WorkSheet, options?: { FS: string, RS: string }): string;
+
     /** Generates a list of the formulae (with value fallbacks) */
     sheet_to_formulae(worksheet: WorkSheet): any;
 
+    /* --- Cell Address Utilities --- */
+
     /** Converts 0-indexed cell address to A1 form */
-    encode_cell(cell: Cell): string;
+    encode_cell(cell: CellAddress): string;
+
     /** Converts 0-indexed row to A1 form */
     encode_row(row: number): string;
+
     /** Converts 0-indexed column to A1 form */
     encode_col(col: number): string;
+
     /** Converts 0-indexed range to A1 form */
-    encode_range(s: Cell, e: Cell): string;
+    encode_range(s: CellAddress, e: CellAddress): string;
 
     /** Converts A1 cell address to 0-indexed form */
-    decode_cell(address: string): Cell;
+    decode_cell(address: string): CellAddress;
+
     /** Converts A1 row to 0-indexed form */
     decode_row(row: string): number;
+
     /** Converts A1 column to 0-indexed form */
     decode_col(col: string): number;
+
     /** Converts A1 range to 0-indexed form */
     decode_range(range: string): Range;
 }

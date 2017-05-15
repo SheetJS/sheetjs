@@ -71,7 +71,7 @@ dist-deps: ## Copy dependencies for distribution
 aux: $(AUXTARGETS)
 
 .PHONY: bytes
-bytes: ## display minified and gzipped file sizes
+bytes: ## Display minified and gzipped file sizes
 	for i in dist/xlsx.min.js dist/xlsx.{core,full}.min.js; do printj "%-30s %7d %10d" $$i $$(wc -c < $$i) $$(gzip --best --stdout $$i | wc -c); done
 
 .PHONY: graph
@@ -155,6 +155,11 @@ old-lint: $(TARGET) $(AUXTARGETS) ## Run jshint and jscs checks
 	@jshint --show-non-errors --extract=always $(HTMLLINT)
 	@jscs $(TARGET) $(AUXTARGETS)
 	if [ -e $(CLOSURE) ]; then java -jar $(CLOSURE) $(REQS) $(FLOWTARGET) --jscomp_warning=reportUnknownTypes >/dev/null; fi
+
+.PHONY: tslint
+tslint: $(TARGET) ## Run typescript checks
+	#@npm install dtslint typescript
+	@npm run-script dtslint
 
 .PHONY: flow
 flow: lint ## Run flow checker
