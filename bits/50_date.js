@@ -6,9 +6,9 @@ function parse_date_code(v/*:number*/,opts/*:?any*/,b2/*:?boolean*/) {
 	if(Math.abs(out.u) < 1e-6) out.u = 0;
 	fixopts(opts != null ? opts : (opts=[]));
 	if(opts.date1904) date += 1462;
-	if(out.u > 0.999) {
+	if(out.u > 0.9999) {
 		out.u = 0;
-		if(++time == 86400) { time = 0; ++date; }
+		if(++time == 86400) { out.T = time = 0; ++date; ++out.D; }
 	}
 	if(date === 60) {dout = b2 ? [1317,10,29] : [1900,2,29]; dow=3;}
 	else if(date === 0) {dout = b2 ? [1317,8,29] : [1900,1,0]; dow=6;}

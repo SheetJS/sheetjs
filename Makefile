@@ -50,7 +50,7 @@ travis: ## Run test suite with minimal output
 	mocha -R dot -t 30000
 
 .PHONY: ctest
-ctest:
+ctest: ## Build browser test fixtures
 	browserify -t brfs test/{dateNF,exp,fraction,general,implied,oddities,utilities,comma,valid}.js > ctest/test.js
 
 .PHONY: ctestserv
