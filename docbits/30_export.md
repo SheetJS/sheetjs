@@ -23,7 +23,7 @@ Note: browser generates binary blob and forces a "download" to client.  This
 example uses [FileSaver.js](https://github.com/eligrey/FileSaver.js/):
 
 ```js
-/* bookType can be any supported output type */ 
+/* bookType can be any supported output type */
 var wopts = { bookType:'xlsx', bookSST:false, type:'binary' };
 
 var wbout = XLSX.write(workbook,wopts);

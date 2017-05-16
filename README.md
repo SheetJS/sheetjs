@@ -103,6 +103,7 @@ enhancements, additional features by request, and dedicated support.
   * [Formulae Output](#formulae-output)
   * [Delimiter-Separated Output](#delimiter-separated-output)
     + [UTF-16 Unicode Text](#utf-16-unicode-text)
+  * [HTML Output](#html-output)
   * [JSON](#json)
 - [File Formats](#file-formats)
   * [Excel 2007+ XML (XLSX/XLSM)](#excel-2007-xml-xlsxxlsm)
@@ -128,9 +129,9 @@ enhancements, additional features by request, and dedicated support.
   * [Tested Environments](#tested-environments)
   * [Test Files](#test-files)
 - [Contributing](#contributing)
-  * [Tests](#tests)
   * [OSX/Linux](#osxlinux)
   * [Windows](#windows)
+  * [Tests](#tests)
 - [License](#license)
 - [References](#references)
 
@@ -457,6 +458,7 @@ files and output the contents in various formats.  The source is available at
 Some helper functions in `XLSX.utils` generate different views of the sheets:
 
 - `XLSX.utils.sheet_to_csv` generates CSV
+- `XLSX.utils.sheet_to_html` generates HTML
 - `XLSX.utils.sheet_to_json` generates an array of objects
 - `XLSX.utils.sheet_to_formulae` generates a list of formulae
 
@@ -485,7 +487,7 @@ Note: browser generates binary blob and forces a "download" to client.  This
 example uses [FileSaver.js](https://github.com/eligrey/FileSaver.js/):
 
 ```js
-/* bookType can be any supported output type */ 
+/* bookType can be any supported output type */
 var wopts = { bookType:'xlsx', bookSST:false, type:'binary' };
 
 var wbout = XLSX.write(workbook,wopts);
@@ -514,7 +516,18 @@ take the same arguments as the normal write functions but return a readable
 stream.  They are only exposed in node.
 
 - `XLSX.stream.to_csv` is the streaming version of `XLSX.utils.sheet_to_csv`.
-- `XLSX.stream.to_html` is the streaming version of the HTML output type.
+- `XLSX.stream.to_html` is the streaming version of `XLSX.utils.sheet_to_html`.
+
+<details>
+	<summary><b>nodejs convert to CSV and write file</b> (click to show)</summary>
+
+```js
+var output_file_name = "out.csv";
+var stream = XLSX.stream.to_csv(worksheet);
+stream.pipe(fs.createWriteStream(output_file_name));
+```
+
+</details>
 
 <https://github.com/sheetjs/sheetaki> pipes write streams to nodejs response.
 
@@ -555,11 +568,13 @@ Utilities are available in the `XLSX.utils` object:
 
 - `aoa_to_sheet` converts an array of arrays of JS data to a worksheet.
 - `json_to_sheet` converts an array of JS objects to a worksheet.
+- `table_to_sheet` converts a DOM TABLE element to a worksheet.
 
 **Exporting:**
 
 - `sheet_to_json` converts a worksheet object to an array of JSON objects.
 - `sheet_to_csv` generates delimiter-separated-values output.
+- `sheet_to_html` generates HTML output.
 - `sheet_to_formulae` generates a list of the formulae (with value fallbacks).
 
 These utilities are described in [Utility Functions](#utility-functions) below.
@@ -571,6 +586,8 @@ These utilities are described in [Utility Functions](#utility-functions) below.
 - `{en,de}code_{row,col}` convert between 0-indexed rows/cols and A1 forms.
 - `{en,de}code_cell` converts cell addresses
 - `{en,de}code_range` converts cell ranges
+
+Utilities are described in the [Utility Functions](#utility-functions) section.
 
 ## Common Spreadsheet Format
 
@@ -979,23 +996,39 @@ objects which have the following properties:
 ```typescript
 type ColInfo = {
 	/* visibility */
-	hidden:?boolean; // if true, the column is hidden
+	hidden?: boolean; // if true, the column is hidden
 
 	/* column width is specified in one of the following ways: */
-	wpx?:number;     // width in screen pixels
-	width:number;    // width in Excel's "Max Digit Width", width*256 is integral
-	wch?:number;     // width in characters
+	wpx?:    number;  // width in screen pixels
+	width?:  number;  // width in Excel's "Max Digit Width", width*256 is integral
+	wch?:    number;  // width in characters
 
 	/* other fields for preserving features from files */
-	MDW?:number;     // Excel's "Max Digit Width" unit, always integral
+	MDW?:    number;  // Excel's "Max Digit Width" unit, always integral
 };
 ```
 
-Excel internally stores column widths in a nebulous "Max Digit Width" form.  The
+<details>
+	<summary><b>Why are there three width types?</b> (click to show)</summary>
+
+There are three different width types corresponding to the three different ways
+spreadsheets store column widths:
+
+SYLK and other plaintext formats use raw character count.  Contemporaneous tools
+like Visicalc and Multiplan were character based.  Since the characters had the
+same width, it sufficed to store a count.  This tradition was continued into the
+BIFF formats.
+
+SpreadsheetML (2003) tried to align with HTML by standardizing on screen pixel
+count throughout the file.  Column widths, row heights, and other measures use
+pixels.  When the pixel and character counts do not align, Excel rounds values.
+
+XLSX internally stores column widths in a nebulous "Max Digit Width" form.  The
 Max Digit Width is the width of the largest digit when rendered (generally the
 "0" character is the widest).  The internal width must be an integer multiple of
 the the width divided by 256.  ECMA-376 describes a formula for converting
-between pixels and the internal width.
+between pixels and the internal width.  This represents a hybrid approach.
+</details>
 
 <details>
 	<summary><b>Implementation details</b> (click to show)</summary>
@@ -1022,11 +1055,11 @@ objects which have the following properties:
 ```typescript
 type RowInfo = {
 	/* visibility */
-	hidden:?boolean; // if true, the row is hidden
+	hidden?: boolean; // if true, the row is hidden
 
 	/* row height is specified in one of the following ways: */
-	hpx?:number;     // height in screen pixels
-	hpt?:number;     // height in points
+	hpx?:    number;  // height in screen pixels
+	hpt?:    number;  // height in points
 };
 ```
 
@@ -1060,7 +1093,6 @@ at index 164.  The following example creates a custom format from scratch:
 	<summary><b>New worksheet with custom format</b> (click to show)</summary>
 
 ```js
-var tbl = {};
 var wb = {
 	SheetNames: ["Sheet1"],
 	Sheets: {
@@ -1285,6 +1317,24 @@ Plaintext format guessing follows the priority order:
 | PRN    | (default)                                                           |
 </details>
 
+<details>
+	<summary><b>Why are random text files valid?</b> (click to show)</summary>
+
+Excel is extremely aggressive in reading files.  Adding an XLS extension to any
+display text file  (where the only characters are ANSI display chars) tricks
+Excel into thinking that the file is potentially a CSV or TSV file, even if it
+is only one column!  This library attempts to replicate that behavior.
+
+The best approach is to validate the desired worksheet and ensure it has the
+expected number of rows or columns.  Extracting the range is extremely simple:
+
+```js
+var range = XLSX.utils.decode_range(worksheet['!ref']);
+var ncols = range.e.c - range.r.c + 1, nrows = range.e.r - range.s.r + 1;
+```
+
+</details>
+
 ## Writing Options
 
 The exported `write` and `writeFile` functions accept an options argument:
@@ -1505,6 +1555,29 @@ S:h:e:e:t:J:S|1:2:3:4:5:6:7|2:3:4:5:6:7:8|
 The `txt` output type uses the tab character as the field separator.  If the
 codepage library is available (included in the full distribution but not core),
 the output will be encoded in codepage `1200` and the BOM will be prepended.
+
+### HTML Output
+
+As an alternative to the `writeFile` HTML type, `XLSX.utils.sheet_to_html` also
+produces HTML output.  The function takes an options argument:
+
+| Option Name |  Default | Description                                         |
+| :---------- | :------: | :-------------------------------------------------- |
+| editable    |  false   | If true, set `contenteditable="true"` for every TD  |
+| header      |          | Override header (default `html body table`)         |
+| footer      |          | Override footer (default `/table /body /html`)      |
+
+
+<details>
+	<summary><b>Examples</b> (click to show)</summary>
+
+For the example sheet:
+
+```js
+> console.log(XLSX.utils.sheet_to_html(ws));
+// ...
+```
+</details>
 
 ### JSON
 
@@ -1926,36 +1999,49 @@ Tests utilize the mocha testing framework.  Travis-CI and Sauce Labs links:
 Test files are housed in [another repo](https://github.com/SheetJS/test_files).
 
 Running `make init` will refresh the `test_files` submodule and get the files.
+Note that this requires `svn`, `git`, `hg` and other commands that may not be
+available.  If `make init` fails, please download the latest version of the test
+files snapshot from [the repo](https://github.com/SheetJS/test_files/releases)
 
+<details>
+	<summary><b>Latest Snapshot</b> (click to show)</summary>
 
+Latest test files snapshot:
+<http://github.com/SheetJS/test_files/releases/download/20170409/test_files.zip>
+
+(download and unzip to the `test_files` subdirectory)
+
+</details>
 
 ## Contributing
 
 Due to the precarious nature of the Open Specifications Promise, it is very
 important to ensure code is cleanroom.  Consult CONTRIBUTING.md
 
-### Tests
-
 <details>
-	<summary>(click to show)</summary>
+	<summary><b>File organization</b> (click to show)</summary>
 
-The `test_misc` target (`make test_misc` on Linux/OSX / `make misc` on Windows)
-runs the targeted feature tests.  It should take 5-10 seconds to perform feature
-tests without testing against the entire test battery.  New features should be
-accompanied with tests for the relevant file formats and features.
+At a high level, the final script is a concatenation of the individual files in
+the `bits` folder.  Running `make` should reproduce the final output on all
+platforms.  The README is similarly split into bits in the `docbits` folder.
 
-For tests involving the read side, an appropriate feature test would involve
-reading an existing file and checking the resulting workbook object.  If a
-parameter is involved, files should be read with different values for the param
-to verify that the feature is working as expected.
+Folders:
 
-For tests involving a new write feature which can already be parsed, appropriate
-feature tests would involve writing a workbook with the feature and then opening
-and verifying that the feature is preserved.
+| folder       | contents                                                      |
+|:-------------|:--------------------------------------------------------------|
+| `bits`       | raw source files that make up the final script                |
+| `docbits`    | raw markdown files that make up README.md                     |
+| `bin`        | server-side bin scripts (`xlsx.njs`)                          |
+| `dist`       | dist files for web browsers and nonstandard JS environments   |
+| `demos`      | demo projects for platforms like ExtendScript and Webpack     |
+| `tests`      | browser tests (run `make ctest` to rebuild)                   |
+| `types`      | typescript definitions and tests                              |
+| `misc`       | miscellaneous supporting scripts                              |
+| `test_files` | test files (pulled from the test files repository)            |
 
-For tests involving a new write feature without an existing read ability, please
-add a feature test to the kitchen sink `tests/write.js`.
 </details>
+
+After cloning the repo, running `make help` will display a list of commands.
 
 ### OSX/Linux
 
@@ -2007,14 +2093,29 @@ make book -- rebuild README and summary
 make help -- display this message
 ```
 
-The normal approach uses a variety of command line tools to grab the test files.
-For windows users, please download the latest version of the test files snapshot
-from [github](https://github.com/SheetJS/test_files/releases)
+</details>
 
-Latest test files snapshot:
-<https://github.com/SheetJS/test_files/releases/download/20170409/test_files.zip>
+### Tests
 
-Download and unzip to the `test_files` subdirectory.
+<details>
+	<summary>(click to show)</summary>
+
+The `test_misc` target (`make test_misc` on Linux/OSX / `make misc` on Windows)
+runs the targeted feature tests.  It should take 5-10 seconds to perform feature
+tests without testing against the entire test battery.  New features should be
+accompanied with tests for the relevant file formats and features.
+
+For tests involving the read side, an appropriate feature test would involve
+reading an existing file and checking the resulting workbook object.  If a
+parameter is involved, files should be read with different values for the param
+to verify that the feature is working as expected.
+
+For tests involving a new write feature which can already be parsed, appropriate
+feature tests would involve writing a workbook with the feature and then opening
+and verifying that the feature is preserved.
+
+For tests involving a new write feature without an existing read ability, please
+add a feature test to the kitchen sink `tests/write.js`.
 </details>
 
 ## License

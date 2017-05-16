@@ -1,28 +1,50 @@
 /* index.d.ts (C) 2015-present SheetJS and contributors */
 // TypeScript Version: 2.2
 
+/** Version string */
+export const version: string;
+
 /** Attempts to read filename and parse */
 export function readFile(filename: string, opts?: ParsingOptions): WorkBook;
 /** Attempts to parse data */
 export function read(data: any, opts?: ParsingOptions): WorkBook;
-/** Attempts to write workbook data to filename */
+/** NODE ONLY! Attempts to write workbook data to filename */
 export function writeFile(data: WorkBook, filename: string, opts?: WritingOptions): any;
 /** Attempts to write the workbook data */
 export function write(data: WorkBook, opts?: WritingOptions): any;
 
 export const utils: Utils;
+export const stream: StreamUtils;
 
+/** Number Format (either a string or an index to the format table) */
+export type NumberFormat = string | number;
+
+/** Basic File Properties */
 export interface Properties {
+    /** Summary tab "Title" */
     Title?: string;
+    /** Summary tab "Subject" */
     Subject?: string;
+    /** Summary tab "Author" */
     Author?: string;
+    /** Summary tab "Manager" */
     Manager?: string;
+    /** Summary tab "Company" */
     Company?: string;
+    /** Summary tab "Category" */
     Category?: string;
+    /** Summary tab "Keywords" */
     Keywords?: string;
+    /** Summary tab "Comments" */
     Comments?: string;
+    /** Statistics tab "Last saved by" */
     LastAuthor?: string;
+    /** Statistics tab "Created" */
     CreatedDate?: Date;
+}
+
+/** Other supported properties */
+export interface FullProperties extends Properties {
     ModifiedDate?: Date;
     Application?: string;
     AppVersion?: string;
@@ -33,13 +55,33 @@ export interface Properties {
     ScaleCrop?: boolean;
     Worksheets?: number;
     SheetNames?: string[];
+    ContentStatus?: string;
+    LastPrinted?: string;
+    Revision?: string | number;
+    Version?: string;
+    Identifier?: string;
+    Language?: string;
 }
 
-export interface ParsingOptions {
+export interface CommonOptions {
     /**
-     * Input data encoding
+     * If true, throw errors when features are not understood
+     * @default false
      */
-    type?: 'base64' | 'binary' | 'buffer' | 'array' | 'file';
+    WTF?: boolean;
+
+    /**
+     * When reading a file, store dates as type d (default is n)
+     * When writing XLSX/XLSM file, use native date (default uses date codes)
+     * @default false
+     */
+    cellDates?: boolean;
+}
+
+/** Options for read and readFile */
+export interface ParsingOptions extends CommonOptions {
+    /** Input data encoding */
+    type?: 'base64' | 'binary' | 'buffer' | 'file' | 'array';
 
     /**
      * Save formulae to the .f field
@@ -66,10 +108,13 @@ export interface ParsingOptions {
     cellStyles?: boolean;
 
     /**
-     * Store dates as type d (default is n)
-     * @default false
+     * Generate formatted text to the .w field
+     * @default true
      */
-    cellDates?: boolean;
+    cellText?: boolean;
+
+    /** Override default date format (code 14) */
+    dateNF?: string;
 
     /**
      * Create cell objects for stub cells
@@ -120,17 +165,10 @@ export interface ParsingOptions {
     password?: string;
 }
 
-export interface WritingOptions {
-    /**
-     * Output data encoding
-     */
+/** Options for write and writeFile */
+export interface WritingOptions extends CommonOptions {
+    /** Output data encoding */
     type?: 'base64' | 'binary' | 'buffer' | 'file';
-
-    /**
-     * Store dates as type d (default is n)
-     * @default false
-     */
-    cellDates?: boolean;
 
     /**
      * Generate Shared String Table
@@ -139,13 +177,13 @@ export interface WritingOptions {
     bookSST?: boolean;
 
     /**
-     * Type of Workbook
+     * File format of generated workbook
      * @default 'xlsx'
      */
-    bookType?: 'xlsx' | 'xlsm' | 'xlsb' | 'biff2' | 'xlml' | 'ods' | 'fods' | 'csv' | 'txt' | 'sylk' | 'html' | 'dif' | 'prn';
+    bookType?: BookType;
 
     /**
-     * Name of Worksheet for single-sheet formats
+     * Name of Worksheet (for single-sheet formats)
      * @default ''
      */
     sheet?: string;
@@ -155,8 +193,12 @@ export interface WritingOptions {
      * @default false
      */
     compression?: boolean;
+
+    /** Override workbook properties on save */
+    Props?: Properties;
 }
 
+/** Workbook Object */
 export interface WorkBook {
     /**
      * A dictionary of the worksheets in the workbook.
@@ -164,59 +206,72 @@ export interface WorkBook {
      */
     Sheets: { [sheet: string]: WorkSheet };
 
-    /**
-     * ordered list of the sheet names in the workbook
-     */
+    /** Ordered list of the sheet names in the workbook */
     SheetNames: string[];
 
     /**
      * an object storing the standard properties. wb.Custprops stores custom properties.
      * Since the XLS standard properties deviate from the XLSX standard, XLS parsing stores core properties in both places.
      */
-    Props?: Properties;
+    Props?: FullProperties;
 
     Workbook?: WBProps;
 }
 
+export interface SheetProps {
+    /** Sheet Visibility (0=Visible 1=Hidden 2=VeryHidden) */
+    Hidden?: 0 | 1 | 2;
+}
+
+export interface DefinedName {
+    Name: string;
+    Ref: string;
+    Sheet?: number;
+    Comment?: string;
+}
+
+/** Workbook-Level Attributes */
 export interface WBProps {
-    Sheets?: any[];
+    /** Sheet Properties */
+    Sheets?: SheetProps[];
+
+    /** Defined Names */
+    Names?: DefinedName[];
 }
 
 export interface ColInfo {
-    /**
-     * Excel's "Max Digit Width" unit, always integral
-     */
-    MDW?: number;
-    /**
-     * width in Excel's "Max Digit Width", width*256 is integral
-     */
-    width?: number;
-    /**
-     * width in screen pixels
-     */
-    wpx?: number;
-    /**
-     * intermediate character calculation
-     */
-    wch?: number;
-    /**
-     * if true, the column is hidden
-     */
+    /* --- visibility --- */
+
+    /** if true, the column is hidden */
     hidden?: boolean;
+
+    /* --- column width --- */
+
+    /** width in Excel's "Max Digit Width", width*256 is integral */
+    width?: number;
+
+    /** width in screen pixels */
+    wpx?: number;
+
+    /** width in "characters" */
+    wch?: number;
+
+    /** Excel's "Max Digit Width" unit, always integral */
+    MDW?: number;
 }
 export interface RowInfo {
-    /**
-     * height in screen pixels
-     */
-    hpx?: number;
-    /**
-     * height in points
-     */
-    hpt?: number;
-    /**
-     * if true, the column is hidden
-     */
+    /* --- visibility --- */
+
+    /** if true, the column is hidden */
     hidden?: boolean;
+
+    /* --- row height --- */
+
+    /** height in screen pixels */
+    hpx?: number;
+
+    /** height in points */
+    hpt?: number;
 }
 
 /**
@@ -305,31 +360,62 @@ export interface ProtectInfo {
     scenarios?: boolean;
 }
 
-/**
- * object representing any sheet (worksheet or chartsheet)
- */
-export interface Sheet {
-    '!ref'?: string;
-    '!margins'?: {
-        left: number,
-        right: number,
-        top: number,
-        bottom: number,
-        header: number,
-        footer: number,
-    };
+/** Page Margins -- see Excel Page Setup .. Margins diagram for explanation */
+export interface MarginInfo {
+    /** Left side margin (inches) */
+    left?: number;
+    /** Right side margin (inches) */
+    right?: number;
+    /** Top side margin (inches) */
+    top?: number;
+    /** Bottom side margin (inches) */
+    bottom?: number;
+    /** Header top margin (inches) */
+    header?: number;
+    /** Footer bottom height (inches) */
+    footer?: number;
 }
+export type SheetType = 'sheet' | 'chart';
+export type SheetKeys = string | MarginInfo | SheetType;
+/** General object representing a Sheet (worksheet or chartsheet) */
+export interface Sheet {
+    /**
+     * Indexing with a cell address string maps to a cell object
+     * Special keys start with '!'
+     */
+    [cell: string]: CellObject | SheetKeys | any;
+
+    /** Sheet type */
+    '!type'?: SheetType;
+
+    /** Sheet Range */
+    '!ref'?: string;
+
+    /** Page Margins */
+    '!margins'?: MarginInfo;
+}
+
+/** AutoFilter properties */
+export interface AutoFilterInfo {
+    /** Range of the AutoFilter table */
+    ref: string;
+}
+export type WSKeys = SheetKeys | ColInfo[] | RowInfo[] | Range[] | ProtectInfo | AutoFilterInfo;
 
 /**
  * object representing the worksheet
  */
 export interface WorkSheet extends Sheet {
-    [cell: string]: CellObject | any;
+    /**
+     * Indexing with a cell address string maps to a cell object
+     * Special keys start with '!'
+     */
+    [cell: string]: CellObject | WSKeys | any;
     '!cols'?: ColInfo[];
     '!rows'?: RowInfo[];
     '!merges'?: Range[];
     '!protect'?: ProtectInfo;
-    '!autofilter'?: {ref: string};
+    '!autofilter'?: AutoFilterInfo;
 }
 
 /**
@@ -338,61 +424,63 @@ export interface WorkSheet extends Sheet {
  */
 export type ExcelDataType = 'b' | 'n' | 'e' | 's' | 'd' | 'z';
 
-export interface CellObject {
-    /**
-     * The raw value of the cell.
-     */
-    v: string | number | boolean | Date;
+/**
+ * Type of generated workbook
+ * @default 'xlsx'
+ */
+export type BookType = 'xlsx' | 'xlsm' | 'xlsb' | 'biff2' | 'xlml' | 'ods' | 'fods' | 'csv' | 'txt' | 'sylk' | 'html' | 'dif' | 'prn';
 
-    /**
-     * Formatted text (if applicable)
-     */
+export interface Comment {
+    /** Author of the comment block */
+    a?: string;
+
+    /** Plaintext of the comment */
+    t: string;
+}
+
+export interface Hyperlink {
+    /** Target of the link (HREF) */
+    Target: string;
+
+    /** Plaintext tooltip to display when mouse is over cell */
+    Tooltip?: string;
+}
+
+export interface CellObject {
+    /** The raw value of the cell.  Can be omitted if a formula is specified */
+    v?: string | number | boolean | Date;
+
+    /** Formatted text (if applicable) */
     w?: string;
 
     /**
      * The Excel Data Type of the cell.
-     * b Boolean, n Number, e error, s String, d Date
+     * b Boolean, n Number, e Error, s String, d Date, z Empty
      */
     t: ExcelDataType;
 
-    /**
-     * Cell formula (if applicable)
-     */
+    /** Cell formula (if applicable) */
     f?: string;
 
-    /**
-     * Range of enclosing array if formula is array formula (if applicable)
-     */
+    /** Range of enclosing array if formula is array formula (if applicable) */
     F?: string;
 
-    /**
-     * Rich text encoding (if applicable)
-     */
-    r?: string;
+    /** Rich text encoding (if applicable) */
+    r?: any;
 
-    /**
-     * HTML rendering of the rich text (if applicable)
-     */
+    /** HTML rendering of the rich text (if applicable) */
     h?: string;
 
-    /**
-     * Comments associated with the cell **
-     */
-    c?: string;
+    /** Comments associated with the cell */
+    c?: Comment[];
 
-    /**
-     * Number format string associated with the cell (if requested)
-     */
-    z?: string;
+    /** Number format string associated with the cell (if requested) */
+    z?: NumberFormat;
 
-    /**
-     * Cell hyperlink object (.Target holds link, .tooltip is tooltip)
-     */
-    l?: object;
+    /** Cell hyperlink object (.Target holds link, .tooltip is tooltip) */
+    l?: Hyperlink;
 
-    /**
-     * The style/theme of the cell (if applicable)
-     */
+    /** The style/theme of the cell (if applicable) */
     s?: object;
 }
 
@@ -403,6 +491,9 @@ export interface CellAddress {
     r: number;
 }
 
+/**
+ * Range object (representing ranges like "A1:B2")
+ */
 export interface Range {
     /** Starting cell */
     s: CellAddress;
@@ -410,24 +501,94 @@ export interface Range {
     e: CellAddress;
 }
 
-export interface Utils {
-    /* --- Cell Address Utilities --- */
+export interface Sheet2CSVOpts {
+    /** Field Separator ("delimiter") */
+    FS?: string;
 
-    /** converts an array of arrays of JS data to a worksheet. */
-    aoa_to_sheet<T>(data: T[], opts?: any): WorkSheet;
+    /** Record Separator ("row separator") */
+    RS?: string;
+
+    /** Use specified date format */
+    dateNF?: NumberFormat;
+}
+
+export interface Sheet2HTMLOpts {
+    editable?: boolean;
+    header?: string;
+    footer?: string;
+}
+
+export interface Sheet2JSONOpts {
+    /** Use specified date format */
+    dateNF?: NumberFormat;
+
+    header?: "A"|number|string[];
+
+    range?: any;
+
+    raw?: boolean;
+}
+
+export interface AOA2SheetOpts {
+    /** Use specified date format */
+    dateNF?: NumberFormat;
+
+    /**
+     * Store dates as type d (default is n)
+     * @default false
+     */
+    cellDates?: boolean;
+
+    /**
+     * Create cell objects for stub cells
+     * @default false
+     */
+    sheetStubs?: boolean;
+}
+
+export interface JSON2SheetOpts {
+    /** Use specified date format */
+    dateNF?: NumberFormat;
+}
+
+export interface Table2SheetOpts {
+    /** Use specified date format */
+    dateNF?: NumberFormat;
+}
+
+/**
+ * General utilities
+ */
+export interface Utils {
+    /* --- Import Functions --- */
+
+    /** Converts an array of arrays of JS data to a worksheet. */
+    aoa_to_sheet<T>(data: T[][], opts?: AOA2SheetOpts): WorkSheet;
+    aoa_to_sheet(data: any[][], opts?: AOA2SheetOpts): WorkSheet;
+
+    /** Converts an array of JS objects to a worksheet. */
+    json_to_sheet<T>(data: T[], opts?: JSON2SheetOpts): WorkSheet;
+    json_to_sheet(data: any[], opts?: JSON2SheetOpts): WorkSheet;
+
+    /** Converts a TABLE DOM element to a worksheet. */
+    table_to_sheet(data: HTMLTableElement,  opts?: Table2SheetOpts): WorkSheet;
+    table_to_book(data: HTMLTableElement,  opts?: Table2SheetOpts): WorkBook;
+
+    /* --- Export Functions --- */
 
     /** Converts a worksheet object to an array of JSON objects */
-    sheet_to_json<T>(worksheet: WorkSheet, opts?: {
-        raw?: boolean;
-        range?: any;
-        header?: "A"|number|string[];
-    }): T[];
+    sheet_to_json<T>(worksheet: WorkSheet, opts?: Sheet2JSONOpts): T[];
+    sheet_to_json(worksheet: WorkSheet, opts?: Sheet2JSONOpts): any[][];
+    sheet_to_json(worksheet: WorkSheet, opts?: Sheet2JSONOpts): any[];
 
     /** Generates delimiter-separated-values output */
-    sheet_to_csv(worksheet: WorkSheet, options?: { FS: string, RS: string }): string;
+    sheet_to_csv(worksheet: WorkSheet, options?: Sheet2CSVOpts): string;
+
+    /** Generates HTML */
+    sheet_to_html(worksheet: WorkSheet, options?: Sheet2HTMLOpts): string;
 
     /** Generates a list of the formulae (with value fallbacks) */
-    sheet_to_formulae(worksheet: WorkSheet): any;
+    sheet_to_formulae(worksheet: WorkSheet): string[];
 
     /* --- Cell Address Utilities --- */
 
@@ -442,6 +603,7 @@ export interface Utils {
 
     /** Converts 0-indexed range to A1 form */
     encode_range(s: CellAddress, e: CellAddress): string;
+    encode_range(r: Range): string;
 
     /** Converts A1 cell address to 0-indexed form */
     decode_cell(address: string): CellAddress;
@@ -454,4 +616,12 @@ export interface Utils {
 
     /** Converts A1 range to 0-indexed form */
     decode_range(range: string): Range;
+}
+
+/** NODE ONLY! these return Readable Streams */
+export interface StreamUtils {
+    /** CSV output stream, generate one line at a time */
+    to_csv(sheet: WorkSheet, opts?: Sheet2CSVOpts): any;
+    /** HTML output stream, generate one line at a time */
+    to_html(sheet: WorkSheet, opts?: Sheet2HTMLOpts): any;
 }

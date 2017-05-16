@@ -6,23 +6,39 @@ objects which have the following properties:
 ```typescript
 type ColInfo = {
 	/* visibility */
-	hidden:?boolean; // if true, the column is hidden
+	hidden?: boolean; // if true, the column is hidden
 
 	/* column width is specified in one of the following ways: */
-	wpx?:number;     // width in screen pixels
-	width?:number;    // width in Excel's "Max Digit Width", width*256 is integral
-	wch?:number;     // width in characters
+	wpx?:    number;  // width in screen pixels
+	width?:  number;  // width in Excel's "Max Digit Width", width*256 is integral
+	wch?:    number;  // width in characters
 
 	/* other fields for preserving features from files */
-	MDW?:number;     // Excel's "Max Digit Width" unit, always integral
+	MDW?:    number;  // Excel's "Max Digit Width" unit, always integral
 };
 ```
 
-Excel internally stores column widths in a nebulous "Max Digit Width" form.  The
+<details>
+	<summary><b>Why are there three width types?</b> (click to show)</summary>
+
+There are three different width types corresponding to the three different ways
+spreadsheets store column widths:
+
+SYLK and other plaintext formats use raw character count.  Contemporaneous tools
+like Visicalc and Multiplan were character based.  Since the characters had the
+same width, it sufficed to store a count.  This tradition was continued into the
+BIFF formats.
+
+SpreadsheetML (2003) tried to align with HTML by standardizing on screen pixel
+count throughout the file.  Column widths, row heights, and other measures use
+pixels.  When the pixel and character counts do not align, Excel rounds values.
+
+XLSX internally stores column widths in a nebulous "Max Digit Width" form.  The
 Max Digit Width is the width of the largest digit when rendered (generally the
 "0" character is the widest).  The internal width must be an integer multiple of
 the the width divided by 256.  ECMA-376 describes a formula for converting
-between pixels and the internal width.
+between pixels and the internal width.  This represents a hybrid approach.
+</details>
 
 <details>
 	<summary><b>Implementation details</b> (click to show)</summary>
@@ -49,11 +65,11 @@ objects which have the following properties:
 ```typescript
 type RowInfo = {
 	/* visibility */
-	hidden?:boolean; // if true, the row is hidden
+	hidden?: boolean; // if true, the row is hidden
 
 	/* row height is specified in one of the following ways: */
-	hpx?:number;     // height in screen pixels
-	hpt?:number;     // height in points
+	hpx?:    number;  // height in screen pixels
+	hpt?:    number;  // height in points
 };
 ```
 

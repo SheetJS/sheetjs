@@ -3,6 +3,8 @@
 	"rules": {
 		"whitespace": false,
 		"no-sparse-arrays": false,
-		"no-consecutive-blank-lines": false
+		"only-arrow-functions": false,
+		"no-consecutive-blank-lines": false,
+		"one-variable-per-declaration": false
 	}
 }

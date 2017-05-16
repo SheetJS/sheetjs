@@ -84,6 +84,17 @@ Tests utilize the mocha testing framework.  Travis-CI and Sauce Labs links:
 Test files are housed in [another repo](https://github.com/SheetJS/test_files).
 
 Running `make init` will refresh the `test_files` submodule and get the files.
+Note that this requires `svn`, `git`, `hg` and other commands that may not be
+available.  If `make init` fails, please download the latest version of the test
+files snapshot from [the repo](https://github.com/SheetJS/test_files/releases)
 
+<details>
+	<summary><b>Latest Snapshot</b> (click to show)</summary>
 
+Latest test files snapshot:
+<http://github.com/SheetJS/test_files/releases/download/20170409/test_files.zip>
+
+(download and unzip to the `test_files` subdirectory)
+
+</details>
 

@@ -3,28 +3,30 @@
 Due to the precarious nature of the Open Specifications Promise, it is very
 important to ensure code is cleanroom.  Consult CONTRIBUTING.md
 
-### Tests
-
 <details>
-	<summary>(click to show)</summary>
+	<summary><b>File organization</b> (click to show)</summary>
 
-The `test_misc` target (`make test_misc` on Linux/OSX / `make misc` on Windows)
-runs the targeted feature tests.  It should take 5-10 seconds to perform feature
-tests without testing against the entire test battery.  New features should be
-accompanied with tests for the relevant file formats and features.
+At a high level, the final script is a concatenation of the individual files in
+the `bits` folder.  Running `make` should reproduce the final output on all
+platforms.  The README is similarly split into bits in the `docbits` folder.
 
-For tests involving the read side, an appropriate feature test would involve
-reading an existing file and checking the resulting workbook object.  If a
-parameter is involved, files should be read with different values for the param
-to verify that the feature is working as expected.
+Folders:
 
-For tests involving a new write feature which can already be parsed, appropriate
-feature tests would involve writing a workbook with the feature and then opening
-and verifying that the feature is preserved.
+| folder       | contents                                                      |
+|:-------------|:--------------------------------------------------------------|
+| `bits`       | raw source files that make up the final script                |
+| `docbits`    | raw markdown files that make up README.md                     |
+| `bin`        | server-side bin scripts (`xlsx.njs`)                          |
+| `dist`       | dist files for web browsers and nonstandard JS environments   |
+| `demos`      | demo projects for platforms like ExtendScript and Webpack     |
+| `tests`      | browser tests (run `make ctest` to rebuild)                   |
+| `types`      | typescript definitions and tests                              |
+| `misc`       | miscellaneous supporting scripts                              |
+| `test_files` | test files (pulled from the test files repository)            |
 
-For tests involving a new write feature without an existing read ability, please
-add a feature test to the kitchen sink `tests/write.js`.
 </details>
+
+After cloning the repo, running `make help` will display a list of commands.
 
 ### OSX/Linux
 
@@ -76,13 +78,28 @@ make book -- rebuild README and summary
 make help -- display this message
 ```
 
-The normal approach uses a variety of command line tools to grab the test files.
-For windows users, please download the latest version of the test files snapshot
-from [github](https://github.com/SheetJS/test_files/releases)
+</details>
 
-Latest test files snapshot:
-<https://github.com/SheetJS/test_files/releases/download/20170409/test_files.zip>
+### Tests
 
-Download and unzip to the `test_files` subdirectory.
+<details>
+	<summary>(click to show)</summary>
+
+The `test_misc` target (`make test_misc` on Linux/OSX / `make misc` on Windows)
+runs the targeted feature tests.  It should take 5-10 seconds to perform feature
+tests without testing against the entire test battery.  New features should be
+accompanied with tests for the relevant file formats and features.
+
+For tests involving the read side, an appropriate feature test would involve
+reading an existing file and checking the resulting workbook object.  If a
+parameter is involved, files should be read with different values for the param
+to verify that the feature is working as expected.
+
+For tests involving a new write feature which can already be parsed, appropriate
+feature tests would involve writing a workbook with the feature and then opening
+and verifying that the feature is preserved.
+
+For tests involving a new write feature without an existing read ability, please
+add a feature test to the kitchen sink `tests/write.js`.
 </details>
 

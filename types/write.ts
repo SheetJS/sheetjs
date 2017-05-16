@@ -2,7 +2,7 @@
 /* vim: set ts=2 ft=javascript: */
 
 /* original data */
-let data = [
+let data: any[][] = [
 	[1, 2, 3],
 	[true, false, null, "sheetjs"],
 	["foo", "bar", new Date("2014-02-19T14:30Z"), "0.3"],
@@ -13,7 +13,7 @@ let data = [
 
 const ws_name = "SheetJS";
 
-let wscols = [
+let wscols: XLSX.ColInfo[] = [
 	{wch: 6}, // "characters"
 	{wpx: 50}, // "pixels"
 	,
@@ -21,7 +21,7 @@ let wscols = [
 ];
 
 /* At 96 PPI, 1 pt = 1 px */
-let wsrows = [
+let wsrows: XLSX.RowInfo[] = [
 	{hpt: 12}, // "points"
 	{hpx: 16}, // "pixels"
 	,
@@ -46,14 +46,14 @@ let wb: XLSX.WorkBook = { SheetNames: <string[]>[], Sheets: {} };
 
 
 /* convert an array of arrays in JS to a CSF spreadsheet */
-let ws = XLSX.utils.aoa_to_sheet(data, {cellDates:true});
+let ws: XLSX.WorkSheet = XLSX.utils.aoa_to_sheet(data, {cellDates:true});
 
 /* TEST: add worksheet to workbook */
 wb.SheetNames.push(ws_name);
 wb.Sheets[ws_name] = ws;
 
 /* TEST: simple formula */
-ws['C1'].f = "A1+B1";
+(<XLSX.CellObject>ws['C1']).f = "A1+B1";
 ws['C2'] = {t:'n', f:"A1+B1"};
 
 /* TEST: single-cell array formula */
@@ -75,14 +75,14 @@ ws['!cols'] = wscols;
 ws['!rows'] = wsrows;
 
 /* TEST: hyperlink note: Excel does not automatically style hyperlinks */
-ws['A3'].l = { Target: "http://sheetjs.com", Tooltip: "Visit us <SheetJS.com!>" };
+(<XLSX.CellObject>ws['A3']).l = { Target: "http://sheetjs.com", Tooltip: "Visit us <SheetJS.com!>" };
 
 /* TEST: built-in format */
-ws['B1'].z = "0%"; // Format Code 9
+(<XLSX.CellObject>ws['B1']).z = "0%"; // Format Code 9
 
 /* TEST: custom format */
 const custfmt = "\"This is \"\\ 0.0";
-ws['C2'].z = custfmt;
+(<XLSX.CellObject>ws['C2']).z = custfmt;
 
 /* TEST: page margins */
 ws['!margins'] =  { left:1.0, right:1.0, top:1.0, bottom:1.0, header:0.5, footer:0.5 };
@@ -112,8 +112,8 @@ wb.Props = {
 
 /* TEST: comments */
 
-ws['A4'].c = [];
-ws['A4'].c.push({a:"SheetJS",t:"I'm a little comment, short and stout!\n\nWell, Stout may be the wrong word"});
+(<XLSX.CellObject>ws['A4']).c = [];
+(<XLSX.CellObject>ws['A4']).c.push({a:"SheetJS",t:"I'm a little comment, short and stout!\n\nWell, Stout may be the wrong word"});
 
 
 /* TEST: sheet protection */

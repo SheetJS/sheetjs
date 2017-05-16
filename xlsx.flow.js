@@ -16099,9 +16099,10 @@ var HTML_ = (function() {
 	function html_to_book(str/*:string*/, opts)/*:Workbook*/ {
 		return sheet_to_workbook(html_to_sheet(str, opts), opts);
 	}
-	function make_html_row(ws/*:Worksheet*/, r/*:Range*/, R/*:number*/, o)/*:string*/ {
+	function make_html_row(ws/*:Worksheet*/, r/*:Range*/, R/*:number*/, o/*:Sheet2HTMLOpts*/)/*:string*/ {
 		var M = (ws['!merges'] ||[]);
 		var oo = [];
+		var nullcell = "<td" + (o.editable ? ' contenteditable="true"' : "" ) + "></td>";
 		for(var C = r.s.c; C <= r.e.c; ++C) {
 			var RS = 0, CS = 0;
 			for(var j = 0; j < M.length; ++j) {
@@ -16113,29 +16114,36 @@ var HTML_ = (function() {
 			if(RS < 0) continue;
 			var coord = encode_cell({r:R,c:C});
 			var cell = o.dense ? (ws[R]||[])[C] : ws[coord];
-			if(!cell || cell.v == null) { oo.push("<td></td>"); continue; }
+			if(!cell || cell.v == null) { oo.push(nullcell); continue; }
 			/* TODO: html entities */
 			var w = cell.h || escapexml(cell.w || (format_cell(cell), cell.w) || "");
 			var sp = {};
 			if(RS > 1) sp.rowspan = RS;
 			if(CS > 1) sp.colspan = CS;
+			if(o.editable) sp.contenteditable = "true";
 			oo.push(writextag('td', w, sp));
 		}
 		return "<tr>" + oo.join("") + "</tr>";
 	}
-	function sheet_to_html(ws/*:Worksheet*/, opts/*:Sheet2HTMLOpts*/)/*:string*/ {
+	var _BEGIN = "<html><head><title>SheetJS Table Export</title></head><body><table>";
+	var _END = "</table></body></html>";
+	function sheet_to_html(ws/*:Worksheet*/, opts/*:?Sheet2HTMLOpts*/)/*:string*/ {
 		var o = opts || {};
 		var out/*:Array<string>*/ = [];
 		var r = decode_range(ws['!ref']);
 		o.dense = Array.isArray(ws);
 		for(var R = r.s.r; R <= r.e.r; ++R) out.push(make_html_row(ws, r, R, o));
-		return "<html><body><table>" + out.join("") + "</table></body></html>";
+		var header = o.header != null ? o.header : _BEGIN;
+		var footer = o.footer != null ? o.footer : _END;
+		return header + out.join("") + footer ;
 	}
 
 	return {
 		to_workbook: html_to_book,
 		to_sheet: html_to_sheet,
 		_row: make_html_row,
+		BEGIN: _BEGIN,
+		END: _END,
 		from_sheet: sheet_to_html
 	};
 })();
@@ -17623,6 +17631,7 @@ var utils/*:any*/ = {
 	table_to_book: table_to_book,
 	sheet_to_csv: sheet_to_csv,
 	sheet_to_json: sheet_to_json,
+	sheet_to_html: HTML_.from_sheet,
 	sheet_to_formulae: sheet_to_formulae,
 	sheet_to_row_object_array: sheet_to_json
 };
@@ -17764,22 +17773,19 @@ if(has_buf && typeof require != 'undefined') (function() {
 		return stream;
 	};
 
-	var HTML_BEGIN = "<html><body><table>";
-	var HTML_END = "</table></body></html>";
-
 	var write_html_stream = function(sheet/*:Worksheet*/, opts/*:?Sheet2HTMLOpts*/) {
 		var stream = Readable();
 
 		var o = opts == null ? {} : opts;
 		var r = decode_range(sheet['!ref']), cell/*:Cell*/;
 		o.dense = Array.isArray(sheet);
-		stream.push(HTML_BEGIN);
+		stream.push(HTML_.BEGIN);
 
 		var R = r.s.r;
 		var end = false;
 		stream._read = function() {
 			if(R > r.e.r) {
-				if(!end) { end = true; stream.push(HTML_END); }
+				if(!end) { end = true; stream.push(HTML_.END); }
 				return stream.push(null);
 			}
 			while(R <= r.e.r) {

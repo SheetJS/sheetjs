@@ -14,7 +14,6 @@ at index 164.  The following example creates a custom format from scratch:
 	<summary><b>New worksheet with custom format</b> (click to show)</summary>
 
 ```js
-var tbl = {};
 var wb = {
 	SheetNames: ["Sheet1"],
 	Sheets: {

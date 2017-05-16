@@ -90,3 +90,21 @@ Plaintext format guessing follows the priority order:
 | PRN    | (default)                                                           |
 </details>
 
+<details>
+	<summary><b>Why are random text files valid?</b> (click to show)</summary>
+
+Excel is extremely aggressive in reading files.  Adding an XLS extension to any
+display text file  (where the only characters are ANSI display chars) tricks
+Excel into thinking that the file is potentially a CSV or TSV file, even if it
+is only one column!  This library attempts to replicate that behavior.
+
+The best approach is to validate the desired worksheet and ensure it has the
+expected number of rows or columns.  Extracting the range is extremely simple:
+
+```js
+var range = XLSX.utils.decode_range(worksheet['!ref']);
+var ncols = range.e.c - range.r.c + 1, nrows = range.e.r - range.s.r + 1;
+```
+
+</details>
+

@@ -29,22 +29,19 @@ if(has_buf && typeof require != 'undefined') (function() {
 		return stream;
 	};
 
-	var HTML_BEGIN = "<html><body><table>";
-	var HTML_END = "</table></body></html>";
-
 	var write_html_stream = function(sheet/*:Worksheet*/, opts/*:?Sheet2HTMLOpts*/) {
 		var stream = Readable();
 
 		var o = opts == null ? {} : opts;
 		var r = decode_range(sheet['!ref']), cell/*:Cell*/;
 		o.dense = Array.isArray(sheet);
-		stream.push(HTML_BEGIN);
+		stream.push(HTML_.BEGIN);
 
 		var R = r.s.r;
 		var end = false;
 		stream._read = function() {
 			if(R > r.e.r) {
-				if(!end) { end = true; stream.push(HTML_END); }
+				if(!end) { end = true; stream.push(HTML_.END); }
 				return stream.push(null);
 			}
 			while(R <= r.e.r) {

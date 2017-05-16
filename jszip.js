@@ -9,7 +9,7 @@ Dual licenced under the MIT license or GPLv3. See https://raw.github.com/Stuk/js
 JSZip uses the library pako released under the MIT license :
 https://github.com/nodeca/pako/blob/master/LICENSE
 */
-!function(e){
+(function(e){
 	if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();
 	else if("function"==typeof define&&define.amd){JSZip=e();define([],e);}
 	else{
@@ -8985,4 +8985,4 @@ function ZStream() {
 module.exports = ZStream;
 },{}]},{},[9])
 (9)
-});
+}));

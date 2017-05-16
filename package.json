@@ -29,8 +29,10 @@
 		"mocha":"",
 		"xlsjs":"",
 		"@sheetjs/uglify-js":"",
+		"@types/node":"",
+		"@types/commander":"",
 		"dtslint": "^0.1.2",
-		"typescript": "^2.2.0"
+		"typescript": "2.2.0"
 	},
 	"repository": { "type":"git", "url":"git://github.com/SheetJS/js-xlsx.git" },
 	"scripts": {

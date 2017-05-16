@@ -1,13 +1,13 @@
-#!/usr/bin/env node
 /* xlsx.js (C) 2013-present  SheetJS -- http://sheetjs.com */
 /* eslint-env node */
-var n = "xlsx";
+const n = "xlsx";
 /* vim: set ts=2 ft=javascript: */
-var X = require('../');
-require('exit-on-epipe');
-var fs = require('fs'), program = require('commander');
+import XLSX = require("xlsx");
+import 'exit-on-epipe';
+import * as fs from 'fs';
+import program = require('commander');
 program
-	.version(X.version)
+	.version(XLSX.version)
 	.usage('[options] <file> [sheetname]')
 	.option('-f, --file <file>', 'use specified workbook')
 	.option('-s, --sheet <sheet>', 'print specified sheet (default first sheet)')
@@ -42,7 +42,6 @@ program
 	.option('--read-only', 'do not generate output')
 	.option('--all', 'parse everything; write as much as possible')
 	.option('--dev', 'development mode')
-	.option('--sparse', 'sparse mode')
 	.option('--read', 'read but do not print out contents')
 	.option('-q, --quiet', 'quiet mode');
 
@@ -53,14 +52,14 @@ program.on('--help', function() {
 });
 
 /* output formats, update list with full option name */
-var workbook_formats = ['xlsx', 'xlsm', 'xlsb', 'ods', 'fods'];
+const workbook_formats = ['xlsx', 'xlsm', 'xlsb', 'ods', 'fods'];
 /* flag, bookType, default ext */
-var wb_formats_2 = [
+const wb_formats_2 = [
 	['xlml', 'xlml', 'xls']
 ];
 program.parse(process.argv);
 
-var filename/*:?string*/, sheetname = '';
+let filename = '', sheetname = '';
 if(program.args[0]) {
 	filename = program.args[0];
 	if(program.args[1]) sheetname = program.args[1];
@@ -78,11 +77,12 @@ if(!fs.existsSync(filename)) {
 	process.exit(2);
 }
 
-var opts = {}, wb/*:?Workbook*/;
+let opts: XLSX.ParsingOptions = {};
+let wb: XLSX.WorkBook;
 if(program.listSheets) opts.bookSheets = true;
 if(program.sheetRows) opts.sheetRows = program.sheetRows;
 if(program.password) opts.password = program.password;
-var seen = false;
+let seen = false;
 function wb_fmt() {
 	seen = true;
 	opts.cellFormula = true;
@@ -104,15 +104,14 @@ if(program.all) {
 	opts.sheetStubs = true;
 	opts.cellDates = true;
 }
-if(program.sparse) opts.dense = false; else opts.dense = true;
 
 if(program.dev) {
 	opts.WTF = true;
-	wb = X.readFile(filename, opts);
+	wb = XLSX.readFile(filename, opts);
 } else try {
-	wb = X.readFile(filename, opts);
+	wb = XLSX.readFile(filename, opts);
 } catch(e) {
-	var msg = (program.quiet) ? "" : n + ": error parsing ";
+	let msg = (program.quiet) ? "" : n + ": error parsing ";
 	msg += filename + ": " + e;
 	console.error(msg);
 	process.exit(3);
@@ -125,28 +124,28 @@ if(program.listSheets) {
 	process.exit(0);
 }
 
-var wopts = ({WTF:opts.WTF, bookSST:program.sst}/*:any*/);
+let wopts: XLSX.WritingOptions = ({WTF:opts.WTF, bookSST:program.sst}/*:any*/);
 if(program.compress) wopts.compression = true;
 
 /* full workbook formats */
 workbook_formats.forEach(function(m) { if(program[m]) {
-		X.writeFile(wb, sheetname || ((filename || "") + "." + m), wopts);
+		XLSX.writeFile(wb, sheetname || ((filename || "") + "." + m), wopts);
 		process.exit(0);
 } });
 
 wb_formats_2.forEach(function(m) { if(program[m[0]]) {
-		wopts.bookType = m[1];
-		X.writeFile(wb, sheetname || ((filename || "") + "." + m[2]), wopts);
+		wopts.bookType = <XLSX.BookType>(m[1]);
+		XLSX.writeFile(wb, sheetname || ((filename || "") + "." + m[2]), wopts);
 		process.exit(0);
 } });
 
-var target_sheet = sheetname || '';
+let target_sheet = sheetname || '';
 if(target_sheet === '') {
 	if(program.sheetIndex < (wb.SheetNames||[]).length) target_sheet = wb.SheetNames[program.sheetIndex];
 	else target_sheet = (wb.SheetNames||[""])[0];
 }
 
-var ws;
+let ws: XLSX.WorkSheet;
 try {
 	ws = wb.Sheets[target_sheet];
 	if(!ws) {
@@ -169,21 +168,21 @@ if(program.readOnly) process.exit(0);
 	['txt', '.txt'],
 	['dif', '.dif']
 ].forEach(function(m) { if(program[m[0]]) {
-		wopts.bookType = m[0];
-		X.writeFile(wb, sheetname || ((filename || "") + m[1]), wopts);
+		wopts.bookType = <XLSX.BookType>(m[1]);
+		XLSX.writeFile(wb, sheetname || ((filename || "") + m[1]), wopts);
 		process.exit(0);
 } });
 
-var oo = "";
-var strm = false;
+let oo = "";
+let strm = false;
 if(!program.quiet) console.error(target_sheet);
-if(program.formulae) oo = X.utils.sheet_to_formulae(ws).join("\n");
-else if(program.json) oo = JSON.stringify(X.utils.sheet_to_json(ws));
-else if(program.rawJs) oo = JSON.stringify(X.utils.sheet_to_json(ws,{raw:true}));
-else if(program.arrays) oo = JSON.stringify(X.utils.sheet_to_json(ws,{raw:true, header:1}));
+if(program.formulae) oo = XLSX.utils.sheet_to_formulae(ws).join("\n");
+else if(program.json) oo = JSON.stringify(XLSX.utils.sheet_to_json(ws));
+else if(program.rawJs) oo = JSON.stringify(XLSX.utils.sheet_to_json(ws,{raw:true}));
+else if(program.arrays) oo = JSON.stringify(XLSX.utils.sheet_to_json(ws,{raw:true, header:1}));
 else {
 	strm = true;
-	var stream = X.stream.to_csv(ws, {FS:program.fieldSep, RS:program.rowSep});
+	let stream: NodeJS.ReadableStream = XLSX.stream.to_csv(ws, {FS:program.fieldSep, RS:program.rowSep});
 	if(program.output) stream.pipe(fs.createWriteStream(program.output));
 	else stream.pipe(process.stdout);
 }

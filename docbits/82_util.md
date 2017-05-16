@@ -152,6 +152,29 @@ The `txt` output type uses the tab character as the field separator.  If the
 codepage library is available (included in the full distribution but not core),
 the output will be encoded in codepage `1200` and the BOM will be prepended.
 
+### HTML Output
+
+As an alternative to the `writeFile` HTML type, `XLSX.utils.sheet_to_html` also
+produces HTML output.  The function takes an options argument:
+
+| Option Name |  Default | Description                                         |
+| :---------- | :------: | :-------------------------------------------------- |
+| editable    |  false   | If true, set `contenteditable="true"` for every TD  |
+| header      |          | Override header (default `html body table`)         |
+| footer      |          | Override footer (default `/table /body /html`)      |
+
+
+<details>
+	<summary><b>Examples</b> (click to show)</summary>
+
+For the example sheet:
+
+```js
+> console.log(XLSX.utils.sheet_to_html(ws));
+// ...
+```
+</details>
+
 ### JSON
 
 `XLSX.utils.sheet_to_json` generates different types of JS objects. The function
