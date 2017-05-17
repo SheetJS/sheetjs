@@ -169,6 +169,7 @@ function sheet_to_formulae(sheet/*:Worksheet*/)/*:Array<string>*/ {
 function json_to_sheet(js/*:Array<any>*/, opts)/*:Worksheet*/ {
 	var o = opts || {};
 	var ws = ({}/*:any*/);
+	var cell/*:Cell*/;
 	var range/*:Range*/ = ({s: {c:0, r:0}, e: {c:0, r:js.length}}/*:any*/);
 	var hdr = o.header || [], C = 0;
 
@@ -177,11 +178,17 @@ function json_to_sheet(js/*:Array<any>*/, opts)/*:Worksheet*/ {
 			if((C=hdr.indexOf(k)) == -1) hdr[C=hdr.length] = k;
 			var v = js[R][k];
 			var t = 'z';
+			var z = "";
 			if(typeof v == 'number') t = 'n';
 			else if(typeof v == 'boolean') t = 'b';
 			else if(typeof v == 'string') t = 's';
-			else if(v instanceof Date) t = 'd';
-			ws[encode_cell({c:C,r:R+1})] = {t:t, v:v};
+			else if(v instanceof Date) {
+				t = 'd';
+				if(!o.cellDates) { t = 'n'; v = datenum(v); }
+				z = o.dateNF || SSF._table[14];
+			}
+			ws[encode_cell({c:C,r:R+1})] = cell = ({t:t, v:v}/*:any*/);
+			if(z) cell.z = z;
 		});
 	}
 	range.e.c = hdr.length - 1;

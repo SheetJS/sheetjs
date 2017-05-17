@@ -6,7 +6,7 @@
 /*global global, exports, module, require:false, process:false, Buffer:false */
 var XLSX = {};
 (function make_xlsx(XLSX){
-XLSX.version = '0.10.1';
+XLSX.version = '0.10.2';
 var current_codepage = 1200;
 /*:: declare var cptable:any; */
 /*global cptable:true */
@@ -1481,12 +1481,19 @@ function parse_isodur(s) {
 }
 
 var good_pd_date = new Date('2017-02-19T19:06:09.000Z');
+if(isNaN(good_pd_date.getFullYear())) good_pd_date = new Date('2/19/17');
 var good_pd = good_pd_date.getFullYear() == 2017;
 function parseDate(str/*:string|Date*/)/*:Date*/ {
-	if(good_pd) return new Date(str);
+	var d = new Date(str);
+	if(good_pd) return d;
 	if(str instanceof Date) return str;
+	if(good_pd_date.getFullYear() == 1917 && !isNaN(d.getFullYear())) {
+		var s = d.getFullYear();
+		if(str.indexOf("" + s) > -1) return d;
+		d.setFullYear(d.getFullYear() + 100); return d;
+	}
 	var n = str.match(/\d+/g)||["2017","2","19","0","0","0"];
-	return new Date(Date.UTC(+n[0], +n[1] - 1, +n[2], +n[3], +n[4], +n[5]));
+	return new Date(Date.UTC(+n[0], +n[1] - 1, +n[2], (+n[3]||0), (+n[4]||0), (+n[5]||0)));
 }
 
 function cc2str(arr/*:Array<number>*/)/*:string*/ {
@@ -5373,6 +5380,8 @@ var SYLK = (function() {
 					else if(+val === +val) {
 						val = +val;
 						if(next_cell_format !== null && SSF.is_date(next_cell_format)) val = numdate(val);
+					} else if(!isNaN(fuzzydate(val).getDate())) {
+						val = parseDate(val);
 					}
 					arr[R][C] = val;
 					next_cell_format = null;
@@ -5390,7 +5399,7 @@ var SYLK = (function() {
 				case 'Y':
 					R = parseInt(record[rj].substr(1))-1; /*C = 0;*/
 					for(j = arr.length; j <= R; ++j) arr[j] = [];
-					++F_seen; break;
+					break;
 				case 'M': Mval = parseInt(record[rj].substr(1)) / 20; break;
 				case 'F': break; /* ??? */
 				case 'P':
@@ -5417,7 +5426,7 @@ var SYLK = (function() {
 					break;
 				default: if(opts && opts.WTF) throw new Error("SYLK bad record " + rstr);
 			}
-			if(F_seen < 2) next_cell_format = null; break;
+			if(F_seen < 1) next_cell_format = null; break;
 			default: if(opts && opts.WTF) throw new Error("SYLK bad record " + rstr);
 			}
 		}
@@ -5616,6 +5625,7 @@ var PRN = (function() {
 		else if(data === 'FALSE') arr[R][C] = false;
 		else if(data === ""){/* empty */}
 		else if(+data == +data) arr[R][C] = +data;
+		else if(!isNaN(fuzzydate(data).getDate())) arr[R][C] = parseDate(data);
 		else arr[R][C] = data;
 	}
 
@@ -5805,11 +5815,15 @@ var WK_ = (function() {
 				case 0x0E: /* NUMBER */
 				case 0x10: /* FORMULA */
 				case 0x33: /* STRING */
+					/* TODO: actual translation of the format code */
+					if(RT == 0x0E && (val[2] & 0x70) == 0x70 && (val[2] & 0x0F) > 1 && (val[2] & 0x0F) < 15) {
+						val[1].z = o.dateNF || SSF._table[14];
+						if(o.cellDates) { val[1].t = 'd'; val[1].v = numdate(val[1].v); }
+					}
 					if(o.dense) {
 						if(!s[val[0].r]) s[val[0].r] = [];
 						s[val[0].r][val[0].c] = val[1];
 					} else s[encode_cell(val[0])] = val[1];
-					/* TODO: FORMAT */
 					break;
 			} else switch(RT) {
 				case 0x16: /* LABEL16 */
@@ -5978,7 +5992,7 @@ var WK_ = (function() {
 	var WK1Enum = {
 		/*::[*/0x0000/*::]*/: { n:"BOF", f:parseuint16 },
 		/*::[*/0x0001/*::]*/: { n:"EOF", f:parsenoop },
-		/*::[*/0x0002/*::]*/: { n: "CALCMODE", f:parsenoop },
+		/*::[*/0x0002/*::]*/: { n:"CALCMODE", f:parsenoop },
 		/*::[*/0x0003/*::]*/: { n:"CALCORDER", f:parsenoop },
 		/*::[*/0x0004/*::]*/: { n:"SPLIT", f:parsenoop },
 		/*::[*/0x0005/*::]*/: { n:"SYNC", f:parsenoop },
@@ -12885,6 +12899,7 @@ function parse_xlml_data(xml, ss, data, cell/*:any*/, base, styles, csty, row, a
 			cell.v = xml.indexOf("<") > -1 ? unescapexml(ss) : cell.r;
 			break;
 		case 'DateTime':
+			if(xml.slice(-1) != "Z") xml += "Z";
 			cell.v = (parseDate(xml) - new Date(Date.UTC(1899, 11, 30))) / (24 * 60 * 60 * 1000);
 			if(cell.v !== cell.v) cell.v = unescapexml(xml);
 			else if(cell.v<60) cell.v = cell.v -1;
@@ -16046,7 +16061,7 @@ function write_biff_buf(wb/*:Workbook*/, opts/*:WriteOpts*/) {
 	// TODO
 	return ba.end();
 }
-/* TODO: in browser attach to DOM; in node use an html parser */
+/* note: browser DOM element cannot see mso- style attrs, must parse */
 var HTML_ = (function() {
 	function html_to_sheet(str/*:string*/, _opts)/*:Workbook*/ {
 		var opts = _opts || {};
@@ -16160,7 +16175,7 @@ function parse_dom_table(table/*:HTMLElement*/, _opts/*:?any*/)/*:Worksheet*/ {
 		var row = rows[R];
 		var elts = row.children;
 		for(_C = C = 0; _C < elts.length; ++_C) {
-			var elt = elts[_C], v = elts[_C].innerText;
+			var elt = elts[_C], v = elts[_C].innerText || elts[_C].textContent;
 			for(midx = 0; midx < merges.length; ++midx) {
 				var m = merges[midx];
 				if(m.s.c == C && m.s.r <= R && R <= m.e.r) { C = m.e.c+1; midx = -1; }
@@ -16168,8 +16183,15 @@ function parse_dom_table(table/*:HTMLElement*/, _opts/*:?any*/)/*:Worksheet*/ {
 			/* TODO: figure out how to extract nonstandard mso- style */
 			CS = +elt.getAttribute("colspan") || 1;
 			if((RS = +elt.getAttribute("rowspan"))>0 || CS>1) merges.push({s:{r:R,c:C},e:{r:R + (RS||1) - 1, c:C + CS - 1}});
-			var o = {t:'s', v:v};
-			if(v != null && v.length && !isNaN(Number(v))) o = {t:'n', v:Number(v)};
+			var o/*:Cell*/ = {t:'s', v:v};
+			if(v != null && v.length) {
+				if(!isNaN(Number(v))) o = {t:'n', v:Number(v)};
+				else if(!isNaN(fuzzydate(v).getDate())) {
+					o = ({t:'d', v:parseDate(v)}/*:any*/);
+					if(!opts.cellDates) o = ({t:'n', v:datenum(o.v)}/*:any*/);
+					o.z = opts.dateNF || SSF._table[14];
+				}
+			}
 			if(opts.dense) { if(!ws[R]) ws[R] = []; ws[R][C] = o; }
 			else ws[encode_cell({c:C, r:R})] = o;
 			if(range.e.c < C) range.e.c = C;
@@ -17589,6 +17611,7 @@ function sheet_to_formulae(sheet/*:Worksheet*/)/*:Array<string>*/ {
 function json_to_sheet(js/*:Array<any>*/, opts)/*:Worksheet*/ {
 	var o = opts || {};
 	var ws = ({}/*:any*/);
+	var cell/*:Cell*/;
 	var range/*:Range*/ = ({s: {c:0, r:0}, e: {c:0, r:js.length}}/*:any*/);
 	var hdr = o.header || [], C = 0;
 
@@ -17597,11 +17620,17 @@ function json_to_sheet(js/*:Array<any>*/, opts)/*:Worksheet*/ {
 			if((C=hdr.indexOf(k)) == -1) hdr[C=hdr.length] = k;
 			var v = js[R][k];
 			var t = 'z';
+			var z = "";
 			if(typeof v == 'number') t = 'n';
 			else if(typeof v == 'boolean') t = 'b';
 			else if(typeof v == 'string') t = 's';
-			else if(v instanceof Date) t = 'd';
-			ws[encode_cell({c:C,r:R+1})] = {t:t, v:v};
+			else if(v instanceof Date) {
+				t = 'd';
+				if(!o.cellDates) { t = 'n'; v = datenum(v); }
+				z = o.dateNF || SSF._table[14];
+			}
+			ws[encode_cell({c:C,r:R+1})] = cell = ({t:t, v:v}/*:any*/);
+			if(z) cell.z = z;
 		});
 	}
 	range.e.c = hdr.length - 1;
@@ -17816,7 +17845,6 @@ XLSX.writeFile = writeFileSync;
 XLSX.writeFileSync = writeFileSync;
 XLSX.writeFileAsync = writeFileAsync;
 XLSX.utils = utils;
-XLSX.CFB = CFB;
 XLSX.SSF = SSF;
 })(typeof exports !== 'undefined' ? exports : XLSX);
 /*exported XLS */

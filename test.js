@@ -1431,7 +1431,7 @@ describe('roundtrip features', function() {
 		});
 	});
 
-	it('should preserve js objects', function() {
+	it('should preserve JS objects', function() {
 		var data = [
 			{a:1},
 			{b:2,c:3},
@@ -1439,7 +1439,7 @@ describe('roundtrip features', function() {
 			{a:true, c:false},
 			{c:new Date("2017-02-19T14:30Z")}
 		];
-		var wb = X.utils.json_to_sheet(data);
+		var wb = X.utils.json_to_sheet(data, {cellDates:true});
 		var out = X.utils.sheet_to_json(wb, {raw:true});
 		data.forEach(function(row, i) {
 			Object.keys(row).forEach(function(k) { assert.equal(row[k], out[i][k]); });
@@ -1679,7 +1679,8 @@ describe('csv', function() {
 		it('should honor dateNF override', function() {
 			var opts = {type:"binary", dateNF:"YYYY-MM-DD"};
 			var cell = get_cell(X.read(b, opts).Sheets.Sheet1, "C3");
-			assert.equal(cell.w, '2014-02-19');
+			/* NOTE: IE interprets 2-digit years as 19xx */
+			assert(cell.w == '2014-02-19' || cell.w == '1914-02-19');
 			opts.cellDates = true; opts.dateNF = "YY-MM-DD";
 			var cell = get_cell(X.read(b, opts).Sheets.Sheet1, "C3");
 			assert.equal(cell.w, '14-02-19');
@@ -1868,7 +1869,7 @@ var mfopts = opts;
 var mft = fs.readFileSync('multiformat.lst','utf-8').split("\n").map(function(x) { return x.trim(); });
 var csv = true, formulae = false;
 mft.forEach(function(x) {
-	if(x[0]!="#") describe('MFT ' + x, function() {
+	if(x.charAt(0)!="#") describe('MFT ' + x, function() {
 		var fil = {}, f = [], r = x.split(/\s+/);
 		if(r.length < 3) return;
 		it('should parse all', function() {

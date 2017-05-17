@@ -75,12 +75,19 @@ function parse_isodur(s) {
 }
 
 var good_pd_date = new Date('2017-02-19T19:06:09.000Z');
+if(isNaN(good_pd_date.getFullYear())) good_pd_date = new Date('2/19/17');
 var good_pd = good_pd_date.getFullYear() == 2017;
 function parseDate(str/*:string|Date*/)/*:Date*/ {
-	if(good_pd) return new Date(str);
+	var d = new Date(str);
+	if(good_pd) return d;
 	if(str instanceof Date) return str;
+	if(good_pd_date.getFullYear() == 1917 && !isNaN(d.getFullYear())) {
+		var s = d.getFullYear();
+		if(str.indexOf("" + s) > -1) return d;
+		d.setFullYear(d.getFullYear() + 100); return d;
+	}
 	var n = str.match(/\d+/g)||["2017","2","19","0","0","0"];
-	return new Date(Date.UTC(+n[0], +n[1] - 1, +n[2], +n[3], +n[4], +n[5]));
+	return new Date(Date.UTC(+n[0], +n[1] - 1, +n[2], (+n[3]||0), (+n[4]||0), (+n[5]||0)));
 }
 
 function cc2str(arr/*:Array<number>*/)/*:string*/ {

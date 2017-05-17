@@ -237,6 +237,8 @@ var SYLK = (function() {
 					else if(+val === +val) {
 						val = +val;
 						if(next_cell_format !== null && SSF.is_date(next_cell_format)) val = numdate(val);
+					} else if(!isNaN(fuzzydate(val).getDate())) {
+						val = parseDate(val);
 					}
 					arr[R][C] = val;
 					next_cell_format = null;
@@ -254,7 +256,7 @@ var SYLK = (function() {
 				case 'Y':
 					R = parseInt(record[rj].substr(1))-1; /*C = 0;*/
 					for(j = arr.length; j <= R; ++j) arr[j] = [];
-					++F_seen; break;
+					break;
 				case 'M': Mval = parseInt(record[rj].substr(1)) / 20; break;
 				case 'F': break; /* ??? */
 				case 'P':
@@ -281,7 +283,7 @@ var SYLK = (function() {
 					break;
 				default: if(opts && opts.WTF) throw new Error("SYLK bad record " + rstr);
 			}
-			if(F_seen < 2) next_cell_format = null; break;
+			if(F_seen < 1) next_cell_format = null; break;
 			default: if(opts && opts.WTF) throw new Error("SYLK bad record " + rstr);
 			}
 		}
@@ -480,6 +482,7 @@ var PRN = (function() {
 		else if(data === 'FALSE') arr[R][C] = false;
 		else if(data === ""){/* empty */}
 		else if(+data == +data) arr[R][C] = +data;
+		else if(!isNaN(fuzzydate(data).getDate())) arr[R][C] = parseDate(data);
 		else arr[R][C] = data;
 	}
 

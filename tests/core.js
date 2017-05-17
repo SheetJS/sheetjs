@@ -637,6 +637,23 @@ describe('output formats', function() {
 	});
 });
 
+function eqarr(a,b) {
+	assert.equal(a.length, b.length);
+	a.forEach(function(x, i) { assert.equal(x, b[i]); });
+}
+
+describe('API', function() {
+	it('book_append_sheet', function() {
+		var wb = X.utils.book_new();
+		X.utils.book_append_sheet(wb, X.utils.aoa_to_sheet([[1,2,3],[4],[5]]), "A");
+		X.utils.book_append_sheet(wb, X.utils.aoa_to_sheet([[1,2,3],[4],[5]]));
+		X.utils.book_append_sheet(wb, X.utils.aoa_to_sheet([[1,2,3],[4],[5]]));
+		X.utils.book_append_sheet(wb, X.utils.aoa_to_sheet([[1,2,3],[4],[5]]), "B");
+		X.utils.book_append_sheet(wb, X.utils.aoa_to_sheet([[1,2,3],[4],[5]]));
+		eqarr(wb.SheetNames, ["A","Sheet1","Sheet2","B","Sheet3"]);
+	});
+});
+
 function coreprop(wb) {
 	assert.equal(wb.Props.Title, 'Example with properties');
 	assert.equal(wb.Props.Subject, 'Test it before you code it');
@@ -1408,15 +1425,15 @@ describe('roundtrip features', function() {
 		});
 	});
 
-	it('should preserve js objects', function() {
+	it('should preserve JS objects', function() {
 		var data = [
 			{a:1},
 			{b:2,c:3},
 			{b:"a",d:"b"},
 			{a:true, c:false},
-			{c:new Date("2017-02-19T14:30Z")}
+			{c:parseDate("2017-02-19T14:30:00.000Z")}
 		];
-		var wb = X.utils.json_to_sheet(data);
+		var wb = X.utils.json_to_sheet(data, {cellDates:true});
 		var out = X.utils.sheet_to_json(wb, {raw:true});
 		data.forEach(function(row, i) {
 			Object.keys(row).forEach(function(k) { assert.equal(row[k], out[i][k]); });
@@ -1485,13 +1502,21 @@ function datenum(v/*:Date*/, date1904/*:?boolean*/)/*:number*/ {
 	return (epoch + 2209161600000) / (24 * 60 * 60 * 1000);
 }
 var good_pd_date = new Date('2017-02-19T19:06:09.000Z');
+if(isNaN(good_pd_date.getFullYear())) good_pd_date = new Date('2/19/17');
 var good_pd = good_pd_date.getFullYear() == 2017;
 function parseDate(str/*:string|Date*/)/*:Date*/ {
-	if(good_pd) return new Date(str);
+	var d = new Date(str);
+	if(good_pd) return d;
 	if(str instanceof Date) return str;
-	var n = str.match(/\d+/g);
-	return new Date(Date.UTC(+n[0], n[1] - 1, +n[2], +n[3], +n[4], +n[5]));
+	if(good_pd_date.getFullYear() == 1917 && !isNaN(d.getFullYear())) {
+		var s = d.getFullYear();
+		if(str.indexOf("" + s) > -1) return d;
+		d.setFullYear(d.getFullYear() + 100); return d;
+	}
+	var n = str.match(/\d+/g)||["2017","2","19","0","0","0"];
+	return new Date(Date.UTC(+n[0], +n[1] - 1, +n[2], +n[3], +n[4], +n[5]));
 }
+
 
 describe('json output', function() {
 	function seeker(json, keys, val) {
@@ -1664,7 +1689,8 @@ describe('csv', function() {
 		it('should honor dateNF override', function() {
 			var opts = {type:"binary", dateNF:"YYYY-MM-DD"};
 			var cell = get_cell(X.read(b, opts).Sheets.Sheet1, "C3");
-			assert.equal(cell.w, '2014-02-19');
+			/* NOTE: IE interprets 2-digit years as 19xx */
+			assert(cell.w == '2014-02-19' || cell.w == '1914-02-19');
 			opts.cellDates = true; opts.dateNF = "YY-MM-DD";
 			var cell = get_cell(X.read(b, opts).Sheets.Sheet1, "C3");
 			assert.equal(cell.w, '14-02-19');
@@ -1677,7 +1703,7 @@ describe('csv', function() {
 			data = [
 				[1,2,3,null],
 				[true, false, null, "sheetjs"],
-				["foo", "bar", new Date("2014-02-19T14:30Z"), "0.3"],
+				["foo", "bar", parseDate("2014-02-19T14:30:00.000Z"), "0.3"],
 				[null, null, null],
 				["baz", undefined, "qux"]
 			];
@@ -1816,10 +1842,6 @@ describe('corner cases', function() {
 				} else if(d[j][2] !== "#") assert.throws(function() { SSF.format(d[0], d[j][0]); });
 			}
 		});
-	});
-	it.skip('CFB', function() {
-		var cfb = X.CFB.read(paths.swcxls, {type:"file"});
-		var xls = X.parse_xlscfb(cfb);
 	});
 	it('codepage', function() {
 		X.read(fs.readFileSync(dir + "biff5/number_format_greek.xls"), {type:"binary"});

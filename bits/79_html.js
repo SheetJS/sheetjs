@@ -1,4 +1,4 @@
-/* TODO: in browser attach to DOM; in node use an html parser */
+/* note: browser DOM element cannot see mso- style attrs, must parse */
 var HTML_ = (function() {
 	function html_to_sheet(str/*:string*/, _opts)/*:Workbook*/ {
 		var opts = _opts || {};
@@ -112,7 +112,7 @@ function parse_dom_table(table/*:HTMLElement*/, _opts/*:?any*/)/*:Worksheet*/ {
 		var row = rows[R];
 		var elts = row.children;
 		for(_C = C = 0; _C < elts.length; ++_C) {
-			var elt = elts[_C], v = elts[_C].innerText;
+			var elt = elts[_C], v = elts[_C].innerText || elts[_C].textContent;
 			for(midx = 0; midx < merges.length; ++midx) {
 				var m = merges[midx];
 				if(m.s.c == C && m.s.r <= R && R <= m.e.r) { C = m.e.c+1; midx = -1; }
@@ -120,8 +120,15 @@ function parse_dom_table(table/*:HTMLElement*/, _opts/*:?any*/)/*:Worksheet*/ {
 			/* TODO: figure out how to extract nonstandard mso- style */
 			CS = +elt.getAttribute("colspan") || 1;
 			if((RS = +elt.getAttribute("rowspan"))>0 || CS>1) merges.push({s:{r:R,c:C},e:{r:R + (RS||1) - 1, c:C + CS - 1}});
-			var o = {t:'s', v:v};
-			if(v != null && v.length && !isNaN(Number(v))) o = {t:'n', v:Number(v)};
+			var o/*:Cell*/ = {t:'s', v:v};
+			if(v != null && v.length) {
+				if(!isNaN(Number(v))) o = {t:'n', v:Number(v)};
+				else if(!isNaN(fuzzydate(v).getDate())) {
+					o = ({t:'d', v:parseDate(v)}/*:any*/);
+					if(!opts.cellDates) o = ({t:'n', v:datenum(o.v)}/*:any*/);
+					o.z = opts.dateNF || SSF._table[14];
+				}
+			}
 			if(opts.dense) { if(!ws[R]) ws[R] = []; ws[R][C] = o; }
 			else ws[encode_cell({c:C, r:R})] = o;
 			if(range.e.c < C) range.e.c = C;

@@ -51,11 +51,15 @@ var WK_ = (function() {
 				case 0x0E: /* NUMBER */
 				case 0x10: /* FORMULA */
 				case 0x33: /* STRING */
+					/* TODO: actual translation of the format code */
+					if(RT == 0x0E && (val[2] & 0x70) == 0x70 && (val[2] & 0x0F) > 1 && (val[2] & 0x0F) < 15) {
+						val[1].z = o.dateNF || SSF._table[14];
+						if(o.cellDates) { val[1].t = 'd'; val[1].v = numdate(val[1].v); }
+					}
 					if(o.dense) {
 						if(!s[val[0].r]) s[val[0].r] = [];
 						s[val[0].r][val[0].c] = val[1];
 					} else s[encode_cell(val[0])] = val[1];
-					/* TODO: FORMAT */
 					break;
 			} else switch(RT) {
 				case 0x16: /* LABEL16 */
@@ -224,7 +228,7 @@ var WK_ = (function() {
 	var WK1Enum = {
 		/*::[*/0x0000/*::]*/: { n:"BOF", f:parseuint16 },
 		/*::[*/0x0001/*::]*/: { n:"EOF", f:parsenoop },
-		/*::[*/0x0002/*::]*/: { n: "CALCMODE", f:parsenoop },
+		/*::[*/0x0002/*::]*/: { n:"CALCMODE", f:parsenoop },
 		/*::[*/0x0003/*::]*/: { n:"CALCORDER", f:parsenoop },
 		/*::[*/0x0004/*::]*/: { n:"SPLIT", f:parsenoop },
 		/*::[*/0x0005/*::]*/: { n:"SYNC", f:parsenoop },

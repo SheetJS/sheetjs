@@ -30,8 +30,10 @@ merge_cells             	.xls .xlsb .xlsx .xls.xml
 named_ranges_2011       	.xls .xlsb .xlsx .xls.xml
 # yes-formula
 # no-csv (macro serialization in xml)
+# no-formula (rounding issue in IE8)
 #number_format           	.xls .xlsb .xlsm .xls.xml .xlsb.xml .xlsm.xml
 number_format           	.xls .xlsb .xlsm .xls.xml
+# yes-formula
 # yes-csv
 number_format_entities  	.xls .xlsb .xlsx .xml
 pivot_table_named_range 	.xls .xlsb .xlsx .xml
@@ -43,4 +45,5 @@ sushi                   	.xls .xlsb .xlsx .xml
 text_and_numbers        	.xls .xlsb .xlsx .xml
 #time_stress_test_1      	.xls .xlsb .xlsx .xml
 #xlsx-stream-d-date-cell 	.xls .xlsb .xlsx .xls.xml .xlsb.xml .xlsx.xml
+# no-formula (rounding issue in IE8)
 xlsx-stream-d-date-cell 	.xls .xlsb .xlsx .xls.xml

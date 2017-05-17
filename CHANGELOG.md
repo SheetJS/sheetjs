@@ -5,9 +5,10 @@ but not limited to API changes and file location changes.  Minor behavioral
 changes may not be included if they are not expected to break existing code.
 
 
-## 0.10.2 (2017-05-??)
+## 0.10.2 (2017-05-16)
 
-* CSV generates numeric dates by default (aligning with XLSX cellDates behavior)
+* Dates are converted to numbers by default (set `cellDates:true` to emit Dates)
+* Module does not export CFB
 
 ## 0.9.10 (2017-04-08)
 
