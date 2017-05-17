@@ -6,7 +6,7 @@
 /*global global, exports, module, require:false, process:false, Buffer:false */
 var XLSX = {};
 (function make_xlsx(XLSX){
-XLSX.version = '0.10.2';
+XLSX.version = '0.10.3';
 var current_codepage = 1200;
 /*:: declare var cptable:any; */
 /*global cptable:true */
@@ -119,7 +119,7 @@ type WriteObjStrFactory = {from_sheet(ws:Worksheet, o:any):string};
 /*jshint -W041 */
 var SSF = {};
 var make_ssf = function make_ssf(SSF){
-SSF.version = '0.9.2';
+SSF.version = '0.9.3';
 function _strrev(x/*:string*/)/*:string*/ { var o = "", i = x.length-1; while(i>=0) o += x.charAt(i--); return o; }
 function fill(c/*:string*/,l/*:number*/)/*:string*/ { var o = ""; while(o.length < l) o+=c; return o; }
 function pad0(v/*:any*/,d/*:number*/)/*:string*/{var t=""+v; return t.length>=d?t:fill('0',d-t.length)+t;}
@@ -269,9 +269,9 @@ function parse_date_code(v/*:number*/,opts/*:?any*/,b2/*:?boolean*/) {
 	if(Math.abs(out.u) < 1e-6) out.u = 0;
 	fixopts(opts != null ? opts : (opts=[]));
 	if(opts.date1904) date += 1462;
-	if(out.u > 0.999) {
+	if(out.u > 0.9999) {
 		out.u = 0;
-		if(++time == 86400) { time = 0; ++date; }
+		if(++time == 86400) { out.T = time = 0; ++date; ++out.D; }
 	}
 	if(date === 60) {dout = b2 ? [1317,10,29] : [1900,2,29]; dow=3;}
 	else if(date === 0) {dout = b2 ? [1317,8,29] : [1900,1,0]; dow=6;}
@@ -5691,7 +5691,7 @@ var PRN = (function() {
 			if(cc == sepcc) ++C; else { C = 0; ++R; }
 		}
 		for(;end < str.length;++end) switch((cc=str.charCodeAt(end))) {
-			case 0x22: if(instr || (end - start == 0)) instr = !instr; break;
+			case 0x22: instr = !instr; break;
 			case sepcc: case 0x0a: case 0x0d: if(!instr) finish_cell(); break;
 			default: break;
 		}

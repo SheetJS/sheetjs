@@ -548,7 +548,7 @@ var PRN = (function() {
 			if(cc == sepcc) ++C; else { C = 0; ++R; }
 		}
 		for(;end < str.length;++end) switch((cc=str.charCodeAt(end))) {
-			case 0x22: if(instr || (end - start == 0)) instr = !instr; break;
+			case 0x22: instr = !instr; break;
 			case sepcc: case 0x0a: case 0x0d: if(!instr) finish_cell(); break;
 			default: break;
 		}
