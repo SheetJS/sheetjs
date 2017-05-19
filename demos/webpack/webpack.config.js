@@ -3,9 +3,6 @@ module.exports = {
 		libraryTarget: 'var',
 		library: 'XLSX'
 	},
-	module: {
-		noParse: [/jszip.js$/]
-	},
 	node: {
 		fs: false,
 		process: false,
