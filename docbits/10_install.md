@@ -28,12 +28,16 @@ The `demos` directory includes sample projects for:
 - [`angular`](demos/angular/)
 - [`browserify`](demos/browserify/)
 - [`Adobe ExtendScript`](demos/extendscript/)
+- [`meteor`](demos/meteor/)
 - [`phantomjs`](demos/phantomjs/)
 - [`requirejs`](demos/requirejs/)
 - [`systemjs`](demos/systemjs/)
 - [`webpack`](demos/webpack/)
 
 ### Optional Modules
+
+<details>
+	<summary><b>Optional features</b> (click to show)</summary>
 
 The node version automatically requires modules for additional features.  Some
 of these modules are rather large in size and are only needed in special
@@ -59,6 +63,7 @@ be configured to remove support with `resolve.alias`:
   }
 ```
 
+</details>
 
 ### ECMAScript 5 Compatibility
 

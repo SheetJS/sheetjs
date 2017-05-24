@@ -1,0 +1,27 @@
+<head>
+	<title>meteor-xlsx</title>
+</head>
+
+<body>
+<pre>
+<b><a href="//sheetjs.com">SheetJS Meteor Demo</a></b>
+
+<b>Meteor Read Demo</b>
+
+{{> read}}
+
+<b>Meteor Write Demo</b>
+
+{{> write}}
+
+</pre>
+</body>
+
+<template name="read">
+	<label for="upload">Parse File: </label><input type="file" id="upload" />
+	<div id="out"></div>
+</template>
+
+<template name="write">
+	<label for="dnload">Write File: </label><button id="dnload">Generate Worksheet</button>
+</template>
