@@ -154,11 +154,19 @@ function write_wb_xml(wb, opts) {
     for(var i = 0; i != wb.SheetNames.length; ++i) {
       var sheetName = wb.SheetNames[i];
       var sheet = wb.Sheets[sheetName]
-      if (sheet['!printHeader']) {
+      if (sheet['!printHeader'] || sheet['!printColumns']) {
           var printHeader = sheet['!printHeader'];
+          var printColumns = sheet['!printColumns'];
 
-        var range = "'" + sheetName + "'!$" + printHeader[0] + ":$" + printHeader[1];
+        //Sheet1!$A:$C,Sheet1!$1:$1
+        var range = "";
 
+        if (printColumns)  range += ("'" + sheetName + "'!")  + ("$" + printColumns[0] + ":$" + printColumns[1]);
+        if (printColumns && printHeader)  range += ","
+        if (printHeader) range += ("'" + sheetName + "'!" ) +  ("$" + printHeader[0] + ":$" + printHeader[1]);
+
+        console.log("-----------------------------")
+        console.log(range)
         o[o.length] = (writextag('definedName', range, {
           "name":"_xlnm.Print_Titles",
           localSheetId : ''+i
