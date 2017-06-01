@@ -29,22 +29,17 @@ function evert_arr(obj/*:any*/)/*:EvertArrType*/ {
 	return o;
 }
 
+var basedate = new Date(1899, 11, 30, 0, 0, 0); // 2209161600000
+var dnthresh = basedate.getTime() + (new Date().getTimezoneOffset() - basedate.getTimezoneOffset()) * 60000;
 function datenum(v/*:Date*/, date1904/*:?boolean*/)/*:number*/ {
 	var epoch = v.getTime();
 	if(date1904) epoch += 1462*24*60*60*1000;
-	return (epoch + 2209161600000) / (24 * 60 * 60 * 1000);
+	return (epoch - dnthresh) / (24 * 60 * 60 * 1000);
 }
 function numdate(v/*:number*/)/*:Date*/ {
-	var date = SSF.parse_date_code(v);
-	var val = new Date();
-	if(date == null) throw new Error("Bad Date Code: " + v);
-	val.setUTCDate(date.d);
-	val.setUTCMonth(date.m-1);
-	val.setUTCFullYear(date.y);
-	val.setUTCHours(date.H);
-	val.setUTCMinutes(date.M);
-	val.setUTCSeconds(date.S);
-	return val;
+	var out = new Date();
+	out.setTime(v * 24 * 60 * 60 * 1000 + dnthresh);
+	return out;
 }
 
 /* ISO 8601 Duration */
@@ -77,9 +72,15 @@ function parse_isodur(s) {
 var good_pd_date = new Date('2017-02-19T19:06:09.000Z');
 if(isNaN(good_pd_date.getFullYear())) good_pd_date = new Date('2/19/17');
 var good_pd = good_pd_date.getFullYear() == 2017;
-function parseDate(str/*:string|Date*/)/*:Date*/ {
+/* parses aa date as a local date */
+function parseDate(str/*:string|Date*/, fixdate/*:?number*/)/*:Date*/ {
 	var d = new Date(str);
-	if(good_pd) return d;
+	if(good_pd) {
+		/*:: if(fixdate == null) fixdate = 0; */
+		if(fixdate > 0) d.setTime(d.getTime() + d.getTimezoneOffset() * 60 * 1000);
+		else if(fixdate < 0) d.setTime(d.getTime() - d.getTimezoneOffset() * 60 * 1000);
+		return d;
+	}
 	if(str instanceof Date) return str;
 	if(good_pd_date.getFullYear() == 1917 && !isNaN(d.getFullYear())) {
 		var s = d.getFullYear();
@@ -87,7 +88,7 @@ function parseDate(str/*:string|Date*/)/*:Date*/ {
 		d.setFullYear(d.getFullYear() + 100); return d;
 	}
 	var n = str.match(/\d+/g)||["2017","2","19","0","0","0"];
-	return new Date(Date.UTC(+n[0], +n[1] - 1, +n[2], (+n[3]||0), (+n[4]||0), (+n[5]||0)));
+	return new Date(+n[0], +n[1] - 1, +n[2], (+n[3]||0), (+n[4]||0), (+n[5]||0));
 }
 
 function cc2str(arr/*:Array<number>*/)/*:string*/ {

@@ -18,10 +18,27 @@ function write_BrtBundleSh(data, o) {
 
 /* [MS-XLSB] 2.4.807 BrtWbProp */
 function parse_BrtWbProp(data, length) {
-	data.read_shift(4);
-	var dwThemeVersion = data.read_shift(4);
+	var o = {};
+	var flags = data.read_shift(4);
+	o.defaultThemeVersion = data.read_shift(4);
 	var strName = (length > 8) ? parse_XLWideString(data) : "";
-	return [dwThemeVersion, strName];
+	if(strName.length > 0) o.codeName = strName;
+	o.autoCompressPictures = !!(flags & 0x10000);
+	o.backupFile = !!(flags & 0x40);
+	o.checkCompatibility = !!(flags & 0x1000);
+	o.date1904 = !!(flags & 0x01);
+	o.filterPrivacy = !!(flags & 0x08);
+	o.hidePivotFieldList = !!(flags & 0x400);
+	o.promptedSolutions = !!(flags & 0x10);
+	o.publishItems = !!(flags & 0x800);
+	o.refreshAllConnections = !!(flags & 0x40000);
+	o.saveExternalLinkValues = !!(flags & 0x80);
+	o.showBorderUnselectedTables = !!(flags & 0x04);
+	o.showInkAnnotation = !!(flags & 0x20);
+	o.showObjects = ["all", "placeholders", "none"][(flags >> 13) & 0x03];
+	o.showPivotChartFilter = !!(flags & 0x8000);
+	o.updateLinks = ["userSet", "never", "always"][(flags >> 8) & 0x03];
+	return o;
 }
 function write_BrtWbProp(data, o) {
 	if(!o) o = new_buf(72);
@@ -85,6 +102,9 @@ function parse_wb_bin(data, opts)/*:WorkbookFile*/ {
 				break;
 			case 0x040C: /* 'BrtNameExt' */ break;
 
+			case 0x0099: /* 'BrtWbProp' */
+				wb.WBProps = val; break;
+
 			/* case 'BrtModelTimeGroupingCalcCol' */
 			/* case 'BrtRevisionPtr' */
 			/* case 'BrtUid' */
@@ -116,7 +136,6 @@ function parse_wb_bin(data, opts)/*:WorkbookFile*/ {
 			case 0x0822: /* 'BrtTimelineCachePivotCacheID' */
 			case 0x018D: /* 'BrtUserBookView' */
 			case 0x009A: /* 'BrtWbFactoid' */
-			case 0x0099: /* 'BrtWbProp' */
 			case 0x045D: /* 'BrtWbProp14' */
 			case 0x0229: /* 'BrtWebOpt' */
 			case 0x082B: /* 'BrtWorkBookPr15' */

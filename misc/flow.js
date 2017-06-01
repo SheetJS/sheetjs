@@ -26,12 +26,17 @@ type Workbook = {
 type WBWBProps = {
 	Sheets: Array<WBWSProp>;
 	Names?: Array<any>;
+	WBProps?: WBProps;
+};
+
+type WBProps = {
+	date1904?: boolean;
 };
 
 type WBWSProp = {
 	Hidden?: number;
 	name?: string;
-}
+};
 
 interface CellAddress {
 	r:number;

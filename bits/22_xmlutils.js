@@ -74,7 +74,7 @@ var xlml_unfixstr/*:StringConv*/ = (function() {
 
 function parsexmlbool(value/*:any*/, tag/*:?string*/)/*:boolean*/ {
 	switch(value) {
-		case '1': case 'true': case 'TRUE': return true;
+		case 1: case true: case '1': case 'true': case 'TRUE': return true;
 		/* case '0': case 'false': case 'FALSE':*/
 		default: return false;
 	}

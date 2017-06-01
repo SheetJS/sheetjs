@@ -44,6 +44,9 @@ will not be generated; the parser `sheetStubs` option must be set to `true`.
 
 #### Dates
 
+<details>
+	<summary><b>Excel Date Code details</b> (click to show)</summary>
+
 By default, Excel stores dates as numbers with a format code that specifies date
 processing.  For example, the date `19-Feb-17` is stored as the number `42785`
 with a number format of `d-mmm-yy`.  The `SSF` module understands number formats
@@ -54,4 +57,30 @@ string.  The formatter converts the date back to a number.
 
 The default behavior for all parsers is to generate number cells.  Setting
 `cellDates` to true will force the generators to store dates.
+
+</details>
+
+<details>
+	<summary><b>Time Zones and Dates</b> (click to show)</summary>
+
+Excel has no native concept of universal time.  All times are specified in the
+local time zone.  Excel limitations prevent specifying true absolute dates.
+
+Following Excel, this library treats all dates as relative to local time zone.
+
+</details>
+
+<details>
+	<summary><b>Epochs: 1900 and 1904</b> (click to show)</summary>
+
+Excel supports two epochs (January 1 1900 and January 1 1904), see
+["1900 vs. 1904 Date System" article](http://support2.microsoft.com/kb/180162).
+The workbook's epoch can be determined by examining the workbook's
+`wb.Workbook.WBProps.date1904` property:
+
+```js
+!!(((wb.Workbook||{}).WBProps||{}).date1904)
+```
+
+</details>
 

@@ -74,7 +74,7 @@ function safe_format_xlml(cell/*:Cell*/, nf, o) {
 		var z = XLMLFormatMap[nf]||nf||"General";
 		if(o.cellNF) cell.z = z;
 		if(o.cellDates && cell.t == 'n' && SSF.is_date(z)) {
-			var _d = SSF.parse_date_code(cell.v); if(_d) { cell.t = 'd'; cell.v = new Date(Date.UTC(_d.y, _d.m-1,_d.d,_d.H,_d.M,_d.S,_d.u)); }
+			var _d = SSF.parse_date_code(cell.v); if(_d) { cell.t = 'd'; cell.v = new Date(_d.y, _d.m-1,_d.d,_d.H,_d.M,_d.S,_d.u); }
 		}
 	} catch(e) { if(o.WTF) throw e; }
 }
@@ -191,7 +191,7 @@ function parse_xlml_xml(d, opts)/*:Workbook*/ {
 	var cstys = [], csty, seencol = false;
 	var arrayf = [];
 	var rowinfo = [], rowobj = {};
-	var Workbook/*:WBWBProps*/ = { Sheets:[] }, wsprops = {};
+	var Workbook/*:WBWBProps*/ = ({ Sheets:[], WBProps:{date1904:false} }/*:any*/), wsprops = {};
 	xlmlregex.lastIndex = 0;
 	str = str.replace(/<!--([^\u2603]*?)-->/mg,"");
 	while((Rn = xlmlregex.exec(str))) switch(Rn[3]) {
@@ -472,6 +472,10 @@ function parse_xlml_xml(d, opts)/*:Workbook*/ {
 
 				/* ExcelWorkbook */
 				case 'ExcelWorkbook': switch(Rn[3]) {
+					case 'Date1904':
+						/*:: if(!Workbook.WBProps) Workbook.WBProps = {}; */
+						Workbook.WBProps.date1904 = true;
+						break;
 					case 'WindowHeight': break;
 					case 'WindowWidth': break;
 					case 'WindowTopX': break;
@@ -490,7 +494,6 @@ function parse_xlml_xml(d, opts)/*:Workbook*/ {
 					case 'Dll': break;
 					case 'AcceptLabelsInFormulas': break;
 					case 'DoNotSaveLinkValues': break;
-					case 'Date1904': break;
 					case 'Iteration': break;
 					case 'MaxIterations': break;
 					case 'MaxChange': break;

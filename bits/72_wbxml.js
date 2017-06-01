@@ -26,8 +26,17 @@ function parse_wb_xml(data, opts)/*:WorkbookFile*/ {
 			case '<fileSharing': case '<fileSharing/>': break;
 
 			/* 18.2.28 workbookPr CT_WorkbookPr ? */
-			case '<workbookPr': delete y[0]; wb.WBProps = y; break;
-			case '<workbookPr/>': delete y[0]; wb.WBProps = y; break;
+			case '<workbookPr':
+			case '<workbookPr/>':
+				WBPropsDef.forEach(function(w) {
+					if(y[w[0]] == null) return;
+					switch(w[2]) {
+						case "bool": wb.WBProps[w[0]] = parsexmlbool(y[w[0]], w[0]); break;
+						case "int": wb.WBProps[w[0]] = parseInt(y[w[0]], 10); break;
+						default: wb.WBProps[w[0]] = y[w[0]];
+					}
+				});
+				break;
 			case '</workbookPr>': break;
 
 			/* 18.2.29 workbookProtection CT_WorkbookProtection ? */
@@ -147,14 +156,6 @@ var WB_XML_ROOT = writextag('workbook', null, {
 	//'xmlns:s': XMLNS.main[0],
 	'xmlns:r': XMLNS.r
 });
-
-function safe1904(wb/*:Workbook*/)/*:string*/ {
-	/* TODO: store date1904 somewhere else */
-	if(!wb.Workbook) return "false";
-	if(!wb.Workbook.WBProps) return "false";
-	// $FlowIgnore
-	return parsexmlbool(wb.Workbook.WBProps.date1904) ? "true" : "false";
-}
 
 function write_wb_xml(wb/*:Workbook*/, opts/*:?WriteOpts*/)/*:string*/ {
 	var o = [XML_HEADER];

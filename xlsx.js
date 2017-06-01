@@ -967,6 +967,33 @@ var XLMLFormatMap/*{[string]:string}*/ = ({
 	"On/Off": '"Yes";"Yes";"No";@'
 });
 
+/* dateNF parse TODO: move to SSF */
+var dateNFregex = /[dD]+|[mM]+|[yYeE]+|[Hh]+|[Ss]+/g;
+function dateNF_regex(dateNF) {
+	var fmt = typeof dateNF == "number" ? SSF._table[dateNF] : dateNF;
+	fmt = fmt.replace(dateNFregex, "(\\d+)");
+	return new RegExp("^" + fmt + "$");
+}
+function dateNF_fix(str, dateNF, match) {
+	var Y = -1, m = -1, d = -1, H = -1, M = -1, S = -1;
+	(dateNF.match(dateNFregex)||[]).forEach(function(n, i) {
+		var v = parseInt(match[i+1], 10);
+		switch(n.toLowerCase().charAt(0)) {
+			case 'y': Y = v; break; case 'd': d = v; break;
+			case 'h': H = v; break; case 's': S = v; break;
+			case 'm': if(H >= 0) M = v; else m = v; break;
+		}
+	});
+	if(S >= 0 && M == -1 && m >= 0) { M = m; m = -1; }
+	var datestr = (("" + (Y>=0?Y: new Date().getFullYear())).slice(-4) + "-" + ("00" + (m>=1?m:1)).slice(-2) + "-" + ("00" + (d>=1?d:1)).slice(-2));
+	if(datestr.length == 7) datestr = "0" + datestr;
+	if(datestr.length == 8) datestr = "20" + datestr;
+	var timestr = (("00" + (H>=0?H:0)).slice(-2) + ":" + ("00" + (M>=0?M:0)).slice(-2) + ":" + ("00" + (S>=0?S:0)).slice(-2));
+	if(H == -1 && M == -1 && S == -1) return datestr;
+	if(Y == -1 && m == -1 && d == -1) return timestr;
+	return datestr + "T" + timestr;
+}
+
 var DO_NOT_EXPORT_CFB = true;
 /* cfb.js (C) 2013-present SheetJS -- http://sheetjs.com */
 /* vim: set ts=2: */
@@ -1385,22 +1412,17 @@ function evert_arr(obj) {
 	return o;
 }
 
+var basedate = new Date(1899, 11, 30, 0, 0, 0); // 2209161600000
+var dnthresh = basedate.getTime() + (new Date().getTimezoneOffset() - basedate.getTimezoneOffset()) * 60000;
 function datenum(v, date1904) {
 	var epoch = v.getTime();
 	if(date1904) epoch += 1462*24*60*60*1000;
-	return (epoch + 2209161600000) / (24 * 60 * 60 * 1000);
+	return (epoch - dnthresh) / (24 * 60 * 60 * 1000);
 }
 function numdate(v) {
-	var date = SSF.parse_date_code(v);
-	var val = new Date();
-	if(date == null) throw new Error("Bad Date Code: " + v);
-	val.setUTCDate(date.d);
-	val.setUTCMonth(date.m-1);
-	val.setUTCFullYear(date.y);
-	val.setUTCHours(date.H);
-	val.setUTCMinutes(date.M);
-	val.setUTCSeconds(date.S);
-	return val;
+	var out = new Date();
+	out.setTime(v * 24 * 60 * 60 * 1000 + dnthresh);
+	return out;
 }
 
 /* ISO 8601 Duration */
@@ -1433,9 +1455,14 @@ function parse_isodur(s) {
 var good_pd_date = new Date('2017-02-19T19:06:09.000Z');
 if(isNaN(good_pd_date.getFullYear())) good_pd_date = new Date('2/19/17');
 var good_pd = good_pd_date.getFullYear() == 2017;
-function parseDate(str) {
+/* parses aa date as a local date */
+function parseDate(str, fixdate) {
 	var d = new Date(str);
-	if(good_pd) return d;
+	if(good_pd) {
+if(fixdate > 0) d.setTime(d.getTime() + d.getTimezoneOffset() * 60 * 1000);
+		else if(fixdate < 0) d.setTime(d.getTime() - d.getTimezoneOffset() * 60 * 1000);
+		return d;
+	}
 	if(str instanceof Date) return str;
 	if(good_pd_date.getFullYear() == 1917 && !isNaN(d.getFullYear())) {
 		var s = d.getFullYear();
@@ -1443,7 +1470,7 @@ function parseDate(str) {
 		d.setFullYear(d.getFullYear() + 100); return d;
 	}
 	var n = str.match(/\d+/g)||["2017","2","19","0","0","0"];
-	return new Date(Date.UTC(+n[0], +n[1] - 1, +n[2], (+n[3]||0), (+n[4]||0), (+n[5]||0)));
+	return new Date(+n[0], +n[1] - 1, +n[2], (+n[3]||0), (+n[4]||0), (+n[5]||0));
 }
 
 function cc2str(arr) {
@@ -1630,7 +1657,7 @@ var xlml_unfixstr = (function() {
 
 function parsexmlbool(value, tag) {
 	switch(value) {
-		case '1': case 'true': case 'TRUE': return true;
+		case 1: case true: case '1': case 'true': case 'TRUE': return true;
 		/* case '0': case 'false': case 'FALSE':*/
 		default: return false;
 	}
@@ -5605,6 +5632,7 @@ var PRN = (function() {
 		var R = 0, C = 0, v = 0;
 		var start = 0, end = 0, sepcc = sep.charCodeAt(0), instr = false, cc=0;
 		str = str.replace(/\r\n/mg, "\n");
+		var _re = o.dateNF != null ? dateNF_regex(o.dateNF) : null;
 		function finish_cell() {
 			var s = str.slice(start, end);
 			var cell = ({});
@@ -5612,10 +5640,12 @@ var PRN = (function() {
 			else if(s == "TRUE") { cell.t = 'b'; cell.v = true; }
 			else if(s == "FALSE") { cell.t = 'b'; cell.v = false; }
 			else if(!isNaN(v = +s)) { cell.t = 'n'; cell.w = s; cell.v = v; }
-			else if(!isNaN(fuzzydate(s).getDate())) {
+			else if(!isNaN(fuzzydate(s).getDate()) || _re && s.match(_re)) {
 				cell.z = o.dateNF || SSF._table[14];
-				if(o.cellDates) { cell.t = 'd'; cell.v = parseDate(s); }
-				else { cell.t = 'n'; cell.v = datenum(parseDate(s)); }
+				var k = 0;
+				if(_re && s.match(_re)){ s=dateNF_fix(s, o.dateNF, (s.match(_re)||[])); k=1; }
+				if(o.cellDates) { cell.t = 'd'; cell.v = parseDate(s, k); }
+				else { cell.t = 'n'; cell.v = datenum(parseDate(s, k)); }
 				cell.w = SSF.format(cell.z, cell.v instanceof Date ? datenum(cell.v):cell.v);
 			} else {
 				cell.t = 's';
@@ -10784,7 +10814,7 @@ function write_ws_xml_cell(cell, ref, ws, opts, idx, wb) {
 		case 'n': vv = ''+cell.v; break;
 		case 'e': vv = BErr[cell.v]; break;
 		case 'd':
-			if(opts.cellDates) vv = parseDate(cell.v).toISOString();
+			if(opts.cellDates) vv = parseDate(cell.v, -1).toISOString();
 			else {
 				cell.t = 'n';
 				vv = ''+(cell.v = datenum(parseDate(cell.v)));
@@ -10937,7 +10967,8 @@ return function parse_ws_xml_data(sdata, s, opts, guess, themes, styles) {
 					break;
 				case 'b': p.v = parsexmlbool(p.v); break;
 				case 'd':
-					if(!opts.cellDates) { p.v = datenum(parseDate(p.v)); p.t = 'n'; }
+					if(opts.cellDates) p.v = parseDate(p.v, 1);
+					else { p.v = datenum(parseDate(p.v, 1)); p.t = 'n'; }
 					break;
 				/* error string in .w, number in .v */
 				case 'e':
@@ -10954,9 +10985,7 @@ return function parse_ws_xml_data(sdata, s, opts, guess, themes, styles) {
 				}
 			}
 			safe_format(p, fmtid, fillid, opts, themes, styles);
-			if(opts.cellDates && do_format && p.t == 'n' && SSF.is_date(SSF._table[fmtid])) {
-				var _d = SSF.parse_date_code(p.v); if(_d) { p.t = 'd'; p.v = new Date(Date.UTC(_d.y, _d.m-1,_d.d,_d.H,_d.M,_d.S,_d.u)); }
-			}
+			if(opts.cellDates && do_format && p.t == 'n' && SSF.is_date(SSF._table[fmtid])) { p.t = 'd'; p.v = numdate(p.v); }
 			if(dense) {
 				var _r = decode_cell(tag.r);
 				if(!s[_r.r]) s[_r.r] = [];
@@ -11572,7 +11601,7 @@ function parse_ws_bin(data, _opts, rels, wb, themes, styles) {
 				if(refguess.e.r < row.r) refguess.e.r = row.r;
 				if(refguess.e.c < C) refguess.e.c = C;
 				if(opts.cellDates && cf && p.t == 'n' && SSF.is_date(SSF._table[cf.ifmt])) {
-					var _d = SSF.parse_date_code(p.v); if(_d) { p.t = 'd'; p.v = new Date(Date.UTC(_d.y, _d.m-1,_d.d,_d.H,_d.M,_d.S,_d.u)); }
+					var _d = SSF.parse_date_code(p.v); if(_d) { p.t = 'd'; p.v = new Date(_d.y, _d.m-1,_d.d,_d.H,_d.M,_d.S,_d.u); }
 				}
 				break;
 
@@ -12054,38 +12083,37 @@ function write_cs_bin(idx, opts, wb, rels) {
 }
 /* 18.2.28 (CT_WorkbookProtection) Defaults */
 var WBPropsDef = [
-	['allowRefreshQuery', '0'],
-	['autoCompressPictures', '1'],
-	['backupFile', '0'],
-	['checkCompatibility', '0'],
-	['codeName', ''],
-	['date1904', '0'],
-	['dateCompatibility', '1'],
-	//['defaultThemeVersion', '0'],
-	['filterPrivacy', '0'],
-	['hidePivotFieldList', '0'],
-	['promptedSolutions', '0'],
-	['publishItems', '0'],
-	['refreshAllConnections', false],
-	['saveExternalLinkValues', '1'],
-	['showBorderUnselectedTables', '1'],
-	['showInkAnnotation', '1'],
-	['showObjects', 'all'],
-	['showPivotChartFilter', '0']
-	//['updateLinks', 'userSet']
+	['allowRefreshQuery',           false, "bool"],
+	['autoCompressPictures',        true,  "bool"],
+	['backupFile',                  false, "bool"],
+	['checkCompatibility',          false, "bool"],
+	['codeName',                    ''],
+	['date1904',                    false, "bool"],
+	['defaultThemeVersion',         0,      "int"],
+	['filterPrivacy',               false, "bool"],
+	['hidePivotFieldList',          false, "bool"],
+	['promptedSolutions',           false, "bool"],
+	['publishItems',                false, "bool"],
+	['refreshAllConnections',       false, "bool"],
+	['saveExternalLinkValues',      true,  "bool"],
+	['showBorderUnselectedTables',  true,  "bool"],
+	['showInkAnnotation',           true,  "bool"],
+	['showObjects',                 'all'],
+	['showPivotChartFilter',        false, "bool"],
+	['updateLinks', 'userSet']
 ];
 
 /* 18.2.30 (CT_BookView) Defaults */
 var WBViewDef = [
-	['activeTab', '0'],
-	['autoFilterDateGrouping', '1'],
-	['firstSheet', '0'],
-	['minimized', '0'],
-	['showHorizontalScroll', '1'],
-	['showSheetTabs', '1'],
-	['showVerticalScroll', '1'],
-	['tabRatio', '600'],
-	['visibility', 'visible']
+	['activeTab',                   0,      "int"],
+	['autoFilterDateGrouping',      true,  "bool"],
+	['firstSheet',                  0,      "int"],
+	['minimized',                   false, "bool"],
+	['showHorizontalScroll',        true,  "bool"],
+	['showSheetTabs',               true,  "bool"],
+	['showVerticalScroll',          true,  "bool"],
+	['tabRatio',                    600,    "int"],
+	['visibility',                  'visible']
 	//window{Height,Width}, {x,y}Window
 ];
 
@@ -12134,12 +12162,20 @@ function push_defaults_array(target, defaults) {
 	for(var j = 0; j != target.length; ++j) { var w = target[j];
 		for(var i=0; i != defaults.length; ++i) { var z = defaults[i];
 			if(w[z[0]] == null) w[z[0]] = z[1];
+			else switch(z[2]) {
+			case "bool": if(typeof w[z[0]] == "string") w[z[0]] = parsexmlbool(w[z[0]], z[0]); break;
+			case "int": if(typeof w[z[0]] == "string") w[z[0]] = parseInt(w[z[0]], 10); break;
+			}
 		}
 	}
 }
 function push_defaults(target, defaults) {
 	for(var i = 0; i != defaults.length; ++i) { var z = defaults[i];
 		if(target[z[0]] == null) target[z[0]] = z[1];
+		else switch(z[2]) {
+			case "bool": if(typeof target[z[0]] == "string") target[z[0]] = parsexmlbool(target[z[0]], z[0]); break;
+			case "int": if(typeof target[z[0]] == "string") target[z[0]] = parseInt(target[z[0]], 10); break;
+		}
 	}
 }
 
@@ -12151,6 +12187,13 @@ function parse_wb_defaults(wb) {
 	push_defaults_array(wb.Sheets, SheetDef);
 
 	_ssfopts.date1904 = parsexmlbool(wb.WBProps.date1904, 'date1904');
+}
+
+function safe1904(wb) {
+	/* TODO: store date1904 somewhere else */
+	if(!wb.Workbook) return "false";
+	if(!wb.Workbook.WBProps) return "false";
+	return parsexmlbool(wb.Workbook.WBProps.date1904) ? "true" : "false";
 }
 
 var badchars = "][*?\/\\".split("");
@@ -12203,8 +12246,17 @@ function parse_wb_xml(data, opts) {
 			case '<fileSharing': case '<fileSharing/>': break;
 
 			/* 18.2.28 workbookPr CT_WorkbookPr ? */
-			case '<workbookPr': delete y[0]; wb.WBProps = y; break;
-			case '<workbookPr/>': delete y[0]; wb.WBProps = y; break;
+			case '<workbookPr':
+			case '<workbookPr/>':
+				WBPropsDef.forEach(function(w) {
+					if(y[w[0]] == null) return;
+					switch(w[2]) {
+						case "bool": wb.WBProps[w[0]] = parsexmlbool(y[w[0]], w[0]); break;
+						case "int": wb.WBProps[w[0]] = parseInt(y[w[0]], 10); break;
+						default: wb.WBProps[w[0]] = y[w[0]];
+					}
+				});
+				break;
 			case '</workbookPr>': break;
 
 			/* 18.2.29 workbookProtection CT_WorkbookProtection ? */
@@ -12325,14 +12377,6 @@ var WB_XML_ROOT = writextag('workbook', null, {
 	'xmlns:r': XMLNS.r
 });
 
-function safe1904(wb) {
-	/* TODO: store date1904 somewhere else */
-	if(!wb.Workbook) return "false";
-	if(!wb.Workbook.WBProps) return "false";
-	// $FlowIgnore
-	return parsexmlbool(wb.Workbook.WBProps.date1904) ? "true" : "false";
-}
-
 function write_wb_xml(wb, opts) {
 	var o = [XML_HEADER];
 	o[o.length] = WB_XML_ROOT;
@@ -12410,10 +12454,27 @@ function write_BrtBundleSh(data, o) {
 
 /* [MS-XLSB] 2.4.807 BrtWbProp */
 function parse_BrtWbProp(data, length) {
-	data.read_shift(4);
-	var dwThemeVersion = data.read_shift(4);
+	var o = {};
+	var flags = data.read_shift(4);
+	o.defaultThemeVersion = data.read_shift(4);
 	var strName = (length > 8) ? parse_XLWideString(data) : "";
-	return [dwThemeVersion, strName];
+	if(strName.length > 0) o.codeName = strName;
+	o.autoCompressPictures = !!(flags & 0x10000);
+	o.backupFile = !!(flags & 0x40);
+	o.checkCompatibility = !!(flags & 0x1000);
+	o.date1904 = !!(flags & 0x01);
+	o.filterPrivacy = !!(flags & 0x08);
+	o.hidePivotFieldList = !!(flags & 0x400);
+	o.promptedSolutions = !!(flags & 0x10);
+	o.publishItems = !!(flags & 0x800);
+	o.refreshAllConnections = !!(flags & 0x40000);
+	o.saveExternalLinkValues = !!(flags & 0x80);
+	o.showBorderUnselectedTables = !!(flags & 0x04);
+	o.showInkAnnotation = !!(flags & 0x20);
+	o.showObjects = ["all", "placeholders", "none"][(flags >> 13) & 0x03];
+	o.showPivotChartFilter = !!(flags & 0x8000);
+	o.updateLinks = ["userSet", "never", "always"][(flags >> 8) & 0x03];
+	return o;
 }
 function write_BrtWbProp(data, o) {
 	if(!o) o = new_buf(72);
@@ -12477,6 +12538,9 @@ function parse_wb_bin(data, opts) {
 				break;
 			case 0x040C: /* 'BrtNameExt' */ break;
 
+			case 0x0099: /* 'BrtWbProp' */
+				wb.WBProps = val; break;
+
 			/* case 'BrtModelTimeGroupingCalcCol' */
 			/* case 'BrtRevisionPtr' */
 			/* case 'BrtUid' */
@@ -12508,7 +12572,6 @@ function parse_wb_bin(data, opts) {
 			case 0x0822: /* 'BrtTimelineCachePivotCacheID' */
 			case 0x018D: /* 'BrtUserBookView' */
 			case 0x009A: /* 'BrtWbFactoid' */
-			case 0x0099: /* 'BrtWbProp' */
 			case 0x045D: /* 'BrtWbProp14' */
 			case 0x0229: /* 'BrtWebOpt' */
 			case 0x082B: /* 'BrtWorkBookPr15' */
@@ -12793,7 +12856,7 @@ function safe_format_xlml(cell, nf, o) {
 		var z = XLMLFormatMap[nf]||nf||"General";
 		if(o.cellNF) cell.z = z;
 		if(o.cellDates && cell.t == 'n' && SSF.is_date(z)) {
-			var _d = SSF.parse_date_code(cell.v); if(_d) { cell.t = 'd'; cell.v = new Date(Date.UTC(_d.y, _d.m-1,_d.d,_d.H,_d.M,_d.S,_d.u)); }
+			var _d = SSF.parse_date_code(cell.v); if(_d) { cell.t = 'd'; cell.v = new Date(_d.y, _d.m-1,_d.d,_d.H,_d.M,_d.S,_d.u); }
 		}
 	} catch(e) { if(o.WTF) throw e; }
 }
@@ -12910,7 +12973,7 @@ function parse_xlml_xml(d, opts) {
 	var cstys = [], csty, seencol = false;
 	var arrayf = [];
 	var rowinfo = [], rowobj = {};
-	var Workbook = { Sheets:[] }, wsprops = {};
+	var Workbook = ({ Sheets:[], WBProps:{date1904:false} }), wsprops = {};
 	xlmlregex.lastIndex = 0;
 	str = str.replace(/<!--([^\u2603]*?)-->/mg,"");
 	while((Rn = xlmlregex.exec(str))) switch(Rn[3]) {
@@ -13190,6 +13253,9 @@ Workbook.Names.push(_DefinedName);
 
 				/* ExcelWorkbook */
 				case 'ExcelWorkbook': switch(Rn[3]) {
+					case 'Date1904':
+Workbook.WBProps.date1904 = true;
+						break;
 					case 'WindowHeight': break;
 					case 'WindowWidth': break;
 					case 'WindowTopX': break;
@@ -13208,7 +13274,6 @@ Workbook.Names.push(_DefinedName);
 					case 'Dll': break;
 					case 'AcceptLabelsInFormulas': break;
 					case 'DoNotSaveLinkValues': break;
-					case 'Date1904': break;
 					case 'Iteration': break;
 					case 'MaxIterations': break;
 					case 'MaxChange': break;
@@ -13868,7 +13933,7 @@ function safe_format_xf(p, opts, date1904) {
 		}
 		else p.w = SSF.format(fmtid,p.v, {date1904:!!date1904});
 		if(opts.cellDates && fmtid && p.t == 'n' && SSF.is_date(SSF._table[fmtid])) {
-			var _d = SSF.parse_date_code(p.v); if(_d) { p.t = 'd'; p.v = new Date(Date.UTC(_d.y, _d.m-1,_d.d,_d.H,_d.M,_d.S,_d.u)); }
+			var _d = SSF.parse_date_code(p.v); if(_d) { p.t = 'd'; p.v = new Date(_d.y, _d.m-1,_d.d,_d.H,_d.M,_d.S,_d.u); }
 		}
 	} catch(e) { if(opts.WTF) throw e; }
 }
@@ -13898,7 +13963,7 @@ function parse_workbook(blob, options) {
 	var cell_valid = true;
 	var XFs = []; /* XF records */
 	var palette = [];
-	var Workbook = ({ Sheets:[] }), wsprops = {};
+	var Workbook = ({ Sheets:[], WBProps:{date1904:false} }), wsprops = {};
 	var get_rgb = function getrgb(icv) {
 		if(icv < 8) return XLSIcv[icv];
 		if(icv < 64) return palette[icv-8] || XLSIcv[icv];
@@ -14010,7 +14075,8 @@ function parse_workbook(blob, options) {
 			/* nested switch statements to workaround V8 128 limit */
 			switch(Rn) {
 				/* Workbook Options */
-				case 'Date1904': wb.opts.Date1904 = val; break;
+				case 'Date1904':
+wb.opts.Date1904 = Workbook.WBProps.date1904 = val; break;
 				case 'WriteProtect': wb.opts.WriteProtect = true; break;
 				case 'FilePass':
 					if(!opts.enc) blob.l = 0;

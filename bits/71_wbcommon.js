@@ -1,37 +1,36 @@
 /* 18.2.28 (CT_WorkbookProtection) Defaults */
 var WBPropsDef = [
-	['allowRefreshQuery', '0'],
-	['autoCompressPictures', '1'],
-	['backupFile', '0'],
-	['checkCompatibility', '0'],
-	['codeName', ''],
-	['date1904', '0'],
-	['dateCompatibility', '1'],
-	//['defaultThemeVersion', '0'],
-	['filterPrivacy', '0'],
-	['hidePivotFieldList', '0'],
-	['promptedSolutions', '0'],
-	['publishItems', '0'],
-	['refreshAllConnections', false],
-	['saveExternalLinkValues', '1'],
-	['showBorderUnselectedTables', '1'],
-	['showInkAnnotation', '1'],
-	['showObjects', 'all'],
-	['showPivotChartFilter', '0']
-	//['updateLinks', 'userSet']
+	['allowRefreshQuery',           false, "bool"],
+	['autoCompressPictures',        true,  "bool"],
+	['backupFile',                  false, "bool"],
+	['checkCompatibility',          false, "bool"],
+	['codeName',                    ''],
+	['date1904',                    false, "bool"],
+	['defaultThemeVersion',         0,      "int"],
+	['filterPrivacy',               false, "bool"],
+	['hidePivotFieldList',          false, "bool"],
+	['promptedSolutions',           false, "bool"],
+	['publishItems',                false, "bool"],
+	['refreshAllConnections',       false, "bool"],
+	['saveExternalLinkValues',      true,  "bool"],
+	['showBorderUnselectedTables',  true,  "bool"],
+	['showInkAnnotation',           true,  "bool"],
+	['showObjects',                 'all'],
+	['showPivotChartFilter',        false, "bool"],
+	['updateLinks', 'userSet']
 ];
 
 /* 18.2.30 (CT_BookView) Defaults */
 var WBViewDef = [
-	['activeTab', '0'],
-	['autoFilterDateGrouping', '1'],
-	['firstSheet', '0'],
-	['minimized', '0'],
-	['showHorizontalScroll', '1'],
-	['showSheetTabs', '1'],
-	['showVerticalScroll', '1'],
-	['tabRatio', '600'],
-	['visibility', 'visible']
+	['activeTab',                   0,      "int"],
+	['autoFilterDateGrouping',      true,  "bool"],
+	['firstSheet',                  0,      "int"],
+	['minimized',                   false, "bool"],
+	['showHorizontalScroll',        true,  "bool"],
+	['showSheetTabs',               true,  "bool"],
+	['showVerticalScroll',          true,  "bool"],
+	['tabRatio',                    600,    "int"],
+	['visibility',                  'visible']
 	//window{Height,Width}, {x,y}Window
 ];
 
@@ -80,12 +79,20 @@ function push_defaults_array(target, defaults) {
 	for(var j = 0; j != target.length; ++j) { var w = target[j];
 		for(var i=0; i != defaults.length; ++i) { var z = defaults[i];
 			if(w[z[0]] == null) w[z[0]] = z[1];
+			else switch(z[2]) {
+			case "bool": if(typeof w[z[0]] == "string") w[z[0]] = parsexmlbool(w[z[0]], z[0]); break;
+			case "int": if(typeof w[z[0]] == "string") w[z[0]] = parseInt(w[z[0]], 10); break;
+			}
 		}
 	}
 }
 function push_defaults(target, defaults) {
 	for(var i = 0; i != defaults.length; ++i) { var z = defaults[i];
 		if(target[z[0]] == null) target[z[0]] = z[1];
+		else switch(z[2]) {
+			case "bool": if(typeof target[z[0]] == "string") target[z[0]] = parsexmlbool(target[z[0]], z[0]); break;
+			case "int": if(typeof target[z[0]] == "string") target[z[0]] = parseInt(target[z[0]], 10); break;
+		}
 	}
 }
 
@@ -97,6 +104,13 @@ function parse_wb_defaults(wb) {
 	push_defaults_array(wb.Sheets, SheetDef);
 
 	_ssfopts.date1904 = parsexmlbool(wb.WBProps.date1904, 'date1904');
+}
+
+function safe1904(wb/*:Workbook*/)/*:string*/ {
+	/* TODO: store date1904 somewhere else */
+	if(!wb.Workbook) return "false";
+	if(!wb.Workbook.WBProps) return "false";
+	return parsexmlbool(wb.Workbook.WBProps.date1904) ? "true" : "false";
 }
 
 var badchars = "][*?\/\\".split("");

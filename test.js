@@ -1502,10 +1502,12 @@ describe('invalid files', function() {
 	});
 });
 
+var basedate = new Date(1899, 11, 30, 0, 0, 0); // 2209161600000
+var dnthresh = basedate.getTime() + (new Date().getTimezoneOffset() - basedate.getTimezoneOffset()) * 60000;
 function datenum(v/*:Date*/, date1904/*:?boolean*/)/*:number*/ {
 	var epoch = v.getTime();
 	if(date1904) epoch += 1462*24*60*60*1000;
-	return (epoch + 2209161600000) / (24 * 60 * 60 * 1000);
+	return (epoch - dnthresh) / (24 * 60 * 60 * 1000);
 }
 
 describe('json output', function() {
@@ -1685,7 +1687,17 @@ describe('csv', function() {
 			var cell = get_cell(X.read(b, opts).Sheets.Sheet1, "C3");
 			assert.equal(cell.w, '14-02-19');
 		});
-
+		it('should interpret dateNF', function() {
+			var bb = "1,2,3,\nTRUE,FALSE,,sheetjs\nfoo,bar,2/3/14,0.3\n,,,\nbaz,,qux,\n";
+			var opts = {type:"binary", cellDates:true, dateNF:'m/d/yy'};
+			var cell = get_cell(X.read(bb, opts).Sheets.Sheet1, "C3");
+			assert.equal(cell.v.getMonth(), 1);
+			assert.equal(cell.w, "2/3/14");
+			opts = {type:"binary", cellDates:true, dateNF:'d/m/yy'};
+			cell = get_cell(X.read(bb, opts).Sheets.Sheet1, "C3");
+			assert.equal(cell.v.getMonth(), 2);
+			assert.equal(cell.w, "2/3/14");
+		});
 	});
 	describe('output', function(){
 		var data, ws;

@@ -523,6 +523,7 @@ var PRN = (function() {
 		var R = 0, C = 0, v = 0;
 		var start = 0, end = 0, sepcc = sep.charCodeAt(0), instr = false, cc=0;
 		str = str.replace(/\r\n/mg, "\n");
+		var _re/*:?RegExp*/ = o.dateNF != null ? dateNF_regex(o.dateNF) : null;
 		function finish_cell() {
 			var s = str.slice(start, end);
 			var cell = ({}/*:any*/);
@@ -530,10 +531,12 @@ var PRN = (function() {
 			else if(s == "TRUE") { cell.t = 'b'; cell.v = true; }
 			else if(s == "FALSE") { cell.t = 'b'; cell.v = false; }
 			else if(!isNaN(v = +s)) { cell.t = 'n'; cell.w = s; cell.v = v; }
-			else if(!isNaN(fuzzydate(s).getDate())) {
+			else if(!isNaN(fuzzydate(s).getDate()) || _re && s.match(_re)) {
 				cell.z = o.dateNF || SSF._table[14];
-				if(o.cellDates) { cell.t = 'd'; cell.v = parseDate(s); }
-				else { cell.t = 'n'; cell.v = datenum(parseDate(s)); }
+				var k = 0;
+				if(_re && s.match(_re)){ s=dateNF_fix(s, o.dateNF, (s.match(_re)||[])); k=1; }
+				if(o.cellDates) { cell.t = 'd'; cell.v = parseDate(s, k); }
+				else { cell.t = 'n'; cell.v = datenum(parseDate(s, k)); }
 				cell.w = SSF.format(cell.z, cell.v instanceof Date ? datenum(cell.v):cell.v);
 			} else {
 				cell.t = 's';
