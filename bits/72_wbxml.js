@@ -166,7 +166,17 @@ function write_wb_xml(wb/*:Workbook*/, opts/*:?WriteOpts*/)/*:string*/ {
 	/* fileVersion */
 	/* fileSharing */
 
-	o[o.length] = (writextag('workbookPr', null, {date1904:safe1904(wb), codeName:"ThisWorkbook"}));
+	var workbookPr/*:WBProps*/ = ({codeName:"ThisWorkbook"}/*:any*/);
+	if(wb.Workbook && wb.Workbook.WBProps) {
+		if(wb.Workbook.WBProps.codeName) workbookPr.codeName = wb.Workbook.WBProps.codeName;
+		WBPropsDef.forEach(function(x) {
+			/*:: if(!wb.Workbook || !wb.Workbook.WBProps) throw "unreachable"; */
+			if((wb.Workbook.WBProps[x[0]]/*:any*/) == null) return;
+			if((wb.Workbook.WBProps[x[0]]/*:any*/) == x[1]) return;
+			workbookPr[x[0]] = (wb.Workbook.WBProps[x[0]]/*:any*/);
+		});
+	}
+	o[o.length] = (writextag('workbookPr', null, workbookPr));
 
 	/* workbookProtection */
 	/* bookViews */

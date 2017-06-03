@@ -6,7 +6,7 @@
 /*global global, exports, module, require:false, process:false, Buffer:false */
 var XLSX = {};
 (function make_xlsx(XLSX){
-XLSX.version = '0.10.3';
+XLSX.version = '0.10.4';
 var current_codepage = 1200;
 /*:: declare var cptable:any; */
 /*global cptable:true */
@@ -12453,7 +12453,17 @@ function write_wb_xml(wb/*:Workbook*/, opts/*:?WriteOpts*/)/*:string*/ {
 	/* fileVersion */
 	/* fileSharing */
 
-	o[o.length] = (writextag('workbookPr', null, {date1904:safe1904(wb), codeName:"ThisWorkbook"}));
+	var workbookPr/*:WBProps*/ = ({codeName:"ThisWorkbook"}/*:any*/);
+	if(wb.Workbook && wb.Workbook.WBProps) {
+		if(wb.Workbook.WBProps.codeName) workbookPr.codeName = wb.Workbook.WBProps.codeName;
+		WBPropsDef.forEach(function(x) {
+			/*:: if(!wb.Workbook || !wb.Workbook.WBProps) throw "unreachable"; */
+			if((wb.Workbook.WBProps[x[0]]/*:any*/) == null) return;
+			if((wb.Workbook.WBProps[x[0]]/*:any*/) == x[1]) return;
+			workbookPr[x[0]] = (wb.Workbook.WBProps[x[0]]/*:any*/);
+		});
+	}
+	o[o.length] = (writextag('workbookPr', null, workbookPr));
 
 	/* workbookProtection */
 	/* bookViews */
@@ -12520,8 +12530,8 @@ function write_BrtBundleSh(data, o) {
 }
 
 /* [MS-XLSB] 2.4.807 BrtWbProp */
-function parse_BrtWbProp(data, length) {
-	var o = {};
+function parse_BrtWbProp(data, length)/*:WBProps*/ {
+	var o/*:WBProps*/ = ({}/*:any*/);
 	var flags = data.read_shift(4);
 	o.defaultThemeVersion = data.read_shift(4);
 	var strName = (length > 8) ? parse_XLWideString(data) : "";
@@ -12543,9 +12553,14 @@ function parse_BrtWbProp(data, length) {
 	o.updateLinks = ["userSet", "never", "always"][(flags >> 8) & 0x03];
 	return o;
 }
-function write_BrtWbProp(data, o) {
+function write_BrtWbProp(data/*:?WBProps*/, o) {
 	if(!o) o = new_buf(72);
-	o.write_shift(4, 0);
+	var flags = 0;
+	if(data) {
+		/* TODO: mirror parse_BrtWbProp fields */
+		if(data.filterPrivacy) flags |= 0x08;
+	}
+	o.write_shift(4, flags);
 	o.write_shift(4, 0);
 	write_XLSBCodeName("ThisWorkbook", o);
 	return o.slice(0, o.l);
@@ -12749,7 +12764,7 @@ function write_wb_bin(wb, opts) {
 	write_record(ba, "BrtBeginBook");
 	write_record(ba, "BrtFileVersion", write_BrtFileVersion());
 	/* [[BrtFileSharingIso] BrtFileSharing] */
-	write_record(ba, "BrtWbProp", write_BrtWbProp());
+	write_record(ba, "BrtWbProp", write_BrtWbProp(wb.Workbook && wb.Workbook.WBProps || null));
 	/* [ACABSPATH] */
 	/* [[BrtBookProtectionIso] BrtBookProtection] */
 	write_BOOKVIEWS(ba, wb, opts);

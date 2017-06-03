@@ -26,7 +26,8 @@ may not enforce this constraint.
 
 `wb.Workbook.WBProps` holds other workbook properties:
 
-| Key        | Description                                         |
-|:-----------|:----------------------------------------------------|
-| `date1904` | epoch: 0/false for 1900 system, 1/true for 1904     |
+| Key             | Description                                         |
+|:----------------|:----------------------------------------------------|
+| `date1904`      | epoch: 0/false for 1900 system, 1/true for 1904     |
+| `filterPrivacy` | Warn or strip personally identifying info on save   |
 

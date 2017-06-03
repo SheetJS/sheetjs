@@ -33,9 +33,9 @@ var wsrows = [
 console.log("Sheet Name: " + ws_name);
 console.log("Data: ");
 var i = 0;
-for(i = 0; i != data.length; ++i) console.log(data[i]);
+for(i = 0; i !== data.length; ++i) console.log(data[i]);
 console.log("Columns :");
-for(i = 0; i != wscols.length; ++i) console.log(wscols[i]);
+for(i = 0; i !== wscols.length; ++i) console.log(wscols[i]);
 
 /* require XLSX */
 if(typeof XLSX === "undefined") { try { XLSX = require('./'); } catch(e) { XLSX = require('../'); } }
@@ -143,39 +143,39 @@ XLSX.utils.cell_add_comment(ws['A4'], "I'm a little comment, short and stout!\n\
 ws['!protect'] = {
 	password:"password",
 	/* enable formatting rows and columns */
-	formatRows:0,
-	formatColumns:0,
+	formatRows:false,
+	formatColumns:false,
 	/* disable editing objects and scenarios */
-	objects:1,
-	scenarios:1
+	objects:true,
+	scenarios:true
 };
+
+/* TEST: Workbook Properties */
+if(!wb.Workbook) wb.Workbook = {Sheets:[], WBProps:{}};
+if(!wb.Workbook.WBProps) wb.Workbook.WBProps = {};
+wb.Workbook.WBProps.filterPrivacy = true;
 
 console.log("Worksheet Model:");
 console.log(ws);
 
-[
+var filenames = [
 	['sheetjs.xlsx', {bookSST:true}],
-	'sheetjs.xlsm',
-	'sheetjs.xlsb',
+	['sheetjs.xlsm'],
+	['sheetjs.xlsb'],
 	['sheetjs.xls', {bookType:'biff2'}],
 	['sheetjs.xml.xls', {bookType:'xlml'}],
-	'sheetjs.ods',
-	'sheetjs.fods',
-	'sheetjs.slk',
-	'sheetjs.csv',
-	'sheetjs.txt',
-	'sheetjs.prn',
-	'sheetjs.dif'
-].forEach(function(r) {
-	if(typeof r === 'string') {
-		/* write file */
-		XLSX.writeFile(wb, r);
-		/* test by reading back files */
-		XLSX.readFile(r);
-	} else {
+	['sheetjs.ods'],
+	['sheetjs.fods'],
+	['sheetjs.slk'],
+	['sheetjs.csv'],
+	['sheetjs.txt'],
+	['sheetjs.prn'],
+	['sheetjs.dif']
+];
+
+filenames.forEach(function(r) {
 		/* write file */
 		XLSX.writeFile(wb, r[0], r[1]);
 		/* test by reading back files */
 		XLSX.readFile(r[0]);
-	}
 });

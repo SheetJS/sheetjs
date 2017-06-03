@@ -127,6 +127,11 @@ ws['!protect'] = {
 	scenarios:true
 };
 
+/* TEST: Workbook Properties */
+if(!wb.Workbook) wb.Workbook = {Sheets:[], WBProps:{}};
+if(!wb.Workbook.WBProps) wb.Workbook.WBProps = {};
+wb.Workbook.WBProps.filterPrivacy = true;
+
 console.log("Worksheet Model:");
 console.log(ws);
 

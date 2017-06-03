@@ -30,7 +30,24 @@ type WBWBProps = {
 };
 
 type WBProps = {
+	allowRefreshQuery?: boolean;
+	autoCompressPictures?: boolean;
+	backupFile?: boolean;
+	checkCompatibility?: boolean;
+	codeName?: string;
 	date1904?: boolean;
+	defaultThemeVersion?: number;
+	filterPrivacy?: boolean;
+	hidePivotFieldList?: boolean;
+	promptedSolutions?: boolean;
+	publishItems?: boolean;
+	refreshAllConnections?: boolean;
+	saveExternalLinkValues?: boolean;
+	showBorderUnselectedTables?: boolean;
+	showInkAnnotation?: boolean;
+	showObjects?: string;
+	showPivotChartFilter?: boolean;
+	updateLinks?: string;
 };
 
 type WBWSProp = {

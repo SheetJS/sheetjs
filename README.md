@@ -49,7 +49,7 @@ enhancements, additional features by request, and dedicated support.
 ## Table of Contents
 
 <details>
-	<summary>Expand to show Table of Contents</summary>
+	<summary><b>Expand to show Table of Contents</b></summary>
 
 <!-- toc -->
 
@@ -405,7 +405,12 @@ input_dom_element.addEventListener('change', handleFile, false);
 - <http://oss.sheetjs.com/js-xlsx/> HTML5 File API / Base64 Text / Web Workers
 
 Note that older versions of IE do not support HTML5 File API, so the base64 mode
-is used for testing.  On OSX you can get the base64 encoding with:
+is used for testing.
+
+<details>
+	<summary><b>Get base64 encoding on OSX / Windows</b> (click to show)</summary>
+
+On OSX you can get the base64 encoding with:
 
 ```bash
 $ <target_file base64 | pbcopy
@@ -418,6 +423,8 @@ On Windows XP and up you can get the base64 encoding using `certutil`:
 ```
 
 (note: You have to open the file and remove the header and footer lines)
+
+</details>
 
 - <http://oss.sheetjs.com/js-xlsx/ajax.html> XMLHttpRequest
 
@@ -953,9 +960,10 @@ may not enforce this constraint.
 
 `wb.Workbook.WBProps` holds other workbook properties:
 
-| Key        | Description                                         |
-|:-----------|:----------------------------------------------------|
-| `date1904` | epoch: 0/false for 1900 system, 1/true for 1904     |
+| Key             | Description                                         |
+|:----------------|:----------------------------------------------------|
+| `date1904`      | epoch: 0/false for 1900 system, 1/true for 1904     |
+| `filterPrivacy` | Warn or strip personally identifying info on save   |
 
 ### Document Features
 

@@ -246,6 +246,9 @@ export interface WBProps {
 export interface WorkbookProperties {
     /** Worksheet Epoch (1904 if true, 1900 if false) */
     date1904?: boolean;
+
+    /** Warn or strip personally identifying info on save */
+    filterPrivacy?: boolean;
 }
 
 export interface ColInfo {

@@ -6,7 +6,7 @@
 /*global global, exports, module, require:false, process:false, Buffer:false */
 var XLSX = {};
 (function make_xlsx(XLSX){
-XLSX.version = '0.10.3';
+XLSX.version = '0.10.4';
 var current_codepage = 1200;
 /*global cptable:true */
 if(typeof module !== "undefined" && typeof require !== 'undefined') {
@@ -12386,7 +12386,16 @@ function write_wb_xml(wb, opts) {
 	/* fileVersion */
 	/* fileSharing */
 
-	o[o.length] = (writextag('workbookPr', null, {date1904:safe1904(wb), codeName:"ThisWorkbook"}));
+	var workbookPr = ({codeName:"ThisWorkbook"});
+	if(wb.Workbook && wb.Workbook.WBProps) {
+		if(wb.Workbook.WBProps.codeName) workbookPr.codeName = wb.Workbook.WBProps.codeName;
+		WBPropsDef.forEach(function(x) {
+if((wb.Workbook.WBProps[x[0]]) == null) return;
+			if((wb.Workbook.WBProps[x[0]]) == x[1]) return;
+			workbookPr[x[0]] = (wb.Workbook.WBProps[x[0]]);
+		});
+	}
+	o[o.length] = (writextag('workbookPr', null, workbookPr));
 
 	/* workbookProtection */
 	/* bookViews */
@@ -12454,7 +12463,7 @@ function write_BrtBundleSh(data, o) {
 
 /* [MS-XLSB] 2.4.807 BrtWbProp */
 function parse_BrtWbProp(data, length) {
-	var o = {};
+	var o = ({});
 	var flags = data.read_shift(4);
 	o.defaultThemeVersion = data.read_shift(4);
 	var strName = (length > 8) ? parse_XLWideString(data) : "";
@@ -12478,7 +12487,12 @@ function parse_BrtWbProp(data, length) {
 }
 function write_BrtWbProp(data, o) {
 	if(!o) o = new_buf(72);
-	o.write_shift(4, 0);
+	var flags = 0;
+	if(data) {
+		/* TODO: mirror parse_BrtWbProp fields */
+		if(data.filterPrivacy) flags |= 0x08;
+	}
+	o.write_shift(4, flags);
 	o.write_shift(4, 0);
 	write_XLSBCodeName("ThisWorkbook", o);
 	return o.slice(0, o.l);
@@ -12682,7 +12696,7 @@ function write_wb_bin(wb, opts) {
 	write_record(ba, "BrtBeginBook");
 	write_record(ba, "BrtFileVersion", write_BrtFileVersion());
 	/* [[BrtFileSharingIso] BrtFileSharing] */
-	write_record(ba, "BrtWbProp", write_BrtWbProp());
+	write_record(ba, "BrtWbProp", write_BrtWbProp(wb.Workbook && wb.Workbook.WBProps || null));
 	/* [ACABSPATH] */
 	/* [[BrtBookProtectionIso] BrtBookProtection] */
 	write_BOOKVIEWS(ba, wb, opts);

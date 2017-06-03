@@ -17,8 +17,8 @@ function write_BrtBundleSh(data, o) {
 }
 
 /* [MS-XLSB] 2.4.807 BrtWbProp */
-function parse_BrtWbProp(data, length) {
-	var o = {};
+function parse_BrtWbProp(data, length)/*:WBProps*/ {
+	var o/*:WBProps*/ = ({}/*:any*/);
 	var flags = data.read_shift(4);
 	o.defaultThemeVersion = data.read_shift(4);
 	var strName = (length > 8) ? parse_XLWideString(data) : "";
@@ -40,9 +40,14 @@ function parse_BrtWbProp(data, length) {
 	o.updateLinks = ["userSet", "never", "always"][(flags >> 8) & 0x03];
 	return o;
 }
-function write_BrtWbProp(data, o) {
+function write_BrtWbProp(data/*:?WBProps*/, o) {
 	if(!o) o = new_buf(72);
-	o.write_shift(4, 0);
+	var flags = 0;
+	if(data) {
+		/* TODO: mirror parse_BrtWbProp fields */
+		if(data.filterPrivacy) flags |= 0x08;
+	}
+	o.write_shift(4, flags);
 	o.write_shift(4, 0);
 	write_XLSBCodeName("ThisWorkbook", o);
 	return o.slice(0, o.l);
@@ -246,7 +251,7 @@ function write_wb_bin(wb, opts) {
 	write_record(ba, "BrtBeginBook");
 	write_record(ba, "BrtFileVersion", write_BrtFileVersion());
 	/* [[BrtFileSharingIso] BrtFileSharing] */
-	write_record(ba, "BrtWbProp", write_BrtWbProp());
+	write_record(ba, "BrtWbProp", write_BrtWbProp(wb.Workbook && wb.Workbook.WBProps || null));
 	/* [ACABSPATH] */
 	/* [[BrtBookProtectionIso] BrtBookProtection] */
 	write_BOOKVIEWS(ba, wb, opts);

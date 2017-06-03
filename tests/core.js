@@ -139,7 +139,7 @@ function parsetest(x, wb, full, ext) {
 		if(fs.existsSync(sname)) it('should have the right sheet names', function() {
 			var file = fs.readFileSync(sname, 'utf-8').replace(/\r/g,"");
 			var names = wb.SheetNames.map(fixsheetname).join("\n") + "\n";
-			if(file.length) assert.equal(names, file);
+			if(file.length && !x.match(/artifacts/)) assert.equal(names, file);
 		});
 	});
 	describe(x + ext + ' should generate CSV', function() {
@@ -826,8 +826,9 @@ describe('parse features', function() {
 			var wb2 = X.read(fs.readFileSync(paths.fstxlsb), opts);
 			var wb3 = X.read(fs.readFileSync(paths.fstxls), opts);
 			var wb4 = X.read(fs.readFileSync(paths.fstxml), opts);
+			var wb5 = X.read(fs.readFileSync(paths.fstods), opts);
 			/* TODO */
-			[wb1, wb2 /*, wb3, wb4 */].forEach(function(wb) {
+			[wb1, wb2 /*, wb3, wb4, wb5 */].forEach(function(wb) {
 				assert.equal(wb.Sheets.Text["!fullref"],"A1:F49");
 				assert.equal(wb.Sheets.Text["!ref"],"A1:F10");
 			});
@@ -1496,10 +1497,12 @@ describe('invalid files', function() {
 	});
 });
 
+var basedate = new Date(1899, 11, 30, 0, 0, 0); // 2209161600000
+var dnthresh = basedate.getTime() + (new Date().getTimezoneOffset() - basedate.getTimezoneOffset()) * 60000;
 function datenum(v/*:Date*/, date1904/*:?boolean*/)/*:number*/ {
 	var epoch = v.getTime();
 	if(date1904) epoch += 1462*24*60*60*1000;
-	return (epoch + 2209161600000) / (24 * 60 * 60 * 1000);
+	return (epoch - dnthresh) / (24 * 60 * 60 * 1000);
 }
 var good_pd_date = new Date('2017-02-19T19:06:09.000Z');
 if(isNaN(good_pd_date.getFullYear())) good_pd_date = new Date('2/19/17');
@@ -1695,7 +1698,17 @@ describe('csv', function() {
 			var cell = get_cell(X.read(b, opts).Sheets.Sheet1, "C3");
 			assert.equal(cell.w, '14-02-19');
 		});
-
+		it('should interpret dateNF', function() {
+			var bb = "1,2,3,\nTRUE,FALSE,,sheetjs\nfoo,bar,2/3/14,0.3\n,,,\nbaz,,qux,\n";
+			var opts = {type:"binary", cellDates:true, dateNF:'m/d/yy'};
+			var cell = get_cell(X.read(bb, opts).Sheets.Sheet1, "C3");
+			assert.equal(cell.v.getMonth(), 1);
+			assert.equal(cell.w, "2/3/14");
+			opts = {type:"binary", cellDates:true, dateNF:'d/m/yy'};
+			cell = get_cell(X.read(bb, opts).Sheets.Sheet1, "C3");
+			assert.equal(cell.v.getMonth(), 2);
+			assert.equal(cell.w, "2/3/14");
+		});
 	});
 	describe('output', function(){
 		var data, ws;
