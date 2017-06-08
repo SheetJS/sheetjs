@@ -31,6 +31,7 @@ The `demos` directory includes sample projects for:
 - [`meteor`](demos/meteor/)
 - [`phantomjs`](demos/phantomjs/)
 - [`requirejs`](demos/requirejs/)
+- [`rollup`](demos/rollup/)
 - [`systemjs`](demos/systemjs/)
 - [`webpack`](demos/webpack/)
 

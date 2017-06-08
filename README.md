@@ -173,6 +173,7 @@ The `demos` directory includes sample projects for:
 - [`meteor`](demos/meteor/)
 - [`phantomjs`](demos/phantomjs/)
 - [`requirejs`](demos/requirejs/)
+- [`rollup`](demos/rollup/)
 - [`systemjs`](demos/systemjs/)
 - [`webpack`](demos/webpack/)
 
@@ -1388,12 +1389,13 @@ Plaintext format guessing follows the priority order:
 
 | Format | Test                                                                |
 |:-------|:--------------------------------------------------------------------|
-| HTML   | starts with \<html                                                  |
-| XML    | starts with \<                                                      |
+| HTML   | starts with `<html`                                                 |
+| XML    | starts with `<`                                                     |
 | DSV    | starts with `/sep=.$/`, separator is the specified character        |
 | TSV    | one of the first 1024 characters is a tab char `"\t"`               |
 | CSV    | one of the first 1024 characters is a comma char `","`              |
 | PRN    | (default)                                                           |
+
 </details>
 
 <details>
@@ -1643,9 +1645,8 @@ produces HTML output.  The function takes an options argument:
 | Option Name |  Default | Description                                         |
 | :---------- | :------: | :-------------------------------------------------- |
 | editable    |  false   | If true, set `contenteditable="true"` for every TD  |
-| header      |          | Override header (default `html body table`)         |
-| footer      |          | Override footer (default `/table /body /html`)      |
-
+| header      |          | Override header (default `html body`)               |
+| footer      |          | Override footer (default `/body /html`)             |
 
 <details>
 	<summary><b>Examples</b> (click to show)</summary>

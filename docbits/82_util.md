@@ -160,9 +160,8 @@ produces HTML output.  The function takes an options argument:
 | Option Name |  Default | Description                                         |
 | :---------- | :------: | :-------------------------------------------------- |
 | editable    |  false   | If true, set `contenteditable="true"` for every TD  |
-| header      |          | Override header (default `html body table`)         |
-| footer      |          | Override footer (default `/table /body /html`)      |
-
+| header      |          | Override header (default `html body`)               |
+| footer      |          | Override footer (default `/body /html`)             |
 
 <details>
 	<summary><b>Examples</b> (click to show)</summary>

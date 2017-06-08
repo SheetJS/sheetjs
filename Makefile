@@ -113,8 +113,12 @@ ctest: ## Build browser test fixtures
 ctestserv: ## Start a test server on port 8000
 	@cd tests && python -mSimpleHTTPServer
 
+## Demos
+
+DEMOS=angular browserify requirejs rollup systemjs webpack
+DEMOTGTS=$(patsubst %,demo-%,$(DEMOS))
 .PHONY: demos
-demos: demo-angular demo-browserify demo-webpack demo-requirejs demo-systemjs
+demos: $(DEMOTGTS)
 
 .PHONY: demo-angular
 demo-angular: ## Run angular demo build
@@ -135,6 +139,11 @@ demo-webpack: ## Run webpack demo build
 demo-requirejs: ## Run requirejs demo build
 	make -C demos/requirejs
 	@echo "start a local server and go to demos/requirejs/requirejs.html"
+
+.PHONY: demo-rollup
+demo-rollup: ## Run rollup demo build
+	make -C demos/rollup
+	@echo "start a local server and go to demos/rollup/rollup.html"
 
 .PHONY: demo-systemjs
 demo-systemjs: ## Run systemjs demo build
