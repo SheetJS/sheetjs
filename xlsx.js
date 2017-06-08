@@ -1638,6 +1638,10 @@ function escapexml(text, xml){
 	return s.replace(decregex, function(y) { return rencoding[y]; }).replace(charegex,function(s) { return "_x" + ("000"+s.charCodeAt(0).toString(16)).slice(-4) + "_";});
 }
 function escapexmltag(text){ return escapexml(text).replace(/ /g,"_x0020_"); }
+function escapehtml(text){
+	var s = text + '';
+	return s.replace(decregex, function(y) { return rencoding[y]; });
+}
 
 var htmlcharegex = /[\u0000-\u001f]/g;
 function escapehtml(text){
