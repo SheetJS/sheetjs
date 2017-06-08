@@ -561,9 +561,10 @@ function fmt_is_date(fmt) {
 			case 'M': case 'D': case 'Y': case 'H': case 'S': case 'E':
 				/* falls through */
 			case 'm': case 'd': case 'y': case 'h': case 's': case 'e': case 'g': return true;
-			case 'A':
+			case 'A': case 'a':
 				if(fmt.substr(i, 3) === "A/P") return true;
 				if(fmt.substr(i, 5) === "AM/PM") return true;
+				if(fmt.substr(i, 5) === "am/pm") return true;
 				++i; break;
 			case '[':
 				o = c;
@@ -620,11 +621,12 @@ function eval_fmt(fmt, v, opts, flen) {
 				if(c === 'm' && lst.toLowerCase() === 'h') c = 'M';
 				if(c === 'h') c = hr;
 				out[out.length] = {t:c, v:o}; lst = c; break;
-			case 'A':
+			case 'A': case 'a':
 				q={t:c, v:"A"};
 				if(dt==null) dt=parse_date_code(v, opts);
 				if(fmt.substr(i, 3) === "A/P") { if(dt!=null) q.v = dt.H >= 12 ? "P" : "A"; q.t = 'T'; hr='h';i+=3;}
 				else if(fmt.substr(i,5) === "AM/PM") { if(dt!=null) q.v = dt.H >= 12 ? "PM" : "AM"; q.t = 'T'; i+=5; hr='h'; }
+				else if(fmt.substr(i,5) === 'am/pm') { if(dt!=null) q.v = dt.H >= 12 ? "PM" : "AM"; q.t = 'T'; i+=5; hr='h'; }
 				else { q.t = "t"; ++i; }
 				if(dt==null && q.t === 'T') return "";
 				out[out.length] = q; lst = c; break;
