@@ -10590,7 +10590,12 @@ function safe_format(p, fmtid, fillid, opts, themes, styles) {
 	} catch(e) { if(opts.WTF) throw e; }
 	if(!opts || opts.cellText !== false) try {
 		if(p.t === 'e') p.w = p.w || BErr[p.v];
-		else if(fmtid === 0) {
+		else if (p.t=='n' && fmtid >= 164) {
+			p.t = 's';
+			p.v = SSF.format(fmtid,p.v,_ssfopts);
+			// p.w = p.v;
+			// console.log('p.w', p);
+		} else if(fmtid === 0) {
 			if(p.t === 'n') {
 				if((p.v|0) === p.v) p.w = SSF._general_int(p.v,_ssfopts);
 				else p.w = SSF._general_num(p.v,_ssfopts);
