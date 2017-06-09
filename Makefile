@@ -80,7 +80,7 @@ flow: lint ## Run flow checker
 	@flow check --all --show-all-errors
 
 .PHONY: cov
-cov: tmp/coverage.html ## Run coverage test
+cov: misc/coverage.html ## Run coverage test
 
 .PHONY: cov_min
 cov_min:

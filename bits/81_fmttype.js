@@ -14,9 +14,9 @@ function fmt_is_date(fmt/*:string*/)/*:boolean*/ {
 			case 'M': case 'D': case 'Y': case 'H': case 'S': case 'E':
 				/* falls through */
 			case 'm': case 'd': case 'y': case 'h': case 's': case 'e': case 'g': return true;
-			case 'A':
-				if(fmt.substr(i, 3) === "A/P") return true;
-				if(fmt.substr(i, 5) === "AM/PM") return true;
+			case 'A': case 'a':
+				if(fmt.substr(i, 3).toUpperCase() === "A/P") return true;
+				if(fmt.substr(i, 5).toUpperCase() === "AM/PM") return true;
 				++i; break;
 			case '[':
 				o = c;
