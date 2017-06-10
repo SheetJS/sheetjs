@@ -8,7 +8,7 @@
 - [Philosophy](README.md#philosophy)
 - [Parsing Workbooks](README.md#parsing-workbooks)
   * [Complete Examples](README.md#complete-examples)
-  * [Note on Streaming Read](README.md#note-on-streaming-read)
+  * [Streaming Read](README.md#streaming-read)
 - [Working with the Workbook](README.md#working-with-the-workbook)
   * [Complete Examples](README.md#complete-examples-1)
 - [Writing Workbooks](README.md#writing-workbooks)

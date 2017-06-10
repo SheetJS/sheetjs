@@ -60,7 +60,7 @@ enhancements, additional features by request, and dedicated support.
 - [Philosophy](#philosophy)
 - [Parsing Workbooks](#parsing-workbooks)
   * [Complete Examples](#complete-examples)
-  * [Note on Streaming Read](#note-on-streaming-read)
+  * [Streaming Read](#streaming-read)
 - [Working with the Workbook](#working-with-the-workbook)
   * [Complete Examples](#complete-examples-1)
 - [Writing Workbooks](#writing-workbooks)
@@ -429,7 +429,10 @@ On Windows XP and up you can get the base64 encoding using `certutil`:
 
 - <http://oss.sheetjs.com/js-xlsx/ajax.html> XMLHttpRequest
 
-### Note on Streaming Read
+### Streaming Read
+
+<details>
+	<summary><b>Why is there no Streaming Read API?</b> (click to show)</summary>
 
 The most common and interesting formats (XLS, XLSX/M, XLSB, ODS) are ultimately
 ZIP or CFB containers of files.  Neither format puts the directory structure at
@@ -437,9 +440,61 @@ the beginning of the file: ZIP files place the Central Directory records at the
 end of the logical file, while CFB files can place the FAT structure anywhere in
 the file! As a result, to properly handle these formats, a streaming function
 would have to buffer the entire file before commencing.  That belies the
-expectations of streaming, so we do not provide any streaming read API.  If you
-really want to stream, there are node modules like `concat-stream` that will do
-the buffering for you.
+expectations of streaming, so we do not provide any streaming read API.
+
+</details>
+
+When dealing with Readable Streams, the easiest approach is to buffer the stream
+and process the whole thing at the end.  This can be done with a temporary file
+or by explicitly concatenating the stream:
+
+<details>
+	<summary><b>Explicitly concatenating streams</b> (click to show)</summary>
+
+```js
+var fs = require('fs');
+var XLSX = require('xlsx');
+function process_RS(stream/*:ReadStream*/, cb/*:(wb:Workbook)=>void*/)/*:void*/{
+	var buffers = [];
+	stream.on('data', function(data) { buffers.push(data); });
+	stream.on('end', function() {
+		var buffer = Buffer.concat(buffers);
+		var workbook = XLSX.read(buffer, {type:"buffer"});
+
+		/* DO SOMETHING WITH workbook IN THE CALLBACK */
+		cb(workbook);
+	});
+}
+```
+
+More robust solutions are available using modules like `concat-stream`.
+
+</details>
+
+<details>
+	<summary><b>Writing to filesystem first</b> (click to show)</summary>
+
+This example uses [`tempfile`](https://npm.im/tempfile) for filenames:
+
+```js
+var fs = require('fs'), tempfile = require('tempfile');
+var XLSX = require('xlsx');
+function process_RS(stream/*:ReadStream*/, cb/*:(wb:Workbook)=>void*/)/*:void*/{
+	var fname = tempfile('.sheetjs');
+	console.log(fname);
+	var ostream = fs.createWriteStream(fname);
+	stream.pipe(ostream);
+	ostream.on('finish', function() {
+		var workbook = XLSX.readFile(fname);
+		fs.unlinkSync(fname);
+
+		/* DO SOMETHING WITH workbook IN THE CALLBACK */
+		cb(workbook);
+	});
+}
+```
+
+</details>
 
 ## Working with the Workbook
 
@@ -558,8 +613,8 @@ saveAs(new Blob([s2ab(wbout)],{type:"application/octet-stream"}), "test.xlsx");
 ### Streaming Write
 
 The streaming write functions are available in the `XLSX.stream` object.  They
-take the same arguments as the normal write functions but return a readable
-stream.  They are only exposed in node.
+take the same arguments as the normal write functions but return a Readable
+Stream.  They are only exposed in NodeJS.
 
 - `XLSX.stream.to_csv` is the streaming version of `XLSX.utils.sheet_to_csv`.
 - `XLSX.stream.to_html` is the streaming version of `XLSX.utils.sheet_to_html`.

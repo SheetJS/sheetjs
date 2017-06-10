@@ -274,7 +274,7 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 					supbooks.names.push(last_lbl);
 					if(!supbooks[0]) supbooks[0] = [];
 					supbooks[supbooks.length-1].push(val);
-					if(val.Name == "\r" && val.itab > 0)
+					if(val.Name == "_xlnm._FilterDatabase" && val.itab > 0)
 						if(val.rgce && val.rgce[0] && val.rgce[0][0] && val.rgce[0][0][0] == 'PtgArea3d')
 							FilterDatabases[val.itab - 1] = { ref: encode_range(val.rgce[0][0][1][2]) };
 					break;

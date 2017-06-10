@@ -441,10 +441,11 @@ function parse_SupBook(blob, length, opts) {
 	var end = blob.l + length;
 	var ctab = blob.read_shift(2);
 	var cch = blob.read_shift(2);
-	var virtPath;
-	if(cch >=0x01 && cch <=0xff) virtPath = parse_XLUnicodeStringNoCch(blob, cch);
-	var rgst = blob.read_shift(end - blob.l);
 	opts.sbcch = cch;
+	if(cch == 0x0401 || cch == 0x3A01) return [cch, ctab];
+	if(cch < 0x01 || cch >0xff) throw new Error("Unexpected SupBook type: "+cch);
+	var virtPath = parse_XLUnicodeStringNoCch(blob, cch);
+	var rgst = blob.read_shift(end - blob.l);
 	return [cch, ctab, virtPath, rgst];
 }
 
@@ -469,6 +470,22 @@ function parse_ExternName(blob, length, opts) {
 }
 
 /* 2.4.150 TODO */
+var XLSLblBuiltIn = [
+	"_xlnm.Consolidate_Area",
+	"_xlnm.Auto_Open",
+	"_xlnm.Auto_Close",
+	"_xlnm.Extract",
+	"_xlnm.Database",
+	"_xlnm.Criteria",
+	"_xlnm.Print_Area",
+	"_xlnm.Print_Titles",
+	"_xlnm.Recorder",
+	"_xlnm.Data_Form",
+	"_xlnm.Auto_Activate",
+	"_xlnm.Auto_Deactivate",
+	"_xlnm.Sheet_Title",
+	"_xlnm._FilterDatabase"
+];
 function parse_Lbl(blob, length, opts) {
 	var target = blob.l + length;
 	var flags = blob.read_shift(2);
@@ -482,6 +499,7 @@ function parse_Lbl(blob, length, opts) {
 		blob.l += 4;
 	}
 	var name = parse_XLUnicodeStringNoCch(blob, cch, opts);
+	if(flags & 0x20) name = XLSLblBuiltIn[name.charCodeAt(0)];
 	var npflen = target - blob.l; if(opts && opts.biff == 2) --npflen;
 	var rgce = target == blob.l || cce == 0 ? [] : parse_NameParsedFormula(blob, npflen, opts, cce);
 	return {

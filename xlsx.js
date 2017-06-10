@@ -6,7 +6,7 @@
 /*global global, exports, module, require:false, process:false, Buffer:false */
 var XLSX = {};
 (function make_xlsx(XLSX){
-XLSX.version = '0.10.4';
+XLSX.version = '0.10.5';
 var current_codepage = 1200;
 /*global cptable:true */
 if(typeof module !== "undefined" && typeof require !== 'undefined') {
@@ -4433,10 +4433,11 @@ function parse_SupBook(blob, length, opts) {
 	var end = blob.l + length;
 	var ctab = blob.read_shift(2);
 	var cch = blob.read_shift(2);
-	var virtPath;
-	if(cch >=0x01 && cch <=0xff) virtPath = parse_XLUnicodeStringNoCch(blob, cch);
-	var rgst = blob.read_shift(end - blob.l);
 	opts.sbcch = cch;
+	if(cch == 0x0401 || cch == 0x3A01) return [cch, ctab];
+	if(cch < 0x01 || cch >0xff) throw new Error("Unexpected SupBook type: "+cch);
+	var virtPath = parse_XLUnicodeStringNoCch(blob, cch);
+	var rgst = blob.read_shift(end - blob.l);
 	return [cch, ctab, virtPath, rgst];
 }
 
@@ -4461,6 +4462,22 @@ function parse_ExternName(blob, length, opts) {
 }
 
 /* 2.4.150 TODO */
+var XLSLblBuiltIn = [
+	"_xlnm.Consolidate_Area",
+	"_xlnm.Auto_Open",
+	"_xlnm.Auto_Close",
+	"_xlnm.Extract",
+	"_xlnm.Database",
+	"_xlnm.Criteria",
+	"_xlnm.Print_Area",
+	"_xlnm.Print_Titles",
+	"_xlnm.Recorder",
+	"_xlnm.Data_Form",
+	"_xlnm.Auto_Activate",
+	"_xlnm.Auto_Deactivate",
+	"_xlnm.Sheet_Title",
+	"_xlnm._FilterDatabase"
+];
 function parse_Lbl(blob, length, opts) {
 	var target = blob.l + length;
 	var flags = blob.read_shift(2);
@@ -4474,6 +4491,7 @@ function parse_Lbl(blob, length, opts) {
 		blob.l += 4;
 	}
 	var name = parse_XLUnicodeStringNoCch(blob, cch, opts);
+	if(flags & 0x20) name = XLSLblBuiltIn[name.charCodeAt(0)];
 	var npflen = target - blob.l; if(opts && opts.biff == 2) --npflen;
 	var rgce = target == blob.l || cce == 0 ? [] : parse_NameParsedFormula(blob, npflen, opts, cce);
 	return {
@@ -6706,8 +6724,8 @@ function char2width_(chr) { return (((chr * MDW + 5)/MDW*256))/256; }
 function cycle_width(collw) { return char2width(px2char(width2px(collw))); }
 /* XLSX/XLSB/XLS specify width in units of MDW */
 function find_mdw_colw(collw) {
-	var delta = Infinity, _MDW = MIN_MDW;
-	for(MDW=MIN_MDW; MDW<MAX_MDW; ++MDW) if(Math.abs(collw - cycle_width(collw)) <= delta) { delta = Math.abs(collw - cycle_width(collw)); _MDW = MDW; }
+	var delta = Math.abs(collw - cycle_width(collw)), _MDW = MDW;
+	if(delta > 0.005) for(MDW=MIN_MDW; MDW<MAX_MDW; ++MDW) if(Math.abs(collw - cycle_width(collw)) <= delta) { delta = Math.abs(collw - cycle_width(collw)); _MDW = MDW; }
 	MDW = _MDW;
 }
 /* XLML specifies width in terms of pixels */
@@ -7024,11 +7042,13 @@ function write_numFmts(NF, opts) {
 }
 
 /* 18.8.10 cellXfs CT_CellXfs */
+var cellXF_uint = [ "numFmtId", "fillId", "fontId", "borderId", "xfId" ];
+var cellXF_bool = [ "applyAlignment", "applyBorder", "applyFill", "applyFont", "applyNumberFormat", "applyProtection", "pivotButton", "quotePrefix" ];
 function parse_cellXfs(t, styles, opts) {
 	styles.CellXf = [];
 	var xf;
 	t[0].match(tagregex).forEach(function(x) {
-		var y = parsexmltag(x);
+		var y = parsexmltag(x), i = 0;
 		switch(y[0]) {
 			case '<cellXfs': case '<cellXfs>': case '<cellXfs/>': case '</cellXfs>': break;
 
@@ -7036,8 +7056,10 @@ function parse_cellXfs(t, styles, opts) {
 			case '<xf':
 				xf = y;
 				delete xf[0];
-				if(xf.numFmtId) xf.numFmtId = parseInt(xf.numFmtId, 10);
-				if(xf.fillId) xf.fillId = parseInt(xf.fillId, 10);
+				for(i = 0; i < cellXF_uint.length; ++i) if(xf[cellXF_uint[i]])
+					xf[cellXF_uint[i]] = parseInt(xf[cellXF_uint[i]], 10);
+				for(i = 0; i < cellXF_bool.length; ++i) if(xf[cellXF_bool[i]])
+					xf[cellXF_bool[i]] = parsexmlbool(xf[cellXF_bool[i]], "");
 				styles.CellXf.push(xf); break;
 			case '</xf>': break;
 
@@ -10639,7 +10661,7 @@ function parse_ws_xml(data, opts, rels, wb, themes, styles) {
 	var refguess = ({s: {r:2000000, c:2000000}, e: {r:0, c:0} });
 
 	var data1 = "", data2 = "";
-	var mtch =data.match(sheetdataregex);
+	var mtch = data.match(sheetdataregex);
 	if(mtch) {
 		data1 = data.substr(0, mtch.index);
 		data2 = data.substr(mtch.index + mtch[0].length);
@@ -13051,7 +13073,7 @@ for(var cma = c; cma <= cc; ++cma) {
 				row = xlml_parsexmltag(Rn[0]);
 				if(row.Index) r = +row.Index - 1;
 				rowobj = {};
-				if(row.AutoFitHeight == "0") {
+				if(row.AutoFitHeight == "0" || row.Height) {
 					rowobj.hpx = parseInt(row.Height, 10); rowobj.hpt = px2pt(rowobj.hpx);
 					rowinfo[r] = rowobj;
 				}
@@ -14149,7 +14171,7 @@ wb.opts.Date1904 = Workbook.WBProps.date1904 = val; break;
 					supbooks.names.push(last_lbl);
 					if(!supbooks[0]) supbooks[0] = [];
 					supbooks[supbooks.length-1].push(val);
-					if(val.Name == "\r" && val.itab > 0)
+					if(val.Name == "_xlnm._FilterDatabase" && val.itab > 0)
 						if(val.rgce && val.rgce[0] && val.rgce[0][0] && val.rgce[0][0][0] == 'PtgArea3d')
 							FilterDatabases[val.itab - 1] = { ref: encode_range(val.rgce[0][0][1][2]) };
 					break;
@@ -16047,7 +16069,7 @@ function write_biff_ws(ba, ws, idx, opts, wb) {
 		for(var C = range.s.c; C <= range.e.c; ++C) {
 			if(R === range.s.r) cols[C] = encode_col(C);
 			ref = cols[C] + rr;
-			var cell = dense ? ws[R][C] : ws[ref];
+			var cell = dense ? (ws[R]||[])[C] : ws[ref];
 			if(!cell) continue;
 			/* write cell */
 			write_ws_biff_cell(ba, cell, R, C, opts);
@@ -16146,21 +16168,29 @@ var HTML_ = (function() {
 			if(RS > 1) sp.rowspan = RS;
 			if(CS > 1) sp.colspan = CS;
 			if(o.editable) sp.contenteditable = "true";
+			sp.id = "sjs-" + coord;
 			oo.push(writextag('td', w, sp));
 		}
-		return "<tr>" + oo.join("") + "</tr>";
+		var preamble = "<tr>";
+		return preamble + oo.join("") + "</tr>";
 	}
-	var _BEGIN = "<html><head><title>SheetJS Table Export</title></head><body><table>";
-	var _END = "</table></body></html>";
-	function sheet_to_html(ws, opts) {
-		var o = opts || {};
+	function make_html_preamble(ws, R, o) {
 		var out = [];
-		var r = decode_range(ws['!ref']);
-		o.dense = Array.isArray(ws);
-		for(var R = r.s.r; R <= r.e.r; ++R) out.push(make_html_row(ws, r, R, o));
+		return out.join("") + '<table>';
+	}
+	var _BEGIN = '<html><head><meta charset="utf-8"/><title>SheetJS Table Export</title></head><body>';
+	var _END = '</body></html>';
+	function sheet_to_html(ws, opts, wb) {
+		var o = opts || {};
 		var header = o.header != null ? o.header : _BEGIN;
 		var footer = o.footer != null ? o.footer : _END;
-		return header + out.join("") + footer ;
+		var out = [header];
+		var r = decode_range(ws['!ref']);
+		o.dense = Array.isArray(ws);
+		out.push(make_html_preamble(ws, r, o));
+		for(var R = r.s.r; R <= r.e.r; ++R) out.push(make_html_row(ws, r, R, o));
+		out.push("</table>" + footer);
+		return out.join("");
 	}
 
 	return {
@@ -16169,6 +16199,7 @@ var HTML_ = (function() {
 		_row: make_html_row,
 		BEGIN: _BEGIN,
 		END: _END,
+		_preamble: make_html_preamble,
 		from_sheet: sheet_to_html
 	};
 })();
@@ -16871,7 +16902,7 @@ function write_obj_str(factory) {
 		var idx = 0;
 		for(var i=0;i<wb.SheetNames.length;++i) if(wb.SheetNames[i] == o.sheet) idx=i;
 		if(idx == 0 && !!o.sheet && wb.SheetNames[0] != o.sheet) throw new Error("Sheet not found: " + o.sheet);
-		return factory.from_sheet(wb.Sheets[wb.SheetNames[idx]], o);
+		return factory.from_sheet(wb.Sheets[wb.SheetNames[idx]], o, wb);
 	};
 }
 
@@ -17808,23 +17839,25 @@ if(has_buf && typeof require != 'undefined') (function() {
 		return stream;
 	};
 
-	var write_html_stream = function(sheet, opts) {
+	var write_html_stream = function(ws, opts) {
 		var stream = Readable();
 
-		var o = opts == null ? {} : opts;
-		var r = decode_range(sheet['!ref']), cell;
-		o.dense = Array.isArray(sheet);
-		stream.push(HTML_.BEGIN);
-
+		var o = opts || {};
+		var header = o.header != null ? o.header : HTML_.BEGIN;
+		var footer = o.footer != null ? o.footer : HTML_.END;
+		stream.push(header);
+		var r = decode_range(ws['!ref']);
+		o.dense = Array.isArray(ws);
+		stream.push(HTML_._preamble(ws, r, o));
 		var R = r.s.r;
 		var end = false;
 		stream._read = function() {
 			if(R > r.e.r) {
-				if(!end) { end = true; stream.push(HTML_.END); }
+				if(!end) { end = true; stream.push("</table>" + footer); }
 				return stream.push(null);
 			}
 			while(R <= r.e.r) {
-				stream.push(HTML_._row(sheet, r, R, o));
+				stream.push(HTML_._row(ws, r, R, o));
 				++R;
 				break;
 			}

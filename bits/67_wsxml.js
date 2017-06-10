@@ -19,7 +19,7 @@ function parse_ws_xml(data/*:?string*/, opts, rels, wb, themes, styles)/*:Worksh
 	var refguess/*:Range*/ = ({s: {r:2000000, c:2000000}, e: {r:0, c:0} }/*:any*/);
 
 	var data1 = "", data2 = "";
-	var mtch/*:?any*/ =data.match(sheetdataregex);
+	var mtch/*:?any*/ = data.match(sheetdataregex);
 	if(mtch) {
 		data1 = data.substr(0, mtch.index);
 		data2 = data.substr(mtch.index + mtch[0].length);

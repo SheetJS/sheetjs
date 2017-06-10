@@ -13,7 +13,7 @@ export function writeFile(data: WorkBook, filename: string, opts?: WritingOption
 /** Attempts to write the workbook data */
 export function write(data: WorkBook, opts?: WritingOptions): any;
 
-export const utils: Utils;
+export const utils: XLSX$Utils;
 export const stream: StreamUtils;
 
 /** Number Format (either a string or an index to the format table) */
@@ -571,7 +571,7 @@ export interface Table2SheetOpts {
 /**
  * General utilities
  */
-export interface Utils {
+export interface XLSX$Utils {
     /* --- Import Functions --- */
 
     /** Converts an array of arrays of JS data to a worksheet. */

@@ -73,21 +73,29 @@ var HTML_ = (function() {
 			if(RS > 1) sp.rowspan = RS;
 			if(CS > 1) sp.colspan = CS;
 			if(o.editable) sp.contenteditable = "true";
+			sp.id = "sjs-" + coord;
 			oo.push(writextag('td', w, sp));
 		}
-		return "<tr>" + oo.join("") + "</tr>";
+		var preamble = "<tr>";
+		return preamble + oo.join("") + "</tr>";
 	}
-	var _BEGIN = "<html><head><title>SheetJS Table Export</title></head><body><table>";
-	var _END = "</table></body></html>";
-	function sheet_to_html(ws/*:Worksheet*/, opts/*:?Sheet2HTMLOpts*/)/*:string*/ {
+	function make_html_preamble(ws/*:Worksheet*/, R/*:Range*/, o/*:Sheet2HTMLOpts*/)/*:string*/ {
+		var out = [];
+		return out.join("") + '<table>';
+	}
+	var _BEGIN = '<html><head><meta charset="utf-8"/><title>SheetJS Table Export</title></head><body>';
+	var _END = '</body></html>';
+	function sheet_to_html(ws/*:Worksheet*/, opts/*:?Sheet2HTMLOpts*/, wb/*:?Workbook*/)/*:string*/ {
 		var o = opts || {};
-		var out/*:Array<string>*/ = [];
-		var r = decode_range(ws['!ref']);
-		o.dense = Array.isArray(ws);
-		for(var R = r.s.r; R <= r.e.r; ++R) out.push(make_html_row(ws, r, R, o));
 		var header = o.header != null ? o.header : _BEGIN;
 		var footer = o.footer != null ? o.footer : _END;
-		return header + out.join("") + footer ;
+		var out/*:Array<string>*/ = [header];
+		var r = decode_range(ws['!ref']);
+		o.dense = Array.isArray(ws);
+		out.push(make_html_preamble(ws, r, o));
+		for(var R = r.s.r; R <= r.e.r; ++R) out.push(make_html_row(ws, r, R, o));
+		out.push("</table>" + footer);
+		return out.join("");
 	}
 
 	return {
@@ -96,6 +104,7 @@ var HTML_ = (function() {
 		_row: make_html_row,
 		BEGIN: _BEGIN,
 		END: _END,
+		_preamble: make_html_preamble,
 		from_sheet: sheet_to_html
 	};
 })();

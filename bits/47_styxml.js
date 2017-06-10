@@ -260,11 +260,13 @@ function write_numFmts(NF/*:{[n:number]:string}*/, opts) {
 }
 
 /* 18.8.10 cellXfs CT_CellXfs */
+var cellXF_uint = [ "numFmtId", "fillId", "fontId", "borderId", "xfId" ];
+var cellXF_bool = [ "applyAlignment", "applyBorder", "applyFill", "applyFont", "applyNumberFormat", "applyProtection", "pivotButton", "quotePrefix" ];
 function parse_cellXfs(t, styles, opts) {
 	styles.CellXf = [];
 	var xf;
 	t[0].match(tagregex).forEach(function(x) {
-		var y = parsexmltag(x);
+		var y = parsexmltag(x), i = 0;
 		switch(y[0]) {
 			case '<cellXfs': case '<cellXfs>': case '<cellXfs/>': case '</cellXfs>': break;
 
@@ -272,8 +274,10 @@ function parse_cellXfs(t, styles, opts) {
 			case '<xf':
 				xf = y;
 				delete xf[0];
-				if(xf.numFmtId) xf.numFmtId = parseInt(xf.numFmtId, 10);
-				if(xf.fillId) xf.fillId = parseInt(xf.fillId, 10);
+				for(i = 0; i < cellXF_uint.length; ++i) if(xf[cellXF_uint[i]])
+					xf[cellXF_uint[i]] = parseInt(xf[cellXF_uint[i]], 10);
+				for(i = 0; i < cellXF_bool.length; ++i) if(xf[cellXF_bool[i]])
+					xf[cellXF_bool[i]] = parsexmlbool(xf[cellXF_bool[i]], "");
 				styles.CellXf.push(xf); break;
 			case '</xf>': break;
 

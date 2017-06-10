@@ -4,7 +4,7 @@ function write_obj_str(factory/*:WriteObjStrFactory*/) {
 		var idx = 0;
 		for(var i=0;i<wb.SheetNames.length;++i) if(wb.SheetNames[i] == o.sheet) idx=i;
 		if(idx == 0 && !!o.sheet && wb.SheetNames[0] != o.sheet) throw new Error("Sheet not found: " + o.sheet);
-		return factory.from_sheet(wb.Sheets[wb.SheetNames[idx]], o);
+		return factory.from_sheet(wb.Sheets[wb.SheetNames[idx]], o, wb);
 	};
 }
 

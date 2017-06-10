@@ -256,7 +256,7 @@ function parse_xlml_xml(d, opts)/*:Workbook*/ {
 				row = xlml_parsexmltag(Rn[0]);
 				if(row.Index) r = +row.Index - 1;
 				rowobj = {};
-				if(row.AutoFitHeight == "0") {
+				if(row.AutoFitHeight == "0" || row.Height) {
 					rowobj.hpx = parseInt(row.Height, 10); rowobj.hpt = px2pt(rowobj.hpx);
 					rowinfo[r] = rowobj;
 				}

@@ -1,8 +1,8 @@
 ### Streaming Write
 
 The streaming write functions are available in the `XLSX.stream` object.  They
-take the same arguments as the normal write functions but return a readable
-stream.  They are only exposed in node.
+take the same arguments as the normal write functions but return a Readable
+Stream.  They are only exposed in NodeJS.
 
 - `XLSX.stream.to_csv` is the streaming version of `XLSX.utils.sheet_to_csv`.
 - `XLSX.stream.to_html` is the streaming version of `XLSX.utils.sheet_to_html`.

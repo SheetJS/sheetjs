@@ -82,7 +82,7 @@ function write_biff_ws(ba/*:BufArray*/, ws/*:Worksheet*/, idx/*:number*/, opts, 
 		for(var C = range.s.c; C <= range.e.c; ++C) {
 			if(R === range.s.r) cols[C] = encode_col(C);
 			ref = cols[C] + rr;
-			var cell = dense ? ws[R][C] : ws[ref];
+			var cell = dense ? (ws[R]||[])[C] : ws[ref];
 			if(!cell) continue;
 			/* write cell */
 			write_ws_biff_cell(ba, cell, R, C, opts);
