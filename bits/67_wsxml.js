@@ -108,7 +108,7 @@ function write_ws_xml_protection(sp)/*:string*/ {
 function parse_ws_xml_hlinks(s, data/*:Array<string>*/, rels) {
 	var dense = Array.isArray(s);
 	for(var i = 0; i != data.length; ++i) {
-		var val = parsexmltag(data[i], true);
+		var val = parsexmltag(utf8read(data[i]), true);
 		if(!val.ref) return;
 		var rel = rels ? rels['!id'][val.id] : null;
 		if(rel) {
