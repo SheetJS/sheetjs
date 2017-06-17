@@ -628,6 +628,14 @@ export interface XLSX$Utils {
 
     /** Converts A1 range to 0-indexed form */
     decode_range(range: string): Range;
+
+    /* --- WorkBook Utilities --- */
+
+    /** Creates a new WorkBook */
+    book_new(): WorkBook;
+
+    /** Appends worksheet to given workbook (blank name will enumerate Sheet# to find unused name) */
+    book_append_sheet(wb: WorkBook, ws: WorkSheet, name?: String): void;
 }
 
 /** NODE ONLY! these return Readable Streams */
