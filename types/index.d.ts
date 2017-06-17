@@ -631,8 +631,11 @@ export interface XLSX$Utils {
 
     /* --- WorkBook Utilities --- */
 
-    /** Adds a worksheet to the end of a given workbook */
-    book_append_sheet(wb: WorkBook, ws: WorkSheet, title: String): void;
+    /** Creates a new WorkBook */
+    book_new(): WorkBook;
+
+    /** Appends worksheet to given workbook (blank name will enumerate Sheet# to find unused name) */
+    book_append_sheet(wb: WorkBook, ws: WorkSheet, name?: String): void;
 }
 
 /** NODE ONLY! these return Readable Streams */
