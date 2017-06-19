@@ -33,6 +33,7 @@ The `demos` directory includes sample projects for:
 - [`requirejs`](demos/requirejs/)
 - [`rollup`](demos/rollup/)
 - [`systemjs`](demos/systemjs/)
+- [`vue 2`](demos/vue/)
 - [`webpack`](demos/webpack/)
 
 ### Optional Modules

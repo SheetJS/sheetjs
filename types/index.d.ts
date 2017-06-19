@@ -13,7 +13,9 @@ export function writeFile(data: WorkBook, filename: string, opts?: WritingOption
 /** Attempts to write the workbook data */
 export function write(data: WorkBook, opts?: WritingOptions): any;
 
+/** Utility Functions */
 export const utils: XLSX$Utils;
+/** Stream Utility Functions */
 export const stream: StreamUtils;
 
 /** Number Format (either a string or an index to the format table) */
@@ -223,10 +225,18 @@ export interface SheetProps {
     Hidden?: 0 | 1 | 2;
 }
 
+/** Defined Name Object */
 export interface DefinedName {
+    /** Name */
     Name: string;
+
+    /** Reference */
     Ref: string;
+
+    /** Scope (undefined for workbook scope) */
     Sheet?: number;
+
+    /** Name comment */
     Comment?: string;
 }
 
@@ -251,6 +261,7 @@ export interface WorkbookProperties {
     filterPrivacy?: boolean;
 }
 
+/** Column Properties Object */
 export interface ColInfo {
     /* --- visibility --- */
 
@@ -271,6 +282,8 @@ export interface ColInfo {
     /** Excel's "Max Digit Width" unit, always integral */
     MDW?: number;
 }
+
+/** Row Properties Object */
 export interface RowInfo {
     /* --- visibility --- */
 
@@ -414,25 +427,33 @@ export interface AutoFilterInfo {
 }
 export type WSKeys = SheetKeys | ColInfo[] | RowInfo[] | Range[] | ProtectInfo | AutoFilterInfo;
 
-/**
- * object representing the worksheet
- */
+/** Worksheet Object */
 export interface WorkSheet extends Sheet {
     /**
      * Indexing with a cell address string maps to a cell object
      * Special keys start with '!'
      */
     [cell: string]: CellObject | WSKeys | any;
+
+    /** Column Info */
     '!cols'?: ColInfo[];
+
+    /** Row Info */
     '!rows'?: RowInfo[];
+
+    /** Merge Ranges */
     '!merges'?: Range[];
+
+    /** Worksheet Protection info */
     '!protect'?: ProtectInfo;
+
+    /** AutoFilter info */
     '!autofilter'?: AutoFilterInfo;
 }
 
 /**
  * The Excel data type for a cell.
- * b Boolean, n Number, e error, s String, d Date
+ * b Boolean, n Number, e error, s String, d Date, z Stub
  */
 export type ExcelDataType = 'b' | 'n' | 'e' | 's' | 'd' | 'z';
 
@@ -442,6 +463,7 @@ export type ExcelDataType = 'b' | 'n' | 'e' | 's' | 'd' | 'z';
  */
 export type BookType = 'xlsx' | 'xlsm' | 'xlsb' | 'biff2' | 'xlml' | 'ods' | 'fods' | 'csv' | 'txt' | 'sylk' | 'html' | 'dif' | 'prn';
 
+/** Comment element */
 export interface Comment {
     /** Author of the comment block */
     a?: string;
@@ -450,6 +472,7 @@ export interface Comment {
     t: string;
 }
 
+/** Link object */
 export interface Hyperlink {
     /** Target of the link (HREF) */
     Target: string;
@@ -458,6 +481,7 @@ export interface Hyperlink {
     Tooltip?: string;
 }
 
+/** Worksheet Cell Object */
 export interface CellObject {
     /** The raw value of the cell.  Can be omitted if a formula is specified */
     v?: string | number | boolean | Date;
@@ -496,6 +520,7 @@ export interface CellObject {
     s?: object;
 }
 
+/** Simple Cell Address */
 export interface CellAddress {
     /** Column number */
     c: number;
@@ -525,24 +550,36 @@ export interface Sheet2CSVOpts {
 }
 
 export interface Sheet2HTMLOpts {
+    /** Add contenteditable to every cell */
     editable?: boolean;
+    /** Header HTML */
     header?: string;
+    /** Footer HTML */
     footer?: string;
 }
 
 export interface Sheet2JSONOpts {
-    /** Use specified date format */
+    /** Use specified format for date cells */
     dateNF?: NumberFormat;
 
+    /** Output format */
     header?: "A"|number|string[];
 
+    /** Override worksheet range */
     range?: any;
 
+    /** Include or omit blank lines in the output */
+    blankrows?: boolean;
+
+    /** Default value for null/undefined values */
+    defval?: any;
+
+    /** if true, return raw data; if false, return formatted text */
     raw?: boolean;
 }
 
 export interface AOA2SheetOpts {
-    /** Use specified date format */
+    /** Use specified format for date cells */
     dateNF?: NumberFormat;
 
     /**
@@ -568,9 +605,7 @@ export interface Table2SheetOpts {
     dateNF?: NumberFormat;
 }
 
-/**
- * General utilities
- */
+/** General utilities */
 export interface XLSX$Utils {
     /* --- Import Functions --- */
 
@@ -629,13 +664,43 @@ export interface XLSX$Utils {
     /** Converts A1 range to 0-indexed form */
     decode_range(range: string): Range;
 
-    /* --- WorkBook Utilities --- */
+    /* --- General Utilities --- */
 
-    /** Creates a new WorkBook */
+    /** Creates a new workbook */
     book_new(): WorkBook;
 
-    /** Appends worksheet to given workbook (blank name will enumerate Sheet# to find unused name) */
-    book_append_sheet(wb: WorkBook, ws: WorkSheet, name?: String): void;
+    /** Append a worksheet to a workbook */
+    book_append_sheet(workbook: WorkBook, worksheet: WorkSheet, name?: string): void;
+
+    /** Set sheet visibility (visible/hidden/very hidden) */
+    book_set_sheet_visibility(workbook: WorkBook, sheet: number|string, visibility: number): void;
+
+    /** Set number format for a cell */
+    cell_set_number_format(cell: CellObject, fmt: string|number): CellObject;
+
+    /** Set hyperlink for a cell */
+    cell_set_hyperlink(cell: CellObject, target: string, tooltip?: string): CellObject;
+
+    /** Add comment to a cell */
+    cell_add_comment(cell: CellObject, text: string, author?: string): void;
+
+    /** Assign an Array Formula to a range */
+    sheet_set_array_formula(ws: WorkSheet, range: Range|string, formula: string): WorkSheet;
+
+    consts: XLSX$Consts;
+}
+
+export interface XLSX$Consts {
+    /* --- Sheet Visibility --- */
+
+    /** Visibility: Visible */
+    SHEET_VISIBLE: 0;
+
+    /** Visibility: Hidden */
+    SHEET_HIDDEN: 1;
+
+    /** Visibility: Very Hidden */
+    SHEET_VERYHIDDEN: 2;
 }
 
 /** NODE ONLY! these return Readable Streams */

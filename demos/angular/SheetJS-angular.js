@@ -7,7 +7,7 @@ function SheetJSExportService(uiGridExporterService) {
 
 		var fileName = gridApi.grid.options.filename || 'SheetJS';
 		fileName += wopts.bookType ? "." + wopts.bookType : '.xlsx';
-		
+
 		var sheetName = gridApi.grid.options.sheetname || 'Sheet1';
 
 		var wb = XLSX.utils.book_new(), ws = uigrid_to_sheet(data, columns);
@@ -63,15 +63,15 @@ function SheetJSExportService(uiGridExporterService) {
 }
 
 var SheetJSImportDirective = function() {
-  return {
+	return {
 		scope: { opts: '=' },
-    link: function ($scope, $elm, $attrs) {
-      $elm.on('change', function (changeEvent) {
-        var reader = new FileReader();
+		link: function ($scope, $elm, $attrs) {
+			$elm.on('change', function (changeEvent) {
+				var reader = new FileReader();
 
-        reader.onload = function (e) {
+				reader.onload = function (e) {
 					/* read workbook */
-          var bstr = e.target.result;
+					var bstr = e.target.result;
 					var wb = XLSX.read(bstr, {type:'binary'});
 
 					/* grab first sheet */
@@ -98,10 +98,10 @@ var SheetJSImportDirective = function() {
 						$scope.opts.columnDefs = cols;
 						$scope.opts.data = data;
 					});
-        };
-  
-        reader.readAsBinaryString(changeEvent.target.files[0]);
-      });
-    }
-  }	
+				};
+
+				reader.readAsBinaryString(changeEvent.target.files[0]);
+			});
+		}
+	}
 }
