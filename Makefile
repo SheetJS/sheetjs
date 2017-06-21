@@ -115,7 +115,7 @@ ctestserv: ## Start a test server on port 8000
 
 ## Demos
 
-DEMOS=angular browserify requirejs rollup systemjs webpack
+DEMOS=angular angular-new browserify requirejs rollup systemjs webpack
 DEMOTGTS=$(patsubst %,demo-%,$(DEMOS))
 .PHONY: demos
 demos: $(DEMOTGTS)
@@ -124,6 +124,11 @@ demos: $(DEMOTGTS)
 demo-angular: ## Run angular demo build
 	#make -C demos/angular
 	@echo "start a local server and go to demos/angular/angular.html"
+
+.PHONY: demo-angular-new
+demo-angular-new: ## Run angular 2 demo build
+	make -C demos/angular2
+	@echo "go to demos/angular/angular.html and run 'ng serve'"
 
 .PHONY: demo-browserify
 demo-browserify: ## Run browserify demo build

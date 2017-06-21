@@ -1,0 +1,23 @@
+{
+  "$schema": "./node_modules/@angular/cli/lib/config/schema.json",
+  "project": {
+    "name": "angular2"
+  },
+  "apps": [
+    {
+      "root": "src",
+      "outDir": "dist",
+      "index": "index.html",
+      "main": "main.ts",
+      "polyfills": "polyfills.ts",
+      "test": "test.ts",
+      "tsconfig": "tsconfig.app.json",
+      "prefix": "app",
+      "scripts": []
+    }
+  ],
+  "defaults": {
+    "styleExt": "css",
+    "component": {}
+  }
+}
