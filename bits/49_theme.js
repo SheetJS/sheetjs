@@ -61,9 +61,9 @@ function parse_fontScheme(t, themes, opts) { }
 /* 20.1.4.1.15 fmtScheme CT_StyleMatrix */
 function parse_fmtScheme(t, themes, opts) { }
 
-var clrsregex = /<a:clrScheme([^>]*)>[^\u2603]*<\/a:clrScheme>/;
-var fntsregex = /<a:fontScheme([^>]*)>[^\u2603]*<\/a:fontScheme>/;
-var fmtsregex = /<a:fmtScheme([^>]*)>[^\u2603]*<\/a:fmtScheme>/;
+var clrsregex = /<a:clrScheme([^>]*)>[\s\S]*<\/a:clrScheme>/;
+var fntsregex = /<a:fontScheme([^>]*)>[\s\S]*<\/a:fontScheme>/;
+var fmtsregex = /<a:fmtScheme([^>]*)>[\s\S]*<\/a:fmtScheme>/;
 
 /* 20.1.6.10 themeElements CT_BaseStyles */
 function parse_themeElements(data, themes, opts) {
@@ -84,7 +84,7 @@ function parse_themeElements(data, themes, opts) {
 	});
 }
 
-var themeltregex = /<a:themeElements([^>]*)>[^\u2603]*<\/a:themeElements>/;
+var themeltregex = /<a:themeElements([^>]*)>[\s\S]*<\/a:themeElements>/;
 
 /* 14.2.7 Theme Part */
 function parse_theme_xml(data/*:string*/, opts) {

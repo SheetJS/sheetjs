@@ -6,7 +6,7 @@
 /*global global, exports, module, require:false, process:false, Buffer:false */
 var XLSX = {};
 (function make_xlsx(XLSX){
-XLSX.version = '0.10.5';
+XLSX.version = '0.10.6';
 var current_codepage = 1200;
 /*global cptable:true */
 if(typeof module !== "undefined" && typeof require !== 'undefined') {
@@ -16,10 +16,22 @@ function reset_cp() { set_cp(1200); }
 var set_cp = function(cp) { current_codepage = cp; };
 
 function char_codes(data) { var o = []; for(var i = 0, len = data.length; i < len; ++i) o[i] = data.charCodeAt(i); return o; }
+
+function utf16leread(data) {
+	var o = [];
+	for(var i = 0; i < (data.length>>1); ++i) o[i] = String.fromCharCode(data.charCodeAt(2*i) + (data.charCodeAt(2*i+1)<<8));
+	return o.join("");
+}
+function utf16beread(data) {
+	var o = [];
+	for(var i = 0; i < (data.length>>1); ++i) o[i] = String.fromCharCode(data.charCodeAt(2*i+1) + (data.charCodeAt(2*i)<<8));
+	return o.join("");
+}
+
 var debom = function(data) {
 	var c1 = data.charCodeAt(0), c2 = data.charCodeAt(1);
-	if(c1 == 0xFF && c2 == 0xFE) return data.substr(2);
-	if(c1 == 0xFE && c2 == 0xFF) return data.substr(2);
+	if(c1 == 0xFF && c2 == 0xFE) return utf16leread(data.substr(2));
+	if(c1 == 0xFE && c2 == 0xFF) return utf16beread(data.substr(2));
 	if(c1 == 0xFEFF) return data.substr(1);
 	return data;
 };
@@ -1711,7 +1723,7 @@ var matchtag = (function() {
 	return function matchtag(f,g) {
 		var t = f+"|"+(g||"");
 		if(mtcache[t]) return mtcache[t];
-		return (mtcache[t] = new RegExp('<(?:\\w+:)?'+f+'(?: xml:space="preserve")?(?:[^>]*)>([^\u2603]*)</(?:\\w+:)?'+f+'>',((g||""))));
+		return (mtcache[t] = new RegExp('<(?:\\w+:)?'+f+'(?: xml:space="preserve")?(?:[^>]*)>([\\s\\S]*?)</(?:\\w+:)?'+f+'>',((g||""))));
 	};
 })();
 
@@ -7604,9 +7616,9 @@ function parse_fontScheme(t, themes, opts) { }
 /* 20.1.4.1.15 fmtScheme CT_StyleMatrix */
 function parse_fmtScheme(t, themes, opts) { }
 
-var clrsregex = /<a:clrScheme([^>]*)>[^\u2603]*<\/a:clrScheme>/;
-var fntsregex = /<a:fontScheme([^>]*)>[^\u2603]*<\/a:fontScheme>/;
-var fmtsregex = /<a:fmtScheme([^>]*)>[^\u2603]*<\/a:fmtScheme>/;
+var clrsregex = /<a:clrScheme([^>]*)>[\s\S]*<\/a:clrScheme>/;
+var fntsregex = /<a:fontScheme([^>]*)>[\s\S]*<\/a:fontScheme>/;
+var fmtsregex = /<a:fmtScheme([^>]*)>[\s\S]*<\/a:fmtScheme>/;
 
 /* 20.1.6.10 themeElements CT_BaseStyles */
 function parse_themeElements(data, themes, opts) {
@@ -7627,7 +7639,7 @@ function parse_themeElements(data, themes, opts) {
 	});
 }
 
-var themeltregex = /<a:themeElements([^>]*)>[^\u2603]*<\/a:themeElements>/;
+var themeltregex = /<a:themeElements([^>]*)>[\s\S]*<\/a:themeElements>/;
 
 /* 14.2.7 Theme Part */
 function parse_theme_xml(data, opts) {
@@ -8070,13 +8082,13 @@ function parse_comments_xml(data, opts) {
 	if(data.match(/<(?:\w+:)?comments *\/>/)) return [];
 	var authors = [];
 	var commentList = [];
-	var authtag = data.match(/<(?:\w+:)?authors>([^\u2603]*)<\/(?:\w+:)?authors>/);
+	var authtag = data.match(/<(?:\w+:)?authors>([\s\S]*)<\/(?:\w+:)?authors>/);
 	if(authtag && authtag[1]) authtag[1].split(/<\/\w*:?author>/).forEach(function(x) {
 		if(x === "" || x.trim() === "") return;
 		var a = x.match(/<(?:\w+:)?author[^>]*>(.*)/);
 		if(a) authors.push(a[1]);
 	});
-	var cmnttag = data.match(/<(?:\w+:)?commentList>([^\u2603]*)<\/(?:\w+:)?commentList>/);
+	var cmnttag = data.match(/<(?:\w+:)?commentList>([\s\S]*)<\/(?:\w+:)?commentList>/);
 	if(cmnttag && cmnttag[1]) cmnttag[1].split(/<\/\w*:?comment>/).forEach(function(x, index) {
 		if(x === "" || x.trim() === "") return;
 		var cm = x.match(/<(?:\w+:)?comment[^>]*>/);
@@ -8085,7 +8097,7 @@ function parse_comments_xml(data, opts) {
 		var comment = ({ author: y.authorId && authors[y.authorId] ? authors[y.authorId] : "sheetjsghost", ref: y.ref, guid: y.guid });
 		var cell = decode_cell(y.ref);
 		if(opts.sheetRows && opts.sheetRows <= cell.r) return;
-		var textMatch = x.match(/<(?:\w+:)?text>([^\u2603]*)<\/(?:\w+:)?text>/);
+		var textMatch = x.match(/<(?:\w+:)?text>([\s\S]*)<\/(?:\w+:)?text>/);
 		var rt = !!textMatch && !!textMatch[1] && parse_si(textMatch[1]) || {r:"",t:"",h:""};
 		comment.r = rt.r;
 		if(rt.r == "<t></t>") rt.t = rt.h = "";
@@ -10645,11 +10657,11 @@ function parse_ws_xml_dim(ws, s) {
 	if(d.s.r<=d.e.r && d.s.c<=d.e.c && d.s.r>=0 && d.s.c>=0) ws["!ref"] = encode_range(d);
 }
 var mergecregex = /<(?:\w:)?mergeCell ref="[A-Z0-9:]+"\s*[\/]?>/g;
-var sheetdataregex = /<(?:\w+:)?sheetData>([^\u2603]*)<\/(?:\w+:)?sheetData>/;
+var sheetdataregex = /<(?:\w+:)?sheetData>([\s\S]*)<\/(?:\w+:)?sheetData>/;
 var hlinkregex = /<(?:\w:)?hyperlink [^>]*>/mg;
 var dimregex = /"(\w*:\w*)"/;
 var colregex = /<(?:\w:)?col[^>]*[\/]?>/g;
-var afregex = /<(?:\w:)?autoFilter[^>]*([\/]|>([^\u2603]*)<\/(?:\w:)?autoFilter)>/g;
+var afregex = /<(?:\w:)?autoFilter[^>]*([\/]|>([\s\S]*)<\/(?:\w:)?autoFilter)>/g;
 var marginregex= /<(?:\w:)?pageMargins[^>]*\/>/g;
 /* 18.3 Worksheets */
 function parse_ws_xml(data, opts, rels, wb, themes, styles) {
@@ -10750,7 +10762,7 @@ function write_ws_xml_protection(sp) {
 function parse_ws_xml_hlinks(s, data, rels) {
 	var dense = Array.isArray(s);
 	for(var i = 0; i != data.length; ++i) {
-		var val = parsexmltag(data[i], true);
+		var val = parsexmltag(utf8read(data[i]), true);
 		if(!val.ref) return;
 		var rel = rels ? rels['!id'][val.id] : null;
 		if(rel) {
@@ -12988,7 +13000,8 @@ function xlml_normalize(d) {
 /* UOS uses CJK in tags */
 var xlmlregex = /<(\/?)([^\s?>!\/:]*:|)([^\s?>]*[^\s?>\/])[^>]*>/mg;
 //var xlmlregex = /<(\/?)([a-z0-9]*:|)(\w+)[^>]*>/mg;
-function parse_xlml_xml(d, opts) {
+function parse_xlml_xml(d, _opts) {
+	var opts = _opts || {};
 	make_ssf(SSF);
 	var str = debom(xlml_normalize(d));
 	if(opts && opts.type == 'binary' && typeof cptable !== 'undefined') str = cptable.utils.decode(65001, char_codes(str));
@@ -13011,7 +13024,7 @@ function parse_xlml_xml(d, opts) {
 	var rowinfo = [], rowobj = {};
 	var Workbook = ({ Sheets:[], WBProps:{date1904:false} }), wsprops = {};
 	xlmlregex.lastIndex = 0;
-	str = str.replace(/<!--([^\u2603]*?)-->/mg,"");
+	str = str.replace(/<!--([\s\S]*?)-->/mg,"");
 	while((Rn = xlmlregex.exec(str))) switch(Rn[3]) {
 		case 'Data':
 			if(state[state.length-1][1]) break;
@@ -16289,7 +16302,7 @@ var parse_content_xml = (function() {
 		var rept = 1, isstub = false;
 		var i = 0;
 		xlmlregex.lastIndex = 0;
-		str = str.replace(/<!--([^\u2603]*?)-->/mg,"").replace(/<!DOCTYPE[^\[]*\[[^\]]*\]>/gm,"");
+		str = str.replace(/<!--([\s\S]*?)-->/mg,"").replace(/<!DOCTYPE[^\[]*\[[^\]]*\]>/gm,"");
 		while((Rn = xlmlregex.exec(str))) switch((Rn[3]=Rn[3].replace(/_.*$/,""))) {
 
 			case 'table': case '工作表': // 9.1.2 <table:table>

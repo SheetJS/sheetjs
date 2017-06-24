@@ -40,7 +40,7 @@ var parse_content_xml = (function() {
 		var rept = 1, isstub = false;
 		var i = 0;
 		xlmlregex.lastIndex = 0;
-		str = str.replace(/<!--([^\u2603]*?)-->/mg,"").replace(/<!DOCTYPE[^\[]*\[[^\]]*\]>/gm,"");
+		str = str.replace(/<!--([\s\S]*?)-->/mg,"").replace(/<!DOCTYPE[^\[]*\[[^\]]*\]>/gm,"");
 		while((Rn = xlmlregex.exec(str))) switch((Rn[3]=Rn[3].replace(/_.*$/,""))) {
 
 			case 'table': case '工作表': // 9.1.2 <table:table>

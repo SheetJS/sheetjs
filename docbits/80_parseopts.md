@@ -39,8 +39,6 @@ The exported `read` and `readFile` functions accept an options argument:
   errors on single worksheets, allowing you to read from the worksheets that do
   parse properly. Setting `WTF:1` forces those errors to be thrown.
 
-The defaults are enumerated in bits/84\_defaults.js
-
 ### Input Type
 
 Strings can be interpreted in multiple ways.  The `type` parameter for `read`

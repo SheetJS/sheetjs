@@ -128,7 +128,7 @@ var matchtag = (function() {
 	return function matchtag(f,g/*:?string*/)/*:RegExp*/ {
 		var t = f+"|"+(g||"");
 		if(mtcache[t]) return mtcache[t];
-		return (mtcache[t] = new RegExp('<(?:\\w+:)?'+f+'(?: xml:space="preserve")?(?:[^>]*)>([^\u2603]*)</(?:\\w+:)?'+f+'>',((g||"")/*:any*/)));
+		return (mtcache[t] = new RegExp('<(?:\\w+:)?'+f+'(?: xml:space="preserve")?(?:[^>]*)>([\\s\\S]*?)</(?:\\w+:)?'+f+'>',((g||"")/*:any*/)));
 	};
 })();
 

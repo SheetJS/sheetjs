@@ -1165,6 +1165,11 @@ Max Digit Width is the width of the largest digit when rendered (generally the
 "0" character is the widest).  The internal width must be an integer multiple of
 the the width divided by 256.  ECMA-376 describes a formula for converting
 between pixels and the internal width.  This represents a hybrid approach.
+
+Read functions attempt to populate all three properties.  Write functions will
+try to cycle specified values to the desired type.  In order to avoid potential
+conflicts, manipulation should delete the other properties first.  For example,
+when changing the pixel width, delete the `wch` and `width` properties.
 </details>
 
 <details>
@@ -1402,8 +1407,6 @@ The exported `read` and `readFile` functions accept an options argument:
 - WTF is mainly for development.  By default, the parser will suppress read
   errors on single worksheets, allowing you to read from the worksheets that do
   parse properly. Setting `WTF:1` forces those errors to be thrown.
-
-The defaults are enumerated in bits/84\_defaults.js
 
 ### Input Type
 

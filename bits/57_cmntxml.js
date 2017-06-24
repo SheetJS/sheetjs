@@ -4,13 +4,13 @@ function parse_comments_xml(data/*:string*/, opts)/*:Array<Comment>*/ {
 	if(data.match(/<(?:\w+:)?comments *\/>/)) return [];
 	var authors = [];
 	var commentList = [];
-	var authtag = data.match(/<(?:\w+:)?authors>([^\u2603]*)<\/(?:\w+:)?authors>/);
+	var authtag = data.match(/<(?:\w+:)?authors>([\s\S]*)<\/(?:\w+:)?authors>/);
 	if(authtag && authtag[1]) authtag[1].split(/<\/\w*:?author>/).forEach(function(x) {
 		if(x === "" || x.trim() === "") return;
 		var a = x.match(/<(?:\w+:)?author[^>]*>(.*)/);
 		if(a) authors.push(a[1]);
 	});
-	var cmnttag = data.match(/<(?:\w+:)?commentList>([^\u2603]*)<\/(?:\w+:)?commentList>/);
+	var cmnttag = data.match(/<(?:\w+:)?commentList>([\s\S]*)<\/(?:\w+:)?commentList>/);
 	if(cmnttag && cmnttag[1]) cmnttag[1].split(/<\/\w*:?comment>/).forEach(function(x, index) {
 		if(x === "" || x.trim() === "") return;
 		var cm = x.match(/<(?:\w+:)?comment[^>]*>/);
@@ -19,7 +19,7 @@ function parse_comments_xml(data/*:string*/, opts)/*:Array<Comment>*/ {
 		var comment/*:Comment*/ = ({ author: y.authorId && authors[y.authorId] ? authors[y.authorId] : "sheetjsghost", ref: y.ref, guid: y.guid }/*:any*/);
 		var cell = decode_cell(y.ref);
 		if(opts.sheetRows && opts.sheetRows <= cell.r) return;
-		var textMatch = x.match(/<(?:\w+:)?text>([^\u2603]*)<\/(?:\w+:)?text>/);
+		var textMatch = x.match(/<(?:\w+:)?text>([\s\S]*)<\/(?:\w+:)?text>/);
 		var rt = !!textMatch && !!textMatch[1] && parse_si(textMatch[1]) || {r:"",t:"",h:""};
 		comment.r = rt.r;
 		if(rt.r == "<t></t>") rt.t = rt.h = "";

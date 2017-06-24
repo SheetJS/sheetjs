@@ -170,7 +170,8 @@ function xlml_normalize(d)/*:string*/ {
 /* UOS uses CJK in tags */
 var xlmlregex = /<(\/?)([^\s?>!\/:]*:|)([^\s?>]*[^\s?>\/])[^>]*>/mg;
 //var xlmlregex = /<(\/?)([a-z0-9]*:|)(\w+)[^>]*>/mg;
-function parse_xlml_xml(d, opts)/*:Workbook*/ {
+function parse_xlml_xml(d, _opts)/*:Workbook*/ {
+	var opts = _opts || {};
 	make_ssf(SSF);
 	var str = debom(xlml_normalize(d));
 	if(opts && opts.type == 'binary' && typeof cptable !== 'undefined') str = cptable.utils.decode(65001, char_codes(str));
@@ -193,7 +194,7 @@ function parse_xlml_xml(d, opts)/*:Workbook*/ {
 	var rowinfo = [], rowobj = {};
 	var Workbook/*:WBWBProps*/ = ({ Sheets:[], WBProps:{date1904:false} }/*:any*/), wsprops = {};
 	xlmlregex.lastIndex = 0;
-	str = str.replace(/<!--([^\u2603]*?)-->/mg,"");
+	str = str.replace(/<!--([\s\S]*?)-->/mg,"");
 	while((Rn = xlmlregex.exec(str))) switch(Rn[3]) {
 		case 'Data':
 			if(state[state.length-1][1]) break;
