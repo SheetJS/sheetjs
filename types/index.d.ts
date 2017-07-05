@@ -4,6 +4,9 @@
 /** Version string */
 export const version: string;
 
+/** Defined SSF */
+export const SSF: any;
+
 /** Attempts to read filename and parse */
 export function readFile(filename: string, opts?: ParsingOptions): WorkBook;
 /** Attempts to parse data */
