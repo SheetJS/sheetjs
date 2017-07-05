@@ -205,8 +205,9 @@ readme: README.md ## Update README Table of Contents
 
 .PHONY: book
 book: readme graph ## Update summary for documentation
-	printf "# Summary\n\n- [xlsx](README.md#xlsx)\n" > misc/docs/SUMMARY.md
+	printf "# Summary\n\n- [xlsx](README.md#sheetjs-js-xlsx)\n" > misc/docs/SUMMARY.md
 	markdown-toc README.md | sed 's/(#/(README.md#/g'>> misc/docs/SUMMARY.md
+	<README.md grep -vE "(details|summary)>" > misc/docs/README.md
 
 .PHONY: help
 help:

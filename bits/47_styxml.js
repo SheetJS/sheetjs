@@ -17,44 +17,48 @@ function parse_borders(t, styles, themes, opts) {
 			case '</border>': break;
 
 			/* note: not in spec, appears to be CT_BorderPr */
-			case '<left': case '<left/>': break;
+			case '<left/>': break;
+			case '<left': case '<left>': break;
 			case '</left>': break;
 
 			/* note: not in spec, appears to be CT_BorderPr */
-			case '<right': case '<right/>': break;
+			case '<right/>': break;
+			case '<right': case '<right>': break;
 			case '</right>': break;
 
 			/* 18.8.43 top CT_BorderPr */
-			case '<top': case '<top/>': break;
+			case '<top/>': break;
+			case '<top': case '<top>': break;
 			case '</top>': break;
 
 			/* 18.8.6 bottom CT_BorderPr */
-			case '<bottom': case '<bottom/>': break;
+			case '<bottom/>': break;
+			case '<bottom': case '<bottom>': break;
 			case '</bottom>': break;
 
 			/* 18.8.13 diagonal CT_BorderPr */
-			case '<diagonal': case '<diagonal/>': break;
+			case '<diagonal': case '<diagonal>': case '<diagonal/>': break;
 			case '</diagonal>': break;
 
 			/* 18.8.25 horizontal CT_BorderPr */
-			case '<horizontal': case '<horizontal/>': break;
+			case '<horizontal': case '<horizontal>': case '<horizontal/>': break;
 			case '</horizontal>': break;
 
 			/* 18.8.44 vertical CT_BorderPr */
-			case '<vertical': case '<vertical/>': break;
+			case '<vertical': case '<vertical>': case '<vertical/>': break;
 			case '</vertical>': break;
 
 			/* 18.8.37 start CT_BorderPr */
-			case '<start': case '<start/>': break;
+			case '<start': case '<start>': case '<start/>': break;
 			case '</start>': break;
 
 			/* 18.8.16 end CT_BorderPr */
-			case '<end': case '<end/>': break;
+			case '<end': case '<end>': case '<end/>': break;
 			case '</end>': break;
 
 			/* 18.8.? color CT_Color */
-			case '<color': case '<color/>': break;
-			case '</color>': break;
+			case '<color': case '<color>': break;
+			case '<color/>': case '</color>': break;
 
 			default: if(opts && opts.WTF) throw new Error('unrecognized ' + y[0] + ' in borders');
 		}
@@ -71,7 +75,7 @@ function parse_fills(t, styles, themes, opts) {
 			case '<fills': case '<fills>': case '</fills>': break;
 
 			/* 18.8.20 fill CT_Fill */
-			case '<fill>': break;
+			case '<fill>': case '<fill': break;
 			case '</fill>': styles.Fills.push(fill); fill = {}; break;
 
 			/* 18.8.24 gradientFill CT_GradientFill */
@@ -204,7 +208,7 @@ function parse_fonts(t, styles, themes, opts) {
 				if(!font.color) font.color = {};
 				if(y.auto) font.color.auto = parsexmlbool(y.auto);
 
-				if(y.rgb) font.color.rgb = y.rgb;
+				if(y.rgb) font.color.rgb = y.rgb.slice(-6);
 				else if(y.indexed) {
 					font.color.index = parseInt(y.indexed, 10);
 					var icv = XLSIcv[font.color.index];
@@ -240,7 +244,14 @@ function parse_numFmts(t, styles, opts) {
 			case '<numFmts': case '</numFmts>': case '<numFmts/>': case '<numFmts>': break;
 			case '<numFmt': {
 				var f=unescapexml(utf8read(y.formatCode)), j=parseInt(y.numFmtId,10);
-				styles.NumberFmt[j] = f; if(j>0) SSF.load(f,j);
+				styles.NumberFmt[j] = f;
+				if(j>0) {
+					if(j > 0x188) {
+						for(j = 0x188; j > 0x3c; --j) if(styles.NumberFmt[j] == null) break;
+						styles.NumberFmt[j] = f;
+					}
+					SSF.load(f,j);
+				}
 			} break;
 			case '</numFmt>': break;
 			default: if(opts.WTF) throw new Error('unrecognized ' + y[0] + ' in numFmts');
@@ -271,13 +282,16 @@ function parse_cellXfs(t, styles, opts) {
 			case '<cellXfs': case '<cellXfs>': case '<cellXfs/>': case '</cellXfs>': break;
 
 			/* 18.8.45 xf CT_Xf */
-			case '<xf':
+			case '<xf': case '<xf/>':
 				xf = y;
 				delete xf[0];
 				for(i = 0; i < cellXF_uint.length; ++i) if(xf[cellXF_uint[i]])
 					xf[cellXF_uint[i]] = parseInt(xf[cellXF_uint[i]], 10);
 				for(i = 0; i < cellXF_bool.length; ++i) if(xf[cellXF_bool[i]])
 					xf[cellXF_bool[i]] = parsexmlbool(xf[cellXF_bool[i]], "");
+				if(xf.numFmtId > 0x188) {
+					for(i = 0x188; i > 0x3c; --i) if(styles.NumberFmt[xf.numFmtId] == styles.NumberFmt[i]) { xf.numFmtId = i; break; }
+				}
 				styles.CellXf.push(xf); break;
 			case '</xf>': break;
 
@@ -316,15 +330,16 @@ function write_cellXfs(cellXfs)/*:string*/ {
 
 /* 18.8 Styles CT_Stylesheet*/
 var parse_sty_xml= (function make_pstyx() {
-var numFmtRegex = /<numFmts([^>]*)>.*<\/numFmts>/;
-var cellXfRegex = /<cellXfs([^>]*)>.*<\/cellXfs>/;
-var fillsRegex = /<fills([^>]*)>.*<\/fills>/;
-var fontsRegex = /<fonts([^>]*)>.*<\/fonts>/;
-var bordersRegex = /<borders([^>]*)>.*<\/borders>/;
+var numFmtRegex = /<numFmts([^>]*)>[\S\s]*?<\/numFmts>/;
+var cellXfRegex = /<cellXfs([^>]*)>[\S\s]*?<\/cellXfs>/;
+var fillsRegex = /<fills([^>]*)>[\S\s]*?<\/fills>/;
+var fontsRegex = /<fonts([^>]*)>[\S\s]*?<\/fonts>/;
+var bordersRegex = /<borders([^>]*)>[\S\s]*?<\/borders>/;
 
 return function parse_sty_xml(data, themes, opts) {
 	var styles = {};
 	if(!data) return styles;
+	data = data.replace(/<!--([\s\S]*?)-->/mg,"").replace(/<!DOCTYPE[^\[]*\[[^\]]*\]>/gm,"");
 	/* 18.8.39 styleSheet CT_Stylesheet */
 	var t;
 

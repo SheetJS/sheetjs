@@ -292,15 +292,15 @@ var SYLK = (function() {
 		return [arr, sht];
 	}
 
-	function sylk_to_sheet(str/*:string*/, opts)/*:Worksheet*/ {
-		var aoasht = sylk_to_aoa(str, opts);
+	function sylk_to_sheet(d/*:RawData*/, opts)/*:Worksheet*/ {
+		var aoasht = sylk_to_aoa(d, opts);
 		var aoa = aoasht[0], ws = aoasht[1];
 		var o = aoa_to_sheet(aoa, opts);
 		keys(ws).forEach(function(k) { o[k] = ws[k]; });
 		return o;
 	}
 
-	function sylk_to_workbook(str/*:string*/, opts)/*:Workbook*/ { return sheet_to_workbook(sylk_to_sheet(str, opts), opts); }
+	function sylk_to_workbook(d/*:RawData*/, opts)/*:Workbook*/ { return sheet_to_workbook(sylk_to_sheet(d, opts), opts); }
 
 	function write_ws_cell_sylk(cell/*:Cell*/, ws/*:Worksheet*/, R/*:number*/, C/*:number*/, opts)/*:string*/ {
 		var o = "C;Y" + (R+1) + ";X" + (C+1) + ";K";
@@ -580,7 +580,7 @@ var PRN = (function() {
 		return prn_to_sheet_str(str, opts);
 	}
 
-	function prn_to_workbook(str/*:string*/, opts)/*:Workbook*/ { return sheet_to_workbook(prn_to_sheet(str, opts), opts); }
+	function prn_to_workbook(d/*:RawData*/, opts)/*:Workbook*/ { return sheet_to_workbook(prn_to_sheet(d, opts), opts); }
 
 	function sheet_to_prn(ws/*:Worksheet*/, opts/*:?any*/)/*:string*/ {
 		var o/*:Array<string>*/ = [];

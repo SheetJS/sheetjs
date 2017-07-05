@@ -59,7 +59,7 @@ function parse_zip(zip/*:ZIP*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
 	}
 	if(dir.workbooks.length === 0) {
 		binname = "xl/workbook.bin";
-		if(!getzipfile(zip,binname,true)) throw new Error("Could not find workbook");
+		if(!getzipdata(zip,binname,true)) throw new Error("Could not find workbook");
 		dir.workbooks.push(binname);
 		xlsb = true;
 	}

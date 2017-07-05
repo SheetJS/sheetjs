@@ -108,7 +108,7 @@ function parse_VtVector(blob, cb) {
 }
 
 /* [MS-OLEPS] 2.15 TypedPropertyValue */
-function parse_TypedPropertyValue(blob, type, _opts) {
+function parse_TypedPropertyValue(blob, type/*:number*/, _opts) {
 	var t = blob.read_shift(2), ret, opts = _opts||{};
 	blob.l += 2;
 	if(type !== VT_VARIANT)
@@ -124,7 +124,7 @@ function parse_TypedPropertyValue(blob, type, _opts) {
 		case 0x41 /*VT_BLOB*/: return parse_BLOB(blob);
 		case 0x47 /*VT_CF*/: return parse_ClipboardData(blob);
 		case 0x50 /*VT_STRING*/: return parse_VtString(blob, t, !opts.raw && 4).replace(chr0,'');
-		case 0x51 /*VT_USTR*/: return parse_VtUnalignedString(blob, t, 4).replace(chr0,'');
+		case 0x51 /*VT_USTR*/: return parse_VtUnalignedString(blob, t/*, 4*/).replace(chr0,'');
 		case 0x100C /*VT_VECTOR|VT_VARIANT*/: return parse_VtVecHeadingPair(blob);
 		case 0x101E /*VT_LPSTR*/: return parse_VtVecUnalignedLpstr(blob);
 		default: throw new Error("TypedPropertyValue unrecognized type " + type + " " + t);
@@ -277,8 +277,8 @@ function parslurp(blob, length, cb) {
 
 function parsebool(blob, length) { return blob.read_shift(length) === 0x1; }
 
-function parseuint16(blob) { return blob.read_shift(2, 'u'); }
-function parseuint16a(blob, length) { return parslurp(blob,length,parseuint16);}
+function parseuint16(blob/*::, length:?number, opts:?any*/) { return blob.read_shift(2, 'u'); }
+function parseuint16a(blob, length/*:: :?number, opts:?any*/) { return parslurp(blob,length,parseuint16);}
 
 /* --- 2.5 Structures --- */
 
@@ -286,7 +286,7 @@ function parseuint16a(blob, length) { return parslurp(blob,length,parseuint16);}
 var parse_Boolean = parsebool;
 
 /* [MS-XLS] 2.5.10 Bes (boolean or error) */
-function parse_Bes(blob) {
+function parse_Bes(blob/*::, length*/) {
 	var v = blob.read_shift(1), t = blob.read_shift(1);
 	return t === 0x01 ? v : v === 0x01;
 }
@@ -360,7 +360,7 @@ function parse_XLUnicodeString2(blob, length, opts) {
 var parse_ControlInfo = parsenoop;
 
 /* [MS-OSHARED] 2.3.7.6 URLMoniker TODO: flags */
-var parse_URLMoniker = function(blob/*, length, opts*/) {
+var parse_URLMoniker = function(blob/*::, length, opts*/) {
 	var len = blob.read_shift(4), start = blob.l;
 	var extra = false;
 	if(len > 24) {

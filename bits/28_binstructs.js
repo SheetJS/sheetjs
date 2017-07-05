@@ -5,7 +5,7 @@ function write_UInt32LE(x/*:number*/, o) {
 }
 
 /* [MS-XLSB] 2.5.168 */
-function parse_XLWideString(data)/*:string*/ {
+function parse_XLWideString(data/*::, length*/)/*:string*/ {
 	var cchCharacters = data.read_shift(4);
 	return cchCharacters === 0 ? "" : data.read_shift(cchCharacters, 'dbcs');
 }
@@ -88,7 +88,7 @@ var parse_XLSBCodeName = parse_XLWideString;
 var write_XLSBCodeName = write_XLWideString;
 
 /* [MS-XLSB] 2.5.166 */
-function parse_XLNullableWideString(data)/*:string*/ {
+function parse_XLNullableWideString(data/*::, length*/)/*:string*/ {
 	var cchCharacters = data.read_shift(4);
 	return cchCharacters === 0 || cchCharacters === 0xFFFFFFFF ? "" : data.read_shift(cchCharacters, 'dbcs');
 }
@@ -129,7 +129,7 @@ function write_RkNumber(data/*:number*/, o) {
 
 
 /* [MS-XLSB] 2.5.117 RfX */
-function parse_RfX(data)/*:Range*/ {
+function parse_RfX(data /*::, length*/)/*:Range*/ {
 	var cell/*:Range*/ = ({s: {}, e: {}}/*:any*/);
 	cell.s.r = data.read_shift(4);
 	cell.e.r = data.read_shift(4);

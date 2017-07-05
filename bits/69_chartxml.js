@@ -9,7 +9,7 @@ function parse_numCache(data) {
 	});
 
 	/* 21.2.2.71 formatCode CT_Xstring */
-	var nf = unescapexml((data.match(/<c:formatCode>(.*?)<\/c:formatCode>/) || ["","General"])[1]);
+	var nf = unescapexml((data.match(/<c:formatCode>([\s\S]*?)<\/c:formatCode>/) || ["","General"])[1]);
 
 	return [col, nf];
 }
@@ -24,7 +24,7 @@ function parse_chart(data, name/*:string*/, opts, rels, wb, csheet) {
 	var refguess = {s: {r:2000000, c:2000000}, e: {r:0, c:0} };
 
 	/* 21.2.2.120 numCache CT_NumData */
-	(data.match(/<c:numCache>.*?<\/c:numCache>/gm)||[]).forEach(function(nc) {
+	(data.match(/<c:numCache>[\s\S]*?<\/c:numCache>/gm)||[]).forEach(function(nc) {
 		var cache = parse_numCache(nc);
 		refguess.s.r = refguess.s.c = 0;
 		refguess.e.c = C;

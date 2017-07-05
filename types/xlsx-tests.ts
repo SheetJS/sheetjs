@@ -39,3 +39,5 @@ const WBProps = workbook.Workbook;
 const WBSheets = WBProps.Sheets;
 const WBSheet0 = WBSheets[0];
 console.log(WBSheet0.Hidden);
+
+const fmt14 = XLSX.SSF._table[14];

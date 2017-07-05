@@ -25,7 +25,7 @@ function parse_ext_props(data, p) {
 			case "string": p[f[1]] = (data.match(matchtag(f[0]))||[])[1]; break;
 			case "bool": p[f[1]] = (data.match(matchtag(f[0]))||[])[1] === "true"; break;
 			case "raw":
-				var cur = data.match(new RegExp("<" + f[0] + "[^>]*>(.*)<\/" + f[0] + ">"));
+				var cur = data.match(new RegExp("<" + f[0] + "[^>]*>([\\s\\S]*?)<\/" + f[0] + ">"));
 				if(cur && cur.length > 0) q[f[1]] = cur[1];
 				break;
 		}
@@ -49,6 +49,7 @@ function parse_ext_props(data, p) {
 				case "Fogli di lavoro":
 				case "Folhas de cálculo":
 				case "Planilhas":
+				case "Regneark":
 				case "Werkbladen":
 					p.Worksheets = len;
 					p.SheetNames = parts.slice(idx, idx + len);
@@ -56,6 +57,7 @@ function parse_ext_props(data, p) {
 
 				case "Named Ranges":
 				case "Benannte Bereiche":
+				case "Navngivne områder":
 					p.NamedRanges = len;
 					p.DefinedNames = parts.slice(idx, idx + len);
 					break;

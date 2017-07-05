@@ -40,7 +40,7 @@ saveAs(new Blob([s2ab(wbout)],{type:"application/octet-stream"}), "test.xlsx");
 ```
 </details>
 
-### Complete Examples
+### Writing Examples
 
 - <http://sheetjs.com/demos/table.html> exporting an HTML table
 - <http://sheetjs.com/demos/writexlsx.html> generates a simple file

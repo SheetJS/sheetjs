@@ -144,7 +144,7 @@ input_dom_element.addEventListener('change', handleFile, false);
 </details>
 
 
-### Complete Examples
+### Parsing Examples
 
 - <http://oss.sheetjs.com/js-xlsx/> HTML5 File API / Base64 Text / Web Workers
 

@@ -4,7 +4,7 @@
 /** Version string */
 export const version: string;
 
-/** Defined SSF */
+/** SSF Formatter Library */
 export const SSF: any;
 
 /** Attempts to read filename and parse */

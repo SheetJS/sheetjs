@@ -50,7 +50,9 @@ wb.Sheets[ws_name] = ws;
 </details>
 
 
-### Complete Examples
+### Parsing and Writing Examples
+
+- <http://sheetjs.com/demos/modify.html> read + modify + write files
 
 - <https://github.com/SheetJS/js-xlsx/blob/master/bin/xlsx.njs> node
 

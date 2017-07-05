@@ -25,7 +25,7 @@ function parse_RgceArea(blob, length, opts) {
 	return { s:{r:r, c:c[0], cRel:c[1], rRel:c[2]}, e:{r:R, c:C[0], cRel:C[1], rRel:C[2]} };
 }
 /* BIFF 2-5 encodes flags in the row field */
-function parse_RgceArea_BIFF2(blob/*, length, opts*/) {
+function parse_RgceArea_BIFF2(blob/*::, length, opts*/) {
 	var r=parse_ColRelU(blob, 2), R=parse_ColRelU(blob, 2);
 	var c=blob.read_shift(1);
 	var C=blob.read_shift(1);
@@ -33,7 +33,7 @@ function parse_RgceArea_BIFF2(blob/*, length, opts*/) {
 }
 
 /* 2.5.198.105 TODO */
-function parse_RgceAreaRel(blob, length/*, opts*/) {
+function parse_RgceAreaRel(blob, length/*::, opts*/) {
 	var r=blob.read_shift(length == 12 ? 4 : 2), R=blob.read_shift(length == 12 ? 4 : 2);
 	var c=parse_ColRelU(blob, 2);
 	var C=parse_ColRelU(blob, 2);
@@ -66,7 +66,7 @@ function parse_RgceLocRel(blob, length, opts) {
 	if(cRel == 1) while(cl > 0x1FFF) cl = cl - 0x4000;
 	return {r:r,c:cl,cRel:cRel,rRel:rRel};
 }
-function parse_RgceLocRel_BIFF2(blob, length) {
+function parse_RgceLocRel_BIFF2(blob, length/*::, opts*/) {
 	var rl = blob.read_shift(2);
 	var c = blob.read_shift(1);
 	var rRel = (rl & 0x8000) >> 15, cRel = (rl & 0x4000) >> 14;
@@ -555,7 +555,7 @@ function parse_Formula(blob, length, opts) {
 }
 
 /* 2.5.133 TODO: how to emit empty strings? */
-function parse_FormulaValue(blob) {
+function parse_FormulaValue(blob/*::, length*/) {
 	var b;
 	if(__readUInt16LE(blob,blob.l + 6) !== 0xFFFF) return [parse_Xnum(blob),'n'];
 	switch(blob[blob.l]) {

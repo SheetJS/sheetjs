@@ -134,8 +134,7 @@ function sheet_to_formulae(sheet/*:Worksheet*/)/*:Array<string>*/ {
 	var y = "", x, val="";
 	if(sheet == null || sheet["!ref"] == null) return [];
 	var r = safe_decode_range(sheet['!ref']), rr = "", cols = [], C;
-	var cmds = new Array((r.e.r-r.s.r+1)*(r.e.c-r.s.c+1));
-	var i = 0;
+	var cmds/*:Array<string>*/ = [];
 	var dense = Array.isArray(sheet);
 	for(C = r.s.c; C <= r.e.c; ++C) cols[C] = encode_col(C);
 	for(var R = r.s.r; R <= r.e.r; ++R) {
@@ -159,10 +158,9 @@ function sheet_to_formulae(sheet/*:Worksheet*/)/*:Array<string>*/ {
 			else if(x.v === undefined) continue;
 			else if(x.t == 's') val = "'" + x.v;
 			else val = ""+x.v;
-			cmds[i++] = y + "=" + val;
+			cmds[cmds.length] = y + "=" + val;
 		}
 	}
-	cmds.length = i;
 	return cmds;
 }
 

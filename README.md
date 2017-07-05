@@ -59,12 +59,12 @@ enhancements, additional features by request, and dedicated support.
   * [ECMAScript 5 Compatibility](#ecmascript-5-compatibility)
 - [Philosophy](#philosophy)
 - [Parsing Workbooks](#parsing-workbooks)
-  * [Complete Examples](#complete-examples)
+  * [Parsing Examples](#parsing-examples)
   * [Streaming Read](#streaming-read)
 - [Working with the Workbook](#working-with-the-workbook)
-  * [Complete Examples](#complete-examples-1)
+  * [Parsing and Writing Examples](#parsing-and-writing-examples)
 - [Writing Workbooks](#writing-workbooks)
-  * [Complete Examples](#complete-examples-2)
+  * [Writing Examples](#writing-examples)
   * [Streaming Write](#streaming-write)
 - [Interface](#interface)
   * [Parsing functions](#parsing-functions)
@@ -403,7 +403,7 @@ input_dom_element.addEventListener('change', handleFile, false);
 </details>
 
 
-### Complete Examples
+### Parsing Examples
 
 - <http://oss.sheetjs.com/js-xlsx/> HTML5 File API / Base64 Text / Web Workers
 
@@ -550,7 +550,9 @@ wb.Sheets[ws_name] = ws;
 </details>
 
 
-### Complete Examples
+### Parsing and Writing Examples
+
+- <http://sheetjs.com/demos/modify.html> read + modify + write files
 
 - <https://github.com/SheetJS/js-xlsx/blob/master/bin/xlsx.njs> node
 
@@ -607,7 +609,7 @@ saveAs(new Blob([s2ab(wbout)],{type:"application/octet-stream"}), "test.xlsx");
 ```
 </details>
 
-### Complete Examples
+### Writing Examples
 
 - <http://sheetjs.com/demos/table.html> exporting an HTML table
 - <http://sheetjs.com/demos/writexlsx.html> generates a simple file

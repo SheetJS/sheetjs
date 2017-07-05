@@ -259,14 +259,14 @@ function parse_sty_bin(data, themes, opts) {
 function write_FMTS_bin(ba, NF/*:?SSFTable*/) {
 	if(!NF) return;
 	var cnt = 0;
-	[[5,8],[23,26],[41,44],[/*63*/57,/*66],[164,*/392]].forEach(function(r) {
+	[[5,8],[23,26],[41,44],[/*63*/50,/*66],[164,*/392]].forEach(function(r) {
 		/*:: if(!NF) return; */
 		for(var i = r[0]; i <= r[1]; ++i) if(NF[i] != null) ++cnt;
 	});
 
 	if(cnt == 0) return;
 	write_record(ba, "BrtBeginFmts", write_UInt32LE(cnt));
-	[[5,8],[23,26],[41,44],[/*63*/57,/*66],[164,*/392]].forEach(function(r) {
+	[[5,8],[23,26],[41,44],[/*63*/50,/*66],[164,*/392]].forEach(function(r) {
 		/*:: if(!NF) return; */
 		for(var i = r[0]; i <= r[1]; ++i) if(NF[i] != null) write_record(ba, "BrtFmt", write_BrtFmt(i, NF[i]));
 	});
