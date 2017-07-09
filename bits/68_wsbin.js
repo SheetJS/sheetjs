@@ -9,6 +9,7 @@ function parse_BrtRowHdr(data, length) {
 	data.l += 1; // TODO: top/bot padding
 	var flags = data.read_shift(1);
 	data.l = tgt;
+	if(flags & 0x07) z.level = flags & 0x07;
 	if(flags & 0x10) z.hidden = true;
 	if(flags & 0x20) z.hpt = miyRw / 20;
 	return z;
@@ -28,6 +29,7 @@ function write_BrtRowHdr(R/*:number*/, range, ws) {
 	o.write_shift(1, 0); /* top/bot padding */
 
 	var flags = 0x0;
+	if(row.level) flags |= row.level;
 	if(row.hidden) flags |= 0x10;
 	if(row.hpx || row.hpt) flags |= 0x20;
 	o.write_shift(1, flags);
@@ -62,7 +64,7 @@ function write_BrtRowHdr(R/*:number*/, range, ws) {
 }
 function write_row_header(ba, ws, range, R) {
 	var o = write_BrtRowHdr(R, range, ws);
-	if(o.length > 17) write_record(ba, 'BrtRowHdr', o);
+	if(o.length > 17 || (ws['!rows']||[])[R]) write_record(ba, 'BrtRowHdr', o);
 }
 
 /* [MS-XLSB] 2.4.812 BrtWsDim */
@@ -426,7 +428,7 @@ function parse_ws_bin(data, _opts, rels, wb, themes, styles)/*:Worksheet*/ {
 				if(opts.sheetRows && opts.sheetRows <= row.r) end=true;
 				rr = encode_row(R = row.r);
 				opts['!row'] = row.r;
-				if(val.hidden || val.hpt) {
+				if(val.hidden || val.hpt || val.level != null) {
 					if(val.hpt) val.hpx = pt2px(val.hpt);
 					rowinfo[val.r] = val;
 				}
@@ -684,12 +686,14 @@ function write_CELLTABLE(ba, ws/*:Worksheet*/, idx/*:number*/, opts, wb/*:Workbo
 	var range = safe_decode_range(ws['!ref'] || "A1"), ref, rr = "", cols = [];
 	write_record(ba, 'BrtBeginSheetData');
 	var dense = Array.isArray(ws);
-	for(var R = range.s.r; R <= range.e.r; ++R) {
+	var cap = range.e.r;
+	if(ws['!rows']) cap = Math.max(range.e.r, ws['!rows'].length - 1);
+	for(var R = range.s.r; R <= cap; ++R) {
 		rr = encode_row(R);
 		/* [ACCELLTABLE] */
 		/* BrtRowHdr */
 		write_row_header(ba, ws, range, R);
-		for(var C = range.s.c; C <= range.e.c; ++C) {
+		if(R <= range.e.r) for(var C = range.s.c; C <= range.e.c; ++C) {
 			/* *16384CELL */
 			if(R === range.s.r) cols[C] = encode_col(C);
 			ref = cols[C] + rr;

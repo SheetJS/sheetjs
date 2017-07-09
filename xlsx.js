@@ -4230,6 +4230,8 @@ function parse_Row(blob, length) {
 	blob.l += 4; // reserved(2), unused(2)
 	var flags = blob.read_shift(1); // various flags
 	blob.l += 3; // reserved(8), ixfe(12), flags(4)
+	if(flags & 0x07) z.level = flags & 0x07;
+	// collapsed: flags & 0x10
 	if(flags & 0x20) z.hidden = true;
 	if(flags & 0x40) z.hpt = miyRw / 20;
 	return z;
@@ -5668,7 +5670,8 @@ var PRN = (function() {
 		function finish_cell() {
 			var s = str.slice(start, end);
 			var cell = ({});
-			if(s.charCodeAt(0) == 0x3D) { cell.t = 'n'; cell.f = s.substr(1); }
+			if(o.raw) { cell.t = 's'; cell.v = s; }
+			else if(s.charCodeAt(0) == 0x3D) { cell.t = 'n'; cell.f = s.substr(1); }
 			else if(s == "TRUE") { cell.t = 'b'; cell.v = true; }
 			else if(s == "FALSE") { cell.t = 'b'; cell.v = false; }
 			else if(!isNaN(v = +s)) { cell.t = 'n'; cell.w = s; cell.v = v; }
@@ -5762,7 +5765,6 @@ function read_wb_ID(d, opts) {
 		return PRN.to_workbook(d, opts);
 	}
 }
-
 var WK_ = (function() {
 	function lotushopper(data, cb, opts) {
 		if(!data) return;
@@ -10933,6 +10935,7 @@ return function parse_ws_xml_data(sdata, s, opts, guess, themes, styles) {
 			rowobj = {}; rowrite = false;
 			if(tag.ht) { rowrite = true; rowobj.hpt = parseFloat(tag.ht); rowobj.hpx = pt2px(rowobj.hpt); }
 			if(tag.hidden == "1") { rowrite = true; rowobj.hidden = true; }
+			if(tag.outlineLevel != null) { rowrite = true; rowobj.level = +tag.outlineLevel; }
 			if(rowrite) rows[tagr-1] = rowobj;
 		}
 
@@ -11062,7 +11065,7 @@ function write_ws_xml_data(ws, opts, idx, wb, rels) {
 			if(_cell === undefined) continue;
 			if((cell = write_ws_xml_cell(_cell, ref, ws, opts, idx, wb)) != null) r.push(cell);
 		}
-		if(r.length > 0) {
+		if(r.length > 0 || rows && rows[R]) {
 			var params = ({r:rr});
 			if(rows && rows[R]) {
 				var row = rows[R];
@@ -11071,8 +11074,22 @@ function write_ws_xml_data(ws, opts, idx, wb, rels) {
 				if (row.hpx) height = px2pt(row.hpx);
 				else if (row.hpt) height = row.hpt;
 				if (height > -1) { params.ht = height; params.customHeight = 1; }
+				if (row.level) { params.outlineLevel = row.level; }
 			}
 			o[o.length] = (writextag('row', r.join(""), params));
+		}
+	}
+	if(rows) for(; R < rows.length; ++R) {
+		if(rows && rows[R]) {
+			var params = ({r:R+1});
+			var row = rows[R];
+			if(row.hidden) params.hidden = 1;
+			var height = -1;
+			if (row.hpx) height = px2pt(row.hpx);
+			else if (row.hpt) height = row.hpt;
+			if (height > -1) { params.ht = height; params.customHeight = 1; }
+			if (row.level) { params.outlineLevel = row.level; }
+			o[o.length] = (writextag('row', "", params));
 		}
 	}
 	return o.join("");
@@ -11100,7 +11117,11 @@ function write_ws_xml(idx, opts, wb, rels) {
 	o[o.length] = write_ws_xml_sheetviews(ws, opts, idx, wb);
 
 	/* TODO: store in WB, process styles */
-	if(opts.sheetFormat) o[o.length] = (writextag('sheetFormatPr', null, {defaultRowHeight:opts.sheetFormat.defaultRowHeight||'16', baseColWidth:opts.sheetFormat.baseColWidth||'10' }));
+	if(opts.sheetFormat) o[o.length] = (writextag('sheetFormatPr', null, {
+		defaultRowHeight:opts.sheetFormat.defaultRowHeight||'16',
+		baseColWidth:opts.sheetFormat.baseColWidth||'10',
+		outlineLevelRow:opts.sheetFormat.outlineLevelRow||'7'
+	}));
 
 	if(ws['!cols'] != null && ws['!cols'].length > 0) o[o.length] = (write_ws_xml_cols(ws, ws['!cols']));
 
@@ -11194,6 +11215,7 @@ function parse_BrtRowHdr(data, length) {
 	data.l += 1; // TODO: top/bot padding
 	var flags = data.read_shift(1);
 	data.l = tgt;
+	if(flags & 0x07) z.level = flags & 0x07;
 	if(flags & 0x10) z.hidden = true;
 	if(flags & 0x20) z.hpt = miyRw / 20;
 	return z;
@@ -11213,6 +11235,7 @@ function write_BrtRowHdr(R, range, ws) {
 	o.write_shift(1, 0); /* top/bot padding */
 
 	var flags = 0x0;
+	if(row.level) flags |= row.level;
 	if(row.hidden) flags |= 0x10;
 	if(row.hpx || row.hpt) flags |= 0x20;
 	o.write_shift(1, flags);
@@ -11247,7 +11270,7 @@ function write_BrtRowHdr(R, range, ws) {
 }
 function write_row_header(ba, ws, range, R) {
 	var o = write_BrtRowHdr(R, range, ws);
-	if(o.length > 17) write_record(ba, 'BrtRowHdr', o);
+	if(o.length > 17 || (ws['!rows']||[])[R]) write_record(ba, 'BrtRowHdr', o);
 }
 
 /* [MS-XLSB] 2.4.812 BrtWsDim */
@@ -11610,7 +11633,7 @@ function parse_ws_bin(data, _opts, rels, wb, themes, styles) {
 				if(opts.sheetRows && opts.sheetRows <= row.r) end=true;
 				rr = encode_row(R = row.r);
 				opts['!row'] = row.r;
-				if(val.hidden || val.hpt) {
+				if(val.hidden || val.hpt || val.level != null) {
 					if(val.hpt) val.hpx = pt2px(val.hpt);
 					rowinfo[val.r] = val;
 				}
@@ -11868,12 +11891,14 @@ function write_CELLTABLE(ba, ws, idx, opts, wb) {
 	var range = safe_decode_range(ws['!ref'] || "A1"), ref, rr = "", cols = [];
 	write_record(ba, 'BrtBeginSheetData');
 	var dense = Array.isArray(ws);
-	for(var R = range.s.r; R <= range.e.r; ++R) {
+	var cap = range.e.r;
+	if(ws['!rows']) cap = Math.max(range.e.r, ws['!rows'].length - 1);
+	for(var R = range.s.r; R <= cap; ++R) {
 		rr = encode_row(R);
 		/* [ACCELLTABLE] */
 		/* BrtRowHdr */
 		write_row_header(ba, ws, range, R);
-		for(var C = range.s.c; C <= range.e.c; ++C) {
+		if(R <= range.e.r) for(var C = range.s.c; C <= range.e.c; ++C) {
 			/* *16384CELL */
 			if(R === range.s.r) cols[C] = encode_col(C);
 			ref = cols[C] + rr;
@@ -14450,6 +14475,7 @@ wb.opts.Date1904 = Workbook.WBProps.date1904 = val; break;
 				} break;
 				case 'Row': {
 					var rowobj = {};
+					if(val.level != null) { rowinfo[val.r] = rowobj; rowobj.level = val.level; }
 					if(val.hidden) { rowinfo[val.r] = rowobj; rowobj.hidden = true; }
 					if(val.hpt) {
 						rowinfo[val.r] = rowobj;
@@ -16570,6 +16596,9 @@ var parse_content_xml = (function() {
 
 			case 'forms': break; // 12.25.2 13.2
 			case 'table-column': break; // 9.1.6 <table:table-column>
+			/* TODO: outline levels */
+			case 'table-row-group': break; // 9.1.9 <table:table-row-group>
+			case 'table-column-group': break; // 9.1.10 <table:table-column-group>
 
 			case 'null-date': break; // 9.4.2 <table:null-date> TODO: date1904
 

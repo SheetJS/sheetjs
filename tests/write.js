@@ -25,7 +25,7 @@ var wsrows = [
 	{hpt: 12}, // "points"
 	{hpx: 16}, // "pixels"
 	,
-	{hpx: 24},
+	{hpx: 24, level:3},
 	{hidden: true}, // hide row
 	{hidden: false}
 ];

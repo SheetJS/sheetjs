@@ -97,6 +97,12 @@ var paths = {
 	nfxlsx:  dir + 'number_format.xlsm',
 	nfxlsb:  dir + 'number_format.xlsb',
 
+	olxls:  dir + 'outline.xls',
+	olxls5:  dir + 'outline.biff5',
+	olxlsx:  dir + 'outline.xlsx',
+	olxlsb:  dir + 'outline.xlsb',
+	olods:  dir + 'outline.ods',
+
 	pmxls:  dir + 'page_margins_2016.xls',
 	pmxls5: dir + 'page_margins_2016_5.xls',
 	pmxml:  dir + 'page_margins_2016.xml',
@@ -901,6 +907,7 @@ describe('parse features', function() {
 
 	describe('row properties', function() {
 		var wb1, wb2, wb3, wb4, wb5, wb6;
+		var ol1, ol2, ol3, ol4, ol5;
 		var bef = (function() {
 			X = require(modp);
 			wb1 = X.readFile(paths.rhxlsx, {cellStyles:true});
@@ -909,6 +916,11 @@ describe('parse features', function() {
 			wb4 = X.readFile(paths.rhxls5, {cellStyles:true});
 			wb5 = X.readFile(paths.rhxml, {cellStyles:true});
 			wb6 = X.readFile(paths.rhslk, {cellStyles:true});
+			ol1 = X.readFile(paths.olxlsx, {cellStyles:true});
+			ol2 = X.readFile(paths.olxlsb, {cellStyles:true});
+			ol3 = X.readFile(paths.olxls, {cellStyles:true});
+			ol4 = X.readFile(paths.olxls5, {cellStyles:true});
+			ol5 = X.readFile(paths.olods, {cellStyles:true});
 		});
 		if(typeof before != 'undefined') before(bef);
 		else it('before', bef);
@@ -928,6 +940,22 @@ describe('parse features', function() {
 				assert.equal(x[1].hpx, 1);
 				assert.equal(x[2].hpx, 10);
 				assert.equal(x[3].hpx, 100);
+			});
+		});
+		it('should have correct outline levels', function() {
+			/* TODO: ODS */
+			[ol1, ol2, ol3, ol4/*, ol5*/].map(function(x) { return x.Sheets.Sheet1; }).forEach(function(ws) {
+				var rows = ws['!rows'];
+				for(var i = 0; i < 29; ++i) {
+					var cell = get_cell(ws, "A" + X.utils.encode_row(i));
+					var lvl = (rows[i]||{}).level||0;
+					if(!cell || cell.t == 's') assert.equal(lvl, 0);
+					else if(cell.t == 'n') {
+						if(cell.v == 0) assert.equal(lvl, 0);
+						else assert.equal(lvl, cell.v);
+					}
+				}
+				assert.equal(rows[29].level, 7);
 			});
 		});
 	});
@@ -1400,18 +1428,21 @@ describe('roundtrip features', function() {
 		}); });
 	});
 
+	/* TODO: ODS and BIFF5/8 */
 	describe('should preserve row properties', function() { [
 			'xlml', /*'biff2', */ 'xlsx', 'xlsb', 'slk'
 		].forEach(function(w) { it(w, function() {
 				var ws1 = X.utils.aoa_to_sheet([["hpx12"],["hpt24"],["hpx48"],["hidden"]]);
 				ws1['!rows'] = [{hpx:12},{hpt:24},{hpx:48},{hidden:true}];
+				for(var i = 0; i <= 7; ++i) ws1['!rows'].push({level:i});
 				var wb1 = {SheetNames:["Sheet1"], Sheets:{Sheet1:ws1}};
-				var wb2 = X.read(X.write(wb1, {bookType:w, type:"buffer"}), {type:"buffer", cellStyles:true});
+				var wb2 = X.read(X.write(wb1, {bookType:w, type:"buffer", cellStyles:true}), {type:"buffer", cellStyles:true});
 				var ws2 = wb2.Sheets.Sheet1;
 				assert.equal(ws2['!rows'][0].hpx, 12);
 				assert.equal(ws2['!rows'][1].hpt, 24);
 				assert.equal(ws2['!rows'][2].hpx, 48);
 				assert.equal(ws2['!rows'][3].hidden, true);
+				if(w == 'xlsb' || w == 'xlsx') for(i = 0; i <= 7; ++i) assert.equal((ws2['!rows'][4+i]||{}).level||0, i);
 		}); });
 	});
 

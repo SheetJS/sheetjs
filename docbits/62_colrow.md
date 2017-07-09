@@ -75,8 +75,13 @@ type RowInfo = {
 	/* row height is specified in one of the following ways: */
 	hpx?:    number;  // height in screen pixels
 	hpt?:    number;  // height in points
+
+	level?:  number;  // 0-indexed outline / group level
 };
 ```
+
+Note: Excel UI displays the base outline level as `1` and the max level as `8`.
+The `level` field stores the base outline as `0` and the max level as `7`.
 
 <details>
 	<summary><b>Implementation details</b> (click to show)</summary>

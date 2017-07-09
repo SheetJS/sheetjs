@@ -289,6 +289,9 @@ var parse_content_xml = (function() {
 
 			case 'forms': break; // 12.25.2 13.2
 			case 'table-column': break; // 9.1.6 <table:table-column>
+			/* TODO: outline levels */
+			case 'table-row-group': break; // 9.1.9 <table:table-row-group>
+			case 'table-column-group': break; // 9.1.10 <table:table-column-group>
 
 			case 'null-date': break; // 9.4.2 <table:null-date> TODO: date1904
 
