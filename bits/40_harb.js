@@ -527,7 +527,8 @@ var PRN = (function() {
 		function finish_cell() {
 			var s = str.slice(start, end);
 			var cell = ({}/*:any*/);
-			if(s.charCodeAt(0) == 0x3D) { cell.t = 'n'; cell.f = s.substr(1); }
+			if(o.raw) { cell.t = 's'; cell.v = s; }
+			else if(s.charCodeAt(0) == 0x3D) { cell.t = 'n'; cell.f = s.substr(1); }
 			else if(s == "TRUE") { cell.t = 'b'; cell.v = true; }
 			else if(s == "FALSE") { cell.t = 'b'; cell.v = false; }
 			else if(!isNaN(v = +s)) { cell.t = 'n'; cell.w = s; cell.v = v; }
@@ -621,4 +622,3 @@ function read_wb_ID(d, opts) {
 		return PRN.to_workbook(d, opts);
 	}
 }
-
