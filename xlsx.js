@@ -11072,7 +11072,7 @@ function write_ws_xml_data(ws, opts, idx, wb, rels) {
 				if (row.hpx) height = px2pt(row.hpx);
 				else if (row.hpt) height = row.hpt;
 				if (height > -1) { params.ht = height; params.customHeight = 1; }
-				if (row.groupLevel) {.params.outlineLevel = row.groupLevel; }
+				if (row.groupLevel) { params.outlineLevel = row.groupLevel; }
 			}
 			o[o.length] = (writextag('row', r.join(""), params));
 		}
