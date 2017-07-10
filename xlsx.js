@@ -4230,6 +4230,7 @@ function parse_Row(blob, length) {
 	blob.l += 4; // reserved(2), unused(2)
 	var flags = blob.read_shift(1); // various flags
 	blob.l += 3; // reserved(8), ixfe(12), flags(4)
+	if(flags & 15) z.groupLevel = flags ^ 0x10;
 	if(flags & 0x20) z.hidden = true;
 	if(flags & 0x40) z.hpt = miyRw / 20;
 	return z;
