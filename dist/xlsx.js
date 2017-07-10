@@ -10933,6 +10933,7 @@ return function parse_ws_xml_data(sdata, s, opts, guess, themes, styles) {
 			rowobj = {}; rowrite = false;
 			if(tag.ht) { rowrite = true; rowobj.hpt = parseFloat(tag.ht); rowobj.hpx = pt2px(rowobj.hpt); }
 			if(tag.hidden == "1") { rowrite = true; rowobj.hidden = true; }
+			if(tag.outlineLevel) { rowrite = true; rowobj.groupLevel = tag.outlineLevel; }
 			if(rowrite) rows[tagr-1] = rowobj;
 		}
 
@@ -11071,6 +11072,7 @@ function write_ws_xml_data(ws, opts, idx, wb, rels) {
 				if (row.hpx) height = px2pt(row.hpx);
 				else if (row.hpt) height = row.hpt;
 				if (height > -1) { params.ht = height; params.customHeight = 1; }
+				if (row.groupLevel) { params.outlineLevel = row.groupLevel; }
 			}
 			o[o.length] = (writextag('row', r.join(""), params));
 		}
@@ -11100,7 +11102,7 @@ function write_ws_xml(idx, opts, wb, rels) {
 	o[o.length] = write_ws_xml_sheetviews(ws, opts, idx, wb);
 
 	/* TODO: store in WB, process styles */
-	if(opts.sheetFormat) o[o.length] = (writextag('sheetFormatPr', null, {defaultRowHeight:opts.sheetFormat.defaultRowHeight||'16', baseColWidth:opts.sheetFormat.baseColWidth||'10' }));
+	if(opts.sheetFormat) o[o.length] = (writextag('sheetFormatPr', null, {defaultRowHeight:opts.sheetFormat.defaultRowHeight||'16', baseColWidth:opts.sheetFormat.baseColWidth||'10', outlineLevelRow: opts.sheetFormat.groupLevelRow||'1' }));
 
 	if(ws['!cols'] != null && ws['!cols'].length > 0) o[o.length] = (write_ws_xml_cols(ws, ws['!cols']));
 

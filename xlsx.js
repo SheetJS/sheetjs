@@ -4230,6 +4230,7 @@ function parse_Row(blob, length) {
 	blob.l += 4; // reserved(2), unused(2)
 	var flags = blob.read_shift(1); // various flags
 	blob.l += 3; // reserved(8), ixfe(12), flags(4)
+	if(flags & 15) z.groupLevel = flags ^ 0x10;
 	if(flags & 0x20) z.hidden = true;
 	if(flags & 0x40) z.hpt = miyRw / 20;
 	return z;
@@ -10933,6 +10934,7 @@ return function parse_ws_xml_data(sdata, s, opts, guess, themes, styles) {
 			rowobj = {}; rowrite = false;
 			if(tag.ht) { rowrite = true; rowobj.hpt = parseFloat(tag.ht); rowobj.hpx = pt2px(rowobj.hpt); }
 			if(tag.hidden == "1") { rowrite = true; rowobj.hidden = true; }
+			if(tag.outlineLevel) { rowrite = true; rowobj.groupLevel = tag.outlineLevel; }
 			if(rowrite) rows[tagr-1] = rowobj;
 		}
 
@@ -11071,6 +11073,7 @@ function write_ws_xml_data(ws, opts, idx, wb, rels) {
 				if (row.hpx) height = px2pt(row.hpx);
 				else if (row.hpt) height = row.hpt;
 				if (height > -1) { params.ht = height; params.customHeight = 1; }
+				if (row.groupLevel) { params.outlineLevel = row.groupLevel; }
 			}
 			o[o.length] = (writextag('row', r.join(""), params));
 		}
@@ -11100,7 +11103,7 @@ function write_ws_xml(idx, opts, wb, rels) {
 	o[o.length] = write_ws_xml_sheetviews(ws, opts, idx, wb);
 
 	/* TODO: store in WB, process styles */
-	if(opts.sheetFormat) o[o.length] = (writextag('sheetFormatPr', null, {defaultRowHeight:opts.sheetFormat.defaultRowHeight||'16', baseColWidth:opts.sheetFormat.baseColWidth||'10' }));
+	if(opts.sheetFormat) o[o.length] = (writextag('sheetFormatPr', null, {defaultRowHeight:opts.sheetFormat.defaultRowHeight||'16', baseColWidth:opts.sheetFormat.baseColWidth||'10', outlineLevelRow: opts.sheetFormat.groupLevelRow||'1' }));
 
 	if(ws['!cols'] != null && ws['!cols'].length > 0) o[o.length] = (write_ws_xml_cols(ws, ws['!cols']));
 
@@ -11194,6 +11197,7 @@ function parse_BrtRowHdr(data, length) {
 	data.l += 1; // TODO: top/bot padding
 	var flags = data.read_shift(1);
 	data.l = tgt;
+	if(flags & 15) z.groupLevel = flags ^ 0x10;
 	if(flags & 0x10) z.hidden = true;
 	if(flags & 0x20) z.hpt = miyRw / 20;
 	return z;
@@ -11213,6 +11217,7 @@ function write_BrtRowHdr(R, range, ws) {
 	o.write_shift(1, 0); /* top/bot padding */
 
 	var flags = 0x0;
+	if(row.groupLevel) flags |= row.groupLevel;
 	if(row.hidden) flags |= 0x10;
 	if(row.hpx || row.hpt) flags |= 0x20;
 	o.write_shift(1, flags);
