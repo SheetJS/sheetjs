@@ -11196,6 +11196,7 @@ function parse_BrtRowHdr(data, length) {
 	data.l += 1; // TODO: top/bot padding
 	var flags = data.read_shift(1);
 	data.l = tgt;
+	if(flags & 15) z.groupLevel = flags ^ 0x10;
 	if(flags & 0x10) z.hidden = true;
 	if(flags & 0x20) z.hpt = miyRw / 20;
 	return z;
@@ -11215,6 +11216,7 @@ function write_BrtRowHdr(R, range, ws) {
 	o.write_shift(1, 0); /* top/bot padding */
 
 	var flags = 0x0;
+	if(row.groupLevel) flags |= row.groupLevel;
 	if(row.hidden) flags |= 0x10;
 	if(row.hpx || row.hpt) flags |= 0x20;
 	o.write_shift(1, flags);
