@@ -288,7 +288,7 @@ var XLSBRecordEnum = {
 	/*::[*/0x0160/*::]*/: { n:"BrtListTrFmla", f:parsenoop },
 	/*::[*/0x0161/*::]*/: { n:"BrtBeginExternals", f:parsenoop },
 	/*::[*/0x0162/*::]*/: { n:"BrtEndExternals", f:parsenoop },
-	/*::[*/0x0163/*::]*/: { n:"BrtSupBookSrc", f:parsenoop },
+	/*::[*/0x0163/*::]*/: { n:"BrtSupBookSrc", f:parse_RelID},
 	/*::[*/0x0165/*::]*/: { n:"BrtSupSelf", f:parsenoop },
 	/*::[*/0x0166/*::]*/: { n:"BrtSupSame", f:parsenoop },
 	/*::[*/0x0167/*::]*/: { n:"BrtSupTabs", f:parsenoop },

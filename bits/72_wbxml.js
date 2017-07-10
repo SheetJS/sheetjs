@@ -139,6 +139,9 @@ function parse_wb_xml(data, opts)/*:WorkbookFile*/ {
 			case '<AlternateContent': pass=true; break;
 			case '</AlternateContent>': pass=false; break;
 
+			/* TODO */
+			case '<revisionPtr': break;
+
 			default: if(!pass && opts.WTF) throw new Error('unrecognized ' + y[0] + ' in workbook');
 		}
 		return x;

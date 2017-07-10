@@ -364,7 +364,9 @@ return function parse_ws_xml_data(sdata, s, opts, guess, themes, styles) {
 				cf = styles.CellXf[tag.s];
 				if(cf != null) {
 					if(cf.numFmtId != null) fmtid = cf.numFmtId;
-					if(opts.cellStyles && cf.fillId != null) fillid = cf.fillId;
+					if(opts.cellStyles) {
+						if(cf.fillId != null) fillid = cf.fillId;
+					}
 				}
 			}
 			safe_format(p, fmtid, fillid, opts, themes, styles);

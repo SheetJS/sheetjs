@@ -620,9 +620,9 @@ export interface XLSX$Utils {
     json_to_sheet<T>(data: T[], opts?: JSON2SheetOpts): WorkSheet;
     json_to_sheet(data: any[], opts?: JSON2SheetOpts): WorkSheet;
 
-    /** Converts a TABLE DOM element to a worksheet. */
-    table_to_sheet(data: HTMLTableElement,  opts?: Table2SheetOpts): WorkSheet;
-    table_to_book(data: HTMLTableElement,  opts?: Table2SheetOpts): WorkBook;
+    /** BROWSER ONLY! Converts a TABLE DOM element to a worksheet. */
+    table_to_sheet(data: any,  opts?: Table2SheetOpts): WorkSheet;
+    table_to_book(data: any,  opts?: Table2SheetOpts): WorkBook;
 
     /* --- Export Functions --- */
 

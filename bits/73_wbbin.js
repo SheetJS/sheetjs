@@ -100,6 +100,9 @@ function parse_wb_bin(data, opts)/*:WorkbookFile*/ {
 				supbooks.SheetNames.push(val.name);
 				wb.Sheets.push(val); break;
 
+			case 0x0099: /* 'BrtWbProp' */
+				wb.WBProps = val; break;
+
 			case 0x0027: /* 'BrtName' */
 				val.Ref = stringify_formula(val.Ptg, null, null, supbooks, opts);
 				delete val.Ptg;
@@ -107,8 +110,13 @@ function parse_wb_bin(data, opts)/*:WorkbookFile*/ {
 				break;
 			case 0x040C: /* 'BrtNameExt' */ break;
 
-			case 0x0099: /* 'BrtWbProp' */
-				wb.WBProps = val; break;
+			case 0x0165: /* 'BrtSupSelf' */
+			case 0x0166: /* 'BrtSupSame' */
+			case 0x0163: /* 'BrtSupBookSrc' */
+			case 0x029B: /* 'BrtSupAddin' */
+			case 0x016A: /* 'BrtExternSheet' */
+			case 0x0169: /* 'BrtPlaceholderName' */
+				break;
 
 			/* case 'BrtModelTimeGroupingCalcCol' */
 			/* case 'BrtRevisionPtr' */
@@ -120,7 +128,6 @@ function parse_wb_bin(data, opts)/*:WorkbookFile*/ {
 			case 0x009D: /* 'BrtCalcProp' */
 			case 0x0262: /* 'BrtCrashRecErr' */
 			case 0x0802: /* 'BrtDecoupledPivotCacheID' */
-			case 0x016A: /* 'BrtExternSheet' */
 			case 0x009B: /* 'BrtFileRecover' */
 			case 0x0224: /* 'BrtFileSharing' */
 			case 0x02A4: /* 'BrtFileSharingIso' */
@@ -130,12 +137,7 @@ function parse_wb_bin(data, opts)/*:WorkbookFile*/ {
 			case 0x084D: /* 'BrtModelTable' */
 			case 0x0225: /* 'BrtOleSize' */
 			case 0x0805: /* 'BrtPivotTableRef' */
-			case 0x0169: /* 'BrtPlaceholderName' */
 			case 0x0254: /* 'BrtSmartTagType' */
-			case 0x029B: /* 'BrtSupAddin' */
-			case 0x0163: /* 'BrtSupBookSrc' */
-			case 0x0166: /* 'BrtSupSame' */
-			case 0x0165: /* 'BrtSupSelf' */
 			case 0x081C: /* 'BrtTableSlicerCacheID' */
 			case 0x081B: /* 'BrtTableSlicerCacheIDs' */
 			case 0x0822: /* 'BrtTimelineCachePivotCacheID' */

@@ -42,7 +42,7 @@ function parse_clrScheme(t, themes, opts) {
 			case '<a:accent6>': case '</a:accent6>':
 			case '<a:hlink>': case '</a:hlink>':
 			case '<a:folHlink>': case '</a:folHlink>':
-				if (y[0][1] === '/') {
+				if (y[0].charAt(1) === '/') {
 					themes.themeElements.clrScheme.push(color);
 					color = {};
 				} else {

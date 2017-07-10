@@ -29,6 +29,7 @@ number_format.xlsb
 number_format_entities.xlsb
 number_format_russian.xlsb
 numfmt_1_russian.xlsb
+outline.xlsb
 phonetic_text.xlsb
 pivot_table_named_range.xlsb
 pivot_table_test.xlsb
@@ -362,6 +363,7 @@ openpyxl_r_formulae.xlsx
 openpyxl_r_nonstandard_workbook_name.xlsx
 openpyxl_r_null_archive.xlsx.pending
 openpyxl_r_null_file.xlsx.pending
+outline.xlsx
 phonetic_text.xlsx
 pivot_table_named_range.xlsx
 rich_text_stress.xlsx
@@ -553,6 +555,7 @@ cell_style_simple.ods
 formula_stress_test.ods
 merge_cells.ods
 number_format.ods
+outline.ods
 rich_text_stress.ods
 roo_numbers1.ods
 roo_type_excel.ods
@@ -1198,6 +1201,7 @@ number_format.xls
 number_format_entities.xls
 number_format_russian.xls
 numfmt_1_russian.xls
+outline.xls
 phonetic_text.xls
 phpexcel_bad_cfb_dir.xls
 pivot_table_named_range.xls
@@ -1371,6 +1375,10 @@ xlsx-stream-d-date-cell.xlsx.xml
 2013/apachepoi_54016.xls.xlsb
 2013/apachepoi_ReadOnlyRecommended.xls.xlsb
 2013/apachepoi_testArraysAndTables.xls.xlsb
+column_width.biff5
+outline.biff5
+row_height.biff5
+sized_boxen.biff5
 artifacts/quattro/write_.csv
 artifacts/quattro/write_.dif
 artifacts/quattro/write_.slk

@@ -50,6 +50,11 @@
 ./test_files/number_format.xls.xml
 ./test_files/number_format.xlsm
 ./test_files/number_format.xlsb
+./test_files/outline.xls
+./test_files/outline.biff5
+./test_files/outline.xlsx
+./test_files/outline.xlsb
+./test_files/outline.ods
 ./test_files/page_margins_2016.xls
 ./test_files/page_margins_2016_5.xls
 ./test_files/page_margins_2016.xml

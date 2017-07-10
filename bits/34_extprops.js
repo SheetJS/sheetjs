@@ -41,6 +41,7 @@ function parse_ext_props(data, p) {
 				case "Worksheets":
 				case "工作表":
 				case "Листы":
+				case "أوراق العمل":
 				case "ワークシート":
 				case "גליונות עבודה":
 				case "Arbeitsblätter":

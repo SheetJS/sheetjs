@@ -6,7 +6,7 @@
 /*global global, exports, module, require:false, process:false, Buffer:false */
 var XLSX = {};
 (function make_xlsx(XLSX){
-XLSX.version = '0.10.7';
+XLSX.version = '0.10.8';
 var current_codepage = 1200;
 /*global cptable:true */
 if(typeof module !== "undefined" && typeof require !== 'undefined') {
@@ -1681,7 +1681,7 @@ var utf8read = function utf8reada(orig) {
 		c = orig.charCodeAt(i++);
 		if (c < 128) { out += String.fromCharCode(c); continue; }
 		d = orig.charCodeAt(i++);
-		if (c>191 && c<224) { out += String.fromCharCode(((c & 31) << 6) | (d & 63)); continue; }
+		if (c>191 && c<224) { f = ((c & 31) << 6); f |= (d & 63); out += String.fromCharCode(f); continue; }
 		e = orig.charCodeAt(i++);
 		if (c < 240) { out += String.fromCharCode(((c & 15) << 12) | ((d & 63) << 6) | (e & 63)); continue; }
 		f = orig.charCodeAt(i++);
@@ -3350,6 +3350,7 @@ function parse_ext_props(data, p) {
 				case "Worksheets":
 				case "工作表":
 				case "Листы":
+				case "أوراق العمل":
 				case "ワークシート":
 				case "גליונות עבודה":
 				case "Arbeitsblätter":
@@ -7616,7 +7617,7 @@ function parse_clrScheme(t, themes, opts) {
 			case '<a:accent6>': case '</a:accent6>':
 			case '<a:hlink>': case '</a:hlink>':
 			case '<a:folHlink>': case '</a:folHlink>':
-				if (y[0][1] === '/') {
+				if (y[0].charAt(1) === '/') {
 					themes.themeElements.clrScheme.push(color);
 					color = {};
 				} else {
@@ -11037,7 +11038,9 @@ return function parse_ws_xml_data(sdata, s, opts, guess, themes, styles) {
 				cf = styles.CellXf[tag.s];
 				if(cf != null) {
 					if(cf.numFmtId != null) fmtid = cf.numFmtId;
-					if(opts.cellStyles && cf.fillId != null) fillid = cf.fillId;
+					if(opts.cellStyles) {
+						if(cf.fillId != null) fillid = cf.fillId;
+					}
 				}
 			}
 			safe_format(p, fmtid, fillid, opts, themes, styles);
@@ -11682,7 +11685,7 @@ function parse_ws_bin(data, _opts, rels, wb, themes, styles) {
 				break;
 
 			case 0x0001: /* 'BrtCellBlank' */
-				if(!opts.sheetStubs) break;
+				if(!opts.sheetStubs || pass) break;
 				p = ({t:'z',v:undefined});
 				C = val[0].c;
 				if(opts.dense) { if(!s[R]) s[R] = []; s[R][C] = p; }
@@ -11748,6 +11751,7 @@ function parse_ws_bin(data, _opts, rels, wb, themes, styles) {
 				s['!margins'] = val;
 				break;
 
+			case 0x01E5: /* 'BrtWsFmtInfo' */
 			/* case 'BrtUid' */
 			case 0x00AF: /* 'BrtAFilterDateGroupItem' */
 			case 0x0284: /* 'BrtActiveX' */
@@ -11800,7 +11804,6 @@ function parse_ws_bin(data, _opts, rels, wb, themes, styles) {
 			case 0x00AA: /* 'BrtTop10Filter' */
 			case 0x0032: /* 'BrtValueMeta' */
 			case 0x0816: /* 'BrtWebExtension' */
-			case 0x01E5: /* 'BrtWsFmtInfo' */
 			case 0x0415: /* 'BrtWsFmtInfoEx14' */
 			case 0x0093: /* 'BrtWsProp' */
 				break;
@@ -12437,6 +12440,9 @@ function parse_wb_xml(data, opts) {
 			case '<AlternateContent': pass=true; break;
 			case '</AlternateContent>': pass=false; break;
 
+			/* TODO */
+			case '<revisionPtr': break;
+
 			default: if(!pass && opts.WTF) throw new Error('unrecognized ' + y[0] + ' in workbook');
 		}
 		return x;
@@ -12623,6 +12629,9 @@ function parse_wb_bin(data, opts) {
 				supbooks.SheetNames.push(val.name);
 				wb.Sheets.push(val); break;
 
+			case 0x0099: /* 'BrtWbProp' */
+				wb.WBProps = val; break;
+
 			case 0x0027: /* 'BrtName' */
 				val.Ref = stringify_formula(val.Ptg, null, null, supbooks, opts);
 				delete val.Ptg;
@@ -12630,8 +12639,13 @@ function parse_wb_bin(data, opts) {
 				break;
 			case 0x040C: /* 'BrtNameExt' */ break;
 
-			case 0x0099: /* 'BrtWbProp' */
-				wb.WBProps = val; break;
+			case 0x0165: /* 'BrtSupSelf' */
+			case 0x0166: /* 'BrtSupSame' */
+			case 0x0163: /* 'BrtSupBookSrc' */
+			case 0x029B: /* 'BrtSupAddin' */
+			case 0x016A: /* 'BrtExternSheet' */
+			case 0x0169: /* 'BrtPlaceholderName' */
+				break;
 
 			/* case 'BrtModelTimeGroupingCalcCol' */
 			/* case 'BrtRevisionPtr' */
@@ -12643,7 +12657,6 @@ function parse_wb_bin(data, opts) {
 			case 0x009D: /* 'BrtCalcProp' */
 			case 0x0262: /* 'BrtCrashRecErr' */
 			case 0x0802: /* 'BrtDecoupledPivotCacheID' */
-			case 0x016A: /* 'BrtExternSheet' */
 			case 0x009B: /* 'BrtFileRecover' */
 			case 0x0224: /* 'BrtFileSharing' */
 			case 0x02A4: /* 'BrtFileSharingIso' */
@@ -12653,12 +12666,7 @@ function parse_wb_bin(data, opts) {
 			case 0x084D: /* 'BrtModelTable' */
 			case 0x0225: /* 'BrtOleSize' */
 			case 0x0805: /* 'BrtPivotTableRef' */
-			case 0x0169: /* 'BrtPlaceholderName' */
 			case 0x0254: /* 'BrtSmartTagType' */
-			case 0x029B: /* 'BrtSupAddin' */
-			case 0x0163: /* 'BrtSupBookSrc' */
-			case 0x0166: /* 'BrtSupSame' */
-			case 0x0165: /* 'BrtSupSelf' */
 			case 0x081C: /* 'BrtTableSlicerCacheID' */
 			case 0x081B: /* 'BrtTableSlicerCacheIDs' */
 			case 0x0822: /* 'BrtTimelineCachePivotCacheID' */
@@ -15081,7 +15089,7 @@ var XLSBRecordEnum = {
 0x0160: { n:"BrtListTrFmla", f:parsenoop },
 0x0161: { n:"BrtBeginExternals", f:parsenoop },
 0x0162: { n:"BrtEndExternals", f:parsenoop },
-0x0163: { n:"BrtSupBookSrc", f:parsenoop },
+0x0163: { n:"BrtSupBookSrc", f:parse_RelID},
 0x0165: { n:"BrtSupSelf", f:parsenoop },
 0x0166: { n:"BrtSupSame", f:parsenoop },
 0x0167: { n:"BrtSupTabs", f:parsenoop },

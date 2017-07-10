@@ -86,7 +86,7 @@ var utf8read/*:StringConv*/ = function utf8reada(orig) {
 		c = orig.charCodeAt(i++);
 		if (c < 128) { out += String.fromCharCode(c); continue; }
 		d = orig.charCodeAt(i++);
-		if (c>191 && c<224) { out += String.fromCharCode(((c & 31) << 6) | (d & 63)); continue; }
+		if (c>191 && c<224) { f = ((c & 31) << 6); f |= (d & 63); out += String.fromCharCode(f); continue; }
 		e = orig.charCodeAt(i++);
 		if (c < 240) { out += String.fromCharCode(((c & 15) << 12) | ((d & 63) << 6) | (e & 63)); continue; }
 		f = orig.charCodeAt(i++);

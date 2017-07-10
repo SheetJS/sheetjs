@@ -1,6 +1,6 @@
 {
 	"name": "xlsx",
-	"version": "0.10.7",
+	"version": "0.10.8",
 	"author": "sheetjs",
 	"description": "Excel (XLSB/XLSX/XLS/XML) ODS and other spreadsheet format (CSV/DIF/DBF/SYLK) parser and writer",
 	"keywords": [ "excel", "xls", "xlsx", "xlsb", "xlsm", "ods", "csv", "dbf", "dif", "sylk", "office", "spreadsheet" ],

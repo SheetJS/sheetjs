@@ -477,7 +477,7 @@ function parse_ws_bin(data, _opts, rels, wb, themes, styles)/*:Worksheet*/ {
 				break;
 
 			case 0x0001: /* 'BrtCellBlank' */
-				if(!opts.sheetStubs) break;
+				if(!opts.sheetStubs || pass) break;
 				p = ({t:'z',v:undefined}/*:any*/);
 				C = val[0].c;
 				if(opts.dense) { if(!s[R]) s[R] = []; s[R][C] = p; }
@@ -543,6 +543,7 @@ function parse_ws_bin(data, _opts, rels, wb, themes, styles)/*:Worksheet*/ {
 				s['!margins'] = val;
 				break;
 
+			case 0x01E5: /* 'BrtWsFmtInfo' */
 			/* case 'BrtUid' */
 			case 0x00AF: /* 'BrtAFilterDateGroupItem' */
 			case 0x0284: /* 'BrtActiveX' */
@@ -595,7 +596,6 @@ function parse_ws_bin(data, _opts, rels, wb, themes, styles)/*:Worksheet*/ {
 			case 0x00AA: /* 'BrtTop10Filter' */
 			case 0x0032: /* 'BrtValueMeta' */
 			case 0x0816: /* 'BrtWebExtension' */
-			case 0x01E5: /* 'BrtWsFmtInfo' */
 			case 0x0415: /* 'BrtWsFmtInfoEx14' */
 			case 0x0093: /* 'BrtWsProp' */
 				break;
