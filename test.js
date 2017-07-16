@@ -683,7 +683,7 @@ function custprop(wb) {
 	assert.equal(wb.Custprops.Counter, -3.14);
 }
 
-function cmparr(x){ for(var i=1;i!=x.length;++i) assert.deepEqual(x[0], x[i]); }
+function cmparr(x){ for(var i=1; i<x.length; ++i) assert.deepEqual(x[0], x[i]); }
 
 function deepcmp(x,y,k,m,c) {
 	var s = k.indexOf(".");
