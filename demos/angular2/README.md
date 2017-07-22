@@ -59,7 +59,7 @@ SystemJS.config({
 		}
 	},
 	map: {
-		'xlsx': 'xlsx.full.min.js', // <-- make sure xlsx.full.min.js is in same dir
+		'xlsx': 'node_modules/xlsx/dist/xlsx.full.min.js', // <-- make sure xlsx.full.min.js is in same dir
 		'fs': '',     // <--|
 		'crypto': '', // <--| suppress native node modules
 		'stream': ''  // <--|
