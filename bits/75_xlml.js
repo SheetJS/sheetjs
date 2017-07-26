@@ -161,7 +161,7 @@ function xlml_clean_comment(comment/*:any*/) {
 }
 
 function xlml_normalize(d)/*:string*/ {
-	if(has_buf &&/*::typeof Buffer !== "undefined" && d != null &&*/ Buffer.isBuffer(d)) return d.toString('utf8');
+	if(has_buf &&/*::typeof Buffer !== "undefined" && d != null && d instanceof Buffer &&*/ Buffer.isBuffer(d)) return d.toString('utf8');
 	if(typeof d === 'string') return d;
 	throw new Error("Bad input format: expected Buffer or string");
 }
@@ -175,7 +175,9 @@ function parse_xlml_xml(d, _opts)/*:Workbook*/ {
 	make_ssf(SSF);
 	var str = debom(xlml_normalize(d));
 	if(opts && opts.type == 'binary' && typeof cptable !== 'undefined') str = cptable.utils.decode(65001, char_codes(str));
-	if(str.substr(0,1000).indexOf("<html") >= 0) return HTML_.to_workbook(str, opts);
+	var opening = str.slice(0, 1024).toLowerCase(), ishtml = false;
+	if(opening.indexOf("<?xml") == -1) ["html", "table", "head", "meta", "script", "style", "div"].forEach(function(tag) { if(opening.indexOf("<" + tag) >= 0) ishtml = true; });
+	if(ishtml) return HTML_.to_workbook(str, opts);
 	var Rn;
 	var state = [], tmp;
 	if(DENSE != null && opts.dense == null) opts.dense = DENSE;

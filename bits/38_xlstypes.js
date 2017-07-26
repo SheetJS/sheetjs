@@ -357,7 +357,13 @@ function parse_XLUnicodeString2(blob, length, opts) {
 }
 
 /* [MS-XLS] 2.5.61 ControlInfo */
-var parse_ControlInfo = parsenoop;
+function parse_ControlInfo(blob, length, opts) {
+	var flags = blob.read_shift(1);
+	blob.l++;
+	var accel = blob.read_shift(2);
+	blob.l += 2;
+	return [flags, accel];
+}
 
 /* [MS-OSHARED] 2.3.7.6 URLMoniker TODO: flags */
 var parse_URLMoniker = function(blob/*::, length, opts*/) {
@@ -420,7 +426,7 @@ var parse_Hyperlink = function(blob, length) {
 	if((flags & 0x0101) === 0x0001) oleMoniker = parse_HyperlinkMoniker(blob, end - blob.l);
 	if(flags & 0x0008) location = parse_HyperlinkString(blob, end - blob.l);
 	if(flags & 0x0020) guid = blob.read_shift(16);
-	if(flags & 0x0040) fileTime = parse_FILETIME(blob, 8);
+	if(flags & 0x0040) fileTime = parse_FILETIME(blob/*, 8*/);
 	blob.l = end;
 	var target = (targetFrameName||moniker||oleMoniker);
 	if(location) target+="#"+location;

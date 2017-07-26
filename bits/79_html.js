@@ -4,20 +4,23 @@ var HTML_ = (function() {
 		var opts = _opts || {};
 		if(DENSE != null && opts.dense == null) opts.dense = DENSE;
 		var ws/*:Worksheet*/ = opts.dense ? ([]/*:any*/) : ({}/*:any*/);
-		var i = str.indexOf("<table"), j = str.indexOf("</table");
-		if(i == -1 || j == -1) throw new Error("Invalid HTML: missing <table> / </table> pair");
-		var rows = str.slice(i, j).split(/(:?<tr[^>]*>)/);
+		var mtch = str.match(/<table/i);
+		if(!mtch) throw new Error("Invalid HTML: could not find <table>");
+		var mtch2 = str.match(/<\/table/i);
+		var i = mtch.index, j = mtch2 && mtch2.index || str.length;
+		var rows = str.slice(i, j).split(/(:?<tr[^>]*>)/i);
 		var R = -1, C = 0, RS = 0, CS = 0;
 		var range = {s:{r:10000000, c:10000000},e:{r:0,c:0}};
 		var merges = [], midx = 0;
 		for(i = 0; i < rows.length; ++i) {
 			var row = rows[i].trim();
-			if(row.substr(0,3) == "<tr") { ++R; C = 0; continue; }
-			if(row.substr(0,3) != "<td") continue;
-			var cells = row.split("</td>");
+			var hd = row.substr(0,3).toLowerCase();
+			if(hd == "<tr") { ++R; C = 0; continue; }
+			if(hd != "<td") continue;
+			var cells = row.split(/<\/td>/i);
 			for(j = 0; j < cells.length; ++j) {
 				var cell = cells[j].trim();
-				if(cell.substr(0,3) != "<td") continue;
+				if(cell.substr(0,3).toLowerCase() != "<td") continue;
 				var m = cell, cc = 0;
 				/* TODO: parse styles etc */
 				while(m.charAt(0) == "<" && (cc = m.indexOf(">")) > -1) m = m.slice(cc+1);

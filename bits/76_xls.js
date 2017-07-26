@@ -25,7 +25,14 @@ function parse_compobj(obj) {
 	throw new Error("Unsupported Unicode Extension");
 }
 
-/* 2.4.58 Continue logic */
+/*
+	Continue logic for:
+	- 2.4.58 Continue
+	- 2.4.59 ContinueBigName
+	- 2.4.60 ContinueFrt
+	- 2.4.61 ContinueFrt11
+	- 2.4.62 ContinueFrt12
+*/
 function slurp(R, blob, length/*:number*/, opts) {
 	var l = length;
 	var bufs = [];
@@ -39,9 +46,13 @@ function slurp(R, blob, length/*:number*/, opts) {
 	bufs.push(d);
 	blob.l += l;
 	var next = (XLSRecordEnum[__readUInt16LE(blob,blob.l)]);
-	while(next != null && next.n === 'Continue') {
+	var start = 0;
+	while(next != null && next.n.slice(0,8) === 'Continue') {
 		l = __readUInt16LE(blob,blob.l+2);
-		bufs.push(blob.slice(blob.l+4,blob.l+4+l));
+		start = blob.l + 4;
+		if(next.n == 'ContinueFrt') start += 4;
+		else if(next.n.slice(0,11) == 'ContinueFrt') start += 12;
+		bufs.push(blob.slice(start,blob.l+4+l));
 		blob.l += 4+l;
 		next = (XLSRecordEnum[__readUInt16LE(blob, blob.l)]);
 	}
@@ -278,6 +289,7 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 						if(val.rgce && val.rgce[0] && val.rgce[0][0] && val.rgce[0][0][0] == 'PtgArea3d')
 							FilterDatabases[val.itab - 1] = { ref: encode_range(val.rgce[0][0][1][2]) };
 					break;
+				case 'ExternCount': opts.ExternCount = val; break;
 				case 'ExternSheet':
 					if(supbooks.length == 0) { supbooks[0] = []; supbooks[0].XTI = []; }
 					supbooks[supbooks.length - 1].XTI = supbooks[supbooks.length - 1].XTI.concat(val); supbooks.XTI = supbooks.XTI.concat(val); break;
@@ -557,6 +569,9 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 				case 'SXVI': break; // TODO
 				case 'SXVDEx': break; // TODO
 				case 'SxIvd': break; // TODO
+				case 'SXString': break; // TODO
+				case 'Sync': break;
+				case 'Addin': break;
 				case 'SXDI': break; // TODO
 				case 'SXLI': break; // TODO
 				case 'SXEx': break; // TODO
@@ -663,6 +678,9 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 				case 'DbOrParamQry': break;
 				case 'DBQueryExt': break;
 
+				case 'OleDbConn': break;
+				case 'ExtString': break;
+
 				/* Formatting */
 				case 'IFmtRecord': break;
 				case 'CondFmt': case 'CF': case 'CF12': case 'CFEx': break;
@@ -754,7 +772,6 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 
 				default: switch(R.n) { /* nested */
 				/* BIFF5 records */
-				case 'ExternCount': break;
 				case 'TabIdConf': case 'Radar': case 'RadarArea': case 'DropBar': case 'Intl': case 'CoordList': case 'SerAuxErrBar': break;
 
 				/* BIFF2-4 records */
@@ -766,6 +783,10 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 				case 'SCENARIO': case 'DConBin': case 'PicF': case 'DataLabExt':
 				case 'Lel': case 'BopPop': case 'BopPopCustom': case 'RealTimeData':
 				case 'Name': break;
+				case 'LHNGraph': case 'FnGroupName': case 'AddMenu': case 'LPr': break;
+				case 'ListObj': case 'ListField': break;
+				case 'RRSort': break;
+				case 'BigName': break;
 				default: if(options.WTF) throw 'Unrecognized Record ' + R.n;
 			}}}}
 		} else blob.l += length;
@@ -818,7 +839,7 @@ var CompObjP, SummaryP, WorkbookP/*:Workbook*/;
 if(CompObj) CompObjP = parse_compobj(CompObj);
 if(options.bookProps && !options.bookSheets) WorkbookP = ({}/*:any*/);
 else {
-	if(Workbook) WorkbookP = parse_workbook(Workbook.content, options, !!Workbook.find);
+	if(Workbook) WorkbookP = parse_workbook(Workbook.content, options);
 	/* Quattro Pro 7-8 */
 	else if(cfb.find('PerfectOffice_MAIN')) WorkbookP = WK_.to_workbook(cfb.find('PerfectOffice_MAIN').content, options);
 	/* Quattro Pro 9 */

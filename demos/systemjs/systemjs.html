@@ -1,0 +1,18 @@
+<script src="https://cdnjs.cloudflare.com/ajax/libs/systemjs/0.20.16/system.js"></script>
+<script>
+	SystemJS.config({
+		meta: {
+			'xlsx': {
+				exports: 'XLSX'
+			}
+		},
+		map: {
+			'xlsx': 'xlsx.full.min.js',
+			'fs': '',
+			'crypto': '',
+			'stream': ''
+		}
+	});
+  SystemJS.import('main.js');
+</script>
+

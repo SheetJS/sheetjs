@@ -44,13 +44,13 @@ function parse_wb_xml(data, opts)/*:WorkbookFile*/ {
 			case '<workbookProtection/>': break;
 
 			/* 18.2.1  bookViews CT_BookViews ? */
-			case '<bookViews>': case '</bookViews>': break;
+			case '<bookViews': case '<bookViews>': case '</bookViews>': break;
 			/* 18.2.30   workbookView CT_BookView + */
 			case '<workbookView': delete y[0]; wb.WBView.push(y); break;
 			case '</workbookView>': break;
 
 			/* 18.2.20 sheets CT_Sheets 1 */
-			case '<sheets>': case '</sheets>': break; // aggregate sheet
+			case '<sheets': case '<sheets>': case '</sheets>': break; // aggregate sheet
 			/* 18.2.19   sheet CT_Sheet + */
 			case '<sheet':
 				switch(y.state) {
@@ -129,7 +129,7 @@ function parse_wb_xml(data, opts)/*:WorkbookFile*/ {
 			case '<webPublishObject': break;
 
 			/* 18.2.10 extLst CT_ExtensionList ? */
-			case '<extLst>': case '</extLst>': case '<extLst/>': break;
+			case '<extLst': case '<extLst>': case '</extLst>': case '<extLst/>': break;
 			/* 18.2.7    ext CT_Extension + */
 			case '<ext': pass=true; break; //TODO: check with versions of excel
 			case '</ext>': pass=false; break;

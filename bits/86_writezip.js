@@ -5,7 +5,6 @@ function write_zip(wb/*:Workbook*/, opts/*:WriteOpts*/)/*:ZIP*/ {
 		wb.SSF = SSF.get_table();
 	}
 	if(wb && wb.SSF) {
-		// $FlowIgnore
 		make_ssf(SSF); SSF.load_table(wb.SSF);
 		// $FlowIgnore
 		opts.revssf = evert_num(wb.SSF); opts.revssf[wb.SSF[65535]] = 0;

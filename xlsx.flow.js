@@ -96,6 +96,7 @@ var has_buf = (typeof Buffer !== 'undefined' && typeof process !== 'undefined' &
 
 function new_raw_buf(len/*:number*/) {
 	/* jshint -W056 */
+	// $FlowIgnore
 	return new (has_buf ? Buffer : Array)(len);
 	/* jshint +W056 */
 }
@@ -3426,6 +3427,7 @@ function parse_ext_props(data, p) {
 					break;
 
 				case "Named Ranges":
+				case "名前付き一覧":
 				case "Benannte Bereiche":
 				case "Navngivne områder":
 					p.NamedRanges = len;
@@ -3512,6 +3514,7 @@ function parse_cust_props(data/*:string*/, opts) {
 						p[name] = unescapexml(text);
 						break;
 					default:
+						if(type.slice(-1) == '/') break;
 						if(opts.WTF && typeof console !== 'undefined') console.warn('Unexpected', x, type, toks);
 				}
 			} else if(x.substr(0,2) === "</") {/* empty */
@@ -3990,7 +3993,13 @@ function parse_XLUnicodeString2(blob, length, opts) {
 }
 
 /* [MS-XLS] 2.5.61 ControlInfo */
-var parse_ControlInfo = parsenoop;
+function parse_ControlInfo(blob, length, opts) {
+	var flags = blob.read_shift(1);
+	blob.l++;
+	var accel = blob.read_shift(2);
+	blob.l += 2;
+	return [flags, accel];
+}
 
 /* [MS-OSHARED] 2.3.7.6 URLMoniker TODO: flags */
 var parse_URLMoniker = function(blob/*::, length, opts*/) {
@@ -4053,7 +4062,7 @@ var parse_Hyperlink = function(blob, length) {
 	if((flags & 0x0101) === 0x0001) oleMoniker = parse_HyperlinkMoniker(blob, end - blob.l);
 	if(flags & 0x0008) location = parse_HyperlinkString(blob, end - blob.l);
 	if(flags & 0x0020) guid = blob.read_shift(16);
-	if(flags & 0x0040) fileTime = parse_FILETIME(blob, 8);
+	if(flags & 0x0040) fileTime = parse_FILETIME(blob/*, 8*/);
 	blob.l = end;
 	var target = (targetFrameName||moniker||oleMoniker);
 	if(location) target+="#"+location;
@@ -5683,8 +5692,9 @@ var DIF = (function() {
 })();
 
 var PRN = (function() {
-	function set_text_arr(data/*:string*/, arr/*:AOA*/, R/*:number*/, C/*:number*/) {
-		if(data === 'TRUE') arr[R][C] = true;
+	function set_text_arr(data/*:string*/, arr/*:AOA*/, R/*:number*/, C/*:number*/, o/*:any*/) {
+		if(o.raw) arr[R][C] = data;
+		else if(data === 'TRUE') arr[R][C] = true;
 		else if(data === 'FALSE') arr[R][C] = false;
 		else if(data === ""){/* empty */}
 		else if(+data == +data) arr[R][C] = +data;
@@ -5693,6 +5703,7 @@ var PRN = (function() {
 	}
 
 	function prn_to_aoa_str(f/*:string*/, opts)/*:AOA*/ {
+		var o = opts || {};
 		var arr/*:AOA*/ = ([]/*:any*/);
 		if(!f || f.length === 0) return arr;
 		var lines = f.split(/[\r\n]/);
@@ -5709,9 +5720,9 @@ var PRN = (function() {
 			arr[R] = [];
 			/* TODO: confirm that widths are always 10 */
 			var C = 0;
-			set_text_arr(lines[R].slice(0, start).trim(), arr, R, C);
+			set_text_arr(lines[R].slice(0, start).trim(), arr, R, C, o);
 			for(C = 1; C <= (lines[R].length - start)/10 + 1; ++C)
-				set_text_arr(lines[R].slice(start+(C-1)*10,start+C*10).trim(),arr,R,C);
+				set_text_arr(lines[R].slice(start+(C-1)*10,start+C*10).trim(),arr,R,C,o);
 		}
 		return arr;
 	}
@@ -5828,6 +5839,7 @@ function read_wb_ID(d, opts) {
 		return PRN.to_workbook(d, opts);
 	}
 }
+
 var WK_ = (function() {
 	function lotushopper(data, cb/*:RecordHopperCB*/, opts/*:any*/) {
 		if(!data) return;
@@ -6565,7 +6577,7 @@ function parse_EncryptionVerifier(blob, length/*:number*/) {
 }
 
 /* [MS-OFFCRYPTO] 2.3.4.* EncryptionInfo Stream */
-function parse_EncryptionInfo(blob, length) {
+function parse_EncryptionInfo(blob, length/*:?number*/) {
 	var vers = parse_CRYPTOVersion(blob);
 	switch(vers.Minor) {
 		case 0x02: return parse_EncInfoStd(blob, vers);
@@ -6597,8 +6609,8 @@ function parse_EncInfoAgl(blob, vers) { throw new Error("File is password-protec
 function parse_RC4CryptoHeader(blob, length/*:number*/) {
 	var o = {};
 	var vers = o.EncryptionVersionInfo = parse_CRYPTOVersion(blob, 4); length -= 4;
-	if(vers.Minor != 2) throw 'unrecognized minor version code: ' + vers.Minor;
-	if(vers.Major > 4 || vers.Major < 2) throw 'unrecognized major version code: ' + vers.Major;
+	if(vers.Minor != 2) throw new Error('unrecognized minor version code: ' + vers.Minor);
+	if(vers.Major > 4 || vers.Major < 2) throw new Error('unrecognized major version code: ' + vers.Major);
 	o.Flags = blob.read_shift(4); length -= 4;
 	var sz = blob.read_shift(4); length -= 4;
 	o.EncryptionHeader = parse_EncryptionHeader(blob, sz); length -= sz;
@@ -6735,7 +6747,7 @@ function parse_FilePassHeader(blob, length/*:number*/, oo) {
 	return o;
 }
 function parse_FilePass(blob, length/*:number*/, opts) {
-	var o = { Type: blob.read_shift(2) }; /* wEncryptionType */
+	var o = { Type: opts.biff >= 8 ? blob.read_shift(2) : 0 }; /* wEncryptionType */
 	if(o.Type) parse_FilePassHeader(blob, length-2, o);
 	else parse_XORObfuscation(blob, length-2, opts, o);
 	return o;
@@ -6870,7 +6882,7 @@ function parse_borders(t, styles, themes, opts) {
 			case '<borders': case '<borders>': case '</borders>': break;
 
 			/* 18.8.4 border CT_Border */
-			case '<border': case '<border>':
+			case '<border': case '<border>': case '<border/>':
 				border = {};
 				if (y.diagonalUp) { border.diagonalUp = y.diagonalUp; }
 				if (y.diagonalDown) { border.diagonalDown = y.diagonalDown; }
@@ -6942,6 +6954,7 @@ function parse_fills(t, styles, themes, opts) {
 
 			/* 18.8.24 gradientFill CT_GradientFill */
 			case '<gradientFill>': break;
+			case '<gradientFill':
 			case '</gradientFill>': styles.Fills.push(fill); fill = {}; break;
 
 			/* 18.8.32 patternFill CT_PatternFill */
@@ -7121,7 +7134,7 @@ function parse_numFmts(t, styles, opts) {
 	}
 }
 
-function write_numFmts(NF/*:{[n:number]:string}*/, opts) {
+function write_numFmts(NF/*:{[n:number|string]:string}*/, opts) {
 	var o = ["<numFmts>"];
 	[[5,8],[23,26],[41,44],[/*63*/50,/*66],[164,*/392]].forEach(function(r) {
 		for(var i = r[0]; i <= r[1]; ++i) if(NF[i] != null) o[o.length] = (writextag('numFmt',null,{numFmtId:i,formatCode:escapexml(NF[i])}));
@@ -11150,10 +11163,10 @@ function write_ws_xml_data(ws/*:Worksheet*/, opts, idx/*:number*/, wb/*:Workbook
 	}
 	if(rows) for(; R < rows.length; ++R) {
 		if(rows && rows[R]) {
-			var params = ({r:R+1}/*:any*/);
-			var row = rows[R];
+			params = ({r:R+1}/*:any*/);
+			row = rows[R];
 			if(row.hidden) params.hidden = 1;
-			var height = -1;
+			height = -1;
 			if (row.hpx) height = px2pt(row.hpx);
 			else if (row.hpt) height = row.hpt;
 			if (height > -1) { params.ht = height; params.customHeight = 1; }
@@ -12412,13 +12425,13 @@ function parse_wb_xml(data, opts)/*:WorkbookFile*/ {
 			case '<workbookProtection/>': break;
 
 			/* 18.2.1  bookViews CT_BookViews ? */
-			case '<bookViews>': case '</bookViews>': break;
+			case '<bookViews': case '<bookViews>': case '</bookViews>': break;
 			/* 18.2.30   workbookView CT_BookView + */
 			case '<workbookView': delete y[0]; wb.WBView.push(y); break;
 			case '</workbookView>': break;
 
 			/* 18.2.20 sheets CT_Sheets 1 */
-			case '<sheets>': case '</sheets>': break; // aggregate sheet
+			case '<sheets': case '<sheets>': case '</sheets>': break; // aggregate sheet
 			/* 18.2.19   sheet CT_Sheet + */
 			case '<sheet':
 				switch(y.state) {
@@ -12497,7 +12510,7 @@ function parse_wb_xml(data, opts)/*:WorkbookFile*/ {
 			case '<webPublishObject': break;
 
 			/* 18.2.10 extLst CT_ExtensionList ? */
-			case '<extLst>': case '</extLst>': case '<extLst/>': break;
+			case '<extLst': case '<extLst>': case '</extLst>': case '<extLst/>': break;
 			/* 18.2.7    ext CT_Extension + */
 			case '<ext': pass=true; break; //TODO: check with versions of excel
 			case '</ext>': pass=false; break;
@@ -13113,7 +13126,7 @@ function xlml_clean_comment(comment/*:any*/) {
 }
 
 function xlml_normalize(d)/*:string*/ {
-	if(has_buf &&/*::typeof Buffer !== "undefined" && d != null &&*/ Buffer.isBuffer(d)) return d.toString('utf8');
+	if(has_buf &&/*::typeof Buffer !== "undefined" && d != null && d instanceof Buffer &&*/ Buffer.isBuffer(d)) return d.toString('utf8');
 	if(typeof d === 'string') return d;
 	throw new Error("Bad input format: expected Buffer or string");
 }
@@ -13127,7 +13140,9 @@ function parse_xlml_xml(d, _opts)/*:Workbook*/ {
 	make_ssf(SSF);
 	var str = debom(xlml_normalize(d));
 	if(opts && opts.type == 'binary' && typeof cptable !== 'undefined') str = cptable.utils.decode(65001, char_codes(str));
-	if(str.substr(0,1000).indexOf("<html") >= 0) return HTML_.to_workbook(str, opts);
+	var opening = str.slice(0, 1024).toLowerCase(), ishtml = false;
+	if(opening.indexOf("<?xml") == -1) ["html", "table", "head", "meta", "script", "style", "div"].forEach(function(tag) { if(opening.indexOf("<" + tag) >= 0) ishtml = true; });
+	if(ishtml) return HTML_.to_workbook(str, opts);
 	var Rn;
 	var state = [], tmp;
 	if(DENSE != null && opts.dense == null) opts.dense = DENSE;
@@ -14061,7 +14076,14 @@ function parse_compobj(obj) {
 	throw new Error("Unsupported Unicode Extension");
 }
 
-/* 2.4.58 Continue logic */
+/*
+	Continue logic for:
+	- 2.4.58 Continue
+	- 2.4.59 ContinueBigName
+	- 2.4.60 ContinueFrt
+	- 2.4.61 ContinueFrt11
+	- 2.4.62 ContinueFrt12
+*/
 function slurp(R, blob, length/*:number*/, opts) {
 	var l = length;
 	var bufs = [];
@@ -14075,9 +14097,13 @@ function slurp(R, blob, length/*:number*/, opts) {
 	bufs.push(d);
 	blob.l += l;
 	var next = (XLSRecordEnum[__readUInt16LE(blob,blob.l)]);
-	while(next != null && next.n === 'Continue') {
+	var start = 0;
+	while(next != null && next.n.slice(0,8) === 'Continue') {
 		l = __readUInt16LE(blob,blob.l+2);
-		bufs.push(blob.slice(blob.l+4,blob.l+4+l));
+		start = blob.l + 4;
+		if(next.n == 'ContinueFrt') start += 4;
+		else if(next.n.slice(0,11) == 'ContinueFrt') start += 12;
+		bufs.push(blob.slice(start,blob.l+4+l));
 		blob.l += 4+l;
 		next = (XLSRecordEnum[__readUInt16LE(blob, blob.l)]);
 	}
@@ -14314,6 +14340,7 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 						if(val.rgce && val.rgce[0] && val.rgce[0][0] && val.rgce[0][0][0] == 'PtgArea3d')
 							FilterDatabases[val.itab - 1] = { ref: encode_range(val.rgce[0][0][1][2]) };
 					break;
+				case 'ExternCount': opts.ExternCount = val; break;
 				case 'ExternSheet':
 					if(supbooks.length == 0) { supbooks[0] = []; supbooks[0].XTI = []; }
 					supbooks[supbooks.length - 1].XTI = supbooks[supbooks.length - 1].XTI.concat(val); supbooks.XTI = supbooks.XTI.concat(val); break;
@@ -14593,6 +14620,9 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 				case 'SXVI': break; // TODO
 				case 'SXVDEx': break; // TODO
 				case 'SxIvd': break; // TODO
+				case 'SXString': break; // TODO
+				case 'Sync': break;
+				case 'Addin': break;
 				case 'SXDI': break; // TODO
 				case 'SXLI': break; // TODO
 				case 'SXEx': break; // TODO
@@ -14699,6 +14729,9 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 				case 'DbOrParamQry': break;
 				case 'DBQueryExt': break;
 
+				case 'OleDbConn': break;
+				case 'ExtString': break;
+
 				/* Formatting */
 				case 'IFmtRecord': break;
 				case 'CondFmt': case 'CF': case 'CF12': case 'CFEx': break;
@@ -14790,7 +14823,6 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 
 				default: switch(R.n) { /* nested */
 				/* BIFF5 records */
-				case 'ExternCount': break;
 				case 'TabIdConf': case 'Radar': case 'RadarArea': case 'DropBar': case 'Intl': case 'CoordList': case 'SerAuxErrBar': break;
 
 				/* BIFF2-4 records */
@@ -14802,6 +14834,10 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 				case 'SCENARIO': case 'DConBin': case 'PicF': case 'DataLabExt':
 				case 'Lel': case 'BopPop': case 'BopPopCustom': case 'RealTimeData':
 				case 'Name': break;
+				case 'LHNGraph': case 'FnGroupName': case 'AddMenu': case 'LPr': break;
+				case 'ListObj': case 'ListField': break;
+				case 'RRSort': break;
+				case 'BigName': break;
 				default: if(options.WTF) throw 'Unrecognized Record ' + R.n;
 			}}}}
 		} else blob.l += length;
@@ -14854,7 +14890,7 @@ var CompObjP, SummaryP, WorkbookP/*:Workbook*/;
 if(CompObj) CompObjP = parse_compobj(CompObj);
 if(options.bookProps && !options.bookSheets) WorkbookP = ({}/*:any*/);
 else {
-	if(Workbook) WorkbookP = parse_workbook(Workbook.content, options, !!Workbook.find);
+	if(Workbook) WorkbookP = parse_workbook(Workbook.content, options);
 	/* Quattro Pro 7-8 */
 	else if(cfb.find('PerfectOffice_MAIN')) WorkbookP = WK_.to_workbook(cfb.find('PerfectOffice_MAIN').content, options);
 	/* Quattro Pro 9 */
@@ -16239,20 +16275,23 @@ var HTML_ = (function() {
 		var opts = _opts || {};
 		if(DENSE != null && opts.dense == null) opts.dense = DENSE;
 		var ws/*:Worksheet*/ = opts.dense ? ([]/*:any*/) : ({}/*:any*/);
-		var i = str.indexOf("<table"), j = str.indexOf("</table");
-		if(i == -1 || j == -1) throw new Error("Invalid HTML: missing <table> / </table> pair");
-		var rows = str.slice(i, j).split(/(:?<tr[^>]*>)/);
+		var mtch = str.match(/<table/i);
+		if(!mtch) throw new Error("Invalid HTML: could not find <table>");
+		var mtch2 = str.match(/<\/table/i);
+		var i = mtch.index, j = mtch2 && mtch2.index || str.length;
+		var rows = str.slice(i, j).split(/(:?<tr[^>]*>)/i);
 		var R = -1, C = 0, RS = 0, CS = 0;
 		var range = {s:{r:10000000, c:10000000},e:{r:0,c:0}};
 		var merges = [], midx = 0;
 		for(i = 0; i < rows.length; ++i) {
 			var row = rows[i].trim();
-			if(row.substr(0,3) == "<tr") { ++R; C = 0; continue; }
-			if(row.substr(0,3) != "<td") continue;
-			var cells = row.split("</td>");
+			var hd = row.substr(0,3).toLowerCase();
+			if(hd == "<tr") { ++R; C = 0; continue; }
+			if(hd != "<td") continue;
+			var cells = row.split(/<\/td>/i);
 			for(j = 0; j < cells.length; ++j) {
 				var cell = cells[j].trim();
-				if(cell.substr(0,3) != "<td") continue;
+				if(cell.substr(0,3).toLowerCase() != "<td") continue;
 				var m = cell, cc = 0;
 				/* TODO: parse styles etc */
 				while(m.charAt(0) == "<" && (cc = m.indexOf(">")) > -1) m = m.slice(cc+1);
@@ -16678,9 +16717,11 @@ var parse_content_xml = (function() {
 
 			case 'forms': break; // 12.25.2 13.2
 			case 'table-column': break; // 9.1.6 <table:table-column>
+			case 'table-header-rows': break; // 9.1.7 <table:table-header-rows>
 			/* TODO: outline levels */
 			case 'table-row-group': break; // 9.1.9 <table:table-row-group>
 			case 'table-column-group': break; // 9.1.10 <table:table-column-group>
+			case 'table-header-columns': break; // 9.1.11 <table:table-header-columns>
 
 			case 'null-date': break; // 9.4.2 <table:null-date> TODO: date1904
 
@@ -16688,14 +16729,17 @@ var parse_content_xml = (function() {
 			case 'calculation-settings': break; // 9.4.1 <table:calculation-settings>
 			case 'named-expressions': break; // 9.4.11 <table:named-expressions>
 			case 'named-range': break; // 9.4.12 <table:named-range>
+			case 'label-range': break; // 9.4.9 <table:label-range>
+			case 'label-ranges': break; // 9.4.10 <table:label-ranges>
 			case 'named-expression': break; // 9.4.13 <table:named-expression>
 			case 'sort': break; // 9.4.19 <table:sort>
 			case 'sort-by': break; // 9.4.20 <table:sort-by>
 			case 'sort-groups': break; // 9.4.22 <table:sort-groups>
 
-			case 'span': break; // <text:span>
+			case 'tab': break; // 6.1.4 <text:tab>
 			case 'line-break': break; // 6.1.5 <text:line-break>
-			case 'p': case '文本串':
+			case 'span': break; // 6.1.7 <text:span>
+			case 'p': case '文本串': // 5.1.3 <text:p>
 				if(Rn[1]==='/') textp = (textp.length > 0 ? textp + "\n" : "") + parse_text_p(str.slice(textpidx,Rn.index), textptag);
 				else { textptag = parsexmltag(Rn[0], false); textpidx = Rn.index + Rn[0].length; }
 				break; // <text:p>
@@ -16715,11 +16759,14 @@ var parse_content_xml = (function() {
 			case 'title': case '标题': break; // <*:title> OR <uof:标题>
 			case 'desc': break; // <*:desc>
 
+			/* 9.2 Advanced Tables */
 			case 'table-source': break; // 9.2.6
+			case 'scenario': break; // 9.2.6
 
 			case 'iteration': break; // 9.4.3 <table:iteration>
 			case 'content-validations': break; // 9.4.4 <table:
 			case 'content-validation': break; // 9.4.5 <table:
+			case 'help-message': break; // 9.4.6 <table:
 			case 'error-message': break; // 9.4.7 <table:
 			case 'database-ranges': break; // 9.4.14 <table:database-ranges>
 			case 'filter': break; // 9.5.2 <table:filter>
@@ -16774,6 +16821,12 @@ var parse_content_xml = (function() {
 			case 'page-count': break; // TODO <text:page-count>
 			case 'time': break; // TODO <text:time>
 
+			/* 9.3 Advanced Table Cells */
+			case 'cell-range-source': break; // 9.3.1 <table:
+			case 'detective': break; // 9.3.2 <table:
+			case 'operation': break; // 9.3.3 <table:
+			case 'highlighted-range': break; // 9.3.4 <table:
+
 			/* 9.6 Data Pilot Tables <table: */
 			case 'data-pilot-table': // 9.6.3
 			case 'source-cell-range': // 9.6.5
@@ -16812,10 +16865,12 @@ var parse_content_xml = (function() {
 			/* non-standard */
 			case 'table-protection': break;
 			case 'data-pilot-grand-total': break; // <table:
+			case 'office-document-common-attrs': break; // bare
 			default:
 				if(Rn[2] === 'dc:') break; // TODO: properties
 				if(Rn[2] === 'draw:') break; // TODO: drawing
 				if(Rn[2] === 'style:') break; // TODO: styles
+				if(Rn[2] === 'form:') break; // TODO: forms
 				if(Rn[2] === 'calcext:') break; // ignore undocumented extensions
 				if(Rn[2] === 'loext:') break; // ignore undocumented extensions
 				if(Rn[2] === 'uof:') break; // TODO: uof
@@ -17274,20 +17329,20 @@ function parse_zip(zip/*:ZIP*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
 function parse_xlsxcfb(cfb, opts/*:?ParseOpts*/)/*:Workbook*/ {
 	var f = 'Version';
 	var data = cfb.find(f);
-	if(!data) throw new Error("ECMA-376 Encrypted file missing " + f);
+	if(!data || !data.content) throw new Error("ECMA-376 Encrypted file missing " + f);
 	var version = parse_DataSpaceVersionInfo(data.content);
 
 	/* 2.3.4.1 */
 	f = 'DataSpaceMap';
 	data = cfb.find(f);
-	if(!data) throw new Error("ECMA-376 Encrypted file missing " + f);
+	if(!data || !data.content) throw new Error("ECMA-376 Encrypted file missing " + f);
 	var dsm = parse_DataSpaceMap(data.content);
 	if(dsm.length != 1 || dsm[0].comps.length != 1 || dsm[0].comps[0].t != 0 || dsm[0].name != "StrongEncryptionDataSpace" || dsm[0].comps[0].v != "EncryptedPackage")
 		throw new Error("ECMA-376 Encrypted file bad " + f);
 
 	f = 'StrongEncryptionDataSpace';
 	data = cfb.find(f);
-	if(!data) throw new Error("ECMA-376 Encrypted file missing " + f);
+	if(!data || !data.content) throw new Error("ECMA-376 Encrypted file missing " + f);
 	var seds = parse_DataSpaceDefinition(data.content);
 	if(seds.length != 1 || seds[0] != "StrongEncryptionTransform")
 		throw new Error("ECMA-376 Encrypted file bad " + f);
@@ -17295,12 +17350,12 @@ function parse_xlsxcfb(cfb, opts/*:?ParseOpts*/)/*:Workbook*/ {
 	/* 2.3.4.3 */
 	f = '!Primary';
 	data = cfb.find(f);
-	if(!data) throw new Error("ECMA-376 Encrypted file missing " + f);
+	if(!data || !data.content) throw new Error("ECMA-376 Encrypted file missing " + f);
 	var hdr = parse_Primary(data.content);
 
 	f = 'EncryptionInfo';
 	data = cfb.find(f);
-	if(!data) throw new Error("ECMA-376 Encrypted file missing " + f);
+	if(!data || !data.content) throw new Error("ECMA-376 Encrypted file missing " + f);
 	var einfo = parse_EncryptionInfo(data.content);
 
 	throw new Error("File is password-protected");
@@ -17313,7 +17368,6 @@ function write_zip(wb/*:Workbook*/, opts/*:WriteOpts*/)/*:ZIP*/ {
 		wb.SSF = SSF.get_table();
 	}
 	if(wb && wb.SSF) {
-		// $FlowIgnore
 		make_ssf(SSF); SSF.load_table(wb.SSF);
 		// $FlowIgnore
 		opts.revssf = evert_num(wb.SSF); opts.revssf[wb.SSF[65535]] = 0;
@@ -17446,7 +17500,7 @@ function firstbyte(f/*:RawData*/,o/*:?TypeOpts*/)/*:Array<number>*/ {
 		case 'base64': x = Base64.decode(f.substr(0,24)); break;
 		case 'binary': x = f; break;
 		case 'array':  return [f[0], f[1], f[2], f[3]];
-		default: throw new Error("Unrecognized type " + (o ? o.type : "undefined"));
+		default: throw new Error("Unrecognized type " + (o && o.type || "undefined"));
 	}
 	return [x.charCodeAt(0), x.charCodeAt(1), x.charCodeAt(2), x.charCodeAt(3)];
 }
@@ -17470,13 +17524,35 @@ function read_zip(data/*:RawData*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
 	return parse_zip(zip, o);
 }
 
+function read_plaintext(data/*:string*/, o/*:ParseOpts*/)/*:Workbook*/ {
+	var i = 0;
+	main: while(i < data.length) switch(data.charCodeAt(i)) {
+		case 0x0A: case 0x0D: case 0x20: ++i; break;
+		case 0x3C: return parse_xlml(data.slice(i),o);
+		default: break main;
+	}
+	return PRN.to_workbook(data, o);
+}
+
+function read_plaintext_raw(data/*:RawData*/, o/*:ParseOpts*/)/*:Workbook*/ {
+	var str = "", bytes = firstbyte(data, o);
+	switch(o.type) {
+		case 'base64': str = Base64.decode(data); break;
+		case 'binary': str = data; break;
+		case 'buffer': str = data.toString('binary'); break;
+		case 'array': str = cc2str(data); break;
+		default: throw new Error("Unrecognized type " + o.type);
+	}
+	if(bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF) str = utf8read(str);
+	return read_plaintext(str, o);
+}
+
 function read_utf16(data/*:RawData*/, o/*:ParseOpts*/)/*:Workbook*/ {
 	var d = data;
 	if(o.type == 'base64') d = Base64.decode(d);
-	d = cptable.utils.decode(1200, d.slice(2));
+	d = cptable.utils.decode(1200, d.slice(2), 'str');
 	o.type = "binary";
-	if(d.charCodeAt(0) == 0x3C) return parse_xlml(d,o);
-	return PRN.to_workbook(d, o);
+	return read_plaintext(d, o);
 }
 
 function readSync(data/*:RawData*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
@@ -17497,6 +17573,8 @@ function readSync(data/*:RawData*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
 		case 0xFF: if(n[1] == 0xFE){ return read_utf16(d, o); } break;
 		case 0x00: if(n[1] == 0x00 && n[2] >= 0x02 && n[3] == 0x00) return WK_.to_workbook(d, o); break;
 		case 0x03: case 0x83: case 0x8B: return DBF.to_workbook(d, o);
+		case 0x7B: if(n[1] == 0x5C && n[2] == 0x72 && n[3] == 0x74) throw new Error("Unsupported RTF"); break;
+		case 0x0A: case 0x0D: case 0x20: return read_plaintext_raw(d, o);
 	}
 	if(n[2] <= 12 && n[3] <= 31) return DBF.to_workbook(d, o);
 	if(0x20>n[0]||n[0]>0x7F) throw new Error("Unsupported file " + n.join("|"));

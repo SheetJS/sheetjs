@@ -477,8 +477,9 @@ var DIF = (function() {
 })();
 
 var PRN = (function() {
-	function set_text_arr(data/*:string*/, arr/*:AOA*/, R/*:number*/, C/*:number*/) {
-		if(data === 'TRUE') arr[R][C] = true;
+	function set_text_arr(data/*:string*/, arr/*:AOA*/, R/*:number*/, C/*:number*/, o/*:any*/) {
+		if(o.raw) arr[R][C] = data;
+		else if(data === 'TRUE') arr[R][C] = true;
 		else if(data === 'FALSE') arr[R][C] = false;
 		else if(data === ""){/* empty */}
 		else if(+data == +data) arr[R][C] = +data;
@@ -487,6 +488,7 @@ var PRN = (function() {
 	}
 
 	function prn_to_aoa_str(f/*:string*/, opts)/*:AOA*/ {
+		var o = opts || {};
 		var arr/*:AOA*/ = ([]/*:any*/);
 		if(!f || f.length === 0) return arr;
 		var lines = f.split(/[\r\n]/);
@@ -503,9 +505,9 @@ var PRN = (function() {
 			arr[R] = [];
 			/* TODO: confirm that widths are always 10 */
 			var C = 0;
-			set_text_arr(lines[R].slice(0, start).trim(), arr, R, C);
+			set_text_arr(lines[R].slice(0, start).trim(), arr, R, C, o);
 			for(C = 1; C <= (lines[R].length - start)/10 + 1; ++C)
-				set_text_arr(lines[R].slice(start+(C-1)*10,start+C*10).trim(),arr,R,C);
+				set_text_arr(lines[R].slice(start+(C-1)*10,start+C*10).trim(),arr,R,C,o);
 		}
 		return arr;
 	}
@@ -622,3 +624,4 @@ function read_wb_ID(d, opts) {
 		return PRN.to_workbook(d, opts);
 	}
 }
+

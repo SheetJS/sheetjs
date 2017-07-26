@@ -124,7 +124,7 @@ function parse_EncryptionVerifier(blob, length/*:number*/) {
 }
 
 /* [MS-OFFCRYPTO] 2.3.4.* EncryptionInfo Stream */
-function parse_EncryptionInfo(blob, length) {
+function parse_EncryptionInfo(blob, length/*:?number*/) {
 	var vers = parse_CRYPTOVersion(blob);
 	switch(vers.Minor) {
 		case 0x02: return parse_EncInfoStd(blob, vers);
@@ -156,8 +156,8 @@ function parse_EncInfoAgl(blob, vers) { throw new Error("File is password-protec
 function parse_RC4CryptoHeader(blob, length/*:number*/) {
 	var o = {};
 	var vers = o.EncryptionVersionInfo = parse_CRYPTOVersion(blob, 4); length -= 4;
-	if(vers.Minor != 2) throw 'unrecognized minor version code: ' + vers.Minor;
-	if(vers.Major > 4 || vers.Major < 2) throw 'unrecognized major version code: ' + vers.Major;
+	if(vers.Minor != 2) throw new Error('unrecognized minor version code: ' + vers.Minor);
+	if(vers.Major > 4 || vers.Major < 2) throw new Error('unrecognized major version code: ' + vers.Major);
 	o.Flags = blob.read_shift(4); length -= 4;
 	var sz = blob.read_shift(4); length -= 4;
 	o.EncryptionHeader = parse_EncryptionHeader(blob, sz); length -= sz;
@@ -294,7 +294,7 @@ function parse_FilePassHeader(blob, length/*:number*/, oo) {
 	return o;
 }
 function parse_FilePass(blob, length/*:number*/, opts) {
-	var o = { Type: blob.read_shift(2) }; /* wEncryptionType */
+	var o = { Type: opts.biff >= 8 ? blob.read_shift(2) : 0 }; /* wEncryptionType */
 	if(o.Type) parse_FilePassHeader(blob, length-2, o);
 	else parse_XORObfuscation(blob, length-2, opts, o);
 	return o;

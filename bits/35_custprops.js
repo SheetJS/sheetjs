@@ -37,6 +37,7 @@ function parse_cust_props(data/*:string*/, opts) {
 						p[name] = unescapexml(text);
 						break;
 					default:
+						if(type.slice(-1) == '/') break;
 						if(opts.WTF && typeof console !== 'undefined') console.warn('Unexpected', x, type, toks);
 				}
 			} else if(x.substr(0,2) === "</") {/* empty */

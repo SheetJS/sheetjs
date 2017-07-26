@@ -57,6 +57,7 @@ function parse_ext_props(data, p) {
 					break;
 
 				case "Named Ranges":
+				case "名前付き一覧":
 				case "Benannte Bereiche":
 				case "Navngivne områder":
 					p.NamedRanges = len;

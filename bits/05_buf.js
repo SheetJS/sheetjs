@@ -2,6 +2,7 @@ var has_buf = (typeof Buffer !== 'undefined' && typeof process !== 'undefined' &
 
 function new_raw_buf(len/*:number*/) {
 	/* jshint -W056 */
+	// $FlowIgnore
 	return new (has_buf ? Buffer : Array)(len);
 	/* jshint +W056 */
 }

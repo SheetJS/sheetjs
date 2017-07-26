@@ -410,10 +410,10 @@ function write_ws_xml_data(ws/*:Worksheet*/, opts, idx/*:number*/, wb/*:Workbook
 	}
 	if(rows) for(; R < rows.length; ++R) {
 		if(rows && rows[R]) {
-			var params = ({r:R+1}/*:any*/);
-			var row = rows[R];
+			params = ({r:R+1}/*:any*/);
+			row = rows[R];
 			if(row.hidden) params.hidden = 1;
-			var height = -1;
+			height = -1;
 			if (row.hpx) height = px2pt(row.hpx);
 			else if (row.hpt) height = row.hpt;
 			if (height > -1) { params.ht = height; params.customHeight = 1; }

@@ -289,9 +289,11 @@ var parse_content_xml = (function() {
 
 			case 'forms': break; // 12.25.2 13.2
 			case 'table-column': break; // 9.1.6 <table:table-column>
+			case 'table-header-rows': break; // 9.1.7 <table:table-header-rows>
 			/* TODO: outline levels */
 			case 'table-row-group': break; // 9.1.9 <table:table-row-group>
 			case 'table-column-group': break; // 9.1.10 <table:table-column-group>
+			case 'table-header-columns': break; // 9.1.11 <table:table-header-columns>
 
 			case 'null-date': break; // 9.4.2 <table:null-date> TODO: date1904
 
@@ -299,14 +301,17 @@ var parse_content_xml = (function() {
 			case 'calculation-settings': break; // 9.4.1 <table:calculation-settings>
 			case 'named-expressions': break; // 9.4.11 <table:named-expressions>
 			case 'named-range': break; // 9.4.12 <table:named-range>
+			case 'label-range': break; // 9.4.9 <table:label-range>
+			case 'label-ranges': break; // 9.4.10 <table:label-ranges>
 			case 'named-expression': break; // 9.4.13 <table:named-expression>
 			case 'sort': break; // 9.4.19 <table:sort>
 			case 'sort-by': break; // 9.4.20 <table:sort-by>
 			case 'sort-groups': break; // 9.4.22 <table:sort-groups>
 
-			case 'span': break; // <text:span>
+			case 'tab': break; // 6.1.4 <text:tab>
 			case 'line-break': break; // 6.1.5 <text:line-break>
-			case 'p': case '文本串':
+			case 'span': break; // 6.1.7 <text:span>
+			case 'p': case '文本串': // 5.1.3 <text:p>
 				if(Rn[1]==='/') textp = (textp.length > 0 ? textp + "\n" : "") + parse_text_p(str.slice(textpidx,Rn.index), textptag);
 				else { textptag = parsexmltag(Rn[0], false); textpidx = Rn.index + Rn[0].length; }
 				break; // <text:p>
@@ -326,11 +331,14 @@ var parse_content_xml = (function() {
 			case 'title': case '标题': break; // <*:title> OR <uof:标题>
 			case 'desc': break; // <*:desc>
 
+			/* 9.2 Advanced Tables */
 			case 'table-source': break; // 9.2.6
+			case 'scenario': break; // 9.2.6
 
 			case 'iteration': break; // 9.4.3 <table:iteration>
 			case 'content-validations': break; // 9.4.4 <table:
 			case 'content-validation': break; // 9.4.5 <table:
+			case 'help-message': break; // 9.4.6 <table:
 			case 'error-message': break; // 9.4.7 <table:
 			case 'database-ranges': break; // 9.4.14 <table:database-ranges>
 			case 'filter': break; // 9.5.2 <table:filter>
@@ -385,6 +393,12 @@ var parse_content_xml = (function() {
 			case 'page-count': break; // TODO <text:page-count>
 			case 'time': break; // TODO <text:time>
 
+			/* 9.3 Advanced Table Cells */
+			case 'cell-range-source': break; // 9.3.1 <table:
+			case 'detective': break; // 9.3.2 <table:
+			case 'operation': break; // 9.3.3 <table:
+			case 'highlighted-range': break; // 9.3.4 <table:
+
 			/* 9.6 Data Pilot Tables <table: */
 			case 'data-pilot-table': // 9.6.3
 			case 'source-cell-range': // 9.6.5
@@ -423,10 +437,12 @@ var parse_content_xml = (function() {
 			/* non-standard */
 			case 'table-protection': break;
 			case 'data-pilot-grand-total': break; // <table:
+			case 'office-document-common-attrs': break; // bare
 			default:
 				if(Rn[2] === 'dc:') break; // TODO: properties
 				if(Rn[2] === 'draw:') break; // TODO: drawing
 				if(Rn[2] === 'style:') break; // TODO: styles
+				if(Rn[2] === 'form:') break; // TODO: forms
 				if(Rn[2] === 'calcext:') break; // ignore undocumented extensions
 				if(Rn[2] === 'loext:') break; // ignore undocumented extensions
 				if(Rn[2] === 'uof:') break; // TODO: uof

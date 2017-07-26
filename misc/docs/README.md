@@ -1270,6 +1270,7 @@ The exported `read` and `readFile` functions accept an options argument:
 | Option Name | Default | Description                                          |
 | :---------- | ------: | :--------------------------------------------------- |
 | type        |         | Input data encoding (see Input Type below)           |
+| raw         |         | If true, plaintext parsing will not parse values **  |
 | cellFormula | true    | Save formulae to the .f field                        |
 | cellHTML    | true    | Parse rich text and save HTML to the `.h` field      |
 | cellNF      | false   | Save number format string to the `.z` field          |
@@ -1289,6 +1290,8 @@ The exported `read` and `readFile` functions accept an options argument:
 
 - Even if `cellNF` is false, formatted text will be generated and saved to `.w`
 - In some cases, sheets may be parsed even if `bookSheets` is false.
+- Excel aggressively tries to interpret values from CSV and other plaintext.
+  This leads to surprising behavior! The `raw` option suppresses value parsing.
 - `bookSheets` and `bookProps` combine to give both sets of information
 - `Deps` will be an empty object if `bookDeps` is falsy
 - `bookFiles` behavior depends on file type:
@@ -1333,8 +1336,13 @@ file but Excel will know how to handle it.  This library applies similar logic:
 | `0x50` | ZIP Archive   | XLSB or XLSX/M or ODS or UOS2 or plaintext          |
 | `0x49` | Plain Text    | SYLK or plaintext                                   |
 | `0x54` | Plain Text    | DIF or plaintext                                    |
-| `0xFE` | UTF16 Encoded | SpreadsheetML or Flat ODS or UOS1 or plaintext      |
+| `0xEF` | UTF8 Encoded  | SpreadsheetML / Flat ODS / UOS1 / HTML / plaintext  |
+| `0xFF` | UTF16 Encoded | SpreadsheetML / Flat ODS / UOS1 / HTML / plaintext  |
 | `0x00` | Record Stream | Lotus WK\* or Quattro Pro or plaintext              |
+| `0x0A` | Plaintext     | RTF or plaintext                                    |
+| `0x0A` | Plaintext     | SpreadsheetML / Flat ODS / UOS1 / HTML / plaintext  |
+| `0x0D` | Plaintext     | SpreadsheetML / Flat ODS / UOS1 / HTML / plaintext  |
+| `0x20` | Plaintext     | SpreadsheetML / Flat ODS / UOS1 / HTML / plaintext  |
 
 DBF files are detected based on the first byte as well as the third and fourth
 bytes (corresponding to month and day of the file date)
@@ -1343,12 +1351,16 @@ Plaintext format guessing follows the priority order:
 
 | Format | Test                                                                |
 |:-------|:--------------------------------------------------------------------|
-| HTML   | starts with `<html`                                                 |
+| XML    | `<?xml` appears in the first 1024 characters                        |
+| HTML   | starts with `<` and HTML tags appear in the first 1024 characters * |
 | XML    | starts with `<`                                                     |
+| RTF    | starts with `{\rt`                                                  |
 | DSV    | starts with `/sep=.$/`, separator is the specified character        |
 | TSV    | one of the first 1024 characters is a tab char `"\t"`               |
 | CSV    | one of the first 1024 characters is a comma char `","`              |
 | PRN    | (default)                                                           |
+
+- HTML tags include: `html`, `table`, `head`, `meta`, `script`, `style`, `div`
 
 
 

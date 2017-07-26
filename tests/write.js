@@ -166,11 +166,12 @@ var filenames = [
 	['sheetjs.xml.xls', {bookType:'xlml'}],
 	['sheetjs.ods'],
 	['sheetjs.fods'],
-	['sheetjs.slk'],
 	['sheetjs.csv'],
 	['sheetjs.txt'],
-	['sheetjs.prn'],
-	['sheetjs.dif']
+	['sheetjs.slk'],
+	['sheetjs.htm'],
+	['sheetjs.dif'],
+	['sheetjs.prn']
 ];
 
 filenames.forEach(function(r) {
