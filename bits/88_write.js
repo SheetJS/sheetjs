@@ -21,7 +21,7 @@ function write_bstr_type(out/*:string*/, opts/*:WriteOpts*/) {
 		case "binary": return out;
 		case "file": return _fs.writeFileSync(opts.file, out, 'binary');
 		case "buffer": {
-			if(has_buf) return new Buffer(out, 'utf8');
+			if(has_buf) return new Buffer(out, 'binary');
 			else return out.split("").map(function(c) { return c.charCodeAt(0); });
 		}
 	}

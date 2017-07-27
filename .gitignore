@@ -1,4 +1,5 @@
 node_modules
+package-lock.json
 *.tgz
 _book/
 misc/coverage.html

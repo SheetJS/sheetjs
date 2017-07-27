@@ -7,7 +7,7 @@ function parse_FILETIME(blob) {
 }
 
 /* [MS-OSHARED] 2.3.3.1.4 Lpstr */
-function parse_lpstr(blob, type, pad) {
+function parse_lpstr(blob, type, pad/*:?number*/) {
 	var str = blob.read_shift(0, 'lpstr');
 	if(pad) blob.l += (4 - ((str.length+1) & 3)) & 3;
 	return str;
@@ -28,8 +28,8 @@ function parse_VtStringBase(blob, stringType, pad) {
 	return parse_lpstr(blob, stringType, pad);
 }
 
-function parse_VtString(blob, t, pad) { return parse_VtStringBase(blob, t, pad === false ? 0: 4); }
-function parse_VtUnalignedString(blob, t) { if(!t) throw new Error("dafuq?"); return parse_VtStringBase(blob, t, 0); }
+function parse_VtString(blob, t/*:number*/, pad/*:number*/) { return parse_VtStringBase(blob, t, pad === false ? 0: 4); }
+function parse_VtUnalignedString(blob, t/*:number*/) { if(!t) throw new Error("dafuq?"); return parse_VtStringBase(blob, t, 0); }
 
 /* [MS-OSHARED] 2.3.3.1.9 VtVecUnalignedLpstrValue */
 function parse_VtVecUnalignedLpstrValue(blob) {

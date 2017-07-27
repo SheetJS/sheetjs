@@ -1,8 +1,8 @@
 /* [MS-XLSB] 2.4.651 BrtFmt */
 function parse_BrtFmt(data, length/*:number*/) {
-	var ifmt = data.read_shift(2);
+	var numFmtId = data.read_shift(2);
 	var stFmtCode = parse_XLWideString(data,length-2);
-	return [ifmt, stFmtCode];
+	return [numFmtId, stFmtCode];
 }
 function write_BrtFmt(i/*:number*/, f/*:string*/, o) {
 	if(!o) o = new_buf(6 + 4 * f.length);
@@ -136,7 +136,7 @@ function parse_BrtXF(data, length/*:number*/) {
 	var ixfeParent = data.read_shift(2);
 	var ifmt = data.read_shift(2);
 	parsenoop(data, length-4);
-	return {ixfe:ixfeParent, ifmt:ifmt };
+	return {ixfe:ixfeParent, numFmtId:ifmt };
 }
 function write_BrtXF(data, ixfeP, o) {
 	if(!o) o = new_buf(16);

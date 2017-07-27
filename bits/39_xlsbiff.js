@@ -25,8 +25,9 @@ function parse_OptXLUnicodeString(blob, length, opts) { return length === 0 ? ""
 var parse_HideObjEnum = parseuint16;
 
 /* 2.5.344 */
-function parse_XTI(blob, length) {
-	var iSupBook = blob.read_shift(2), itabFirst = blob.read_shift(2,'i'), itabLast = blob.read_shift(2,'i');
+function parse_XTI(blob, length, opts) {
+	var w = opts.biff > 8 ? 4 : 2;
+	var iSupBook = blob.read_shift(w), itabFirst = blob.read_shift(w,'i'), itabLast = blob.read_shift(w,'i');
 	return [iSupBook, itabFirst, itabLast];
 }
 
@@ -195,10 +196,11 @@ function parse_BoundSheet8(blob, length, opts) {
 
 /* 2.4.265 TODO */
 function parse_SST(blob, length)/*:SST*/ {
+	var end = blob.l + length;
 	var cnt = blob.read_shift(4);
 	var ucnt = blob.read_shift(4);
 	var strs/*:SST*/ = ([]/*:any*/);
-	for(var i = 0; i != ucnt; ++i) {
+	for(var i = 0; i != ucnt && blob.l < end; ++i) {
 		strs.push(parse_XLUnicodeRichExtendedString(blob));
 	}
 	strs.Count = cnt; strs.Unique = ucnt;
@@ -308,9 +310,9 @@ function parse_Label(blob, length, opts) {
 
 /* 2.4.126 Number Formats */
 function parse_Format(blob, length, opts) {
-	var ifmt = blob.read_shift(2);
+	var numFmtId = blob.read_shift(2);
 	var fmtstr = parse_XLUnicodeString2(blob, 0, opts);
-	return [ifmt, fmtstr];
+	return [numFmtId, fmtstr];
 }
 var parse_BIFF2Format = parse_XLUnicodeString2;
 
@@ -401,7 +403,7 @@ function parse_StyleXF(blob, length, opts) {return parse_CellStyleXF(blob,length
 /* 2.4.353 TODO: actually do this right */
 function parse_XF(blob, length, opts) {
 	var o = {};
-	o.ifnt = blob.read_shift(2); o.ifmt = blob.read_shift(2); o.flags = blob.read_shift(2);
+	o.ifnt = blob.read_shift(2); o.numFmtId = blob.read_shift(2); o.flags = blob.read_shift(2);
 	o.fStyle = (o.flags >> 2) & 0x01;
 	length -= 6;
 	o.data = parse_CellStyleXF(blob, length, o.fStyle, opts);
@@ -447,7 +449,9 @@ function parse_SupBook(blob, length, opts) {
 	if(cch == 0x0401 || cch == 0x3A01) return [cch, ctab];
 	if(cch < 0x01 || cch >0xff) throw new Error("Unexpected SupBook type: "+cch);
 	var virtPath = parse_XLUnicodeStringNoCch(blob, cch);
-	var rgst = blob.read_shift(end - blob.l);
+	/* TODO: 2.5.277 Virtual Path */
+	var rgst = [];
+	while(end > blob.l) rgst.push(parse_XLUnicodeString(blob));
 	return [cch, ctab, virtPath, rgst];
 }
 
@@ -512,15 +516,21 @@ function parse_Lbl(blob, length, opts) {
 	};
 }
 
-/* 2.4.106 TODO: verify supbook manipulation */
+/* 2.4.106 TODO: verify filename encoding */
 function parse_ExternSheet(blob, length, opts) {
-	if(opts.biff < 8) return parse_ShortXLUnicodeString(blob, length, opts);
-	var o = [], target = blob.l + length, len = blob.read_shift(2);
-	while(len-- !== 0) o.push(parse_XTI(blob, 6));
+	if(opts.biff < 8) return parse_BIFF5ExternSheet(blob, length, opts);
+	var o = [], target = blob.l + length, len = blob.read_shift(opts.biff > 8 ? 4 : 2);
+	while(len-- !== 0) o.push(parse_XTI(blob, opts.biff > 8 ? 12 : 6, opts));
 		// [iSupBook, itabFirst, itabLast];
 	var oo = [];
 	return o;
 }
+function parse_BIFF5ExternSheet(blob, length, opts) {
+	if(blob[blob.l + 1] == 0x03) blob[blob.l]++;
+	var o = parse_ShortXLUnicodeString(blob, length, opts);
+	return o.charCodeAt(0) == 0x03 ? o.slice(1) : o;
+}
+var parse_ExternCount = parseuint16;
 
 /* 2.4.176 TODO: check older biff */
 function parse_NameCmt(blob, length, opts) {

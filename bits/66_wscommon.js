@@ -60,7 +60,7 @@ function get_cell_style(styles, cell, opts) {
 	return len;
 }
 
-function safe_format(p, fmtid/*:number*/, fillid, opts, themes, styles) {
+function safe_format(p, fmtid/*:number*/, fillid/*:number*/, opts, themes, styles) {
 	if(p.t === 'z') return;
 	if(p.t === 'd' && typeof p.v === 'string') p.v = parseDate(p.v);
 	try {
@@ -70,13 +70,13 @@ function safe_format(p, fmtid/*:number*/, fillid, opts, themes, styles) {
 		if(p.t === 'e') p.w = p.w || BErr[p.v];
 		else if(fmtid === 0) {
 			if(p.t === 'n') {
-				if((p.v|0) === p.v) p.w = SSF._general_int(p.v,_ssfopts);
-				else p.w = SSF._general_num(p.v,_ssfopts);
+				if((p.v|0) === p.v) p.w = SSF._general_int(p.v);
+				else p.w = SSF._general_num(p.v);
 			}
 			else if(p.t === 'd') {
 				var dd = datenum(p.v);
-				if((dd|0) === dd) p.w = SSF._general_int(dd,_ssfopts);
-				else p.w = SSF._general_num(dd,_ssfopts);
+				if((dd|0) === dd) p.w = SSF._general_int(dd);
+				else p.w = SSF._general_num(dd);
 			}
 			else if(p.v === undefined) return "";
 			else p.w = SSF._general(p.v,_ssfopts);

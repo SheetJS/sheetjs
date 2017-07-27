@@ -25,21 +25,21 @@ function write_BIFF2Cell(out, r/*:number*/, c/*:number*/) {
 	return out;
 }
 
-function write_BIFF2INT(r/*:number*/, c/*:number*/, val) {
+function write_BIFF2INT(r/*:number*/, c/*:number*/, val/*:number*/) {
 	var out = new_buf(9);
 	write_BIFF2Cell(out, r, c);
 	out.write_shift(2, val);
 	return out;
 }
 
-function write_BIFF2NUMBER(r, c, val) {
+function write_BIFF2NUMBER(r/*:number*/, c/*:number*/, val/*:number*/) {
 	var out = new_buf(15);
 	write_BIFF2Cell(out, r, c);
 	out.write_shift(8, val, 'f');
 	return out;
 }
 
-function write_BIFF2BERR(r, c, val, t) {
+function write_BIFF2BERR(r/*:number*/, c/*:number*/, val, t/*:?string*/) {
 	var out = new_buf(9);
 	write_BIFF2Cell(out, r, c);
 	if(t == 'e') { out.write_shift(1, val); out.write_shift(1, 1); }
@@ -48,7 +48,7 @@ function write_BIFF2BERR(r, c, val, t) {
 }
 
 /* TODO: codepage, large strings */
-function write_BIFF2LABEL(r, c, val) {
+function write_BIFF2LABEL(r/*:number*/, c/*:number*/, val) {
 	var out = new_buf(8 + 2*val.length);
 	write_BIFF2Cell(out, r, c);
 	out.write_shift(1, val.length);
@@ -76,7 +76,7 @@ function write_ws_biff_cell(ba/*:BufArray*/, cell/*:Cell*/, R/*:number*/, C/*:nu
 
 function write_biff_ws(ba/*:BufArray*/, ws/*:Worksheet*/, idx/*:number*/, opts, wb/*:Workbook*/) {
 	var dense = Array.isArray(ws);
-	var range = safe_decode_range(ws['!ref'] || "A1"), ref, rr = "", cols = [];
+	var range = safe_decode_range(ws['!ref'] || "A1"), ref/*:string*/, rr = "", cols/*:Array<string>*/ = [];
 	for(var R = range.s.r; R <= range.e.r; ++R) {
 		rr = encode_row(R);
 		for(var C = range.s.c; C <= range.e.c; ++C) {

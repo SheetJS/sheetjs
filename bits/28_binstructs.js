@@ -192,11 +192,11 @@ function parse_BrtColor(data, length/*:number*/) {
 			out.index = index;
 			var icv = XLSIcv[index];
 			/* automatic pseudo index 81 */
-			if(icv) out.rgb = icv[0].toString(16) + icv[1].toString(16) + icv[2].toString(16);
+			if(icv) out.rgb = rgb2Hex(icv);
 			break;
 		case 2:
 			/* if(!fValidRGB) throw new Error("invalid"); */
-			out.rgb = bR.toString(16) + bG.toString(16) + bB.toString(16);
+			out.rgb = rgb2Hex([bR, bG, bB]);
 			break;
 		case 3: out.theme = index; break;
 	}

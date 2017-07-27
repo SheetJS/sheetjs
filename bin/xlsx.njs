@@ -60,7 +60,7 @@ var wb_formats_2 = [
 ];
 program.parse(process.argv);
 
-var filename/*:?string*/, sheetname = '';
+var filename = "", sheetname = '';
 if(program.args[0]) {
 	filename = program.args[0];
 	if(program.args[1]) sheetname = program.args[1];

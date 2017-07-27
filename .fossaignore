@@ -1,0 +1,14 @@
+bits/
+demos/
+docbits/
+misc/
+node_modules/
+types/
+tests/
+test_files
+
+*.json
+*.log
+*.sh
+.DS_Store
+.Trashes

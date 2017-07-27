@@ -11,7 +11,7 @@ type WorkbookFile = any;
 
 type Workbook = {
 	SheetNames: Array<string>;
-	Sheets: any;
+	Sheets: {[name:string]:Worksheet};
 
 	Props?: any;
 	Custprops?: any;
@@ -81,7 +81,7 @@ type WriteFileOpts = any;
 type RawData = any;
 
 interface TypeOpts {
-	type:string;
+	type?:string;
 }
 
 type XLSXModule = any;

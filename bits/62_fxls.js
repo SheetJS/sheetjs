@@ -690,6 +690,9 @@ var PtgBinOp = {
 	PtgPower: "^",
 	PtgSub: "-"
 };
+function get_ixti(supbooks, ixti/*:number*/, opts)/*:string*/ {
+	return supbooks.SheetNames[ixti];
+}
 function stringify_formula(formula/*Array<any>*/, range, cell/*:any*/, supbooks, opts) {
 	//console.log(formula);
 	var _range = /*range != null ? range :*/ {s:{c:0, r:0},e:{c:0, r:0}};
@@ -773,7 +776,7 @@ function stringify_formula(formula/*Array<any>*/, range, cell/*:any*/, supbooks,
 				break;
 			case 'PtgRef3d': /* 2.5.198.85 */
 				type = f[1][0]; ixti = /*::Number(*/f[1][1]/*::)*/; c = shift_cell_xls((f[1][2]/*:any*/), _range, opts);
-				sname = supbooks.SheetNames[ixti];
+				sname = get_ixti(supbooks, ixti, opts);
 				var w = sname; /* IE9 fails on defined names */
 				stack.push(sname + "!" + encode_cell_xls(c));
 				break;
@@ -825,7 +828,7 @@ function stringify_formula(formula/*Array<any>*/, range, cell/*:any*/, supbooks,
 				/* f[1] = type, 0, nameindex */
 				nameidx = (f[1][2]/*:any*/);
 				var lbl = (supbooks.names||[])[nameidx-1] || (supbooks[0]||[])[nameidx];
-				var name = lbl ? lbl.Name : "**MISSING**" + String(nameidx);
+				var name = lbl ? lbl.Name : "SH33TJSERR7" + String(nameidx);
 				if(name in XLSXFutureFunctions) name = XLSXFutureFunctions[name];
 				stack.push(name);
 				break;
@@ -850,11 +853,11 @@ function stringify_formula(formula/*Array<any>*/, range, cell/*:any*/, supbooks,
 					else o = supbooks.SheetNames[nameidx-1]+ "!";
 					if(supbooks[bookidx] && supbooks[bookidx][nameidx]) o += supbooks[bookidx][nameidx].Name;
 					else if(supbooks[0] && supbooks[0][nameidx]) o += supbooks[0][nameidx].Name;
-					else o += "??NAMEX??";
+					else o += "SH33TJSERRX";
 					stack.push(o);
 					break;
 				}
-				if(!externbook) externbook = {Name: "??NAMEX??"};
+				if(!externbook) externbook = {Name: "SH33TJSERRY"};
 				stack.push(externbook.Name);
 				break;
 
