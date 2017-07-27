@@ -29,6 +29,7 @@ enhancements, additional features by request, and dedicated support.
 	<summary><b>Graph of supported formats</b> (click to show)</summary>
 
 ![circo graph of format support](formats.png)
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bhttps%3A%2F%2Fgithub.com%2FSheetJS%2Fjs-xlsx.svg?type=shield)](https://app.fossa.io/projects/git%2Bhttps%3A%2F%2Fgithub.com%2FSheetJS%2Fjs-xlsx?ref=badge_shield)
 
 ![graph legend](legend.png)
 
@@ -2283,6 +2284,9 @@ Please consult the attached LICENSE file for details.  All rights not explicitly
 granted by the Apache 2.0 License are reserved by the Original Author.
 
 
+
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bhttps%3A%2F%2Fgithub.com%2FSheetJS%2Fjs-xlsx.svg?type=large)](https://app.fossa.io/projects/git%2Bhttps%3A%2F%2Fgithub.com%2FSheetJS%2Fjs-xlsx?ref=badge_large)
+
 ## References
 
 <details>
@@ -2312,5 +2316,3 @@ granted by the Apache 2.0 License are reserved by the Original Author.
 - ISO/IEC 29500:2012(E) "Information technology — Document description and processing languages — Office Open XML File Formats"
 - Open Document Format for Office Applications Version 1.2 (29 September 2011)
 - Worksheet File Format (From Lotus) December 1984
-
-
