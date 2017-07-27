@@ -520,7 +520,7 @@ export interface CellObject {
     l?: Hyperlink;
 
     /** The style/theme of the cell (if applicable) */
-    s?: object;
+    s?: any;
 }
 
 /** Simple Cell Address */
