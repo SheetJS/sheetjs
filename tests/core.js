@@ -678,7 +678,7 @@ function custprop(wb) {
 	assert.equal(wb.Custprops.Counter, -3.14);
 }
 
-function cmparr(x){ for(var i=1;i!=x.length;++i) assert.deepEqual(x[0], x[i]); }
+function cmparr(x){ for(var i=1;i<x.length;++i) assert.deepEqual(x[0], x[i]); }
 
 function deepcmp(x,y,k,m,c) {
 	var s = k.indexOf(".");
@@ -1928,7 +1928,7 @@ mft.forEach(function(x) {
 		if(r.length < 3) return;
 		if(!fs.existsSync(dir + r[0] + r[1])) return;
 		it('should parse all', function() {
-			for(var j = 1; j != r.length; ++j) f[j-1] = X.read(fs.readFileSync(dir + r[0] + r[j]), mfopts);
+			for(var j = 1; j < r.length; ++j) f[j-1] = X.read(fs.readFileSync(dir + r[0] + r[j]), mfopts);
 		});
 		it('should have the same sheetnames', function() {
 			cmparr(f.map(function(x) { return x.SheetNames; }));
