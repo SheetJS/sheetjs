@@ -28,6 +28,7 @@ tmp
 *.sheetjs
 *.exe
 .gitignore
+.fossaignore
 .eslintrc
 .jshintrc
 CONTRIBUTING.md

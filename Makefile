@@ -14,7 +14,7 @@ FLOWTARGET=$(LIB).flow.js
 FLOWAUX=$(patsubst %.js,%.flow.js,$(AUXTARGETS))
 AUXSCPTS=xlsxworker1.js xlsxworker2.js xlsxworker.js
 FLOWTGTS=$(TARGET) $(AUXTARGETS) $(AUXSCPTS)
-UGLIFYOPTS=--support-ie8 -c -m
+UGLIFYOPTS=--support-ie8
 CLOSURE=/usr/local/lib/node_modules/google-closure-compiler/compiler.jar
 
 ## Main Targets

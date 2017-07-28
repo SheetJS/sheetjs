@@ -5,7 +5,7 @@ but not limited to API changes and file location changes.  Minor behavioral
 changes may not be included if they are not expected to break existing code.
 
 
-## Unreleased  (2017-??-??)
+## 0.10.9 (2017-07-28)
 
 * XLML/HTML resolution logic looks further into the data stream to decide type
 * Errors thrown on suspected RTF files

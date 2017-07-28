@@ -6,6 +6,7 @@ node_modules/
 types/
 tests/
 test_files
+*.md
 
 *.json
 *.log

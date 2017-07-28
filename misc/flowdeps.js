@@ -12,6 +12,120 @@ declare module 'fs' { declare var exports:any; };
 
 type ZIP = any;
 
+type SSFTable = {[key:number|string]:string};
+type SSFDate = {
+	D:number; T:number;
+	y:number; m:number; d:number; q:number;
+	H:number; M:number; S:number; u:number;
+};
+
+type SSFModule = {
+	format:(fmt:string|number, v:any, o:any)=>string;
+
+	is_date:(fmt:string)=>boolean;
+	parse_date_code:(v:number,opts:any)=>?SSFDate;
+
+	load:(fmt:string, idx:?number)=>number;
+	get_table:()=>SSFTable;
+	load_table:(table:any)=>void;
+	_table:SSFTable;
+	init_table:any;
+
+	_general_int:(v:number)=>string;
+	_general_num:(v:number)=>string;
+	_general:(v:number, o:?any)=>string;
+	_eval:any;
+	_split:any;
+	version:string;
+};
+
+// ----------------------------------------------------------------------------
+// Note: The following override is needed because ReadShift includes more cases
+// ----------------------------------------------------------------------------
+
+type CFBModule = {
+	version:string;
+	read:(blob:RawBytes|string, opts:CFBReadOpts)=>CFBContainer;
+	parse:(file:RawBytes, opts:CFBReadOpts)=>CFBContainer;
+	utils:CFBUtils;
+};
+
+type CFBFullPathDir = {
+	[n:string]: CFBEntry;
+}
+
+type CFBUtils = any;
+
+type CheckFieldFunc = {(hexstr:string, fld:string):void;};
+
+type RawBytes = Array<number> | Buffer | Uint8Array;
+
+class CFBlobArray extends Array<number> {
+	l:number;
+	read_shift:ReadShiftFunc;
+	chk:CheckFieldFunc;
+};
+interface CFBlobBuffer extends Buffer {
+	l:number;
+	slice:(start:number, end:?number)=>Buffer;
+	read_shift:ReadShiftFunc;
+	chk:CheckFieldFunc;
+};
+interface CFBlobUint8 extends Uint8Array {
+	l:number;
+	slice:(start:number, end:?number)=>Uint8Array;
+	read_shift:ReadShiftFunc;
+	chk:CheckFieldFunc;
+};
+
+interface CFBlobber {
+	[n:number]:number;
+	l:number;
+	length:number;
+	slice:(start:number, end:?number)=>RawBytes;
+	read_shift:ReadShiftFunc;
+	chk:CheckFieldFunc;
+};
+
+type CFBlob = CFBlobArray | CFBlobBuffer | CFBlobUint8;
+
+interface CFBReadOpts {
+	type?:string;
+};
+
+type CFBFileIndex = Array<CFBEntry>;
+
+type CFBFindPath = (n:string)=>?CFBEntry;
+
+type CFBContainer = {
+	raw:{
+		header:any;
+		sectors:Array<any>;
+	};
+	FileIndex:CFBFileIndex;
+	FullPathDir:CFBDirectory;
+	FullPaths:Array<string>;
+	find:CFBFindPath;
+}
+
+type CFBEntry = {
+	name: string;
+	type: number;
+	ct?: Date;
+	mt?: Date;
+	color: number;
+	clsid: string;
+	state: number;
+	start: number;
+	size: number;
+	storage?: "fat" | "minifat";
+	L: number;
+	R: number;
+	C: number;
+	content?: CFBlob;
+}
+
+
 // ----------------------------------------------------------------------------
 // Note: The following override is needed because Flow is missing Date#getYear
 // ----------------------------------------------------------------------------

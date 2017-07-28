@@ -1,8 +1,8 @@
 /* ssf.js (C) 2013-present SheetJS -- http://sheetjs.com */
 /*jshint -W041 */
-var SSF = {};
-var make_ssf = function make_ssf(SSF){
-SSF.version = '0.9.4';
+var SSF/*:SSFModule*/ = ({}/*:any*/);
+var make_ssf = function make_ssf(SSF/*:SSFModule*/){
+SSF.version = '0.10.0';
 function _strrev(x/*:string*/)/*:string*/ { var o = "", i = x.length-1; while(i>=0) o += x.charAt(i--); return o; }
 function fill(c/*:string*/,l/*:number*/)/*:string*/ { var o = ""; while(o.length < l) o+=c; return o; }
 function pad0(v/*:any*/,d/*:number*/)/*:string*/{var t=""+v; return t.length>=d?t:fill('0',d-t.length)+t;}
@@ -13,16 +13,9 @@ function pad0r2(v/*:any*/,d/*:number*/)/*:string*/{var t=""+v; return t.length>=
 var p2_32 = Math.pow(2,32);
 function pad0r(v/*:any*/,d/*:number*/)/*:string*/{if(v>p2_32||v<-p2_32) return pad0r1(v,d); var i = Math.round(v); return pad0r2(i,d); }
 function isgeneral(s/*:string*/, i/*:?number*/)/*:boolean*/ { i = i || 0; return s.length >= 7 + i && (s.charCodeAt(i)|32) === 103 && (s.charCodeAt(i+1)|32) === 101 && (s.charCodeAt(i+2)|32) === 110 && (s.charCodeAt(i+3)|32) === 101 && (s.charCodeAt(i+4)|32) === 114 && (s.charCodeAt(i+5)|32) === 97 && (s.charCodeAt(i+6)|32) === 108; }
-/* Options */
-var opts_fmt/*:Array<Array<any> >*/ = [
-	["date1904", 0],
-	["output", ""],
-	["WTF", false]
-];
-function fixopts(o){
-	for(var y = 0; y != opts_fmt.length; ++y) if(o[opts_fmt[y][0]]===undefined) o[opts_fmt[y][0]]=opts_fmt[y][1];
-}
-SSF.opts = opts_fmt;
+/*::
+type SSF_write_num = {(type:string, fmt:string, val:number):string};
+*/
 var days/*:Array<Array<string> >*/ = [
 	['Sun', 'Sunday'],
 	['Mon', 'Monday'],
@@ -101,7 +94,47 @@ function frac(x/*:number*/, D/*:number*/, mixed/*:?boolean*/)/*:Array<number>*/ 
 	var q = Math.floor(sgn * P/Q);
 	return [q, sgn*P - q*Q, Q];
 }
-function general_fmt_int(v/*:number*/)/*:string*/ { return ""+v; }
+function parse_date_code(v/*:number*/,opts/*:?any*/,b2/*:?boolean*/) {
+	if(v > 2958465 || v < 0) return null;
+	var date = (v|0), time = Math.floor(86400 * (v - date)), dow=0;
+	var dout=[];
+	var out={D:date, T:time, u:86400*(v-date)-time,y:0,m:0,d:0,H:0,M:0,S:0,q:0};
+	if(Math.abs(out.u) < 1e-6) out.u = 0;
+	if(opts && opts.date1904) date += 1462;
+	if(out.u > 0.9999) {
+		out.u = 0;
+		if(++time == 86400) { out.T = time = 0; ++date; ++out.D; }
+	}
+	if(date === 60) {dout = b2 ? [1317,10,29] : [1900,2,29]; dow=3;}
+	else if(date === 0) {dout = b2 ? [1317,8,29] : [1900,1,0]; dow=6;}
+	else {
+		if(date > 60) --date;
+		/* 1 = Jan 1 1900 in Gregorian */
+		var d = new Date(1900, 0, 1);
+		d.setDate(d.getDate() + date - 1);
+		dout = [d.getFullYear(), d.getMonth()+1,d.getDate()];
+		dow = d.getDay();
+		if(date < 60) dow = (dow + 6) % 7;
+		if(b2) dow = fix_hijri(d, dout);
+	}
+	out.y = dout[0]; out.m = dout[1]; out.d = dout[2];
+	out.S = time % 60; time = Math.floor(time / 60);
+	out.M = time % 60; time = Math.floor(time / 60);
+	out.H = time;
+	out.q = dow;
+	return out;
+}
+SSF.parse_date_code = parse_date_code;
+var basedate = new Date(1899, 11, 31, 0, 0, 0);
+var dnthresh = basedate.getTime();
+var base1904 = new Date(1900, 2, 1, 0, 0, 0);
+function datenum_local(v/*:Date*/, date1904/*:?boolean*/)/*:number*/ {
+	var epoch = v.getTime();
+	if(date1904) epoch -= 1461*24*60*60*1000;
+	else if(v >= base1904) epoch += 24*60*60*1000;
+	return (epoch - (dnthresh + (v.getTimezoneOffset() - basedate.getTimezoneOffset()) * 60000)) / (24 * 60 * 60 * 1000);
+}
+function general_fmt_int(v/*:number*/)/*:string*/ { return v.toString(10); }
 SSF._general_int = general_fmt_int;
 var general_fmt_num = (function make_general_fmt_num() {
 var gnr1 = /\.(\d*[1-9])0+$/, gnr2 = /\.0*$/, gnr4 = /\.(\d*[1-9])0+/, gnr5 = /\.0*[Ee]/, gnr6 = /(E[+-])(\d)$/;
@@ -132,50 +165,20 @@ return function general_fmt_num(v/*:number*/)/*:string*/ {
 	return gfn5(gfn4(o));
 };})();
 SSF._general_num = general_fmt_num;
-function general_fmt(v/*:any*/) {
+function general_fmt(v/*:any*/, opts/*:any*/) {
 	switch(typeof v) {
 		case 'string': return v;
 		case 'boolean': return v ? "TRUE" : "FALSE";
-		case 'number': return (v|0) === v ? general_fmt_int(v/*, opts*/) : general_fmt_num(v/*, opts*/);
+		case 'number': return (v|0) === v ? general_fmt_int(v) : general_fmt_num(v);
 		case 'undefined': return "";
-		case 'object': if(v == null) return "";
+		case 'object':
+			if(v == null) return "";
+			if(v instanceof Date) return format(14, datenum_local(v, opts && opts.date1904), opts);
 	}
 	throw new Error("unsupported value in General format: " + v);
 }
 SSF._general = general_fmt;
-function fix_hijri(/*date, o*/) { return 0; }
-function parse_date_code(v/*:number*/,opts/*:?any*/,b2/*:?boolean*/) {
-	if(v > 2958465 || v < 0) return null;
-	var date = (v|0), time = Math.floor(86400 * (v - date)), dow=0;
-	var dout=[];
-	var out={D:date, T:time, u:86400*(v-date)-time,y:0,m:0,d:0,H:0,M:0,S:0,q:0};
-	if(Math.abs(out.u) < 1e-6) out.u = 0;
-	fixopts(opts != null ? opts : (opts=[]));
-	if(opts.date1904) date += 1462;
-	if(out.u > 0.9999) {
-		out.u = 0;
-		if(++time == 86400) { out.T = time = 0; ++date; ++out.D; }
-	}
-	if(date === 60) {dout = b2 ? [1317,10,29] : [1900,2,29]; dow=3;}
-	else if(date === 0) {dout = b2 ? [1317,8,29] : [1900,1,0]; dow=6;}
-	else {
-		if(date > 60) --date;
-		/* 1 = Jan 1 1900 in Gregorian */
-		var d = new Date(1900, 0, 1);
-		d.setDate(d.getDate() + date - 1);
-		dout = [d.getFullYear(), d.getMonth()+1,d.getDate()];
-		dow = d.getDay();
-		if(date < 60) dow = (dow + 6) % 7;
-		if(b2) dow = fix_hijri(d, dout);
-	}
-	out.y = dout[0]; out.m = dout[1]; out.d = dout[2];
-	out.S = time % 60; time = Math.floor(time / 60);
-	out.M = time % 60; time = Math.floor(time / 60);
-	out.H = time;
-	out.q = dow;
-	return out;
-}
-SSF.parse_date_code = parse_date_code;
+function fix_hijri(/*::date, o*/) { return 0; }
 /*jshint -W086 */
 function write_date(type/*:number*/, fmt/*:string*/, val, ss0/*:?number*/)/*:string*/ {
 	var o="", ss=0, tt=0, y = val.y, out, outl = 0;
@@ -217,23 +220,17 @@ function write_date(type/*:number*/, fmt/*:string*/, val, ss0/*:?number*/)/*:str
 			default: throw 'bad minute format: ' + fmt;
 		} break;
 		case 115: /* 's' seconds */
-		if(val.u === 0) switch(fmt) {
-			case 's': case 'ss': return pad0(val.S, fmt.length);
-			case '.0': case '.00': case '.000':
-		}
-		switch(fmt) {
-			case 's': case 'ss': case '.0': case '.00': case '.000':
-				/*::if(!ss0) ss0 = 0; */
-				if(ss0 >= 2) tt = ss0 === 3 ? 1000 : 100;
-				else tt = ss0 === 1 ? 10 : 1;
-				ss = Math.round((tt)*(val.S + val.u));
-				if(ss >= 60*tt) ss = 0;
-				if(fmt === 's') return ss === 0 ? "0" : ""+ss/tt;
-				o = pad0(ss,2 + ss0);
-				if(fmt === 'ss') return o.substr(0,2);
-				return "." + o.substr(2,fmt.length-1);
-			default: throw 'bad second format: ' + fmt;
-		}
+			if(fmt != 's' && fmt != 'ss' && fmt != '.0' && fmt != '.00' && fmt != '.000') throw 'bad second format: ' + fmt;
+			if(val.u === 0 && (fmt == "s" || fmt == "ss")) return pad0(val.S, fmt.length);
+			/*::if(!ss0) ss0 = 0; */
+			if(ss0 >= 2) tt = ss0 === 3 ? 1000 : 100;
+			else tt = ss0 === 1 ? 10 : 1;
+			ss = Math.round((tt)*(val.S + val.u));
+			if(ss >= 60*tt) ss = 0;
+			if(fmt === 's') return ss === 0 ? "0" : ""+ss/tt;
+			o = pad0(ss,2 + ss0);
+			if(fmt === 'ss') return o.substr(0,2);
+			return "." + o.substr(2,fmt.length-1);
 		case 90: /* 'Z' absolute time */
 		switch(fmt) {
 			case '[h]': case '[hh]': out = val.D*24+val.H; break;
@@ -248,12 +245,13 @@ function write_date(type/*:number*/, fmt/*:string*/, val, ss0/*:?number*/)/*:str
 }
 /*jshint +W086 */
 function commaify(s/*:string*/)/*:string*/ {
-	if(s.length <= 3) return s;
-	var j = (s.length % 3), o = s.substr(0,j);
-	for(; j!=s.length; j+=3) o+=(o.length > 0 ? "," : "") + s.substr(j,3);
+	var w = 3;
+	if(s.length <= w) return s;
+	var j = (s.length % w), o = s.substr(0,j);
+	for(; j!=s.length; j+=w) o+=(o.length > 0 ? "," : "") + s.substr(j,w);
 	return o;
 }
-var write_num = (function make_write_num(){
+var write_num/*:SSF_write_num*/ = (function make_write_num(){
 var pct1 = /%/g;
 function write_num_pct(type/*:string*/, fmt/*:string*/, val/*:number*/)/*:string*/{
 	var sfmt = fmt.replace(pct1,""), mul = fmt.length - sfmt.length;
@@ -591,7 +589,7 @@ function fmt_is_date(fmt/*:string*/)/*:boolean*/ {
 }
 SSF.is_date = fmt_is_date;
 function eval_fmt(fmt/*:string*/, v/*:any*/, opts/*:any*/, flen/*:number*/) {
-	var out = [], o = "", i = 0, c = "", lst='t', q, dt, j, cc;
+	var out = [], o = "", i = 0, c = "", lst='t', dt, j, cc;
 	var hr='H';
 	/* Tokenize */
 	while(i < fmt.length) {
@@ -619,12 +617,12 @@ function eval_fmt(fmt/*:string*/, v/*:any*/, opts/*:any*/, flen/*:number*/) {
 			case 'm': case 'd': case 'y': case 'h': case 's': case 'e': case 'g':
 				if(v < 0) return "";
 				if(dt==null) { dt=parse_date_code(v, opts); if(dt==null) return ""; }
-				o = c; while(++i<fmt.length && fmt.charAt(i).toLowerCase() === c) o+=c;
+				o = c; while(++i < fmt.length && fmt.charAt(i).toLowerCase() === c) o+=c;
 				if(c === 'm' && lst.toLowerCase() === 'h') c = 'M';
 				if(c === 'h') c = hr;
 				out[out.length] = {t:c, v:o}; lst = c; break;
 			case 'A': case 'a':
-				q={t:c, v:c};
+				var q={t:c, v:c};
 				if(dt==null) dt=parse_date_code(v, opts);
 				if(fmt.substr(i, 3).toUpperCase() === "A/P") { if(dt!=null) q.v = dt.H >= 12 ? "P" : "A"; q.t = 'T'; hr='h';i+=3;}
 				else if(fmt.substr(i,5).toUpperCase() === "AM/PM") { if(dt!=null) q.v = dt.H >= 12 ? "PM" : "AM"; q.t = 'T'; i+=5; hr='h'; }
@@ -647,7 +645,7 @@ function eval_fmt(fmt/*:string*/, v/*:any*/, opts/*:any*/, flen/*:number*/) {
 			/* Numbers */
 			case '.':
 				if(dt != null) {
-					o = c; while((c=fmt.charAt(++i)) === "0") o += c;
+					o = c; while(++i < fmt.length && (c=fmt.charAt(i)) === "0") o += c;
 					out[out.length] = {t:'s', v:o}; break;
 				}
 				/* falls through */
@@ -656,7 +654,7 @@ function eval_fmt(fmt/*:string*/, v/*:any*/, opts/*:any*/, flen/*:number*/) {
 				out[out.length] = {t:'n', v:o}; break;
 			case '?':
 				o = c; while(fmt.charAt(++i) === c) o+=c;
-				q={t:c, v:o}; out[out.length] = q; lst = c; break;
+				out[out.length] = {t:c, v:o}; lst = c; break;
 			case '*': ++i; if(fmt.charAt(i) == ' ' || fmt.charAt(i) == '*') ++i; break; // **
 			case '(': case ')': out[out.length] = {t:(flen===1?'t':c), v:c}; ++i; break;
 			case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':
@@ -807,7 +805,7 @@ function chkcond(v, rr) {
 	}
 	return false;
 }
-function choose_fmt(f/*:string*/, v) {
+function choose_fmt(f/*:string*/, v/*:any*/) {
 	var fmt = split_fmt(f);
 	var l = fmt.length, lat = fmt[l-1].indexOf("@");
 	if(l<4 && lat>-1) --l;
@@ -842,17 +840,37 @@ function format(fmt/*:string|number*/,v/*:any*/,o/*:?any*/) {
 			break;
 	}
 	if(isgeneral(sfmt,0)) return general_fmt(v, o);
+	if(v instanceof Date) v = datenum_local(v, o.date1904);
 	var f = choose_fmt(sfmt, v);
 	if(isgeneral(f[1])) return general_fmt(v, o);
 	if(v === true) v = "TRUE"; else if(v === false) v = "FALSE";
 	else if(v === "" || v == null) return "";
 	return eval_fmt(f[1], v, o, f[0]);
 }
+function load_entry(fmt/*:string*/, idx/*:?number*/)/*:number*/ {
+	if(typeof idx != 'number') {
+		idx = +idx || -1;
+/*::if(typeof idx != 'number') return 0x188; */
+		for(var i = 0; i < 0x0188; ++i) {
+/*::if(typeof idx != 'number') return 0x188; */
+			if(table_fmt[i] == undefined) { if(idx < 0) idx = i; continue; }
+			if(table_fmt[i] == fmt) { idx = i; break; }
+		}
+/*::if(typeof idx != 'number') return 0x188; */
+		if(idx < 0) idx = 0x187;
+	}
+/*::if(typeof idx != 'number') return 0x188; */
+	table_fmt[idx] = fmt;
+	return idx;
+}
+SSF.load = load_entry;
 SSF._table = table_fmt;
-SSF.load = function load_entry(fmt/*:string*/, idx/*:number*/) { table_fmt[idx] = fmt; };
-SSF.format = format;
-SSF.get_table = function get_table() { return table_fmt; };
-SSF.load_table = function load_table(tbl/*:{[n:number]:string}*/) { for(var i=0; i!=0x0188; ++i) if(tbl[i] !== undefined) SSF.load(tbl[i], i); };
+SSF.get_table = function get_table()/*:SSFTable*/ { return table_fmt; };
+SSF.load_table = function load_table(tbl/*:SSFTable*/)/*:void*/ {
+	for(var i=0; i!=0x0188; ++i)
+		if(tbl[i] !== undefined) load_entry(tbl[i], i);
+};
 SSF.init_table = init_table;
+SSF.format = format;
 };
 make_ssf(SSF);

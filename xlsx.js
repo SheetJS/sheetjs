@@ -6,7 +6,7 @@
 /*global global, exports, module, require:false, process:false, Buffer:false */
 var XLSX = {};
 (function make_xlsx(XLSX){
-XLSX.version = '0.10.8';
+XLSX.version = '0.10.9';
 var current_codepage = 1200;
 /*global cptable:true */
 if(typeof module !== "undefined" && typeof require !== 'undefined') {
@@ -110,9 +110,9 @@ var bconcat = function(bufs) { return [].concat.apply([], bufs); };
 var chr0 = /\u0000/g, chr1 = /[\u0001-\u0006]/;
 /* ssf.js (C) 2013-present SheetJS -- http://sheetjs.com */
 /*jshint -W041 */
-var SSF = {};
+var SSF = ({});
 var make_ssf = function make_ssf(SSF){
-SSF.version = '0.9.4';
+SSF.version = '0.10.0';
 function _strrev(x) { var o = "", i = x.length-1; while(i>=0) o += x.charAt(i--); return o; }
 function fill(c,l) { var o = ""; while(o.length < l) o+=c; return o; }
 function pad0(v,d){var t=""+v; return t.length>=d?t:fill('0',d-t.length)+t;}
@@ -123,16 +123,6 @@ function pad0r2(v,d){var t=""+v; return t.length>=d?t:fill('0',d-t.length)+t;}
 var p2_32 = Math.pow(2,32);
 function pad0r(v,d){if(v>p2_32||v<-p2_32) return pad0r1(v,d); var i = Math.round(v); return pad0r2(i,d); }
 function isgeneral(s, i) { i = i || 0; return s.length >= 7 + i && (s.charCodeAt(i)|32) === 103 && (s.charCodeAt(i+1)|32) === 101 && (s.charCodeAt(i+2)|32) === 110 && (s.charCodeAt(i+3)|32) === 101 && (s.charCodeAt(i+4)|32) === 114 && (s.charCodeAt(i+5)|32) === 97 && (s.charCodeAt(i+6)|32) === 108; }
-/* Options */
-var opts_fmt = [
-	["date1904", 0],
-	["output", ""],
-	["WTF", false]
-];
-function fixopts(o){
-	for(var y = 0; y != opts_fmt.length; ++y) if(o[opts_fmt[y][0]]===undefined) o[opts_fmt[y][0]]=opts_fmt[y][1];
-}
-SSF.opts = opts_fmt;
 var days = [
 	['Sun', 'Sunday'],
 	['Mon', 'Monday'],
@@ -211,7 +201,47 @@ function frac(x, D, mixed) {
 	var q = Math.floor(sgn * P/Q);
 	return [q, sgn*P - q*Q, Q];
 }
-function general_fmt_int(v) { return ""+v; }
+function parse_date_code(v,opts,b2) {
+	if(v > 2958465 || v < 0) return null;
+	var date = (v|0), time = Math.floor(86400 * (v - date)), dow=0;
+	var dout=[];
+	var out={D:date, T:time, u:86400*(v-date)-time,y:0,m:0,d:0,H:0,M:0,S:0,q:0};
+	if(Math.abs(out.u) < 1e-6) out.u = 0;
+	if(opts && opts.date1904) date += 1462;
+	if(out.u > 0.9999) {
+		out.u = 0;
+		if(++time == 86400) { out.T = time = 0; ++date; ++out.D; }
+	}
+	if(date === 60) {dout = b2 ? [1317,10,29] : [1900,2,29]; dow=3;}
+	else if(date === 0) {dout = b2 ? [1317,8,29] : [1900,1,0]; dow=6;}
+	else {
+		if(date > 60) --date;
+		/* 1 = Jan 1 1900 in Gregorian */
+		var d = new Date(1900, 0, 1);
+		d.setDate(d.getDate() + date - 1);
+		dout = [d.getFullYear(), d.getMonth()+1,d.getDate()];
+		dow = d.getDay();
+		if(date < 60) dow = (dow + 6) % 7;
+		if(b2) dow = fix_hijri(d, dout);
+	}
+	out.y = dout[0]; out.m = dout[1]; out.d = dout[2];
+	out.S = time % 60; time = Math.floor(time / 60);
+	out.M = time % 60; time = Math.floor(time / 60);
+	out.H = time;
+	out.q = dow;
+	return out;
+}
+SSF.parse_date_code = parse_date_code;
+var basedate = new Date(1899, 11, 31, 0, 0, 0);
+var dnthresh = basedate.getTime();
+var base1904 = new Date(1900, 2, 1, 0, 0, 0);
+function datenum_local(v, date1904) {
+	var epoch = v.getTime();
+	if(date1904) epoch -= 1461*24*60*60*1000;
+	else if(v >= base1904) epoch += 24*60*60*1000;
+	return (epoch - (dnthresh + (v.getTimezoneOffset() - basedate.getTimezoneOffset()) * 60000)) / (24 * 60 * 60 * 1000);
+}
+function general_fmt_int(v) { return v.toString(10); }
 SSF._general_int = general_fmt_int;
 var general_fmt_num = (function make_general_fmt_num() {
 var gnr1 = /\.(\d*[1-9])0+$/, gnr2 = /\.0*$/, gnr4 = /\.(\d*[1-9])0+/, gnr5 = /\.0*[Ee]/, gnr6 = /(E[+-])(\d)$/;
@@ -242,50 +272,20 @@ return function general_fmt_num(v) {
 	return gfn5(gfn4(o));
 };})();
 SSF._general_num = general_fmt_num;
-function general_fmt(v) {
+function general_fmt(v, opts) {
 	switch(typeof v) {
 		case 'string': return v;
 		case 'boolean': return v ? "TRUE" : "FALSE";
-		case 'number': return (v|0) === v ? general_fmt_int(v/*, opts*/) : general_fmt_num(v/*, opts*/);
+		case 'number': return (v|0) === v ? general_fmt_int(v) : general_fmt_num(v);
 		case 'undefined': return "";
-		case 'object': if(v == null) return "";
+		case 'object':
+			if(v == null) return "";
+			if(v instanceof Date) return format(14, datenum_local(v, opts && opts.date1904), opts);
 	}
 	throw new Error("unsupported value in General format: " + v);
 }
 SSF._general = general_fmt;
-function fix_hijri(/*date, o*/) { return 0; }
-function parse_date_code(v,opts,b2) {
-	if(v > 2958465 || v < 0) return null;
-	var date = (v|0), time = Math.floor(86400 * (v - date)), dow=0;
-	var dout=[];
-	var out={D:date, T:time, u:86400*(v-date)-time,y:0,m:0,d:0,H:0,M:0,S:0,q:0};
-	if(Math.abs(out.u) < 1e-6) out.u = 0;
-	fixopts(opts != null ? opts : (opts=[]));
-	if(opts.date1904) date += 1462;
-	if(out.u > 0.9999) {
-		out.u = 0;
-		if(++time == 86400) { out.T = time = 0; ++date; ++out.D; }
-	}
-	if(date === 60) {dout = b2 ? [1317,10,29] : [1900,2,29]; dow=3;}
-	else if(date === 0) {dout = b2 ? [1317,8,29] : [1900,1,0]; dow=6;}
-	else {
-		if(date > 60) --date;
-		/* 1 = Jan 1 1900 in Gregorian */
-		var d = new Date(1900, 0, 1);
-		d.setDate(d.getDate() + date - 1);
-		dout = [d.getFullYear(), d.getMonth()+1,d.getDate()];
-		dow = d.getDay();
-		if(date < 60) dow = (dow + 6) % 7;
-		if(b2) dow = fix_hijri(d, dout);
-	}
-	out.y = dout[0]; out.m = dout[1]; out.d = dout[2];
-	out.S = time % 60; time = Math.floor(time / 60);
-	out.M = time % 60; time = Math.floor(time / 60);
-	out.H = time;
-	out.q = dow;
-	return out;
-}
-SSF.parse_date_code = parse_date_code;
+function fix_hijri() { return 0; }
 /*jshint -W086 */
 function write_date(type, fmt, val, ss0) {
 	var o="", ss=0, tt=0, y = val.y, out, outl = 0;
@@ -327,22 +327,16 @@ function write_date(type, fmt, val, ss0) {
 			default: throw 'bad minute format: ' + fmt;
 		} break;
 		case 115: /* 's' seconds */
-		if(val.u === 0) switch(fmt) {
-			case 's': case 'ss': return pad0(val.S, fmt.length);
-			case '.0': case '.00': case '.000':
-		}
-		switch(fmt) {
-			case 's': case 'ss': case '.0': case '.00': case '.000':
+			if(fmt != 's' && fmt != 'ss' && fmt != '.0' && fmt != '.00' && fmt != '.000') throw 'bad second format: ' + fmt;
+			if(val.u === 0 && (fmt == "s" || fmt == "ss")) return pad0(val.S, fmt.length);
 if(ss0 >= 2) tt = ss0 === 3 ? 1000 : 100;
-				else tt = ss0 === 1 ? 10 : 1;
-				ss = Math.round((tt)*(val.S + val.u));
-				if(ss >= 60*tt) ss = 0;
-				if(fmt === 's') return ss === 0 ? "0" : ""+ss/tt;
-				o = pad0(ss,2 + ss0);
-				if(fmt === 'ss') return o.substr(0,2);
-				return "." + o.substr(2,fmt.length-1);
-			default: throw 'bad second format: ' + fmt;
-		}
+			else tt = ss0 === 1 ? 10 : 1;
+			ss = Math.round((tt)*(val.S + val.u));
+			if(ss >= 60*tt) ss = 0;
+			if(fmt === 's') return ss === 0 ? "0" : ""+ss/tt;
+			o = pad0(ss,2 + ss0);
+			if(fmt === 'ss') return o.substr(0,2);
+			return "." + o.substr(2,fmt.length-1);
 		case 90: /* 'Z' absolute time */
 		switch(fmt) {
 			case '[h]': case '[hh]': out = val.D*24+val.H; break;
@@ -357,9 +351,10 @@ if(ss0 >= 2) tt = ss0 === 3 ? 1000 : 100;
 }
 /*jshint +W086 */
 function commaify(s) {
-	if(s.length <= 3) return s;
-	var j = (s.length % 3), o = s.substr(0,j);
-	for(; j!=s.length; j+=3) o+=(o.length > 0 ? "," : "") + s.substr(j,3);
+	var w = 3;
+	if(s.length <= w) return s;
+	var j = (s.length % w), o = s.substr(0,j);
+	for(; j!=s.length; j+=w) o+=(o.length > 0 ? "," : "") + s.substr(j,w);
 	return o;
 }
 var write_num = (function make_write_num(){
@@ -698,7 +693,7 @@ function fmt_is_date(fmt) {
 }
 SSF.is_date = fmt_is_date;
 function eval_fmt(fmt, v, opts, flen) {
-	var out = [], o = "", i = 0, c = "", lst='t', q, dt, j, cc;
+	var out = [], o = "", i = 0, c = "", lst='t', dt, j, cc;
 	var hr='H';
 	/* Tokenize */
 	while(i < fmt.length) {
@@ -726,12 +721,12 @@ function eval_fmt(fmt, v, opts, flen) {
 			case 'm': case 'd': case 'y': case 'h': case 's': case 'e': case 'g':
 				if(v < 0) return "";
 				if(dt==null) { dt=parse_date_code(v, opts); if(dt==null) return ""; }
-				o = c; while(++i<fmt.length && fmt.charAt(i).toLowerCase() === c) o+=c;
+				o = c; while(++i < fmt.length && fmt.charAt(i).toLowerCase() === c) o+=c;
 				if(c === 'm' && lst.toLowerCase() === 'h') c = 'M';
 				if(c === 'h') c = hr;
 				out[out.length] = {t:c, v:o}; lst = c; break;
 			case 'A': case 'a':
-				q={t:c, v:c};
+				var q={t:c, v:c};
 				if(dt==null) dt=parse_date_code(v, opts);
 				if(fmt.substr(i, 3).toUpperCase() === "A/P") { if(dt!=null) q.v = dt.H >= 12 ? "P" : "A"; q.t = 'T'; hr='h';i+=3;}
 				else if(fmt.substr(i,5).toUpperCase() === "AM/PM") { if(dt!=null) q.v = dt.H >= 12 ? "PM" : "AM"; q.t = 'T'; i+=5; hr='h'; }
@@ -754,7 +749,7 @@ function eval_fmt(fmt, v, opts, flen) {
 			/* Numbers */
 			case '.':
 				if(dt != null) {
-					o = c; while((c=fmt.charAt(++i)) === "0") o += c;
+					o = c; while(++i < fmt.length && (c=fmt.charAt(i)) === "0") o += c;
 					out[out.length] = {t:'s', v:o}; break;
 				}
 				/* falls through */
@@ -763,7 +758,7 @@ function eval_fmt(fmt, v, opts, flen) {
 				out[out.length] = {t:'n', v:o}; break;
 			case '?':
 				o = c; while(fmt.charAt(++i) === c) o+=c;
-				q={t:c, v:o}; out[out.length] = q; lst = c; break;
+				out[out.length] = {t:c, v:o}; lst = c; break;
 			case '*': ++i; if(fmt.charAt(i) == ' ' || fmt.charAt(i) == '*') ++i; break; // **
 			case '(': case ')': out[out.length] = {t:(flen===1?'t':c), v:c}; ++i; break;
 			case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':
@@ -946,18 +941,34 @@ function format(fmt,v,o) {
 			break;
 	}
 	if(isgeneral(sfmt,0)) return general_fmt(v, o);
+	if(v instanceof Date) v = datenum_local(v, o.date1904);
 	var f = choose_fmt(sfmt, v);
 	if(isgeneral(f[1])) return general_fmt(v, o);
 	if(v === true) v = "TRUE"; else if(v === false) v = "FALSE";
 	else if(v === "" || v == null) return "";
 	return eval_fmt(f[1], v, o, f[0]);
 }
+function load_entry(fmt, idx) {
+	if(typeof idx != 'number') {
+		idx = +idx || -1;
+for(var i = 0; i < 0x0188; ++i) {
+if(table_fmt[i] == undefined) { if(idx < 0) idx = i; continue; }
+			if(table_fmt[i] == fmt) { idx = i; break; }
+		}
+if(idx < 0) idx = 0x187;
+	}
+table_fmt[idx] = fmt;
+	return idx;
+}
+SSF.load = load_entry;
 SSF._table = table_fmt;
-SSF.load = function load_entry(fmt, idx) { table_fmt[idx] = fmt; };
-SSF.format = format;
 SSF.get_table = function get_table() { return table_fmt; };
-SSF.load_table = function load_table(tbl) { for(var i=0; i!=0x0188; ++i) if(tbl[i] !== undefined) SSF.load(tbl[i], i); };
+SSF.load_table = function load_table(tbl) {
+	for(var i=0; i!=0x0188; ++i)
+		if(tbl[i] !== undefined) load_entry(tbl[i], i);
+};
 SSF.init_table = init_table;
+SSF.format = format;
 };
 make_ssf(SSF);
 /* map from xlml named formats to SSF TODO: localize */
@@ -1015,8 +1026,8 @@ var DO_NOT_EXPORT_CFB = true;
 /* [MS-CFB] v20130118 */
 var CFB = (function _CFB(){
 var exports = {};
-exports.version = '0.11.1';
-function parse(file) {
+exports.version = '0.12.0';
+function parse(file, options) {
 var mver = 3; // major version
 var ssz = 512; // sector size
 var nmfs = 0; // number of mini FAT sectors
@@ -1076,7 +1087,7 @@ difat_start = blob.read_shift(4, 'i');
 ndfs = blob.read_shift(4, 'i');
 
 // Grab FAT Sector Locations
-for(var q, j = 0; j < 109; ++j) { /* 109 = (512 - blob.l)>>>2; */
+for(var q = -1, j = 0; j < 109; ++j) { /* 109 = (512 - blob.l)>>>2; */
 	q = blob.read_shift(4, 'i');
 	if(q<0) break;
 	fat_addrs[j] = q;
@@ -1103,7 +1114,6 @@ read_directory(dir_start, sector_list, sectors, Paths, nmfs, files, FileIndex);
 build_full_paths(FileIndex, FullPathDir, FullPaths, Paths);
 
 var root_name = Paths.shift();
-Paths.root = root_name;
 
 /* [MS-CFB] 2.6.4 (Unicode 3.0.1 case conversion) */
 var find_path = make_find_path(FullPaths, Paths, FileIndex, files, root_name);
@@ -1154,7 +1164,7 @@ function check_shifts(blob, mver) {
 /** Break the file up into sectors */
 function sectorify(file, ssz) {
 	var nsectors = Math.ceil(file.length/ssz)-1;
-	var sectors = new Array(nsectors);
+	var sectors = [];
 	for(var i=1; i < nsectors; ++i) sectors[i-1] = file.slice(i*ssz,(i+1)*ssz);
 	sectors[nsectors-1] = file.slice(nsectors*ssz);
 	return sectors;
@@ -1163,7 +1173,7 @@ function sectorify(file, ssz) {
 /* [MS-CFB] 2.6.4 Red-Black Tree */
 function build_full_paths(FI, FPD, FP, Paths) {
 	var i = 0, L = 0, R = 0, C = 0, j = 0, pl = Paths.length;
-	var dad = new Array(pl), q = new Array(pl);
+	var dad = [], q = [];
 
 	for(; i < pl; ++i) { dad[i]=q[i]=i; FP[i]=Paths[i]; }
 
@@ -1203,12 +1213,12 @@ function build_full_paths(FI, FPD, FP, Paths) {
 
 /* [MS-CFB] 2.6.4 */
 function make_find_path(FullPaths, Paths, FileIndex, files, root_name) {
-	var UCFullPaths = new Array(FullPaths.length);
-	var UCPaths = new Array(Paths.length), i;
+	var UCFullPaths = [];
+	var UCPaths = [], i = 0;
 	for(i = 0; i < FullPaths.length; ++i) UCFullPaths[i] = FullPaths[i].toUpperCase().replace(chr0,'').replace(chr1,'!');
 	for(i = 0; i < Paths.length; ++i) UCPaths[i] = Paths[i].toUpperCase().replace(chr0,'').replace(chr1,'!');
 	return function find_path(path) {
-		var k;
+		var k = false;
 		if(path.charCodeAt(0) === 47 /* "/" */) { k=true; path = root_name + path; }
 		else k = path.indexOf("/") !== -1;
 		var UCPath = path.toUpperCase().replace(chr0,'').replace(chr1,'!');
@@ -1221,7 +1231,7 @@ function make_find_path(FullPaths, Paths, FileIndex, files, root_name) {
 /** Chase down the rest of the DIFAT chain to build a comprehensive list
     DIFAT chains by storing the next sector number as the last 32 bytes */
 function sleuth_fat(idx, cnt, sectors, ssz, fat_addrs) {
-	var q;
+	var q = ENDOFCHAIN;
 	if(idx === ENDOFCHAIN) {
 		if(cnt !== 0) throw new Error("DIFAT chain shorter than expected");
 	} else if(idx !== -1 /*FREESECT*/) {
@@ -1238,11 +1248,9 @@ function sleuth_fat(idx, cnt, sectors, ssz, fat_addrs) {
 /** Follow the linked list of sectors for a given starting point */
 function get_sector_list(sectors, start, fat_addrs, ssz, chkd) {
 	var sl = sectors.length;
-	var buf, buf_chain;
-	if(!chkd) chkd = new Array(sl);
-	var modulus = ssz - 1, j, jj;
-	buf = [];
-	buf_chain = [];
+	var buf = [], buf_chain = [];
+	if(!chkd) chkd = [];
+	var modulus = ssz - 1, j = 0, jj = 0;
 	for(j=start; j>=0;) {
 		chkd[j] = true;
 		buf[buf.length] = j;
@@ -1258,13 +1266,13 @@ function get_sector_list(sectors, start, fat_addrs, ssz, chkd) {
 
 /** Chase down the sector linked lists */
 function make_sector_list(sectors, dir_start, fat_addrs, ssz) {
-	var sl = sectors.length, sector_list = new Array(sl);
-	var chkd = new Array(sl), buf, buf_chain;
-	var modulus = ssz - 1, i, j, k, jj;
+	var sl = sectors.length, sector_list = ([]);
+	var chkd = [], buf = [], buf_chain = [];
+	var modulus = ssz - 1, i=0, j=0, k=0, jj=0;
 	for(i=0; i < sl; ++i) {
-		buf = [];
+		buf = ([]);
 		k = (i + dir_start); if(k >= sl) k-=sl;
-		if(chkd[k] === true) continue;
+		if(chkd[k]) continue;
 		buf_chain = [];
 		for(j=k; j>=0;) {
 			chkd[j] = true;
@@ -1276,25 +1284,24 @@ function make_sector_list(sectors, dir_start, fat_addrs, ssz) {
 			if(!sectors[addr]) break;
 			j = __readInt32LE(sectors[addr], jj);
 		}
-		sector_list[k] = {nodes: buf, data:__toBuffer([buf_chain])};
+		sector_list[k] = ({nodes: buf, data:__toBuffer([buf_chain])});
 	}
 	return sector_list;
 }
 
 /* [MS-CFB] 2.6.1 Compound File Directory Entry */
 function read_directory(dir_start, sector_list, sectors, Paths, nmfs, files, FileIndex) {
-	var blob;
 	var minifat_store = 0, pl = (Paths.length?2:0);
 	var sector = sector_list[dir_start].data;
-	var i = 0, namelen = 0, name, o, ctime, mtime;
+	var i = 0, namelen = 0, name;
 	for(; i < sector.length; i+= 128) {
-		blob = sector.slice(i, i+128);
+		var blob = sector.slice(i, i+128);
 		prep_blob(blob, 64);
 		namelen = blob.read_shift(2);
 		if(namelen === 0) continue;
 		name = __utf16le(blob,0,namelen-pl);
 		Paths.push(name);
-		o = ({
+		var o = ({
 			name:  name,
 			type:  blob.read_shift(1),
 			color: blob.read_shift(1),
@@ -1302,16 +1309,14 @@ function read_directory(dir_start, sector_list, sectors, Paths, nmfs, files, Fil
 			R:     blob.read_shift(4, 'i'),
 			C:     blob.read_shift(4, 'i'),
 			clsid: blob.read_shift(16),
-			state: blob.read_shift(4, 'i')
+			state: blob.read_shift(4, 'i'),
+			start: 0,
+			size: 0
 		});
-		ctime = blob.read_shift(2) + blob.read_shift(2) + blob.read_shift(2) + blob.read_shift(2);
-		if(ctime !== 0) {
-			o.ctime = ctime; o.ct = read_date(blob, blob.l-8);
-		}
-		mtime = blob.read_shift(2) + blob.read_shift(2) + blob.read_shift(2) + blob.read_shift(2);
-		if(mtime !== 0) {
-			o.mtime = mtime; o.mt = read_date(blob, blob.l-8);
-		}
+		var ctime = blob.read_shift(2) + blob.read_shift(2) + blob.read_shift(2) + blob.read_shift(2);
+		if(ctime !== 0) o.ct = read_date(blob, blob.l-8);
+		var mtime = blob.read_shift(2) + blob.read_shift(2) + blob.read_shift(2) + blob.read_shift(2);
+		if(mtime !== 0) o.mt = read_date(blob, blob.l-8);
 		o.start = blob.read_shift(4, 'i');
 		o.size = blob.read_shift(4, 'i');
 		if(o.type === 5) { /* root */
@@ -1322,12 +1327,12 @@ function read_directory(dir_start, sector_list, sectors, Paths, nmfs, files, Fil
 			o.storage = 'fat';
 			if(sector_list[o.start] === undefined) sector_list[o.start] = get_sector_list(sectors, o.start, sector_list.fat_addrs, sector_list.ssz);
 			sector_list[o.start].name = o.name;
-			o.content = sector_list[o.start].data.slice(0,o.size);
+			o.content = (sector_list[o.start].data.slice(0,o.size));
 			prep_blob(o.content, 0);
 		} else {
 			o.storage = 'minifat';
 			if(minifat_store !== ENDOFCHAIN && o.start !== ENDOFCHAIN) {
-				o.content = sector_list[minifat_store].data.slice(o.start*MSSZ,o.start*MSSZ+o.size);
+				o.content = (sector_list[minifat_store].data.slice(o.start*MSSZ,o.start*MSSZ+o.size));
 				prep_blob(o.content, 0);
 			}
 		}
@@ -1342,17 +1347,17 @@ function read_date(blob, offset) {
 
 var fs;
 function readFileSync(filename, options) {
-	if(fs === undefined) fs = require('fs');
+	if(fs == null) fs = require('fs');
 	return parse(fs.readFileSync(filename), options);
 }
 
 function readSync(blob, options) {
-	switch(options !== undefined && options.type !== undefined ? options.type : "base64") {
+	switch(options && options.type || "base64") {
 		case "file": return readFileSync(blob, options);
 		case "base64": return parse(s2a(Base64.decode(blob)), options);
 		case "binary": return parse(s2a(blob), options);
 	}
-	return parse(blob);
+	return parse(blob, options);
 }
 
 /** CFB Constants */

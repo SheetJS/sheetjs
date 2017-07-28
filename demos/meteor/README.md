@@ -26,6 +26,24 @@ The write demo:
 - generates file on client side
 - triggers a download.
 
+This demo uses the FileSaver.js library for writing files, installed through the
+[`pfafman:filesaver` wrapper](https://atmospherejs.com/pfafman/filesaver):
+
+```bash
+meteor add pfafman:filesaver
+```
+
+## Setup
+
+This tree does not include the `.meteor` structure.  Rebuild the project with:
+
+```bash
+meteor create .
+npm install babel-runtime meteor-node-stubs xlsx
+meteor add pfafman:filesaver
+meteor
+```
+
 
 ## Environment-specific features
 
