@@ -29,9 +29,19 @@ define `DO_NOT_EXPORT_SSF`.
 
 ## Usage
 
-`SSF.format(fmt, val, opts)` formats `val` using the format `fmt`.  If `fmt` is
-a string, it will be parsed and evaluated.  If `fmt` is a `number`, the actual
-format will be the corresponding entry in the internal format table.
+`SSF.format(fmt, val, opts)` formats `val` using the format `fmt`.
+
+If `fmt` is a string, it will be parsed and evaluated.  If `fmt` is a `number`,
+the actual format will be the corresponding entry in the internal format table.
+For a raw numeric format like `000`, the value should be passed as a string.
+
+Date arguments are interpreted in the local time of the JS client.
+
+The options argument may contain the following keys:
+
+| Option Name | Default | Description                                          |
+| :---------- | :-----: | :--------------------------------------------------- |
+| date1904    | false   | Use 1904 date system if true, 1900 system if false   |
 
 ### Manipulating the Internal Format Table
 

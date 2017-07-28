@@ -51,7 +51,7 @@ travis: ## Run test suite with minimal output
 
 .PHONY: ctest
 ctest: ## Build browser test fixtures
-	browserify -t brfs test/{dateNF,exp,fraction,general,implied,oddities,utilities,comma,valid}.js > ctest/test.js
+	browserify -t brfs test/{dateNF,dates,exp,fraction,general,implied,oddities,utilities,comma,valid}.js > ctest/test.js
 
 .PHONY: ctestserv
 ctestserv: ## Start a test server on port 8000

@@ -15,4 +15,12 @@ describe('General format', function() {
     assert.equal(SSF.format("General", undefined), "");
     assert.equal(SSF.format("General", null), "");
   });
+  it('should handle dates', function() {
+    assert.equal(SSF.format("General", new Date(2017, 1, 19)), "2/19/17");
+    assert.equal(SSF.format("General", new Date(2017, 1, 19), {date1904:true}), "2/19/17");
+    assert.equal(SSF.format("General", new Date(1901, 0, 1)), "1/1/01");
+    if(SSF.format("General", new Date(1901, 0, 1), {date1904:true}) == "1/1/01") throw new Error("date1904 invalid date");
+    assert.equal(SSF.format("General", new Date(1904, 0, 1)), "1/1/04");
+    assert.equal(SSF.format("General", new Date(1904, 0, 1), {date1904:true}), "1/1/04");
+  });
 });

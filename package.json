@@ -1,6 +1,6 @@
 {
 	"name": "ssf",
-	"version": "0.9.4",
+	"version": "0.10.0",
 	"author": "SheetJS",
 	"description": "Format data using ECMA-376 spreadsheet Format Codes",
 	"keywords": [ "format", "sprintf", "spreadsheet" ],
@@ -9,13 +9,13 @@
 	},
 	"main": "./ssf",
 	"dependencies": {
-		"voc":"",
-		"colors":"0.6.2",
+		"voc":"~1.0.0",
 		"frac":"~1.0.6"
 	},
 	"devDependencies": {
-		"mocha":"",
-		"@sheetjs/uglify-js":""
+		"mocha":"~2.5.3",
+		"blanket": "~1.2.3",
+		"@sheetjs/uglify-js":"~2.7.3"
 	},
 	"repository": { "type":"git", "url":"git://github.com/SheetJS/ssf.git" },
 	"scripts": {
