@@ -4,7 +4,7 @@ REQS=
 ADDONS=
 AUXTARGETS=
 CMDS=bin/ssf.njs
-HTMLLINT=
+HTMLLINT=index.html
 
 ULIB=$(shell echo $(LIB) | tr a-z A-Z)
 DEPS=$(sort $(wildcard bits/*.js))

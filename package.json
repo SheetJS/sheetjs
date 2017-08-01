@@ -1,7 +1,7 @@
 {
 	"name": "ssf",
-	"version": "0.10.0",
-	"author": "SheetJS",
+	"version": "0.10.1",
+	"author": "sheetjs",
 	"description": "Format data using ECMA-376 spreadsheet Format Codes",
 	"keywords": [ "format", "sprintf", "spreadsheet" ],
 	"bin": {
@@ -9,8 +9,7 @@
 	},
 	"main": "./ssf",
 	"dependencies": {
-		"voc":"~1.0.0",
-		"frac":"~1.0.6"
+		"frac":"~1.1.0"
 	},
 	"devDependencies": {
 		"mocha":"~2.5.3",
