@@ -224,7 +224,7 @@ Excel 2007, nothing outside of SheetJS or Excel supported the format.
 
 To promote a format-agnostic view, js-xlsx starts from a pure-JS representation
 that we call the ["Common Spreadsheet Format"](#common-spreadsheet-format).
-Emphasizing a uniform object representation enables radical features like format
+Emphasizing a uniform object representation enables new features like format
 conversion (e.g. reading an XLSX template and saving as XLS) and circumvents the
 "class trap".  By abstracting the complexities of the various formats, tools
 need not worry about the specific file type!
@@ -408,7 +408,7 @@ On Windows XP and up you can get the base64 encoding using `certutil`:
 The most common and interesting formats (XLS, XLSX/M, XLSB, ODS) are ultimately
 ZIP or CFB containers of files.  Neither format puts the directory structure at
 the beginning of the file: ZIP files place the Central Directory records at the
-end of the logical file, while CFB files can place the FAT structure anywhere in
+end of the logical file, while CFB files can place the storage info anywhere in
 the file! As a result, to properly handle these formats, a streaming function
 would have to buffer the entire file before commencing.  That belies the
 expectations of streaming, so we do not provide any streaming read API.
@@ -1400,7 +1400,7 @@ The exported `write` and `writeFile` functions accept an options argument:
   in this README may not be serialized.
 - `cellDates` only applies to XLSX output and is not guaranteed to work with
   third-party readers.  Excel itself does not usually write cells with type `d`
-  so non-Excel tools may ignore the data or blow up in the presence of dates.
+  so non-Excel tools may ignore the data or error in the presence of dates.
 - `Props` is an object mirroring the workbook `Props` field.  See the table from
   the [Workbook File Properties](#workbook-file-properties) section.
 - if specified, the string from `themeXLSX` will be saved as the primary theme
@@ -1828,7 +1828,7 @@ standard, instead focusing on parts necessary to extract and store raw data.
 
 UOS is a very similar format, and it comes in 2 varieties corresponding to ODS
 and FODS respectively.  For the most part, the difference between the formats
-lies in the names of tags and attributes.
+is in the names of tags and attributes.
 
 
 ### Other Single-Worksheet Formats
@@ -1933,7 +1933,7 @@ Start a local server and navigate to that directory to run the tests.
 
 To run the full in-browser tests, clone the repo for
 [oss.sheetjs.com](https://github.com/SheetJS/SheetJS.github.io) and replace
-the xlsx.js file (then fire up the browser and go to `stress.html`):
+the xlsx.js file (then open a browser window and go to `stress.html`):
 
 ```bash
 $ cp xlsx.js ../SheetJS.github.io

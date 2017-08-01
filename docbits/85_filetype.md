@@ -168,7 +168,7 @@ standard, instead focusing on parts necessary to extract and store raw data.
 
 UOS is a very similar format, and it comes in 2 varieties corresponding to ODS
 and FODS respectively.  For the most part, the difference between the formats
-lies in the names of tags and attributes.
+is in the names of tags and attributes.
 
 </details>
 

@@ -10,7 +10,7 @@ Excel 2007, nothing outside of SheetJS or Excel supported the format.
 
 To promote a format-agnostic view, js-xlsx starts from a pure-JS representation
 that we call the ["Common Spreadsheet Format"](#common-spreadsheet-format).
-Emphasizing a uniform object representation enables radical features like format
+Emphasizing a uniform object representation enables new features like format
 conversion (e.g. reading an XLSX template and saving as XLS) and circumvents the
 "class trap".  By abstracting the complexities of the various formats, tools
 need not worry about the specific file type!

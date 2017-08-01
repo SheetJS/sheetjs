@@ -1918,6 +1918,7 @@ describe('encryption', function() {
 	});
 });
 
+if(typeof cptable !== 'undefined')
 describe('multiformat tests', function() {
 var mfopts = opts;
 var mft = fs.readFileSync('multiformat.lst','utf-8').split("\n");

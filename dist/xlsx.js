@@ -6,11 +6,11 @@
 /*global global, exports, module, require:false, process:false, Buffer:false */
 var XLSX = {};
 (function make_xlsx(XLSX){
-XLSX.version = '0.10.9';
+XLSX.version = '0.11.0';
 var current_codepage = 1200;
 /*global cptable:true */
 if(typeof module !== "undefined" && typeof require !== 'undefined') {
-	if(typeof cptable === 'undefined') global.cptable = require('./dist/cpexcel.js');
+	if(typeof cptable === 'undefined') global.cptable = null;
 }
 function reset_cp() { set_cp(1200); }
 var set_cp = function(cp) { current_codepage = cp; };
@@ -1347,7 +1347,7 @@ function read_date(blob, offset) {
 
 var fs;
 function readFileSync(filename, options) {
-	if(fs == null) fs = require('fs');
+	if(fs == null) fs = null;
 	return parse(fs.readFileSync(filename), options);
 }
 
@@ -1583,8 +1583,8 @@ var _fs, jszip;
 if(typeof JSZip !== 'undefined') jszip = JSZip;
 if (typeof exports !== 'undefined') {
 	if (typeof module !== 'undefined' && module.exports) {
-		if(typeof jszip === 'undefined') jszip = require('./jszip.js');
-		_fs = require('fs');
+		if(typeof jszip === 'undefined') jszip = null;
+		_fs = null;
 	}
 }
 
@@ -2122,7 +2122,7 @@ var make_offcrypto = function(O, _crypto) {
 	var crypto;
 	if(typeof _crypto !== 'undefined') crypto = _crypto;
 	else if(typeof require !== 'undefined') {
-		try { crypto = require('crypto'); }
+		try { crypto = null; }
 		catch(e) { crypto = null; }
 	}
 
@@ -17974,7 +17974,7 @@ return utils;
 })(utils);
 
 if(has_buf && typeof require != 'undefined') (function() {
-	var Readable = require('stream').Readable;
+	var Readable = {}.Readable;
 
 	var write_csv_stream = function(sheet, opts) {
 		var stream = Readable();

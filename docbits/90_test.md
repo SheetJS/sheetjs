@@ -49,7 +49,7 @@ Start a local server and navigate to that directory to run the tests.
 
 To run the full in-browser tests, clone the repo for
 [oss.sheetjs.com](https://github.com/SheetJS/SheetJS.github.io) and replace
-the xlsx.js file (then fire up the browser and go to `stress.html`):
+the xlsx.js file (then open a browser window and go to `stress.html`):
 
 ```bash
 $ cp xlsx.js ../SheetJS.github.io

@@ -6,7 +6,7 @@
 /*global global, exports, module, require:false, process:false, Buffer:false */
 var XLSX = {};
 (function make_xlsx(XLSX){
-XLSX.version = '0.10.9';
+XLSX.version = '0.11.0';
 var current_codepage = 1200;
 /*:: declare var cptable:any; */
 /*global cptable:true */

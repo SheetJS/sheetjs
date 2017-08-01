@@ -19,7 +19,7 @@ The exported `write` and `writeFile` functions accept an options argument:
   in this README may not be serialized.
 - `cellDates` only applies to XLSX output and is not guaranteed to work with
   third-party readers.  Excel itself does not usually write cells with type `d`
-  so non-Excel tools may ignore the data or blow up in the presence of dates.
+  so non-Excel tools may ignore the data or error in the presence of dates.
 - `Props` is an object mirroring the workbook `Props` field.  See the table from
   the [Workbook File Properties](#workbook-file-properties) section.
 - if specified, the string from `themeXLSX` will be saved as the primary theme
