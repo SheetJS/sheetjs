@@ -17758,8 +17758,8 @@ function sheet_to_csv(sheet, opts) {
 	var endregex = new RegExp((FS=="|" ? "\\|" : FS)+"+$");
 	var row = "", cols = [];
 	o.dense = Array.isArray(sheet);
-	var colInfos = sheet["!cols"];
-	var rowInfos = sheet["!rows"];
+	var colInfos = o.skipHidden ? sheet["!cols"] : undefined;
+	var rowInfos = o.skipHidden ? sheet["!rows"] : undefined;
 	for(var C = r.s.c; C <= r.e.c; ++C) if (!colInfos || !colInfos[C] || !colInfos[C].hidden) cols[C] = encode_col(C);
 	for(var R = r.s.r; R <= r.e.r; ++R) {
 		if (rowInfos && rowInfos[R] && rowInfos[R].hidden) continue;
