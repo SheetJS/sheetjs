@@ -81,8 +81,9 @@ function sheet_to_json(sheet/*:Worksheet*/, opts/*:?Sheet2JSONOpts*/){
 var qreg = /"/g;
 function make_csv_row(sheet/*:Worksheet*/, r/*:Range*/, R/*:number*/, cols/*:Array<string>*/, fs/*:number*/, rs/*:number*/, FS/*:string*/, o/*:Sheet2CSVOpts*/)/*:?string*/ {
 	var isempty = true;
-	var row = "", txt = "", rr = encode_row(R);
+	var row = [], txt = "", rr = encode_row(R);
 	for(var C = r.s.c; C <= r.e.c; ++C) {
+		if (!cols[C]) continue;
 		var val = o.dense ? (sheet[R]||[])[C]: sheet[cols[C] + rr];
 		if(val == null) txt = "";
 		else if(val.v != null) {
@@ -95,10 +96,10 @@ function make_csv_row(sheet/*:Worksheet*/, r/*:Range*/, R/*:number*/, cols/*:Arr
 			txt = '=' + val.f; if(txt.indexOf(",") >= 0) txt = '"' + txt.replace(qreg, '""') + '"';
 		} else txt = "";
 		/* NOTE: Excel CSV does not support array formulae */
-		row += (C === r.s.c ? "" : FS) + txt;
+		row.push(txt);
 	}
 	if(o.blankrows === false && isempty) return null;
-	return row;
+	return row.join(FS);
 }
 
 function sheet_to_csv(sheet/*:Worksheet*/, opts/*:?Sheet2CSVOpts*/)/*:string*/ {
@@ -111,8 +112,11 @@ function sheet_to_csv(sheet/*:Worksheet*/, opts/*:?Sheet2CSVOpts*/)/*:string*/ {
 	var endregex = new RegExp((FS=="|" ? "\\|" : FS)+"+$");
 	var row = "", cols = [];
 	o.dense = Array.isArray(sheet);
-	for(var C = r.s.c; C <= r.e.c; ++C) cols[C] = encode_col(C);
+	var colInfos = o.skipHidden ? sheet["!cols"] : undefined;
+	var rowInfos = o.skipHidden ? sheet["!rows"] : undefined;
+	for(var C = r.s.c; C <= r.e.c; ++C) if (!colInfos || !colInfos[C] || !colInfos[C].hidden) cols[C] = encode_col(C);
 	for(var R = r.s.r; R <= r.e.r; ++R) {
+		if (rowInfos && rowInfos[R] && rowInfos[R].hidden) continue;
 		row = make_csv_row(sheet, r, R, cols, fs, rs, FS, o);
 		if(row == null) { continue; }
 		if(o.strip) row = row.replace(endregex,"");
