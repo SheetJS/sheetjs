@@ -17727,7 +17727,7 @@ function sheet_to_json(sheet, opts){
 var qreg = /"/g;
 function make_csv_row(sheet, r, R, cols, fs, rs, FS, o) {
 	var isempty = true;
-	var row = "", txt = "", rr = encode_row(R);
+	var row = [], txt = "", rr = encode_row(R);
 	for(var C = r.s.c; C <= r.e.c; ++C) {
 		if (!cols[C]) continue;
 		var val = o.dense ? (sheet[R]||[])[C]: sheet[cols[C] + rr];
@@ -17742,10 +17742,10 @@ function make_csv_row(sheet, r, R, cols, fs, rs, FS, o) {
 			txt = '=' + val.f; if(txt.indexOf(",") >= 0) txt = '"' + txt.replace(qreg, '""') + '"';
 		} else txt = "";
 		/* NOTE: Excel CSV does not support array formulae */
-		row += (C === r.s.c || row.length === 0 ? "" : FS) + txt;
+		row.push(txt);
 	}
 	if(o.blankrows === false && isempty) return null;
-	return row;
+	return row.join(FS);
 }
 
 function sheet_to_csv(sheet, opts) {
@@ -17758,11 +17758,8 @@ function sheet_to_csv(sheet, opts) {
 	var endregex = new RegExp((FS=="|" ? "\\|" : FS)+"+$");
 	var row = "", cols = [];
 	o.dense = Array.isArray(sheet);
-	var colInfos = sheet["!cols"];
-	var rowInfos = sheet["!rows"];
-	for(var C = r.s.c; C <= r.e.c; ++C) if (!colInfos || !colInfos[C] || !colInfos[C].hidden) cols[C] = encode_col(C);
+	for(var C = r.s.c; C <= r.e.c; ++C) cols[C] = encode_col(C);
 	for(var R = r.s.r; R <= r.e.r; ++R) {
-		if (rowInfos && rowInfos[R] && rowInfos[R].hidden) continue;
 		row = make_csv_row(sheet, r, R, cols, fs, rs, FS, o);
 		if(row == null) { continue; }
 		if(o.strip) row = row.replace(endregex,"");
