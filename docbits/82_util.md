@@ -123,6 +123,7 @@ produces CSV output.  The function takes an options argument:
 | dateNF      |  fmt 14  | Use specified date format in string output          |
 | strip       |  false   | Remove trailing field separators in each record **  |
 | blankrows   |  true    | Include blank lines in the CSV output               |
+| skipHidden  |  false   | Skips hidden rows/columns in the CSV output         |
 
 - `strip` will remove trailing commas from each line under default `FS/RS`
 - blankrows must be set to `false` to skip blank lines.
