@@ -1791,6 +1791,24 @@ describe('csv', function() {
 				assert.equal(wb.Sheets.Sheet1['!ref'], "A1:B3");
 			});
 		});
+		it('should handle skipHidden for rows if requested', function() {
+			var baseline = "1,2,3,\nTRUE,FALSE,,sheetjs\nfoo,bar,2/19/14,0.3\n,,,\nbaz,,qux,\n";
+			assert.equal(X.utils.sheet_to_csv(ws), baseline);
+			ws["!rows"] = [null,{hidden:true},null,null];
+			assert.equal(X.utils.sheet_to_csv(ws), baseline);
+			assert.equal(X.utils.sheet_to_csv(ws, {skipHidden:true}), "1,2,3,\nfoo,bar,2/19/14,0.3\n,,,\nbaz,,qux,\n");
+			delete ws["!rows"];
+		});
+		it('should handle skipHidden for columns if requested', function() {
+			var baseline = "1,2,3,\nTRUE,FALSE,,sheetjs\nfoo,bar,2/19/14,0.3\n,,,\nbaz,,qux,\n";
+			assert.equal(X.utils.sheet_to_csv(ws), baseline);
+			ws["!cols"] = [null,{hidden:true},null,null];
+			assert.equal(X.utils.sheet_to_csv(ws), baseline);
+			assert.equal(X.utils.sheet_to_csv(ws, {skipHidden:true}), "1,3,\nTRUE,,sheetjs\nfoo,2/19/14,0.3\n,,\nbaz,qux,\n");
+			ws["!cols"] = [{hidden:true},null,null,null];
+			assert.equal(X.utils.sheet_to_csv(ws, {skipHidden:true}), "2,3,\nFALSE,,sheetjs\nbar,2/19/14,0.3\n,,\n,qux,\n");
+			delete ws["!cols"];
+		});
 	});
 });
 
