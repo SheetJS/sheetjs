@@ -2314,5 +2314,3 @@ granted by the Apache 2.0 License are reserved by the Original Author.
 - ISO/IEC 29500:2012(E) "Information technology — Document description and processing languages — Office Open XML File Formats"
 - Open Document Format for Office Applications Version 1.2 (29 September 2011)
 - Worksheet File Format (From Lotus) December 1984
-
-
