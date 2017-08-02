@@ -17742,7 +17742,7 @@ function make_csv_row(sheet, r, R, cols, fs, rs, FS, o) {
 			txt = '=' + val.f; if(txt.indexOf(",") >= 0) txt = '"' + txt.replace(qreg, '""') + '"';
 		} else txt = "";
 		/* NOTE: Excel CSV does not support array formulae */
-		row += (C === r.s.c ? "" : FS) + txt;
+		row += (C === r.s.c || row.length === 0 ? "" : FS) + txt;
 	}
 	if(o.blankrows === false && isempty) return null;
 	return row;
