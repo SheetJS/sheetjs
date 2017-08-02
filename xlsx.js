@@ -17729,6 +17729,7 @@ function make_csv_row(sheet, r, R, cols, fs, rs, FS, o) {
 	var isempty = true;
 	var row = "", txt = "", rr = encode_row(R);
 	for(var C = r.s.c; C <= r.e.c; ++C) {
+		if (!cols[C]) continue;
 		var val = o.dense ? (sheet[R]||[])[C]: sheet[cols[C] + rr];
 		if(val == null) txt = "";
 		else if(val.v != null) {
@@ -17757,8 +17758,11 @@ function sheet_to_csv(sheet, opts) {
 	var endregex = new RegExp((FS=="|" ? "\\|" : FS)+"+$");
 	var row = "", cols = [];
 	o.dense = Array.isArray(sheet);
-	for(var C = r.s.c; C <= r.e.c; ++C) cols[C] = encode_col(C);
+	var colInfos = sheet["!cols"];
+	var rowInfos = sheet["!rows"];
+	for(var C = r.s.c; C <= r.e.c; ++C) if (!colInfos || !colInfos[C] || !colInfos[C].hidden) cols[C] = encode_col(C);
 	for(var R = r.s.r; R <= r.e.r; ++R) {
+		if (rowInfos && rowInfos[R] && rowInfos[R].hidden) continue;
 		row = make_csv_row(sheet, r, R, cols, fs, rs, FS, o);
 		if(row == null) { continue; }
 		if(o.strip) row = row.replace(endregex,"");
