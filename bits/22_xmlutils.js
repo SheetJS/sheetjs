@@ -138,12 +138,15 @@ var vtregex = (function(){ var vt_cache = {};
 		return (vt_cache[bt] = new RegExp("<(?:vt:)?" + bt + ">([\\s\\S]*?)</(?:vt:)?" + bt + ">", 'g') );
 };})();
 var vtvregex = /<\/?(?:vt:)?variant>/g, vtmregex = /<(?:vt:)([^>]*)>([\s\S]*)</;
-function parseVector(data) {
+function parseVector(data, opts) {
 	var h = parsexmltag(data);
 
 	var matches = data.match(vtregex(h.baseType))||[];
-	if(matches.length != h.size) throw new Error("unexpected vector length " + matches.length + " != " + h.size);
 	var res = [];
+	if(matches.length != h.size) {
+		if(opts.WTF) throw new Error("unexpected vector length " + matches.length + " != " + h.size);
+		return res;
+	}
 	matches.forEach(function(x) {
 		var v = x.replace(vtvregex,"").match(vtmregex);
 		res.push({v:utf8read(v[2]), t:v[1]});

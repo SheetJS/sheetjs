@@ -1803,12 +1803,15 @@ var vtregex = (function(){ var vt_cache = {};
 		return (vt_cache[bt] = new RegExp("<(?:vt:)?" + bt + ">([\\s\\S]*?)</(?:vt:)?" + bt + ">", 'g') );
 };})();
 var vtvregex = /<\/?(?:vt:)?variant>/g, vtmregex = /<(?:vt:)([^>]*)>([\s\S]*)</;
-function parseVector(data) {
+function parseVector(data, opts) {
 	var h = parsexmltag(data);
 
 	var matches = data.match(vtregex(h.baseType))||[];
-	if(matches.length != h.size) throw new Error("unexpected vector length " + matches.length + " != " + h.size);
 	var res = [];
+	if(matches.length != h.size) {
+		if(opts.WTF) throw new Error("unexpected vector length " + matches.length + " != " + h.size);
+		return res;
+	}
 	matches.forEach(function(x) {
 		var v = x.replace(vtvregex,"").match(vtmregex);
 		res.push({v:utf8read(v[2]), t:v[1]});
@@ -3408,7 +3411,7 @@ var EXT_PROPS/*:Array<Array<string> >*/ = [
 XMLNS.EXT_PROPS = "http://schemas.openxmlformats.org/officeDocument/2006/extended-properties";
 RELS.EXT_PROPS  = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/extended-properties';
 
-function parse_ext_props(data, p) {
+function parse_ext_props(data, p, opts) {
 	var q = {}; if(!p) p = {};
 
 	EXT_PROPS.forEach(function(f) {
@@ -3423,10 +3426,10 @@ function parse_ext_props(data, p) {
 	});
 
 	if(q.HeadingPairs && q.TitlesOfParts) {
-		var v = parseVector(q.HeadingPairs);
-		var parts = parseVector(q.TitlesOfParts).map(function(x) { return x.v; });
+		var v = parseVector(q.HeadingPairs, opts);
+		var parts = parseVector(q.TitlesOfParts, opts).map(function (x) { return x.v; });
 		var idx = 0, len = 0;
-		for(var i = 0; i !== v.length; i+=2) {
+		if(parts.length > 0) for(var i = 0; i !== v.length; i += 2) {
 			len = +(v[i+1].v);
 			switch(v[i].v) {
 				case "Worksheets":
@@ -17279,7 +17282,7 @@ function parse_zip(zip/*:ZIP*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
 		if(propdata) props = parse_core_props(propdata);
 		if(dir.extprops.length !== 0) {
 			propdata = getzipstr(zip, dir.extprops[0].replace(/^\//,''), true);
-			if(propdata) parse_ext_props(propdata, props);
+			if(propdata) parse_ext_props(propdata, props, opts);
 		}
 	}
 

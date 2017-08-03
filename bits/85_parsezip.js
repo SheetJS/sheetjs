@@ -86,7 +86,7 @@ function parse_zip(zip/*:ZIP*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
 		if(propdata) props = parse_core_props(propdata);
 		if(dir.extprops.length !== 0) {
 			propdata = getzipstr(zip, dir.extprops[0].replace(/^\//,''), true);
-			if(propdata) parse_ext_props(propdata, props);
+			if(propdata) parse_ext_props(propdata, props, opts);
 		}
 	}
 

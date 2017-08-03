@@ -17,7 +17,7 @@ var EXT_PROPS/*:Array<Array<string> >*/ = [
 XMLNS.EXT_PROPS = "http://schemas.openxmlformats.org/officeDocument/2006/extended-properties";
 RELS.EXT_PROPS  = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/extended-properties';
 
-function parse_ext_props(data, p) {
+function parse_ext_props(data, p, opts) {
 	var q = {}; if(!p) p = {};
 
 	EXT_PROPS.forEach(function(f) {
@@ -32,10 +32,10 @@ function parse_ext_props(data, p) {
 	});
 
 	if(q.HeadingPairs && q.TitlesOfParts) {
-		var v = parseVector(q.HeadingPairs);
-		var parts = parseVector(q.TitlesOfParts).map(function(x) { return x.v; });
+		var v = parseVector(q.HeadingPairs, opts);
+		var parts = parseVector(q.TitlesOfParts, opts).map(function (x) { return x.v; });
 		var idx = 0, len = 0;
-		for(var i = 0; i !== v.length; i+=2) {
+		if(parts.length > 0) for(var i = 0; i !== v.length; i += 2) {
 			len = +(v[i+1].v);
 			switch(v[i].v) {
 				case "Worksheets":
