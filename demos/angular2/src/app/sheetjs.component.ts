@@ -6,9 +6,9 @@ import * as XLSX from 'xlsx';
 
 import { saveAs } from 'file-saver';
 
-type AOA = Array<Array<any> >;
+type AOA = Array<Array<any>>;
 
-function s2ab(s:string):ArrayBuffer {
+function s2ab(s: string): ArrayBuffer {
 	const buf = new ArrayBuffer(s.length);
 	const view = new Uint8Array(buf);
 	for (let i = 0; i !== s.length; ++i) {
@@ -33,17 +33,16 @@ function s2ab(s:string):ArrayBuffer {
 })
 
 export class SheetJSComponent {
-	data:AOA = [[1,2],[3,4]];
-	wopts:XLSX.WritingOptions = { bookType:'xlsx', type:'binary' };
-	fileName:string = "SheetJS.xlsx";
+	data: AOA = [[1,2],[3,4]];
+	wopts: XLSX.WritingOptions = { bookType:'xlsx', type:'binary' };
+	fileName: string = "SheetJS.xlsx";
 
-	public onFileChange(evt:any) {
-		const scope = this;
+	onFileChange(evt: any) {
 		/* wire up file reader */
-		const target:DataTransfer = (<DataTransfer>(evt.target));
-		if(target.files.length != 1) throw new Error("Cannot upload multiple files on the entry");
+		const target: DataTransfer = <DataTransfer>(evt.target);
+		if(target.files.length != 1) { throw new Error("Cannot upload multiple files on the entry") };
 		const reader = new FileReader();
-		reader.onload = function (e:any) {
+		reader.onload = (e: any) => {
 			/* read workbook */
 			const bstr = e.target.result;
 			const wb = XLSX.read(bstr, {type:'binary'});
@@ -52,13 +51,13 @@ export class SheetJSComponent {
 			const wsname = wb.SheetNames[0];
 			const ws = wb.Sheets[wsname];
 
-			/* save data to scope */
-			scope.data = (<AOA>(XLSX.utils.sheet_to_json(ws, {header:1})));
+			/* save data */
+			this.data = <AOA>(XLSX.utils.sheet_to_json(ws, {header:1}));
 		};
 		reader.readAsBinaryString(target.files[0]);
 	}
 
-	export():void {
+	export(): void {
 		/* generate worksheet */
 		const ws = XLSX.utils.aoa_to_sheet(this.data);
 
