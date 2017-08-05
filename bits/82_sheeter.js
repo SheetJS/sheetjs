@@ -13,4 +13,5 @@ var write_csv_str = write_obj_str({from_sheet:sheet_to_csv});
 var write_slk_str = write_obj_str(SYLK);
 var write_dif_str = write_obj_str(DIF);
 var write_prn_str = write_obj_str(PRN);
+var write_rtf_str = write_obj_str(RTF);
 var write_txt_str = write_obj_str({from_sheet:sheet_to_txt});

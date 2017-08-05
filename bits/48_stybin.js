@@ -102,6 +102,7 @@ var XLSBFillPTNames = [
 ];
 var rev_XLSBFillPTNames/*:EvertNumType*/ = (evert(XLSBFillPTNames)/*:any*/);
 /* TODO: gradient fill representation */
+var parse_BrtFill = parsenoop;
 function write_BrtFill(fill, o) {
 	if(!o) o = new_buf(4*3 + 8*7 + 16*1);
 	var fls/*:number*/ = rev_XLSBFillPTNames[fill.patternType];
@@ -164,6 +165,7 @@ function write_Blxf(data, o) {
 	return o;
 }
 /* [MS-XLSB] 2.4.299 BrtBorder TODO */
+var parse_BrtBorder = parsenoop;
 function write_BrtBorder(border, o) {
 	if(!o) o = new_buf(51);
 	o.write_shift(1, 0); /* diagonal */

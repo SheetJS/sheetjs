@@ -294,7 +294,7 @@ function parse_FilePassHeader(blob, length/*:number*/, oo) {
 	return o;
 }
 function parse_FilePass(blob, length/*:number*/, opts) {
-	var o = { Type: opts.biff >= 8 ? blob.read_shift(2) : 0 }; /* wEncryptionType */
+	var o = ({ Type: opts.biff >= 8 ? blob.read_shift(2) : 0 }/*:any*/); /* wEncryptionType */
 	if(o.Type) parse_FilePassHeader(blob, length-2, o);
 	else parse_XORObfuscation(blob, length-2, opts, o);
 	return o;

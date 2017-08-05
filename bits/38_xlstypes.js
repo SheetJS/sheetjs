@@ -28,8 +28,8 @@ function parse_VtStringBase(blob, stringType, pad) {
 	return parse_lpstr(blob, stringType, pad);
 }
 
-function parse_VtString(blob, t/*:number*/, pad/*:number*/) { return parse_VtStringBase(blob, t, pad === false ? 0: 4); }
-function parse_VtUnalignedString(blob, t/*:number*/) { if(!t) throw new Error("dafuq?"); return parse_VtStringBase(blob, t, 0); }
+function parse_VtString(blob, t/*:number*/, pad/*:?boolean*/) { return parse_VtStringBase(blob, t, pad === false ? 0: 4); }
+function parse_VtUnalignedString(blob, t/*:number*/) { if(!t) throw new Error("VtUnalignedString must have positive length"); return parse_VtStringBase(blob, t, 0); }
 
 /* [MS-OSHARED] 2.3.3.1.9 VtVecUnalignedLpstrValue */
 function parse_VtVecUnalignedLpstrValue(blob) {
@@ -123,7 +123,7 @@ function parse_TypedPropertyValue(blob, type/*:number*/, _opts) {
 		case 0x40 /*VT_FILETIME*/: return parse_FILETIME(blob);
 		case 0x41 /*VT_BLOB*/: return parse_BLOB(blob);
 		case 0x47 /*VT_CF*/: return parse_ClipboardData(blob);
-		case 0x50 /*VT_STRING*/: return parse_VtString(blob, t, !opts.raw && 4).replace(chr0,'');
+		case 0x50 /*VT_STRING*/: return parse_VtString(blob, t, !opts.raw).replace(chr0,'');
 		case 0x51 /*VT_USTR*/: return parse_VtUnalignedString(blob, t/*, 4*/).replace(chr0,'');
 		case 0x100C /*VT_VECTOR|VT_VARIANT*/: return parse_VtVecHeadingPair(blob);
 		case 0x101E /*VT_LPSTR*/: return parse_VtVecUnalignedLpstr(blob);

@@ -10,7 +10,7 @@ JSZip uses the library pako released under the MIT license :
 https://github.com/nodeca/pako/blob/master/LICENSE
 */
 (function(e){
-	if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();
+	if("object"==typeof exports&&"undefined"!=typeof module&&"undefined"==typeof DO_NOT_EXPORT_JSZIP)module.exports=e();
 	else if("function"==typeof define&&define.amd){JSZip=e();define([],e);}
 	else{
 		var f;

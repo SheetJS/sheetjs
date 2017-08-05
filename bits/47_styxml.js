@@ -75,8 +75,9 @@ function parse_fills(t, styles, themes, opts) {
 			case '<fills': case '<fills>': case '</fills>': break;
 
 			/* 18.8.20 fill CT_Fill */
-			case '<fill>': case '<fill': break;
-			case '</fill>': styles.Fills.push(fill); fill = {}; break;
+			case '<fill>': case '<fill': case '<fill/>':
+				fill = {}; styles.Fills.push(fill); break;
+			case '</fill>': break;
 
 			/* 18.8.24 gradientFill CT_GradientFill */
 			case '<gradientFill>': break;

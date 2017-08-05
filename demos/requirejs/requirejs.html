@@ -39,7 +39,7 @@ Use Transferrables: (when available) <input type="checkbox" name="xferable" chec
 Use readAsBinaryString: (when available) <input type="checkbox" name="userabs" checked><br />
 <pre id="out"></pre>
 <br />
-<script src="webpack.min.js"></script>
+<script src="require.js"></script>
 <script>
 var XW = {
 	/* worker message */
@@ -50,6 +50,6 @@ var XW = {
 	noxfer: './xlsxworker.js'
 };
 </script>
-<script src="app.js"></script>
+<script src="requirejs-built.js"></script>
 </body>
 </html>

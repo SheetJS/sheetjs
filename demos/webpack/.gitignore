@@ -1,2 +1,3 @@
 webpack.js
 webpack.min.js
+*.out.js

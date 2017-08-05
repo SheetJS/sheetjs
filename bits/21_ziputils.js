@@ -58,7 +58,7 @@ if(typeof JSZip !== 'undefined') jszip = JSZip;
 if (typeof exports !== 'undefined') {
 	if (typeof module !== 'undefined' && module.exports) {
 		if(typeof jszip === 'undefined') jszip = require('./jszip.js');
-		_fs = require('fs');
+		try { _fs = require('fs'); } catch(e) { }
 	}
 }
 

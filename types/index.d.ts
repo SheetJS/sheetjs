@@ -550,13 +550,24 @@ export interface Sheet2CSVOpts {
 
     /** Use specified date format */
     dateNF?: NumberFormat;
+
+    /** Remove trailing field separators in each record */
+    strip?: boolean;
+
+    /** Include blank lines in the CSV output */
+    blankrows?: boolean;
+
+    /** Skip hidden rows and columns in the CSV output */
+    skipHidden?: boolean;
 }
 
 export interface Sheet2HTMLOpts {
     /** Add contenteditable to every cell */
     editable?: boolean;
+
     /** Header HTML */
     header?: string;
+
     /** Footer HTML */
     footer?: string;
 }

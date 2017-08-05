@@ -690,8 +690,16 @@ var PtgBinOp = {
 	PtgPower: "^",
 	PtgSub: "-"
 };
-function get_ixti(supbooks, ixti/*:number*/, opts)/*:string*/ {
+function formula_quote_sheet_name(sname/*:string*/)/*:string*/ {
+	if(!sname) return "";
+	if(sname.indexOf(" ") > -1) return "'" + sname + "'";
+	return sname;
+}
+function get_ixti_raw(supbooks, ixti/*:number*/, opts)/*:string*/ {
 	return supbooks.SheetNames[ixti];
+}
+function get_ixti(supbooks, ixti/*:number*/, opts)/*:string*/ {
+	return formula_quote_sheet_name(get_ixti_raw(supbooks, ixti, opts));
 }
 function stringify_formula(formula/*Array<any>*/, range, cell/*:any*/, supbooks, opts) {
 	//console.log(formula);

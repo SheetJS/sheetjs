@@ -69,6 +69,7 @@ function writeSync(wb/*:Workbook*/, opts/*:?WriteOpts*/) {
 		case 'csv': return write_string_type(write_csv_str(wb, o), o);
 		case 'dif': return write_string_type(write_dif_str(wb, o), o);
 		case 'prn': return write_string_type(write_prn_str(wb, o), o);
+		case 'rtf': return write_string_type(write_rtf_str(wb, o), o);
 		case 'fods': return write_string_type(write_ods(wb, o), o);
 		case 'biff2': return write_binary_type(write_biff_buf(wb, o), o);
 		case 'xlsx':
@@ -95,6 +96,7 @@ function resolve_book_type(o/*?WriteFileOpts*/) {
 		case '.txt': o.bookType = 'txt'; break;
 		case '.dif': o.bookType = 'dif'; break;
 		case '.prn': o.bookType = 'prn'; break;
+		case '.rtf': o.bookType = 'rtf'; break;
 		case '.slk': o.bookType = 'sylk'; break;
 		case '.htm': o.bookType = 'html'; break;
 	}

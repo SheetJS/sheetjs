@@ -1,5 +1,6 @@
 bits/
 demos/
+dist/
 docbits/
 misc/
 node_modules/

@@ -817,12 +817,14 @@ function parse_xlml_xml(d, _opts)/*:Workbook*/ {
 	return out;
 }
 
-function parse_xlml(data/*:RawBytes*/, opts)/*:Workbook*/ {
+function arr2str(data/*:any*/)/*:string*/ { return data.map(_chr).join(""); }
+
+function parse_xlml(data/*:RawBytes|string*/, opts)/*:Workbook*/ {
 	fix_read_opts(opts=opts||{});
 	switch(opts.type||"base64") {
 		case "base64": return parse_xlml_xml(Base64.decode(data), opts);
 		case "binary": case "buffer": case "file": return parse_xlml_xml(data, opts);
-		case "array": return parse_xlml_xml(data.map(_chr).join(""), opts);
+		case "array": return parse_xlml_xml(arr2str(data), opts);
 	}
 	/*:: throw new Error("unsupported type " + opts.type); */
 }

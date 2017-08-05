@@ -33,7 +33,7 @@ var basedate = new Date(1899, 11, 30, 0, 0, 0); // 2209161600000
 var dnthresh = basedate.getTime() + (new Date().getTimezoneOffset() - basedate.getTimezoneOffset()) * 60000;
 function datenum(v/*:Date*/, date1904/*:?boolean*/)/*:number*/ {
 	var epoch = v.getTime();
-	if(date1904) epoch += 1462*24*60*60*1000;
+	if(date1904) epoch -= 1462*24*60*60*1000;
 	return (epoch - dnthresh) / (24 * 60 * 60 * 1000);
 }
 function numdate(v/*:number*/)/*:Date*/ {

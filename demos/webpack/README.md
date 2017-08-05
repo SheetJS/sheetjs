@@ -40,3 +40,16 @@ the module can be omitted by aliasing the dependency:
 		alias: { "./dist/cpexcel.js": "" }
 	},
 ```
+
+## Bower and minified versions
+
+The minified versions, used in Bower, require `module.noParse` configuration:
+
+```js
+	module: {
+		noParse: [
+			/xlsx.core.min.js/,
+			/xlsx.full.min.js/
+		]
+	}
+```

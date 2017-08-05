@@ -12,13 +12,16 @@ if(has_buf && typeof require != 'undefined') (function() {
 		var endregex = new RegExp((FS=="|" ? "\\|" : FS)+"+$");
 		var row/*:?string*/ = "", cols = [];
 		o.dense = Array.isArray(sheet);
-		for(var C = r.s.c; C <= r.e.c; ++C) cols[C] = encode_col(C);
+		var colInfos = o.skipHidden && sheet["!cols"] || [];
+		var rowInfos = o.skipHidden && sheet["!rows"] || [];
+		for(var C = r.s.c; C <= r.e.c; ++C) if (!((colInfos[C]||{}).hidden)) cols[C] = encode_col(C);
 		var R = r.s.r;
 		stream._read = function() {
 			if(R > r.e.r) return stream.push(null);
 			while(R <= r.e.r) {
-				row = make_csv_row(sheet, r, R, cols, fs, rs, FS, o);
 				++R;
+				if ((rowInfos[R-1]||{}).hidden) continue;
+				row = make_csv_row(sheet, r, R-1, cols, fs, rs, FS, o);
 				if(row != null) {
 					if(o.strip) row = row.replace(endregex,"");
 					stream.push(row + RS);
