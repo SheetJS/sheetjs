@@ -1664,7 +1664,7 @@ function resolve_path(path/*:string*/, base/*:string*/)/*:string*/ {
 	return result.join('/');
 }
 var attregexg=/([^"\s?>\/]+)=((?:")([^"]*)(?:")|(?:')([^']*)(?:')|([^'">\s]+))/g;
-var tagregex=/<[^>]*>/g;
+var tagregex=/<[\/\?]?[a-zA-Z0-9:]+(?:\s+[^"\s?>\/]+=(?:"[^"]*"|'[^']*'|[^'">\s]+))*\s?[\/\?]?>/g;
 var nsregex=/<\w*:/, nsregex2 = /<(\/?)\w+:/;
 function parsexmltag(tag/*:string*/, skip_root/*:?boolean*/)/*:any*/ {
 	var z = ({}/*:any*/);
