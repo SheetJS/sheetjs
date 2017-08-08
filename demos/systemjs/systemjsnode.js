@@ -15,4 +15,4 @@ SystemJS.config({
 		'stream': '@node/stream'
 	}
 });
-SystemJS.import('./app.js');
+SystemJS.import('./app.node.js');

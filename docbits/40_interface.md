@@ -29,7 +29,8 @@ Write options are described in the [Writing Options](#writing-options) section.
 
 ### Utilities
 
-Utilities are available in the `XLSX.utils` object:
+Utilities are available in the `XLSX.utils` object and are described in the
+[Utility Functions](#utility-functions) section:
 
 **Importing:**
 
@@ -44,8 +45,6 @@ Utilities are available in the `XLSX.utils` object:
 - `sheet_to_html` generates HTML output.
 - `sheet_to_formulae` generates a list of the formulae (with value fallbacks).
 
-These utilities are described in [Utility Functions](#utility-functions) below.
-
 
 **Cell and cell address manipulation:**
 
@@ -53,6 +52,4 @@ These utilities are described in [Utility Functions](#utility-functions) below.
 - `{en,de}code_{row,col}` convert between 0-indexed rows/cols and A1 forms.
 - `{en,de}code_cell` converts cell addresses
 - `{en,de}code_range` converts cell ranges
-
-Utilities are described in the [Utility Functions](#utility-functions) section.
 

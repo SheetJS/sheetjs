@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<!-- xlsx.js (C) 2013-present  SheetJS http://sheetjs.com -->
+<!-- vim: set ts=2: -->
+<html ng-app="app">
+<head>
+	<title>SheetJS + Angular 1 + ui-grid</title>
+	<!-- Angular -->
+	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.0/angular.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.0/angular-touch.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.0/angular-animate.js"></script>
+
+	<!-- ui-grid -->
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-grid/4.0.0/ui-grid.js"></script>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-grid/4.0.0/ui-grid.css"></script>
+
+	<!-- FileSaver shim for exporting files -->
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/1.3.3/FileSaver.min.js"></script>
+
+	<!-- SheetJS js-xlsx library -->
+	<script src="xlsx.full.min.js"></script>
+
+	<!-- SheetJS Service -->
+	<script src="SheetJS-angular.js"></script>
+
+<style>
+.grid1 {
+	width: 500px;
+	height: 400px;
+};
+</style>
+</head>
+<body>
+<pre>
+<b><a href="http://sheetjs.com">SheetJS + angular 1 + ui-grid demo</a></b>
+
+The core library can be used as-is in angular applications.
+The <a href="https://github.com/sheetjs/js-xlsx">Community Edition README</a> details some common use cases.
+We also have some <a href="http://sheetjs.com/demos/">more public demos</a>
+
+This demo shows:
+- SheetJSExportService: a service for exporting data from a ui-grid
+- SheetJSImportDirective: a directive providing a file input button for import
+
+<a href="https://obamawhitehouse.archives.gov/sites/default/files/omb/budget/fy2014/assets/receipts.xls">Sample Spreadsheet</a>
+</pre>
+
+<div ng-controller="MainCtrl">
+	<input type="file" import-sheet-js="" opts="gridOptions" multiple="false"  />
+	<div id="grid1" ui-grid="gridOptions" ui-grid-selection ui-grid-exporter class="grid"></div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
+

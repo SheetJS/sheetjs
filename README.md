@@ -668,7 +668,8 @@ Write options are described in the [Writing Options](#writing-options) section.
 
 ### Utilities
 
-Utilities are available in the `XLSX.utils` object:
+Utilities are available in the `XLSX.utils` object and are described in the
+[Utility Functions](#utility-functions) section:
 
 **Importing:**
 
@@ -683,8 +684,6 @@ Utilities are available in the `XLSX.utils` object:
 - `sheet_to_html` generates HTML output.
 - `sheet_to_formulae` generates a list of the formulae (with value fallbacks).
 
-These utilities are described in [Utility Functions](#utility-functions) below.
-
 
 **Cell and cell address manipulation:**
 
@@ -692,8 +691,6 @@ These utilities are described in [Utility Functions](#utility-functions) below.
 - `{en,de}code_{row,col}` convert between 0-indexed rows/cols and A1 forms.
 - `{en,de}code_cell` converts cell addresses
 - `{en,de}code_range` converts cell ranges
-
-Utilities are described in the [Utility Functions](#utility-functions) section.
 
 ## Common Spreadsheet Format
 
@@ -1610,7 +1607,15 @@ var ws = XLSX.utils.aoa_to_sheet([
 ### Array of Objects Input
 
 `XLSX.utils.json_to_sheet` takes an array of objects and returns a worksheet
-with automatically-generated "headers" based on the keys of the objects.
+with automatically-generated "headers" based on the keys of the objects.  The
+default column order is determined by the first appearance of the field using
+`Object.keys`, but can be overridden using the options argument:
+
+| Option Name |  Default | Description                                         |
+| :---------- | :------: | :-------------------------------------------------- |
+| header      |          | Use specified column order (default `Object.keys`)  |
+| dateNF      |  fmt 14  | Use specified date format in string output          |
+| cellDates   |  false   | Store dates as type `d` (default is `n`)            |
 
 <details>
 	<summary><b>Examples</b> (click to show)</summary>
@@ -1622,7 +1627,7 @@ After replacing the second `e` and `S` with `e_1` and `S_1`:
 var ws = XLSX.utils.json_to_sheet([
 	{S:1,h:2,e:3,e_1:4,t:5,J:6,S_1:7},
 	{S:2,h:3,e:4,e_1:5,t:6,J:7,S_1:8}
-]);
+], {header:["S","h","e","e_1","t","J","S_1"]});
 ```
 </details>
 

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<!-- xlsx.js (C) 2013-present  SheetJS http://sheetjs.com -->
+<!-- vim: set ts=2: -->
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>JS-XLSX Live Demo</title>
+<style>
+#drop{
+	border:2px dashed #bbb;
+	-moz-border-radius:5px;
+	-webkit-border-radius:5px;
+	border-radius:5px;
+	padding:25px;
+	text-align:center;
+	font:20pt bold,"Vollkorn";color:#bbb
+}
+#b64data{
+	width:100%;
+}
+</style>
+</head>
+<body>
+<b>JS-XLSX Live Demo</b><br />
+Output Format:
+<select name="format">
+<option value="csv" selected> CSV</option>
+<option value="json"> JSON</option>
+<option value="form"> FORMULAE</option>
+</select><br />
+
+<div id="drop">Drop a spreadsheet file here to see sheet data</div>
+<p><input type="file" name="xlfile" id="xlf" /> ... or click here to select a file</p>
+<textarea id="b64data">... or paste a base64-encoding here</textarea>
+<input type="button" id="dotext" value="Click here to process the base64 text" onclick="b64it();"/><br />
+Advanced Demo Options: <br />
+Use Web Workers: (when available) <input type="checkbox" name="useworker" checked><br />
+Use Transferrables: (when available) <input type="checkbox" name="xferable" checked><br />
+Use readAsBinaryString: (when available) <input type="checkbox" name="userabs" checked><br />
+<pre id="out"></pre>
+<br />
+<script src="core.out.js"></script>
+<script>
+var XW = {
+	/* worker message */
+	msg: 'xlsx',
+	/* worker scripts */
+	rABS: './coreworker2.js',
+	norABS: './coreworker1.js',
+	noxfer: './coreworker.js'
+};
+</script>
+<script src="app.js"></script>
+</body>
+</html>
