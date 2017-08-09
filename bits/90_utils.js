@@ -1,8 +1,8 @@
-function sheet_to_json(sheet/*:Worksheet*/, opts/*:?Sheet2JSONOpts*/){
+function sheet_to_json(sheet/*:Worksheet*/, opts/*:?Sheet2JSONOpts*/) {
 	if(sheet == null || sheet["!ref"] == null) return [];
 	var val = {t:'n',v:0}, header = 0, offset = 1, hdr/*:Array<any>*/ = [], isempty = true, v=0, vv="";
 	var r = {s:{r:0,c:0},e:{r:0,c:0}};
-	var o = opts != null ? opts : {};
+	var o = opts || {};
 	var raw = o.raw;
 	var defval = o.defval;
 	var range = o.range != null ? o.range : sheet["!ref"];
@@ -16,8 +16,8 @@ function sheet_to_json(sheet/*:Worksheet*/, opts/*:?Sheet2JSONOpts*/){
 	}
 	if(header > 0) offset = 0;
 	var rr = encode_row(r.s.r);
-	var cols = new Array(r.e.c-r.s.c+1);
-	var out = new Array(r.e.r-r.s.r-offset+1);
+	var cols/*:Array<string>*/ = [];
+	var out/*:Array<any>*/ = [];
 	var outi = 0, counter = 0;
 	var dense = Array.isArray(sheet);
 	var R = r.s.r, C = 0, CC = 0;
@@ -37,7 +37,7 @@ function sheet_to_json(sheet/*:Worksheet*/, opts/*:?Sheet2JSONOpts*/){
 				hdr[C] = vv;
 		}
 	}
-	var row = (header === 1) ? [] : {};
+	var row/*:any*/ = (header === 1) ? [] : {};
 	for (R = r.s.r + offset; R <= r.e.r; ++R) {
 		rr = encode_row(R);
 		isempty = true;
@@ -81,7 +81,7 @@ function sheet_to_json(sheet/*:Worksheet*/, opts/*:?Sheet2JSONOpts*/){
 var qreg = /"/g;
 function make_csv_row(sheet/*:Worksheet*/, r/*:Range*/, R/*:number*/, cols/*:Array<string>*/, fs/*:number*/, rs/*:number*/, FS/*:string*/, o/*:Sheet2CSVOpts*/)/*:?string*/ {
 	var isempty = true;
-	var row = [], txt = "", rr = encode_row(R);
+	var row/*:Array<string>*/ = [], txt = "", rr = encode_row(R);
 	for(var C = r.s.c; C <= r.e.c; ++C) {
 		if (!cols[C]) continue;
 		var val = o.dense ? (sheet[R]||[])[C]: sheet[cols[C] + rr];

@@ -77,6 +77,15 @@ as strings.
 
 `XLSX.utils.table_to_book` produces a minimal workbook based on the worksheet.
 
+Both functions accept options arguments:
+
+| Option Name |  Default | Description                                         |
+| :---------- | :------: | :-------------------------------------------------- |
+| dateNF      |  fmt 14  | Use specified date format in string output          |
+| cellDates   |  false   | Store dates as type `d` (default is `n`)            |
+| raw         |          | If true, every cell will hold raw strings           |
+
+
 <details>
 	<summary><b>Examples</b> (click to show)</summary>
 

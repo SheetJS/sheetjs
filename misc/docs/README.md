@@ -38,7 +38,6 @@ enhancements, additional features by request, and dedicated support.
 [![Build Status](https://travis-ci.org/SheetJS/js-xlsx.svg?branch=master)](https://travis-ci.org/SheetJS/js-xlsx)
 [![Build Status](https://semaphoreci.com/api/v1/sheetjs/js-xlsx/branches/master/shields_badge.svg)](https://semaphoreci.com/sheetjs/js-xlsx)
 [![Coverage Status](http://img.shields.io/coveralls/SheetJS/js-xlsx/master.svg)](https://coveralls.io/r/SheetJS/js-xlsx?branch=master)
-[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bhttps%3A%2F%2Fgithub.com%2FSheetJS%2Fjs-xlsx.svg?type=shield)](https://app.fossa.io/projects/git%2Bhttps%3A%2F%2Fgithub.com%2FSheetJS%2Fjs-xlsx?ref=badge_shield)
 [![Dependencies Status](https://david-dm.org/sheetjs/js-xlsx/status.svg)](https://david-dm.org/sheetjs/js-xlsx)
 [![NPM Downloads](https://img.shields.io/npm/dt/xlsx.svg)](https://npmjs.org/package/xlsx)
 [![ghit.me](https://ghit.me/badge.svg?repo=sheetjs/js-xlsx)](https://ghit.me/repo/sheetjs/js-xlsx)
@@ -165,6 +164,7 @@ The `demos` directory includes sample projects for:
 - [`angular 1.x`](demos/angular/)
 - [`angular 2.x / 4.x`](demos/angular2/)
 - [`browserify`](demos/browserify/)
+- [`canvas-datagrid`](demos/datagrid/)
 - [`Adobe ExtendScript`](demos/extendscript/)
 - [`meteor`](demos/meteor/)
 - [`phantomjs`](demos/phantomjs/)
@@ -1515,6 +1515,15 @@ resembling the input table.  Numbers are parsed.  All other data will be stored
 as strings.
 
 `XLSX.utils.table_to_book` produces a minimal workbook based on the worksheet.
+
+Both functions accept options arguments:
+
+| Option Name |  Default | Description                                         |
+| :---------- | :------: | :-------------------------------------------------- |
+| dateNF      |  fmt 14  | Use specified date format in string output          |
+| cellDates   |  false   | Store dates as type `d` (default is `n`)            |
+| raw         |          | If true, every cell will hold raw strings           |
+
 
 
 To generate the example sheet, start with the HTML table:

@@ -1845,6 +1845,32 @@ describe('csv', function() {
 	});
 });
 
+describe('HTML', function() {
+	describe('input', function(){
+		var b = "<table><tr><td>1</td><td>4,001</td></tr><tr><td>$41.08</td></tr></table>";
+		it('should generate numbers by default', function() {
+			var sheet = X.read(b, {type:"binary"}).Sheets.Sheet1
+			var cell = get_cell(sheet, "A1");
+			assert.equal(cell.v, 1);
+			assert.equal(cell.t, 'n');
+			cell = get_cell(sheet, "B1");
+			assert.equal(cell.v, 4001);
+			cell = get_cell(sheet, "A2");
+			assert.equal(cell.v, 41.08);
+		});
+		it('should generate strings if raw option is passed', function() {
+			var sheet = X.read(b, {type:"binary", raw:true}).Sheets.Sheet1
+			var cell = get_cell(sheet, "A1");
+			assert.equal(cell.v, "1");
+			assert.equal(cell.t, 's');
+			cell = get_cell(sheet, "B1");
+			assert.equal(cell.v, "4,001");
+			cell = get_cell(sheet, "A2");
+			assert.equal(cell.v, "$41.08");
+		});
+	});
+});
+
 describe('js -> file -> js', function() {
 	var data, ws, wb, BIN="binary";
 	var bef = (function() {

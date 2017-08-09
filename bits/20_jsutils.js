@@ -114,6 +114,13 @@ function dup(o/*:any*/)/*:any*/ {
 function fill(c/*:string*/,l/*:number*/)/*:string*/ { var o = ""; while(o.length < l) o+=c; return o; }
 
 /* TODO: stress test */
+function fuzzynum(s/*:string*/)/*:number*/ {
+	var v/*:number*/ = Number(s);
+	if(!isNaN(v)) return v;
+	var ss = s.replace(/([\d]),([\d])/g,"$1$2").replace(/[$]/g,"");
+	if(!isNaN(v = Number(ss))) return v;
+	return v;
+}
 function fuzzydate(s/*:string*/)/*:Date*/ {
 	var o = new Date(s), n = new Date(NaN);
 	var y = o.getYear(), m = o.getMonth(), d = o.getDate();

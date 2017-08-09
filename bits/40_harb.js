@@ -234,8 +234,8 @@ var SYLK = (function() {
 					if(val.charAt(0) === '"') val = val.substr(1,val.length - 2);
 					else if(val === 'TRUE') val = true;
 					else if(val === 'FALSE') val = false;
-					else if(+val === +val) {
-						val = +val;
+					else if(!isNaN(fuzzynum(val))) {
+						val = fuzzynum(val);
 						if(next_cell_format !== null && SSF.is_date(next_cell_format)) val = numdate(val);
 					} else if(!isNaN(fuzzydate(val).getDate())) {
 						val = parseDate(val);
@@ -396,7 +396,7 @@ var DIF = (function() {
 				case 0:
 					if(data === 'TRUE') arr[R][C] = true;
 					else if(data === 'FALSE') arr[R][C] = false;
-					else if(+value == +value) arr[R][C] = +value;
+					else if(!isNaN(fuzzynum(value))) arr[R][C] = fuzzynum(value);
 					else if(!isNaN(fuzzydate(value).getDate())) arr[R][C] = parseDate(value);
 					else arr[R][C] = value;
 					++C; break;
@@ -482,7 +482,7 @@ var PRN = (function() {
 		else if(data === 'TRUE') arr[R][C] = true;
 		else if(data === 'FALSE') arr[R][C] = false;
 		else if(data === ""){/* empty */}
-		else if(+data == +data) arr[R][C] = +data;
+		else if(!isNaN(fuzzynum(data))) arr[R][C] = fuzzynum(data);
 		else if(!isNaN(fuzzydate(data).getDate())) arr[R][C] = parseDate(data);
 		else arr[R][C] = data;
 	}
@@ -533,7 +533,7 @@ var PRN = (function() {
 			else if(s.charCodeAt(0) == 0x3D) { cell.t = 'n'; cell.f = s.substr(1); }
 			else if(s == "TRUE") { cell.t = 'b'; cell.v = true; }
 			else if(s == "FALSE") { cell.t = 'b'; cell.v = false; }
-			else if(!isNaN(v = +s)) { cell.t = 'n'; cell.w = s; cell.v = v; }
+			else if(!isNaN(v = fuzzynum(s))) { cell.t = 'n'; cell.w = s; cell.v = v; }
 			else if(!isNaN(fuzzydate(s).getDate()) || _re && s.match(_re)) {
 				cell.z = o.dateNF || SSF._table[14];
 				var k = 0;

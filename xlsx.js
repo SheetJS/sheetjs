@@ -1026,7 +1026,7 @@ var DO_NOT_EXPORT_CFB = true;
 /* [MS-CFB] v20130118 */
 var CFB = (function _CFB(){
 var exports = {};
-exports.version = '0.12.0';
+exports.version = '0.12.1';
 function parse(file, options) {
 var mver = 3; // major version
 var ssz = 512; // sector size
@@ -1197,7 +1197,7 @@ function build_full_paths(FI, FPD, FP, Paths) {
 		if(FI[i].type === 0 /* unknown */) continue;
 		j = dad[i];
 		if(j === 0) FP[i] = FP[0] + "/" + FP[i];
-		else while(j !== 0) {
+		else while(j !== 0 && j !== dad[j]) {
 			FP[i] = FP[j] + "/" + FP[i];
 			j = dad[j];
 		}
@@ -1298,7 +1298,6 @@ function read_directory(dir_start, sector_list, sectors, Paths, nmfs, files, Fil
 		var blob = sector.slice(i, i+128);
 		prep_blob(blob, 64);
 		namelen = blob.read_shift(2);
-		if(namelen === 0) continue;
 		name = __utf16le(blob,0,namelen-pl);
 		Paths.push(name);
 		var o = ({
@@ -1319,6 +1318,7 @@ function read_directory(dir_start, sector_list, sectors, Paths, nmfs, files, Fil
 		if(mtime !== 0) o.mt = read_date(blob, blob.l-8);
 		o.start = blob.read_shift(4, 'i');
 		o.size = blob.read_shift(4, 'i');
+		if(o.size < 0 && o.start < 0) { o.size = o.type = 0; o.start = ENDOFCHAIN; o.name = ""; }
 		if(o.type === 5) { /* root */
 			minifat_store = o.start;
 			if(nmfs > 0 && minifat_store !== ENDOFCHAIN) sector_list[minifat_store].name = "!StreamData";
@@ -1331,7 +1331,7 @@ function read_directory(dir_start, sector_list, sectors, Paths, nmfs, files, Fil
 			prep_blob(o.content, 0);
 		} else {
 			o.storage = 'minifat';
-			if(minifat_store !== ENDOFCHAIN && o.start !== ENDOFCHAIN) {
+			if(minifat_store !== ENDOFCHAIN && o.start !== ENDOFCHAIN && sector_list[minifat_store]) {
 				o.content = (sector_list[minifat_store].data.slice(o.start*MSSZ,o.start*MSSZ+o.size));
 				prep_blob(o.content, 0);
 			}
@@ -1360,6 +1360,9 @@ function readSync(blob, options) {
 	return parse(blob, options);
 }
 
+function find(cfb, path) {
+	return cfb.find(path);
+}
 /** CFB Constants */
 var MSSZ = 64; /* Mini Sector Size = 1<<6 */
 //var MSCSZ = 4096; /* Mini Stream Cutoff Size */
@@ -1385,6 +1388,7 @@ var consts = {
 	EntryTypes: ['unknown','storage','stream','lockbytes','property','root']
 };
 
+exports.find = find;
 exports.read = readSync;
 exports.parse = parse;
 exports.utils = {
@@ -1514,6 +1518,13 @@ function dup(o) {
 function fill(c,l) { var o = ""; while(o.length < l) o+=c; return o; }
 
 /* TODO: stress test */
+function fuzzynum(s) {
+	var v = Number(s);
+	if(!isNaN(v)) return v;
+	var ss = s.replace(/([\d]),([\d])/g,"$1$2").replace(/[$]/g,"");
+	if(!isNaN(v = Number(ss))) return v;
+	return v;
+}
 function fuzzydate(s) {
 	var o = new Date(s), n = new Date(NaN);
 	var y = o.getYear(), m = o.getMonth(), d = o.getDate();
@@ -5409,8 +5420,8 @@ var SYLK = (function() {
 					if(val.charAt(0) === '"') val = val.substr(1,val.length - 2);
 					else if(val === 'TRUE') val = true;
 					else if(val === 'FALSE') val = false;
-					else if(+val === +val) {
-						val = +val;
+					else if(!isNaN(fuzzynum(val))) {
+						val = fuzzynum(val);
 						if(next_cell_format !== null && SSF.is_date(next_cell_format)) val = numdate(val);
 					} else if(!isNaN(fuzzydate(val).getDate())) {
 						val = parseDate(val);
@@ -5571,7 +5582,7 @@ var DIF = (function() {
 				case 0:
 					if(data === 'TRUE') arr[R][C] = true;
 					else if(data === 'FALSE') arr[R][C] = false;
-					else if(+value == +value) arr[R][C] = +value;
+					else if(!isNaN(fuzzynum(value))) arr[R][C] = fuzzynum(value);
 					else if(!isNaN(fuzzydate(value).getDate())) arr[R][C] = parseDate(value);
 					else arr[R][C] = value;
 					++C; break;
@@ -5657,7 +5668,7 @@ var PRN = (function() {
 		else if(data === 'TRUE') arr[R][C] = true;
 		else if(data === 'FALSE') arr[R][C] = false;
 		else if(data === ""){/* empty */}
-		else if(+data == +data) arr[R][C] = +data;
+		else if(!isNaN(fuzzynum(data))) arr[R][C] = fuzzynum(data);
 		else if(!isNaN(fuzzydate(data).getDate())) arr[R][C] = parseDate(data);
 		else arr[R][C] = data;
 	}
@@ -5708,7 +5719,7 @@ var PRN = (function() {
 			else if(s.charCodeAt(0) == 0x3D) { cell.t = 'n'; cell.f = s.substr(1); }
 			else if(s == "TRUE") { cell.t = 'b'; cell.v = true; }
 			else if(s == "FALSE") { cell.t = 'b'; cell.v = false; }
-			else if(!isNaN(v = +s)) { cell.t = 'n'; cell.w = s; cell.v = v; }
+			else if(!isNaN(v = fuzzynum(s))) { cell.t = 'n'; cell.w = s; cell.v = v; }
 			else if(!isNaN(fuzzydate(s).getDate()) || _re && s.match(_re)) {
 				cell.z = o.dateNF || SSF._table[14];
 				var k = 0;
@@ -14854,11 +14865,11 @@ wb.opts.Date1904 = Workbook.WBProps.date1904 = val; break;
 /* TODO: WTF */
 function parse_props(cfb) {
 	/* [MS-OSHARED] 2.3.3.2.2 Document Summary Information Property Set */
-	var DSI = cfb.find('!DocumentSummaryInformation');
+	var DSI = CFB.find(cfb, '!DocumentSummaryInformation');
 	if(DSI) try { cfb.DocSummary = parse_PropertySetStream(DSI, DocSummaryPIDDSI); } catch(e) {/* empty */}
 
 	/* [MS-OSHARED] 2.3.3.2.1 Summary Information Property Set*/
-	var SI = cfb.find('!SummaryInformation');
+	var SI = CFB.find(cfb, '!SummaryInformation');
 	if(SI) try { cfb.Summary = parse_PropertySetStream(SI, SummaryPIDSI); } catch(e) {/* empty */}
 }
 
@@ -14866,27 +14877,28 @@ function parse_xlscfb(cfb, options) {
 if(!options) options = {};
 fix_read_opts(options);
 reset_cp();
-var CompObj, Summary, Workbook;
+var CompObj, Summary, WB;
 if(cfb.FullPaths) {
-	CompObj = cfb.find('!CompObj');
-	Summary = cfb.find('!SummaryInformation');
-	Workbook = cfb.find('/Workbook');
+	CompObj = CFB.find(cfb, '!CompObj');
+	Summary = CFB.find(cfb, '!SummaryInformation');
+	WB = CFB.find(cfb, '/Workbook');
 } else {
 	prep_blob(cfb, 0);
-	Workbook = ({content: cfb});
+	WB = ({content: cfb});
 }
 
-if(!Workbook) Workbook = cfb.find('/Book');
+if(!WB) WB = CFB.find(cfb, '/Book');
 var CompObjP, SummaryP, WorkbookP;
 
+var _data;
 if(CompObj) CompObjP = parse_compobj(CompObj);
 if(options.bookProps && !options.bookSheets) WorkbookP = ({});
 else {
-	if(Workbook) WorkbookP = parse_workbook(Workbook.content, options);
+	if(WB && WB.content) WorkbookP = parse_workbook(WB.content, options);
 	/* Quattro Pro 7-8 */
-	else if(cfb.find('PerfectOffice_MAIN')) WorkbookP = WK_.to_workbook(cfb.find('PerfectOffice_MAIN').content, options);
+	else if((_data=CFB.find(cfb, 'PerfectOffice_MAIN')) && _data.content) WorkbookP = WK_.to_workbook(_data.content, options);
 	/* Quattro Pro 9 */
-	else if(cfb.find('NativeContent_MAIN')) WorkbookP = WK_.to_workbook(cfb.find('NativeContent_MAIN').content, options);
+	else if((_data=CFB.find(cfb, 'NativeContent_MAIN')) && _data.content) WorkbookP = WK_.to_workbook(_data.content, options);
 	else throw new Error("Cannot find Workbook stream");
 }
 
@@ -16300,12 +16312,14 @@ var HTML_ = (function() {
 				if(range.e.c < C) range.e.c = C;
 				if(opts.dense) {
 					if(!ws[R]) ws[R] = [];
-					if(Number(m) == Number(m)) ws[R][C] = {t:'n', v:+m};
+					if(opts.raw) ws[R][C] = {t:'s', v:m};
+					else if(!isNaN(fuzzynum(m))) ws[R][C] = {t:'n', v:fuzzynum(m)};
 					else ws[R][C] = {t:'s', v:m};
 				} else {
 					var coord = encode_cell({r:R, c:C});
 					/* TODO: value parsing */
-					if(Number(m) == Number(m)) ws[coord] = {t:'n', v:+m};
+					if(opts.raw) ws[coord] = {t:'s', v:m};
+					else if(!isNaN(fuzzynum(m))) ws[coord] = {t:'n', v:fuzzynum(m)};
 					else ws[coord] = {t:'s', v:m};
 				}
 				C += CS;
@@ -16397,7 +16411,8 @@ function parse_dom_table(table, _opts) {
 			if((RS = +elt.getAttribute("rowspan"))>0 || CS>1) merges.push({s:{r:R,c:C},e:{r:R + (RS||1) - 1, c:C + CS - 1}});
 			var o = {t:'s', v:v};
 			if(v != null && v.length) {
-				if(!isNaN(Number(v))) o = {t:'n', v:Number(v)};
+				if(opts.raw) o = {t:'s', v:v};
+				else if(!isNaN(fuzzynum(v))) o = {t:'n', v:fuzzynum(v)};
 				else if(!isNaN(fuzzydate(v).getDate())) {
 					o = ({t:'d', v:parseDate(v)});
 					if(!opts.cellDates) o = ({t:'n', v:datenum(o.v)});
@@ -17320,20 +17335,20 @@ function parse_zip(zip, opts) {
 /* references to [MS-OFFCRYPTO] */
 function parse_xlsxcfb(cfb, opts) {
 	var f = 'Version';
-	var data = cfb.find(f);
+	var data = CFB.find(cfb, f);
 	if(!data || !data.content) throw new Error("ECMA-376 Encrypted file missing " + f);
 	var version = parse_DataSpaceVersionInfo(data.content);
 
 	/* 2.3.4.1 */
 	f = 'DataSpaceMap';
-	data = cfb.find(f);
+	data = CFB.find(cfb, f);
 	if(!data || !data.content) throw new Error("ECMA-376 Encrypted file missing " + f);
 	var dsm = parse_DataSpaceMap(data.content);
 	if(dsm.length != 1 || dsm[0].comps.length != 1 || dsm[0].comps[0].t != 0 || dsm[0].name != "StrongEncryptionDataSpace" || dsm[0].comps[0].v != "EncryptedPackage")
 		throw new Error("ECMA-376 Encrypted file bad " + f);
 
 	f = 'StrongEncryptionDataSpace';
-	data = cfb.find(f);
+	data = CFB.find(cfb, f);
 	if(!data || !data.content) throw new Error("ECMA-376 Encrypted file missing " + f);
 	var seds = parse_DataSpaceDefinition(data.content);
 	if(seds.length != 1 || seds[0] != "StrongEncryptionTransform")
@@ -17341,12 +17356,12 @@ function parse_xlsxcfb(cfb, opts) {
 
 	/* 2.3.4.3 */
 	f = '!Primary';
-	data = cfb.find(f);
+	data = CFB.find(cfb, f);
 	if(!data || !data.content) throw new Error("ECMA-376 Encrypted file missing " + f);
 	var hdr = parse_Primary(data.content);
 
 	f = 'EncryptionInfo';
-	data = cfb.find(f);
+	data = CFB.find(cfb, f);
 	if(!data || !data.content) throw new Error("ECMA-376 Encrypted file missing " + f);
 	var einfo = parse_EncryptionInfo(data.content);
 
@@ -17491,7 +17506,7 @@ function firstbyte(f,o) {
 }
 
 function read_cfb(cfb, opts) {
-	if(cfb.find("EncryptedPackage")) return parse_xlsxcfb(cfb, opts);
+	if(CFB.find(cfb, "EncryptedPackage")) return parse_xlsxcfb(cfb, opts);
 	return parse_xlscfb(cfb, opts);
 }
 
@@ -17688,11 +17703,11 @@ function writeFileAsync(filename, wb, opts, cb) {
 	var _cb = cb; if(!(_cb instanceof Function)) _cb = (opts);
 	return _fs.writeFile(filename, writeSync(wb, o), _cb);
 }
-function sheet_to_json(sheet, opts){
+function sheet_to_json(sheet, opts) {
 	if(sheet == null || sheet["!ref"] == null) return [];
 	var val = {t:'n',v:0}, header = 0, offset = 1, hdr = [], isempty = true, v=0, vv="";
 	var r = {s:{r:0,c:0},e:{r:0,c:0}};
-	var o = opts != null ? opts : {};
+	var o = opts || {};
 	var raw = o.raw;
 	var defval = o.defval;
 	var range = o.range != null ? o.range : sheet["!ref"];
@@ -17706,8 +17721,8 @@ function sheet_to_json(sheet, opts){
 	}
 	if(header > 0) offset = 0;
 	var rr = encode_row(r.s.r);
-	var cols = new Array(r.e.c-r.s.c+1);
-	var out = new Array(r.e.r-r.s.r-offset+1);
+	var cols = [];
+	var out = [];
 	var outi = 0, counter = 0;
 	var dense = Array.isArray(sheet);
 	var R = r.s.r, C = 0, CC = 0;

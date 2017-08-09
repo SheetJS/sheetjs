@@ -28,6 +28,7 @@ The `demos` directory includes sample projects for:
 - [`angular 1.x`](demos/angular/)
 - [`angular 2.x / 4.x`](demos/angular2/)
 - [`browserify`](demos/browserify/)
+- [`canvas-datagrid`](demos/datagrid/)
 - [`Adobe ExtendScript`](demos/extendscript/)
 - [`meteor`](demos/meteor/)
 - [`phantomjs`](demos/phantomjs/)

@@ -83,6 +83,11 @@ export interface CommonOptions {
     cellDates?: boolean;
 }
 
+export interface DateNFOption {
+    /** Use specified date format */
+    dateNF?: NumberFormat;
+}
+
 /** Options for read and readFile */
 export interface ParsingOptions extends CommonOptions {
     /** Input data encoding */
@@ -168,6 +173,9 @@ export interface ParsingOptions extends CommonOptions {
      * @default ''
      */
     password?: string;
+
+    /* If true, plaintext parsing will not parse values */
+    raw?: boolean;
 }
 
 /** Options for write and writeFile */
@@ -541,15 +549,12 @@ export interface Range {
     e: CellAddress;
 }
 
-export interface Sheet2CSVOpts {
+export interface Sheet2CSVOpts extends DateNFOption {
     /** Field Separator ("delimiter") */
     FS?: string;
 
     /** Record Separator ("row separator") */
     RS?: string;
-
-    /** Use specified date format */
-    dateNF?: NumberFormat;
 
     /** Remove trailing field separators in each record */
     strip?: boolean;
@@ -572,10 +577,7 @@ export interface Sheet2HTMLOpts {
     footer?: string;
 }
 
-export interface Sheet2JSONOpts {
-    /** Use specified format for date cells */
-    dateNF?: NumberFormat;
-
+export interface Sheet2JSONOpts extends DateNFOption {
     /** Output format */
     header?: "A"|number|string[];
 
@@ -592,16 +594,7 @@ export interface Sheet2JSONOpts {
     raw?: boolean;
 }
 
-export interface AOA2SheetOpts {
-    /** Use specified format for date cells */
-    dateNF?: NumberFormat;
-
-    /**
-     * Store dates as type d (default is n)
-     * @default false
-     */
-    cellDates?: boolean;
-
+export interface AOA2SheetOpts extends CommonOptions, DateNFOption {
     /**
      * Create cell objects for stub cells
      * @default false
@@ -609,14 +602,14 @@ export interface AOA2SheetOpts {
     sheetStubs?: boolean;
 }
 
-export interface JSON2SheetOpts {
-    /** Use specified date format */
-    dateNF?: NumberFormat;
+export interface JSON2SheetOpts extends CommonOptions, DateNFOption {
+    /** Use specified column order */
+    header?: string[];
 }
 
-export interface Table2SheetOpts {
-    /** Use specified date format */
-    dateNF?: NumberFormat;
+export interface Table2SheetOpts extends CommonOptions, DateNFOption {
+    /* If true, plaintext parsing will not parse values */
+    raw?: boolean;
 }
 
 /** General utilities */

@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<!-- xlsx.js (C) 2013-present  SheetJS http://sheetjs.com -->
+<!-- vim: set ts=2: -->
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>SheetJS + canvas-datagrid Live Demo</title>
+<style>
+#drop{
+	border:2px dashed #bbb;
+	-moz-border-radius:5px;
+	-webkit-border-radius:5px;
+	border-radius:5px;
+	padding:25px;
+	text-align:center;
+	font:20pt bold,"Vollkorn";color:#bbb
+}
+#b64data{
+	width:100%;
+}
+a { text-decoration: none }
+</style>
+</head>
+<body>
+<pre>
+<b><a href="http://sheetjs.com">SheetJS Data Preview Live Demo</a></b>
+
+<a href="https://github.com/TonyGermaneri/canvas-datagrid">canvas-datagrid component library</a>
+
+<a href="https://github.com/SheetJS/js-xlsx">Source Code Repo</a>
+<a href="https://github.com/SheetJS/js-xlsx/issues">Issues?  Something look weird?  Click here and report an issue</a>
+
+<div id="drop">Drop a spreadsheet file here to see sheet data</div>
+<input type="file" name="xlfile" id="xlf" /> ... or click here to select a file
+<textarea id="b64data">... or paste a base64-encoding here</textarea>
+<input type="button" id="dotext" value="Click here to process the base64 text" onclick="b64it();"/><br />
+<b>Advanced Demo Options:</b>
+Use readAsBinaryString: (when available) <input type="checkbox" name="userabs" checked>
+</pre>
+<p><input type="submit" value="Export to XLSX!" id="xport" onclick="doit();" disabled="true"></p>
+<div id="htmlout"></div>
+<br />
+<script src="https://unpkg.com/canvas-datagrid/dist/canvas-datagrid.js"></script>
+<script type="text/javascript" src="https://rawgit.com/eligrey/Blob.js/master/Blob.js"></script>
+<script type="text/javascript" src="https://rawgit.com/eligrey/FileSaver.js/master/FileSaver.js"></script>
+<script src="xlsx.full.min.js"></script>
+<script>
+/*jshint browser:true */
+/* eslint-env browser */
+/* eslint no-use-before-define:0 */
+/*global Uint8Array, Uint16Array, ArrayBuffer */
+/*global XLSX */
+var X = XLSX;
+
+var rABS = typeof FileReader !== "undefined" && typeof FileReader.prototype !== "undefined" && typeof FileReader.prototype.readAsBinaryString !== "undefined";
+if(!rABS) {
+	document.getElementsByName("userabs")[0].disabled = true;
+	document.getElementsByName("userabs")[0].checked = false;
+}
+
+var wtf_mode = false;
+
+function fixdata(data) {
+	var o = "", l = 0, w = 10240;
+	for(; l<data.byteLength/w; ++l) o+=String.fromCharCode.apply(null,new Uint8Array(data.slice(l*w,l*w+w)));
+	o+=String.fromCharCode.apply(null, new Uint8Array(data.slice(l*w)));
+	return o;
+}
+
+function ab2str(data) {
+	var o = "", l = 0, w = 10240;
+	for(; l<data.byteLength/w; ++l) o+=String.fromCharCode.apply(null,new Uint16Array(data.slice(l*w,l*w+w)));
+	o+=String.fromCharCode.apply(null, new Uint16Array(data.slice(l*w)));
+	return o;
+}
+
+function s2ab(s) {
+	var b = new ArrayBuffer(s.length), v = new Uint8Array(b);
+	for (var i=0; i != s.length; ++i) v[i] = s.charCodeAt(i) & 0xFF;
+	return b;
+}
+
+function get_radio_value( radioName ) {
+	var radios = document.getElementsByName( radioName );
+	for( var i = 0; i < radios.length; i++ ) {
+		if( radios[i].checked || radios.length === 1 ) {
+			return radios[i].value;
+		}
+	}
+}
+
+var tarea = document.getElementById('b64data');
+function b64it() {
+	if(typeof console !== 'undefined') console.log("onload", new Date());
+	var wb = X.read(tarea.value, {type: 'base64',WTF:wtf_mode});
+	process_wb(wb);
+}
+window.b64it = b64it;
+
+var global_wb;
+var cDg;
+function process_wb(wb) {
+	global_wb = wb;
+	var ws = wb.Sheets[wb.SheetNames[0]];
+	var data = XLSX.utils.sheet_to_json(ws, {header:1});
+	if(!cDg) cDg = canvasDatagrid({ parentNode:document.getElementById('htmlout'), data:data });
+	else cDg.data = data;
+	document.getElementById('xport').disabled = false;
+	if(typeof console !== 'undefined') console.log("output", new Date());
+}
+function doit() {
+	var new_wb = XLSX.utils.book_new();
+	var new_ws = XLSX.utils.aoa_to_sheet(cDg.data);
+	XLSX.utils.book_append_sheet(new_wb, new_ws, 'SheetJS');
+	var wbout = XLSX.write(new_wb, {bookType:'xlsx', bookSST:true, type:'binary'});
+	var fname = 'sheetjs.xlsx';
+	try {
+		saveAs(new Blob([s2ab(wbout)],{type:"application/octet-stream"}), fname);
+	} catch(e) { if(typeof console != 'undefined') console.log(e, wbout); }
+}
+
+var drop = document.getElementById('drop');
+function handleDrop(e) {
+	e.stopPropagation();
+	e.preventDefault();
+	rABS = document.getElementsByName("userabs")[0].checked;
+	var files = e.dataTransfer.files;
+	var f = files[0];
+	{
+		var reader = new FileReader();
+		//var name = f.name;
+		reader.onload = function(e) {
+			if(typeof console !== 'undefined') console.log("onload", new Date(), rABS);
+			var data = e.target.result;
+			{
+				var wb;
+				if(rABS) {
+					wb = X.read(data, {type: 'binary'});
+				} else {
+					var arr = fixdata(data);
+					wb = X.read(btoa(arr), {type: 'base64'});
+				}
+				process_wb(wb);
+			}
+		};
+		if(rABS) reader.readAsBinaryString(f);
+		else reader.readAsArrayBuffer(f);
+	}
+}
+
+function handleDragover(e) {
+	e.stopPropagation();
+	e.preventDefault();
+	e.dataTransfer.dropEffect = 'copy';
+}
+
+if(drop.addEventListener) {
+	drop.addEventListener('dragenter', handleDragover, false);
+	drop.addEventListener('dragover', handleDragover, false);
+	drop.addEventListener('drop', handleDrop, false);
+}
+
+
+var xlf = document.getElementById('xlf');
+function handleFile(e) {
+	rABS = document.getElementsByName("userabs")[0].checked;
+	var files = e.target.files;
+	var f = files[0];
+	{
+		var reader = new FileReader();
+		//var name = f.name;
+		reader.onload = function(e) {
+			if(typeof console !== 'undefined') console.log("onload", new Date(), rABS);
+			var data = e.target.result;
+			{
+				var wb;
+				if(rABS) {
+					wb = X.read(data, {type: 'binary'});
+				} else {
+					var arr = fixdata(data);
+					wb = X.read(btoa(arr), {type: 'base64'});
+				}
+				process_wb(wb);
+			}
+		};
+		if(rABS) reader.readAsBinaryString(f);
+		else reader.readAsArrayBuffer(f);
+	}
+}
+
+if(xlf.addEventListener) xlf.addEventListener('change', handleFile, false);
+</script>
+<script type="text/javascript">
+	var _gaq = _gaq || [];
+	_gaq.push(['_setAccount', 'UA-36810333-1']);
+	_gaq.push(['_trackPageview']);
+
+	(function() {
+		var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+		ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+		var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+	})();
+</script>
+</body>
+</html>

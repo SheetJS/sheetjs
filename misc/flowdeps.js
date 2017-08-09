@@ -45,6 +45,7 @@ type SSFModule = {
 
 type CFBModule = {
 	version:string;
+	find:(cfb:CFBContainer, path:string)=>?CFBEntry;
 	read:(blob:RawBytes|string, opts:CFBReadOpts)=>CFBContainer;
 	parse:(file:RawBytes, opts:CFBReadOpts)=>CFBContainer;
 	utils:CFBUtils;

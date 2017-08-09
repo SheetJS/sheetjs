@@ -10,8 +10,8 @@ function firstbyte(f/*:RawData*/,o/*:?TypeOpts*/)/*:Array<number>*/ {
 	return [x.charCodeAt(0), x.charCodeAt(1), x.charCodeAt(2), x.charCodeAt(3)];
 }
 
-function read_cfb(cfb, opts/*:?ParseOpts*/)/*:Workbook*/ {
-	if(cfb.find("EncryptedPackage")) return parse_xlsxcfb(cfb, opts);
+function read_cfb(cfb/*:CFBContainer*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
+	if(CFB.find(cfb, "EncryptedPackage")) return parse_xlsxcfb(cfb, opts);
 	return parse_xlscfb(cfb, opts);
 }
 

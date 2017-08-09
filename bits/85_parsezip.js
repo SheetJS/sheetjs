@@ -172,20 +172,20 @@ function parse_zip(zip/*:ZIP*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
 /* references to [MS-OFFCRYPTO] */
 function parse_xlsxcfb(cfb, opts/*:?ParseOpts*/)/*:Workbook*/ {
 	var f = 'Version';
-	var data = cfb.find(f);
+	var data = CFB.find(cfb, f);
 	if(!data || !data.content) throw new Error("ECMA-376 Encrypted file missing " + f);
 	var version = parse_DataSpaceVersionInfo(data.content);
 
 	/* 2.3.4.1 */
 	f = 'DataSpaceMap';
-	data = cfb.find(f);
+	data = CFB.find(cfb, f);
 	if(!data || !data.content) throw new Error("ECMA-376 Encrypted file missing " + f);
 	var dsm = parse_DataSpaceMap(data.content);
 	if(dsm.length != 1 || dsm[0].comps.length != 1 || dsm[0].comps[0].t != 0 || dsm[0].name != "StrongEncryptionDataSpace" || dsm[0].comps[0].v != "EncryptedPackage")
 		throw new Error("ECMA-376 Encrypted file bad " + f);
 
 	f = 'StrongEncryptionDataSpace';
-	data = cfb.find(f);
+	data = CFB.find(cfb, f);
 	if(!data || !data.content) throw new Error("ECMA-376 Encrypted file missing " + f);
 	var seds = parse_DataSpaceDefinition(data.content);
 	if(seds.length != 1 || seds[0] != "StrongEncryptionTransform")
@@ -193,12 +193,12 @@ function parse_xlsxcfb(cfb, opts/*:?ParseOpts*/)/*:Workbook*/ {
 
 	/* 2.3.4.3 */
 	f = '!Primary';
-	data = cfb.find(f);
+	data = CFB.find(cfb, f);
 	if(!data || !data.content) throw new Error("ECMA-376 Encrypted file missing " + f);
 	var hdr = parse_Primary(data.content);
 
 	f = 'EncryptionInfo';
-	data = cfb.find(f);
+	data = CFB.find(cfb, f);
 	if(!data || !data.content) throw new Error("ECMA-376 Encrypted file missing " + f);
 	var einfo = parse_EncryptionInfo(data.content);
 

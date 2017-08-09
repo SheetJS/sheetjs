@@ -811,11 +811,11 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 /* TODO: WTF */
 function parse_props(cfb) {
 	/* [MS-OSHARED] 2.3.3.2.2 Document Summary Information Property Set */
-	var DSI = cfb.find('!DocumentSummaryInformation');
+	var DSI = CFB.find(cfb, '!DocumentSummaryInformation');
 	if(DSI) try { cfb.DocSummary = parse_PropertySetStream(DSI, DocSummaryPIDDSI); } catch(e) {/* empty */}
 
 	/* [MS-OSHARED] 2.3.3.2.1 Summary Information Property Set*/
-	var SI = cfb.find('!SummaryInformation');
+	var SI = CFB.find(cfb, '!SummaryInformation');
 	if(SI) try { cfb.Summary = parse_PropertySetStream(SI, SummaryPIDSI); } catch(e) {/* empty */}
 }
 
@@ -823,27 +823,28 @@ function parse_xlscfb(cfb/*:any*/, options/*:?ParseOpts*/)/*:Workbook*/ {
 if(!options) options = {};
 fix_read_opts(options);
 reset_cp();
-var CompObj, Summary, Workbook/*:?any*/;
+var CompObj, Summary, WB/*:?any*/;
 if(cfb.FullPaths) {
-	CompObj = cfb.find('!CompObj');
-	Summary = cfb.find('!SummaryInformation');
-	Workbook = cfb.find('/Workbook');
+	CompObj = CFB.find(cfb, '!CompObj');
+	Summary = CFB.find(cfb, '!SummaryInformation');
+	WB = CFB.find(cfb, '/Workbook');
 } else {
 	prep_blob(cfb, 0);
-	Workbook = ({content: cfb}/*:any*/);
+	WB = ({content: cfb}/*:any*/);
 }
 
-if(!Workbook) Workbook = cfb.find('/Book');
+if(!WB) WB = CFB.find(cfb, '/Book');
 var CompObjP, SummaryP, WorkbookP/*:Workbook*/;
 
+var _data/*:?any*/;
 if(CompObj) CompObjP = parse_compobj(CompObj);
 if(options.bookProps && !options.bookSheets) WorkbookP = ({}/*:any*/);
 else {
-	if(Workbook) WorkbookP = parse_workbook(Workbook.content, options);
+	if(WB && WB.content) WorkbookP = parse_workbook(WB.content, options);
 	/* Quattro Pro 7-8 */
-	else if(cfb.find('PerfectOffice_MAIN')) WorkbookP = WK_.to_workbook(cfb.find('PerfectOffice_MAIN').content, options);
+	else if((_data=CFB.find(cfb, 'PerfectOffice_MAIN')) && _data.content) WorkbookP = WK_.to_workbook(_data.content, options);
 	/* Quattro Pro 9 */
-	else if(cfb.find('NativeContent_MAIN')) WorkbookP = WK_.to_workbook(cfb.find('NativeContent_MAIN').content, options);
+	else if((_data=CFB.find(cfb, 'NativeContent_MAIN')) && _data.content) WorkbookP = WK_.to_workbook(_data.content, options);
 	else throw new Error("Cannot find Workbook stream");
 }
 

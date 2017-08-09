@@ -35,7 +35,7 @@ type CFBFiles = {[n:string]:CFBEntry};
 /* [MS-CFB] v20130118 */
 var CFB = (function _CFB(){
 var exports/*:CFBModule*/ = /*::(*/{}/*:: :any)*/;
-exports.version = '0.12.0';
+exports.version = '0.12.1';
 function parse(file/*:RawBytes*/, options/*:CFBReadOpts*/)/*:CFBContainer*/ {
 var mver = 3; // major version
 var ssz = 512; // sector size
@@ -206,7 +206,7 @@ function build_full_paths(FI/*:CFBFileIndex*/, FPD/*:CFBFullPathDir*/, FP/*:Arra
 		if(FI[i].type === 0 /* unknown */) continue;
 		j = dad[i];
 		if(j === 0) FP[i] = FP[0] + "/" + FP[i];
-		else while(j !== 0) {
+		else while(j !== 0 && j !== dad[j]) {
 			FP[i] = FP[j] + "/" + FP[i];
 			j = dad[j];
 		}
@@ -307,7 +307,6 @@ function read_directory(dir_start/*:number*/, sector_list/*:SectorList*/, sector
 		var blob/*:CFBlob*/ = /*::(*/sector.slice(i, i+128)/*:: :any)*/;
 		prep_blob(blob, 64);
 		namelen = blob.read_shift(2);
-		if(namelen === 0) continue;
 		name = __utf16le(blob,0,namelen-pl);
 		Paths.push(name);
 		var o/*:CFBEntry*/ = ({
@@ -328,6 +327,7 @@ function read_directory(dir_start/*:number*/, sector_list/*:SectorList*/, sector
 		if(mtime !== 0) o.mt = read_date(blob, blob.l-8);
 		o.start = blob.read_shift(4, 'i');
 		o.size = blob.read_shift(4, 'i');
+		if(o.size < 0 && o.start < 0) { o.size = o.type = 0; o.start = ENDOFCHAIN; o.name = ""; }
 		if(o.type === 5) { /* root */
 			minifat_store = o.start;
 			if(nmfs > 0 && minifat_store !== ENDOFCHAIN) sector_list[minifat_store].name = "!StreamData";
@@ -340,7 +340,7 @@ function read_directory(dir_start/*:number*/, sector_list/*:SectorList*/, sector
 			prep_blob(o.content, 0);
 		} else {
 			o.storage = 'minifat';
-			if(minifat_store !== ENDOFCHAIN && o.start !== ENDOFCHAIN) {
+			if(minifat_store !== ENDOFCHAIN && o.start !== ENDOFCHAIN && sector_list[minifat_store]) {
 				o.content = (sector_list[minifat_store].data.slice(o.start*MSSZ,o.start*MSSZ+o.size)/*:any*/);
 				prep_blob(o.content, 0);
 			}
@@ -369,6 +369,9 @@ function readSync(blob/*:RawBytes|string*/, options/*:CFBReadOpts*/) {
 	return parse(/*::typeof blob == 'string' ? new Buffer(blob, 'utf-8') : */blob, options);
 }
 
+function find(cfb/*:CFBContainer*/, path/*:string*/)/*:?CFBEntry*/ {
+	return cfb.find(path);
+}
 /** CFB Constants */
 var MSSZ = 64; /* Mini Sector Size = 1<<6 */
 //var MSCSZ = 4096; /* Mini Stream Cutoff Size */
@@ -394,6 +397,7 @@ var consts = {
 	EntryTypes: ['unknown','storage','stream','lockbytes','property','root']
 };
 
+exports.find = find;
 exports.read = readSync;
 exports.parse = parse;
 exports.utils = {

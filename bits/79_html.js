@@ -37,12 +37,14 @@ var HTML_ = (function() {
 				if(range.e.c < C) range.e.c = C;
 				if(opts.dense) {
 					if(!ws[R]) ws[R] = [];
-					if(Number(m) == Number(m)) ws[R][C] = {t:'n', v:+m};
+					if(opts.raw) ws[R][C] = {t:'s', v:m};
+					else if(!isNaN(fuzzynum(m))) ws[R][C] = {t:'n', v:fuzzynum(m)};
 					else ws[R][C] = {t:'s', v:m};
 				} else {
 					var coord/*:string*/ = encode_cell({r:R, c:C});
 					/* TODO: value parsing */
-					if(Number(m) == Number(m)) ws[coord] = {t:'n', v:+m};
+					if(opts.raw) ws[coord] = {t:'s', v:m};
+					else if(!isNaN(fuzzynum(m))) ws[coord] = {t:'n', v:fuzzynum(m)};
 					else ws[coord] = {t:'s', v:m};
 				}
 				C += CS;
@@ -134,7 +136,8 @@ function parse_dom_table(table/*:HTMLElement*/, _opts/*:?any*/)/*:Worksheet*/ {
 			if((RS = +elt.getAttribute("rowspan"))>0 || CS>1) merges.push({s:{r:R,c:C},e:{r:R + (RS||1) - 1, c:C + CS - 1}});
 			var o/*:Cell*/ = {t:'s', v:v};
 			if(v != null && v.length) {
-				if(!isNaN(Number(v))) o = {t:'n', v:Number(v)};
+				if(opts.raw) o = {t:'s', v:v};
+				else if(!isNaN(fuzzynum(v))) o = {t:'n', v:fuzzynum(v)};
 				else if(!isNaN(fuzzydate(v).getDate())) {
 					o = ({t:'d', v:parseDate(v)}/*:any*/);
 					if(!opts.cellDates) o = ({t:'n', v:datenum(o.v)}/*:any*/);
