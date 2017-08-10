@@ -105,6 +105,8 @@ function process_wb(wb) {
 	var data = XLSX.utils.sheet_to_json(ws, {header:1});
 	if(!cDg) cDg = canvasDatagrid({ parentNode:document.getElementById('htmlout'), data:data });
 	else cDg.data = data;
+	var range = XLSX.utils.decode_range(ws['!ref']);
+	for(var i = range.s.c; i <= range.e.c; ++i) cDg.schema[i - range.s.c].title = XLSX.utils.encode_col(i);
 	document.getElementById('xport').disabled = false;
 	if(typeof console !== 'undefined') console.log("output", new Date());
 }

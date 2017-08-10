@@ -14,3 +14,4 @@ update:
 	git show master:tests/mocha.css > tests/mocha.css
 	git show master:tests/mocha.js > tests/mocha.js
 	git show master:tests/xhr-hack.js > tests/xhr-hack.js
+	git show master:demos/datagrid/index.html > datagrid.html
