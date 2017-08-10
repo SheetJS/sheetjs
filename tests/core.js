@@ -568,14 +568,14 @@ describe('input formats', function() {
 		X.read(fs.readFileSync(paths.cstxlsb, 'base64'), {type: 'base64'});
 	});
 	var k = browser ? 'array' : 'buffer';
-	(typeof UInt8Array !== 'undefined' ? it : it.skip)('should read ' + k + 's', function() {
-		X.read(fs.readFileSync(paths.cstxls, 'buffer'), {type: k});
-		X.read(fs.readFileSync(paths.cstxml, 'buffer'), {type: k});
-		X.read(fs.readFileSync(paths.cstods, 'buffer'), {type: k});
-		X.read(fs.readFileSync(paths.cstxlsx, 'buffer'), {type: k});
-		X.read(fs.readFileSync(paths.cstxlsb, 'buffer'), {type: k});
+	(typeof Uint8Array !== 'undefined' ? it : it.skip)('should read ' + k + 's', function() {
+		X.read(fs.readFileSync(paths.cstxls, browser ? 'buffer' : null), {type: k});
+		X.read(fs.readFileSync(paths.cstxml, browser ? 'buffer' : null), {type: k});
+		X.read(fs.readFileSync(paths.cstods, browser ? 'buffer' : null), {type: k});
+		X.read(fs.readFileSync(paths.cstxlsx, browser ? 'buffer' : null), {type: k});
+		X.read(fs.readFileSync(paths.cstxlsb, browser ? 'buffer' : null), {type: k});
 	});
-	(typeof UInt8Array !== 'undefined' ? it : it.skip)('should read array', function() {
+	(typeof Uint8Array !== 'undefined' ? it : it.skip)('should read array', function() {
 		X.read(fs.readFileSync(paths.cstxls, 'binary').split("").map(function(x) { return x.charCodeAt(0); }), {type:'array'});
 		X.read(fs.readFileSync(paths.cstxml, 'binary').split("").map(function(x) { return x.charCodeAt(0); }), {type:'array'});
 		X.read(fs.readFileSync(paths.cstxlsx, 'binary').split("").map(function(x) { return x.charCodeAt(0); }), {type:'array'});
@@ -1841,6 +1841,40 @@ describe('csv', function() {
 			ws["!cols"] = [{hidden:true},null,null,null];
 			assert.equal(X.utils.sheet_to_csv(ws, {skipHidden:true}), "2,3,\nFALSE,,sheetjs\nbar,2/19/14,0.3\n,,\n,qux,\n");
 			delete ws["!cols"];
+		});
+	});
+});
+
+describe('HTML', function() {
+	describe('input', function(){
+		var b = "<table><tr><td>-0.08</td><td>4,001</td><td>\u00e3\u0081\u0082 1</td></tr><tr><td>$41.08</td><td>11%</td></tr></table>";
+		it('should generate numbers by default', function() {
+			var sheet = X.read(b, {type:"binary"}).Sheets.Sheet1;
+			var cell = get_cell(sheet, "A1");
+			assert.equal(cell.v, -0.08);
+			assert.equal(cell.t, 'n');
+			cell = get_cell(sheet, "B1");
+			assert.equal(cell.v, 4001);
+			cell = get_cell(sheet, "C1");
+			assert.equal(cell.v, "あ 1");
+			cell = get_cell(sheet, "A2");
+			assert.equal(cell.v, 41.08);
+			cell = get_cell(sheet, "B2");
+			assert.equal(cell.v, .11);
+		});
+		it('should generate strings if raw option is passed', function() {
+			var sheet = X.read(b, {type:"binary", raw:true}).Sheets.Sheet1;
+			var cell = get_cell(sheet, "A1");
+			assert.equal(cell.v, "-0.08");
+			assert.equal(cell.t, 's');
+			cell = get_cell(sheet, "B1");
+			assert.equal(cell.v, "4,001");
+			cell = get_cell(sheet, "C1");
+			assert.equal(cell.v, "あ 1");
+			cell = get_cell(sheet, "A2");
+			assert.equal(cell.v, "$41.08");
+			cell = get_cell(sheet, "B2");
+			assert.equal(cell.v, "11%");
 		});
 	});
 });

@@ -72,7 +72,7 @@ function parse_isodur(s) {
 var good_pd_date = new Date('2017-02-19T19:06:09.000Z');
 if(isNaN(good_pd_date.getFullYear())) good_pd_date = new Date('2/19/17');
 var good_pd = good_pd_date.getFullYear() == 2017;
-/* parses aa date as a local date */
+/* parses a date as a local date */
 function parseDate(str/*:string|Date*/, fixdate/*:?number*/)/*:Date*/ {
 	var d = new Date(str);
 	if(good_pd) {
@@ -88,7 +88,9 @@ function parseDate(str/*:string|Date*/, fixdate/*:?number*/)/*:Date*/ {
 		d.setFullYear(d.getFullYear() + 100); return d;
 	}
 	var n = str.match(/\d+/g)||["2017","2","19","0","0","0"];
-	return new Date(+n[0], +n[1] - 1, +n[2], (+n[3]||0), (+n[4]||0), (+n[5]||0));
+	var out = new Date(+n[0], +n[1] - 1, +n[2], (+n[3]||0), (+n[4]||0), (+n[5]||0));
+	if(str.indexOf("Z") > -1) out = new Date(out.getTime() - out.getTimezoneOffset() * 60 * 1000);
+	return out;
 }
 
 function cc2str(arr/*:Array<number>*/)/*:string*/ {
@@ -117,8 +119,11 @@ function fill(c/*:string*/,l/*:number*/)/*:string*/ { var o = ""; while(o.length
 function fuzzynum(s/*:string*/)/*:number*/ {
 	var v/*:number*/ = Number(s);
 	if(!isNaN(v)) return v;
-	var ss = s.replace(/([\d]),([\d])/g,"$1$2").replace(/[$]/g,"");
-	if(!isNaN(v = Number(ss))) return v;
+	var wt = 1;
+	var ss = s.replace(/([\d]),([\d])/g,"$1$2").replace(/[$]/g,"").replace(/[%]/g, function() { wt *= 100; return "";});
+	if(!isNaN(v = Number(ss))) return v / wt;
+	ss = ss.replace(/[(](.*)[)]/,function($$, $1) { wt = -wt; return $1;});
+	if(!isNaN(v = Number(ss))) return v / wt;
 	return v;
 }
 function fuzzydate(s/*:string*/)/*:Date*/ {
@@ -128,7 +133,14 @@ function fuzzydate(s/*:string*/)/*:Date*/ {
 	if(y < 0 || y > 8099) return n;
 	if((m > 0 || d > 1) && y != 101) return o;
 	if(s.toLowerCase().match(/jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec/)) return o;
-	if(!s.match(/[a-zA-Z]/)) return o;
+	if(s.match(/[^-0-9:,\/\\]/)) return o;
 	return n;
 }
 
+var safe_split_regex = "abacaba".split(/(:?b)/i).length == 5;
+function split_regex(str/*:string*/, re, def/*:string*/)/*:Array<string>*/ {
+	if(safe_split_regex || typeof re == "string") return str.split(re);
+	var p = str.split(re), o = [p[0]];
+	for(var i = 1; i < p.length; ++i) { o.push(def); o.push(p[i]); }
+	return o;
+}

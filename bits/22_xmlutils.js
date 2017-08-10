@@ -44,8 +44,10 @@ var unescapexml/*:StringConv*/ = (function() {
 	/* 22.4.2.4 bstr (Basic String) */
 	var encregex = /&(?:quot|apos|gt|lt|amp|#x?([\da-fA-F]+));/g, coderegex = /_x([\da-fA-F]{4})_/g;
 	return function unescapexml(text/*:string*/)/*:string*/ {
-		var s = text + '';
-		return s.replace(encregex, function($$, $1) { return encodings[$$]||String.fromCharCode(parseInt($1,$$.indexOf("x")>-1?16:10))||$$; }).replace(coderegex,function(m,c) {return String.fromCharCode(parseInt(c,16));});
+		var s = text + '', i = s.indexOf("<![CDATA[");
+		if(i == -1) return s.replace(encregex, function($$, $1) { return encodings[$$]||String.fromCharCode(parseInt($1,$$.indexOf("x")>-1?16:10))||$$; }).replace(coderegex,function(m,c) {return String.fromCharCode(parseInt(c,16));});
+		var j = s.indexOf("]]>");
+		return unescapexml(s.slice(0, i)) + s.slice(i+9,j) + unescapexml(s.slice(j+3));
 	};
 })();
 

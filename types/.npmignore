@@ -1,4 +1,5 @@
 Makefile
 *xlsx*.ts
+doc.ts
 write.ts
 tslint.json

@@ -8,7 +8,7 @@ var HTML_ = (function() {
 		if(!mtch) throw new Error("Invalid HTML: could not find <table>");
 		var mtch2/*:any*/ = str.match(/<\/table/i);
 		var i/*:number*/ = mtch.index, j/*:number*/ = mtch2 && mtch2.index || str.length;
-		var rows = str.slice(i, j).split(/(:?<tr[^>]*>)/i);
+		var rows = split_regex(str.slice(i, j), /(:?<tr[^>]*>)/i, "<tr>");
 		var R = -1, C = 0, RS = 0, CS = 0;
 		var range = {s:{r:10000000, c:10000000},e:{r:0,c:0}};
 		var merges = [], midx = 0;

@@ -161,18 +161,24 @@ CDNjs automatically pulls the latest version and makes all versions available at
 
 The `demos` directory includes sample projects for:
 
+**Frameworks**
 - [`angular 1.x`](demos/angular/)
 - [`angular 2.x / 4.x`](demos/angular2/)
-- [`browserify`](demos/browserify/)
-- [`canvas-datagrid`](demos/datagrid/)
-- [`Adobe ExtendScript`](demos/extendscript/)
 - [`meteor`](demos/meteor/)
-- [`phantomjs`](demos/phantomjs/)
+- [`vue 2`](demos/vue/)
+
+**JS Bundlers and Tooling**
+- [`browserify`](demos/browserify/)
 - [`requirejs`](demos/requirejs/)
 - [`rollup`](demos/rollup/)
 - [`systemjs`](demos/systemjs/)
-- [`vue 2`](demos/vue/)
 - [`webpack`](demos/webpack/)
+
+**JS Platforms and Integrations**
+- [`Adobe ExtendScript`](demos/extendscript/)
+- [`phantomjs`](demos/phantomjs/)
+- [`canvas-datagrid`](demos/datagrid/)
+- [`Other JS engines`](demos/altjs/)
 
 ### Optional Modules
 

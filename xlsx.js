@@ -6,7 +6,7 @@
 /*global global, exports, module, require:false, process:false, Buffer:false */
 var XLSX = {};
 (function make_xlsx(XLSX){
-XLSX.version = '0.11.1';
+XLSX.version = '0.11.2';
 var current_codepage = 1200;
 /*global cptable:true */
 if(typeof module !== "undefined" && typeof require !== 'undefined') {
@@ -1477,7 +1477,7 @@ function parse_isodur(s) {
 var good_pd_date = new Date('2017-02-19T19:06:09.000Z');
 if(isNaN(good_pd_date.getFullYear())) good_pd_date = new Date('2/19/17');
 var good_pd = good_pd_date.getFullYear() == 2017;
-/* parses aa date as a local date */
+/* parses a date as a local date */
 function parseDate(str, fixdate) {
 	var d = new Date(str);
 	if(good_pd) {
@@ -1492,7 +1492,9 @@ if(fixdate > 0) d.setTime(d.getTime() + d.getTimezoneOffset() * 60 * 1000);
 		d.setFullYear(d.getFullYear() + 100); return d;
 	}
 	var n = str.match(/\d+/g)||["2017","2","19","0","0","0"];
-	return new Date(+n[0], +n[1] - 1, +n[2], (+n[3]||0), (+n[4]||0), (+n[5]||0));
+	var out = new Date(+n[0], +n[1] - 1, +n[2], (+n[3]||0), (+n[4]||0), (+n[5]||0));
+	if(str.indexOf("Z") > -1) out = new Date(out.getTime() - out.getTimezoneOffset() * 60 * 1000);
+	return out;
 }
 
 function cc2str(arr) {
@@ -1521,8 +1523,11 @@ function fill(c,l) { var o = ""; while(o.length < l) o+=c; return o; }
 function fuzzynum(s) {
 	var v = Number(s);
 	if(!isNaN(v)) return v;
-	var ss = s.replace(/([\d]),([\d])/g,"$1$2").replace(/[$]/g,"");
-	if(!isNaN(v = Number(ss))) return v;
+	var wt = 1;
+	var ss = s.replace(/([\d]),([\d])/g,"$1$2").replace(/[$]/g,"").replace(/[%]/g, function() { wt *= 100; return "";});
+	if(!isNaN(v = Number(ss))) return v / wt;
+	ss = ss.replace(/[(](.*)[)]/,function($$, $1) { wt = -wt; return $1;});
+	if(!isNaN(v = Number(ss))) return v / wt;
 	return v;
 }
 function fuzzydate(s) {
@@ -1532,10 +1537,17 @@ function fuzzydate(s) {
 	if(y < 0 || y > 8099) return n;
 	if((m > 0 || d > 1) && y != 101) return o;
 	if(s.toLowerCase().match(/jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec/)) return o;
-	if(!s.match(/[a-zA-Z]/)) return o;
+	if(s.match(/[^-0-9:,\/\\]/)) return o;
 	return n;
 }
 
+var safe_split_regex = "abacaba".split(/(:?b)/i).length == 5;
+function split_regex(str, re, def) {
+	if(safe_split_regex || typeof re == "string") return str.split(re);
+	var p = str.split(re), o = [p[0]];
+	for(var i = 1; i < p.length; ++i) { o.push(def); o.push(p[i]); }
+	return o;
+}
 function getdatastr(data) {
 	if(!data) return null;
 	if(data.data) return debom(data.data);
@@ -1656,8 +1668,10 @@ var unescapexml = (function() {
 	/* 22.4.2.4 bstr (Basic String) */
 	var encregex = /&(?:quot|apos|gt|lt|amp|#x?([\da-fA-F]+));/g, coderegex = /_x([\da-fA-F]{4})_/g;
 	return function unescapexml(text) {
-		var s = text + '';
-		return s.replace(encregex, function($$, $1) { return encodings[$$]||String.fromCharCode(parseInt($1,$$.indexOf("x")>-1?16:10))||$$; }).replace(coderegex,function(m,c) {return String.fromCharCode(parseInt(c,16));});
+		var s = text + '', i = s.indexOf("<![CDATA[");
+		if(i == -1) return s.replace(encregex, function($$, $1) { return encodings[$$]||String.fromCharCode(parseInt($1,$$.indexOf("x")>-1?16:10))||$$; }).replace(coderegex,function(m,c) {return String.fromCharCode(parseInt(c,16));});
+		var j = s.indexOf("]]>");
+		return unescapexml(s.slice(0, i)) + s.slice(i+9,j) + unescapexml(s.slice(j+3));
 	};
 })();
 
@@ -16283,7 +16297,7 @@ var HTML_ = (function() {
 		if(!mtch) throw new Error("Invalid HTML: could not find <table>");
 		var mtch2 = str.match(/<\/table/i);
 		var i = mtch.index, j = mtch2 && mtch2.index || str.length;
-		var rows = str.slice(i, j).split(/(:?<tr[^>]*>)/i);
+		var rows = split_regex(str.slice(i, j), /(:?<tr[^>]*>)/i, "<tr>");
 		var R = -1, C = 0, RS = 0, CS = 0;
 		var range = {s:{r:10000000, c:10000000},e:{r:0,c:0}};
 		var merges = [], midx = 0;
