@@ -133,8 +133,8 @@ function fuzzydate(s/*:string*/)/*:Date*/ {
 	if(y < 0 || y > 8099) return n;
 	if((m > 0 || d > 1) && y != 101) return o;
 	if(s.toLowerCase().match(/jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec/)) return o;
-	if(s.match(/[^-0-9:,\/\\]/)) return o;
-	return n;
+	if(s.match(/[^-0-9:,\/\\]/)) return n;
+	return o;
 }
 
 var safe_split_regex = "abacaba".split(/(:?b)/i).length == 5;
