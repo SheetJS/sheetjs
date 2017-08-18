@@ -31,6 +31,7 @@
 		"@sheetjs/uglify-js":"~2.7.3",
 		"@types/node":"^8.0.7",
 		"@types/commander":"^2.9.0",
+		"jsdom": "~11.1.0",
 		"dtslint": "^0.1.2",
 		"typescript": "2.2.0"
 	},

@@ -512,6 +512,16 @@ var PRN = (function() {
 		return arr;
 	}
 
+	function guess_sep(str) {
+		var cnt = [], instr = false, end = 0, cc = 0;
+		for(;end < str.length;++end) {
+			if((cc=str.charCodeAt(end)) == 0x22) instr = !instr;
+			else if(!instr) cnt[cc] = (cnt[cc]||0)+1;
+		}
+		if(cnt[0x2C] > cnt[0x09]) return ",";
+		return ",";
+	}
+
 	function dsv_to_sheet_str(str/*:string*/, opts)/*:Worksheet*/ {
 		var o = opts || {};
 		var sep = "";
@@ -519,9 +529,8 @@ var PRN = (function() {
 		var ws/*:Worksheet*/ = o.dense ? ([]/*:any*/) : ({}/*:any*/);
 		var range/*:Range*/ = ({s: {c:0, r:0}, e: {c:0, r:0}}/*:any*/);
 
-		/* known sep */
 		if(str.substr(0,4) == "sep=" && str.charCodeAt(5) == 10) { sep = str.charAt(4); str = str.substr(6); }
-		else if(str.substr(0,1024).indexOf("\t") == -1) sep = ","; else sep = "\t";
+		else sep = guess_sep(str.substr(0,1024));
 		var R = 0, C = 0, v = 0;
 		var start = 0, end = 0, sepcc = sep.charCodeAt(0), instr = false, cc=0;
 		str = str.replace(/\r\n/mg, "\n");
@@ -529,24 +538,30 @@ var PRN = (function() {
 		function finish_cell() {
 			var s = str.slice(start, end);
 			var cell = ({}/*:any*/);
-			if(o.raw) { cell.t = 's'; cell.v = s; }
-			else if(s.charCodeAt(0) == 0x3D) { cell.t = 'n'; cell.f = s.substr(1); }
+			if(s.charAt(0) == '"' && s.charAt(s.length - 1) == '"') s = s.slice(1,-1).replace(/""/g,'"');
+			if(s.length == 0) cell.t = 'z';
+			else if(o.raw) { cell.t = 's'; cell.v = s; }
+			else if(s.charCodeAt(0) == 0x3D) {
+				if(s.charCodeAt(1) == 0x22 && s.charCodeAt(s.length - 1) == 0x22) { cell.t = 's'; cell.v = s.slice(2,-1).replace(/""/g,'"'); }
+				else if(fuzzyfmla(s)) { cell.t = 'n'; cell.f = s.substr(1); }
+				else { cell.t = 's'; cell.v = s; } }
 			else if(s == "TRUE") { cell.t = 'b'; cell.v = true; }
 			else if(s == "FALSE") { cell.t = 'b'; cell.v = false; }
-			else if(!isNaN(v = fuzzynum(s))) { cell.t = 'n'; cell.w = s; cell.v = v; }
+			else if(!isNaN(v = fuzzynum(s))) { cell.t = 'n'; if(o.cellText !== false) cell.w = s; cell.v = v; }
 			else if(!isNaN(fuzzydate(s).getDate()) || _re && s.match(_re)) {
 				cell.z = o.dateNF || SSF._table[14];
 				var k = 0;
 				if(_re && s.match(_re)){ s=dateNF_fix(s, o.dateNF, (s.match(_re)||[])); k=1; }
 				if(o.cellDates) { cell.t = 'd'; cell.v = parseDate(s, k); }
 				else { cell.t = 'n'; cell.v = datenum(parseDate(s, k)); }
-				cell.w = SSF.format(cell.z, cell.v instanceof Date ? datenum(cell.v):cell.v);
+				if(o.cellText !== false) cell.w = SSF.format(cell.z, cell.v instanceof Date ? datenum(cell.v):cell.v);
+				if(!o.cellNF) delete cell.z;
 			} else {
 				cell.t = 's';
-				if(s.charAt(0) == '"' && s.charAt(s.length - 1) == '"') s = s.slice(1,-1).replace(/""/g,'"');
 				cell.v = s;
 			}
-			if(o.dense) { if(!ws[R]) ws[R] = []; ws[R][C] = cell; }
+			if(cell.t == 'z'){}
+			else if(o.dense) { if(!ws[R]) ws[R] = []; ws[R][C] = cell; }
 			else ws[encode_cell({c:C,r:R})] = cell;
 			start = end+1;
 			if(range.e.c < C) range.e.c = C;
@@ -579,7 +594,7 @@ var PRN = (function() {
 			case 'array': str = cc2str(d); break;
 			default: throw new Error("Unrecognized type " + opts.type);
 		}
-		if(bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF) str = utf8read(str);
+		if(bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF) str = utf8read(str.slice(3));
 		return prn_to_sheet_str(str, opts);
 	}
 

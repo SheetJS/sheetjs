@@ -80,7 +80,7 @@ ws['!rows'] = wsrows;
 
 /* TEST: hyperlink note: Excel does not automatically style hyperlinks */
 (<XLSX.CellObject>ws['A3']).l = { Target: "http://sheetjs.com", Tooltip: "Visit us <SheetJS.com!>" };
-XLSX.utils.cell_set_hyperlink(ws['A3'], "http://sheetjs.com", "Visit us <SheetJS.com!>" );
+XLSX.utils.cell_set_hyperlink(ws['A3'], "http://sheetjs.com", "Visit us <SheetJS.com!>");
 
 /* TEST: built-in format */
 (<XLSX.CellObject>ws['B1']).z = "0%"; // Format Code 9

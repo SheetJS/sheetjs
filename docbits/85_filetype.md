@@ -113,6 +113,14 @@ writer proactively generates cells for formulae if values are unavailable.
 
 Excel TXT uses tab as the delimiter and codepage 1200.
 
+Notes:
+
+- Like in Excel, files starting with `0x49 0x44 ("ID")` are treated as Symbolic
+  Link files.  Unlike Excel, if the file does not have a valid SYLK header, it
+  will be proactively reinterpreted as CSV.  There are some files with semicolon
+  delimiter that align with a valid SYLK file.  For the broadest compatibility,
+  all cells with the value of `ID` are automatically wrapped in double-quotes.
+
 </details>
 
 ### Other Workbook Formats

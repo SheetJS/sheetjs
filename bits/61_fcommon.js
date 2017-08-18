@@ -40,3 +40,9 @@ function shift_formula_xlsx(f/*:string*/, range/*:string*/, cell/*:string*/)/*:s
 	var delta = {r:c.r - s.r, c:c.c - s.c};
 	return shift_formula_str(f, delta);
 }
+
+/* TODO: parse formula */
+function fuzzyfmla(f/*:string*/)/*:boolean*/ {
+	if(f.length == 1) return false;
+	return true;
+}

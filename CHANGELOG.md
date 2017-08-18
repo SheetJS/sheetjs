@@ -4,6 +4,10 @@ This log is intended to keep track of backwards-incompatible changes, including
 but not limited to API changes and file location changes.  Minor behavioral
 changes may not be included if they are not expected to break existing code.
 
+## Unreleased (2017-08-??)
+
+* XLS cell ixfe/XF removed
+
 ## 0.11.0 (2017-07-31)
 
 * Strip `require` statements from minified version

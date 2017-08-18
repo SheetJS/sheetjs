@@ -32,6 +32,8 @@ before_install:
   - "npm install blanket"
   - "npm install xlsjs"
   - "npm install coveralls mocha-lcov-reporter"
+# note: jsdom 11.x expects node >= 6 but is missing engines.node
+  - "npm install jsdom@11.x"
 before_script:
   - "make init"
   - "cd test_files; make all; cd -"

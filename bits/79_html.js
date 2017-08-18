@@ -37,13 +37,19 @@ var HTML_ = (function() {
 				if(range.e.c < C) range.e.c = C;
 				if(opts.dense) {
 					if(!ws[R]) ws[R] = [];
-					if(opts.raw) ws[R][C] = {t:'s', v:m};
+					if(!m.length){}
+					else if(opts.raw) ws[R][C] = {t:'s', v:m};
+					else if(m === 'TRUE') ws[R][C] = {t:'b', v:true};
+					else if(m === 'FALSE') ws[R][C] = {t:'b', v:false};
 					else if(!isNaN(fuzzynum(m))) ws[R][C] = {t:'n', v:fuzzynum(m)};
 					else ws[R][C] = {t:'s', v:m};
 				} else {
 					var coord/*:string*/ = encode_cell({r:R, c:C});
 					/* TODO: value parsing */
-					if(opts.raw) ws[coord] = {t:'s', v:m};
+					if(!m.length){}
+					else if(opts.raw) ws[coord] = {t:'s', v:m};
+					else if(m === 'TRUE') ws[coord] = {t:'b', v:true};
+					else if(m === 'FALSE') ws[coord] = {t:'b', v:false};
 					else if(!isNaN(fuzzynum(m))) ws[coord] = {t:'n', v:fuzzynum(m)};
 					else ws[coord] = {t:'s', v:m};
 				}
@@ -126,7 +132,7 @@ function parse_dom_table(table/*:HTMLElement*/, _opts/*:?any*/)/*:Worksheet*/ {
 		var row = rows[R];
 		var elts = row.children;
 		for(_C = C = 0; _C < elts.length; ++_C) {
-			var elt = elts[_C], v = elts[_C].innerText || elts[_C].textContent;
+			var elt = elts[_C], v = elts[_C].innerText || elts[_C].textContent || "";
 			for(midx = 0; midx < merges.length; ++midx) {
 				var m = merges[midx];
 				if(m.s.c == C && m.s.r <= R && R <= m.e.r) { C = m.e.c+1; midx = -1; }
@@ -135,8 +141,11 @@ function parse_dom_table(table/*:HTMLElement*/, _opts/*:?any*/)/*:Worksheet*/ {
 			CS = +elt.getAttribute("colspan") || 1;
 			if((RS = +elt.getAttribute("rowspan"))>0 || CS>1) merges.push({s:{r:R,c:C},e:{r:R + (RS||1) - 1, c:C + CS - 1}});
 			var o/*:Cell*/ = {t:'s', v:v};
-			if(v != null && v.length) {
-				if(opts.raw) o = {t:'s', v:v};
+			if(v != null) {
+				if(v.length == 0) o.t = 'z';
+				else if(opts.raw){}
+				else if(v === 'TRUE') o = {t:'b', v:true};
+				else if(v === 'FALSE') o = {t:'b', v:false};
 				else if(!isNaN(fuzzynum(v))) o = {t:'n', v:fuzzynum(v)};
 				else if(!isNaN(fuzzydate(v).getDate())) {
 					o = ({t:'d', v:parseDate(v)}/*:any*/);

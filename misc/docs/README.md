@@ -1274,7 +1274,7 @@ The exported `read` and `readFile` functions accept an options argument:
 | Option Name | Default | Description                                          |
 | :---------- | ------: | :--------------------------------------------------- |
 | type        |         | Input data encoding (see Input Type below)           |
-| raw         |         | If true, plaintext parsing will not parse values **  |
+| raw         | false   | If true, plaintext parsing will not parse values **  |
 | cellFormula | true    | Save formulae to the .f field                        |
 | cellHTML    | true    | Parse rich text and save HTML to the `.h` field      |
 | cellNF      | false   | Save number format string to the `.z` field          |
@@ -1360,8 +1360,8 @@ Plaintext format guessing follows the priority order:
 | XML    | starts with `<`                                                     |
 | RTF    | starts with `{\rt`                                                  |
 | DSV    | starts with `/sep=.$/`, separator is the specified character        |
+| CSV    | more unquoted `","` characters than `"\t"` chars in the first 1024  |
 | TSV    | one of the first 1024 characters is a tab char `"\t"`               |
-| CSV    | one of the first 1024 characters is a comma char `","`              |
 | PRN    | (default)                                                           |
 
 - HTML tags include: `html`, `table`, `head`, `meta`, `script`, `style`, `div`
@@ -1808,6 +1808,14 @@ compatible readers.  The parser should generally understand Excel CSV. The
 writer proactively generates cells for formulae if values are unavailable.
 
 Excel TXT uses tab as the delimiter and codepage 1200.
+
+Notes:
+
+- Like in Excel, files starting with `0x49 0x44 ("ID")` are treated as Symbolic
+  Link files.  Unlike Excel, if the file does not have a valid SYLK header, it
+  will be proactively reinterpreted as CSV.  There are some files with semicolon
+  delimiter that align with a valid SYLK file.  For the broadest compatibility,
+  all cells with the value of `ID` are automatically wrapped in double-quotes.
 
 
 ### Other Workbook Formats

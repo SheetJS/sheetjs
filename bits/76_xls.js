@@ -131,6 +131,7 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 		if(file_depth > 1) return;
 		if(!cell_valid) return;
 		if(options.cellStyles && line.XF && line.XF.data) process_cell_style(cell, line, options);
+		delete line.ixfe; delete line.XF;
 		lastcell = cell;
 		last_cell = encode_cell(cell);
 		if(range.s) {
@@ -240,8 +241,11 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 				case 'FileSharing': break; //TODO
 				case 'CodePage':
 					/* overrides based on test cases */
-					if(val === 0x5212) val = 1200;
-					else if(val === 0x8001) val = 1252;
+					switch(val) {
+						case 0x5212: val =  1200; break;
+						case 0x8000: val = 10000; break;
+						case 0x8001: val =  1252; break;
+					}
 					opts.codepage = val;
 					set_cp(val);
 					break;

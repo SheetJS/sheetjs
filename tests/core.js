@@ -1723,6 +1723,39 @@ describe('json output', function() {
 	});
 });
 
+
+var codes = [["あ 1", "\u00E3\u0081\u0082 1"]]
+var plaintext_val = [
+	["A1", 'n', -0.08,  "-0.08"],
+	["B1", 'n', 4001,   "4,001"],
+	["C1", 's', "あ 1",  "あ 1"],
+	["A2", 'n', 41.08, "$41.08"],
+	["B2", 'n', 0.11,     "11%"],
+	["B3", 'b', true,    "TRUE"],
+	["C3", 'b', false,  "FALSE"],
+	["A3"]];
+function plaintext_test(wb, raw, sn) {
+	var sheet = wb.Sheets[sn || wb.SheetNames[0]];
+	plaintext_val.forEach(function(x) {
+		var cell = get_cell(sheet, x[0]);
+		if(x.length == 1) { if(cell) { assert.equal(cell.t, 'z'); assert(!cell.v); } return; }
+		assert.equal(cell.v, x[2+!!raw]); assert.equal(cell.t, raw ? 's' : x[1]);
+	});
+}
+function make_html_str(idx) { return ["<table>",
+	"<tr><td>-0.08</td><td>4,001</td><td>", codes[0][idx], "</td></tr>",
+	"<tr><td>$41.08</td><td>11%</td></tr>",
+	"<tr><td></td><td>TRUE</td><td>FALSE</td></tr>",
+"</table>" ].join(""); }
+function make_csv_str(idx) { return [ '\u00EF\u00BB\u00BF' +
+	'-0.08,"4,001",' + codes[0][idx] + '',
+	'$41.08,11%',
+	',TRUE,FALSE'
+].join("\n"); }
+var html_bstr = make_html_str(1), html_str = make_html_str(0);
+var csv_bstr = make_csv_str(1);
+
+
 describe('csv', function() {
 	describe('input', function(){
 		var b = "1,2,3,\nTRUE,FALSE,,sheetjs\nfoo,bar,2/19/14,0.3\n,,,\nbaz,,qux,\n";
@@ -1768,6 +1801,17 @@ describe('csv', function() {
 			cell = get_cell(X.read(bb, opts).Sheets.Sheet1, "C3");
 			assert.equal(cell.v.getMonth(), 2);
 			assert.equal(cell.w, "2/3/14");
+		});
+		it('should interpret values by default', function() { plaintext_test(X.read(csv_bstr, {type:"binary"}), false); });
+		it('should generate strings if raw option is passed', function() { plaintext_test(X.read(csv_bstr, {type:"binary", raw:true}), true); });
+		it('should handle formulae', function() {
+			var bb = '=,=1+1,="100"';
+			var sheet = X.read(bb, {type:"binary"}).Sheets.Sheet1;
+			assert.equal(get_cell(sheet, "A1").t, 's');
+			assert.equal(get_cell(sheet, "A1").v, '=');
+			assert.equal(get_cell(sheet, "B1").f, '1+1');
+			assert.equal(get_cell(sheet, "C1").t, 's');
+			assert.equal(get_cell(sheet, "C1").v, '100');
 		});
 	});
 	describe('output', function(){
@@ -1845,37 +1889,26 @@ describe('csv', function() {
 	});
 });
 
+var JSDOM = null;
+var domtest = browser || (function(){try{return !!(JSDOM=require('jsdom').JSDOM);}catch(e){return 0;}})();
+
+function get_dom_element(html) {
+	if(browser) {
+		var domelt = document.createElement('div');
+		domelt.innerHTML = html;
+		return domelt;
+	}
+	return new JSDOM(html).window.document.body.children[0];
+}
+
 describe('HTML', function() {
-	describe('input', function(){
-		var b = "<table><tr><td>-0.08</td><td>4,001</td><td>\u00e3\u0081\u0082 1</td></tr><tr><td>$41.08</td><td>11%</td></tr></table>";
-		it('should generate numbers by default', function() {
-			var sheet = X.read(b, {type:"binary"}).Sheets.Sheet1;
-			var cell = get_cell(sheet, "A1");
-			assert.equal(cell.v, -0.08);
-			assert.equal(cell.t, 'n');
-			cell = get_cell(sheet, "B1");
-			assert.equal(cell.v, 4001);
-			cell = get_cell(sheet, "C1");
-			assert.equal(cell.v, "あ 1");
-			cell = get_cell(sheet, "A2");
-			assert.equal(cell.v, 41.08);
-			cell = get_cell(sheet, "B2");
-			assert.equal(cell.v, .11);
-		});
-		it('should generate strings if raw option is passed', function() {
-			var sheet = X.read(b, {type:"binary", raw:true}).Sheets.Sheet1;
-			var cell = get_cell(sheet, "A1");
-			assert.equal(cell.v, "-0.08");
-			assert.equal(cell.t, 's');
-			cell = get_cell(sheet, "B1");
-			assert.equal(cell.v, "4,001");
-			cell = get_cell(sheet, "C1");
-			assert.equal(cell.v, "あ 1");
-			cell = get_cell(sheet, "A2");
-			assert.equal(cell.v, "$41.08");
-			cell = get_cell(sheet, "B2");
-			assert.equal(cell.v, "11%");
-		});
+	describe('input string', function(){
+		it('should interpret values by default', function() { plaintext_test(X.read(html_bstr, {type:"binary"}), false); });
+		it('should generate strings if raw option is passed', function() { plaintext_test(X.read(html_bstr, {type:"binary", raw:true}), true); });
+	});
+	(domtest ? describe : describe.skip)('input DOM', function() {
+		it('should interpret values by default', function() { plaintext_test(X.utils.table_to_book(get_dom_element(html_str)), false); });
+		it('should generate strings if raw option is passed', function() { plaintext_test(X.utils.table_to_book(get_dom_element(html_str), {raw:true}), true); });
 	});
 });
 
