@@ -64,9 +64,7 @@ if(typeof Uint8Array !== 'undefined') {
 		if(typeof console !== 'undefined') console.log("onload", new Date());
 		var arraybuffer = oReq.response;
 		var data = new Uint8Array(arraybuffer);
-		var arr = new Array();
-		for(var i = 0; i != data.length; ++i) arr[i] = String.fromCharCode(data[i]);
-		var wb = XLSX.read(arr.join(""), {type:"binary"});
+		var wb = XLSX.read(data, {type:"array"});
 		process_wb(wb);
 	};
 } else {

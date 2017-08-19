@@ -46,13 +46,13 @@
     <script src="mocha.js"></script>
     <script>
       window.initMochaPhantomJS && window.initMochaPhantomJS();
-      mocha.setup('bdd');
+      mocha.setup({ui:'bdd', timeout:15000});
     </script>
     <script src="core.js"></script>
     <script>
       if(typeof mochaSaucePlease !== "undefined") mochaSaucePlease();
       else if(window.mochaPhantomJS) mochaPhantomJS.run();
-      else mocha.run();
+      else typeof mocha_sauce !== 'undefined' ? mocha_sauce() : mocha.run();
     </script>
   </body>
 </html>
