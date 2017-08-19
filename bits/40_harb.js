@@ -518,8 +518,8 @@ var PRN = (function() {
 			if((cc=str.charCodeAt(end)) == 0x22) instr = !instr;
 			else if(!instr) cnt[cc] = (cnt[cc]||0)+1;
 		}
-		if(cnt[0x2C] > cnt[0x09]) return ",";
-		return ",";
+		if((cnt[0x2C]||0) >= (cnt[0x09]||0)) return ",";
+		return "\t";
 	}
 
 	function dsv_to_sheet_str(str/*:string*/, opts)/*:Worksheet*/ {

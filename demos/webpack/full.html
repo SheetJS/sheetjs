@@ -4,7 +4,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-<title>JS-XLSX Live Demo</title>
+<title>SheetJS Live Demo</title>
 <style>
 #drop{
 	border:2px dashed #bbb;
@@ -18,26 +18,33 @@
 #b64data{
 	width:100%;
 }
+a { text-decoration: none }
 </style>
 </head>
 <body>
-<b>JS-XLSX Live Demo</b><br />
-Output Format:
-<select name="format">
+<pre>
+<b><a href="http://sheetjs.com">SheetJS Data Preview Live Demo</a></b>
+(Base64 text works back to IE6; drag and drop works back to IE10)
+
+<a href="https://github.com/SheetJS/js-xlsx">Source Code Repo</a>
+<a href="https://github.com/SheetJS/js-xlsx/issues">Issues?  Something look weird?  Click here and report an issue</a>
+Output Format: <select name="format" onchange="setfmt()">
 <option value="csv" selected> CSV</option>
 <option value="json"> JSON</option>
 <option value="form"> FORMULAE</option>
+<option value="html"> HTML</option>
 </select><br />
-
 <div id="drop">Drop a spreadsheet file here to see sheet data</div>
-<p><input type="file" name="xlfile" id="xlf" /> ... or click here to select a file</p>
+<input type="file" name="xlfile" id="xlf" /> ... or click here to select a file
+
 <textarea id="b64data">... or paste a base64-encoding here</textarea>
 <input type="button" id="dotext" value="Click here to process the base64 text" onclick="b64it();"/><br />
-Advanced Demo Options: <br />
-Use Web Workers: (when available) <input type="checkbox" name="useworker" checked><br />
-Use Transferrables: (when available) <input type="checkbox" name="xferable" checked><br />
-Use readAsBinaryString: (when available) <input type="checkbox" name="userabs" checked><br />
+<b>Advanced Demo Options:</b>
+Use Web Workers: (when available) <input type="checkbox" name="useworker" checked>
+Use readAsBinaryString: (when available) <input type="checkbox" name="userabs" checked>
+</pre>
 <pre id="out"></pre>
+<div id="htmlout"></div>
 <br />
 <script src="full.out.js"></script>
 <script>
@@ -45,9 +52,7 @@ var XW = {
 	/* worker message */
 	msg: 'xlsx',
 	/* worker scripts */
-	rABS: './fullworker2.js',
-	norABS: './fullworker1.js',
-	noxfer: './fullworker.js'
+	worker: './fullworker.js'
 };
 </script>
 <script src="app.js"></script>

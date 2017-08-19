@@ -2,225 +2,151 @@
 /*global XLSX */
 var X = XLSX;
 
-var rABS = typeof FileReader !== "undefined" && typeof FileReader.prototype !== "undefined" && typeof FileReader.prototype.readAsBinaryString !== "undefined";
-if(!rABS) {
-	document.getElementsByName("userabs")[0].disabled = true;
-	document.getElementsByName("userabs")[0].checked = false;
-}
+var global_wb;
 
-var use_worker = typeof Worker !== 'undefined';
-if(!use_worker) {
-	document.getElementsByName("useworker")[0].disabled = true;
-	document.getElementsByName("useworker")[0].checked = false;
-}
+var process_wb = (function() {
+	var OUT = document.getElementById('out');
+	var HTMLOUT = document.getElementById('htmlout');
 
-var transferable = use_worker;
-if(!transferable) {
-	document.getElementsByName("xferable")[0].disabled = true;
-	document.getElementsByName("xferable")[0].checked = false;
-}
+	var get_format = (function() {
+		var radios = document.getElementsByName( "format" );
+		return function() {
+			for(var i = 0; i < radios.length; ++i) if(radios[i].checked || radios.length === 1) return radios[i].value;
+		};
+	})();
 
-var wtf_mode = false;
-
-function fixdata(data) {
-	var o = "", l = 0, w = 10240;
-	for(; l<data.byteLength/w; ++l) o+=String.fromCharCode.apply(null,new Uint8Array(data.slice(l*w,l*w+w)));
-	o+=String.fromCharCode.apply(null, new Uint8Array(data.slice(l*w)));
-	return o;
-}
-
-function ab2str(data) {
-	var o = "", l = 0, w = 10240;
-	for(; l<data.byteLength/w; ++l) o+=String.fromCharCode.apply(null,new Uint16Array(data.slice(l*w,l*w+w)));
-	o+=String.fromCharCode.apply(null, new Uint16Array(data.slice(l*w)));
-	return o;
-}
-
-function s2ab(s) {
-	var b = new ArrayBuffer(s.length*2), v = new Uint16Array(b);
-	for (var i=0; i != s.length; ++i) v[i] = s.charCodeAt(i);
-	return [v, b];
-}
-
-function xw_noxfer(data, cb) {
-	var worker = new Worker(XW.noxfer);
-	worker.onmessage = function(e) {
-		switch(e.data.t) {
-			case 'ready': break;
-			case 'e': console.error(e.data.d); break;
-			case XW.msg: cb(JSON.parse(e.data.d)); break;
-		}
+	var to_json = function to_json(workbook) {
+		var result = {};
+		workbook.SheetNames.forEach(function(sheetName) {
+			var roa = X.utils.sheet_to_json(workbook.Sheets[sheetName]);
+			if(roa.length) result[sheetName] = roa;
+		});
+		return JSON.stringify(result, 2, 2);
 	};
-	var arr = rABS ? data : btoa(fixdata(data));
-	worker.postMessage({d:arr,b:rABS});
-}
 
-function xw_xfer(data, cb) {
-	var worker = new Worker(rABS ? XW.rABS : XW.norABS);
-	worker.onmessage = function(e) {
-		switch(e.data.t) {
-			case 'ready': break;
-			case 'e': console.error(e.data.d); break;
-			default: xx=ab2str(e.data).replace(/\n/g,"\\n").replace(/\r/g,"\\r"); console.log("done"); cb(JSON.parse(xx)); break;
-		}
+	var to_csv = function to_csv(workbook) {
+		var result = [];
+		workbook.SheetNames.forEach(function(sheetName) {
+			var csv = X.utils.sheet_to_csv(workbook.Sheets[sheetName]);
+			if(csv.length){
+				result.push("SHEET: " + sheetName);
+				result.push("");
+				result.push(csv);
+			}
+		});
+		return result.join("\n");
 	};
-	if(rABS) {
-		var val = s2ab(data);
-		worker.postMessage(val[1], [val[1]]);
-	} else {
-		worker.postMessage(data, [data]);
-	}
-}
 
-function xw(data, cb) {
-	transferable = document.getElementsByName("xferable")[0].checked;
-	if(transferable) xw_xfer(data, cb);
-	else xw_noxfer(data, cb);
-}
+	var to_fmla = function to_fmla(workbook) {
+		var result = [];
+		workbook.SheetNames.forEach(function(sheetName) {
+			var formulae = X.utils.get_formulae(workbook.Sheets[sheetName]);
+			if(formulae.length){
+				result.push("SHEET: " + sheetName);
+				result.push("");
+				result.push(formulae.join("\n"));
+			}
+		});
+		return result.join("\n");
+	};
 
-function get_radio_value( radioName ) {
-	var radios = document.getElementsByName( radioName );
-	for( var i = 0; i < radios.length; i++ ) {
-		if( radios[i].checked || radios.length === 1 ) {
-			return radios[i].value;
+	var to_html = function to_html(workbook) {
+		HTMLOUT.innerHTML = "";
+		workbook.SheetNames.forEach(function(sheetName) {
+			var htmlstr = X.write(workbook, {sheet:sheetName, type:'binary', bookType:'html'});
+			HTMLOUT.innerHTML += htmlstr;
+		});
+		return "";
+	};
+
+	return function process_wb(wb) {
+		global_wb = wb;
+		var output = "";
+		switch(get_format()) {
+			case "form": output = to_fmla(wb); break;
+			case "html": output = to_html(wb); break;
+			case "json": output = to_json(wb); break;
+			default: output = to_csv(wb);
 		}
-	}
-}
+		if(OUT.innerText === undefined) OUT.textContent = output;
+		else OUT.innerText = output;
+		if(typeof console !== 'undefined') console.log("output", new Date());
+	};
+})();
 
-function to_json(workbook) {
-	var result = {};
-	workbook.SheetNames.forEach(function(sheetName) {
-		var roa = X.utils.sheet_to_json(workbook.Sheets[sheetName]);
-		if(roa.length > 0){
-			result[sheetName] = roa;
-		}
-	});
-	return result;
-}
+var setfmt = window.setfmt = function setfmt() { if(global_wb) process_wb(global_wb); };
 
-function to_csv(workbook) {
-	var result = [];
-	workbook.SheetNames.forEach(function(sheetName) {
-		var csv = X.utils.sheet_to_csv(workbook.Sheets[sheetName]);
-		if(csv.length > 0){
-			result.push("SHEET: " + sheetName);
-			result.push("");
-			result.push(csv);
-		}
-	});
-	return result.join("\n");
-}
+var b64it = window.b64it = (function() {
+	var tarea = document.getElementById('b64data');
+	return function b64it() {
+		if(typeof console !== 'undefined') console.log("onload", new Date());
+		var wb = X.read(tarea.value, {type:'base64', WTF:false});
+		process_wb(wb);
+	};
+})();
 
-function to_formulae(workbook) {
-	var result = [];
-	workbook.SheetNames.forEach(function(sheetName) {
-		var formulae = X.utils.get_formulae(workbook.Sheets[sheetName]);
-		if(formulae.length > 0){
-			result.push("SHEET: " + sheetName);
-			result.push("");
-			result.push(formulae.join("\n"));
-		}
-	});
-	return result.join("\n");
-}
+var do_file = (function() {
+	var rABS = typeof FileReader !== "undefined" && (FileReader.prototype||{}).readAsBinaryString;
+	var domrabs = document.getElementsByName("userabs")[0];
+	if(!rABS) domrabs.disabled = !(domrabs.checked = false);
 
-var tarea = document.getElementById('b64data');
-function b64it() {
-	if(typeof console !== 'undefined') console.log("onload", new Date());
-	var wb = X.read(tarea.value, {type: 'base64',WTF:wtf_mode});
-	process_wb(wb);
-}
+	var use_worker = typeof Worker !== 'undefined';
+	var domwork = document.getElementsByName("useworker")[0];
+	if(!use_worker) domwork.disabled = !(domwork.checked = false);
 
-function process_wb(wb) {
-	var output = "";
-	switch(get_radio_value("format")) {
-		case "json":
-			output = JSON.stringify(to_json(wb), 2, 2);
-			break;
-		case "form":
-			output = to_formulae(wb);
-			break;
-		default:
-			output = to_csv(wb);
-	}
-	if(out.innerText === undefined) out.textContent = output;
-	else out.innerText = output;
-	if(typeof console !== 'undefined') console.log("output", new Date());
-}
+	var xw = function xw(data, cb) {
+		var worker = new Worker(XW.worker);
+		worker.onmessage = function(e) {
+			switch(e.data.t) {
+				case 'ready': break;
+				case 'e': console.error(e.data.d); break;
+				case XW.msg: cb(JSON.parse(e.data.d)); break;
+			}
+		};
+		worker.postMessage({d:data,b:rABS?'binary':'array'});
+	};
 
-var drop = document.getElementById('drop');
-function handleDrop(e) {
-	e.stopPropagation();
-	e.preventDefault();
-	rABS = document.getElementsByName("userabs")[0].checked;
-	use_worker = document.getElementsByName("useworker")[0].checked;
-	var files = e.dataTransfer.files;
-	var f = files[0];
-	{
+	return function do_file(files) {
+		rABS = domrabs.checked;
+		use_worker = domwork.checked;
+		var f = files[0];
 		var reader = new FileReader();
-		var name = f.name;
 		reader.onload = function(e) {
 			if(typeof console !== 'undefined') console.log("onload", new Date(), rABS, use_worker);
 			var data = e.target.result;
-			if(use_worker) {
-				xw(data, process_wb);
-			} else {
-				var wb;
-				if(rABS) {
-					wb = X.read(data, {type: 'binary'});
-				} else {
-					var arr = fixdata(data);
-					wb = X.read(btoa(arr), {type: 'base64'});
-				}
-				process_wb(wb);
-			}
+			if(!rABS) data = new Uint8Array(data);
+			if(use_worker) xw(data, process_wb);
+			else process_wb(X.read(data, {type: rABS ? 'binary' : 'array'}));
 		};
 		if(rABS) reader.readAsBinaryString(f);
 		else reader.readAsArrayBuffer(f);
+	};
+})();
+
+(function() {
+	var drop = document.getElementById('drop');
+	if(!drop.addEventListener) return;
+
+	function handleDrop(e) {
+		e.stopPropagation();
+		e.preventDefault();
+		do_file(e.dataTransfer.files);
 	}
-}
 
-function handleDragover(e) {
-	e.stopPropagation();
-	e.preventDefault();
-	e.dataTransfer.dropEffect = 'copy';
-}
+	function handleDragover(e) {
+		e.stopPropagation();
+		e.preventDefault();
+		e.dataTransfer.dropEffect = 'copy';
+	}
 
-if(drop.addEventListener) {
 	drop.addEventListener('dragenter', handleDragover, false);
 	drop.addEventListener('dragover', handleDragover, false);
 	drop.addEventListener('drop', handleDrop, false);
-}
+})();
 
-
-var xlf = document.getElementById('xlf');
-function handleFile(e) {
-	rABS = document.getElementsByName("userabs")[0].checked;
-	use_worker = document.getElementsByName("useworker")[0].checked;
-	var files = e.target.files;
-	var f = files[0];
-	{
-		var reader = new FileReader();
-		var name = f.name;
-		reader.onload = function(e) {
-			if(typeof console !== 'undefined') console.log("onload", new Date(), rABS, use_worker);
-			var data = e.target.result;
-			if(use_worker) {
-				xw(data, process_wb);
-			} else {
-				var wb;
-				if(rABS) {
-					wb = X.read(data, {type: 'binary'});
-				} else {
-					var arr = fixdata(data);
-					wb = X.read(btoa(arr), {type: 'base64'});
-				}
-				process_wb(wb);
-			}
-		};
-		if(rABS) reader.readAsBinaryString(f);
-		else reader.readAsArrayBuffer(f);
-	}
-}
-
-if(xlf.addEventListener) xlf.addEventListener('change', handleFile, false);
+(function() {
+	var xlf = document.getElementById('xlf');
+	if(!xlf.addEventListener) return;
+	function handleFile(e) { do_file(e.target.files); }
+	xlf.addEventListener('change', handleFile, false);
+})();

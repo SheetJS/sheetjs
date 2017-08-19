@@ -40,7 +40,7 @@ The `demos` directory includes sample projects for:
 
 **JS Platforms and Integrations**
 - [`Adobe ExtendScript`](demos/extendscript/)
-- [`phantomjs`](demos/phantomjs/)
+- [`Headless Browsers`](demos/headless/)
 - [`canvas-datagrid`](demos/datagrid/)
 - [`Other JS engines`](demos/altjs/)
 

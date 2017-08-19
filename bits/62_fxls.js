@@ -823,7 +823,7 @@ function stringify_formula(formula/*Array<any>*/, range, cell/*:any*/, supbooks,
 			case 'PtgArea3d': /* 2.5.198.28 TODO */
 				type = f[1][0]; ixti = /*::Number(*/f[1][1]/*::)*/; r = f[1][2];
 				sname = (supbooks && supbooks[1] ? supbooks[1][ixti+1] : "**MISSING**");
-				stack.push(sname + "!" + encode_range((r/*:any*/)));
+				stack.push(sname + "!" + encode_range_xls((r/*:any*/), opts));
 				break;
 			case 'PtgAttrSum': /* 2.5.198.41 */
 				stack.push("SUM(" + stack.pop() + ")");

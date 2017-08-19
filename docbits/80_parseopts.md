@@ -50,7 +50,7 @@ tells the library how to parse the data argument:
 | `type`     | expected input                                                  |
 |------------|-----------------------------------------------------------------|
 | `"base64"` | string: base64 encoding of the file                             |
-| `"binary"` | string:  binary string (`n`-th byte is `data.charCodeAt(n)`)    |
+| `"binary"` | string: binary string (`n`-th byte is `data.charCodeAt(n)`)     |
 | `"buffer"` | nodejs Buffer                                                   |
 | `"array"`  | array: array of 8-bit unsigned int (`n`-th byte is `data[n]`)   |
 | `"file"`   | string: filename that will be read and processed (nodejs only)  |
@@ -76,7 +76,7 @@ file but Excel will know how to handle it.  This library applies similar logic:
 | `0xEF` | UTF8 Encoded  | SpreadsheetML / Flat ODS / UOS1 / HTML / plaintext  |
 | `0xFF` | UTF16 Encoded | SpreadsheetML / Flat ODS / UOS1 / HTML / plaintext  |
 | `0x00` | Record Stream | Lotus WK\* or Quattro Pro or plaintext              |
-| `0x0A` | Plaintext     | RTF or plaintext                                    |
+| `0x7B` | Plaintext     | RTF or plaintext                                    |
 | `0x0A` | Plaintext     | SpreadsheetML / Flat ODS / UOS1 / HTML / plaintext  |
 | `0x0D` | Plaintext     | SpreadsheetML / Flat ODS / UOS1 / HTML / plaintext  |
 | `0x20` | Plaintext     | SpreadsheetML / Flat ODS / UOS1 / HTML / plaintext  |

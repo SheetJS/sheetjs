@@ -69,7 +69,7 @@ function readSync(data/*:RawData*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
 	if(o.type == "file") { o.type = "buffer"; d = _fs.readFileSync(data); }
 	switch((n = firstbyte(d, o))[0]) {
 		case 0xD0: return read_cfb(CFB.read(d, o), o);
-		case 0x09: return parse_xlscfb(s2a(o.type === 'base64' ? Base64.decode(d) : d), o);
+		case 0x09: return parse_xlscfb(d, o);
 		case 0x3C: return parse_xlml(d, o);
 		case 0x49: if(n[1] == 0x44) return read_wb_ID(d, o); break;
 		case 0x54: if(n[1] == 0x41 && n[2] == 0x42 && n[3] == 0x4C) return DIF.to_workbook(d, o); break;

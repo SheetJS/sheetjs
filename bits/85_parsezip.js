@@ -38,6 +38,8 @@ function safe_parse_sheet(zip, path/*:string*/, relsPath/*:string*/, sheet, shee
 }
 
 var nodirs = function nodirs(x/*:string*/)/*:boolean*/{return x.slice(-1) != '/';};
+function strip_front_slash(x/*:string*/)/*:string*/ { return x.charAt(0) == '/' ? x.slice(1) : x; }
+
 function parse_zip(zip/*:ZIP*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
 	make_ssf(SSF);
 	opts = opts || {};
@@ -70,22 +72,26 @@ function parse_zip(zip/*:ZIP*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
 	var styles = ({}/*:any*/);
 	if(!opts.bookSheets && !opts.bookProps) {
 		strs = [];
-		if(dir.sst) strs=parse_sst(getzipdata(zip, dir.sst.replace(/^\//,'')), dir.sst, opts);
+		if(dir.sst) strs=parse_sst(getzipdata(zip, strip_front_slash(dir.sst)), dir.sst, opts);
 
 		if(opts.cellStyles && dir.themes.length) themes = parse_theme(getzipstr(zip, dir.themes[0].replace(/^\//,''), true)||"",dir.themes[0], opts);
 
-		if(dir.style) styles = parse_sty(getzipdata(zip, dir.style.replace(/^\//,'')),dir.style, themes, opts);
+		if(dir.style) styles = parse_sty(getzipdata(zip, strip_front_slash(dir.style)), dir.style, themes, opts);
 	}
 
-	var wb = parse_wb(getzipdata(zip, dir.workbooks[0].replace(/^\//,'')), dir.workbooks[0], opts);
+	var externbooks = dir.links.map(function(link) {
+		return parse_xlink(getzipdata(zip, strip_front_slash(link)), link, opts);
+	});
+
+	var wb = parse_wb(getzipdata(zip, strip_front_slash(dir.workbooks[0])), dir.workbooks[0], opts);
 
 	var props = {}, propdata = "";
 
-	if(dir.coreprops.length !== 0) {
-		propdata = getzipstr(zip, dir.coreprops[0].replace(/^\//,''), true);
+	if(dir.coreprops.length) {
+		propdata = getzipstr(zip, strip_front_slash(dir.coreprops[0]), true);
 		if(propdata) props = parse_core_props(propdata);
 		if(dir.extprops.length !== 0) {
-			propdata = getzipstr(zip, dir.extprops[0].replace(/^\//,''), true);
+			propdata = getzipstr(zip, strip_front_slash(dir.extprops[0]), true);
 			if(propdata) parse_ext_props(propdata, props, opts);
 		}
 	}
@@ -93,7 +99,7 @@ function parse_zip(zip/*:ZIP*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
 	var custprops = {};
 	if(!opts.bookSheets || opts.bookProps) {
 		if (dir.custprops.length !== 0) {
-			propdata = getzipstr(zip, dir.custprops[0].replace(/^\//,''), true);
+			propdata = getzipstr(zip, strip_front_slash(dir.custprops[0]), true);
 			if(propdata) custprops = parse_cust_props(propdata, opts);
 		}
 	}
@@ -109,7 +115,7 @@ function parse_zip(zip/*:ZIP*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
 	sheets = {};
 
 	var deps = {};
-	if(opts.bookDeps && dir.calcchain) deps=parse_cc(getzipdata(zip, dir.calcchain.replace(/^\//,'')),dir.calcchain,opts);
+	if(opts.bookDeps && dir.calcchain) deps=parse_cc(getzipdata(zip, strip_front_slash(dir.calcchain)),dir.calcchain,opts);
 
 	var i=0;
 	var sheetRels = ({}/*:any*/);
@@ -163,7 +169,7 @@ function parse_zip(zip/*:ZIP*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
 		out.files = zip.files;
 	}
 	if(opts.bookVBA) {
-		if(dir.vba.length > 0) out.vbaraw = getzipdata(zip,dir.vba[0].replace(/^\//,''),true);
+		if(dir.vba.length > 0) out.vbaraw = getzipdata(zip,strip_front_slash(dir.vba[0]),true);
 		else if(dir.defaults && dir.defaults.bin === 'application/vnd.ms-office.vbaProject') out.vbaraw = getzipdata(zip,'xl/vbaProject.bin',true);
 	}
 	return out;

@@ -43,8 +43,13 @@ function parse_cmnt(data, name/*:string*/, opts) {
 }
 
 function parse_cc(data, name/*:string*/, opts) {
-	if(name.slice(-4)===".bin") return parse_cc_bin((data/*:any*/), opts);
-	return parse_cc_xml((data/*:any*/), opts);
+	if(name.slice(-4)===".bin") return parse_cc_bin((data/*:any*/), name, opts);
+	return parse_cc_xml((data/*:any*/), name, opts);
+}
+
+function parse_xlink(data, name/*:string*/, opts) {
+	if(name.slice(-4)===".bin") return parse_xlink_bin((data/*:any*/), name, opts);
+	return parse_xlink_xml((data/*:any*/), name, opts);
 }
 
 function write_wb(wb, name/*:string*/, opts) {

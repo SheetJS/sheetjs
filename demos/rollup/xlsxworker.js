@@ -5,7 +5,7 @@ postMessage({t:"ready"});
 onmessage = function (oEvent) {
   var v;
   try {
-    v = XLSX.read(oEvent.data.d, {type: oEvent.data.b ? 'binary' : 'base64'});
-  } catch(e) { postMessage({t:"e",d:e.stack||e}); }
+    v = XLSX.read(oEvent.data.d, {type: oEvent.data.b});
 postMessage({t:"xlsx", d:JSON.stringify(v)});
+  } catch(e) { postMessage({t:"e",d:e.stack||e}); }
 };

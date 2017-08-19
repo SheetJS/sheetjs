@@ -377,6 +377,7 @@ function parse_xlml_xml(d, _opts)/*:Workbook*/ {
 		case 'ContentStatus':
 		case 'Identifier':
 		case 'Language':
+		case 'AppName':
 			if(Rn[0].slice(-2) === "/>") break;
 			else if(Rn[1]==="/") xlml_set_prop(Props, Rn[3], str.slice(pidx, Rn.index));
 			else pidx = Rn.index + Rn[0].length;
@@ -817,7 +818,10 @@ function parse_xlml_xml(d, _opts)/*:Workbook*/ {
 	return out;
 }
 
-function arr2str(data/*:any*/)/*:string*/ { return data.map(_chr).join(""); }
+function arr2str(data/*:any*/)/*:string*/ {
+	if(Array.isArray(data)) return data.map(_chr).join("");
+	var o = []; for(var i = 0; i < data.length; ++i) o[i] = _chr(data[i]); return o.join("");
+}
 
 function parse_xlml(data/*:RawBytes|string*/, opts)/*:Workbook*/ {
 	fix_read_opts(opts=opts||{});

@@ -28,8 +28,8 @@ var __toBuffer, ___toBuffer;
 __toBuffer = ___toBuffer = function toBuffer_(bufs) { var x = []; for(var i = 0; i < bufs[0].length; ++i) { x.push.apply(x, bufs[0][i]); } return x; };
 var __utf16le, ___utf16le;
 __utf16le = ___utf16le = function utf16le_(b,s,e) { var ss=[]; for(var i=s; i<e; i+=2) ss.push(String.fromCharCode(__readUInt16LE(b,i))); return ss.join(""); };
-var __hexlify, ___hexlify;
-__hexlify = ___hexlify = function hexlify_(b,s,l) { return b.slice(s,(s+l)).map(function(x){return (x<16?"0":"") + x.toString(16);}).join(""); };
+var __hexlify = function(b/*:RawBytes|CFBlob*/,s/*:number*/,l/*:number*/)/*:string*/ { var ss/*:Array<string>*/=[]; for(var i=s; i<s+l; ++i) ss.push(("0" + b[i].toString(16)).slice(-2)); return ss.join(""); };
+var ___hexlify = __hexlify;
 var __utf8, ___utf8;
 __utf8 = ___utf8 = function(b,s,e) { var ss=[]; for(var i=s; i<e; i++) ss.push(String.fromCharCode(__readUInt8(b,i))); return ss.join(""); };
 var __lpstr, ___lpstr;
@@ -68,11 +68,11 @@ if(typeof cptable !== 'undefined') {
 	__8lpp4 = function(b,i) { var len = __readUInt32LE(b,i); return len > 0 ? cptable.utils.decode(65001, b.slice(i+4,i+4+len)) : "";};
 }
 
-var __readUInt8 = function(b, idx) { return b[idx]; };
-var __readUInt16LE = function(b, idx) { return b[idx+1]*(1<<8)+b[idx]; };
-var __readInt16LE = function(b, idx) { var u = b[idx+1]*(1<<8)+b[idx]; return (u < 0x8000) ? u : (0xffff - u + 1) * -1; };
-var __readUInt32LE = function(b, idx) { return b[idx+3]*(1<<24)+(b[idx+2]<<16)+(b[idx+1]<<8)+b[idx]; };
-var __readInt32LE = function(b, idx) { return (b[idx+3]<<24)|(b[idx+2]<<16)|(b[idx+1]<<8)|b[idx]; };
+var __readUInt8 = function(b, idx/*:number*/)/*:number*/ { return b[idx]; };
+var __readUInt16LE = function(b, idx/*:number*/)/*:number*/ { return b[idx+1]*(1<<8)+b[idx]; };
+var __readInt16LE = function(b, idx/*:number*/)/*:number*/ { var u = b[idx+1]*(1<<8)+b[idx]; return (u < 0x8000) ? u : (0xffff - u + 1) * -1; };
+var __readUInt32LE = function(b, idx/*:number*/)/*:number*/ { return b[idx+3]*(1<<24)+(b[idx+2]<<16)+(b[idx+1]<<8)+b[idx]; };
+var __readInt32LE = function(b, idx/*:number*/)/*:number*/ { return (b[idx+3]<<24)|(b[idx+2]<<16)|(b[idx+1]<<8)|b[idx]; };
 
 var ___unhexlify = function(s) { return s.match(/../g).map(function(x) { return parseInt(x,16);}); };
 var __unhexlify = typeof Buffer !== "undefined" ? function(s) { return Buffer.isBuffer(s) ? new Buffer(s, 'hex') : ___unhexlify(s); } : ___unhexlify;
