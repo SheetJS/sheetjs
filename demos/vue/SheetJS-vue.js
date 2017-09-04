@@ -6,7 +6,7 @@ var SJSTemplate = [
 	'<div>',
 		'<input type="file" multiple="false" id="sheetjs-input" accept="' + SheetJSFT + '" @change="onchange" />',
 		'<br/>',
-		'<button type="button" id="expor-table" style="visibility:hidden" @click="onexport">Export to XLSX</button>',
+		'<button type="button" id="export-table" style="visibility:hidden" @click="onexport">Export to XLSX</button>',
 		'<br/>',
 		'<div id="out-table"></div>',
 	'</div>'
@@ -61,7 +61,7 @@ Vue.component('html-preview', {
 				/* update table */
 				document.getElementById('out-table').innerHTML = HTML;
 				/* show export button */
-				document.getElementById('expor-table').style.visibility = "visible";
+				document.getElementById('export-table').style.visibility = "visible";
 			};
 
 			reader.readAsArrayBuffer(file);

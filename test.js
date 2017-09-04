@@ -1253,19 +1253,19 @@ describe('write features', function() {
 				X = require(modp);
 				ws = X.utils.aoa_to_sheet([["a","b","c"],[1,2,3]]);
 				baseprops = {
-					Category: "C4tegory",
-					ContentStatus: "C0ntentStatus",
-					Keywords: "K3ywords",
-					LastAuthor: "L4stAuthor",
-					LastPrinted: "L4stPrinted",
+					Category: "Newspaper",
+					ContentStatus: "Published",
+					Keywords: "print",
+					LastAuthor: "Perry White",
+					LastPrinted: "1978-12-15",
 					RevNumber: 6969,
 					AppVersion: 69,
-					Author: "4uth0r",
-					Comments: "C0mments",
+					Author: "Lois Lane",
+					Comments: "Needs work",
 					Identifier: "1d",
-					Language: "L4nguage",
-					Subject: "Subj3ct",
-					Title: "T1tle"
+					Language: "English",
+					Subject: "Superman",
+					Title: "Man of Steel"
 				};
 			});
 			if(typeof before != 'undefined') before(bef);
@@ -2016,7 +2016,7 @@ describe('encryption', function() {
 			it('should throw with no password', function() {assert.throws(function() { X.read(fs.readFileSync(dir + x), {type:TYPE}); }); });
 			it('should throw with wrong password', function() {
 				try {
-					X.read(fs.readFileSync(dir + x), {type:TYPE,password:'passwor',WTF:opts.WTF});
+					X.read(fs.readFileSync(dir + x), {type:TYPE,password:'Password',WTF:opts.WTF});
 					throw new Error("incorrect password was accepted");
 				} catch(e) {
 					if(e.message != "Password is incorrect") throw e;

@@ -1,6 +1,6 @@
 # Headless Browsers
 
-The library, intentionally conservative in the use of ES5+ feaures, plays nicely
+The library, intentionally conservative in the use of ES5+ features, plays nicely
 with most headless browsers.  This demo shows a few common headless scenarios.
 
 ## PhantomJS

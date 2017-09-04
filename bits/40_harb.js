@@ -149,7 +149,7 @@ function dbf_to_aoa(buf, opts)/*:AOA*/ {
 				case 'L': switch(s.toUpperCase()) {
 					case 'Y': case 'T': out[R][C] = true; break;
 					case 'N': case 'F': out[R][C] = false; break;
-					case ' ': case '?': out[R][C] = false; break; /* NOTE: technically unitialized */
+					case ' ': case '?': out[R][C] = false; break; /* NOTE: technically uninitialized */
 					default: throw new Error("DBF Unrecognized L:|" + s + "|");
 					} break;
 				case 'M': /* TODO: handle memo files */

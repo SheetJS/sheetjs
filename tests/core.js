@@ -2016,7 +2016,7 @@ describe('encryption', function() {
 			it('should throw with no password', function() {assert.throws(function() { X.read(fs.readFileSync(dir + x), {type:TYPE}); }); });
 			it('should throw with wrong password', function() {
 				try {
-					X.read(fs.readFileSync(dir + x), {type:TYPE,password:'passwor',WTF:opts.WTF});
+					X.read(fs.readFileSync(dir + x), {type:TYPE,password:'Password',WTF:opts.WTF});
 					throw new Error("incorrect password was accepted");
 				} catch(e) {
 					if(e.message != "Password is incorrect") throw e;

@@ -2111,7 +2111,7 @@ the metadata the output is valid HTML, although it does accept bare `&` symbols.
 
 `make test` will run the node-based tests.  By default it runs tests on files in
 every supported format.  To test a specific file type, set `FMTS` to the format
-you want to test.  Feature-specific tests are avaialble with `make test_misc`
+you want to test.  Feature-specific tests are available with `make test_misc`
 
 ```bash
 $ make test_misc   # run core tests

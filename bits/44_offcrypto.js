@@ -131,7 +131,7 @@ function parse_EncryptionInfo(blob, length/*:?number*/) {
 		case 0x03: return parse_EncInfoExt(blob, vers);
 		case 0x04: return parse_EncInfoAgl(blob, vers);
 	}
-	throw new Error("ECMA-376 Encryped file unrecognized Version: " + vers.Minor);
+	throw new Error("ECMA-376 Encrypted file unrecognized Version: " + vers.Minor);
 }
 
 /* [MS-OFFCRYPTO] 2.3.4.5  EncryptionInfo Stream (Standard Encryption) */

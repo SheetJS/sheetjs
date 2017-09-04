@@ -381,7 +381,7 @@ var ENDOFCHAIN = -2;
 var HEADER_SIGNATURE = 'd0cf11e0a1b11ae1';
 var HEADER_CLSID = '00000000000000000000000000000000';
 var consts = {
-	/* 2.1 Compund File Sector Numbers and Types */
+	/* 2.1 Compound File Sector Numbers and Types */
 	MAXREGSECT: -6,
 	DIFSECT: -4,
 	FATSECT: -3,
