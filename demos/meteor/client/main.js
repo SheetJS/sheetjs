@@ -1,3 +1,4 @@
+/* xlsx.js (C) 2013-present  SheetJS -- http://sheetjs.com */
 import { Template } from 'meteor/templating';
 import { ReactiveVar } from 'meteor/reactive-var';
 

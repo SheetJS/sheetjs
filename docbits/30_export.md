@@ -40,6 +40,29 @@ saveAs(new Blob([s2ab(wbout)],{type:"application/octet-stream"}), "test.xlsx");
 ```
 </details>
 
+<details>
+	<summary><b>Browser upload to server</b> (click to show)</summary>
+
+A complete example using XHR is [included in the xhr demo](demos/xhr/), along
+with examples for fetch and wrapper libraries.  This example assumes the server
+can handle Base64-encoded files (see the demo for a basic nodejs server):
+
+```js
+/* in this example, send a base64 string to the server */
+var wopts = { bookType:'xlsx', bookSST:false, type:'base64' };
+
+var wbout = XLSX.write(workbook,wopts);
+
+var oReq = new XMLHttpRequest();
+oReq.open("POST", "/upload", true);
+var formdata = new FormData();
+formdata.append('file', 'test.xlsx'); // <-- server expects `file` to hold name
+formdata.append('data', wbout); // <-- `data` holds the base64-encoded data
+oReq.send(formdata);
+```
+
+</details>
+
 ### Writing Examples
 
 - <http://sheetjs.com/demos/table.html> exporting an HTML table

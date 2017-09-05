@@ -1,3 +1,4 @@
+/* xlsx.js (C) 2013-present  SheetJS -- http://sheetjs.com */
 require(["xlsx.full.min"], function(_XLSX) {
 var X = XLSX;
 

@@ -1,4 +1,5 @@
 #!/usr/bin/env jjs
+/* xlsx.js (C) 2013-present  SheetJS -- http://sheetjs.com */
 /* read file */
 var path = java.nio.file.Paths.get('sheetjs.xlsx');
 var fileArray = java.nio.file.Files.readAllBytes(path);

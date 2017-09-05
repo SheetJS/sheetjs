@@ -14,8 +14,8 @@ function write_double_le(b, v/*:number*/, idx/*:number*/) {
 	var av = bs ? -v : v;
 	if(!isFinite(av)) { e = 0x7ff; m = isNaN(v) ? 0x6969 : 0; }
 	else {
-		e = Math.floor(Math.log(av) * Math.LOG2E);
-		m = v * Math.pow(2, 52 - e);
+		e = Math.floor(Math.log(av) / Math.LN2);
+		m = av * Math.pow(2, 52 - e);
 		if(e <= -1023 && (!isFinite(m) || m < Math.pow(2,52))) { e = -1022; }
 		else { m -= Math.pow(2,52); e+=1023; }
 	}

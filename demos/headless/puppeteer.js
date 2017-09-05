@@ -1,3 +1,4 @@
+/* xlsx.js (C) 2013-present  SheetJS -- http://sheetjs.com */
 const puppeteer = require('puppeteer');
 
 (async () => {

@@ -1434,7 +1434,7 @@ var ENDOFCHAIN = -2;
 var HEADER_SIGNATURE = 'd0cf11e0a1b11ae1';
 var HEADER_CLSID = '00000000000000000000000000000000';
 var consts = {
-	/* 2.1 Compund File Sector Numbers and Types */
+	/* 2.1 Compound File Sector Numbers and Types */
 	MAXREGSECT: -6,
 	DIFSECT: -4,
 	FATSECT: -3,
@@ -1907,8 +1907,8 @@ function write_double_le(b, v/*:number*/, idx/*:number*/) {
 	var av = bs ? -v : v;
 	if(!isFinite(av)) { e = 0x7ff; m = isNaN(v) ? 0x6969 : 0; }
 	else {
-		e = Math.floor(Math.log(av) * Math.LOG2E);
-		m = v * Math.pow(2, 52 - e);
+		e = Math.floor(Math.log(av) / Math.LN2);
+		m = av * Math.pow(2, 52 - e);
 		if(e <= -1023 && (!isFinite(m) || m < Math.pow(2,52))) { e = -1022; }
 		else { m -= Math.pow(2,52); e+=1023; }
 	}
@@ -5423,7 +5423,7 @@ function dbf_to_aoa(buf, opts)/*:AOA*/ {
 				case 'L': switch(s.toUpperCase()) {
 					case 'Y': case 'T': out[R][C] = true; break;
 					case 'N': case 'F': out[R][C] = false; break;
-					case ' ': case '?': out[R][C] = false; break; /* NOTE: technically unitialized */
+					case ' ': case '?': out[R][C] = false; break; /* NOTE: technically uninitialized */
 					default: throw new Error("DBF Unrecognized L:|" + s + "|");
 					} break;
 				case 'M': /* TODO: handle memo files */
@@ -6658,7 +6658,7 @@ function parse_EncryptionInfo(blob, length/*:?number*/) {
 		case 0x03: return parse_EncInfoExt(blob, vers);
 		case 0x04: return parse_EncInfoAgl(blob, vers);
 	}
-	throw new Error("ECMA-376 Encryped file unrecognized Version: " + vers.Minor);
+	throw new Error("ECMA-376 Encrypted file unrecognized Version: " + vers.Minor);
 }
 
 /* [MS-OFFCRYPTO] 2.3.4.5  EncryptionInfo Stream (Standard Encryption) */

@@ -1,2 +1,6 @@
 jvm-npm.js
 sheetjs.*
+*.class
+*.jar
+rhino
+xlsx.swift.js

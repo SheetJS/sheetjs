@@ -1,3 +1,4 @@
+/* xlsx.js (C) 2013-present  SheetJS -- http://sheetjs.com */
 var SystemJS = require('systemjs');
 SystemJS.config({
 	meta: {

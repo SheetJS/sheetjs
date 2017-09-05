@@ -1,3 +1,4 @@
+/* xlsx.js (C) 2013-present  SheetJS -- http://sheetjs.com */
 import { Meteor } from 'meteor/meteor';
 
 const XLSX = require('xlsx');

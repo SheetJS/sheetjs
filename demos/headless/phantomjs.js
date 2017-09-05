@@ -1,3 +1,4 @@
+/* xlsx.js (C) 2013-present  SheetJS -- http://sheetjs.com */
 var fs = require('fs');
 var xlsx = require('../../xlsx');
 var page = require('webpage').create();

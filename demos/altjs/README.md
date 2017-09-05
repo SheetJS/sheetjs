@@ -6,6 +6,21 @@ optimize for low overhead and others optimize for ease of embedding within other
 applications.  Since it was designed for ES3 engines, the library can be used in
 those settings!  This demo tries to demonstrate a few alternative deployments.
 
+Some engines provide no default global object.  To create a global reference:
+
+```js
+var global = (function(){ return this; }).call(null);
+```
+
+
+## Swift + JavaScriptCore
+
+iOS and OSX ship with the JavaScriptCore framework, enabling easy JS access from
+Swift and Objective-C.  Hybrid function invocation is tricky, but explicit data
+passing is straightforward.
+
+Binary strings can be passed back and forth using `String.Encoding.ascii`.
+
 
 ## Nashorn
 
@@ -19,6 +34,20 @@ and manually requires the library.
 The Java `nio` API provides the `Files.readAllBytes` method to read a file into
 a byte array.  To use in `XLSX.read`, the demo copies the bytes into a plain JS
 array and calls `XLSX.read` with type `"array"`.
+
+
+## Rhino
+
+[Rhino](http://www.mozilla.org/rhino) is an ES3+ engine written in Java.  The
+`SheetJSRhino` class and `com.sheetjs` package show a complete JAR deployment,
+including the full XLSX source.
+
+Due to code generation errors, optimization must be disabled:
+
+```java
+Context context = Context.enter();
+context.setOptimizationLevel(-1);
+```
 
 
 ## duktape and skookum

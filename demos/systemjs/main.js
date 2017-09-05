@@ -1,3 +1,4 @@
+/* xlsx.js (C) 2013-present  SheetJS -- http://sheetjs.com */
 var XLSX = require('xlsx');
 console.log(XLSX);
 var w = XLSX.read('abc,def\nghi,jkl', {type:'binary'});
