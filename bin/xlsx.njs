@@ -89,8 +89,14 @@ function wb_fmt() {
 	opts.cellNF = true;
 	if(program.output) sheetname = program.output;
 }
-workbook_formats.forEach(function(m) { if(program[m]) { wb_fmt(); } });
-wb_formats_2.forEach(function(m) { if(program[m[0]]) { wb_fmt(); } });
+function isfmt(m) {
+	if(!program.output) return false;
+	var t = m.charAt(0) == "." ? m : "." + m;
+	console.log(m);
+	return program.output.slice(-m.length) == m;
+}
+workbook_formats.forEach(function(m) { if(program[m] || isfmt(m)) { wb_fmt(); } });
+wb_formats_2.forEach(function(m) { if(program[m[0]] || isfmt(m[0])) { wb_fmt(); } });
 if(seen) {
 } else if(program.formulae) opts.cellFormula = true;
 else opts.cellFormula = false;
@@ -129,14 +135,14 @@ var wopts = ({WTF:opts.WTF, bookSST:program.sst}/*:any*/);
 if(program.compress) wopts.compression = true;
 
 /* full workbook formats */
-workbook_formats.forEach(function(m) { if(program[m]) {
-		X.writeFile(wb, sheetname || ((filename || "") + "." + m), wopts);
+workbook_formats.forEach(function(m) { if(program[m] || isfmt(m)) {
+		X.writeFile(wb, program.output || sheetname || ((filename || "") + "." + m), wopts);
 		process.exit(0);
 } });
 
-wb_formats_2.forEach(function(m) { if(program[m[0]]) {
+wb_formats_2.forEach(function(m) { if(program[m[0]] || isfmt(m[0])) {
 		wopts.bookType = m[1];
-		X.writeFile(wb, sheetname || ((filename || "") + "." + m[2]), wopts);
+		X.writeFile(wb, program.output || sheetname || ((filename || "") + "." + m[2]), wopts);
 		process.exit(0);
 } });
 
@@ -168,9 +174,9 @@ if(program.readOnly) process.exit(0);
 	['prn', '.prn'],
 	['txt', '.txt'],
 	['dif', '.dif']
-].forEach(function(m) { if(program[m[0]]) {
+].forEach(function(m) { if(program[m[0]] || isfmt(m[1])) {
 		wopts.bookType = m[0];
-		X.writeFile(wb, sheetname || ((filename || "") + m[1]), wopts);
+		X.writeFile(wb, program.output || sheetname || ((filename || "") + m[1]), wopts);
 		process.exit(0);
 } });
 

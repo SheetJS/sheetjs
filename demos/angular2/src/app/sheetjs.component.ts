@@ -24,8 +24,8 @@ function s2ab(s: string): ArrayBuffer {
 	<table class="sjs-table">
 		<tr *ngFor="let row of data">
 			<td *ngFor="let val of row">
-			{{val}}
-		</td>
+				{{val}}
+			</td>
 		</tr>
 	</table>
 	<button (click)="export()">Export!</button>

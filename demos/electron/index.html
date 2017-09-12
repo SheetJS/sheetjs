@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<!-- xlsx.js (C) 2013-present  SheetJS http://sheetjs.com -->
+<!-- vim: set ts=2: -->
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>SheetJS Electron Demo</title>
+<style>
+#drop{
+	border:2px dashed #bbb;
+	-moz-border-radius:5px;
+	-webkit-border-radius:5px;
+	border-radius:5px;
+	padding:25px;
+	text-align:center;
+	font:20pt bold,"Vollkorn";color:#bbb
+}
+a { text-decoration: none }
+</style>
+</head>
+<body>
+<pre>
+<b><a href="http://sheetjs.com">SheetJS Electron Demo</a></b>
+
+<a href="https://github.com/SheetJS/js-xlsx">Source Code Repo</a>
+<a href="https://github.com/SheetJS/js-xlsx/issues">Issues?  Something look weird?  Click here and report an issue</a>
+<br />
+<button id="readf">Click here to select a file from your computer</button><br />
+<div id="drop">Drop a spreadsheet file here to see sheet data</div>
+<input type="file" name="xlfile" id="xlf" /> ... or click here to select a file
+
+</pre>
+<div id="htmlout"></div>
+<br />
+<script src="index.js"></script>
+</body>
+</html>

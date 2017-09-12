@@ -6,9 +6,9 @@ The library can be imported directly from TS code with:
 import * as XLSX from 'xlsx';
 ```
 
-This demo uses an array of arrays as the core data structure.  The component
-template includes a file input element, a table that updates based on the data,
-and a button to export the data.
+This demo uses an array of arrays (type `Array<Array<any>>`) as the core state.
+The component template includes a file input element, a table that updates with
+the data, and a button to export the data.
 
 ## Switching between Angular versions
 

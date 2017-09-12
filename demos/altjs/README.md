@@ -50,14 +50,30 @@ context.setOptimizationLevel(-1);
 ```
 
 
-## duktape and skookum
+## ChakraCore
+
+ChakraCore is an embeddable JS engine written in C++.  The library and binary
+distributions include a command-line tool `chakra` for running JS scripts.
+
+The simplest way to interop with the engine is to pass Base64 strings.  The make
+target builds a very simple payload with the data.
+
+
+## Duktape
 
 [Duktape](http://duktape.org/) is an embeddable JS engine written in C.  The
-amalgamation makes integration extremely simple!  Duktape understands the source
-code and can process binary strings out the box, but does not provide I/O or
-other standard library features.
+amalgamation makes integration extremely simple!  It supports `Buffer` natively:
 
-To demonstrate compatibility with duktape, this demo uses the JS runtime from
-[Skookum JS](https://github.com/saghul/sjs).  Built upon the duktape engine, it
-adds a simple I/O interface to enable reading from files.
+```C
+/* parse a C char array as a workbook object */
+duk_push_external_buffer(ctx);
+duk_config_buffer(ctx, -1, buf, len);
+duk_put_global_string(ctx, "buf");
+duk_eval_string_noresult("workbook = XLSX.read(buf, {type:'buffer'});");
 
+/* write a workbook object to a C char array */
+duk_eval_string(ctx, "XLSX.write(workbook, {type:'buffer', bookType:'xlsx'})");
+duk_size_t sz;
+char *buf = (char *)duk_get_buffer_data(ctx, -1, sz);
+duk_pop(ctx);
+```

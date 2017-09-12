@@ -1,0 +1,10 @@
+{
+	"name": "sheetjs-nwjs",
+	"author": "sheetjs",
+	"version": "0.0.0",
+	"main": "index.html",
+	"dependencies": {
+		"nw": "~0.24.4",
+		"xlsx": "*"
+	}
+}

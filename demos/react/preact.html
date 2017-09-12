@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<!-- xlsx.js (C) 2013-present  SheetJS http://sheetjs.com -->
+<!-- vim: set ts=2: -->
+<html lang="en" style="height: 100%">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>SheetJS React Demo</title>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" />
+<script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+<script src="//unpkg.com/preact"></script>
+<script src="//unpkg.com/proptypes"></script>
+<script src="//unpkg.com/preact-compat"></script>
+<script>var React = preactCompat, ReactDOM = preactCompat;</script>
+<script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+<script src="https://unpkg.com/file-saver/FileSaver.js"></script>
+<style>body, #app { height: 100%; };</style>
+</head>
+<body>
+<div class="container-fluid">
+<h1><a href="http://sheetjs.com">SheetJS React Demo</a></h1>
+<br />
+<a href="https://github.com/SheetJS/js-xlsx">Source Code Repo</a><br />
+<a href="https://github.com/SheetJS/js-xlsx/issues">Issues?  Something look weird?  Click here and report an issue</a><br /><br />
+</div>
+<div id="app" class="container-fluid"></div>
+<script type="text/babel" src="sheetjs.jsx"></script>
+<script type="text/javascript">
+	var _gaq = _gaq || [];
+	_gaq.push(['_setAccount', 'UA-36810333-1']);
+	_gaq.push(['_trackPageview']);
+
+	(function() {
+		var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+		ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+		var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+	})();
+</script>
+<script type="text/babel">
+	ReactDOM.render( <SheetJSApp />, document.getElementById('app') );
+</script>
+</body>
+</html>
