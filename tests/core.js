@@ -13,7 +13,7 @@ var opts = {cellNF: true};
 var TYPE = browser ? "binary" : "buffer";
 opts.type = TYPE;
 var fullex = [".xlsb", /*".xlsm",*/ ".xlsx"/*, ".xlml"*/];
-var ofmt = ["xlsb", "xlsm", "xlsx", "ods", "biff2", "xlml", "sylk", "dif"];
+var ofmt = ["xlsb", "xlsm", "xlsx", "ods", "biff2", "biff8", "xlml", "sylk", "dif"];
 var ex = fullex.slice(); ex = ex.concat([".ods", ".xls", ".xml", ".fods"]);
 if(typeof process != 'undefined' && ((process||{}).env)) {
 	opts.WTF = true;
@@ -1253,19 +1253,19 @@ describe('write features', function() {
 				X = require(modp);
 				ws = X.utils.aoa_to_sheet([["a","b","c"],[1,2,3]]);
 				baseprops = {
-					Category: "C4tegory",
-					ContentStatus: "C0ntentStatus",
-					Keywords: "K3ywords",
-					LastAuthor: "L4stAuthor",
-					LastPrinted: "L4stPrinted",
+					Category: "Newspaper",
+					ContentStatus: "Published",
+					Keywords: "print",
+					LastAuthor: "Perry White",
+					LastPrinted: "1978-12-15",
 					RevNumber: 6969,
 					AppVersion: 69,
-					Author: "4uth0r",
-					Comments: "C0mments",
+					Author: "Lois Lane",
+					Comments: "Needs work",
 					Identifier: "1d",
-					Language: "L4nguage",
-					Subject: "Subj3ct",
-					Title: "T1tle"
+					Language: "English",
+					Subject: "Superman",
+					Title: "Man of Steel"
 				};
 			});
 			if(typeof before != 'undefined') before(bef);
@@ -1458,7 +1458,7 @@ describe('roundtrip features', function() {
 	});
 
 	describe('should preserve column properties', function() { [
-			'xlml', /*'biff2', */ 'xlsx', 'xlsb', 'slk'
+			'xlml', /*'biff2', 'biff8', */ 'xlsx', 'xlsb', 'slk'
 		].forEach(function(w) { it(w, function() {
 				var ws1 = X.utils.aoa_to_sheet([["hpx12", "hpt24", "hpx48", "hidden"]]);
 				ws1['!cols'] = [{wch:9},{wpx:100},{width:80},{hidden:true}];
@@ -1477,7 +1477,7 @@ describe('roundtrip features', function() {
 
 	/* TODO: ODS and BIFF5/8 */
 	describe('should preserve row properties', function() { [
-			'xlml', /*'biff2', */ 'xlsx', 'xlsb', 'slk'
+			'xlml', /*'biff2', 'biff8', */ 'xlsx', 'xlsb', 'slk'
 		].forEach(function(w) { it(w, function() {
 				var ws1 = X.utils.aoa_to_sheet([["hpx12"],["hpt24"],["hpx48"],["hidden"]]);
 				ws1['!rows'] = [{hpx:12},{hpt:24},{hpx:48},{hidden:true}];
@@ -1979,6 +1979,7 @@ describe('corner cases', function() {
 		X.write(wb, {type: "base64", bookType: 'xlsb'});
 		X.write(wb, {type: "binary", bookType: 'ods'});
 		X.write(wb, {type: "binary", bookType: 'biff2'});
+		X.write(wb, {type: "binary", bookType: 'biff8'});
 		get_cell(ws,"A2").t = "f";
 		assert.throws(function() { X.utils.make_json(ws); });
 	});
@@ -2016,7 +2017,7 @@ describe('encryption', function() {
 			it('should throw with no password', function() {assert.throws(function() { X.read(fs.readFileSync(dir + x), {type:TYPE}); }); });
 			it('should throw with wrong password', function() {
 				try {
-					X.read(fs.readFileSync(dir + x), {type:TYPE,password:'passwor',WTF:opts.WTF});
+					X.read(fs.readFileSync(dir + x), {type:TYPE,password:'Password',WTF:opts.WTF});
 					throw new Error("incorrect password was accepted");
 				} catch(e) {
 					if(e.message != "Password is incorrect") throw e;
