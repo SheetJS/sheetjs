@@ -13,6 +13,7 @@ function write_double_le(b, v/*:number*/, idx/*:number*/) {
 	var bs = ((v < 0 || 1/v == -Infinity) ? 1 : 0) << 7, e = 0, m = 0;
 	var av = bs ? -v : v;
 	if(!isFinite(av)) { e = 0x7ff; m = isNaN(v) ? 0x6969 : 0; }
+	else if(av == 0) e = m = 0;
 	else {
 		e = Math.floor(Math.log(av) / Math.LN2);
 		m = av * Math.pow(2, 52 - e);
@@ -164,6 +165,20 @@ function WriteShift(t/*:number*/, val/*:string|number*/, f/*:?string*/) {
 		/*:: if(typeof val !== 'string') throw new Error("unreachable"); */
 		for(i = 0; i != val.length; ++i) this[this.l + i] = val.charCodeAt(i) & 0xFF;
 		size = val.length;
+	} else if(f === 'hex') {
+		for(; i < t; ++i) {
+			/*:: if(typeof val !== "string") throw new Error("unreachable"); */
+			this[this.l++] = parseInt(val.slice(2*i, 2*i+2), 16)||0;
+		} return this;
+	} else if(f === 'utf16le') {
+			var end/*:number*/ = this.l + t;
+			for(i = 0; i < Math.min(val.length, t); ++i) {
+				var cc = val.charCodeAt(i);
+				this[this.l++] = cc & 0xff;
+				this[this.l++] = cc >> 8;
+			}
+			while(this.l < end) this[this.l++] = 0;
+			return this;
 	} else /*:: if(typeof val === 'number') */ switch(t) {
 		case  1: size = 1; this[this.l] = val&0xFF; break;
 		case  2: size = 2; this[this.l] = val&0xFF; val >>>= 8; this[this.l+1] = val&0xFF; break;

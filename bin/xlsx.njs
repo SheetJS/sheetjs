@@ -20,6 +20,10 @@ program
 	.option('-M, --xlsm', 'emit XLSM to <sheetname> or <file>.xlsm')
 	.option('-X, --xlsx', 'emit XLSX to <sheetname> or <file>.xlsx')
 	.option('-Y, --ods',  'emit ODS  to <sheetname> or <file>.ods')
+	.option('-8, --xls',  'emit XLS  to <sheetname> or <file>.xls (BIFF8)')
+	//.option('-5, --biff5','emit XLS  to <sheetname> or <file>.xls (BIFF5)')
+	//.option('-4, --biff4','emit XLS  to <sheetname> or <file>.xls (BIFF4)')
+	//.option('-3, --biff3','emit XLS  to <sheetname> or <file>.xls (BIFF3)')
 	.option('-2, --biff2','emit XLS  to <sheetname> or <file>.xls (BIFF2)')
 	.option('-6, --xlml', 'emit SSML to <sheetname> or <file>.xls (2003 XML)')
 	.option('-T, --fods', 'emit FODS to <sheetname> or <file>.fods (Flat ODS)')
@@ -52,15 +56,22 @@ program.on('--help', function() {
 	console.log('  Web Demo: http://oss.sheetjs.com/js-'+n+'/');
 });
 
-/* output formats, update list with full option name */
-var workbook_formats = ['xlsx', 'xlsm', 'xlsb', 'ods', 'fods'];
 /* flag, bookType, default ext */
+var workbook_formats = [
+	['xlsx',   'xlsx', 'xlsx'],
+	['xlsm',   'xlsm', 'xlsm'],
+	['xlsb',   'xlsb', 'xlsb'],
+	['xls',     'xls',  'xls'],
+	//['biff5', 'biff5',  'xls'],
+	['ods',     'ods',  'ods'],
+	['fods',   'fods', 'fods']
+];
 var wb_formats_2 = [
-	['xlml', 'xlml', 'xls']
+	['xlml',   'xlml', 'xls']
 ];
 program.parse(process.argv);
 
-var filename = "", sheetname = '';
+var filename = '', sheetname = '';
 if(program.args[0]) {
 	filename = program.args[0];
 	if(program.args[1]) sheetname = program.args[1];
@@ -89,13 +100,12 @@ function wb_fmt() {
 	opts.cellNF = true;
 	if(program.output) sheetname = program.output;
 }
-function isfmt(m) {
+function isfmt(m/*:string*/)/*:boolean*/ {
 	if(!program.output) return false;
-	var t = m.charAt(0) == "." ? m : "." + m;
-	console.log(m);
-	return program.output.slice(-m.length) == m;
+	var t = m.charAt(0) === "." ? m : "." + m;
+	return program.output.slice(-t.length) === t;
 }
-workbook_formats.forEach(function(m) { if(program[m] || isfmt(m)) { wb_fmt(); } });
+workbook_formats.forEach(function(m) { if(program[m[0]] || isfmt(m[0])) { wb_fmt(); } });
 wb_formats_2.forEach(function(m) { if(program[m[0]] || isfmt(m[0])) { wb_fmt(); } });
 if(seen) {
 } else if(program.formulae) opts.cellFormula = true;
@@ -135,8 +145,9 @@ var wopts = ({WTF:opts.WTF, bookSST:program.sst}/*:any*/);
 if(program.compress) wopts.compression = true;
 
 /* full workbook formats */
-workbook_formats.forEach(function(m) { if(program[m] || isfmt(m)) {
-		X.writeFile(wb, program.output || sheetname || ((filename || "") + "." + m), wopts);
+workbook_formats.forEach(function(m) { if(program[m[0]] || isfmt(m[0])) {
+		wopts.bookType = m[1];
+		X.writeFile(wb, program.output || sheetname || ((filename || "") + "." + m[2]), wopts);
 		process.exit(0);
 } });
 
@@ -169,6 +180,8 @@ if(program.readOnly) process.exit(0);
 /* single worksheet formats */
 [
 	['biff2', '.xls'],
+	//['biff3', '.xls'],
+	//['biff4', '.xls'],
 	['sylk', '.slk'],
 	['html', '.html'],
 	['prn', '.prn'],
@@ -180,8 +193,7 @@ if(program.readOnly) process.exit(0);
 		process.exit(0);
 } });
 
-var oo = "";
-var strm = false;
+var oo = "", strm = false;
 if(!program.quiet) console.error(target_sheet);
 if(program.formulae) oo = X.utils.sheet_to_formulae(ws).join("\n");
 else if(program.json) oo = JSON.stringify(X.utils.sheet_to_json(ws));

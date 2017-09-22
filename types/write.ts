@@ -25,7 +25,7 @@ let wsrows: XLSX.RowInfo[] = [
 	{hpt: 12}, // "points"
 	{hpx: 16}, // "pixels"
 	,
-	{hpx: 24},
+	{hpx: 24, level:3},
 	{hidden: true}, // hide row
 	{hidden: false}
 ];
@@ -150,15 +150,17 @@ const filenames: Array<[string]|[string, XLSX.WritingOptions]> = [
 	['sheetjs.xlsx', {bookSST:true}],
 	['sheetjs.xlsm'],
 	['sheetjs.xlsb'],
-	['sheetjs.xls', {bookType:'biff2'}],
+	['sheetjs.xls', {bookType:'xls'}],
+	['sheetjs.biff2', {bookType:'biff2'}],
 	['sheetjs.xml.xls', {bookType:'xlml'}],
 	['sheetjs.ods'],
 	['sheetjs.fods'],
-	['sheetjs.slk'],
 	['sheetjs.csv'],
 	['sheetjs.txt'],
-	['sheetjs.prn'],
-	['sheetjs.dif']
+	['sheetjs.slk'],
+	['sheetjs.htm'],
+	['sheetjs.dif'],
+	['sheetjs.prn']
 ];
 
 filenames.forEach((r) => {

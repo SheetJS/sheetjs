@@ -16,7 +16,7 @@ function parse_comments_xml(data/*:string*/, opts)/*:Array<Comment>*/ {
 		var cm = x.match(/<(?:\w+:)?comment[^>]*>/);
 		if(!cm) return;
 		var y = parsexmltag(cm[0]);
-		var comment/*:Comment*/ = ({ author: y.authorId && authors[y.authorId] ? authors[y.authorId] : "sheetjsghost", ref: y.ref, guid: y.guid }/*:any*/);
+		var comment/*:Comment*/ = ({ author: y.authorId && authors[y.authorId] || "sheetjsghost", ref: y.ref, guid: y.guid }/*:any*/);
 		var cell = decode_cell(y.ref);
 		if(opts.sheetRows && opts.sheetRows <= cell.r) return;
 		var textMatch = x.match(/<(?:\w+:)?text>([\s\S]*)<\/(?:\w+:)?text>/);

@@ -329,14 +329,16 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 					out = ((options.dense ? [] : {})/*:any*/);
 				} break;
 				case 'BOF': {
-					if(opts.biff !== 8){/* empty */}
-					else if(RecordType  === 0x0009) opts.biff = 2;
-					else if(RecordType  === 0x0209) opts.biff = 3;
-					else if(RecordType  === 0x0409) opts.biff = 4;
-					else if(val.BIFFVer === 0x0500) opts.biff = 5;
-					else if(val.BIFFVer === 0x0600) opts.biff = 8;
-					else if(val.BIFFVer === 0x0002) opts.biff = 2;
-					else if(val.BIFFVer === 0x0007) opts.biff = 2;
+					if(opts.biff === 8) switch(RecordType) {
+						case 0x0009: opts.biff = 2; break;
+						case 0x0209: opts.biff = 3; break;
+						case 0x0409: opts.biff = 4; break;
+						default: switch(val.BIFFVer) {
+						case 0x0500: opts.biff = 5; break;
+						case 0x0600: opts.biff = 8; break;
+						case 0x0002: opts.biff = 2; break;
+						case 0x0007: opts.biff = 2; break;
+					}}
 					if(file_depth++) break;
 					cell_valid = true;
 					out = ((options.dense ? [] : {})/*:any*/);
@@ -692,7 +694,8 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 				/* Explicitly Ignored */
 				case 'Excel9File': break;
 				case 'Units': break;
-				case 'InterfaceHdr': case 'Mms': case 'InterfaceEnd': case 'DSF': case 'BuiltInFnGroupCount': break;
+				case 'InterfaceHdr': case 'Mms': case 'InterfaceEnd': case 'DSF': break;
+				case 'BuiltInFnGroupCount': /* 2.4.30 0x0E or 0x10 but excel 2011 generates 0x11? */ break;
 				/* View Stuff */
 				case 'Window1': case 'Window2': case 'HideObj': case 'GridSet': case 'Guts':
 				case 'UserBView': case 'UserSViewBegin': case 'UserSViewEnd':
@@ -791,6 +794,9 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 				case 'ListObj': case 'ListField': break;
 				case 'RRSort': break;
 				case 'BigName': break;
+				case 'ToolbarHdr': case 'ToolbarEnd': break;
+				case 'DDEObjName': break;
+				case 'FRTArchId$': break;
 				default: if(options.WTF) throw 'Unrecognized Record ' + R.n;
 			}}}}
 		} else blob.l += length;
@@ -842,7 +848,6 @@ if(cfb.FullPaths) {
 	prep_blob(cfb, 0);
 	WB = ({content: cfb}/*:any*/);
 }
-
 if(!WB) WB = CFB.find(cfb, '/Book');
 var CompObjP, SummaryP, WorkbookP/*:Workbook*/;
 
@@ -869,3 +874,19 @@ if(options.bookFiles) WorkbookP.cfb = cfb;
 return WorkbookP;
 }
 
+
+function write_xlscfb(wb/*:Workbook*/, opts/*:WriteOpts*/)/*:CFBContainer*/ {
+	var o = opts || {};
+	var cfb = CFB.utils.cfb_new({root:"R"});
+	var wbpath = "/Workbook";
+	switch(o.bookType || "xls") {
+		case "xls": o.bookType = "biff8";
+		/* falls through */
+		case "biff8": wbpath = "/Workbook"; o.biff = 8; break;
+		case "biff5": wbpath = "/Book"; o.biff = 5; break;
+		default: throw new Error("invalid type " + o.bookType + " for XLS CFB");
+	}
+	CFB.utils.cfb_add(cfb, wbpath, write_biff_buf(wb, o));
+	// TODO: SI, DSI, CO
+	return cfb;
+}

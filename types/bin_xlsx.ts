@@ -2,12 +2,12 @@
 /* eslint-env node */
 const n = "xlsx";
 /* vim: set ts=2 ft=javascript: */
-import XLSX = require("xlsx");
+import X = require("xlsx");
 import 'exit-on-epipe';
 import * as fs from 'fs';
 import program = require('commander');
 program
-	.version(XLSX.version)
+	.version(X.version)
 	.usage('[options] <file> [sheetname]')
 	.option('-f, --file <file>', 'use specified workbook')
 	.option('-s, --sheet <sheet>', 'print specified sheet (default first sheet)')
@@ -42,6 +42,7 @@ program
 	.option('--read-only', 'do not generate output')
 	.option('--all', 'parse everything; write as much as possible')
 	.option('--dev', 'development mode')
+	.option('--sparse', 'sparse mode')
 	.option('--read', 'read but do not print out contents')
 	.option('-q, --quiet', 'quiet mode');
 
@@ -77,8 +78,7 @@ if(!fs.existsSync(filename)) {
 	process.exit(2);
 }
 
-let opts: XLSX.ParsingOptions = {};
-let wb: XLSX.WorkBook;
+let opts: X.ParsingOptions = {}, wb: X.WorkBook;
 if(program.listSheets) opts.bookSheets = true;
 if(program.sheetRows) opts.sheetRows = program.sheetRows;
 if(program.password) opts.password = program.password;
@@ -89,8 +89,13 @@ function wb_fmt() {
 	opts.cellNF = true;
 	if(program.output) sheetname = program.output;
 }
-workbook_formats.forEach(function(m) { if(program[m]) { wb_fmt(); } });
-wb_formats_2.forEach(function(m) { if(program[m[0]]) { wb_fmt(); } });
+function isfmt(m: string): boolean {
+	if(!program.output) return false;
+	const t = m.charAt(0) === "." ? m : "." + m;
+	return program.output.slice(-t.length) === t;
+}
+workbook_formats.forEach(function(m) { if(program[m] || isfmt(m)) { wb_fmt(); } });
+wb_formats_2.forEach(function(m) { if(program[m[0]] || isfmt(m[0])) { wb_fmt(); } });
 if(seen) {
 } else if(program.formulae) opts.cellFormula = true;
 else opts.cellFormula = false;
@@ -104,12 +109,13 @@ if(program.all) {
 	opts.sheetStubs = true;
 	opts.cellDates = true;
 }
+if(program.sparse) opts.dense = false; else opts.dense = true;
 
 if(program.dev) {
 	opts.WTF = true;
-	wb = XLSX.readFile(filename, opts);
+	wb = X.readFile(filename, opts);
 } else try {
-	wb = XLSX.readFile(filename, opts);
+	wb = X.readFile(filename, opts);
 } catch(e) {
 	let msg = (program.quiet) ? "" : n + ": error parsing ";
 	msg += filename + ": " + e;
@@ -124,18 +130,18 @@ if(program.listSheets) {
 	process.exit(0);
 }
 
-let wopts: XLSX.WritingOptions = ({WTF:opts.WTF, bookSST:program.sst}/*:any*/);
+let wopts: X.WritingOptions = ({WTF:opts.WTF, bookSST:program.sst}/*:any*/);
 if(program.compress) wopts.compression = true;
 
 /* full workbook formats */
-workbook_formats.forEach(function(m) { if(program[m]) {
-		XLSX.writeFile(wb, sheetname || ((filename || "") + "." + m), wopts);
+workbook_formats.forEach(function(m) { if(program[m] || isfmt(m)) {
+		X.writeFile(wb, program.output || sheetname || ((filename || "") + "." + m), wopts);
 		process.exit(0);
 } });
 
-wb_formats_2.forEach(function(m) { if(program[m[0]]) {
-		wopts.bookType = <XLSX.BookType>(m[1]);
-		XLSX.writeFile(wb, sheetname || ((filename || "") + "." + m[2]), wopts);
+wb_formats_2.forEach(function(m) { if(program[m[0]] || isfmt(m[0])) {
+		wopts.bookType = <X.BookType>(m[1]);
+		X.writeFile(wb, program.output || sheetname || ((filename || "") + "." + m[2]), wopts);
 		process.exit(0);
 } });
 
@@ -145,7 +151,7 @@ if(target_sheet === '') {
 	else target_sheet = (wb.SheetNames||[""])[0];
 }
 
-let ws: XLSX.WorkSheet;
+let ws: X.WorkSheet;
 try {
 	ws = wb.Sheets[target_sheet];
 	if(!ws) {
@@ -167,22 +173,21 @@ if(program.readOnly) process.exit(0);
 	['prn', '.prn'],
 	['txt', '.txt'],
 	['dif', '.dif']
-].forEach(function(m) { if(program[m[0]]) {
-		wopts.bookType = <XLSX.BookType>(m[1]);
-		XLSX.writeFile(wb, sheetname || ((filename || "") + m[1]), wopts);
+].forEach(function(m) { if(program[m[0]] || isfmt(m[1])) {
+		wopts.bookType = <X.BookType>(m[0]);
+		X.writeFile(wb, program.output || sheetname || ((filename || "") + m[1]), wopts);
 		process.exit(0);
 } });
 
-let oo = "";
-let strm = false;
+let oo = "", strm = false;
 if(!program.quiet) console.error(target_sheet);
-if(program.formulae) oo = XLSX.utils.sheet_to_formulae(ws).join("\n");
-else if(program.json) oo = JSON.stringify(XLSX.utils.sheet_to_json(ws));
-else if(program.rawJs) oo = JSON.stringify(XLSX.utils.sheet_to_json(ws,{raw:true}));
-else if(program.arrays) oo = JSON.stringify(XLSX.utils.sheet_to_json(ws,{raw:true, header:1}));
+if(program.formulae) oo = X.utils.sheet_to_formulae(ws).join("\n");
+else if(program.json) oo = JSON.stringify(X.utils.sheet_to_json(ws));
+else if(program.rawJs) oo = JSON.stringify(X.utils.sheet_to_json(ws,{raw:true}));
+else if(program.arrays) oo = JSON.stringify(X.utils.sheet_to_json(ws,{raw:true, header:1}));
 else {
 	strm = true;
-	let stream: NodeJS.ReadableStream = XLSX.stream.to_csv(ws, {FS:program.fieldSep, RS:program.rowSep});
+	let stream: NodeJS.ReadableStream = X.stream.to_csv(ws, {FS:program.fieldSep, RS:program.rowSep});
 	if(program.output) stream.pipe(fs.createWriteStream(program.output));
 	else stream.pipe(process.stdout);
 }

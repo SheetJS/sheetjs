@@ -1,5 +1,7 @@
+var XML_HEADER = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\r\n';
 var attregexg=/([^"\s?>\/]+)=((?:")([^"]*)(?:")|(?:')([^']*)(?:')|([^'">\s]+))/g;
 var tagregex=/<[\/\?]?[a-zA-Z0-9:]+(?:\s+[^"\s?>\/]+=(?:"[^"]*"|'[^']*'|[^'">\s]+))*\s?[\/\?]?>/g;
+if(!(XML_HEADER.match(tagregex))) tagregex = /<[^>]*>/g;
 var nsregex=/<\w*:/, nsregex2 = /<(\/?)\w+:/;
 function parsexmltag(tag/*:string*/, skip_root/*:?boolean*/)/*:any*/ {
 	var z = ({}/*:any*/);
@@ -174,7 +176,6 @@ function write_vt(s) {
 	throw new Error("Unable to serialize " + s);
 }
 
-var XML_HEADER = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\r\n';
 var XMLNS = ({
 	'dc': 'http://purl.org/dc/elements/1.1/',
 	'dcterms': 'http://purl.org/dc/terms/',

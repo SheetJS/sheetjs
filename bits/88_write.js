@@ -14,6 +14,18 @@ function write_zip_type(wb/*:Workbook*/, opts/*:?WriteOpts*/) {
 	return z.generate(oopts);
 }
 
+function write_cfb_type(wb/*:Workbook*/, opts/*:?WriteOpts*/) {
+	var o = opts||{};
+	var cfb/*:CFBContainer*/ = write_xlscfb(wb, o);
+	switch(o.type) {
+		case "base64": case "binary": break;
+		case "buffer": case "array": o.type = ""; break;
+		case "file": return _fs.writeFileSync(o.file, CFB.write(cfb, {type:'buffer'}));
+		default: throw new Error("Unrecognized type " + o.type);
+	}
+	return CFB.write(cfb, o);
+}
+
 /* TODO: test consistency */
 function write_bstr_type(out/*:string*/, opts/*:WriteOpts*/) {
 	switch(opts.type) {
@@ -71,7 +83,12 @@ function writeSync(wb/*:Workbook*/, opts/*:?WriteOpts*/) {
 		case 'prn': return write_string_type(write_prn_str(wb, o), o);
 		case 'rtf': return write_string_type(write_rtf_str(wb, o), o);
 		case 'fods': return write_string_type(write_ods(wb, o), o);
-		case 'biff2': return write_binary_type(write_biff_buf(wb, o), o);
+		case 'biff2': if(!o.biff) o.biff = 2; return write_binary_type(write_biff_buf(wb, o), o);
+		case 'biff3': if(!o.biff) o.biff = 3; return write_binary_type(write_biff_buf(wb, o), o);
+		case 'biff4': if(!o.biff) o.biff = 4; return write_binary_type(write_biff_buf(wb, o), o);
+		case 'biff5': if(!o.biff) o.biff = 5; return write_cfb_type(wb, o);
+		case 'biff8':
+		case 'xls': if(!o.biff) o.biff = 8; return write_cfb_type(wb, o);
 		case 'xlsx':
 		case 'xlsm':
 		case 'xlsb':
@@ -89,7 +106,7 @@ function resolve_book_type(o/*?WriteFileOpts*/) {
 		case '.xlml': o.bookType = 'xlml'; break;
 		case '.sylk': o.bookType = 'sylk'; break;
 		case '.html': o.bookType = 'html'; break;
-		case '.xls': o.bookType = 'biff2'; break;
+		case '.xls': o.bookType = 'biff8'; break;
 		case '.xml': o.bookType = 'xml'; break;
 		case '.ods': o.bookType = 'ods'; break;
 		case '.csv': o.bookType = 'csv'; break;

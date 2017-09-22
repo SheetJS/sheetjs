@@ -14,10 +14,10 @@ var data = [
 var ws_name = "SheetJS";
 
 var wscols = [
-	{wch:6}, // "characters"
-	{wpx:50}, // "pixels"
+	{wch: 6}, // "characters"
+	{wpx: 50}, // "pixels"
 	,
-	{hidden:true} // hide column
+	{hidden: true} // hide column
 ];
 
 /* At 96 PPI, 1 pt = 1 px */
@@ -162,7 +162,8 @@ var filenames = [
 	['sheetjs.xlsx', {bookSST:true}],
 	['sheetjs.xlsm'],
 	['sheetjs.xlsb'],
-	['sheetjs.xls', {bookType:'biff2'}],
+	['sheetjs.xls', {bookType:'xls'}],
+	['sheetjs.biff2', {bookType:'biff2'}],
 	['sheetjs.xml.xls', {bookType:'xlml'}],
 	['sheetjs.ods'],
 	['sheetjs.fods'],

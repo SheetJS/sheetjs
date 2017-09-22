@@ -101,6 +101,7 @@ type RowInfo = {
 
 	hpx?:number;     // height in screen pixels
 	hpt?:number;     // height in points
+	level?:number;   // outline / group level
 };
 
 type ColInfo = {

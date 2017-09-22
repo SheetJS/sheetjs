@@ -8,7 +8,7 @@ Despite the library name `xlsx`, it supports numerous spreadsheet file formats:
 | Excel 2007+ XML Formats (XLSX/XLSM)                          |  :o:  |  :o:  |
 | Excel 2007+ Binary Format (XLSB BIFF12)                      |  :o:  |  :o:  |
 | Excel 2003-2004 XML Format (XML "SpreadsheetML")             |  :o:  |  :o:  |
-| Excel 97-2004 (XLS BIFF8)                                    |  :o:  |       |
+| Excel 97-2004 (XLS BIFF8)                                    |  :o:  |  :o:  |
 | Excel 5.0/95 (XLS BIFF5)                                     |  :o:  |       |
 | Excel 4.0 (XLS/XLW BIFF4)                                    |  :o:  |       |
 | Excel 3.0 (XLS BIFF3)                                        |  :o:  |       |

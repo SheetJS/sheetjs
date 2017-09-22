@@ -1564,7 +1564,8 @@ output formats.  The specific file type is controlled with `bookType` option:
 | `xlsx`   | `.xlsx`  |    ZIP    | multi  | Excel 2007+ XML Format            |
 | `xlsm`   | `.xlsm`  |    ZIP    | multi  | Excel 2007+ Macro XML Format      |
 | `xlsb`   | `.xlsb`  |    ZIP    | multi  | Excel 2007+ Binary Format         |
-| `biff2`  | `.xls`   |   none    | single | Excel 2.0 Worksheet format        |
+| `biff8`  | `.xls`   |    CFB    | multi  | Excel 97-2004 Workbook Format     |
+| `biff2`  | `.xls`   |   none    | single | Excel 2.0 Worksheet Format        |
 | `xlml`   | `.xls`   |   none    | multi  | Excel 2003-2004 (SpreadsheetML)   |
 | `ods`    | `.ods`   |    ZIP    | multi  | OpenDocument Spreadsheet          |
 | `fods`   | `.fods`  |   none    | multi  | Flat OpenDocument Spreadsheet     |
@@ -1887,7 +1888,7 @@ Despite the library name `xlsx`, it supports numerous spreadsheet file formats:
 | Excel 2007+ XML Formats (XLSX/XLSM)                          |  :o:  |  :o:  |
 | Excel 2007+ Binary Format (XLSB BIFF12)                      |  :o:  |  :o:  |
 | Excel 2003-2004 XML Format (XML "SpreadsheetML")             |  :o:  |  :o:  |
-| Excel 97-2004 (XLS BIFF8)                                    |  :o:  |       |
+| Excel 97-2004 (XLS BIFF8)                                    |  :o:  |  :o:  |
 | Excel 5.0/95 (XLS BIFF5)                                     |  :o:  |       |
 | Excel 4.0 (XLS/XLW BIFF4)                                    |  :o:  |       |
 | Excel 3.0 (XLS BIFF3)                                        |  :o:  |       |

@@ -21,7 +21,7 @@ function write_BrtBeginComment(data, o) {
 
 /* [MS-XLSB] 2.4.324 BrtCommentAuthor */
 var parse_BrtCommentAuthor = parse_XLWideString;
-function write_BrtCommentAuthor(data) { return write_XLWideString(data.substr(0, 54)); }
+function write_BrtCommentAuthor(data) { return write_XLWideString(data.slice(0, 54)); }
 
 /* [MS-XLSB] 2.1.7.8 Comments */
 function parse_comments_bin(data, opts) {
@@ -72,7 +72,7 @@ function write_comments_bin(data, opts) {
 		data.forEach(function(comment) {
 			comment[1].forEach(function(c) {
 				if(iauthor.indexOf(c.a) > -1) return;
-				iauthor.push(c.a.substr(0,54));
+				iauthor.push(c.a.slice(0,54));
 				write_record(ba, "BrtCommentAuthor", write_BrtCommentAuthor(c.a));
 			});
 		});

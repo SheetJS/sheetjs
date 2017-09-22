@@ -267,6 +267,7 @@ function parse_PropertySetStream(file, PIDSI) {
 
 
 function parsenoop2(blob, length) { blob.read_shift(length); return null; }
+function writezeroes(n, o) { if(!o) o=new_buf(n); for(var j=0; j<n; ++j) o.write_shift(1, 0); return o; }
 
 function parslurp(blob, length, cb) {
 	var arr = [], target = blob.l + length;
@@ -275,20 +276,25 @@ function parslurp(blob, length, cb) {
 	return arr;
 }
 
-function parsebool(blob, length) { return blob.read_shift(length) === 0x1; }
+function parsebool(blob, length/*:number*/) { return blob.read_shift(length) === 0x1; }
+function writebool(v/*:any*/, o) { if(!o) o=new_buf(2); o.write_shift(2, +!!v); return o; }
 
 function parseuint16(blob/*::, length:?number, opts:?any*/) { return blob.read_shift(2, 'u'); }
+function writeuint16(v/*:number*/, o) { if(!o) o=new_buf(2); o.write_shift(2, v); return o; }
 function parseuint16a(blob, length/*:: :?number, opts:?any*/) { return parslurp(blob,length,parseuint16);}
 
 /* --- 2.5 Structures --- */
-
-/* [MS-XLS] 2.5.14 Boolean */
-var parse_Boolean = parsebool;
 
 /* [MS-XLS] 2.5.10 Bes (boolean or error) */
 function parse_Bes(blob/*::, length*/) {
 	var v = blob.read_shift(1), t = blob.read_shift(1);
 	return t === 0x01 ? v : v === 0x01;
+}
+function write_Bes(v, t/*:string*/, o) {
+	if(!o) o = new_buf(2);
+	o.write_shift(1, +v);
+	o.write_shift(1, t == 'e' ? 1 : 0);
+	return o;
 }
 
 /* [MS-XLS] 2.5.240 ShortXLUnicodeString */
@@ -366,7 +372,7 @@ function parse_ControlInfo(blob, length, opts) {
 }
 
 /* [MS-OSHARED] 2.3.7.6 URLMoniker TODO: flags */
-var parse_URLMoniker = function(blob/*::, length, opts*/) {
+function parse_URLMoniker(blob/*::, length, opts*/) {
 	var len = blob.read_shift(4), start = blob.l;
 	var extra = false;
 	if(len > 24) {
@@ -378,10 +384,10 @@ var parse_URLMoniker = function(blob/*::, length, opts*/) {
 	var url = blob.read_shift((extra?len-24:len)>>1, 'utf16le').replace(chr0,"");
 	if(extra) blob.l += 24;
 	return url;
-};
+}
 
 /* [MS-OSHARED] 2.3.7.8 FileMoniker TODO: all fields */
-var parse_FileMoniker = function(blob, length) {
+function parse_FileMoniker(blob, length) {
 	var cAnti = blob.read_shift(2);
 	var ansiLength = blob.read_shift(4);
 	var ansiPath = blob.read_shift(ansiLength, 'cstr');
@@ -393,27 +399,27 @@ var parse_FileMoniker = function(blob, length) {
 	var usKeyValue = blob.read_shift(2);
 	var unicodePath = blob.read_shift(cbUnicodePathBytes>>1, 'utf16le').replace(chr0,"");
 	return unicodePath;
-};
+}
 
 /* [MS-OSHARED] 2.3.7.2 HyperlinkMoniker TODO: all the monikers */
-var parse_HyperlinkMoniker = function(blob, length) {
+function parse_HyperlinkMoniker(blob, length) {
 	var clsid = blob.read_shift(16); length -= 16;
 	switch(clsid) {
 		case "e0c9ea79f9bace118c8200aa004ba90b": return parse_URLMoniker(blob, length);
 		case "0303000000000000c000000000000046": return parse_FileMoniker(blob, length);
 		default: throw new Error("Unsupported Moniker " + clsid);
 	}
-};
+}
 
 /* [MS-OSHARED] 2.3.7.9 HyperlinkString */
-var parse_HyperlinkString = function(blob, length) {
+function parse_HyperlinkString(blob, length) {
 	var len = blob.read_shift(4);
 	var o = blob.read_shift(len, 'utf16le').replace(chr0, "");
 	return o;
-};
+}
 
 /* [MS-OSHARED] 2.3.7.1 Hyperlink Object TODO: unify params with XLSX */
-var parse_Hyperlink = function(blob, length) {
+function parse_Hyperlink(blob, length) {
 	var end = blob.l + length;
 	var sVer = blob.read_shift(4);
 	if(sVer !== 2) throw new Error("Unrecognized streamVersion: " + sVer);
@@ -431,7 +437,7 @@ var parse_Hyperlink = function(blob, length) {
 	var target = (targetFrameName||moniker||oleMoniker);
 	if(location) target+="#"+location;
 	return {Target: target};
-};
+}
 
 /* 2.5.178 LongRGBA */
 function parse_LongRGBA(blob, length) { var r = blob.read_shift(1), g = blob.read_shift(1), b = blob.read_shift(1), a = blob.read_shift(1); return [r,g,b,a]; }

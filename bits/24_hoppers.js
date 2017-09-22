@@ -12,7 +12,7 @@ function recordhopper(data, cb/*:RecordHopperCB*/, opts/*:?any*/) {
 		length = tmpbyte & 0x7F;
 		for(cntbyte = 1; cntbyte <4 && (tmpbyte & 0x80); ++cntbyte) length += ((tmpbyte = data.read_shift(1)) & 0x7F)<<(7*cntbyte);
 		tgt = data.l + length;
-		var d = R.f(data, length, opts);
+		var d = (R.f||parsenoop)(data, length, opts);
 		data.l = tgt;
 		if(cb(d, R.n, RT)) return;
 	}
@@ -53,7 +53,7 @@ function buf_array()/*:BufArray*/ {
 }
 
 function write_record(ba/*:BufArray*/, type/*:string*/, payload, length/*:?number*/) {
-	var t/*:number*/ = Number(evert_RE[type]), l;
+	var t/*:number*/ = +XLSBRE[type], l;
 	if(isNaN(t)) return; // TODO: throw something here?
 	if(!length) length = XLSBRecordEnum[t].p || (payload||[]).length || 0;
 	l = 1 + (t >= 0x80 ? 1 : 0) + 1 + length;

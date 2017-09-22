@@ -40,6 +40,7 @@ digraph G {
 		csf -> xlml
 		xlml -> csf
 		xls5 -> csf
+		csf -> xls8
 		xls8 -> csf
 		ods -> csf
 		csf -> ods

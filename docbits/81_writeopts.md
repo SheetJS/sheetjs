@@ -35,7 +35,8 @@ output formats.  The specific file type is controlled with `bookType` option:
 | `xlsx`   | `.xlsx`  |    ZIP    | multi  | Excel 2007+ XML Format            |
 | `xlsm`   | `.xlsm`  |    ZIP    | multi  | Excel 2007+ Macro XML Format      |
 | `xlsb`   | `.xlsb`  |    ZIP    | multi  | Excel 2007+ Binary Format         |
-| `biff2`  | `.xls`   |   none    | single | Excel 2.0 Worksheet format        |
+| `biff8`  | `.xls`   |    CFB    | multi  | Excel 97-2004 Workbook Format     |
+| `biff2`  | `.xls`   |   none    | single | Excel 2.0 Worksheet Format        |
 | `xlml`   | `.xls`   |   none    | multi  | Excel 2003-2004 (SpreadsheetML)   |
 | `ods`    | `.ods`   |    ZIP    | multi  | OpenDocument Spreadsheet          |
 | `fods`   | `.fods`  |   none    | multi  | Flat OpenDocument Spreadsheet     |

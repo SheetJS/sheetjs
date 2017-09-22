@@ -43,7 +43,9 @@ the module can be omitted by aliasing the dependency:
 
 ## Bower and minified versions
 
-The minified versions, used in Bower, require `module.noParse` configuration:
+Webpack may show a message like "This seems to be a pre-built javascript file"
+when processing minified files (like the default Bower script).  The message is
+harmless.  To suppress the message, set `module.noParse` in the webpack config:
 
 ```js
 	module: {

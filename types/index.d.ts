@@ -176,6 +176,8 @@ export interface ParsingOptions extends CommonOptions {
 
     /* If true, plaintext parsing will not parse values */
     raw?: boolean;
+
+    dense?: boolean;
 }
 
 /** Options for write and writeFile */
@@ -308,6 +310,9 @@ export interface RowInfo {
 
     /** height in points */
     hpt?: number;
+
+    /** outline / group level */
+    level?: number;
 }
 
 /**
@@ -472,7 +477,7 @@ export type ExcelDataType = 'b' | 'n' | 'e' | 's' | 'd' | 'z';
  * Type of generated workbook
  * @default 'xlsx'
  */
-export type BookType = 'xlsx' | 'xlsm' | 'xlsb' | 'biff2' | 'xlml' | 'ods' | 'fods' | 'csv' | 'txt' | 'sylk' | 'html' | 'dif' | 'prn';
+export type BookType = 'xlsx' | 'xlsm' | 'xlsb' | 'xls' | 'biff8' | 'biff2' | 'xlml' | 'ods' | 'fods' | 'csv' | 'txt' | 'sylk' | 'html' | 'dif' | 'prn';
 
 /** Comment element */
 export interface Comment {
