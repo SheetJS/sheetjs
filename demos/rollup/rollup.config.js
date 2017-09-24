@@ -2,7 +2,7 @@
 import resolve from 'rollup-plugin-node-resolve';
 import commonjs from 'rollup-plugin-commonjs';
 export default {
-	entry: 'main.js',
+	entry: 'app.js',
 	dest: 'rollup.js',
 	plugins: [
 		resolve({
@@ -11,6 +11,5 @@ export default {
 		}),
 		commonjs()
 	],
-	moduleName: 'XLSX',
 	format: 'iife'
 };

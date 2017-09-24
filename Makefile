@@ -209,6 +209,13 @@ book: readme graph ## Update summary for documentation
 	markdown-toc README.md | sed 's/(#/(README.md#/g'>> misc/docs/SUMMARY.md
 	<README.md grep -vE "(details|summary)>" > misc/docs/README.md
 
+DEMOMDS=$(sort $(wildcard demos/*/README.md))
+MDLINT=$(DEMODS) $(READEPS) demos/README.md
+.PHONY: mdlint
+mdlint: $(MDLINT) ## Check markdown documents
+	alex $^
+	mdspell -a -n -x -r --en-us $^
+
 .PHONY: help
 help:
 	@grep -hE '(^[a-zA-Z_-][ a-zA-Z_-]*:.*?|^#[#*])' $(MAKEFILE_LIST) | bash misc/help.sh

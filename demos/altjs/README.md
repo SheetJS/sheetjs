@@ -17,9 +17,52 @@ var global = (function(){ return this; }).call(null);
 
 iOS and OSX ship with the JavaScriptCore framework, enabling easy JS access from
 Swift and Objective-C.  Hybrid function invocation is tricky, but explicit data
-passing is straightforward.
+passing is straightforward.  The demo shows a standalone example for OSX.  For
+playgrounds, the library should be copied to shared playground data directory
+(usually `~/Documents/Shared Playground Data`):
 
-Binary strings can be passed back and forth using `String.Encoding.ascii`.
+```swift
+/* This only works in a playground, see SheetJSCore.swift for standalone use */
+import JavaScriptCore;
+import PlaygroundSupport;
+
+/* build path variable for the library */
+let shared_dir = PlaygroundSupport.playgroundSharedDataDirectory;
+let lib_path = shared_dir.appendingPathComponent("xlsx.full.min.js");
+
+/* prepare JS context */
+var context:JSContext! = JSContext();
+var src = "var global = (function(){ return this; }).call(null);";
+context.evaluateScript(src);
+
+/* load library */
+var lib = try? String(contentsOf: lib_path);
+context.evaluateScript(lib);
+let XLSX: JSValue! = context.objectForKeyedSubscript("XLSX");
+
+/* to verify the library was loaded, get the version string */
+let XLSXversion: JSValue! = XLSX.objectForKeyedSubscript("version")
+var version  = XLSXversion.toString();
+```
+
+Binary strings can be passed back and forth using `String.Encoding.isoLatin1`:
+
+```swift
+/* parse sheetjs.xls */
+let file_path = shared_dir.appendingPathComponent("sheetjs.xls");
+let data:String! = try String(contentsOf: file_path, encoding:String.Encoding.isoLatin1);
+context.setObject(data, forKeyedSubscript:"payload" as (NSCopying & NSObjectProtocol)!);
+src = "var wb = XLSX.read(payload, {type:'binary'});";
+context.evaluateScript(src);
+
+/* write to sheetjs.xlsx  */
+let out_path = shared_dir.appendingPathComponent("sheetjs.xlsx");
+src = "var out = XLSX.write(wb, {type:'binary', bookType:'xlsx'})";
+context.evaluateScript(src);
+let outvalue: JSValue! = context.objectForKeyedSubscript("out");
+var out:String! = outvalue.toString();
+try? out.write(to: out_path, atomically: false, encoding: String.Encoding.isoLatin1);
+```
 
 
 ## Nashorn
@@ -42,7 +85,7 @@ array and calls `XLSX.read` with type `"array"`.
 `SheetJSRhino` class and `com.sheetjs` package show a complete JAR deployment,
 including the full XLSX source.
 
-Due to code generation errors, optimization must be disabled:
+Due to code generation errors, optimization must be turned off:
 
 ```java
 Context context = Context.enter();
@@ -55,7 +98,7 @@ context.setOptimizationLevel(-1);
 ChakraCore is an embeddable JS engine written in C++.  The library and binary
 distributions include a command-line tool `chakra` for running JS scripts.
 
-The simplest way to interop with the engine is to pass Base64 strings.  The make
+The simplest way to interact with the engine is to pass Base64 strings. The make
 target builds a very simple payload with the data.
 
 
@@ -77,3 +120,5 @@ duk_size_t sz;
 char *buf = (char *)duk_get_buffer_data(ctx, -1, sz);
 duk_pop(ctx);
 ```
+
+[![Analytics](https://ga-beacon.appspot.com/UA-36810333-1/SheetJS/js-xlsx?pixel)](https://github.com/SheetJS/js-xlsx)

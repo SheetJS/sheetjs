@@ -1,5 +1,6 @@
 /* xlsx.js (C) 2013-present  SheetJS -- http://sheetjs.com */
 module.exports = {
+	/* ensure that the XLSX variable is exported */
 	output: {
 		libraryTarget: 'var',
 		library: 'XLSX'
@@ -17,6 +18,7 @@ module.exports = {
 		alias: { "./dist/cpexcel.js": "" }
 	},
 	*/
+	/* suppress node shims */
 	node: {
 		fs: false,
 		process: false,

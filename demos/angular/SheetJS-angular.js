@@ -103,5 +103,5 @@ var SheetJSImportDirective = function() {
 				reader.readAsBinaryString(changeEvent.target.files[0]);
 			});
 		}
-	}
-}
+	};
+};

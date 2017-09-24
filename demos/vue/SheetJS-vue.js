@@ -29,8 +29,6 @@ function s2ab(s) {
 Vue.component('html-preview', {
 	template: SJSTemplate,
 	methods: {
-		// as per: https://github.com/SheetJS/js-xlsx/wiki/Reading-XLSX-from-FileReader.readAsArrayBuffer()
-		// changing the readAsBinaryString (deprecated) to readAsArrayBuffer()
 		onchange: function(evt) {
 			var file;
 			var files = evt.target.files;
@@ -38,7 +36,7 @@ Vue.component('html-preview', {
 			if (!files || files.length == 0) return;
 
 			file = files[0];
-			
+
 			var reader = new FileReader();
 			reader.onload = function (e) {
 				// pre-process data
@@ -48,7 +46,7 @@ Vue.component('html-preview', {
 				for (var i = 0; i < length; i++) {
 					binary += String.fromCharCode(bytes[i]);
 				}
-				
+
 				/* read workbook */
 				var wb = XLSX.read(binary, {type: 'binary'});
 
@@ -57,7 +55,7 @@ Vue.component('html-preview', {
 				var ws = wb.Sheets[wsname];
 
 				/* generate HTML */
-				var HTML = XLSX.utils.sheet_to_html(ws); 
+				var HTML = XLSX.utils.sheet_to_html(ws);
 
 				/* update table */
 				document.getElementById('out-table').innerHTML = HTML;

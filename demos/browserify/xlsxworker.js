@@ -1,12 +1,12 @@
 /* xlsx.js (C) 2013-present SheetJS -- http://sheetjs.com */
-importScripts('browserify.min.js');
-var XLSX = require('xlsx');
+var XLSX = require('../../'); // test against development version
+//var XLSX = require('xlsx'); // use in production
 postMessage({t:"ready"});
 
-onmessage = function (oEvent) {
+onmessage = function (evt) {
   var v;
   try {
-    v = XLSX.read(oEvent.data.d, {type: oEvent.data.b});
+    v = XLSX.read(evt.data.d, {type: evt.data.b});
 postMessage({t:"xlsx", d:JSON.stringify(v)});
   } catch(e) { postMessage({t:"e",d:e.stack||e}); }
 };

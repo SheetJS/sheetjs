@@ -11,19 +11,19 @@ somewhere in the table.  Excel convention mandates that the custom formats start
 at index 164.  The following example creates a custom format from scratch:
 
 <details>
-	<summary><b>New worksheet with custom format</b> (click to show)</summary>
+  <summary><b>New worksheet with custom format</b> (click to show)</summary>
 
 ```js
 var wb = {
-	SheetNames: ["Sheet1"],
-	Sheets: {
-		Sheet1: {
-			"!ref":"A1:C1",
-			A1: { t:"n", v:10000 },                    // <-- General format
-			B1: { t:"n", v:10000, z: "0%" },           // <-- Builtin format
-			C1: { t:"n", v:10000, z: "\"T\"\ #0.00" }  // <-- Custom format
-		}
-	}
+  SheetNames: ["Sheet1"],
+  Sheets: {
+    Sheet1: {
+      "!ref":"A1:C1",
+      A1: { t:"n", v:10000 },                    // <-- General format
+      B1: { t:"n", v:10000, z: "0%" },           // <-- Builtin format
+      C1: { t:"n", v:10000, z: "\"T\"\ #0.00" }  // <-- Custom format
+    }
+  }
 }
 ```
 </details>
@@ -31,11 +31,11 @@ var wb = {
 The rules are slightly different from how Excel displays custom number formats.
 In particular, literal characters must be wrapped in double quotes or preceded
 by a backslash. For more info, see the Excel documentation article
-[`Create or delete a custom number format`](https://support.office.com/en-us/article/78f2a361-936b-4c03-8772-09fab54be7f4)
-or ECMA-376 18.8.31 (Number Formats)
+`Create or delete a custom number format` or ECMA-376 18.8.31 (Number Formats)
+
 
 <details>
-	<summary><b>Default Number Formats</b> (click to show)</summary>
+  <summary><b>Default Number Formats</b> (click to show)</summary>
 
 The default formats are listed in ECMA-376 18.8.30:
 

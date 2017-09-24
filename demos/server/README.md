@@ -25,6 +25,15 @@ request(url, {encoding: null}, function(err, res, data) {
 });
 ```
 
+The `readFile` / `writeFile` functions wrap `fs.{read,write}FileSync`:
+
+```js
+/* equivalent to `var wb = XLSX.readFile("sheetjs.xlsx");` */
+var buf = fs.readFileSync("sheetjs.xlsx");
+var wb = XLSX.read(buf, {type:'buffer'});
+```
+
+
 ### Example servers
 
 Each example server is expected to hold an array-of-arrays in memory.  They are
@@ -82,11 +91,11 @@ The main server script is `koa.js` and the worker script is `koasub.js`.  State
 is maintained in the worker script.
 
 
-## xlsx script with micro
+## command-line utility with micro
 
-The node module ships with the `xlsx` bin script.  For global installs, symlinks
-are configured to enable running `xlsx` from anywhere.  For local installs, the
-appropriate symlink is set up in `node_modules/.bin/`.
+The npm module ships with the `xlsx` command line tool. For global installs, the
+script `bin/xlsx.njs` is added to a directory in `PATH`. For local installs, the
+appropriate script or symbolic link is set up in `node_modules/.bin/`.
 
 The `--arrays` option directs `xlsx` to generate an array of arrays that can be
 parsed by the server.  To generate files, the `json2csv` module exports the JS
@@ -94,3 +103,26 @@ array of arrays to a CSV, the server writes the file, and the `xlsx` command is
 used to generate files of different formats.
 
 
+## tiny-worker with hapi
+
+`tiny-worker` provides a Web Worker-like interface.  Binary strings and simple
+objects are readily passed across the Worker divide.
+
+The main server script is `hapi.js` and the worker script is `worker.js`.  State
+is maintained in the server script.
+
+Note: due to an issue with hapi payload parsing, the route `POST /file` is used
+to handle the case of reading from file, so the cURL test is:
+
+```bash
+# upload test.xls and update data
+curl -X POST -F "data=@test.xls" http://localhost:7262/
+# download data in SYLK format
+curl -X GET http://localhost:7262/?t=slk
+# read sheetjs.xlsx from the server directory
+curl -X POST http://localhost:7262/file?f=sheetjs.xlsx
+# write sheetjs.xlsb in the XLSB format
+curl -X GET http://localhost:7262/?f=sheetjs.xlsb
+```
+
+[![Analytics](https://ga-beacon.appspot.com/UA-36810333-1/SheetJS/js-xlsx?pixel)](https://github.com/SheetJS/js-xlsx)

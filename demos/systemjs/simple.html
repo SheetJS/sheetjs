@@ -1,0 +1,18 @@
+<!-- xlsx.js (C) 2013-present  SheetJS http://sheetjs.com -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/systemjs/0.20.16/system.js"></script>
+<script>
+SystemJS.config({
+	meta: {
+		'xlsx': {
+			exports: 'XLSX' // <-- tell SystemJS to expose the XLSX variable
+		}
+	},
+	map: {
+		'xlsx': 'xlsx.full.min.js', // <-- make sure xlsx.full.min.js is in same dir
+		'fs': '',     // <--|
+		'crypto': '', // <--| suppress native node modules
+		'stream': ''  // <--|
+	}
+});
+SystemJS.import('main.simple.js');
+</script>

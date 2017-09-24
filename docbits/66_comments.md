@@ -3,7 +3,7 @@
 Cell comments are objects stored in the `c` array of cell objects.  The actual
 contents of the comment are split into blocks based on the comment author.  The
 `a` field of each comment object is the author of the comment and the `t` field
-is the plaintext representation.
+is the plain text representation.
 
 For example, the following snippet appends a cell comment into cell `A1`:
 

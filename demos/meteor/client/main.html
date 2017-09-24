@@ -6,22 +6,13 @@
 <pre>
 <b><a href="//sheetjs.com">SheetJS Meteor Demo</a></b>
 
-<b>Meteor Read Demo</b>
-
-{{> read}}
-
-<b>Meteor Write Demo</b>
-
-{{> write}}
+{{> sheetjs}}
 
 </pre>
 </body>
 
-<template name="read">
+<template name="sheetjs">
 	<label for="upload">Parse File: </label><input type="file" id="upload" />
 	<div id="out"></div>
-</template>
-
-<template name="write">
-	<label for="dnload">Write File: </label><button id="dnload">Generate Worksheet</button>
+	<button id="dnload" disabled="true">Generate Worksheet</button>
 </template>

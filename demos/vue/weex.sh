@@ -5,9 +5,9 @@ if [ ! -e SheetJS ]; then
 	cd SheetJS
 	npm install
 	weexpack platform add ios
-	sed -i 's/ATSDK-Weex/ATSDK/g' platforms/ios/Podfile
+	# see https://github.com/weexteam/weex-pack/issues/133#issuecomment-295806132
+	sed -i.bak 's/ATSDK-Weex/ATSDK/g' platforms/ios/Podfile
 	cd -
-	# weexpack run ios
 fi
 cp native.vue SheetJS/src/index.vue
 if [ ! -e SheetJS/web/bootstrap.min.css ]; then

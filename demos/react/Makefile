@@ -3,10 +3,9 @@ react: ## Simple server for react and clones
 	python -mSimpleHTTPServer
 
 .PHONY: next
-next: ## next.js demo
-	# next doesn't support jsx extension
+next: init ## next.js demo
 	mkdir -p pages
-	cp sheetjs.jsx pages/sheetjs.js
+	cat nexthdr.js sheetjs.jsx > pages/sheetjs.js
 	next
 
 .PHONY: native
@@ -20,3 +19,9 @@ ios: native ## react-native ios sim
 .PHONY: android
 android: native ## react-native android sim
 	cd SheetJS; react-native run-android; cd -
+
+.PHONY: init
+init: ## set up node_modules and symlink
+	mkdir -p node_modules
+	cd node_modules; if [ ! -e xlsx ]; then ln -s ../../../ xlsx; fi; cd -
+	if [ ! -e node_modules/file-saver ]; then npm install file-saver; fi

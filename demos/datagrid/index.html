@@ -33,11 +33,10 @@ a { text-decoration: none }
 <div id="drop">Drop a spreadsheet file here to see sheet data</div>
 <input type="file" name="xlfile" id="xlf" /> ... or click here to select a file
 <textarea id="b64data">... or paste a base64-encoding here</textarea>
-<input type="button" id="dotext" value="Click here to process the base64 text" onclick="b64it();"/><br />
 <b>Advanced Demo Options:</b>
 Use readAsBinaryString: (when available) <input type="checkbox" name="userabs" checked>
 </pre>
-<p><input type="submit" value="Export to XLSX!" id="xport" onclick="doit();" disabled="true"></p>
+<p><input type="submit" value="Export to XLSX!" id="xport" onclick="export_xlsx();" disabled="true"></p>
 <div id="htmlout"></div>
 <br />
 <script src="https://unpkg.com/canvas-datagrid/dist/canvas-datagrid.js"></script>
@@ -52,147 +51,117 @@ Use readAsBinaryString: (when available) <input type="checkbox" name="userabs" c
 /*global XLSX */
 var X = XLSX;
 
-var rABS = typeof FileReader !== "undefined" && typeof FileReader.prototype !== "undefined" && typeof FileReader.prototype.readAsBinaryString !== "undefined";
-if(!rABS) {
-	document.getElementsByName("userabs")[0].disabled = true;
-	document.getElementsByName("userabs")[0].checked = false;
-}
-
-var wtf_mode = false;
-
-function fixdata(data) {
-	var o = "", l = 0, w = 10240;
-	for(; l<data.byteLength/w; ++l) o+=String.fromCharCode.apply(null,new Uint8Array(data.slice(l*w,l*w+w)));
-	o+=String.fromCharCode.apply(null, new Uint8Array(data.slice(l*w)));
-	return o;
-}
-
-function ab2str(data) {
-	var o = "", l = 0, w = 10240;
-	for(; l<data.byteLength/w; ++l) o+=String.fromCharCode.apply(null,new Uint16Array(data.slice(l*w,l*w+w)));
-	o+=String.fromCharCode.apply(null, new Uint16Array(data.slice(l*w)));
-	return o;
-}
-
-function s2ab(s) {
-	var b = new ArrayBuffer(s.length), v = new Uint8Array(b);
-	for (var i=0; i != s.length; ++i) v[i] = s.charCodeAt(i) & 0xFF;
-	return b;
-}
-
-function get_radio_value( radioName ) {
-	var radios = document.getElementsByName( radioName );
-	for( var i = 0; i < radios.length; i++ ) {
-		if( radios[i].checked || radios.length === 1 ) {
-			return radios[i].value;
-		}
-	}
-}
-
-var tarea = document.getElementById('b64data');
-function b64it() {
-	if(typeof console !== 'undefined') console.log("onload", new Date());
-	var wb = X.read(tarea.value, {type: 'base64',WTF:wtf_mode});
-	process_wb(wb);
-}
-window.b64it = b64it;
-
-var global_wb;
 var cDg;
-function process_wb(wb) {
-	global_wb = wb;
-	var ws = wb.Sheets[wb.SheetNames[0]];
-	var data = XLSX.utils.sheet_to_json(ws, {header:1});
-	if(!cDg) cDg = canvasDatagrid({ parentNode:document.getElementById('htmlout'), data:data });
-	else cDg.data = data;
-	var range = XLSX.utils.decode_range(ws['!ref']);
-	for(var i = range.s.c; i <= range.e.c; ++i) cDg.schema[i - range.s.c].title = XLSX.utils.encode_col(i);
-	document.getElementById('xport').disabled = false;
-	if(typeof console !== 'undefined') console.log("output", new Date());
-}
-function doit() {
-	var new_wb = XLSX.utils.book_new();
-	var new_ws = XLSX.utils.aoa_to_sheet(cDg.data);
-	XLSX.utils.book_append_sheet(new_wb, new_ws, 'SheetJS');
-	var wbout = XLSX.write(new_wb, {bookType:'xlsx', bookSST:true, type:'binary'});
-	var fname = 'sheetjs.xlsx';
-	try {
-		saveAs(new Blob([s2ab(wbout)],{type:"application/octet-stream"}), fname);
-	} catch(e) { if(typeof console != 'undefined') console.log(e, wbout); }
-}
 
-var drop = document.getElementById('drop');
-function handleDrop(e) {
-	e.stopPropagation();
-	e.preventDefault();
-	rABS = document.getElementsByName("userabs")[0].checked;
-	var files = e.dataTransfer.files;
-	var f = files[0];
-	{
+var process_wb = (function() {
+	var XPORT = document.getElementById('xport');
+	var HTMLOUT = document.getElementById('htmlout');
+
+	return function process_wb(wb) {
+		/* get data */
+		var ws = wb.Sheets[wb.SheetNames[0]];
+		var data = XLSX.utils.sheet_to_json(ws, {header:1});
+
+		/* update canvas-datagrid */
+		if(!cDg) cDg = canvasDatagrid({ parentNode:HTMLOUT, data:data });
+		cDg.data = data;
+		XPORT.disabled = false;
+
+		/* create schema (for A,B,C column headings) */
+		var range = XLSX.utils.decode_range(ws['!ref']);
+		for(var i = range.s.c; i <= range.e.c; ++i) cDg.schema[i - range.s.c].title = XLSX.utils.encode_col(i);
+
+		if(typeof console !== 'undefined') console.log("output", new Date());
+	};
+})();
+
+var do_file = (function() {
+	var rABS = typeof FileReader !== "undefined" && (FileReader.prototype||{}).readAsBinaryString;
+	var domrabs = document.getElementsByName("userabs")[0];
+	if(!rABS) domrabs.disabled = !(domrabs.checked = false);
+
+	return function do_file(files) {
+		rABS = domrabs.checked;
+		var f = files[0];
 		var reader = new FileReader();
-		//var name = f.name;
 		reader.onload = function(e) {
 			if(typeof console !== 'undefined') console.log("onload", new Date(), rABS);
 			var data = e.target.result;
-			{
-				var wb;
-				if(rABS) {
-					wb = X.read(data, {type: 'binary'});
-				} else {
-					var arr = fixdata(data);
-					wb = X.read(btoa(arr), {type: 'base64'});
-				}
-				process_wb(wb);
-			}
+			if(!rABS) data = new Uint8Array(data);
+			process_wb(X.read(data, {type: rABS ? 'binary' : 'array'}));
 		};
 		if(rABS) reader.readAsBinaryString(f);
 		else reader.readAsArrayBuffer(f);
+	};
+})();
+
+(function() {
+	var drop = document.getElementById('drop');
+	if(!drop.addEventListener) return;
+
+	function handleDrop(e) {
+		e.stopPropagation();
+		e.preventDefault();
+		do_file(e.dataTransfer.files);
 	}
-}
 
-function handleDragover(e) {
-	e.stopPropagation();
-	e.preventDefault();
-	e.dataTransfer.dropEffect = 'copy';
-}
+	function handleDragover(e) {
+		e.stopPropagation();
+		e.preventDefault();
+		e.dataTransfer.dropEffect = 'copy';
+	}
 
-if(drop.addEventListener) {
 	drop.addEventListener('dragenter', handleDragover, false);
 	drop.addEventListener('dragover', handleDragover, false);
 	drop.addEventListener('drop', handleDrop, false);
-}
+})();
 
+(function() {
+	var xlf = document.getElementById('xlf');
+	if(!xlf.addEventListener) return;
+	function handleFile(e) { do_file(e.target.files); }
+	xlf.addEventListener('change', handleFile, false);
+})();
 
-var xlf = document.getElementById('xlf');
-function handleFile(e) {
-	rABS = document.getElementsByName("userabs")[0].checked;
-	var files = e.target.files;
-	var f = files[0];
-	{
-		var reader = new FileReader();
-		//var name = f.name;
-		reader.onload = function(e) {
-			if(typeof console !== 'undefined') console.log("onload", new Date(), rABS);
-			var data = e.target.result;
-			{
-				var wb;
-				if(rABS) {
-					wb = X.read(data, {type: 'binary'});
-				} else {
-					var arr = fixdata(data);
-					wb = X.read(btoa(arr), {type: 'base64'});
-				}
-				process_wb(wb);
-			}
-		};
-		if(rABS) reader.readAsBinaryString(f);
-		else reader.readAsArrayBuffer(f);
+var export_xlsx = (function() {
+	function prep(arr) {
+		var out = [];
+		for(var i = 0; i < arr.length; ++i) {
+			if(!arr[i]) continue;
+			if(Array.isArray(arr[i])) { out[i] = arr[i]; continue };
+			var o = new Array();
+			Object.keys(arr[i]).forEach(function(k) { o[+k] = arr[i][k] });
+			out[i] = o;
+		}
+		return out;
 	}
-}
 
-if(xlf.addEventListener) xlf.addEventListener('change', handleFile, false);
+	function s2ab(s) {
+		var b = new ArrayBuffer(s.length), v = new Uint8Array(b);
+		for (var i=0; i != s.length; ++i) v[i] = s.charCodeAt(i) & 0xFF;
+		return b;
+	}
+
+	return function export_xlsx() {
+		if(!cDg) return;
+		/* convert canvas-datagrid data to worksheet */
+		var new_ws = XLSX.utils.aoa_to_sheet(prep(cDg.data));
+
+		/* build workbook */
+		var new_wb = XLSX.utils.book_new();
+		XLSX.utils.book_append_sheet(new_wb, new_ws, 'SheetJS');
+
+		/* write file and trigger a download */
+		var wbout = XLSX.write(new_wb, {bookType:'xlsx', bookSST:true, type:'binary'});
+		var fname = 'sheetjs.xlsx';
+		try {
+			saveAs(new Blob([s2ab(wbout)],{type:"application/octet-stream"}), fname);
+		} catch(e) { if(typeof console != 'undefined') console.log(e, wbout); }
+	};
+})();
 </script>
 <script type="text/javascript">
+/* eslint no-use-before-define:0 */
 	var _gaq = _gaq || [];
 	_gaq.push(['_setAccount', 'UA-36810333-1']);
 	_gaq.push(['_trackPageview']);

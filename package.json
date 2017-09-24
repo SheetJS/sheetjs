@@ -46,6 +46,7 @@
 			"pattern": "xlsx.js"
 		}
 	},
+	"alex": { "allow": ["wtf", "holes"] },
 	"homepage": "http://sheetjs.com/opensource",
 	"bugs": { "url": "https://github.com/SheetJS/js-xlsx/issues" },
 	"license": "Apache-2.0",

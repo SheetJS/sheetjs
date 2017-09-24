@@ -19,3 +19,8 @@ micro: init ## micro demo
 .PHONY: koa
 koa: init ## koa demo
 	node koa.js
+
+.PHONY: hapi
+hapi: init ## hapi demo
+	cp ../../dist/xlsx.full.min.js .
+	node hapi.js

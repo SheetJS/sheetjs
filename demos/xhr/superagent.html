@@ -28,7 +28,6 @@ a { text-decoration: none }
 <script>
 var demo = 'superagent', book = 'xlsx';
 
-var request = window.superagent;
 function process_wb(wb) {
 	console.log(wb);
 	htmlout.innerHTML = XLSX.utils.sheet_to_html(wb.Sheets[wb.SheetNames[0]], {editable:true}).replace("<table", '<table id="table" border="1"');
@@ -38,7 +37,7 @@ var url = "sheetjs.xlsx";
 document.getElementById('fileurl').innerHTML = '<a href="' + url + '">Download original file</a>';
 document.getElementById('outfile').innerHTML = '<a href="' + demo + '.' + book + '">Download new file</a>';
 
-request.get(url)
+superagent.get(url)
 	.responseType('arraybuffer')
 	.end(function(err, res) {
 		var data = new Uint8Array(res.body);
@@ -49,10 +48,10 @@ request.get(url)
 document.getElementById('ulbutton').onclick = function() {
 	var wb = XLSX.utils.table_to_book(document.getElementById('htmlout'));
 	console.log(wb);
-	var formdata = new FormData();
-	formdata.append('file', demo + '.' + book);
-	formdata.append('data', XLSX.write(wb, {bookType:book, type:'base64'}));
-	request.post("/upload").send(formdata).end(function(e,r) { console.log(r.text); });
+	var fd = new FormData();
+	fd.append('file', demo + '.' + book);
+	fd.append('data', XLSX.write(wb, {bookType:book, type:'base64'}));
+	superagent.post("/upload").send(fd).end(function(e,r) { console.log(r.text); });
 };
 </script>
 <script type="text/javascript">

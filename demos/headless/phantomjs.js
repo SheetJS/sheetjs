@@ -3,7 +3,7 @@ var fs = require('fs');
 var xlsx = require('../../xlsx');
 var page = require('webpage').create();
 
-page.open('http://www.google.com', function(status) {
+page.open('http://oss.sheetjs.com/js-xlsx/tests/', function(status) {
 
   var data = fs.read('sheetjs.xlsx', {mode: 'rb', charset: 'utf8'});
   var workbook = xlsx.read(data, {type: 'binary'});

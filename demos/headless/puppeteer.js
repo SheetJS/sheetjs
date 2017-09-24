@@ -5,7 +5,7 @@ const puppeteer = require('puppeteer');
 
   const browser = await puppeteer.launch();
   const page = await browser.newPage();
-  await page.goto('http://localhost:8000', {waitUntil: 'load'});
+  await page.goto('http://oss.sheetjs.com/js-xlsx/tests/', {waitUntil: 'load'});
 	await page.waitFor(30*1000);
   await page.pdf({path: 'test.pdf', format: 'A4'});
 

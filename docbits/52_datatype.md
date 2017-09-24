@@ -7,7 +7,7 @@ Type `b` is the Boolean type.  `v` is interpreted according to JS truth tables.
 Type `e` is the Error type. `v` holds the number and `w` holds the common name:
 
 <details>
-	<summary><b>Error values and interpretation</b> (click to show)</summary>
+  <summary><b>Error values and interpretation</b> (click to show)</summary>
 
 |  Value | Error Meaning   |
 | -----: | :-------------- |
@@ -45,7 +45,7 @@ will not be generated; the parser `sheetStubs` option must be set to `true`.
 #### Dates
 
 <details>
-	<summary><b>Excel Date Code details</b> (click to show)</summary>
+  <summary><b>Excel Date Code details</b> (click to show)</summary>
 
 By default, Excel stores dates as numbers with a format code that specifies date
 processing.  For example, the date `19-Feb-17` is stored as the number `42785`
@@ -61,7 +61,7 @@ The default behavior for all parsers is to generate number cells.  Setting
 </details>
 
 <details>
-	<summary><b>Time Zones and Dates</b> (click to show)</summary>
+  <summary><b>Time Zones and Dates</b> (click to show)</summary>
 
 Excel has no native concept of universal time.  All times are specified in the
 local time zone.  Excel limitations prevent specifying true absolute dates.
@@ -71,7 +71,7 @@ Following Excel, this library treats all dates as relative to local time zone.
 </details>
 
 <details>
-	<summary><b>Epochs: 1900 and 1904</b> (click to show)</summary>
+  <summary><b>Epochs: 1900 and 1904</b> (click to show)</summary>
 
 Excel supports two epochs (January 1 1900 and January 1 1904), see
 ["1900 vs. 1904 Date System" article](http://support2.microsoft.com/kb/180162).

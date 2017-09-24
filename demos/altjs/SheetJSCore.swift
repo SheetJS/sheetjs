@@ -1,5 +1,5 @@
 #!/usr/bin/env xcrun swift
-
+/* xlsx.js (C) 2013-present  SheetJS -- http://sheetjs.com */
 import JavaScriptCore;
 
 class SheetJS {
@@ -30,7 +30,7 @@ class SheetJS {
 	}
 
 	func readFileToCSV(file: String) throws -> String {
-		let data:String! = try String(contentsOfFile: file, encoding:String.Encoding.ascii);
+		let data:String! = try String(contentsOfFile: file, encoding:String.Encoding.isoLatin1);
 		self.context.setObject(data, forKeyedSubscript:"payload" as (NSCopying & NSObjectProtocol)!);
 
 		let src = [

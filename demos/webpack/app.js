@@ -1,7 +1,7 @@
 /* xlsx.js (C) 2013-present SheetJS -- http://sheetjs.com */
 /*jshint browser:true */
 /*global XLSX */
-var X = XLSX;
+var X = typeof require !== "undefined" && require('../../') || XLSX;
 
 var global_wb;
 

@@ -1,0 +1,109 @@
+# xlsx.js (C) 2013-present SheetJS -- http://sheetjs.com
+SheetJS
+js-xlsx
+xls
+xlsb
+xlsx
+
+# Excel-related terms
+A1-style
+AutoFilter
+ECMA-376
+FoxPro
+Multiplan
+OData
+OpenDocument
+OpenFormula
+PivotTable
+Quattro
+SpreadsheetML
+Unhide
+Visicalc
+chartsheet
+chartsheets
+dBASE
+tooltip
+tooltips
+
+# Third-party
+Browserify
+CDNjs
+CommonJS
+ExtendScript
+FileSaver
+JavaScriptCore
+NPM
+Nuxt.js
+RequireJS
+Rollup
+SystemJS
+VueJS
+iOS
+nodejs
+npm
+unpkg
+webpack
+weex
+
+# Other terms
+APIs
+Base64
+Booleans
+JS
+README
+UTF-16
+XHR
+XMLHttpRequest
+bundlers
+cleanroom
+config
+customizable
+datagrid
+deduplication
+embeddable
+filesystem
+javascript
+metadata
+natively
+prepend
+prepended
+repo
+runtime
+submodule
+transpiled
+
+ - demos/altjs/README.md
+ChakraCore
+Duktape
+Nashorn
+
+ - demos/angular/README.md
+angular-ui-grid
+ui-grid
+ 
+ - demos/angular2/README.md
+angular-cli
+
+ - demos/extendscript/README.md
+Photoshop
+minifier
+
+ - demos/headless/README.md
+PhantomJS
+SlimerJS
+wkhtmltopdf
+
+ - demos/nwjs/README.md
+NW.js
+
+ - demos/react/README.md
+Next.js
+Preact
+
+ - demos/server/README.md
+hapi
+
+ - demos/xhr/README.md
+axios
+superagent
+

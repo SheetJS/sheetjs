@@ -9,9 +9,9 @@
 		<text :style="{ color: data.length ? '#841584' : '#CDCDCD', disabled: !data.length }" @click="exportFile">Upload XLSX</text>
 		<text style="instructions">Current Data</text>
 		<scroller class="scroller">
-			<div class="row" v-for="(row, ridx) in data">
+			<div class="row" v-for="(row, ridx) in data" :key="ridx">
 				<text>ROW {{ridx + 1}}</text>
-				<text v-for="(cell, cidx) in row">CELL {{get_label(ridx, cidx)}}:{{cell}}</text>
+				<text v-for="(cell, cidx) in row" :key="cidx">CELL {{get_label(ridx, cidx)}}:{{cell}}</text>
 			</div>
 		</scroller>
 	</div>

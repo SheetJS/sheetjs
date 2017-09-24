@@ -1,2 +1,4 @@
 browserify.js
 browserify.min.js
+worker.js
+worker.min.js

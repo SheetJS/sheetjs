@@ -1,5 +1,5 @@
 #!/bin/bash
-
+# xlsx.js (C) 2013-present  SheetJS -- http://sheetjs.com */
 if [ ! -e SheetJS ]; then
 	react-native init SheetJS
 	cd SheetJS
@@ -13,5 +13,5 @@ fi
 cp react-native.js SheetJS/index.ios.js
 cp react-native.js SheetJS/index.android.js
 cd SheetJS;
-react-native link
+RNFB_ANDROID_PERMISSIONS=true react-native link
 cd -;

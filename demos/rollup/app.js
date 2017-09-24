@@ -1,6 +1,7 @@
 /* xlsx.js (C) 2013-present SheetJS -- http://sheetjs.com */
 /*jshint browser:true */
 /*global XLSX */
+import XLSX from 'xlsx';
 var X = XLSX;
 
 var global_wb;

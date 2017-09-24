@@ -1,12 +1,14 @@
-var X = XLSX;
+var fs = require('fs');
 
 var process_wb = (function() {
 	var HTMLOUT = document.getElementById('htmlout');
+	var XPORT = document.getElementById('xport');
 
 	return function process_wb(wb) {
+		XPORT.disabled = false;
 		HTMLOUT.innerHTML = "";
 		wb.SheetNames.forEach(function(sheetName) {
-			var htmlstr = X.write(wb, {sheet:sheetName, type:'binary', bookType:'html'});
+			var htmlstr = XLSX.utils.sheet_to_html(wb.Sheets[sheetName],{editable:true});
 			HTMLOUT.innerHTML += htmlstr;
 		});
 	};
@@ -29,7 +31,7 @@ var do_file = (function() {
 		reader.onload = function(e) {
 			var data = e.target.result;
 			data = new Uint8Array(data);
-			process_wb(X.read(data, {type: 'array'}));
+			process_wb(XLSX.read(data, {type: 'array'}));
 		};
 		reader.readAsArrayBuffer(f);
 	};
@@ -59,4 +61,26 @@ var do_file = (function() {
 	var xlf = document.getElementById('xlf');
 	function handleFile(e) { do_file(e.target.files); }
 	xlf.addEventListener('change', handleFile, false);
+})();
+
+var export_xlsx = (function() {
+	/* pre-build the nwsaveas input element */
+	var HTMLOUT = document.getElementById('htmlout');
+	var input = document.createElement('input');
+	input.style.display = 'none';
+	input.setAttribute('nwsaveas', 'sheetjs.xlsx');
+	input.setAttribute('type', 'file');
+	document.body.appendChild(input);
+	input.addEventListener('cancel',function(){ alert("Save was canceled!"); });
+	input.addEventListener('change',function(e){
+		var filename=this.value, bookType=(filename.match(/[^\.]*$/)||["xlsx"])[0];
+		var wb = XLSX.utils.table_to_book(HTMLOUT);
+		var wbout = XLSX.write(wb, {type:'buffer', bookType:bookType});
+		fs.writeFile(filename, wbout, function(err) {
+			if(!err) return alert("Saved to " + filename);
+			alert("Error: " + (err.message || err));
+		});
+	});
+
+	return function() { input.click(); };
 })();

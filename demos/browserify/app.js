@@ -1,6 +1,15 @@
 /* xlsx.js (C) 2013-present  SheetJS -- http://sheetjs.com */
-require(["xlsx.full.min"], function(_XLSX) {
-var X = XLSX;
+var XLSX = require('../../'); // test against development version
+//var XLSX = require('xlsx'); // use in production
+/*jshint browser:true */
+/*global require */
+var X = require('xlsx');
+var XW = {
+	/* worker message */
+	msg: 'xlsx',
+	/* worker scripts */
+	worker: './worker.min.js'
+};
 
 var global_wb;
 
@@ -90,7 +99,7 @@ var do_file = (function() {
 	var domrabs = document.getElementsByName("userabs")[0];
 	if(!rABS) domrabs.disabled = !(domrabs.checked = false);
 
-	var use_worker = false && typeof Worker !== 'undefined';
+	var use_worker = typeof Worker !== 'undefined';
 	var domwork = document.getElementsByName("useworker")[0];
 	if(!use_worker) domwork.disabled = !(domwork.checked = false);
 
@@ -151,4 +160,3 @@ var do_file = (function() {
 	xlf.addEventListener('change', handleFile, false);
 })();
 
-});

@@ -55,10 +55,10 @@ fetch(url).then(function(res) {
 document.getElementById('ulbutton').onclick = function() {
 	var wb = XLSX.utils.table_to_book(document.getElementById('htmlout'));
 	console.log(wb);
-	var formdata = new FormData();
-	formdata.append('file', demo + '.' + book);
-	formdata.append('data', XLSX.write(wb, {bookType:book, type:'base64'}));
-	fetch("/upload", {method: "POST", body: formdata}).then(function(r) { return r.text(); }).then(function(t) { console.log(t); }); 
+	var fd = new FormData();
+	fd.append('file', demo + '.' + book);
+	fd.append('data', XLSX.write(wb, {bookType:book, type:'base64'}));
+	fetch("/upload", {method: "POST", body: fd}).then(function(r) { return r.text(); }).then(function(t) { console.log(t); });
 };
 </script>
 <script type="text/javascript">

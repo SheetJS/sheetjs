@@ -1,13 +1,15 @@
-var X = require('xlsx');
+var XLSX = require('xlsx');
 var electron = require('electron').remote;
 
 var process_wb = (function() {
 	var HTMLOUT = document.getElementById('htmlout');
+	var XPORT = document.getElementById('xport');
 
 	return function process_wb(wb) {
+		XPORT.disabled = false;
 		HTMLOUT.innerHTML = "";
 		wb.SheetNames.forEach(function(sheetName) {
-			var htmlstr = X.write(wb, {sheet:sheetName, type:'binary', bookType:'html'});
+			var htmlstr = XLSX.utils.sheet_to_html(wb.Sheets[sheetName],{editable:true});
 			HTMLOUT.innerHTML += htmlstr;
 		});
 	};
@@ -30,7 +32,7 @@ var do_file = (function() {
 		reader.onload = function(e) {
 			var data = e.target.result;
 			data = new Uint8Array(data);
-			process_wb(X.read(data, {type: 'array'}));
+			process_wb(XLSX.read(data, {type: 'array'}));
 		};
 		reader.readAsArrayBuffer(f);
 	};
@@ -67,7 +69,7 @@ var do_file = (function() {
 			}],
 			properties: ['openFile']
 		});
-		if(o.length > 0) process_wb(X.readFile(o[0]));
+		if(o.length > 0) process_wb(XLSX.readFile(o[0]));
 	}
 	readf.addEventListener('click', handleF, false);
 })();
@@ -76,4 +78,22 @@ var do_file = (function() {
 	var xlf = document.getElementById('xlf');
 	function handleFile(e) { do_file(e.target.files); }
 	xlf.addEventListener('change', handleFile, false);
+})();
+
+var export_xlsx = (function() {
+	var HTMLOUT = document.getElementById('htmlout');
+	var XTENSION = "xls|xlsx|xlsm|xlsb|xml|csv|txt|dif|sylk|slk|prn|ods|fods|htm|html".split("|")
+	return function() {
+		var wb = XLSX.utils.table_to_book(HTMLOUT);
+		var o = electron.dialog.showSaveDialog({
+			title: 'Save file as',
+			filters: [{
+				name: "Spreadsheets",
+				extensions: XTENSION
+			}]
+		});
+		console.log(o);
+		XLSX.writeFile(wb, o);
+		electron.dialog.showMessageBox({ message: "Exported data to " + o, buttons: ["OK"] });
+	};
 })();

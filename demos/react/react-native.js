@@ -1,13 +1,24 @@
 /* xlsx.js (C) 2013-present  SheetJS -- http://sheetjs.com */
-
 import * as XLSX from 'xlsx';
 
 import React, { Component } from 'react';
 import { AppRegistry, StyleSheet, Text, View, Button, Alert, Image } from 'react-native';
 import { Table, Row, Rows } from 'react-native-table-component';
-import { writeFile, readFile, DocumentDirectoryPath } from 'react-native-fs'
 
+// react-native-fs
+import { writeFile, readFile, DocumentDirectoryPath } from 'react-native-fs';
 const DDP = DocumentDirectoryPath + "/";
+const input = res => res;
+const output = str => str;
+
+// react-native-fetch-blob
+/*
+import RNFetchBlob from 'react-native-fetch-blob';
+const { writeFile, readFile, dirs:{ DocumentDir } } = RNFetchBlob.fs;
+const DDP = DocumentDir + "/";
+const input = res => res.map(x => String.fromCharCode(x)).join("");
+const output = str => str.split("").map(x => x.charCodeAt(0));
+*/
 
 const make_cols = refstr => Array.from({length: XLSX.utils.decode_range(refstr).e.c + 1}, (x,i) => XLSX.utils.encode_col(i));
 
@@ -26,22 +37,32 @@ export default class SheetJS extends Component {
 			{text: 'Cancel', onPress: () => {}, style: 'cancel' },
 			{text: 'Import', onPress: () => {
 				readFile(DDP + "sheetjs.xlsx", 'ascii').then((res) => {
-					const wb = XLSX.read(res, {type:'binary'});
+					/* parse file */
+					const wb = XLSX.read(input(res), {type:'binary'});
+
+					/* convert first worksheet to AOA */
 					const wsname = wb.SheetNames[0];
 					const ws = wb.Sheets[wsname];
 					const data = XLSX.utils.sheet_to_json(ws, {header:1});
+
+					/* update state */
 					this.setState({ data: data, cols: make_cols(ws['!ref']) });
 				}).catch((err) => { Alert.alert("importFile Error", "Error " + err.message); });
 			}}
 		]);
 	}
 	exportFile() {
+		/* convert AOA back to worksheet */
 		const ws = XLSX.utils.aoa_to_sheet(this.state.data);
+
+		/* build new workbook */
 		const wb = XLSX.utils.book_new();
 		XLSX.utils.book_append_sheet(wb, ws, "SheetJS");
-		const wbout = XLSX.write(wb, {type:"binary", bookType:"xlsx"});
+
+		/* write file */
+		const wbout = XLSX.write(wb, {type:'binary', bookType:"xlsx"});
 		const file = DDP + "sheetjsw.xlsx";
-		writeFile(file, wbout, 'ascii').then((res) =>{
+		writeFile(file, output(wbout), 'ascii').then((res) =>{
 				Alert.alert("exportFile success", "Exported to " + file);
 		}).catch((err) => { Alert.alert("exportFile Error", "Error " + err.message); });
 	};

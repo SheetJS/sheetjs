@@ -3,7 +3,7 @@
 ### Node
 
 <details>
-	<summary>(click to show)</summary>
+  <summary>(click to show)</summary>
 
 `make test` will run the node-based tests.  By default it runs tests on files in
 every supported format.  To test a specific file type, set `FMTS` to the format
@@ -26,11 +26,12 @@ $ make test        # run full tests
 $ WTF=1 make test  # enable all error messages
 ```
 
-Flow and eslint checks are available:
+`flow` and `eslint` checks are available:
 
 ```bash
 $ make lint        # eslint checks
 $ make flow        # make lint + Flow checking
+$ make tslint      # check TS definitions
 ```
 
 </details>
@@ -38,7 +39,7 @@ $ make flow        # make lint + Flow checking
 ### Browser
 
 <details>
-	<summary>(click to show)</summary>
+  <summary>(click to show)</summary>
 
 The core in-browser tests are available at `tests/index.html` within this repo.
 Start a local server and navigate to that directory to run the tests.
@@ -48,8 +49,8 @@ Start a local server and navigate to that directory to run the tests.
 `tests/fixtures.lst` file and add the paths.
 
 To run the full in-browser tests, clone the repo for
-[oss.sheetjs.com](https://github.com/SheetJS/SheetJS.github.io) and replace
-the xlsx.js file (then open a browser window and go to `stress.html`):
+[`oss.sheetjs.com`](https://github.com/SheetJS/SheetJS.github.io) and replace
+the `xlsx.js` file (then open a browser window and go to `stress.html`):
 
 ```bash
 $ cp xlsx.js ../SheetJS.github.io
@@ -62,13 +63,13 @@ $ open -a Chromium.app http://localhost:8000/stress.html
 ### Tested Environments
 
 <details>
-	<summary>(click to show)</summary>
+  <summary>(click to show)</summary>
 
- - NodeJS 0.8, 0.9, 0.10, 0.11, 0.12, 4.x, 5.x, 6.x, 7.x
- - IE 6/7/8/9/10/11 (IE6-9 browsers require shims for interacting with client)
- - Chrome 24+
- - Safari 6+
- - FF 18+
+ - NodeJS `0.8`, `0.10`, `0.12`, `4.x`, `5.x`, `6.x`, `7.x`, `8.x`
+ - IE 6/7/8/9/10/11 (IE 6-9 require shims)
+ - Chrome 24+ (including Android 4.0+)
+ - Safari 6+ (iOS and Desktop)
+ - Edge 13+, FF 18+, and Opera 12+
 
 Tests utilize the mocha testing framework.  Travis-CI and Sauce Labs links:
 
@@ -76,6 +77,13 @@ Tests utilize the mocha testing framework.  Travis-CI and Sauce Labs links:
  - <https://semaphoreci.com/sheetjs/js-xlsx> for XLSX module in nodejs
  - <https://travis-ci.org/SheetJS/SheetJS.github.io> for XLS\* modules
  - <https://saucelabs.com/u/sheetjs> for XLS\* modules using Sauce Labs
+
+The Travis-CI test suite also includes tests for various time zones.  To change
+the timezone locally, set the TZ environment variable:
+
+```bash
+$ env TZ="Asia/Kolkata" WTF=1 make test_misc
+```
 
 </details>
 
@@ -89,7 +97,7 @@ available.  If `make init` fails, please download the latest version of the test
 files snapshot from [the repo](https://github.com/SheetJS/test_files/releases)
 
 <details>
-	<summary><b>Latest Snapshot</b> (click to show)</summary>
+  <summary><b>Latest Snapshot</b> (click to show)</summary>
 
 Latest test files snapshot:
 <http://github.com/SheetJS/test_files/releases/download/20170409/test_files.zip>

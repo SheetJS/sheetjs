@@ -7,13 +7,13 @@
 `wb.Workbook.Names` is an array of defined name objects which have the keys:
 
 <details>
-	<summary><b>Defined Name Properties</b> (click to show)</summary>
+  <summary><b>Defined Name Properties</b> (click to show)</summary>
 
 | Key       | Description                                                      |
 |:----------|:-----------------------------------------------------------------|
 | `Sheet`   | Name scope.  Sheet Index (0 = first sheet) or `null` (Workbook)  |
 | `Name`    | Case-sensitive name.  Standard rules apply **                    |
-| `Ref`     | A1-style Reference (e.g. `"Sheet1!$A$1:$D$20"`)                  |
+| `Ref`     | A1-style Reference (`"Sheet1!$A$1:$D$20"`)                       |
 | `Comment` | Comment (only applicable for XLS/XLSX/XLSB)                      |
 
 </details>

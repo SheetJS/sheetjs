@@ -25,7 +25,7 @@ Each key that does not start with `!` maps to a cell (using `A-1` notation)
   but they are stored as raw measurements. The main properties are listed below:
 
 <details>
-	<summary><b>Page margin details</b> (click to show)</summary>
+  <summary><b>Page margin details</b> (click to show)</summary>
 
 | key      | description            | "normal" | "wide" | "narrow" |
 |----------|------------------------|:---------|:-------|:-------- |
@@ -38,11 +38,11 @@ Each key that does not start with `!` maps to a cell (using `A-1` notation)
 
 ```js
 /* Set worksheet sheet to "normal" */
-sheet["!margins"] = { left:0.7, right:0.7, top:0.75, bottom:0.75, header:0.3, footer:0.3 }
+ws["!margins"]={left:0.7, right:0.7, top:0.75,bottom:0.75,header:0.3,footer:0.3}
 /* Set worksheet sheet to "wide" */
-sheet["!margins"] = { left:1.0, right:1.0, top:1.0, bottom:1.0, header:0.5, footer:0.5 }
+ws["!margins"]={left:1.0, right:1.0, top:1.0, bottom:1.0, header:0.5,footer:0.5}
 /* Set worksheet sheet to "narrow" */
-sheet["!margins"] = { left:0.25, right:0.25, top:0.75, bottom:0.75, header:0.3, footer:0.3 }
+ws["!margins"]={left:0.25,right:0.25,top:0.75,bottom:0.75,header:0.3,footer:0.3}
 ```
 </details>
 

@@ -38,6 +38,7 @@ Utilities are available in the `XLSX.utils` object and are described in the
 - `json_to_sheet` converts an array of JS objects to a worksheet.
 - `table_to_sheet` converts a DOM TABLE element to a worksheet.
 
+
 **Exporting:**
 
 - `sheet_to_json` converts a worksheet object to an array of JSON objects.
@@ -48,8 +49,9 @@ Utilities are available in the `XLSX.utils` object and are described in the
 
 **Cell and cell address manipulation:**
 
-- `format_cell` generates the text value for a cell (using number formats)
-- `{en,de}code_{row,col}` convert between 0-indexed rows/cols and A1 forms.
-- `{en,de}code_cell` converts cell addresses
-- `{en,de}code_range` converts cell ranges
+- `format_cell` generates the text value for a cell (using number formats).
+- `encode_row / decode_row` converts between 0-indexed rows and 1-indexed rows.
+- `encode_col / decode_col` converts between 0-indexed columns and column names.
+- `encode_cell / decode_cell` converts cell addresses.
+- `encode_range / decode_range` converts cell ranges.
 

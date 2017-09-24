@@ -5,6 +5,8 @@ with other JS libraries such as data grids for previewing data.  After extensive
 testing, [`canvas-datagrid`](https://tonygermaneri.github.io/canvas-datagrid/)
 stood out as a very high-performance grid with an incredibly simple API.
 
+This demo is available at <http://oss.sheetjs.com/js-xlsx/datagrid.html>
+
 ## Obtaining the Library
 
 The [`canvas-datagrid` npm nodule](http://npm.im/canvas-datagrid) includes a
@@ -27,8 +29,8 @@ Grid initialization is a one-liner:
 
 ```js
 var grid = canvasDatagrid({
-	parentNode: document.getElementById('gridctr'),
-	data: []
+  parentNode: document.getElementById('gridctr'),
+  data: []
 });
 ```
 
@@ -44,15 +46,30 @@ features to support multiple worksheets.
 
 ## Editing
 
-The library handles the whole edit cycle.  No intervention is necessary.
+`canvas-datagrid` handles the entire edit cycle.  No intervention is necessary.
 
 ## Saving Data
 
-`grid.data` is immediately readable and can be converted back to a worksheet:
+`grid.data` is immediately readable and can be converted back to a worksheet.
+Some versions return an array-like object without the length, so a little bit of
+preparation may be needed:
 
 ```js
+/* converts an array of array-like objects into an array of arrays */
+function prep(arr) {
+  var out = [];
+  for(var i = 0; i < arr.length; ++i) {
+    if(!arr[i]) continue;
+    if(Array.isArray(arr[i])) { out[i] = arr[i]; continue };
+    var o = new Array();
+    Object.keys(arr[i]).forEach(function(k) { o[+k] = arr[i][k] });
+    out[i] = o;
+  }
+  return out;
+}
+
 /* build worksheet from the grid data */
-var ws = XLSX.utils.aoa_to_sheet(grid.data);
+var ws = XLSX.utils.aoa_to_sheet(prep(grid.data));
 
 /* build up workbook */
 var wb = XLSX.utils.book_new();
@@ -65,3 +82,5 @@ XLSX.utils.book_append_sheet(wb, ws, 'SheetJS');
 
 This demo barely scratches the surface.  The underlying grid component includes
 many additional features including massive data streaming, sorting and styling.
+
+[![Analytics](https://ga-beacon.appspot.com/UA-36810333-1/SheetJS/js-xlsx?pixel)](https://github.com/SheetJS/js-xlsx)

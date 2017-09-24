@@ -6,6 +6,24 @@ In the browser, just add a script tag:
 <script lang="javascript" src="dist/xlsx.full.min.js"></script>
 ```
 
+<details>
+  <summary><b>CDN Availability</b> (click to show)</summary>
+
+|    CDN     | URL                                      |
+|-----------:|:-----------------------------------------|
+|    `unpkg` | <https://unpkg.com/xlsx/>                |
+| `jsDelivr` | <https://jsdelivr.com/package/npm/xlsx>  |
+|    `CDNjs` | <http://cdnjs.com/libraries/xlsx>        |
+
+`unpkg` makes the latest version available at:
+
+```html
+<script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+```
+
+</details>
+
+
 With [npm](https://www.npmjs.org/package/xlsx):
 
 ```bash
@@ -18,12 +36,9 @@ With [bower](http://bower.io/search/?q=js-xlsx):
 $ bower install js-xlsx
 ```
 
-CDNjs automatically pulls the latest version and makes all versions available at
-<http://cdnjs.com/libraries/xlsx>
-
 ### JS Ecosystem Demos
 
-The `demos` directory includes sample projects for:
+The [`demos` directory](demos/) includes sample projects for:
 
 **Frameworks and APIs**
 - [`angular 1.x`](demos/angular/)
@@ -52,7 +67,7 @@ The `demos` directory includes sample projects for:
 ### Optional Modules
 
 <details>
-	<summary><b>Optional features</b> (click to show)</summary>
+  <summary><b>Optional features</b> (click to show)</summary>
 
 The node version automatically requires modules for additional features.  Some
 of these modules are rather large in size and are only needed in special
@@ -68,7 +83,7 @@ An appropriate version for each dependency is included in the dist/ directory.
 
 The complete single-file version is generated at `dist/xlsx.full.min.js`
 
-Webpack and browserify builds include optional modules by default.  Webpack can
+Webpack and Browserify builds include optional modules by default.  Webpack can
 be configured to remove support with `resolve.alias`:
 
 ```js
@@ -82,13 +97,15 @@ be configured to remove support with `resolve.alias`:
 
 ### ECMAScript 5 Compatibility
 
-Since xlsx.js uses ES5 functions like `Array#forEach`, older browsers require
-[Polyfills](http://git.io/QVh77g).  This repo and the gh-pages branch include
-[a shim](https://github.com/SheetJS/js-xlsx/blob/master/shim.js)
+Since the library uses functions like `Array#forEach`, older browsers require
+[shims to provide missing functions](http://oss.sheetjs.com/js-xlsx/shim.js).
 
-To use the shim, add the shim before the script tag that loads xlsx.js:
+To use the shim, add the shim before the script tag that loads `xlsx.js`:
 
 ```html
-<script type="text/javascript" src="/path/to/shim.js"></script>
+<!-- add the shim first -->
+<script type="text/javascript" src="shim.js"></script>
+<!-- after the shim is referenced, add the library -->
+<script type="text/javascript" src="xlsx.full.min.js"></script>
 ```
 

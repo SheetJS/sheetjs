@@ -1,4 +1,4 @@
-/* xlsx.js (C) 2013-present  SheetJS -- http://sheetjs.com */
+<!-- xlsx.js (C) 2013-present  SheetJS -- http://sheetjs.com -->
 <template>
 <div @drop="_drop" @dragenter="_suppress" @dragover="_suppress">
 	<div class="row"><div class="col-xs-12">
@@ -16,11 +16,13 @@
 		<div class="table-responsive">
 			<table class="table table-striped">
 				<thead><tr>
-					<th v-for="c in cols">{{c.name}}</th>
+					<th v-for="c in cols" :key="c.key">{{c.name}}</th>
 				</tr></thead>
-				<tbody><tr v-for="r in data">
-					<td v-for="c in cols"> {{ r[c.key] }}</td>
-				</tr></tbody>
+				<tbody>
+					<tr v-for="(r, key) in data" :key="key">
+						<td v-for="c in cols" :key="c.key"> {{ r[c.key] }}</td>
+					</tr>
+				</tbody>
 			</table>
 		</div>
 	</div></div>

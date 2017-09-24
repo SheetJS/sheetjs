@@ -35,7 +35,29 @@ var j = XLSX.utils.sheet_to_json(w.Sheets[w.SheetNames[0]], {header:1});
 console.log(j);
 ```
 
-The file functions `readFile` and `writeFile` are not available in the browser.
+Note: The `readFile` and `writeFile` functions are not available in the browser.
+
+## Web Workers
+
+Web Workers can load the SystemJS library with `importScripts`, but the imported
+code cannot assign the original worker's `onmessage` callback.  This demo works
+around the limitation by exposing the desired function as a global:
+
+```js
+/* main worker script */
+importScripts('system.js');
+
+SystemJS.config({ /* ... browser config ... */ });
+
+onmessage = function(evt) {
+	SystemJS.import('xlsxworker.js').then(function() { _cb(evt); });
+};
+
+/* xlsxworker.js */
+var XLSX = require('xlsx');
+
+_cb = function (evt) { /* ... do work here ... */ };
+```
 
 ## Node
 
@@ -64,3 +86,4 @@ SystemJS.import('xlsx').then(function(XLSX) {
 });
 ```
 
+[![Analytics](https://ga-beacon.appspot.com/UA-36810333-1/SheetJS/js-xlsx?pixel)](https://github.com/SheetJS/js-xlsx)

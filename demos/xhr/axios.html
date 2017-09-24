@@ -46,10 +46,10 @@ axios(url, {responseType:'arraybuffer'}).then(function(res) {
 document.getElementById('ulbutton').onclick = function() {
 	var wb = XLSX.utils.table_to_book(document.getElementById('htmlout'));
 	console.log(wb);
-	var formdata = new FormData();
-	formdata.append('file', demo + '.' + book);
-	formdata.append('data', XLSX.write(wb, {bookType:book, type:'base64'}));
-	axios("/upload", {method: "POST", data: formdata});
+	var fd = new FormData();
+	fd.append('file', demo + '.' + book);
+	fd.append('data', XLSX.write(wb, {bookType:book, type:'base64'}));
+	axios("/upload", {method: "POST", data: fd});
 };
 </script>
 <script type="text/javascript">

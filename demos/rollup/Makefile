@@ -1,6 +1,6 @@
 TOOL=rollup
 .PHONY: all
-all: $(TOOL).min.js
+all: $(TOOL).min.js worker.min.js
 
 $(TOOL).min.js: $(TOOL).js
 	uglifyjs $< > $@
@@ -12,6 +12,10 @@ $(TOOL).js:
 	node -e 'require("./rollup.node")'
 	# browser
 	rollup -c
+	rollup -c rollup.config.worker.js
+
+worker.min.js: worker.js
+	uglifyjs $< > $@
 
 .PHONY: init
 init:

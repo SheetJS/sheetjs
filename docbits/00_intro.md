@@ -26,7 +26,7 @@ enhancements, additional features by request, and dedicated support.
 [**File format support for known spreadsheet data formats:**](#file-formats)
 
 <details>
-	<summary><b>Graph of supported formats</b> (click to show)</summary>
+  <summary><b>Graph of supported formats</b> (click to show)</summary>
 
 ![circo graph of format support](formats.png)
 
@@ -42,7 +42,7 @@ enhancements, additional features by request, and dedicated support.
 [![Build Status](https://semaphoreci.com/api/v1/sheetjs/js-xlsx/branches/master/shields_badge.svg)](https://semaphoreci.com/sheetjs/js-xlsx)
 [![Coverage Status](http://img.shields.io/coveralls/SheetJS/js-xlsx/master.svg)](https://coveralls.io/r/SheetJS/js-xlsx?branch=master)
 [![Dependencies Status](https://david-dm.org/sheetjs/js-xlsx/status.svg)](https://david-dm.org/sheetjs/js-xlsx)
-[![NPM Downloads](https://img.shields.io/npm/dt/xlsx.svg)](https://npmjs.org/package/xlsx)
+[![npm Downloads](https://img.shields.io/npm/dt/xlsx.svg)](https://npmjs.org/package/xlsx)
 [![ghit.me](https://ghit.me/badge.svg?repo=sheetjs/js-xlsx)](https://ghit.me/repo/sheetjs/js-xlsx)
 [![Analytics](https://ga-beacon.appspot.com/UA-36810333-1/SheetJS/js-xlsx?pixel)](https://github.com/SheetJS/js-xlsx)
 

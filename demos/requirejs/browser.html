@@ -46,7 +46,6 @@ Use readAsBinaryString: (when available) <input type="checkbox" name="userabs" c
 <pre id="out"></pre>
 <div id="htmlout"></div>
 <br />
-<script src="webpack.min.js"></script>
 <script>
 var XW = {
 	/* worker message */
@@ -54,6 +53,16 @@ var XW = {
 	/* worker scripts */
 	worker: './xlsxworker.js'
 };
+</script>
+<script src="require.js"></script>
+<script>
+require.config({
+	baseUrl: ".",
+	name: "app",
+	paths: {
+		xlsx: "xlsx.full.min"
+	}
+});
 </script>
 <script src="app.js"></script>
 </body>
