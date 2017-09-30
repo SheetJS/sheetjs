@@ -341,7 +341,7 @@ var SYLK = (function() {
 
 	function sheet_to_sylk(ws/*:Worksheet*/, opts/*:?any*/)/*:string*/ {
 		var preamble/*:Array<string>*/ = ["ID;PWXL;N;E"], o/*:Array<string>*/ = [];
-		var r = decode_range(ws['!ref']), cell/*:Cell*/;
+		var r = safe_decode_range(ws['!ref']), cell/*:Cell*/;
 		var dense = Array.isArray(ws);
 		var RS = "\r\n";
 
@@ -425,7 +425,7 @@ var DIF = (function() {
 		};
 		return function sheet_to_dif(ws/*:Worksheet*/, opts/*:?any*/)/*:string*/ {
 			var o/*:Array<string>*/ = [];
-			var r = decode_range(ws['!ref']), cell/*:Cell*/;
+			var r = safe_decode_range(ws['!ref']), cell/*:Cell*/;
 			var dense = Array.isArray(ws);
 			push_field(o, "TABLE", 0, 1, "sheetjs");
 			push_field(o, "VECTORS", 0, r.e.r - r.s.r + 1,"");
@@ -541,6 +541,7 @@ var PRN = (function() {
 			if(s.charAt(0) == '"' && s.charAt(s.length - 1) == '"') s = s.slice(1,-1).replace(/""/g,'"');
 			if(s.length == 0) cell.t = 'z';
 			else if(o.raw) { cell.t = 's'; cell.v = s; }
+			else if(s.trim().length == 0) { cell.t = 's'; cell.v = s; }
 			else if(s.charCodeAt(0) == 0x3D) {
 				if(s.charCodeAt(1) == 0x22 && s.charCodeAt(s.length - 1) == 0x22) { cell.t = 's'; cell.v = s.slice(2,-1).replace(/""/g,'"'); }
 				else if(fuzzyfmla(s)) { cell.t = 'n'; cell.f = s.substr(1); }
@@ -586,12 +587,13 @@ var PRN = (function() {
 	}
 
 	function prn_to_sheet(d/*:RawData*/, opts)/*:Worksheet*/ {
-		var str = "", bytes = firstbyte(d, opts);
+		var str = "", bytes = opts.type == 'string' ? [0,0,0,0] : firstbyte(d, opts);
 		switch(opts.type) {
 			case 'base64': str = Base64.decode(d); break;
 			case 'binary': str = d; break;
 			case 'buffer': str = d.toString('binary'); break;
 			case 'array': str = cc2str(d); break;
+			case 'string': str = d; break;
 			default: throw new Error("Unrecognized type " + opts.type);
 		}
 		if(bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF) str = utf8read(str.slice(3));
@@ -602,7 +604,7 @@ var PRN = (function() {
 
 	function sheet_to_prn(ws/*:Worksheet*/, opts/*:?any*/)/*:string*/ {
 		var o/*:Array<string>*/ = [];
-		var r = decode_range(ws['!ref']), cell/*:Cell*/;
+		var r = safe_decode_range(ws['!ref']), cell/*:Cell*/;
 		var dense = Array.isArray(ws);
 		for(var R = r.s.r; R <= r.e.r; ++R) {
 			var oo = [];

@@ -1,5 +1,6 @@
+/* xlsx.js (C) 2013-present SheetJS -- http://sheetjs.com */
 /* vim: set ts=2: */
-/*jshint loopfunc:true, eqnull:true */
+/*jshint -W069, loopfunc:true, mocha:true */
 var X;
 var modp = './';
 //var modp = 'xlsx';
@@ -7,7 +8,7 @@ var fs = require('fs'), assert = require('assert');
 describe('source',function(){it('should load',function(){X=require(modp);});});
 var DIF_XL = true;
 
-var browser = false;
+var browser = typeof document !== 'undefined';
 
 var opts = {cellNF: true};
 var TYPE = browser ? "binary" : "buffer";
@@ -36,15 +37,48 @@ function fixjson(x) { return x.replace(/[\r\n]+$/,""); }
 
 var dir = "./test_files/";
 
+var dirwp = dir + "artifacts/wps/", dirqp = dir + "artifacts/quattro/";
 var paths = {
-	afxls:  dir + 'AutoFilter.xls',
-	afxml:  dir + 'AutoFilter.xml',
-	afods:  dir + 'AutoFilter.ods',
+	aadbf:  dirwp + 'write.dbf',
+	aadif:  dirwp + 'write.dif',
+	aaxls:  dirwp + 'write.xls',
+	aaxlsx: dirwp + 'write.xlsx',
+	aaxml:  dirwp + 'write.xml',
+
+	abcsv:  dirqp + 'write_.csv',
+	abdif:  dirqp + 'write_.dif',
+	abslk:  dirqp + 'write_.slk',
+	abx57:  dirqp + 'write_57.xls',
+	abwb2:  dirqp + 'write_6.wb2',
+	abwb2b: dirqp + 'write_6b.wb2',
+	abwb3:  dirqp + 'write_8.wb3',
+	abqpw:  dirqp + 'write_9.qpw',
+	abx97:  dirqp + 'write_97.xls',
+	abwks:  dirqp + 'write_L1.wks',
+	abwk1:  dirqp + 'write_L2.wk1',
+	abwk3:  dirqp + 'write_L3.wk3',
+	abwk4:  dirqp + 'write_L45.wk4',
+	ab123:  dirqp + 'write_L9.123',
+	ab124:  dirqp + 'write_L97.123',
+	abwke2: dirqp + 'write_Led.wke',
+	abwq1:  dirqp + 'write_qpdos.wq1',
+	abwb1:  dirqp + 'write_qpw.wb1',
+
+	afxls:   dir + 'AutoFilter.xls',
+	afxml:   dir + 'AutoFilter.xml',
+	afods:   dir + 'AutoFilter.ods',
 	afxlsx:  dir + 'AutoFilter.xlsx',
 	afxlsb:  dir + 'AutoFilter.xlsb',
 
-	cpxls:  dir + 'custom_properties.xls',
-	cpxml:  dir + 'custom_properties.xls.xml',
+	asxls:   dir + 'author_snowman.xls',
+	asxls5:  dir + 'author_snowman.xls5',
+	asxml:   dir + 'author_snowman.xml',
+	asods:   dir + 'author_snowman.ods',
+	asxlsx:  dir + 'author_snowman.xlsx',
+	asxlsb:  dir + 'author_snowman.xlsb',
+
+	cpxls:   dir + 'custom_properties.xls',
+	cpxml:   dir + 'custom_properties.xls.xml',
 	cpxlsx:  dir + 'custom_properties.xlsx',
 	cpxlsb:  dir + 'custom_properties.xlsb',
 
@@ -226,19 +260,19 @@ function parsetest(x, wb, full, ext) {
 	if(fs.existsSync(dir + '2011/' + x + '.xml'))
 	describe(x + ext + '.xml from 2011', function() {
 		it('should parse', function() {
-			var wb = X.readFile(dir + '2011/' + x + '.xml', opts);
+			/*var wb = */X.readFile(dir + '2011/' + x + '.xml', opts);
 		});
 	});
 	if(fs.existsSync(dir + '2013/' + x + '.xlsb'))
 	describe(x + ext + '.xlsb from 2013', function() {
 		it('should parse', function() {
-			var wb = X.readFile(dir + '2013/' + x + '.xlsb', opts);
+			/*var wb = */X.readFile(dir + '2013/' + x + '.xlsb', opts);
 		});
 	});
 	if(fs.existsSync(dir + x + '.xml' + ext))
 	describe(x + '.xml', function() {
 		it('should parse', function() {
-			var wb = X.readFile(dir + x + '.xml', opts);
+			/*var wb = */X.readFile(dir + x + '.xml', opts);
 		});
 	});
 }
@@ -553,121 +587,94 @@ describe('parse options', function() {
 });
 
 describe('input formats', function() {
+	var _paths = [
+		"cstods", "cstxls", "cstxlsb", "cstxlsb", "cstxml", "aadbf", "aadif",
+		"aaxls", "aaxml", "aaxlsx", "ab123", "ab124", "abcsv", "abdif", "abqpw",
+		"abslk", "abwb1", "abwb2", "abwb3", "abwk1", "abwk3", "abwk4", "abwks",
+		"abwq1", "abx57", "abx97", "abwke2", "abwb2b"
+	].map(function(x) { return paths[x]; });
 	it('should read binary strings', function() {
-		X.read(fs.readFileSync(paths.cstxlsx, 'binary'), {type: 'binary'});
-		X.read(fs.readFileSync(paths.cstxlsb, 'binary'), {type: 'binary'});
-		X.read(fs.readFileSync(paths.cstxls, 'binary'), {type: 'binary'});
-		X.read(fs.readFileSync(paths.cstxml, 'binary'), {type: 'binary'});
-		X.read(fs.readFileSync(paths.cstods, 'binary'), {type: 'binary'});
+		_paths.forEach(function(pth) {
+			X.read(fs.readFileSync(pth, 'binary'), {type: 'binary'});
+		});
 	});
 	it('should read base64 strings', function() {
-		X.read(fs.readFileSync(paths.cstxls, 'base64'), {type: 'base64'});
-		X.read(fs.readFileSync(paths.cstxml, 'base64'), {type: 'base64'});
-		X.read(fs.readFileSync(paths.cstods, 'base64'), {type: 'base64'});
-		X.read(fs.readFileSync(paths.cstxlsx, 'base64'), {type: 'base64'});
-		X.read(fs.readFileSync(paths.cstxlsb, 'base64'), {type: 'base64'});
+		_paths.forEach(function(pth) {
+			X.read(fs.readFileSync(pth, 'base64'), {type: 'base64'});
+		});
 	});
 	var k = browser ? 'array' : 'buffer';
 	(typeof Uint8Array !== 'undefined' ? it : it.skip)('should read ' + k + 's', function() {
-		X.read(fs.readFileSync(paths.cstxls, browser ? 'buffer' : null), {type: k});
-		X.read(fs.readFileSync(paths.cstxml, browser ? 'buffer' : null), {type: k});
-		X.read(fs.readFileSync(paths.cstods, browser ? 'buffer' : null), {type: k});
-		X.read(fs.readFileSync(paths.cstxlsx, browser ? 'buffer' : null), {type: k});
-		X.read(fs.readFileSync(paths.cstxlsb, browser ? 'buffer' : null), {type: k});
+		_paths.forEach(function(pth) {
+			X.read(fs.readFileSync(pth, browser ? 'buffer' : null), {type: k});
+		});
 	});
 	(typeof Uint8Array !== 'undefined' ? it : it.skip)('should read array', function() {
-		X.read(fs.readFileSync(paths.cstxls, 'binary').split("").map(function(x) { return x.charCodeAt(0); }), {type:'array'});
-		X.read(fs.readFileSync(paths.cstxml, 'binary').split("").map(function(x) { return x.charCodeAt(0); }), {type:'array'});
-		X.read(fs.readFileSync(paths.cstxlsx, 'binary').split("").map(function(x) { return x.charCodeAt(0); }), {type:'array'});
-		X.read(fs.readFileSync(paths.cstxlsb, 'binary').split("").map(function(x) { return x.charCodeAt(0); }), {type:'array'});
-		X.read(fs.readFileSync(paths.cstods, 'binary').split("").map(function(x) { return x.charCodeAt(0); }), {type:'array'});
+		_paths.forEach(function(pth) {
+			X.read(fs.readFileSync(pth, 'binary').split("").map(function(x) { return x.charCodeAt(0); }), {type:'array'});
+		});
 	});
 	it('should throw if format is unknown', function() {
-		assert.throws(function() { X.read(fs.readFileSync(paths.cstxls), {type: 'dafuq'}); });
-		assert.throws(function() { X.read(fs.readFileSync(paths.cstxml), {type: 'dafuq'}); });
-		assert.throws(function() { X.read(fs.readFileSync(paths.cstods), {type: 'dafuq'}); });
-		assert.throws(function() { X.read(fs.readFileSync(paths.cstxlsx), {type: 'dafuq'}); });
-		assert.throws(function() { X.read(fs.readFileSync(paths.cstxlsb), {type: 'dafuq'}); });
+		_paths.forEach(function(pth) {
+			assert.throws(function() { X.read(fs.readFileSync(pth), {type: 'dafuq'}); });
+		});
 	});
 
 	if(browser) it('should default to base64 type', function() {
-		X.read(fs.readFileSync(paths.cstxls, 'base64'));
-		X.read(fs.readFileSync(paths.cstxml, 'base64'));
-		X.read(fs.readFileSync(paths.cstods, 'base64'));
-		X.read(fs.readFileSync(paths.cstxlsx, 'base64'));
-		X.read(fs.readFileSync(paths.cstxlsb, 'base64'));
+		_paths.forEach(function(pth) {
+			X.read(fs.readFileSync(pth, 'base64'));
+		});
 	});
 	else {
 	it('should infer buffer type', function() {
-		X.read(fs.readFileSync(paths.cstxls));
-		X.read(fs.readFileSync(paths.cstxml));
-		X.read(fs.readFileSync(paths.cstods));
-		X.read(fs.readFileSync(paths.cstxlsx));
-		X.read(fs.readFileSync(paths.cstxlsb));
+		_paths.forEach(function(pth) {
+			X.read(fs.readFileSync(pth));
+		});
 	});
 	it('should read files', function() {
-		X.readFile(paths.cstxls);
-		X.readFile(paths.cstxml);
-		X.readFile(paths.cstods);
-		X.readFile(paths.cstxlsx);
-		X.readFile(paths.cstxlsb);
+		_paths.forEach(function(pth) {
+			X.readFile(pth);
+		});
 	});
 	}
 });
 
 describe('output formats', function() {
-	var wb1, wb2, wb3, wb4;
-	var bef = (function() {
-		X = require(modp);
-		wb1 = X.read(fs.readFileSync(paths.cpxlsx), {type:TYPE});
-		wb2 = X.read(fs.readFileSync(paths.cpxlsb), {type:TYPE});
-		wb3 = X.read(fs.readFileSync(paths.cpxls), {type:TYPE});
-		wb4 = X.read(fs.readFileSync(paths.cpxml), {type:TYPE});
-	});
-	if(typeof before != 'undefined') before(bef);
-	else it('before', bef);
-	it('should write binary strings', function() {
-		if(!wb1) {
-			wb1 = X.read(fs.readFileSync(paths.cpxlsx), {type:TYPE});
-			wb2 = X.read(fs.readFileSync(paths.cpxlsb), {type:TYPE});
-			wb3 = X.read(fs.readFileSync(paths.cpxls), {type:TYPE});
-			wb4 = X.read(fs.readFileSync(paths.cpxml), {type:TYPE});
-		}
-		X.write(wb1, {type: 'binary'});
-		X.write(wb2, {type: 'binary'});
-		X.write(wb3, {type: 'binary'});
-		X.write(wb4, {type: 'binary'});
-		X.read(X.write(wb1, {type: 'binary'}), {type: 'binary'});
-		X.read(X.write(wb2, {type: 'binary'}), {type: 'binary'});
-		X.read(X.write(wb3, {type: 'binary'}), {type: 'binary'});
-		X.read(X.write(wb4, {type: 'binary'}), {type: 'binary'});
-	});
-	it('should write base64 strings', function() {
-		X.write(wb1, {type: 'base64'});
-		X.write(wb2, {type: 'base64'});
-		X.write(wb3, {type: 'base64'});
-		X.write(wb4, {type: 'base64'});
-		X.read(X.write(wb1, {type: 'base64'}), {type: 'base64'});
-		X.read(X.write(wb2, {type: 'base64'}), {type: 'base64'});
-		X.read(X.write(wb3, {type: 'base64'}), {type: 'base64'});
-		X.read(X.write(wb4, {type: 'base64'}), {type: 'base64'});
-	});
-	if(!browser) it('should write buffers', function() {
-		X.write(wb1, {type: 'buffer'});
-		X.write(wb2, {type: 'buffer'});
-		X.write(wb3, {type: 'buffer'});
-		X.write(wb4, {type: 'buffer'});
-		X.read(X.write(wb1, {type: 'buffer'}), {type: 'buffer'});
-		X.read(X.write(wb2, {type: 'buffer'}), {type: 'buffer'});
-		X.read(X.write(wb3, {type: 'buffer'}), {type: 'buffer'});
-		X.read(X.write(wb4, {type: 'buffer'}), {type: 'buffer'});
-	});
-	it('should throw if format is unknown', function() {
-		assert.throws(function() { X.write(wb1, {type: 'dafuq'}); });
-		assert.throws(function() { X.write(wb2, {type: 'dafuq'}); });
-		assert.throws(function() { X.write(wb3, {type: 'dafuq'}); });
-		assert.throws(function() { X.write(wb4, {type: 'dafuq'}); });
-	});
+	var fmts = [
+		/* fmt   unicode   str */
+		["xlsx",   true,  false],
+		["xlsb",   true,  false],
+		["xls",    true,  false],
+		["xlml",   true,   true],
+		["ods",    true,  false],
+		["fods",   true,   true],
+		["csv",    true,   true],
+		["txt",    true,   true],
+		["sylk",  false,   true],
+		["html",   true,   true],
+		["dif",   false,   true],
+		["prn",   false,   true]
+	];
+	function RT(T) {
+		if(!X) X = require(modp);
+		fmts.forEach(function(fmt) {
+			var wb = X.utils.book_new();
+			X.utils.book_append_sheet(wb, X.utils.aoa_to_sheet([['R',"\u2603"],["\u0BEE",2]]), "Sheet1");
+			if(T == 'string' && !fmt[2]) return assert.throws(function() {X.write(wb, {type: T, bookType:fmt[0], WTF:1});});
+			var out = X.write(wb, {type: T, bookType:fmt[0], WTF:1});
+			var nwb = X.read(out, {type: T, WTF:1});
+			var nws = nwb.Sheets[nwb.SheetNames[0]];
+			assert.equal(get_cell(nws, "B2").v, 2);
+			assert.equal(get_cell(nws, "A1").v, "R");
+			if(fmt[1]) assert.equal(get_cell(nws, "A2").v, "\u0BEE");
+			if(fmt[1]) assert.equal(get_cell(nws, "B1").v, "\u2603");
+		});
+	}
+	it('should write binary strings', function() { RT('binary'); });
+	it('should write base64 strings', function() { RT('base64'); });
+	it('should write JS strings', function() { RT('string'); });
+	if(!browser) it('should write buffers', function() { RT('buffer'); });
+	it('should throw if format is unknown', function() { assert.throws(function() { RT('dafuq'); }); });
 });
 
 function eqarr(a,b) {
@@ -756,30 +763,32 @@ function check_margin(margins, exp) {
 
 describe('parse features', function() {
 	describe('sheet visibility', function() {
-		var wb1, wb2, wb3, wb4, wb5;
+		var wbs = [];
 		var bef = (function() {
-			wb1 = X.read(fs.readFileSync(paths.svxls), {type:TYPE});
-			wb2 = X.read(fs.readFileSync(paths.svxls5), {type:TYPE});
-			wb3 = X.read(fs.readFileSync(paths.svxml), {type:TYPE});
-			wb4 = X.read(fs.readFileSync(paths.svxlsx), {type:TYPE});
-			wb5 = X.read(fs.readFileSync(paths.svxlsb), {type:TYPE});
+			wbs = [
+				X.read(fs.readFileSync(paths.svxls), {type:TYPE}),
+				X.read(fs.readFileSync(paths.svxls5), {type:TYPE}),
+				X.read(fs.readFileSync(paths.svxml), {type:TYPE}),
+				X.read(fs.readFileSync(paths.svxlsx), {type:TYPE}),
+				X.read(fs.readFileSync(paths.svxlsb), {type:TYPE})
+			];
 		});
 		if(typeof before != 'undefined') before(bef);
 		else it('before', bef);
 
 		it('should detect visible sheets', function() {
-			[wb1, wb2, wb3, wb4, wb5].forEach(function(wb) {
+			wbs.forEach(function(wb) {
 				assert(!wb.Workbook.Sheets[0].Hidden);
 			});
 		});
 		it('should detect all hidden sheets', function() {
-			[wb1, wb2, wb3, wb4, wb5].forEach(function(wb) {
+			wbs.forEach(function(wb) {
 				assert(wb.Workbook.Sheets[1].Hidden);
 				assert(wb.Workbook.Sheets[2].Hidden);
 			});
 		});
 		it('should distinguish very hidden sheets', function() {
-			[wb1, wb2, wb3, wb4, wb5].forEach(function(wb) {
+			wbs.forEach(function(wb) {
 				assert.equal(wb.Workbook.Sheets[1].Hidden,1);
 				assert.equal(wb.Workbook.Sheets[2].Hidden,2);
 			});
@@ -822,24 +831,44 @@ describe('parse features', function() {
 	});
 
 	describe('should parse core properties and custom properties', function() {
-		var wb1, wb2, wb3, wb4;
+		var wbs=[];
 		var bef = (function() {
-			wb1 = X.read(fs.readFileSync(paths.cpxlsx), {type:TYPE});
-			wb2 = X.read(fs.readFileSync(paths.cpxlsb), {type:TYPE});
-			wb3 = X.read(fs.readFileSync(paths.cpxls), {type:TYPE});
-			wb4 = X.read(fs.readFileSync(paths.cpxml), {type:TYPE});
+			wbs = [
+				X.read(fs.readFileSync(paths.cpxlsx), {type:TYPE}),
+				X.read(fs.readFileSync(paths.cpxlsb), {type:TYPE}),
+				X.read(fs.readFileSync(paths.cpxls), {type:TYPE}),
+				X.read(fs.readFileSync(paths.cpxml), {type:TYPE})
+			];
 		});
 		if(typeof before != 'undefined') before(bef);
 		else it('before', bef);
 
-		it(N1 + ' should parse core properties', function() { coreprop(wb1); });
-		it(N2 + ' should parse core properties', function() { coreprop(wb2); });
-		it(N3 + ' should parse core properties', function() { coreprop(wb3); });
-		it(N4 + ' should parse core properties', function() { coreprop(wb4); });
-		it(N1 + ' should parse custom properties', function() { custprop(wb1); });
-		it(N2 + ' should parse custom properties', function() { custprop(wb2); });
-		it(N3 + ' should parse custom properties', function() { custprop(wb3); });
-		it(N4 + ' should parse custom properties', function() { custprop(wb4); });
+		[N1, N2, N3, N4].forEach(function(x, i) {
+			it(x + ' should parse core properties', function() { coreprop(wbs[i]); });
+			it(x + ' should parse custom properties', function() { custprop(wbs[i]); });
+		});
+		[
+			["asxls",  "BIFF8", "\u2603"],
+			["asxls5", "BIFF5", "_"],
+			["asxml",   "XLML", "\u2603"],
+			["asods",    "ODS", "God"],
+			["asxlsx",  "XLSX", "\u2603"],
+			["asxlsb",  "XLSB", "\u2603"]
+		].forEach(function(x) {
+		(fs.existsSync(paths[x[0]]) ? it : it.skip)(x[1] + ' should read unicode author', function() {
+			var wb = X.read(fs.readFileSync(paths[x[0]]), {type:TYPE});
+			assert.equal(wb.Props.Author, x[2]);
+		}); });
+		var BASE = "இராமா";
+		[ "xlsx", "xlsb", "xlml"/*, "ods", "xls" */].forEach(function(n) {
+		it(n + ' should round-trip unicode category', function() {
+			var wb = X.utils.book_new();
+			X.utils.book_append_sheet(wb, X.utils.aoa_to_sheet([["a"]]), "Sheet1");
+			if(!wb.Props) wb.Props = {};
+			wb.Props.Category = BASE;
+			var wb2 = X.read(X.write(wb, {bookType:n, type:TYPE}), {type:TYPE});
+			assert.equal(wb2.Props.Category,BASE);
+		}); });
 	});
 
 	describe('sheetRows', function() {
@@ -930,6 +959,7 @@ describe('parse features', function() {
 	describe('row properties', function() {
 		var wb1, wb2, wb3, wb4, wb5, wb6;
 		var ol1, ol2, ol3, ol4, ol5;
+		var ol = fs.existsSync(paths.olxls);
 		var bef = (function() {
 			X = require(modp);
 			wb1 = X.read(fs.readFileSync(paths.rhxlsx), {type:TYPE, cellStyles:true});
@@ -938,6 +968,8 @@ describe('parse features', function() {
 			wb4 = X.read(fs.readFileSync(paths.rhxls5), {type:TYPE, cellStyles:true});
 			wb5 = X.read(fs.readFileSync(paths.rhxml), {type:TYPE, cellStyles:true});
 			wb6 = X.read(fs.readFileSync(paths.rhslk), {type:TYPE, cellStyles:true});
+			/* */
+			if(!ol) return;
 			ol1 = X.read(fs.readFileSync(paths.olxlsx), {type:TYPE, cellStyles:true});
 			ol2 = X.read(fs.readFileSync(paths.olxlsb), {type:TYPE, cellStyles:true});
 			ol3 = X.read(fs.readFileSync(paths.olxls), {type:TYPE, cellStyles:true});
@@ -964,7 +996,7 @@ describe('parse features', function() {
 				assert.equal(x[3].hpx, 100);
 			});
 		});
-		it('should have correct outline levels', function() {
+		(ol ? it : it.skip)('should have correct outline levels', function() {
 			/* TODO: ODS */
 			[ol1, ol2, ol3, ol4/*, ol5*/].map(function(x) { return x.Sheets.Sheet1; }).forEach(function(ws) {
 				var rows = ws['!rows'];
@@ -973,7 +1005,7 @@ describe('parse features', function() {
 					var lvl = (rows[i]||{}).level||0;
 					if(!cell || cell.t == 's') assert.equal(lvl, 0);
 					else if(cell.t == 'n') {
-						if(cell.v == 0) assert.equal(lvl, 0);
+						if(cell.v === 0) assert.equal(lvl, 0);
 						else assert.equal(lvl, cell.v);
 					}
 				}
@@ -983,47 +1015,47 @@ describe('parse features', function() {
 	});
 
 	describe('merge cells',function() {
-		var wb1, wb2, wb3, wb4, wb5;
+		var wbs=[];
 		var bef = (function() {
 			X = require(modp);
-			wb1 = X.read(fs.readFileSync(paths.mcxlsx), {type:TYPE});
-			wb2 = X.read(fs.readFileSync(paths.mcxlsb), {type:TYPE});
-			wb3 = X.read(fs.readFileSync(paths.mcods), {type:TYPE});
-			wb4 = X.read(fs.readFileSync(paths.mcxls), {type:TYPE});
-			wb5 = X.read(fs.readFileSync(paths.mcxml), {type:TYPE});
+			wbs = [
+				X.read(fs.readFileSync(paths.mcxlsx), {type:TYPE}),
+				X.read(fs.readFileSync(paths.mcxlsb), {type:TYPE}),
+				X.read(fs.readFileSync(paths.mcods), {type:TYPE}),
+				X.read(fs.readFileSync(paths.mcxls), {type:TYPE}),
+				X.read(fs.readFileSync(paths.mcxml), {type:TYPE})
+			];
 		});
 		if(typeof before != 'undefined') before(bef);
 		else it('before', bef);
 		it('should have !merges', function() {
-			assert(wb1.Sheets.Merge['!merges']);
-			assert(wb2.Sheets.Merge['!merges']);
-			assert(wb3.Sheets.Merge['!merges']);
-			assert(wb4.Sheets.Merge['!merges']);
-			assert(wb5.Sheets.Merge['!merges']);
-			var m = [wb1, wb2, wb3, wb4, wb5].map(function(x) { return x.Sheets.Merge['!merges'].map(function(y) { return X.utils.encode_range(y); });});
-			assert.deepEqual(m[0].sort(),m[1].sort());
-			assert.deepEqual(m[0].sort(),m[2].sort());
-			assert.deepEqual(m[0].sort(),m[3].sort());
-			assert.deepEqual(m[0].sort(),m[4].sort());
+			wbs.forEach(function(wb) {
+				assert(wb.Sheets.Merge['!merges']);
+			});
+			var m = wbs.map(function(x) { return x.Sheets.Merge['!merges'].map(function(y) { return X.utils.encode_range(y); });});
+			m.slice(1).forEach(function(x) {
+				assert.deepEqual(m[0].sort(),x.sort());
+			});
 		});
 	});
 
 	describe('should find hyperlinks', function() {
-		var wb1, wb2, wb3, wb4;
+		var wbs;
 		var bef = (function() {
 			X = require(modp);
-			wb1 = X.read(fs.readFileSync(paths.hlxlsx), {type:TYPE});
-			wb2 = X.read(fs.readFileSync(paths.hlxlsb), {type:TYPE});
-			wb3 = X.read(fs.readFileSync(paths.hlxls), {type:TYPE});
-			wb4 = X.read(fs.readFileSync(paths.hlxml), {type:TYPE});
+			wbs = [
+				X.read(fs.readFileSync(paths.hlxlsx), {type:TYPE}),
+				X.read(fs.readFileSync(paths.hlxlsb), {type:TYPE}),
+				X.read(fs.readFileSync(paths.hlxls), {type:TYPE}),
+				X.read(fs.readFileSync(paths.hlxml), {type:TYPE})
+			];
 		});
 		if(typeof before != 'undefined') before(bef);
 		else it('before', bef);
 
-		it(N1, function() { hlink(wb1); });
-		it(N2, function() { hlink(wb2); });
-		it(N3, function() { hlink(wb3); });
-		it(N4, function() { hlink(wb4); });
+		[N1, N2, N3, N4].forEach(function(x, i) {
+			it(x, function() { hlink(wbs[i]); });
+		});
 	});
 
 	describe('should parse cells with date type (XLSX/XLSM)', function() {
@@ -1077,7 +1109,7 @@ describe('parse features', function() {
 			['xlsx', paths.dnsxlsx,  true],
 			['xlsb', paths.dnsxlsb,  true],
 			['xls',  paths.dnsxls,   true],
-			['xlml', paths.dnsxml,  false],
+			['xlml', paths.dnsxml,  false]
 		].forEach(function(m) { it(m[0], function() {
 			var wb = X.read(fs.readFileSync(m[1]), {type:TYPE});
 			var names = wb.Workbook.Names;
@@ -1103,9 +1135,9 @@ describe('parse features', function() {
 			['ods', paths.afods]
 		].forEach(function(m) { it(m[0], function() {
 			var wb = X.read(fs.readFileSync(m[1]), {type:TYPE});
-			assert(wb.Sheets[wb.SheetNames[0]]['!autofilter'] == null);
+			assert(!wb.Sheets[wb.SheetNames[0]]['!autofilter']);
 			for(var i = 1; i < wb.SheetNames.length; ++i) {
-				assert(wb.Sheets[wb.SheetNames[i]]['!autofilter'] != null);
+				assert(wb.Sheets[wb.SheetNames[i]]['!autofilter']);
 				assert.equal(wb.Sheets[wb.SheetNames[i]]['!autofilter'].ref,"A1:E22");
 			}
 		}); });
@@ -1132,15 +1164,16 @@ describe('parse features', function() {
 	});
 
 	describe('page margins', function() {
-		var wb1, wb2, wb3, wb4, wb5, wbs;
+		var wbs=[];
 		var bef = (function() {
-			if(!fs.existsSync(paths.pmxls)) return wbs=[];
-			wb1 = X.read(fs.readFileSync(paths.pmxls), {type:TYPE});
-			wb2 = X.read(fs.readFileSync(paths.pmxls5), {type:TYPE});
-			wb3 = X.read(fs.readFileSync(paths.pmxml), {type:TYPE});
-			wb4 = X.read(fs.readFileSync(paths.pmxlsx), {type:TYPE});
-			wb5 = X.read(fs.readFileSync(paths.pmxlsb), {type:TYPE});
-			wbs = [wb1, wb2, wb3, wb4, wb5];
+			if(!fs.existsSync(paths.pmxls)) return;
+			wbs = [
+				X.read(fs.readFileSync(paths.pmxls), {type:TYPE}),
+				X.read(fs.readFileSync(paths.pmxls5), {type:TYPE}),
+				X.read(fs.readFileSync(paths.pmxml), {type:TYPE}),
+				X.read(fs.readFileSync(paths.pmxlsx), {type:TYPE}),
+				X.read(fs.readFileSync(paths.pmxlsb), {type:TYPE})
+			];
 		});
 		if(typeof before != 'undefined') before(bef);
 		else it('before', bef);
@@ -1149,17 +1182,17 @@ describe('parse features', function() {
 				check_margin(wb.Sheets["Normal"]["!margins"], [0.7, 0.7, 0.75, 0.75, 0.3, 0.3]);
 			});
 		});
-		it('should parse wide margins ', function() {
+		it('should parse wide margins', function() {
 			wbs.forEach(function(wb) {
 				check_margin(wb.Sheets["Wide"]["!margins"], [1, 1, 1, 1, 0.5, 0.5]);
 			});
 		});
-		it('should parse narrow margins ', function() {
+		it('should parse narrow margins', function() {
 			wbs.forEach(function(wb) {
 				check_margin(wb.Sheets["Narrow"]["!margins"], [0.25, 0.25, 0.75, 0.75, 0.3, 0.3]);
 			});
 		});
-		it('should parse custom margins ', function() {
+		it('should parse custom margins', function() {
 			wbs.forEach(function(wb) {
 				check_margin(wb.Sheets["Custom 1 Inch Centered"]["!margins"], [1, 1, 1, 1, 0.3, 0.3]);
 				check_margin(wb.Sheets["1 Inch HF"]["!margins"], [0.7, 0.7, 0.75, 0.75, 1, 1]);
@@ -1255,7 +1288,7 @@ describe('write features', function() {
 				baseprops = {
 					Category: "Newspaper",
 					ContentStatus: "Published",
-					Keywords: "print",
+					Keywords: "☃",
 					LastAuthor: "Perry White",
 					LastPrinted: "1978-12-15",
 					RevNumber: 6969,
@@ -1271,7 +1304,7 @@ describe('write features', function() {
 			if(typeof before != 'undefined') before(bef);
 			else it('before', bef);
 			['xlml', 'xlsx', 'xlsb'].forEach(function(w) { it(w, function() {
-				wb = {
+				var wb = {
 					Props: {},
 					SheetNames: ["Sheet1"],
 					Sheets: {Sheet1: ws}
@@ -1389,7 +1422,7 @@ describe('roundtrip features', function() {
 
 				if(m[0].t === 'n' && m[1].t === 'n') assert.equal(m[0].v, m[1].v);
 				else if(m[0].t === 'd' && m[1].t === 'd') assert.equal(m[0].v.toString(), m[1].v.toString());
-				else if(m[1].t === 'n') assert(Math.abs(datenum(new Date(m[0].v)) - m[1].v) < 0.01);
+				else if(m[1].t === 'n') assert(Math.abs(datenum(browser ? parseDate(m[0].v) : new Date(m[0].v)) - m[1].v) < 0.01);
 			});
 		});
 	});
@@ -1543,10 +1576,9 @@ describe('invalid files', function() {
 	});
 	describe('write', function() {
 		it('should pass -> XLSX', function() {
-			X.write(X.read(fs.readFileSync(paths.fstxlsb), {type:TYPE}), {type:TYPE});
-			X.write(X.read(fs.readFileSync(paths.fstxlsx), {type:TYPE}), {type:TYPE});
-			X.write(X.read(fs.readFileSync(paths.fstxls), {type:TYPE}), {type:TYPE});
-			X.write(X.read(fs.readFileSync(paths.fstxml), {type:TYPE}), {type:TYPE});
+			["fstxlsb", "fstxlsx", "fstxls", "fstxml"].forEach(function(n) {
+				X.write(X.read(fs.readFileSync(paths[n]), {type:TYPE}), {type:TYPE});
+			});
 		});
 		it('should pass if a sheet is missing', function() {
 			var wb = X.read(fs.readFileSync(paths.fstxlsx), {type:TYPE}); delete wb.Sheets[wb.SheetNames[0]];
@@ -1700,16 +1732,16 @@ describe('json output', function() {
 		var _data = [["S","h","e","e","t","J","S"],[1,2,3,4,5,6,7],[],[2,3,4,5,6,7,8]];
 		var _ws = X.utils.aoa_to_sheet(_data);
 		var json1 = X.utils.sheet_to_json(_ws);
-		var json2 = X.utils.sheet_to_json(_ws, {header:1});
-		var json3 = X.utils.sheet_to_json(_ws, {blankrows:true});
-		var json4 = X.utils.sheet_to_json(_ws, {blankrows:true, header:1});
-		var json5 = X.utils.sheet_to_json(_ws, {blankrows:false});
-		var json6 = X.utils.sheet_to_json(_ws, {blankrows:false, header:1});
 		assert.equal(json1.length, 2); // = 2 non-empty records
+		var json2 = X.utils.sheet_to_json(_ws, {header:1});
 		assert.equal(json2.length, 4); // = 4 sheet rows
+		var json3 = X.utils.sheet_to_json(_ws, {blankrows:true});
 		assert.equal(json3.length, 3); // = 2 records + 1 blank row
+		var json4 = X.utils.sheet_to_json(_ws, {blankrows:true, header:1});
 		assert.equal(json4.length, 4); // = 4 sheet rows
+		var json5 = X.utils.sheet_to_json(_ws, {blankrows:false});
 		assert.equal(json5.length, 2); // = 2 records
+		var json6 = X.utils.sheet_to_json(_ws, {blankrows:false, header:1});
 		assert.equal(json6.length, 3); // = 4 sheet rows - 1 blank row
 	});
 	it('should have an index that starts with zero when selecting range', function() {
@@ -1724,36 +1756,40 @@ describe('json output', function() {
 });
 
 
-var codes = [["あ 1", "\u00E3\u0081\u0082 1"]]
+var codes = [["あ 1", "\u00E3\u0081\u0082 1"]];
 var plaintext_val = [
 	["A1", 'n', -0.08,  "-0.08"],
 	["B1", 'n', 4001,   "4,001"],
 	["C1", 's', "あ 1",  "あ 1"],
 	["A2", 'n', 41.08, "$41.08"],
 	["B2", 'n', 0.11,     "11%"],
-	["B3", 'b', true,    "TRUE"],
-	["C3", 'b', false,  "FALSE"],
-	["A3"]];
-function plaintext_test(wb, raw, sn) {
-	var sheet = wb.Sheets[sn || wb.SheetNames[0]];
+	["C3", 'b', true,    "TRUE"],
+	["D3", 'b', false,  "FALSE"],
+	["B3", 's', " ",        " "],
+	["A3"]
+];
+function plaintext_test(wb, raw, t) {
+	var sheet = wb.Sheets[wb.SheetNames[0]];
 	plaintext_val.forEach(function(x) {
 		var cell = get_cell(sheet, x[0]);
+		var tcval = x[2+!!raw];
+		var type = raw ? 's' : x[1]; // != 's' ? x[1] : tcval.length === 0 ? 'z' : 's';
 		if(x.length == 1) { if(cell) { assert.equal(cell.t, 'z'); assert(!cell.v); } return; }
-		assert.equal(cell.v, x[2+!!raw]); assert.equal(cell.t, raw ? 's' : x[1]);
+		assert.equal(cell.v, tcval); assert.equal(cell.t, type);
 	});
 }
 function make_html_str(idx) { return ["<table>",
 	"<tr><td>-0.08</td><td>4,001</td><td>", codes[0][idx], "</td></tr>",
 	"<tr><td>$41.08</td><td>11%</td></tr>",
-	"<tr><td></td><td>TRUE</td><td>FALSE</td></tr>",
+	"<tr><td></td><td> \n&nbsp;</td><td>TRUE</td><td>FALSE</td></tr>",
 "</table>" ].join(""); }
-function make_csv_str(idx) { return [ '\u00EF\u00BB\u00BF' +
+function make_csv_str(idx) { return [ (idx == 1 ? '\u00EF\u00BB\u00BF' : "") +
 	'-0.08,"4,001",' + codes[0][idx] + '',
 	'$41.08,11%',
-	',TRUE,FALSE'
+	', ,TRUE,FALSE'
 ].join("\n"); }
 var html_bstr = make_html_str(1), html_str = make_html_str(0);
-var csv_bstr = make_csv_str(1);
+var csv_bstr = make_csv_str(1), csv_str = make_csv_str(0);
 
 
 describe('csv', function() {
@@ -1779,7 +1815,7 @@ describe('csv', function() {
 			var cell = get_cell(X.read(b, opts).Sheets.Sheet1, "C3");
 			assert.equal(cell.w, '2/19/14');
 			opts.cellDates = true;
-			var cell = get_cell(X.read(b, opts).Sheets.Sheet1, "C3");
+			cell = get_cell(X.read(b, opts).Sheets.Sheet1, "C3");
 			assert.equal(cell.w, '2/19/14');
 		});
 		it('should honor dateNF override', function() {
@@ -1788,7 +1824,7 @@ describe('csv', function() {
 			/* NOTE: IE interprets 2-digit years as 19xx */
 			assert(cell.w == '2014-02-19' || cell.w == '1914-02-19');
 			opts.cellDates = true; opts.dateNF = "YY-MM-DD";
-			var cell = get_cell(X.read(b, opts).Sheets.Sheet1, "C3");
+			cell = get_cell(X.read(b, opts).Sheets.Sheet1, "C3");
 			assert.equal(cell.w, '14-02-19');
 		});
 		it('should interpret dateNF', function() {
@@ -1802,8 +1838,8 @@ describe('csv', function() {
 			assert.equal(cell.v.getMonth(), 2);
 			assert.equal(cell.w, "2/3/14");
 		});
-		it('should interpret values by default', function() { plaintext_test(X.read(csv_bstr, {type:"binary"}), false); });
-		it('should generate strings if raw option is passed', function() { plaintext_test(X.read(csv_bstr, {type:"binary", raw:true}), true); });
+		it('should interpret values by default', function() { plaintext_test(X.read(csv_bstr, {type:"binary"}), false, false); });
+		it('should generate strings if raw option is passed', function() { plaintext_test(X.read(csv_bstr, {type:"binary", raw:true}), true, false); });
 		it('should handle formulae', function() {
 			var bb = '=,=1+1,="100"';
 			var sheet = X.read(bb, {type:"binary"}).Sheets.Sheet1;
@@ -1903,12 +1939,13 @@ function get_dom_element(html) {
 
 describe('HTML', function() {
 	describe('input string', function(){
-		it('should interpret values by default', function() { plaintext_test(X.read(html_bstr, {type:"binary"}), false); });
-		it('should generate strings if raw option is passed', function() { plaintext_test(X.read(html_bstr, {type:"binary", raw:true}), true); });
+		it('should interpret values by default', function() { plaintext_test(X.read(html_bstr, {type:"binary"}), false, false); });
+		it('should generate strings if raw option is passed', function() { plaintext_test(X.read(html_bstr, {type:"binary", raw:true}), true, false); });
+		it('should handle "string" type', function() { plaintext_test(X.read(html_str, {type:"string"}), false, false); });
 	});
 	(domtest ? describe : describe.skip)('input DOM', function() {
-		it('should interpret values by default', function() { plaintext_test(X.utils.table_to_book(get_dom_element(html_str)), false); });
-		it('should generate strings if raw option is passed', function() { plaintext_test(X.utils.table_to_book(get_dom_element(html_str), {raw:true}), true); });
+		it('should interpret values by default', function() { plaintext_test(X.utils.table_to_book(get_dom_element(html_str)), false, true); });
+		it('should generate strings if raw option is passed', function() { plaintext_test(X.utils.table_to_book(get_dom_element(html_str), {raw:true}), true, true); });
 	});
 });
 
@@ -1933,25 +1970,14 @@ describe('js -> file -> js', function() {
 	ofmt.forEach(function(f) {
 		it(f, function() {
 			var newwb = X.read(X.write(wb, {type:BIN, bookType: f}), {type:BIN});
-			/* int */
-			eqcell(wb, newwb, 'Sheet1', 'A1');
-			eqcell(wb, newwb, 'Sheet1', 'B1');
-			eqcell(wb, newwb, 'Sheet1', 'C1');
-			/* double */
-			eqcell(wb, newwb, 'Sheet1', 'B4');
-			/* bool */
-			eqcell(wb, newwb, 'Sheet1', 'A2');
-			eqcell(wb, newwb, 'Sheet1', 'B2');
-			/* string */
-			eqcell(wb, newwb, 'Sheet1', 'D2');
-			eqcell(wb, newwb, 'Sheet1', 'A3');
-			eqcell(wb, newwb, 'Sheet1', 'B3');
-			eqcell(wb, newwb, 'Sheet1', 'A4');
-			eqcell(wb, newwb, 'Sheet1', 'C4');
+			var cb = function(cell) { eqcell(wb, newwb, 'Sheet1', cell); };
+			['A1', 'B1', 'C1'].forEach(cb); /* int */
+			['B4'].forEach(cb); /* double */
+			['A2', 'B2'].forEach(cb); /* bool */
+			['D2', 'A3', 'B3', 'A4', 'C4'].forEach(cb);	/* string */
+			if(!DIF_XL) cb('C3'); /* date */
 			if(DIF_XL && f == "dif") assert.equal(get_cell(newwb.Sheets["Sheet1"], 'D3').v, '=""0.3""');// dif forces string formula
 			else eqcell(wb, newwb, 'Sheet1', 'D3');
-			/* date */
-			if(!DIF_XL) eqcell(wb, newwb, 'Sheet1', 'C3');
 		});
 	});
 });
@@ -1997,12 +2023,13 @@ describe('corner cases', function() {
 	});
 	it('SSF oddities', function() {
 		var ssfdata = require('./misc/ssf.json');
+		var cb = function(d, j) { return function() { return X.SSF.format(d[0], d[j][0]); }; };
 		ssfdata.forEach(function(d) {
 			for(var j=1;j<d.length;++j) {
 				if(d[j].length == 2) {
 					var expected = d[j][1], actual = X.SSF.format(d[0], d[j][0], {});
 					assert.equal(actual, expected);
-				} else if(d[j][2] !== "#") assert.throws(function() { SSF.format(d[0], d[j][0]); });
+				} else if(d[j][2] !== "#") assert.throws(cb(d, j));
 			}
 		});
 	});
@@ -2031,7 +2058,7 @@ describe('encryption', function() {
 				}
 			});
 			it.skip('should decrypt file', function() {
-				var wb = X.read(fs.readFileSync(dir + x), {type:TYPE,password:'password',WTF:opts.WTF});
+				/*var wb = */X.read(fs.readFileSync(dir + x), {type:TYPE,password:'password',WTF:opts.WTF});
 			});
 		});
 	});

@@ -101,6 +101,31 @@ var utf8read/*:StringConv*/ = function utf8reada(orig) {
 	return out;
 };
 
+var utf8write/*:StringConv*/ = function(orig) {
+	var out = [], i = 0, c = 0, d = 0;
+	while(i < orig.length) {
+		c = orig.charCodeAt(i++);
+		switch(true) {
+			case c < 128: out.push(String.fromCharCode(c)); break;
+			case c < 2048:
+				out.push(String.fromCharCode(192 + (c >> 6)));
+				out.push(String.fromCharCode(128 + (c & 63)));
+				break;
+			case c >= 55296 && c < 57344:
+				c -= 55296; d = orig.charCodeAt(i++) - 56320 + (c<<10);
+				out.push(String.fromCharCode(240 + ((d >>18) & 7)));
+				out.push(String.fromCharCode(144 + ((d >>12) & 63)));
+				out.push(String.fromCharCode(128 + ((d >> 6) & 63)));
+				out.push(String.fromCharCode(128 + (d & 63)));
+				break;
+			default:
+				out.push(String.fromCharCode(224 + (c >> 12)));
+				out.push(String.fromCharCode(128 + ((c >> 6) & 63)));
+				out.push(String.fromCharCode(128 + (c & 63)));
+		}
+	}
+	return out.join("");
+};
 
 if(has_buf) {
 	var utf8readb = function utf8readb(data) {
@@ -124,6 +149,8 @@ if(has_buf) {
 	// $FlowIgnore
 	var utf8readc = function utf8readc(data) { return Buffer(data, 'binary').toString('utf8'); };
 	if(utf8read(corpus) == utf8readc(corpus)) utf8read = utf8readc;
+
+	utf8write = function(data) { return new Buffer(data, 'utf8').toString("binary"); };
 }
 
 // matches <foo>...</foo> extracts content
@@ -135,6 +162,10 @@ var matchtag = (function() {
 		return (mtcache[t] = new RegExp('<(?:\\w+:)?'+f+'(?: xml:space="preserve")?(?:[^>]*)>([\\s\\S]*?)</(?:\\w+:)?'+f+'>',((g||"")/*:any*/)));
 	};
 })();
+
+function htmldecode(str/*:string*/)/*:string*/ {
+	return str.trim().replace(/\s+/g, " ").replace(/<\s*[bB][rR]\s*\/?/g,"\n").replace(/<[^>]*>/g,"").replace(/&nbsp;/g, " ");
+}
 
 var vtregex = (function(){ var vt_cache = {};
 	return function vt_regex(bt) {

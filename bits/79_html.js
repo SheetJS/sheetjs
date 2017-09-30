@@ -30,7 +30,7 @@ var HTML_ = (function() {
 				if((RS = +tag.rowspan)>0 || CS>1) merges.push({s:{r:R,c:C},e:{r:R + (RS||1) - 1, c:C + CS - 1}});
 				/* TODO: generate stub cells */
 				if(!m.length) { C += CS; continue; }
-				m = unescapexml(m).replace(/[\r\n]/g,"");
+				m = htmldecode(unescapexml(m));
 				if(range.s.r > R) range.s.r = R;
 				if(range.e.r < R) range.e.r = R;
 				if(range.s.c > C) range.s.c = C;
@@ -38,7 +38,7 @@ var HTML_ = (function() {
 				if(opts.dense) {
 					if(!ws[R]) ws[R] = [];
 					if(!m.length){}
-					else if(opts.raw) ws[R][C] = {t:'s', v:m};
+					else if(opts.raw || !m.trim().length) ws[R][C] = {t:'s', v:m};
 					else if(m === 'TRUE') ws[R][C] = {t:'b', v:true};
 					else if(m === 'FALSE') ws[R][C] = {t:'b', v:false};
 					else if(!isNaN(fuzzynum(m))) ws[R][C] = {t:'n', v:fuzzynum(m)};
@@ -48,6 +48,7 @@ var HTML_ = (function() {
 					/* TODO: value parsing */
 					if(!m.length){}
 					else if(opts.raw) ws[coord] = {t:'s', v:m};
+					else if(opts.raw || !m.trim().length) ws[coord] = {t:'s', v:m};
 					else if(m === 'TRUE') ws[coord] = {t:'b', v:true};
 					else if(m === 'FALSE') ws[coord] = {t:'b', v:false};
 					else if(!isNaN(fuzzynum(m))) ws[coord] = {t:'n', v:fuzzynum(m)};
@@ -132,7 +133,7 @@ function parse_dom_table(table/*:HTMLElement*/, _opts/*:?any*/)/*:Worksheet*/ {
 		var row = rows[R];
 		var elts = row.children;
 		for(_C = C = 0; _C < elts.length; ++_C) {
-			var elt = elts[_C], v = elts[_C].innerText || elts[_C].textContent || "";
+			var elt = elts[_C], v = htmldecode(elts[_C].innerHTML);
 			for(midx = 0; midx < merges.length; ++midx) {
 				var m = merges[midx];
 				if(m.s.c == C && m.s.r <= R && R <= m.e.r) { C = m.e.c+1; midx = -1; }
@@ -144,6 +145,7 @@ function parse_dom_table(table/*:HTMLElement*/, _opts/*:?any*/)/*:Worksheet*/ {
 			if(v != null) {
 				if(v.length == 0) o.t = 'z';
 				else if(opts.raw){}
+				else if(v.trim().length == 0) o.t = 's';
 				else if(v === 'TRUE') o = {t:'b', v:true};
 				else if(v === 'FALSE') o = {t:'b', v:false};
 				else if(!isNaN(fuzzynum(v))) o = {t:'n', v:fuzzynum(v)};

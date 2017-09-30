@@ -1,7 +1,8 @@
 /* [MS-OLEDS] 2.3.8 CompObjStream */
-function parse_compobj(obj) {
+function parse_compobj(obj/*:CFBEntry*/) {
 	var v = {};
 	var o = obj.content;
+	/*:: if(o == null) return; */
 
 	/* [MS-OLEDS] 2.3.7 CompObjHeader -- All fields MUST be ignored */
 	var l = 28, m;
@@ -819,25 +820,31 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 }
 
 /* TODO: WTF */
-function parse_props(cfb) {
+function parse_props(cfb/*:CFBContainer*/, props, o) {
 	/* [MS-OSHARED] 2.3.3.2.2 Document Summary Information Property Set */
 	var DSI = CFB.find(cfb, '!DocumentSummaryInformation');
-	if(DSI) try { cfb.DocSummary = parse_PropertySetStream(DSI, DocSummaryPIDDSI); } catch(e) {/* empty */}
+	if(DSI) try {
+		var DocSummary = parse_PropertySetStream(DSI, DocSummaryPIDDSI);
+		for(var d in DocSummary) props[d] = DocSummary[d];
+	} catch(e) {if(o.WTF == 2) throw e;/* empty */}
 
 	/* [MS-OSHARED] 2.3.3.2.1 Summary Information Property Set*/
 	var SI = CFB.find(cfb, '!SummaryInformation');
-	if(SI) try { cfb.Summary = parse_PropertySetStream(SI, SummaryPIDSI); } catch(e) {/* empty */}
+	if(SI) try {
+		var Summary = parse_PropertySetStream(SI, SummaryPIDSI);
+		for(var s in Summary) if(props[s] == null) props[s] = Summary[s];
+	} catch(e) {if(o.WTF == 2) throw e;/* empty */}
 }
 
 function parse_xlscfb(cfb/*:any*/, options/*:?ParseOpts*/)/*:Workbook*/ {
 if(!options) options = {};
 fix_read_opts(options);
 reset_cp();
-var CompObj, Summary, WB/*:?any*/;
+var CompObj/*:?CFBEntry*/, Summary, WB/*:?any*/;
 if(cfb.FullPaths) {
 	CompObj = CFB.find(cfb, '!CompObj');
 	Summary = CFB.find(cfb, '!SummaryInformation');
-	WB = CFB.find(cfb, '/Workbook');
+	WB = CFB.find(cfb, '/Workbook') || CFB.find(cfb, '/Book');
 } else {
 	switch(options.type) {
 		case 'base64': cfb = s2a(Base64.decode(cfb)); break;
@@ -848,26 +855,24 @@ if(cfb.FullPaths) {
 	prep_blob(cfb, 0);
 	WB = ({content: cfb}/*:any*/);
 }
-if(!WB) WB = CFB.find(cfb, '/Book');
-var CompObjP, SummaryP, WorkbookP/*:Workbook*/;
+var CompObjP, SummaryP, WorkbookP/*:: :Workbook = XLSX.utils.book_new(); */;
 
 var _data/*:?any*/;
 if(CompObj) CompObjP = parse_compobj(CompObj);
 if(options.bookProps && !options.bookSheets) WorkbookP = ({}/*:any*/);
-else {
+else/*:: if(cfb instanceof CFBContainer) */ {
+	var T = has_buf ? 'buffer' : 'array';
 	if(WB && WB.content) WorkbookP = parse_workbook(WB.content, options);
 	/* Quattro Pro 7-8 */
-	else if((_data=CFB.find(cfb, 'PerfectOffice_MAIN')) && _data.content) WorkbookP = WK_.to_workbook(_data.content, options);
+	else if((_data=CFB.find(cfb, 'PerfectOffice_MAIN')) && _data.content) WorkbookP = WK_.to_workbook(_data.content, (options.type = T, options));
 	/* Quattro Pro 9 */
-	else if((_data=CFB.find(cfb, 'NativeContent_MAIN')) && _data.content) WorkbookP = WK_.to_workbook(_data.content, options);
+	else if((_data=CFB.find(cfb, 'NativeContent_MAIN')) && _data.content) WorkbookP = WK_.to_workbook(_data.content, (options.type = T, options));
 	else throw new Error("Cannot find Workbook stream");
 }
 
-if(cfb.FullPaths) parse_props(cfb);
-
 var props = {};
-for(var y in cfb.Summary) props[y] = cfb.Summary[y];
-for(y in cfb.DocSummary) props[y] = cfb.DocSummary[y];
+if(cfb.FullPaths) parse_props(/*::((*/cfb/*:: :any):CFBContainer)*/, props, options);
+
 WorkbookP.Props = WorkbookP.Custprops = props; /* TODO: split up properties */
 if(options.bookFiles) WorkbookP.cfb = cfb;
 /*WorkbookP.CompObjP = CompObjP; // TODO: storage? */

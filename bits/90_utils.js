@@ -129,8 +129,8 @@ function sheet_to_csv(sheet/*:Worksheet*/, opts/*:?Sheet2CSVOpts*/)/*:string*/ {
 function sheet_to_txt(sheet/*:Worksheet*/, opts/*:?Sheet2CSVOpts*/) {
 	if(!opts) opts = {}; opts.FS = "\t"; opts.RS = "\n";
 	var s = sheet_to_csv(sheet, opts);
-	if(typeof cptable == 'undefined') return s;
-	var o = cptable.utils.encode(1200, s);
+	if(typeof cptable == 'undefined' || opts.type == 'string') return s;
+	var o = cptable.utils.encode(1200, s, 'str');
 	return "\xff\xfe" + o;
 }
 

@@ -464,7 +464,9 @@ function parse_ods(zip/*:ZIPFile*/, opts/*:?ParseOpts*/) {
 	if(ods) var manifest = parse_manifest(getzipdata(zip, 'META-INF/manifest.xml'), opts);
 	var content = getzipstr(zip, 'content.xml');
 	if(!content) throw new Error("Missing content.xml in " + (ods ? "ODS" : "UOF")+ " file");
-	return parse_content_xml(ods ? content : utf8read(content), opts);
+	var wb = parse_content_xml(ods ? content : utf8read(content), opts);
+	if(safegetzipfile(zip, 'meta.xml')) wb.Props = parse_core_props(getzipdata(zip, 'meta.xml'));
+	return wb;
 }
 function parse_fods(data/*:string*/, opts/*:?ParseOpts*/) {
 	return parse_content_xml(data, opts);

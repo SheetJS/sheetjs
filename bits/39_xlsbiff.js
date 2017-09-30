@@ -7,7 +7,7 @@ function parse_XLSCell(blob, length)/*:Cell*/ {
 	var ixfe = blob.read_shift(2);
 	return ({r:rw, c:col, ixfe:ixfe}/*:any*/);
 }
-function write_XLSCell(R/*:number*/, C/*:number*/, ixfe/*:number*/, o) {
+function write_XLSCell(R/*:number*/, C/*:number*/, ixfe/*:?number*/, o) {
 	if(!o) o = new_buf(6);
 	o.write_shift(2, R);
 	o.write_shift(2, C);

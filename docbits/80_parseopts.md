@@ -52,6 +52,7 @@ tells the library how to parse the data argument:
 |------------|-----------------------------------------------------------------|
 | `"base64"` | string: Base64 encoding of the file                             |
 | `"binary"` | string: binary string (byte `n` is `data.charCodeAt(n)`)        |
+| `"string"` | string: JS string (characters interpreted as UTF8)              |
 | `"buffer"` | nodejs Buffer                                                   |
 | `"array"`  | array: array of 8-bit unsigned int (byte `n` is `data[n]`)      |
 | `"file"`   | string: path of file that will be read (nodejs only)            |

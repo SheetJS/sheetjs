@@ -19,6 +19,7 @@ RELS.EXT_PROPS  = 'http://schemas.openxmlformats.org/officeDocument/2006/relatio
 
 function parse_ext_props(data, p, opts) {
 	var q = {}; if(!p) p = {};
+	data = utf8read(data);
 
 	EXT_PROPS.forEach(function(f) {
 		switch(f[2]) {

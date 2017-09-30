@@ -277,6 +277,9 @@ For parsing, the first step is to read the file.  This involves acquiring the
 data and feeding it into the library.  Here are a few common scenarios:
 
 
+`readFile` is only available in server environments. Browsers have no API for
+reading arbitrary files given a path, so another strategy must be used.
+
 ```js
 if(typeof require !== 'undefined') XLSX = require('xlsx');
 var workbook = XLSX.readFile('test.xlsx');
@@ -285,9 +288,19 @@ var workbook = XLSX.readFile('test.xlsx');
 
 
 
+The `table_to_book` and `table_to_sheet` utility functions take a DOM TABLE
+element and iterate through the child nodes.
+
 ```js
 var worksheet = XLSX.utils.table_to_book(document.getElementById('tableau'));
 /* DO SOMETHING WITH workbook HERE */
+```
+
+Alternatively, the HTML code can be extracted and parsed:
+
+```js
+var htmlstr = document.getElementById('tableau').outerHTML;
+var worksheet = XLSX.read(htmlstr, {type:'string'});
 ```
 
 
@@ -516,11 +529,27 @@ dissemination.  The second step is to actual share the data with the end point.
 Assuming `workbook` is a workbook object:
 
 
+`writeFile` is only available in server environments. Browsers have no API for
+writing arbitrary files given a path, so another strategy must be used.
+
 ```js
+if(typeof require !== 'undefined') XLSX = require('xlsx');
 /* output format determined by filename */
-XLSX.writeFile(workbook, 'out.xlsx');
-/* at this point, out.xlsx is a file that you can distribute */
+XLSX.writeFile(workbook, 'out.xlsb');
+/* at this point, out.xlsb is a file that you can distribute */
 ```
+
+
+
+The `sheet_to_html` utility function generates HTML code that can be added to
+any DOM element.
+
+```js
+var worksheet = workbook.Sheets[workbook.SheetNames[0]];
+var container = document.getElementById('tableau');
+container.innerHTML = XLSX.utils.sheet_to_html(worksheet);
+```
+
 
 
 
@@ -543,6 +572,7 @@ function s2ab(s) {
 /* the saveAs call downloads a file on the local machine */
 saveAs(new Blob([s2ab(wbout)],{type:"application/octet-stream"}), "test.xlsx");
 ```
+
 
 
 A complete example using XHR is [included in the XHR demo](demos/xhr/), along
@@ -1325,6 +1355,7 @@ tells the library how to parse the data argument:
 |------------|-----------------------------------------------------------------|
 | `"base64"` | string: Base64 encoding of the file                             |
 | `"binary"` | string: binary string (byte `n` is `data.charCodeAt(n)`)        |
+| `"string"` | string: JS string (characters interpreted as UTF8)              |
 | `"buffer"` | nodejs Buffer                                                   |
 | `"array"`  | array: array of 8-bit unsigned int (byte `n` is `data[n]`)      |
 | `"file"`   | string: path of file that will be read (nodejs only)            |
@@ -1451,9 +1482,9 @@ The `type` argument for `write` mirrors the `type` argument for `read`:
 |------------|-----------------------------------------------------------------|
 | `"base64"` | string: Base64 encoding of the file                             |
 | `"binary"` | string: binary string (byte `n` is `data.charCodeAt(n)`)        |
+| `"string"` | string: JS string (characters interpreted as UTF8)              |
 | `"buffer"` | nodejs Buffer                                                   |
 | `"file"`   | string: path of file that will be created (nodejs only)         |
-
 
 ## Utility Functions
 

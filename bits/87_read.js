@@ -60,13 +60,23 @@ function read_utf16(data/*:RawData*/, o/*:ParseOpts*/)/*:Workbook*/ {
 	return read_plaintext(d, o);
 }
 
+function bstrify(data/*:string*/)/*:string*/ {
+	return !data.match(/[^\x00-\x7F]/) ? data : utf8write(data);
+}
+
+function read_prn(data, d, o, str) {
+	if(str) { o.type = "string"; return PRN.to_workbook(data, o); }
+	return PRN.to_workbook(d, o);
+}
+
 function readSync(data/*:RawData*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
-	var zip, d = data, n=[0];
+	var zip, d = data, n=[0], str = false;
 	var o = opts||{};
 	_ssfopts = {};
 	if(o.dateNF) _ssfopts.dateNF = o.dateNF;
 	if(!o.type) o.type = (has_buf && Buffer.isBuffer(data)) ? "buffer" : "base64";
 	if(o.type == "file") { o.type = "buffer"; d = _fs.readFileSync(data); }
+	if(o.type == "string") { str = true; o.type = "binary"; d = bstrify(data); }
 	switch((n = firstbyte(d, o))[0]) {
 		case 0xD0: return read_cfb(CFB.read(d, o), o);
 		case 0x09: return parse_xlscfb(d, o);
@@ -74,7 +84,7 @@ function readSync(data/*:RawData*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
 		case 0x49: if(n[1] == 0x44) return read_wb_ID(d, o); break;
 		case 0x54: if(n[1] == 0x41 && n[2] == 0x42 && n[3] == 0x4C) return DIF.to_workbook(d, o); break;
 		case 0x50: if(n[1] == 0x4B && n[2] < 0x20 && n[3] < 0x20) return read_zip(d, o); break;
-		case 0xEF: return n[3] == 0x3C ? parse_xlml(d, o) : PRN.to_workbook(d,o);
+		case 0xEF: return n[3] == 0x3C ? parse_xlml(d, o) : read_prn(data, d, o, str);
 		case 0xFF: if(n[1] == 0xFE){ return read_utf16(d, o); } break;
 		case 0x00: if(n[1] == 0x00 && n[2] >= 0x02 && n[3] == 0x00) return WK_.to_workbook(d, o); break;
 		case 0x03: case 0x83: case 0x8B: return DBF.to_workbook(d, o);
@@ -83,7 +93,7 @@ function readSync(data/*:RawData*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
 	}
 	if(n[2] <= 12 && n[3] <= 31) return DBF.to_workbook(d, o);
 	if(0x20>n[0]||n[0]>0x7F) throw new Error("Unsupported file " + n.join("|"));
-	return PRN.to_workbook(d, o);
+	return read_prn(data, d, o, str);
 }
 
 function readFileSync(filename/*:string*/, opts/*:?ParseOpts*/)/*:Workbook*/ {

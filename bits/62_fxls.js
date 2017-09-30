@@ -655,7 +655,7 @@ function parse_Rgce(blob, length, opts) {
 	return ptgs;
 }
 
-function stringify_array(f) {
+function stringify_array(f)/*:string*/ {
 	var o = [];
 	for(var i = 0; i < f.length; ++i) {
 		var x = f[i], r = [];
@@ -701,7 +701,7 @@ function get_ixti_raw(supbooks, ixti/*:number*/, opts)/*:string*/ {
 function get_ixti(supbooks, ixti/*:number*/, opts)/*:string*/ {
 	return formula_quote_sheet_name(get_ixti_raw(supbooks, ixti, opts));
 }
-function stringify_formula(formula/*Array<any>*/, range, cell/*:any*/, supbooks, opts) {
+function stringify_formula(formula/*Array<any>*/, range, cell/*:any*/, supbooks, opts)/*:string*/ {
 	//console.log(formula);
 	var _range = /*range != null ? range :*/ {s:{c:0, r:0},e:{c:0, r:0}};
 	var stack/*:Array<string>*/ = [], e1, e2, type, c/*:CellAddress*/, ixti=0, nameidx=0, r, sname="";
@@ -793,7 +793,7 @@ function stringify_formula(formula/*Array<any>*/, range, cell/*:any*/, supbooks,
 			case 'PtgFuncVar': /* 2.5.198.63 */
 				//console.log(f[1]);
 				/* f[1] = [argc, func, type] */
-				var argc/*:number*/ = f[1][0], func/*:string*/ = f[1][1];
+				var argc/*:number*/ = (f[1][0]/*:any*/), func/*:string*/ = (f[1][1]/*:any*/);
 				if(!argc) argc = 0;
 				var args = argc == 0 ? [] : stack.slice(-argc);
 				stack.length -= argc;

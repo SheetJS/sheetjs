@@ -62,7 +62,7 @@ The `type` argument for `write` mirrors the `type` argument for `read`:
 |------------|-----------------------------------------------------------------|
 | `"base64"` | string: Base64 encoding of the file                             |
 | `"binary"` | string: binary string (byte `n` is `data.charCodeAt(n)`)        |
+| `"string"` | string: JS string (characters interpreted as UTF8)              |
 | `"buffer"` | nodejs Buffer                                                   |
 | `"file"`   | string: path of file that will be created (nodejs only)         |
-
 

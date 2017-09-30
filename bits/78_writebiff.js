@@ -1,5 +1,5 @@
 function write_biff_rec(ba/*:BufArray*/, type/*:number|string*/, payload, length/*:?number*/) {
-	var t/*:number*/ = +type || +XLSRE[type];
+	var t/*:number*/ = +type || +XLSRE[/*::String(*/type/*::)*/];
 	if(isNaN(t)) return;
 	var len = length || (payload||[]).length || 0;
 	var o = ba.next(4 + len);

@@ -3,8 +3,7 @@ function get_sheet_type(n/*:string*/)/*:string*/ {
 	if(RELS.CS && n == RELS.CS) return "chart";
 	if(RELS.DS && n == RELS.DS) return "dialog";
 	if(RELS.MS && n == RELS.MS) return "macro";
-	if(!n || !n.length) return "sheet";
-	return n;
+	return (n && n.length) ? n : "sheet";
 }
 function safe_parse_wbrels(wbrels, sheets) {
 	if(!wbrels) return 0;
@@ -88,10 +87,10 @@ function parse_zip(zip/*:ZIP*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
 	var props = {}, propdata = "";
 
 	if(dir.coreprops.length) {
-		propdata = getzipstr(zip, strip_front_slash(dir.coreprops[0]), true);
+		propdata = getzipdata(zip, strip_front_slash(dir.coreprops[0]), true);
 		if(propdata) props = parse_core_props(propdata);
 		if(dir.extprops.length !== 0) {
-			propdata = getzipstr(zip, strip_front_slash(dir.extprops[0]), true);
+			propdata = getzipdata(zip, strip_front_slash(dir.extprops[0]), true);
 			if(propdata) parse_ext_props(propdata, props, opts);
 		}
 	}

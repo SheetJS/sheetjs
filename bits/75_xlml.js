@@ -174,7 +174,10 @@ function parse_xlml_xml(d, _opts)/*:Workbook*/ {
 	var opts = _opts || {};
 	make_ssf(SSF);
 	var str = debom(xlml_normalize(d));
-	if(opts && opts.type == 'binary' && typeof cptable !== 'undefined') str = cptable.utils.decode(65001, char_codes(str));
+	if(opts.type == 'binary' || opts.type == 'base64') {
+		if(typeof cptable !== 'undefined') str = cptable.utils.decode(65001, char_codes(str));
+		else str = utf8read(str);
+	}
 	var opening = str.slice(0, 1024).toLowerCase(), ishtml = false;
 	if(opening.indexOf("<?xml") == -1) ["html", "table", "head", "meta", "script", "style", "div"].forEach(function(tag) { if(opening.indexOf("<" + tag) >= 0) ishtml = true; });
 	if(ishtml) return HTML_.to_workbook(str, opts);
@@ -1001,12 +1004,6 @@ function write_ws_xlml_cell(cell, ref, ws, opts, idx, wb, addr)/*:string*/{
 		case 's': t = 'String'; p = escapexml(cell.v||""); break;
 	}
 	var _v = (cell.v != null ? p : "");
-	if(opts && opts.type == 'binary' && typeof cptable !== 'undefined' && cell.t == 's') {
-		_v = cptable.utils.encode(65001, _v);
-		var __v = "";
-		for(var __i = 0; __i < _v.length; ++__i) __v += String.fromCharCode(_v[__i]);
-		_v = __v;
-	}
 	var m = '<Data ss:Type="' + t + '">' + _v + '</Data>';
 
 	if((cell.c||[]).length > 0) m += write_ws_xlml_comment(cell.c);

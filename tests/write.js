@@ -6,7 +6,7 @@ var data = [
 	[1, 2, 3],
 	[true, false, null, "sheetjs"],
 	["foo", "bar", new Date("2014-02-19T14:30Z"), "0.3"],
-	["baz", null, "qux", 3.14159],
+	["baz", null, "\u0BEE", 3.14159],
 	["hidden"],
 	["visible"]
 ];

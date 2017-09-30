@@ -156,6 +156,9 @@ demo-systemjs: ## Run systemjs demo build
 
 ## Code Checking
 
+.PHONY: fullint
+fullint: lint old-lint tslint flow mdlint ## Run all checks
+
 .PHONY: lint
 lint: $(TARGET) $(AUXTARGETS) ## Run eslint checks
 	@eslint --ext .js,.njs,.json,.html,.htm $(TARGET) $(AUXTARGETS) $(CMDS) $(HTMLLINT) package.json bower.json
@@ -165,9 +168,9 @@ lint: $(TARGET) $(AUXTARGETS) ## Run eslint checks
 old-lint: $(TARGET) $(AUXTARGETS) ## Run jshint and jscs checks
 	@jshint --show-non-errors $(TARGET) $(AUXTARGETS)
 	@jshint --show-non-errors $(CMDS)
-	@jshint --show-non-errors package.json bower.json
+	@jshint --show-non-errors package.json bower.json test.js
 	@jshint --show-non-errors --extract=always $(HTMLLINT)
-	@jscs $(TARGET) $(AUXTARGETS)
+	@jscs $(TARGET) $(AUXTARGETS) test.js
 	if [ -e $(CLOSURE) ]; then java -jar $(CLOSURE) $(REQS) $(FLOWTARGET) --jscomp_warning=reportUnknownTypes >/dev/null; fi
 
 .PHONY: tslint

@@ -330,3 +330,14 @@ if (!Date.prototype.toISOString) {
   }());
 }
 
+// note: MDN shim will not work in IE
+if(typeof Uint8Array !== 'undefined' && !Uint8Array.prototype.slice) Uint8Array.prototype.slice = function(start, end) {
+	if(start < 0) { start += this.length; if(start < 0) start = 0; }
+	if(start >= this.length) return new Uint8Array(0);
+	if(end == null) end = this.length;
+	if(end < 0) { end += this.length; if(end < 0) end = 0; }
+	if(end > this.length) end = this.length;
+	var out = new Uint8Array(end - start);
+	while(start <= --end) out[end - start] = this[end];
+	return out;
+};

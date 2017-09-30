@@ -1,4 +1,4 @@
-function read_double_le(b, idx/*:number*/)/*:number*/ {
+function read_double_le(b/*:RawBytes|CFBlob*/, idx/*:number*/)/*:number*/ {
 	var s = 1 - 2 * (b[idx + 7] >>> 7);
 	var e = ((b[idx + 7] & 0x7f) << 4) + ((b[idx + 6] >>> 4) & 0x0f);
 	var m = (b[idx+6]&0x0f);
@@ -9,7 +9,7 @@ function read_double_le(b, idx/*:number*/)/*:number*/ {
 	return s * Math.pow(2, e - 52) * m;
 }
 
-function write_double_le(b, v/*:number*/, idx/*:number*/) {
+function write_double_le(b/*:RawBytes|CFBlob*/, v/*:number*/, idx/*:number*/) {
 	var bs = ((v < 0 || 1/v == -Infinity) ? 1 : 0) << 7, e = 0, m = 0;
 	var av = bs ? -v : v;
 	if(!isFinite(av)) { e = 0x7ff; m = isNaN(v) ? 0x6969 : 0; }
@@ -25,61 +25,61 @@ function write_double_le(b, v/*:number*/, idx/*:number*/) {
 	b[idx + 7] = (e >> 4) | bs;
 }
 
-var __toBuffer, ___toBuffer;
-__toBuffer = ___toBuffer = function toBuffer_(bufs) { var x = []; for(var i = 0; i < bufs[0].length; ++i) { x.push.apply(x, bufs[0][i]); } return x; };
-var __utf16le, ___utf16le;
-__utf16le = ___utf16le = function utf16le_(b,s,e) { var ss=[]; for(var i=s; i<e; i+=2) ss.push(String.fromCharCode(__readUInt16LE(b,i))); return ss.join(""); };
+var __toBuffer = function(bufs) { var x = []; for(var i = 0; i < bufs[0].length; ++i) { x.push.apply(x, bufs[0][i]); } return x; };
+var ___toBuffer = __toBuffer;
+var __utf16le = function(b/*:RawBytes|CFBlob*/,s/*:number*/,e/*:number*/)/*:string*/ { var ss/*:Array<string>*/=[]; for(var i=s; i<e; i+=2) ss.push(String.fromCharCode(__readUInt16LE(b,i))); return ss.join(""); };
+var ___utf16le = __utf16le;
 var __hexlify = function(b/*:RawBytes|CFBlob*/,s/*:number*/,l/*:number*/)/*:string*/ { var ss/*:Array<string>*/=[]; for(var i=s; i<s+l; ++i) ss.push(("0" + b[i].toString(16)).slice(-2)); return ss.join(""); };
 var ___hexlify = __hexlify;
-var __utf8, ___utf8;
-__utf8 = ___utf8 = function(b,s,e) { var ss=[]; for(var i=s; i<e; i++) ss.push(String.fromCharCode(__readUInt8(b,i))); return ss.join(""); };
-var __lpstr, ___lpstr;
-__lpstr = ___lpstr = function lpstr_(b,i) { var len = __readUInt32LE(b,i); return len > 0 ? __utf8(b, i+4,i+4+len-1) : "";};
-var __lpwstr, ___lpwstr;
-__lpwstr = ___lpwstr = function lpwstr_(b,i) { var len = 2*__readUInt32LE(b,i); return len > 0 ? __utf8(b, i+4,i+4+len-1) : "";};
+var __utf8 = function(b/*:RawBytes|CFBlob*/,s/*:number*/,e/*:number*/) { var ss=[]; for(var i=s; i<e; i++) ss.push(String.fromCharCode(__readUInt8(b,i))); return ss.join(""); };
+var ___utf8 = __utf8;
+var __lpstr = function(b/*:RawBytes|CFBlob*/,i/*:number*/) { var len = __readUInt32LE(b,i); return len > 0 ? __utf8(b, i+4,i+4+len-1) : "";};
+var ___lpstr = __lpstr;
+var __lpwstr = function(b/*:RawBytes|CFBlob*/,i/*:number*/) { var len = 2*__readUInt32LE(b,i); return len > 0 ? __utf8(b, i+4,i+4+len-1) : "";};
+var ___lpwstr = __lpwstr;
 var __lpp4, ___lpp4;
-__lpp4 = ___lpp4 = function lpp4_(b,i) { var len = __readUInt32LE(b,i); return len > 0 ? __utf16le(b, i+4,i+4+len) : "";};
-var __8lpp4, ___8lpp4;
-__8lpp4 = ___8lpp4 = function lpp4_8(b,i) { var len = __readUInt32LE(b,i); return len > 0 ? __utf8(b, i+4,i+4+len) : "";};
+__lpp4 = ___lpp4 = function lpp4_(b/*:RawBytes|CFBlob*/,i/*:number*/) { var len = __readUInt32LE(b,i); return len > 0 ? __utf16le(b, i+4,i+4+len) : "";};
+var __8lpp4 = function(b/*:RawBytes|CFBlob*/,i/*:number*/) { var len = __readUInt32LE(b,i); return len > 0 ? __utf8(b, i+4,i+4+len) : "";};
+var ___8lpp4 = __8lpp4;
 var __double, ___double;
-__double = ___double = function(b, idx) { return read_double_le(b, idx);};
-
+__double = ___double = function(b/*:RawBytes|CFBlob*/, idx/*:number*/) { return read_double_le(b, idx);};
 var is_buf = function is_buf_a(a) { return Array.isArray(a); };
-if(has_buf/*:: && typeof Buffer != 'undefined'*/) {
-	__utf16le = function utf16le_b(b,s,e) { if(!Buffer.isBuffer(b)) return ___utf16le(b,s,e); return b.toString('utf16le',s,e); };
-	__hexlify = function(b,s,l) { return Buffer.isBuffer(b) ? b.toString('hex',s,s+l) : ___hexlify(b,s,l); };
-	__lpstr = function lpstr_b(b,i) { if(!Buffer.isBuffer(b)) return ___lpstr(b, i); var len = b.readUInt32LE(i); return len > 0 ? b.toString('utf8',i+4,i+4+len-1) : "";};
-	__lpwstr = function lpwstr_b(b,i) { if(!Buffer.isBuffer(b)) return ___lpwstr(b, i); var len = 2*b.readUInt32LE(i); return b.toString('utf16le',i+4,i+4+len-1);};
-	__lpp4 = function lpp4_b(b,i) { if(!Buffer.isBuffer(b)) return ___lpp4(b, i); var len = b.readUInt32LE(i); return b.toString('utf16le',i+4,i+4+len);};
-	__8lpp4 = function lpp4_8b(b,i) { if(!Buffer.isBuffer(b)) return ___8lpp4(b, i); var len = b.readUInt32LE(i); return b.toString('utf8',i+4,i+4+len);};
-	__utf8 = function utf8_b(b, s,e) { return b.toString('utf8',s,e); };
+
+if(has_buf/*:: && typeof Buffer !== 'undefined'*/) {
+	__utf16le = function(b/*:RawBytes|CFBlob*/,s/*:number*/,e/*:number*/)/*:string*/ { if(!Buffer.isBuffer(b)/*:: || !(b instanceof Buffer)*/) return ___utf16le(b,s,e); return b.toString('utf16le',s,e); };
+	__hexlify = function(b/*:RawBytes|CFBlob*/,s/*:number*/,l/*:number*/)/*:string*/ { return Buffer.isBuffer(b)/*:: && b instanceof Buffer*/ ? b.toString('hex',s,s+l) : ___hexlify(b,s,l); };
+	__lpstr = function lpstr_b(b/*:RawBytes|CFBlob*/, i/*:number*/) { if(!Buffer.isBuffer(b)/*:: || !(b instanceof Buffer)*/) return ___lpstr(b, i); var len = b.readUInt32LE(i); return len > 0 ? b.toString('utf8',i+4,i+4+len-1) : "";};
+	__lpwstr = function lpwstr_b(b/*:RawBytes|CFBlob*/, i/*:number*/) { if(!Buffer.isBuffer(b)/*:: || !(b instanceof Buffer)*/) return ___lpwstr(b, i); var len = 2*b.readUInt32LE(i); return b.toString('utf16le',i+4,i+4+len-1);};
+	__lpp4 = function lpp4_b(b/*:RawBytes|CFBlob*/, i/*:number*/) { if(!Buffer.isBuffer(b)/*:: || !(b instanceof Buffer)*/) return ___lpp4(b, i); var len = b.readUInt32LE(i); return b.toString('utf16le',i+4,i+4+len);};
+	__8lpp4 = function lpp4_8b(b/*:RawBytes|CFBlob*/, i/*:number*/) { if(!Buffer.isBuffer(b)/*:: || !(b instanceof Buffer)*/) return ___8lpp4(b, i); var len = b.readUInt32LE(i); return b.toString('utf8',i+4,i+4+len);};
+	__utf8 = function utf8_b(b/*:RawBytes|CFBlob*/, s/*:number*/, e/*:number*/) { return (Buffer.isBuffer(b)/*:: && (b instanceof Buffer)*/) ? b.toString('utf8',s,e) : __utf8(b,s,e); };
 	__toBuffer = function(bufs) { return (bufs[0].length > 0 && Buffer.isBuffer(bufs[0][0])) ? Buffer.concat(bufs[0]) : ___toBuffer(bufs);};
 	bconcat = function(bufs) { return Buffer.isBuffer(bufs[0]) ? Buffer.concat(bufs) : [].concat.apply([], bufs); };
-	__double = function double_(b,i) { if(Buffer.isBuffer(b)/*::&& b instanceof Buffer*/) return b.readDoubleLE(i); return ___double(b,i); };
+	__double = function double_(b/*:RawBytes|CFBlob*/, i/*:number*/) { if(Buffer.isBuffer(b)/*::&& b instanceof Buffer*/) return b.readDoubleLE(i); return ___double(b,i); };
 	is_buf = function is_buf_b(a) { return Buffer.isBuffer(a) || Array.isArray(a); };
 }
 
 /* from js-xls */
 if(typeof cptable !== 'undefined') {
-	__utf16le = function(b,s,e) { return cptable.utils.decode(1200, b.slice(s,e)); };
-	__utf8 = function(b,s,e) { return cptable.utils.decode(65001, b.slice(s,e)); };
-	__lpstr = function(b,i) { var len = __readUInt32LE(b,i); return len > 0 ? cptable.utils.decode(current_codepage, b.slice(i+4, i+4+len-1)) : "";};
-	__lpwstr = function(b,i) { var len = 2*__readUInt32LE(b,i); return len > 0 ? cptable.utils.decode(1200, b.slice(i+4,i+4+len-1)) : "";};
-	__lpp4 = function(b,i) { var len = __readUInt32LE(b,i); return len > 0 ? cptable.utils.decode(1200, b.slice(i+4,i+4+len)) : "";};
-	__8lpp4 = function(b,i) { var len = __readUInt32LE(b,i); return len > 0 ? cptable.utils.decode(65001, b.slice(i+4,i+4+len)) : "";};
+	__utf16le = function(b/*:RawBytes|CFBlob*/,s/*:number*/,e/*:number*/) { return cptable.utils.decode(1200, b.slice(s,e)); };
+	__utf8 = function(b/*:RawBytes|CFBlob*/,s/*:number*/,e/*:number*/) { return cptable.utils.decode(65001, b.slice(s,e)); };
+	__lpstr = function(b/*:RawBytes|CFBlob*/,i/*:number*/) { var len = __readUInt32LE(b,i); return len > 0 ? cptable.utils.decode(current_codepage, b.slice(i+4, i+4+len-1)) : "";};
+	__lpwstr = function(b/*:RawBytes|CFBlob*/,i/*:number*/) { var len = 2*__readUInt32LE(b,i); return len > 0 ? cptable.utils.decode(1200, b.slice(i+4,i+4+len-1)) : "";};
+	__lpp4 = function(b/*:RawBytes|CFBlob*/,i/*:number*/) { var len = __readUInt32LE(b,i); return len > 0 ? cptable.utils.decode(1200, b.slice(i+4,i+4+len)) : "";};
+	__8lpp4 = function(b/*:RawBytes|CFBlob*/,i/*:number*/) { var len = __readUInt32LE(b,i); return len > 0 ? cptable.utils.decode(65001, b.slice(i+4,i+4+len)) : "";};
 }
 
-var __readUInt8 = function(b, idx/*:number*/)/*:number*/ { return b[idx]; };
-var __readUInt16LE = function(b, idx/*:number*/)/*:number*/ { return b[idx+1]*(1<<8)+b[idx]; };
-var __readInt16LE = function(b, idx/*:number*/)/*:number*/ { var u = b[idx+1]*(1<<8)+b[idx]; return (u < 0x8000) ? u : (0xffff - u + 1) * -1; };
-var __readUInt32LE = function(b, idx/*:number*/)/*:number*/ { return b[idx+3]*(1<<24)+(b[idx+2]<<16)+(b[idx+1]<<8)+b[idx]; };
-var __readInt32LE = function(b, idx/*:number*/)/*:number*/ { return (b[idx+3]<<24)|(b[idx+2]<<16)|(b[idx+1]<<8)|b[idx]; };
+var __readUInt8 = function(b/*:RawBytes|CFBlob*/, idx/*:number*/)/*:number*/ { return b[idx]; };
+var __readUInt16LE = function(b/*:RawBytes|CFBlob*/, idx/*:number*/)/*:number*/ { return b[idx+1]*(1<<8)+b[idx]; };
+var __readInt16LE = function(b/*:RawBytes|CFBlob*/, idx/*:number*/)/*:number*/ { var u = b[idx+1]*(1<<8)+b[idx]; return (u < 0x8000) ? u : (0xffff - u + 1) * -1; };
+var __readUInt32LE = function(b/*:RawBytes|CFBlob*/, idx/*:number*/)/*:number*/ { return b[idx+3]*(1<<24)+(b[idx+2]<<16)+(b[idx+1]<<8)+b[idx]; };
+var __readInt32LE = function(b/*:RawBytes|CFBlob*/, idx/*:number*/)/*:number*/ { return (b[idx+3]<<24)|(b[idx+2]<<16)|(b[idx+1]<<8)|b[idx]; };
 
-var ___unhexlify = function(s) { return s.match(/../g).map(function(x) { return parseInt(x,16);}); };
-var __unhexlify = typeof Buffer !== "undefined" ? function(s) { return Buffer.isBuffer(s) ? new Buffer(s, 'hex') : ___unhexlify(s); } : ___unhexlify;
+var ___unhexlify = function(s/*:string*/)/*:Array<number>*/ { return (s.match(/../g)||[]).map(function(x) { return parseInt(x,16);}); };
+var __unhexlify = typeof Buffer !== "undefined" ? function(s/*:string*/)/*:Array<number>|Buffer*/ { return Buffer.isBuffer(s) ? new Buffer(s, 'hex') : ___unhexlify(s); } : ___unhexlify;
 
-function ReadShift(size/*:number*/, t/*:?string*/) {
-	var o="", oI, oR, oo=[], w, vv, i, loc;
+function ReadShift(size/*:number*/, t/*:?string*/)/*:number|string*/ {
+	var o="", oI/*:: :number = 0*/, oR, oo=[], w, vv, i, loc;
 	switch(t) {
 		case 'dbcs':
 			loc = this.l;
@@ -151,11 +151,11 @@ function ReadShift(size/*:number*/, t/*:?string*/) {
 	this.l+=size; return o;
 }
 
-var __writeUInt16LE = function(b, val, idx) { b[idx] = (val & 0xFF); b[idx+1] = ((val >>> 8) & 0xFF); };
-var __writeUInt32LE = function(b, val, idx) { b[idx] = (val & 0xFF); b[idx+1] = ((val >>> 8) & 0xFF); b[idx+2] = ((val >>> 16) & 0xFF); b[idx+3] = ((val >>> 24) & 0xFF); };
-var __writeInt32LE  = function(b, val, idx) { b[idx] = (val & 0xFF); b[idx+1] = ((val >> 8) & 0xFF); b[idx+2] = ((val >> 16) & 0xFF); b[idx+3] = ((val >> 24) & 0xFF); };
+var __writeUInt32LE = function(b/*:RawBytes|CFBlob*/, val/*:number*/, idx/*:number*/)/*:void*/ { b[idx] = (val & 0xFF); b[idx+1] = ((val >>> 8) & 0xFF); b[idx+2] = ((val >>> 16) & 0xFF); b[idx+3] = ((val >>> 24) & 0xFF); };
+var __writeInt32LE  = function(b/*:RawBytes|CFBlob*/, val/*:number*/, idx/*:number*/)/*:void*/ { b[idx] = (val & 0xFF); b[idx+1] = ((val >> 8) & 0xFF); b[idx+2] = ((val >> 16) & 0xFF); b[idx+3] = ((val >> 24) & 0xFF); };
+var __writeUInt16LE = function(b/*:RawBytes|CFBlob*/, val/*:number*/, idx/*:number*/)/*:void*/ { b[idx] = (val & 0xFF); b[idx+1] = ((val >>> 8) & 0xFF); };
 
-function WriteShift(t/*:number*/, val/*:string|number*/, f/*:?string*/) {
+function WriteShift(t/*:number*/, val/*:string|number*/, f/*:?string*/)/*:any*/ {
 	var size = 0, i = 0;
 	if(f === 'dbcs') {
 		/*:: if(typeof val !== 'string') throw new Error("unreachable"); */
@@ -171,6 +171,7 @@ function WriteShift(t/*:number*/, val/*:string|number*/, f/*:?string*/) {
 			this[this.l++] = parseInt(val.slice(2*i, 2*i+2), 16)||0;
 		} return this;
 	} else if(f === 'utf16le') {
+			/*:: if(typeof val !== "string") throw new Error("unreachable"); */
 			var end/*:number*/ = this.l + t;
 			for(i = 0; i < Math.min(val.length, t); ++i) {
 				var cc = val.charCodeAt(i);
@@ -192,20 +193,20 @@ function WriteShift(t/*:number*/, val/*:string|number*/, f/*:?string*/) {
 	this.l += size; return this;
 }
 
-function CheckField(hexstr, fld) {
+function CheckField(hexstr/*:string*/, fld/*:string*/)/*:void*/ {
 	var m = __hexlify(this,this.l,hexstr.length>>1);
-	if(m !== hexstr) throw fld + 'Expected ' + hexstr + ' saw ' + m;
+	if(m !== hexstr) throw new Error(fld + 'Expected ' + hexstr + ' saw ' + m);
 	this.l += hexstr.length>>1;
 }
 
-function prep_blob(blob, pos/*:number*/) {
+function prep_blob(blob, pos/*:number*/)/*:void*/ {
 	blob.l = pos;
-	blob.read_shift = ReadShift;
+	blob.read_shift = /*::(*/ReadShift/*:: :any)*/;
 	blob.chk = CheckField;
 	blob.write_shift = WriteShift;
 }
 
-function parsenoop(blob, length/*:number*/) { blob.l += length; }
+function parsenoop(blob, length/*:: :number, opts?:any */) { blob.l += length; }
 function parsenooplog(blob, length/*:number*/) { if(typeof console != 'undefined') console.log(blob.slice(blob.l, blob.l + length)); blob.l += length; }
 
 function writenoop(blob, length/*:number*/) { blob.l += length; }

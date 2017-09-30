@@ -33,6 +33,7 @@ var CORE_PROPS_REGEX/*:Array<RegExp>*/ = (function() {
 
 function parse_core_props(data) {
 	var p = {};
+	data = utf8read(data);
 
 	for(var i = 0; i < CORE_PROPS.length; ++i) {
 		var f = CORE_PROPS[i], cur = data.match(CORE_PROPS_REGEX[i]);

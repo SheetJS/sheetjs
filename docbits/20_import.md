@@ -6,6 +6,9 @@ data and feeding it into the library.  Here are a few common scenarios:
 <details>
   <summary><b>nodejs read a file</b> (click to show)</summary>
 
+`readFile` is only available in server environments. Browsers have no API for
+reading arbitrary files given a path, so another strategy must be used.
+
 ```js
 if(typeof require !== 'undefined') XLSX = require('xlsx');
 var workbook = XLSX.readFile('test.xlsx');
@@ -17,9 +20,19 @@ var workbook = XLSX.readFile('test.xlsx');
 <details>
   <summary><b>Browser read TABLE element from page</b> (click to show)</summary>
 
+The `table_to_book` and `table_to_sheet` utility functions take a DOM TABLE
+element and iterate through the child nodes.
+
 ```js
 var worksheet = XLSX.utils.table_to_book(document.getElementById('tableau'));
 /* DO SOMETHING WITH workbook HERE */
+```
+
+Alternatively, the HTML code can be extracted and parsed:
+
+```js
+var htmlstr = document.getElementById('tableau').outerHTML;
+var worksheet = XLSX.read(htmlstr, {type:'string'});
 ```
 
 </details>

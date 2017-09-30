@@ -39,7 +39,7 @@ function getzipfile(zip, file/*:string*/) {
 	return o;
 }
 
-function getzipdata(zip, file/*:string*/, safe/*:?boolean*/) {
+function getzipdata(zip, file/*:string*/, safe/*:?boolean*/)/*:any*/ {
 	if(!safe) return getdata(getzipfile(zip, file));
 	if(!file) return null;
 	try { return getzipdata(zip, file); } catch(e) { return null; }

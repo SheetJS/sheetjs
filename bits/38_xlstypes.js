@@ -193,7 +193,7 @@ function parse_PropertySet(blob, PIDSI) {
 				case 1252:
 				case 65000: case -536:
 				case 65001: case -535:
-					set_cp(CodePage = PropH[piddsi.n]); break;
+					set_cp(CodePage = PropH[piddsi.n]>>>0 & 0xFFFF); break;
 				default: throw new Error("Unsupported CodePage: " + PropH[piddsi.n]);
 			}
 		} else {
@@ -235,6 +235,7 @@ function parse_PropertySet(blob, PIDSI) {
 /* [MS-OLEPS] 2.21 PropertySetStream */
 function parse_PropertySetStream(file, PIDSI) {
 	var blob = file.content;
+	if(!blob) return ({}/*:any*/);
 	prep_blob(blob, 0);
 
 	var NumSets, FMTID0, FMTID1, Offset0, Offset1 = 0;
