@@ -3,13 +3,6 @@ node_js:
   - "8"
   - "7"
   - "6"
-# note: travis has been acting up on old versions of node
-#  - "5"
-#  - "4"
-#  - "0.12"
-#  - "0.10"
-#  - "0.9"
-#  - "0.8"
 matrix:
   include:
     - node_js: "6"
@@ -26,6 +19,18 @@ matrix:
       env: TZ="Asia/Shanghai"
     - node_js: "8"
       env: TZ="Asia/Seoul" FMTS=misc
+
+    - node_js: "5"
+      env: TZ="America/Anchorage" FMTS=misc
+    - node_js: "4"
+      env: TZ="America/Barbados" FMTS=misc
+    - node_js: "0.12"
+      env: TZ="America/Cayman" FMTS=misc
+    - node_js: "0.10"
+      env: TZ="Pacific/Honolulu" FMTS=misc
+    - node_js: "0.8"
+      env: TZ="America/Mexico_City" FMTS=misc
+
 before_install:
   - "npm install -g npm@4.3.0"
   - "npm install -g mocha@2.x voc"

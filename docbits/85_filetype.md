@@ -28,6 +28,7 @@ Despite the library name `xlsx`, it supports numerous spreadsheet file formats:
 | Quattro Pro Spreadsheet (WQ1/WQ2/WB1/WB2/WB3/QPW)            |  :o:  |       |
 | **Other Common Spreadsheet Output Formats**                  |:-----:|:-----:|
 | HTML Tables                                                  |  :o:  |  :o:  |
+| RTF Tables                                                   |       |  :o:  |
 
 ### Excel 2007+ XML (XLSX/XLSM)
 
@@ -250,4 +251,15 @@ Excel HTML worksheets include special metadata encoded in styles.  For example,
 the metadata the output is valid HTML, although it does accept bare `&` symbols.
 
 </details>
+
+#### Rich Text Format (RTF)
+
+<details>
+  <summary>(click to show)</summary>
+
+Excel RTF worksheets are stored in clipboard when copying cells or ranges from a
+worksheet.  The supported codes are a subset of the Word RTF support.
+
+</details>
+
 

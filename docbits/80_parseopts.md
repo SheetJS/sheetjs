@@ -36,7 +36,9 @@ The exported `read` and `readFile` functions accept an options argument:
 - `sheetRows-1` rows will be generated when looking at the JSON object output
   (since the header row is counted as a row when parsing the data)
 - `bookVBA` merely exposes the raw VBA CFB object.  It does not parse the data.
-  XLSM and XLSB store the VBA CFB object in `xl/vbaProject.bin`.
+  XLSM and XLSB store the VBA CFB object in `xl/vbaProject.bin`. BIFF8 XLS mixes
+  the VBA entries alongside the core Workbook entry, so the library generates a
+  new XLSB-compatible blob from the XLS CFB container.
 - Currently only XOR encryption is supported.  Unsupported error will be thrown
   for files employing other encryption methods.
 - WTF is mainly for development.  By default, the parser will suppress read

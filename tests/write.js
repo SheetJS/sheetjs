@@ -172,6 +172,7 @@ var filenames = [
 	['sheetjs.slk'],
 	['sheetjs.htm'],
 	['sheetjs.dif'],
+	['sheetjs.rtf'],
 	['sheetjs.prn']
 ];
 

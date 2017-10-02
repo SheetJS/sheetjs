@@ -2202,7 +2202,7 @@ function write_double_le(b, v, idx) {
 
 var __toBuffer = function(bufs) { var x = []; for(var i = 0; i < bufs[0].length; ++i) { x.push.apply(x, bufs[0][i]); } return x; };
 var ___toBuffer = __toBuffer;
-var __utf16le = function(b,s,e) { var ss=[]; for(var i=s; i<e; i+=2) ss.push(String.fromCharCode(__readUInt16LE(b,i))); return ss.join(""); };
+var __utf16le = function(b,s,e) { var ss=[]; for(var i=s; i<e; i+=2) ss.push(String.fromCharCode(__readUInt16LE(b,i))); return ss.join("").replace(chr0,''); };
 var ___utf16le = __utf16le;
 var __hexlify = function(b,s,l) { var ss=[]; for(var i=s; i<s+l; ++i) ss.push(("0" + b[i].toString(16)).slice(-2)); return ss.join(""); };
 var ___hexlify = __hexlify;
@@ -2221,7 +2221,7 @@ __double = ___double = function(b, idx) { return read_double_le(b, idx);};
 var is_buf = function is_buf_a(a) { return Array.isArray(a); };
 
 if(has_buf) {
-	__utf16le = function(b,s,e) { if(!Buffer.isBuffer(b)) return ___utf16le(b,s,e); return b.toString('utf16le',s,e); };
+	__utf16le = function(b,s,e) { if(!Buffer.isBuffer(b)) return ___utf16le(b,s,e); return b.toString('utf16le',s,e).replace(chr0,'')/*.replace(chr1,'!')*/; };
 	__hexlify = function(b,s,l) { return Buffer.isBuffer(b) ? b.toString('hex',s,s+l) : ___hexlify(b,s,l); };
 	__lpstr = function lpstr_b(b, i) { if(!Buffer.isBuffer(b)) return ___lpstr(b, i); var len = b.readUInt32LE(i); return len > 0 ? b.toString('utf8',i+4,i+4+len-1) : "";};
 	__lpwstr = function lpwstr_b(b, i) { if(!Buffer.isBuffer(b)) return ___lpwstr(b, i); var len = 2*b.readUInt32LE(i); return b.toString('utf16le',i+4,i+4+len-1);};
@@ -2236,7 +2236,7 @@ if(has_buf) {
 
 /* from js-xls */
 if(typeof cptable !== 'undefined') {
-	__utf16le = function(b,s,e) { return cptable.utils.decode(1200, b.slice(s,e)); };
+	__utf16le = function(b,s,e) { return cptable.utils.decode(1200, b.slice(s,e)).replace(chr0, ''); };
 	__utf8 = function(b,s,e) { return cptable.utils.decode(65001, b.slice(s,e)); };
 	__lpstr = function(b,i) { var len = __readUInt32LE(b,i); return len > 0 ? cptable.utils.decode(current_codepage, b.slice(i+4, i+4+len-1)) : "";};
 	__lpwstr = function(b,i) { var len = 2*__readUInt32LE(b,i); return len > 0 ? cptable.utils.decode(1200, b.slice(i+4,i+4+len-1)) : "";};
@@ -6945,11 +6945,39 @@ var RTF = (function() {
 	}
 
 	function rtf_to_sheet_str(str, opts) {
-		throw new Error("Unsupported RTF");
+		var o = opts || {};
+		var ws = ({});
+		var range = ({s: {c:0, r:0}, e: {c:0, r:0}});
+
+		// TODO: parse
+		if(!str.match(/\\trowd/)) throw new Error("RTF missing table");
+
+		ws['!ref'] = encode_range(range);
+		return ws;
 	}
 
 	function rtf_to_workbook(d, opts) { return sheet_to_workbook(rtf_to_sheet(d, opts), opts); }
-	function sheet_to_rtf() { throw new Error("Unsupported"); }
+
+	/* TODO: this is a stub */
+	function sheet_to_rtf(ws, opts) {
+		var o = ["{\\rtf1\\ansi"];
+		var r = safe_decode_range(ws['!ref']), cell;
+		var dense = Array.isArray(ws);
+		for(var R = r.s.r; R <= r.e.r; ++R) {
+			o.push("\\trowd\\trautofit1");
+			for(var C = r.s.c; C <= r.e.c; ++C) o.push("\\cellx" + (C+1));
+			o.push("\\pard\\intbl");
+			for(C = r.s.c; C <= r.e.c; ++C) {
+				var coord = encode_cell({r:R,c:C});
+				cell = dense ? (ws[R]||[])[C]: ws[coord];
+				if(!cell || cell.v == null && (!cell.f || cell.F)) continue;
+				o.push(" " + (cell.w || (format_cell(cell), cell.w)));
+				o.push("\\cell");
+			}
+			o.push("\\pard\\intbl\\row");
+		}
+		return o.join("") + "}";
+	}
 
 	return {
 		to_workbook: rtf_to_workbook,
@@ -8585,6 +8613,15 @@ function write_comments_bin(data, opts) {
 	}
 	write_record(ba, "BrtEndComments");
 	return ba.end();
+}
+function make_vba_xls(cfb) {
+	var newcfb = CFB.utils.cfb_new({root:"R"});
+	cfb.FullPaths.forEach(function(p, i) {
+		if(p.slice(-1) === "/" || !p.match(/_VBA_PROJECT_CUR/)) return;
+		var newpath = p.replace(/^[^/]*/,"R").replace(/\/_VBA_PROJECT_CUR\u0000*/, "");
+		CFB.utils.cfb_add(newcfb, newpath, cfb.FileIndex[i].content);
+	});
+	return CFB.write(newcfb);
 }
 RELS.DS = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/dialogsheet";
 RELS.MS = "http://schemas.microsoft.com/office/2006/relationships/xlMacrosheet";
@@ -12792,7 +12829,8 @@ function parse_wb_xml(data, opts) {
 
 			/* Others */
 			case '<ArchID': break;
-			case '<AlternateContent': pass=true; break;
+			case '<AlternateContent':
+			case '<AlternateContent>': pass=true; break;
 			case '</AlternateContent>': pass=false; break;
 
 			/* TODO */
@@ -15193,6 +15231,7 @@ else {
 	/* Quattro Pro 9 */
 	else if((_data=CFB.find(cfb, 'NativeContent_MAIN')) && _data.content) WorkbookP = WK_.to_workbook(_data.content, (options.type = T, options));
 	else throw new Error("Cannot find Workbook stream");
+	if(options.bookVBA && CFB.find(cfb, '/_VBA_PROJECT_CUR/VBA/dir')) WorkbookP.vbaraw = make_vba_xls(cfb);
 }
 
 var props = {};

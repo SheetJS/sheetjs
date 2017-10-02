@@ -21,6 +21,7 @@ type Workbook = {
 
 	SSF?: SSFTable;
 	cfb?: any;
+	vbaraw?: any;
 };
 
 type WBWBProps = {

@@ -60,3 +60,13 @@ Chartsheets are represented as standard sheets.  They are distinguished with the
 The underlying data and `!ref` refer to the cached data in the chartsheet.  The
 first row of the chartsheet is the underlying header.
 
+#### Macrosheet Object
+
+Macrosheets are represented as standard sheets.  They are distinguished with the
+`!type` property set to `"macro"`.
+
+#### Dialogsheet Object
+
+Dialogsheets are represented as standard sheets. They are distinguished with the
+`!type` property set to `"dialog"`.
+

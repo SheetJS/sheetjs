@@ -22,6 +22,7 @@
  - `MS-XLSB`: Excel (.xlsb) Binary File Format
  - `MS-XLSX`: Excel (.xlsx) Extensions to the Office Open XML SpreadsheetML File Format
  - `XLS`: Microsoft Office Excel 97-2007 Binary File Format Specification
+ - `RTF`: Rich Text Format
 
 </details>
 

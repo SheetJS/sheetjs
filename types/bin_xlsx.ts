@@ -20,19 +20,21 @@ program
 	.option('-M, --xlsm', 'emit XLSM to <sheetname> or <file>.xlsm')
 	.option('-X, --xlsx', 'emit XLSX to <sheetname> or <file>.xlsx')
 	.option('-Y, --ods',  'emit ODS  to <sheetname> or <file>.ods')
+	.option('-8, --xls',  'emit XLS  to <sheetname> or <file>.xls (BIFF8)')
 	.option('-2, --biff2','emit XLS  to <sheetname> or <file>.xls (BIFF2)')
 	.option('-6, --xlml', 'emit SSML to <sheetname> or <file>.xls (2003 XML)')
 	.option('-T, --fods', 'emit FODS to <sheetname> or <file>.fods (Flat ODS)')
 
-	.option('-S, --formulae', 'print formulae')
-	.option('-j, --json', 'emit formatted JSON (all fields text)')
-	.option('-J, --raw-js', 'emit raw JS object (raw numbers)')
-	.option('-A, --arrays', 'emit rows as JS objects (raw numbers)')
-	.option('-H, --html', 'emit HTML')
-	.option('-D, --dif', 'emit data interchange format (dif)')
-	.option('-K, --sylk', 'emit symbolic link (sylk)')
-	.option('-P, --prn', 'emit formatted text (prn)')
-	.option('-t, --txt', 'emit delimited text (txt)')
+	.option('-S, --formulae', 'emit list of values and formulae')
+	.option('-j, --json',     'emit formatted JSON (all fields text)')
+	.option('-J, --raw-js',   'emit raw JS object (raw numbers)')
+	.option('-A, --arrays',   'emit rows as JS objects (raw numbers)')
+	.option('-H, --html', 'emit HTML to <sheetname> or <file>.html')
+	.option('-D, --dif',  'emit DIF  to <sheetname> or <file>.dif (Lotus DIF)')
+	.option('-K, --sylk', 'emit SYLK to <sheetname> or <file>.slk (Excel SYLK)')
+	.option('-P, --prn',  'emit PRN  to <sheetname> or <file>.prn (Lotus PRN)')
+	.option('-t, --txt',  'emit TXT  to <sheetname> or <file>.txt (UTF-8 TSV)')
+	.option('-r, --rtf',  'emit RTF  to <sheetname> or <file>.txt (Table RTF)')
 
 	.option('-F, --field-sep <sep>', 'CSV field separator', ",")
 	.option('-R, --row-sep <sep>', 'CSV row separator', "\n")
@@ -52,11 +54,18 @@ program.on('--help', function() {
 	console.log('  Web Demo: http://oss.sheetjs.com/js-'+n+'/');
 });
 
-/* output formats, update list with full option name */
-const workbook_formats = ['xlsx', 'xlsm', 'xlsb', 'ods', 'fods'];
 /* flag, bookType, default ext */
+const workbook_formats = [
+	['xlsx',   'xlsx', 'xlsx'],
+	['xlsm',   'xlsm', 'xlsm'],
+	['xlsb',   'xlsb', 'xlsb'],
+	['xls',     'xls',  'xls'],
+	['biff5', 'biff5',  'xls'],
+	['ods',     'ods',  'ods'],
+	['fods',   'fods', 'fods']
+];
 const wb_formats_2 = [
-	['xlml', 'xlml', 'xls']
+	['xlml',   'xlml', 'xls']
 ];
 program.parse(process.argv);
 
@@ -94,7 +103,7 @@ function isfmt(m: string): boolean {
 	const t = m.charAt(0) === "." ? m : "." + m;
 	return program.output.slice(-t.length) === t;
 }
-workbook_formats.forEach(function(m) { if(program[m] || isfmt(m)) { wb_fmt(); } });
+workbook_formats.forEach(function(m) { if(program[m[0]] || isfmt(m[0])) { wb_fmt(); } });
 wb_formats_2.forEach(function(m) { if(program[m[0]] || isfmt(m[0])) { wb_fmt(); } });
 if(seen) {
 } else if(program.formulae) opts.cellFormula = true;
@@ -134,8 +143,9 @@ let wopts: X.WritingOptions = ({WTF:opts.WTF, bookSST:program.sst}/*:any*/);
 if(program.compress) wopts.compression = true;
 
 /* full workbook formats */
-workbook_formats.forEach(function(m) { if(program[m] || isfmt(m)) {
-		X.writeFile(wb, program.output || sheetname || ((filename || "") + "." + m), wopts);
+workbook_formats.forEach(function(m) { if(program[m[0]] || isfmt(m[0])) {
+		wopts.bookType = <X.BookType>(m[1]);
+		X.writeFile(wb, program.output || sheetname || ((filename || "") + "." + m[2]), wopts);
 		process.exit(0);
 } });
 
@@ -168,9 +178,12 @@ if(program.readOnly) process.exit(0);
 /* single worksheet formats */
 [
 	['biff2', '.xls'],
+	['biff3', '.xls'],
+	['biff4', '.xls'],
 	['sylk', '.slk'],
 	['html', '.html'],
 	['prn', '.prn'],
+	['rtf', '.rtf'],
 	['txt', '.txt'],
 	['dif', '.dif']
 ].forEach(function(m) { if(program[m[0]] || isfmt(m[1])) {

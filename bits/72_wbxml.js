@@ -136,7 +136,8 @@ function parse_wb_xml(data, opts)/*:WorkbookFile*/ {
 
 			/* Others */
 			case '<ArchID': break;
-			case '<AlternateContent': pass=true; break;
+			case '<AlternateContent':
+			case '<AlternateContent>': pass=true; break;
 			case '</AlternateContent>': pass=false; break;
 
 			/* TODO */

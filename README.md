@@ -78,6 +78,8 @@ enhancements, additional features by request, and dedicated support.
   * [Sheet Objects](#sheet-objects)
     + [Worksheet Object](#worksheet-object)
     + [Chartsheet Object](#chartsheet-object)
+    + [Macrosheet Object](#macrosheet-object)
+    + [Dialogsheet Object](#dialogsheet-object)
   * [Workbook Object](#workbook-object)
     + [Workbook File Properties](#workbook-file-properties)
   * [Workbook-Level Attributes](#workbook-level-attributes)
@@ -91,6 +93,7 @@ enhancements, additional features by request, and dedicated support.
     + [Hyperlinks](#hyperlinks)
     + [Cell Comments](#cell-comments)
     + [Sheet Visibility](#sheet-visibility)
+    + [VBA and Macros](#vba-and-macros)
 - [Parsing Options](#parsing-options)
   * [Input Type](#input-type)
   * [Guessing File Type](#guessing-file-type)
@@ -124,6 +127,7 @@ enhancements, additional features by request, and dedicated support.
     + [Lotus Formatted Text (PRN)](#lotus-formatted-text-prn)
     + [Data Interchange Format (DIF)](#data-interchange-format-dif)
     + [HTML](#html)
+    + [Rich Text Format (RTF)](#rich-text-format-rtf)
 - [Testing](#testing)
   * [Node](#node)
   * [Browser](#browser)
@@ -983,6 +987,16 @@ Chartsheets are represented as standard sheets.  They are distinguished with the
 The underlying data and `!ref` refer to the cached data in the chartsheet.  The
 first row of the chartsheet is the underlying header.
 
+#### Macrosheet Object
+
+Macrosheets are represented as standard sheets.  They are distinguished with the
+`!type` property set to `"macro"`.
+
+#### Dialogsheet Object
+
+Dialogsheets are represented as standard sheets. They are distinguished with the
+`!type` property set to `"dialog"`.
+
 ### Workbook Object
 
 `workbook.SheetNames` is an ordered list of the sheets in the workbook
@@ -1421,6 +1435,37 @@ if a sheet is visible is to check if the `Hidden` property is logical truth:
 ```
 </details>
 
+#### VBA and Macros
+
+VBA Macros are stored in a special data blob that is exposed in the `vbaraw`
+property of the workbook object when the `bookVBA` option is `true`.  They are
+supported in `XLSM`, `XLSB`, and `BIFF8 XLS` formats.  The `XLSM` and `XLSB`
+writers automatically insert the data blobs if it is present in the workbook.
+
+<details>
+	<summary><b>Macrosheets</b> (click to show)</summary>
+
+Older versions of Excel also supported a non-VBA "macrosheet" sheet type that
+stored automation commands.  These are exposed in objects with the `!type`
+property set to `"macro"`.
+
+</details>
+
+<details>
+	<summary><b>Detecting macros in workbooks</b> (click to show)</summary>
+
+The `vbaraw` field will only be set if macros are present, so testing is simple:
+
+```js
+function wb_has_macro(wb/*:workbook*/)/*:boolean*/ {
+	if(!!wb.vbaraw) return true;
+	const sheets = wb.SheetNames.map((n) => wb.Sheets[n]);
+	return sheets.some((ws) => !!ws && ws['!type']=='macro');
+}
+```
+
+</details>
+
 ## Parsing Options
 
 The exported `read` and `readFile` functions accept an options argument:
@@ -1459,7 +1504,9 @@ The exported `read` and `readFile` functions accept an options argument:
 - `sheetRows-1` rows will be generated when looking at the JSON object output
   (since the header row is counted as a row when parsing the data)
 - `bookVBA` merely exposes the raw VBA CFB object.  It does not parse the data.
-  XLSM and XLSB store the VBA CFB object in `xl/vbaProject.bin`.
+  XLSM and XLSB store the VBA CFB object in `xl/vbaProject.bin`. BIFF8 XLS mixes
+  the VBA entries alongside the core Workbook entry, so the library generates a
+  new XLSB-compatible blob from the XLS CFB container.
 - Currently only XOR encryption is supported.  Unsupported error will be thrown
   for files employing other encryption methods.
 - WTF is mainly for development.  By default, the parser will suppress read
@@ -1591,6 +1638,7 @@ output formats.  The specific file type is controlled with `bookType` option:
 | `sylk`     | `.sylk`  |   none    | single | Symbolic Link (SYLK)            |
 | `html`     | `.html`  |   none    | single | HTML Document                   |
 | `dif`      | `.dif`   |   none    | single | Data Interchange Format (DIF)   |
+| `rtf`      | `.rtf`   |   none    | single | Rich Text Format                |
 | `prn`      | `.prn`   |   none    | single | Lotus Formatted Text            |
 
 - `compression` only applies to formats with ZIP containers.
@@ -1928,6 +1976,7 @@ Despite the library name `xlsx`, it supports numerous spreadsheet file formats:
 | Quattro Pro Spreadsheet (WQ1/WQ2/WB1/WB2/WB3/QPW)            |  :o:  |       |
 | **Other Common Spreadsheet Output Formats**                  |:-----:|:-----:|
 | HTML Tables                                                  |  :o:  |  :o:  |
+| RTF Tables                                                   |       |  :o:  |
 
 ### Excel 2007+ XML (XLSX/XLSM)
 
@@ -2150,6 +2199,17 @@ Excel HTML worksheets include special metadata encoded in styles.  For example,
 the metadata the output is valid HTML, although it does accept bare `&` symbols.
 
 </details>
+
+#### Rich Text Format (RTF)
+
+<details>
+  <summary>(click to show)</summary>
+
+Excel RTF worksheets are stored in clipboard when copying cells or ranges from a
+worksheet.  The supported codes are a subset of the Word RTF support.
+
+</details>
+
 
 ## Testing
 
@@ -2394,6 +2454,7 @@ granted by the Apache 2.0 License are reserved by the Original Author.
  - `MS-XLSB`: Excel (.xlsb) Binary File Format
  - `MS-XLSX`: Excel (.xlsx) Extensions to the Office Open XML SpreadsheetML File Format
  - `XLS`: Microsoft Office Excel 97-2007 Binary File Format Specification
+ - `RTF`: Rich Text Format
 
 </details>
 

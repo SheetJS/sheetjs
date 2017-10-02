@@ -576,12 +576,14 @@ describe('parse options', function() {
 			assert(typeof wb.vbaraw === 'undefined');
 			wb = X.read(fs.readFileSync(paths.nfxlsb), {type:TYPE});
 			assert(typeof wb.vbaraw === 'undefined');
+			wb = X.read(fs.readFileSync(paths.nfxls), {type:TYPE});
+			assert(typeof wb.vbaraw === 'undefined');
 		});
-		it('bookVBA should generate vbaraw (XLSX/XLSB)', function() {
-			var wb = X.read(fs.readFileSync(paths.nfxlsx),{type:TYPE, bookVBA:true});
-			assert(wb.vbaraw);
-			wb = X.read(fs.readFileSync(paths.nfxlsb),{type:TYPE, bookVBA:true});
-			assert(wb.vbaraw);
+		it('bookVBA should generate vbaraw', function() {
+			var wb;
+			wb = X.read(fs.readFileSync(paths.nfxlsx),{type:TYPE, bookVBA:true}); assert(wb.vbaraw);
+			wb = X.read(fs.readFileSync(paths.nfxlsb),{type:TYPE, bookVBA:true}); assert(wb.vbaraw);
+			wb = X.read(fs.readFileSync(paths.nfxls),{type:TYPE, bookVBA:true}); assert(wb.vbaraw);
 		});
 	});
 });
@@ -1068,12 +1070,9 @@ describe('parse features', function() {
 			assert.equal(sheet[3]['てすと'], '2/14/14');
 		});
 		it('cellDates should not affect formatted text', function() {
-			var wb1, ws1, wb2, ws2;
 			var sheetName = 'Sheet1';
-			wb1 = X.read(fs.readFileSync(paths.dtxlsx), {type:TYPE});
-			ws1 = wb1.Sheets[sheetName];
-			wb2 = X.read(fs.readFileSync(paths.dtxlsb), {type:TYPE});
-			ws2 = wb2.Sheets[sheetName];
+			var ws1 = X.read(fs.readFileSync(paths.dtxlsx), {type:TYPE}).Sheets[sheetName];
+			var ws2 = X.read(fs.readFileSync(paths.dtxlsb), {type:TYPE}).Sheets[sheetName];
 			assert.equal(X.utils.sheet_to_csv(ws1),X.utils.sheet_to_csv(ws2));
 		});
 	});

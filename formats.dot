@@ -25,6 +25,7 @@ digraph G {
 		dif   [label="DIF"];
 		slk   [label="SYLK"];
 		prn   [label="PRN"];
+		rtf   [label="RTF"];
 		wk1   [label="WK1/2\n123"];
 		wk3   [label="WK3/4"];
 		wqb   [label="WQ*\nWB*"];
@@ -62,6 +63,7 @@ digraph G {
 		wk1 -> csf
 		wqb -> csf
 		dif -> csf
+		csf -> rtf
 		prn -> csf
 		csf -> prn
 		csv -> csf

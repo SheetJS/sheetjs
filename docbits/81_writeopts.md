@@ -45,6 +45,7 @@ output formats.  The specific file type is controlled with `bookType` option:
 | `sylk`     | `.sylk`  |   none    | single | Symbolic Link (SYLK)            |
 | `html`     | `.html`  |   none    | single | HTML Document                   |
 | `dif`      | `.dif`   |   none    | single | Data Interchange Format (DIF)   |
+| `rtf`      | `.rtf`   |   none    | single | Rich Text Format                |
 | `prn`      | `.prn`   |   none    | single | Lotus Formatted Text            |
 
 - `compression` only applies to formats with ZIP containers.
