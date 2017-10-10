@@ -2,7 +2,7 @@
 var parse_content_xml = (function() {
 
 	var parse_text_p = function(text, tag) {
-		return unescapexml(text.replace(/<text:s\/>/g," ").replace(/<[^>]*>/g,""));
+		return unescapexml(text.replace(/<text:s\/>/g," ").replace(/<text:s text:c="(\d+)"\/>/g, function($$,$1) { return Array(parseInt($1)+1).join(" "); }).replace(/<[^>]*>/g,""));
 	};
 
 	var number_formats = {
