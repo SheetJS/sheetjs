@@ -14250,9 +14250,9 @@ function write_ws_xlml_wsopts(ws, opts, idx, wb) {
 		if(ws['!protect'].selectLockedCells != null && !ws['!protect'].selectLockedCells) o.push(writetag("EnableSelection", "NoSelection"));
 		else if(ws['!protect'].selectUnlockedCells != null && !ws['!protect'].selectUnlockedCells) o.push(writetag("EnableSelection", "UnlockedCells"));
 	[
-		[ "formatColumns", "AllowFormatCells" ],
-		[ "formatRows", "AllowSizeCols" ],
-		[ "formatCells", "AllowSizeRows" ],
+		[ "formatCells", "AllowFormatCells" ],
+		[ "formatColumns", "AllowSizeCols" ],
+		[ "formatRows", "AllowSizeRows" ],
 		[ "insertColumns", "AllowInsertCols" ],
 		[ "insertRows", "AllowInsertRows" ],
 		[ "insertHyperlinks", "AllowInsertHyperlinks" ],
