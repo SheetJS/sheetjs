@@ -5974,14 +5974,42 @@ var PRN = (function() {
 		return arr;
 	}
 
+	// List of accepted CSV separators
+	var guess_seps = {
+		0x2C: ',',
+		0x09: "\t",
+		0x3B: ';'
+	};
+
+	// CSV separator weights to be used in case of equal numbers
+	var guess_sep_weights = {
+		0x2C: 3,
+		0x09: 2,
+		0x3B: 1
+	};
+
 	function guess_sep(str) {
-		var cnt = [], instr = false, end = 0, cc = 0;
+		var cnt = {}, instr = false, end = 0, cc = 0;
 		for(;end < str.length;++end) {
 			if((cc=str.charCodeAt(end)) == 0x22) instr = !instr;
-			else if(!instr) cnt[cc] = (cnt[cc]||0)+1;
+			else if(!instr && cc in guess_seps) cnt[cc] = (cnt[cc]||0)+1;
 		}
-		if((cnt[0x2C]||0) >= (cnt[0x09]||0)) return ",";
-		return "\t";
+
+		cc = [];
+		for(end in cnt) if ( cnt.hasOwnProperty(end) ) {
+			cc.push([ cnt[end], end ]);
+		}
+
+		if ( !cc.length ) {
+			cnt = guess_sep_weights;
+			for(end in cnt) if ( cnt.hasOwnProperty(end) ) {
+				cc.push([ cnt[end], end ]);
+			}
+		}
+
+		cc.sort(function(a, b) { return a[0] - b[0] || guess_sep_weights[a[1]] - guess_sep_weights[b[1]]; });
+
+		return guess_seps[cc.pop()[1]];
 	}
 
 	function dsv_to_sheet_str(str/*:string*/, opts)/*:Worksheet*/ {
