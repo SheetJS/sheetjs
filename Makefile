@@ -213,7 +213,7 @@ book: readme graph ## Update summary for documentation
 	<README.md grep -vE "(details|summary)>" > misc/docs/README.md
 
 DEMOMDS=$(sort $(wildcard demos/*/README.md))
-MDLINT=$(DEMODS) $(READEPS) demos/README.md
+MDLINT=$(DEMOMDS) $(READEPS) demos/README.md
 .PHONY: mdlint
 mdlint: $(MDLINT) ## Check markdown documents
 	alex $^

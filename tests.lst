@@ -1441,3 +1441,5 @@ artifacts/wps/write.et
 # artifacts/wps/write.xls ## bad sheet name
 artifacts/wps/write.xlsx
 artifacts/wps/write.xml
+dbf/d11.dbf
+dbf/vfp3.dbf

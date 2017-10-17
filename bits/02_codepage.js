@@ -28,14 +28,14 @@ var debom = function(data/*:string*/)/*:string*/ {
 	return data;
 };
 
-var _getchar = function _gc1(x) { return String.fromCharCode(x); };
+var _getchar = function _gc1(x/*:number*/)/*:string*/ { return String.fromCharCode(x); };
 if(typeof cptable !== 'undefined') {
-	set_cp = function(cp) { current_codepage = cp; };
-	debom = function(data) {
+	set_cp = function(cp/*:number*/) { current_codepage = cp; };
+	debom = function(data/*:string*/) {
 		if(data.charCodeAt(0) === 0xFF && data.charCodeAt(1) === 0xFE) { return cptable.utils.decode(1200, char_codes(data.substr(2))); }
 		return data;
 	};
-	_getchar = function _gc2(x) {
+	_getchar = function _gc2(x/*:number*/)/*:string*/ {
 		if(current_codepage === 1200) return String.fromCharCode(x);
 		return cptable.utils.decode(current_codepage, [x&255,x>>8])[0];
 	};

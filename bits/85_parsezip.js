@@ -49,6 +49,8 @@ function parse_zip(zip/*:ZIP*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
 	if(safegetzipfile(zip, 'META-INF/manifest.xml')) return parse_ods(zip, opts);
 	/* UOC */
 	if(safegetzipfile(zip, 'objectdata.xml')) return parse_ods(zip, opts);
+	/* Numbers */
+	if(safegetzipfile(zip, 'Index/Document.iwa')) throw new Error('Unsupported NUMBERS file');
 
 	var entries = keys(zip.files).filter(nodirs).sort();
 	var dir = parse_ct((getzipstr(zip, '[Content_Types].xml')/*:?any*/), opts);
@@ -186,7 +188,7 @@ function parse_xlsxcfb(cfb, opts/*:?ParseOpts*/)/*:Workbook*/ {
 	data = CFB.find(cfb, f);
 	if(!data || !data.content) throw new Error("ECMA-376 Encrypted file missing " + f);
 	var dsm = parse_DataSpaceMap(data.content);
-	if(dsm.length != 1 || dsm[0].comps.length != 1 || dsm[0].comps[0].t != 0 || dsm[0].name != "StrongEncryptionDataSpace" || dsm[0].comps[0].v != "EncryptedPackage")
+	if(dsm.length !== 1 || dsm[0].comps.length !== 1 || dsm[0].comps[0].t !== 0 || dsm[0].name !== "StrongEncryptionDataSpace" || dsm[0].comps[0].v !== "EncryptedPackage")
 		throw new Error("ECMA-376 Encrypted file bad " + f);
 
 	f = 'StrongEncryptionDataSpace';
@@ -207,6 +209,7 @@ function parse_xlsxcfb(cfb, opts/*:?ParseOpts*/)/*:Workbook*/ {
 	if(!data || !data.content) throw new Error("ECMA-376 Encrypted file missing " + f);
 	var einfo = parse_EncryptionInfo(data.content);
 
+	if(einfo[0] == 0x04) throw new Error("File is password-protected: ECMA-376 Agile");
 	throw new Error("File is password-protected");
 }
 

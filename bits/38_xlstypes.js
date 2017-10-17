@@ -108,7 +108,7 @@ function parse_VtVector(blob, cb) {
 }
 
 /* [MS-OLEPS] 2.15 TypedPropertyValue */
-function parse_TypedPropertyValue(blob, type/*:number*/, _opts) {
+function parse_TypedPropertyValue(blob, type/*:number*/, _opts)/*:any*/ {
 	var t = blob.read_shift(2), ret, opts = _opts||{};
 	blob.l += 2;
 	if(type !== VT_VARIANT)
@@ -193,12 +193,12 @@ function parse_PropertySet(blob, PIDSI) {
 				case 1252:
 				case 65000: case -536:
 				case 65001: case -535:
-					set_cp(CodePage = PropH[piddsi.n]>>>0 & 0xFFFF); break;
+					set_cp(CodePage = (PropH[piddsi.n]>>>0) & 0xFFFF); break;
 				default: throw new Error("Unsupported CodePage: " + PropH[piddsi.n]);
 			}
 		} else {
 			if(Props[i][0] === 0x1) {
-				CodePage = PropH.CodePage = parse_TypedPropertyValue(blob, VT_I2);
+				CodePage = PropH.CodePage = (parse_TypedPropertyValue(blob, VT_I2)/*:number*/);
 				set_cp(CodePage);
 				if(Dictionary !== -1) {
 					var oldpos = blob.l;

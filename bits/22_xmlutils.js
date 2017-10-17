@@ -102,7 +102,7 @@ var utf8read/*:StringConv*/ = function utf8reada(orig) {
 };
 
 var utf8write/*:StringConv*/ = function(orig) {
-	var out = [], i = 0, c = 0, d = 0;
+	var out/*:Array<string>*/ = [], i = 0, c = 0, d = 0;
 	while(i < orig.length) {
 		c = orig.charCodeAt(i++);
 		switch(true) {
@@ -197,7 +197,7 @@ function writextag(f,g,h) { return '<' + f + (isval(h) /*:: && h */? wxt_helper(
 
 function write_w3cdtf(d/*:Date*/, t/*:?boolean*/)/*:string*/ { try { return d.toISOString().replace(/\.\d*/,""); } catch(e) { if(t) throw e; } return ""; }
 
-function write_vt(s) {
+function write_vt(s)/*:string*/ {
 	switch(typeof s) {
 		case 'string': return writextag('vt:lpwstr', s);
 		case 'number': return writextag((s|0)==s?'vt:i4':'vt:r8', String(s));

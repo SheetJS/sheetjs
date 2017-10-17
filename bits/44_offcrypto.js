@@ -127,9 +127,9 @@ function parse_EncryptionVerifier(blob, length/*:number*/) {
 function parse_EncryptionInfo(blob, length/*:?number*/) {
 	var vers = parse_CRYPTOVersion(blob);
 	switch(vers.Minor) {
-		case 0x02: return parse_EncInfoStd(blob, vers);
-		case 0x03: return parse_EncInfoExt(blob, vers);
-		case 0x04: return parse_EncInfoAgl(blob, vers);
+		case 0x02: return [vers.Minor, parse_EncInfoStd(blob, vers)];
+		case 0x03: return [vers.Minor, parse_EncInfoExt(blob, vers)];
+		case 0x04: return [vers.Minor, parse_EncInfoAgl(blob, vers)];
 	}
 	throw new Error("ECMA-376 Encrypted file unrecognized Version: " + vers.Minor);
 }
@@ -147,7 +147,10 @@ function parse_EncInfoStd(blob, vers) {
 /* [MS-OFFCRYPTO] 2.3.4.6  EncryptionInfo Stream (Extensible Encryption) */
 function parse_EncInfoExt(blob, vers) { throw new Error("File is password-protected: ECMA-376 Extensible"); }
 /* [MS-OFFCRYPTO] 2.3.4.10 EncryptionInfo Stream (Agile Encryption) */
-function parse_EncInfoAgl(blob, vers) { throw new Error("File is password-protected: ECMA-376 Agile"); }
+function parse_EncInfoAgl(blob, vers) {
+	blob.l+=4;
+	return blob.read_shift(blob.length - blob.l, 'utf8');
+}
 
 
 
@@ -282,7 +285,7 @@ function parse_XORObfuscation(blob, length, opts, out) {
 	var o = ({ key: parseuint16(blob), verificationBytes: parseuint16(blob) }/*:any*/);
 	if(opts.password) o.verifier = crypto_CreatePasswordVerifier_Method1(opts.password);
 	out.valid = o.verificationBytes === o.verifier;
-	if(out.valid) out.insitu_decrypt = crypto_MakeXorDecryptor(opts.password);
+	if(out.valid) out.insitu = crypto_MakeXorDecryptor(opts.password);
 	return o;
 }
 

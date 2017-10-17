@@ -196,7 +196,7 @@ function parse_xlml_xml(d, _opts)/*:Workbook*/ {
 	var comments = [], comment = {};
 	var cstys = [], csty, seencol = false;
 	var arrayf = [];
-	var rowinfo = [], rowobj = {};
+	var rowinfo = [], rowobj = {}, cc = 0, rr = 0;
 	var Workbook/*:WBWBProps*/ = ({ Sheets:[], WBProps:{date1904:false} }/*:any*/), wsprops = {};
 	xlmlregex.lastIndex = 0;
 	str = str.replace(/<!--([\s\S]*?)-->/mg,"");
@@ -220,8 +220,8 @@ function parse_xlml_xml(d, _opts)/*:Workbook*/ {
 					delete cell.HRef; delete cell.HRefScreenTip;
 				}
 				if(cell.MergeAcross || cell.MergeDown) {
-					var cc = c + (parseInt(cell.MergeAcross,10)|0);
-					var rr = r + (parseInt(cell.MergeDown,10)|0);
+					cc = c + (parseInt(cell.MergeAcross,10)|0);
+					rr = r + (parseInt(cell.MergeDown,10)|0);
 					mergecells.push({s:{c:c,r:r},e:{c:cc,r:rr}});
 				}
 				if(!opts.sheetStubs) { if(cell.MergeAcross) c = cc + 1; else ++c; }

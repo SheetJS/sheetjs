@@ -2,7 +2,6 @@
 .*/node_modules/.*
 .*/dist/.*
 .*/tmp/.*
-.*/test.js
 
 .*/bits/.*
 .*/ctest/.*
@@ -25,6 +24,7 @@ xlsxworker.flow.js
 xlsx.flow.js
 .*/bin/.*.njs
 .*/demo/browser.flow.js
+test.js
 
 [libs]
 bits/09_types.js

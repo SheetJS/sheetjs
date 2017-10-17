@@ -70,7 +70,7 @@ function read_prn(data, d, o, str) {
 }
 
 function readSync(data/*:RawData*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
-	var zip, d = data, n=[0], str = false;
+	var zip, d = data, n = [0,0,0,0], str = false;
 	var o = opts||{};
 	_ssfopts = {};
 	if(o.dateNF) _ssfopts.dateNF = o.dateNF;
@@ -81,14 +81,14 @@ function readSync(data/*:RawData*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
 		case 0xD0: return read_cfb(CFB.read(d, o), o);
 		case 0x09: return parse_xlscfb(d, o);
 		case 0x3C: return parse_xlml(d, o);
-		case 0x49: if(n[1] == 0x44) return read_wb_ID(d, o); break;
-		case 0x54: if(n[1] == 0x41 && n[2] == 0x42 && n[3] == 0x4C) return DIF.to_workbook(d, o); break;
-		case 0x50: if(n[1] == 0x4B && n[2] < 0x20 && n[3] < 0x20) return read_zip(d, o); break;
-		case 0xEF: return n[3] == 0x3C ? parse_xlml(d, o) : read_prn(data, d, o, str);
-		case 0xFF: if(n[1] == 0xFE){ return read_utf16(d, o); } break;
-		case 0x00: if(n[1] == 0x00 && n[2] >= 0x02 && n[3] == 0x00) return WK_.to_workbook(d, o); break;
-		case 0x03: case 0x83: case 0x8B: return DBF.to_workbook(d, o);
-		case 0x7B: if(n[1] == 0x5C && n[2] == 0x72 && n[3] == 0x74) return RTF.to_workbook(d, o); break;
+		case 0x49: if(n[1] === 0x44) return read_wb_ID(d, o); break;
+		case 0x54: if(n[1] === 0x41 && n[2] === 0x42 && n[3] === 0x4C) return DIF.to_workbook(d, o); break;
+		case 0x50: if(n[1] === 0x4B && n[2] < 0x20 && n[3] < 0x20) return read_zip(d, o); break;
+		case 0xEF: return n[3] === 0x3C ? parse_xlml(d, o) : read_prn(data, d, o, str);
+		case 0xFF: if(n[1] === 0xFE) { return read_utf16(d, o); } break;
+		case 0x00: if(n[1] === 0x00 && n[2] >= 0x02 && n[3] === 0x00) return WK_.to_workbook(d, o); break;
+		case 0x03: case 0x83: case 0x8B: case 0x8C: return DBF.to_workbook(d, o);
+		case 0x7B: if(n[1] === 0x5C && n[2] === 0x72 && n[3] === 0x74) return RTF.to_workbook(d, o); break;
 		case 0x0A: case 0x0D: case 0x20: return read_plaintext_raw(d, o);
 	}
 	if(n[2] <= 12 && n[3] <= 31) return DBF.to_workbook(d, o);

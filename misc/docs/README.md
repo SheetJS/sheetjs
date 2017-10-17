@@ -1437,8 +1437,9 @@ Plain text format guessing follows the priority order:
 | XML    | starts with `<`                                                     |
 | RTF    | starts with `{\rt`                                                  |
 | DSV    | starts with `/sep=.$/`, separator is the specified character        |
-| CSV    | more unquoted `","` characters than `"\t"` chars in the first 1024  |
-| TSV    | one of the first 1024 characters is a tab char `"\t"`               |
+| DSV    | more unquoted `";"` chars than `"\t"` or `","` in the first 1024    |
+| TSV    | more unquoted `"\t"` chars than `","` chars in the first 1024       |
+| CSV    | one of the first 1024 characters is a comma `","`                   |
 | PRN    | (default)                                                           |
 
 - HTML tags include: `html`, `table`, `head`, `meta`, `script`, `style`, `div`
@@ -1497,6 +1498,7 @@ output formats.  The specific file type is controlled with `bookType` option:
 | `xlsm`     | `.xlsm`  |    ZIP    | multi  | Excel 2007+ Macro XML Format    |
 | `xlsb`     | `.xlsb`  |    ZIP    | multi  | Excel 2007+ Binary Format       |
 | `biff8`    | `.xls`   |    CFB    | multi  | Excel 97-2004 Workbook Format   |
+| `biff5`    | `.xls`   |    CFB    | multi  | Excel 5.0/95 Workbook Format    |
 | `biff2`    | `.xls`   |   none    | single | Excel 2.0 Worksheet Format      |
 | `xlml`     | `.xls`   |   none    | multi  | Excel 2003-2004 (SpreadsheetML) |
 | `ods`      | `.ods`   |    ZIP    | multi  | OpenDocument Spreadsheet        |
@@ -1506,7 +1508,7 @@ output formats.  The specific file type is controlled with `bookType` option:
 | `sylk`     | `.sylk`  |   none    | single | Symbolic Link (SYLK)            |
 | `html`     | `.html`  |   none    | single | HTML Document                   |
 | `dif`      | `.dif`   |   none    | single | Data Interchange Format (DIF)   |
-| `rtf`      | `.rtf`   |   none    | single | Rich Text Format                |
+| `rtf`      | `.rtf`   |   none    | single | Rich Text Format (RTF)          |
 | `prn`      | `.prn`   |   none    | single | Lotus Formatted Text            |
 
 - `compression` only applies to formats with ZIP containers.
@@ -1804,7 +1806,7 @@ Despite the library name `xlsx`, it supports numerous spreadsheet file formats:
 | Excel 2007+ Binary Format (XLSB BIFF12)                      |  :o:  |  :o:  |
 | Excel 2003-2004 XML Format (XML "SpreadsheetML")             |  :o:  |  :o:  |
 | Excel 97-2004 (XLS BIFF8)                                    |  :o:  |  :o:  |
-| Excel 5.0/95 (XLS BIFF5)                                     |  :o:  |       |
+| Excel 5.0/95 (XLS BIFF5)                                     |  :o:  |  :o:  |
 | Excel 4.0 (XLS/XLW BIFF4)                                    |  :o:  |       |
 | Excel 3.0 (XLS BIFF3)                                        |  :o:  |       |
 | Excel 2.0/2.1 (XLS BIFF2)                                    |  :o:  |  :o:  |
@@ -1823,7 +1825,7 @@ Despite the library name `xlsx`, it supports numerous spreadsheet file formats:
 | Quattro Pro Spreadsheet (WQ1/WQ2/WB1/WB2/WB3/QPW)            |  :o:  |       |
 | **Other Common Spreadsheet Output Formats**                  |:-----:|:-----:|
 | HTML Tables                                                  |  :o:  |  :o:  |
-| RTF Tables                                                   |       |  :o:  |
+| Rich Text Format tables (RTF)                                |       |  :o:  |
 
 ### Excel 2007+ XML (XLSX/XLSM)
 

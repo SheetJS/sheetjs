@@ -21,7 +21,7 @@ program
 	.option('-X, --xlsx', 'emit XLSX to <sheetname> or <file>.xlsx')
 	.option('-Y, --ods',  'emit ODS  to <sheetname> or <file>.ods')
 	.option('-8, --xls',  'emit XLS  to <sheetname> or <file>.xls (BIFF8)')
-	//.option('-5, --biff5','emit XLS  to <sheetname> or <file>.xls (BIFF5)')
+	.option('-5, --biff5','emit XLS  to <sheetname> or <file>.xls (BIFF5)')
 	//.option('-4, --biff4','emit XLS  to <sheetname> or <file>.xls (BIFF4)')
 	//.option('-3, --biff3','emit XLS  to <sheetname> or <file>.xls (BIFF3)')
 	.option('-2, --biff2','emit XLS  to <sheetname> or <file>.xls (BIFF2)')
@@ -44,11 +44,10 @@ program
 	.option('-n, --sheet-rows <num>', 'Number of rows to process (0=all rows)')
 	.option('--sst', 'generate shared string table for XLS* formats')
 	.option('--compress', 'use compression when writing XLSX/M/B and ODS')
-	.option('--read-only', 'do not generate output')
+	.option('--read', 'read but do not generate output')
 	.option('--all', 'parse everything; write as much as possible')
 	.option('--dev', 'development mode')
 	.option('--sparse', 'sparse mode')
-	.option('--read', 'read but do not print out contents')
 	.option('-q, --quiet', 'quiet mode');
 
 program.on('--help', function() {
@@ -176,9 +175,8 @@ try {
 	process.exit(4);
 }
 
-if(program.readOnly) process.exit(0);
 
-/* single worksheet formats */
+/* single worksheet file formats */
 [
 	['biff2', '.xls'],
 	['biff3', '.xls'],

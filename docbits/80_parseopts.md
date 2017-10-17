@@ -97,8 +97,9 @@ Plain text format guessing follows the priority order:
 | XML    | starts with `<`                                                     |
 | RTF    | starts with `{\rt`                                                  |
 | DSV    | starts with `/sep=.$/`, separator is the specified character        |
-| CSV    | more unquoted `","` characters than `"\t"` chars in the first 1024  |
-| TSV    | one of the first 1024 characters is a tab char `"\t"`               |
+| DSV    | more unquoted `";"` chars than `"\t"` or `","` in the first 1024    |
+| TSV    | more unquoted `"\t"` chars than `","` chars in the first 1024       |
+| CSV    | one of the first 1024 characters is a comma `","`                   |
 | PRN    | (default)                                                           |
 
 - HTML tags include: `html`, `table`, `head`, `meta`, `script`, `style`, `div`

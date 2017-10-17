@@ -1,14 +1,36 @@
 /* OpenDocument */
 var write_styles_ods/*:{(wb:any, opts:any):string}*/ = (function() {
-	var payload = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><office:document-styles xmlns:table="urn:oasis:names:tc:opendocument:xmlns:table:1.0" xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0" xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0" xmlns:draw="urn:oasis:names:tc:opendocument:xmlns:drawing:1.0" xmlns:fo="urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:number="urn:oasis:names:tc:opendocument:xmlns:datastyle:1.0" xmlns:svg="urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0" xmlns:of="urn:oasis:names:tc:opendocument:xmlns:of:1.2" office:version="1.2"></office:document-styles>';
+	var payload = '<office:document-styles ' + wxt_helper({
+		'xmlns:office':   "urn:oasis:names:tc:opendocument:xmlns:office:1.0",
+		'xmlns:table':    "urn:oasis:names:tc:opendocument:xmlns:table:1.0",
+		'xmlns:style':    "urn:oasis:names:tc:opendocument:xmlns:style:1.0",
+		'xmlns:text':     "urn:oasis:names:tc:opendocument:xmlns:text:1.0",
+		'xmlns:draw':     "urn:oasis:names:tc:opendocument:xmlns:drawing:1.0",
+		'xmlns:fo':       "urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0",
+		'xmlns:xlink':    "http://www.w3.org/1999/xlink",
+		'xmlns:dc':       "http://purl.org/dc/elements/1.1/",
+		'xmlns:number':   "urn:oasis:names:tc:opendocument:xmlns:datastyle:1.0",
+		'xmlns:svg':      "urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0",
+		'xmlns:of':       "urn:oasis:names:tc:opendocument:xmlns:of:1.2",
+		'office:version': "1.2"
+	}) + '></office:document-styles>';
 	return function wso(wb, opts) {
-		return payload;
+		return XML_HEADER + payload;
 	};
 })();
 var write_content_ods/*:{(wb:any, opts:any):string}*/ = (function() {
+	/* 6.1.2 White Space Characters */
+	var write_text_p = function(text/*:string*/)/*:string*/ {
+		return escapexml(text)
+			.replace(/  +/g, function($$){return '<text:s text:c="'+$$.length+'"/>';})
+			.replace(/\t/g, "<text:tab/>")
+			.replace(/\n/g, "<text:line-break/>")
+			.replace(/^ /, "<text:s/>").replace(/ $/, "<text:s/>");
+	};
+
 	var null_cell_xml = '          <table:table-cell />\n';
 	var covered_cell_xml = '          <table:covered-table-cell/>\n';
-	var write_ws = function(ws, wb, i/*:number*/, opts)/*:string*/ {
+	var write_ws = function(ws, wb/*:Workbook*/, i/*:number*/, opts)/*:string*/ {
 		/* Section 9 Tables */
 		var o = [];
 		o.push('      <table:table table:name="' + escapexml(wb.SheetNames[i]) + '">\n');
@@ -56,7 +78,7 @@ var write_content_ods/*:{(wb:any, opts:any):string}*/ = (function() {
 						ct['office:value'] = (cell.v||0);
 						break;
 					case 's': case 'str':
-						textp = escapexml(cell.v);
+						textp = cell.v;
 						ct['office:value-type'] = "string";
 						break;
 					case 'd':
@@ -68,7 +90,7 @@ var write_content_ods/*:{(wb:any, opts:any):string}*/ = (function() {
 					//case 'e':
 					default: o.push(null_cell_xml); continue;
 				}
-				o.push('          ' + writextag('table:table-cell', writextag('text:p', textp, {}), ct) + '\n');
+				o.push('          ' + writextag('table:table-cell', writextag('text:p', write_text_p(textp), {}), ct) + '\n');
 			}
 			o.push('        </table:table-row>\n');
 		}
@@ -133,8 +155,8 @@ var write_content_ods/*:{(wb:any, opts:any):string}*/ = (function() {
 		});
 
 		var fods = wxt_helper({
-			'xmlns:config':"urn:oasis:names:tc:opendocument:xmlns:config:1.0",
-			'office:mimetype':"application/vnd.oasis.opendocument.spreadsheet"
+			'xmlns:config':    "urn:oasis:names:tc:opendocument:xmlns:config:1.0",
+			'office:mimetype': "application/vnd.oasis.opendocument.spreadsheet"
 		});
 
 		if(opts.bookType == "fods") o.push('<office:document' + attr + fods + '>\n');
@@ -161,7 +183,7 @@ function write_ods(wb/*:any*/, opts/*:any*/) {
 	var manifest/*:Array<Array<string> >*/ = [];
 	var rdf = [];
 
-	/* 3:3.3 and 2:2.2.4 */
+	/* Part 3 Section 3.3 MIME Media Type */
 	f = "mimetype";
 	zip.file(f, "application/vnd.oasis.opendocument.spreadsheet");
 
@@ -177,16 +199,16 @@ function write_ods(wb/*:any*/, opts/*:any*/) {
 	manifest.push([f, "text/xml"]);
 	rdf.push([f, "StylesFile"]);
 
-	/* Part 3 Section 6 Metadata Manifest File */
-	f = "manifest.rdf";
-	zip.file(f, write_rdf(rdf, opts));
-	manifest.push([f, "application/rdf+xml"]);
-
 	/* TODO: this is hard-coded to satiate excel */
 	f = "meta.xml";
 	zip.file(f, write_meta_ods(wb, opts));
 	manifest.push([f, "text/xml"]);
 	rdf.push([f, "MetadataFile"]);
+
+	/* Part 3 Section 6 Metadata Manifest File */
+	f = "manifest.rdf";
+	zip.file(f, write_rdf(rdf, opts));
+	manifest.push([f, "application/rdf+xml"]);
 
 	/* Part 3 Section 4 Manifest File */
 	f = "META-INF/manifest.xml";

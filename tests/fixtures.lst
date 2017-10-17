@@ -39,6 +39,7 @@
 ./test_files/custom_properties.xlsb
 ./test_files/cell_style_simple.xls
 ./test_files/cell_style_simple.xml
+./test_files/cell_style_simple.ods
 ./test_files/cell_style_simple.xlsx
 ./test_files/cell_style_simple.xlsb
 ./test_files/comments_stress_test.xls
@@ -106,3 +107,5 @@
 ./test_files/apachepoi_SimpleWithComments.xlsx
 ./test_files/2013/apachepoi_SimpleWithComments.xlsx.xlsb
 ./test_files/password_2002_40_xor.xls
+./test_files/dbf/d11.dbf
+./test_files/dbf/vfp3.dbf

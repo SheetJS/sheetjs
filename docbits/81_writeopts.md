@@ -36,6 +36,7 @@ output formats.  The specific file type is controlled with `bookType` option:
 | `xlsm`     | `.xlsm`  |    ZIP    | multi  | Excel 2007+ Macro XML Format    |
 | `xlsb`     | `.xlsb`  |    ZIP    | multi  | Excel 2007+ Binary Format       |
 | `biff8`    | `.xls`   |    CFB    | multi  | Excel 97-2004 Workbook Format   |
+| `biff5`    | `.xls`   |    CFB    | multi  | Excel 5.0/95 Workbook Format    |
 | `biff2`    | `.xls`   |   none    | single | Excel 2.0 Worksheet Format      |
 | `xlml`     | `.xls`   |   none    | multi  | Excel 2003-2004 (SpreadsheetML) |
 | `ods`      | `.ods`   |    ZIP    | multi  | OpenDocument Spreadsheet        |
@@ -45,7 +46,7 @@ output formats.  The specific file type is controlled with `bookType` option:
 | `sylk`     | `.sylk`  |   none    | single | Symbolic Link (SYLK)            |
 | `html`     | `.html`  |   none    | single | HTML Document                   |
 | `dif`      | `.dif`   |   none    | single | Data Interchange Format (DIF)   |
-| `rtf`      | `.rtf`   |   none    | single | Rich Text Format                |
+| `rtf`      | `.rtf`   |   none    | single | Rich Text Format (RTF)          |
 | `prn`      | `.prn`   |   none    | single | Lotus Formatted Text            |
 
 - `compression` only applies to formats with ZIP containers.

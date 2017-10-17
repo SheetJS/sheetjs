@@ -201,7 +201,8 @@ function parse_WriteAccess(blob, length, opts) {
 	return UserName;
 }
 function write_WriteAccess(s/*:string*/, opts) {
-	var o = new_buf(112);
+	var b8 = !opts || opts.biff == 8;
+	var o = new_buf(b8 ? 112 : 54);
 	o.write_shift(opts.biff == 8 ? 2 : 1, 7);
 	o.write_shift(1, 0);
 	o.write_shift(4, 0x33336853);
@@ -226,14 +227,15 @@ function parse_BoundSheet8(blob, length, opts) {
 	return { pos:pos, hs:hidden, dt:dt, name:name };
 }
 function write_BoundSheet8(data, opts) {
-	var o = new_buf(8 + 2 * data.name.length);
+	var w = (!opts || opts.biff >= 8 ? 2 : 1);
+	var o = new_buf(8 + w * data.name.length);
 	o.write_shift(4, data.pos);
 	o.write_shift(1, data.hs || 0);
 	o.write_shift(1, data.dt);
 	o.write_shift(1, data.name.length);
-	o.write_shift(1, 1);
-	o.write_shift(2 * data.name.length, data.name, 'utf16le');
-	return o;
+	if(opts.biff >= 8) o.write_shift(1, 1);
+	o.write_shift(w * data.name.length, data.name, opts.biff < 8 ? 'sbcs' : 'utf16le');
+	return o.slice(0, o.l);
 }
 
 /* 2.4.265 TODO */
@@ -362,11 +364,12 @@ function parse_Label(blob, length, opts) {
 	return cell;
 }
 function write_Label(R/*:number*/, C/*:number*/, v/*:string*/, opts) {
-	var o = new_buf(6 + 3 + 2 * v.length);
+	var b8 = !opts || opts.biff == 8;
+	var o = new_buf(6 + 2 + (+b8) + (1 + b8) * v.length);
 	write_XLSCell(R, C, 0, o);
 	o.write_shift(2, v.length);
-	o.write_shift(1, 1);
-	o.write_shift(2 * v.length, v, 'utf16le');
+	if(b8) o.write_shift(1, 1);
+	o.write_shift((1 + b8) * v.length, v, b8 ? 'utf16le' : 'sbcs');
 	return o;
 }
 
@@ -389,9 +392,10 @@ function parse_Dimensions(blob, length, opts) {
 	return {s: {r:r, c:c}, e: {r:R, c:C}};
 }
 function write_Dimensions(range, opts) {
-	var o = new_buf(14);
-	o.write_shift(4, range.s.r);
-	o.write_shift(4, range.e.r + 1);
+	var w = opts.biff == 8 || !opts.biff ? 4 : 2;
+	var o = new_buf(2*w + 6);
+	o.write_shift(w, range.s.r);
+	o.write_shift(w, range.e.r + 1);
 	o.write_shift(2, range.s.c);
 	o.write_shift(2, range.e.c + 1);
 	o.write_shift(2, 0);
@@ -598,7 +602,7 @@ function parse_Lbl(blob, length, opts) {
 	var name = parse_XLUnicodeStringNoCch(blob, cch, opts);
 	if(flags & 0x20) name = XLSLblBuiltIn[name.charCodeAt(0)];
 	var npflen = target - blob.l; if(opts && opts.biff == 2) --npflen;
-	var rgce = target == blob.l || cce == 0 ? [] : parse_NameParsedFormula(blob, npflen, opts, cce);
+	var rgce = target == blob.l || cce === 0 ? [] : parse_NameParsedFormula(blob, npflen, opts, cce);
 	return {
 		chKey: chKey,
 		Name: name,

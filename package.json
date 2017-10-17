@@ -1,8 +1,8 @@
 {
 	"name": "xlsx",
-	"version": "0.11.5",
+	"version": "0.11.6",
 	"author": "sheetjs",
-	"description": "Excel (XLSB/XLSX/XLS/XML) ODS and other spreadsheet format (CSV/DIF/DBF/SYLK) parser and writer",
+	"description": "SheetJS Spreadsheet data parser and writer",
 	"keywords": [ "excel", "xls", "xlsx", "xlsb", "xlsm", "ods", "csv", "dbf", "dif", "sylk", "office", "spreadsheet" ],
 	"bin": {
 		"xlsx": "./bin/xlsx.njs"
@@ -17,20 +17,20 @@
 		"fs": false
 	},
 	"dependencies": {
-		"exit-on-epipe":"~1.0.1",
-		"ssf":"~0.10.1",
-		"codepage":"~1.11.0",
-		"cfb":"~0.13.1",
-		"crc-32":"~1.1.1",
-		"adler-32":"~1.1.0",
-		"commander":"~2.11.0"
+		"exit-on-epipe": "~1.0.1",
+		"ssf": "~0.10.1",
+		"codepage": "~1.11.0",
+		"cfb": "~0.13.1",
+		"crc-32": "~1.1.1",
+		"adler-32": "~1.1.0",
+		"commander": "~2.11.0"
 	},
 	"devDependencies": {
-		"mocha":"~2.5.3",
+		"mocha": "~2.5.3",
 		"blanket": "~1.2.3",
-		"@sheetjs/uglify-js":"~2.7.3",
-		"@types/node":"^8.0.7",
-		"@types/commander":"^2.9.0",
+		"@sheetjs/uglify-js": "~2.7.3",
+		"@types/node": "^8.0.7",
+		"@types/commander": "^2.9.0",
 		"jsdom": "~11.1.0",
 		"dtslint": "^0.1.2",
 		"typescript": "2.2.0"
@@ -39,6 +39,8 @@
 	"scripts": {
 		"pretest": "git submodule init && git submodule update",
 		"test": "make travis",
+		"build": "make",
+		"lint": "make fullint",
 		"dtslint": "dtslint types"
 	},
 	"config": {

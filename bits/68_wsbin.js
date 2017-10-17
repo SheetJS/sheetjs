@@ -261,7 +261,9 @@ function parse_BrtHLink(data, length, opts) {
 	var tooltip = parse_XLWideString(data);
 	var display = parse_XLWideString(data);
 	data.l = end;
-	return {rfx:rfx, relId:relId, loc:loc, Tooltip:tooltip, display:display};
+	var o = ({rfx:rfx, relId:relId, loc:loc, display:display}/*:any*/);
+	if(tooltip) o.Tooltip = tooltip;
+	return o;
 }
 function write_BrtHLink(l, rId, o) {
 	if(o == null) o = new_buf(50+4*l[1].Target.length);
@@ -319,25 +321,16 @@ function write_BrtColInfo(C/*:number*/, col, o) {
 }
 
 /* [MS-XLSB] 2.4.672 BrtMargins */
-function parse_BrtMargins(data, length, opts) {
-	return {
-		left: parse_Xnum(data, 8),
-		right: parse_Xnum(data, 8),
-		top: parse_Xnum(data, 8),
-		bottom: parse_Xnum(data, 8),
-		header: parse_Xnum(data, 8),
-		footer: parse_Xnum(data, 8)
-	};
+var BrtMarginKeys = ["left","right","top","bottom","header","footer"];
+function parse_BrtMargins(data, length, opts)/*:Margins*/ {
+	var margins = ({}/*:any*/);
+	BrtMarginKeys.forEach(function(k) { margins[k] = parse_Xnum(data, 8); });
+	return margins;
 }
-function write_BrtMargins(margins, o) {
+function write_BrtMargins(margins/*:Margins*/, o) {
 	if(o == null) o = new_buf(6*8);
 	default_margins(margins);
-	write_Xnum(margins.left, o);
-	write_Xnum(margins.right, o);
-	write_Xnum(margins.top, o);
-	write_Xnum(margins.bottom, o);
-	write_Xnum(margins.header, o);
-	write_Xnum(margins.footer, o);
+	BrtMarginKeys.forEach(function(k) { write_Xnum((margins/*:any*/)[k], o); });
 	return o;
 }
 
@@ -641,13 +634,13 @@ function parse_ws_bin(data, _opts, rels, wb, themes, styles)/*:Worksheet*/ {
 /* TODO: something useful -- this is a stub */
 function write_ws_bin_cell(ba/*:BufArray*/, cell/*:Cell*/, R/*:number*/, C/*:number*/, opts, ws/*:Worksheet*/) {
 	if(cell.v === undefined) return "";
-	var vv = ""; var olddate = null;
+	var vv = "";
 	switch(cell.t) {
 		case 'b': vv = cell.v ? "1" : "0"; break;
 		case 'd': // no BrtCellDate :(
+			cell = dup(cell);
 			cell.z = cell.z || SSF._table[14];
-			olddate = cell.v;
-			cell.v = datenum((cell.v/*:any*/)); cell.t = 'n';
+			cell.v = datenum(parseDate(cell.v)); cell.t = 'n';
 			break;
 		/* falls through */
 		case 'n': case 'e': vv = ''+cell.v; break;
@@ -673,7 +666,6 @@ function write_ws_bin_cell(ba/*:BufArray*/, cell/*:Cell*/, R/*:number*/, C/*:num
 			/* TODO: determine threshold for Real vs RK */
 			if(cell.v == (cell.v | 0) && cell.v > -1000 && cell.v < 1000) write_record(ba, "BrtCellRk", write_BrtCellRk(cell, o));
 			else write_record(ba, "BrtCellReal", write_BrtCellReal(cell, o));
-			if(olddate) { cell.t = 'd'; cell.v = olddate; }
 			return;
 		case 'b':
 			o.t = "b";

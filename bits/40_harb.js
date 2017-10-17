@@ -55,13 +55,14 @@ function dbf_to_aoa(buf, opts)/*:AOA*/ {
 	/* header */
 	var ft = d.read_shift(1);
 	var memo = false;
-	var vfp = false;
+	var vfp = false, l7 = false;
 	switch(ft) {
 		case 0x02: case 0x03: break;
 		case 0x30: vfp = true; memo = true; break;
 		case 0x31: vfp = true; break;
 		case 0x83: memo = true; break;
 		case 0x8B: memo = true; break;
+		case 0x8C: memo = true; l7 = true; break;
 		case 0xF5: memo = true; break;
 		default: throw new Error("DBF Unsupported Version: " + ft.toString(16));
 	}
@@ -84,36 +85,42 @@ function dbf_to_aoa(buf, opts)/*:AOA*/ {
 
 	d.l+=2;
 	}
+	if(l7) d.l += 36;
 	var fields = [], field = {};
-	var hend = fpos - 10 - (vfp ? 264 : 0);
+	var hend = fpos - 10 - (vfp ? 264 : 0), ww = l7 ? 32 : 11;
 	while(ft == 0x02 ? d.l < d.length && d[d.l] != 0x0d: d.l < hend) {
 		field = {};
-		field.name = cptable.utils.decode(current_cp, d.slice(d.l, d.l+10)).replace(/[\u0000\r\n].*$/g,"");
-		d.l += 11;
+		field.name = cptable.utils.decode(current_cp, d.slice(d.l, d.l+ww)).replace(/[\u0000\r\n].*$/g,"");
+		d.l += ww;
 		field.type = String.fromCharCode(d.read_shift(1));
-		if(ft != 0x02) field.offset = d.read_shift(4);
+		if(ft != 0x02 && !l7) field.offset = d.read_shift(4);
 		field.len = d.read_shift(1);
 		if(ft == 0x02) field.offset = d.read_shift(2);
 		field.dec = d.read_shift(1);
 		if(field.name.length) fields.push(field);
-		if(ft != 0x02) d.l += 14;
+		if(ft != 0x02) d.l += l7 ? 13 : 14;
 		switch(field.type) {
-			// case 'B': break; // Binary
-			case 'C': break; // character
-			case 'D': break; // date
-			case 'F': break; // floating point
-			// case 'G': break; // General
-			case 'I': break; // long
-			case 'L': break; // boolean
-			case 'M': break; // memo
-			case 'N': break; // number
-			// case 'O': break; // double
-			// case 'P': break; // Picture
-			case 'T': break; // datetime
-			case 'Y': break; // currency
-			case '0': break; // null ?
-			case '+': break; // autoincrement
-			case '@': break; // timestamp
+			case 'B': // VFP Double
+				if((!vfp || field.len != 8) && opts.WTF) console.log('Skipping ' + field.name + ':' + field.type);
+				break;
+			case 'G': // General
+			case 'P': // Picture
+				if(opts.WTF) console.log('Skipping ' + field.name + ':' + field.type);
+				break;
+			case 'C': // character
+			case 'D': // date
+			case 'F': // floating point
+			case 'I': // long
+			case 'L': // boolean
+			case 'M': // memo
+			case 'N': // number
+			case 'O': // double
+			case 'T': // datetime
+			case 'Y': // currency
+			case '0': // VFP _NullFlags
+			case '@': // timestamp
+			case '+': // autoincrement
+				break;
 			default: throw new Error('Unknown Field Type: ' + field.type);
 		}
 	}
@@ -145,7 +152,7 @@ function dbf_to_aoa(buf, opts)/*:AOA*/ {
 					else out[R][C] = s;
 					break;
 				case 'F': out[R][C] = parseFloat(s.trim()); break;
-				case 'I': out[R][C] = dd.read_shift(4, 'i'); break;
+				case '+': case 'I': out[R][C] = l7 ? dd.read_shift(-4, 'i') ^ 0x80000000 : dd.read_shift(4, 'i'); break;
 				case 'L': switch(s.toUpperCase()) {
 					case 'Y': case 'T': out[R][C] = true; break;
 					case 'N': case 'F': out[R][C] = false; break;
@@ -154,15 +161,16 @@ function dbf_to_aoa(buf, opts)/*:AOA*/ {
 					} break;
 				case 'M': /* TODO: handle memo files */
 					if(!memo) throw new Error("DBF Unexpected MEMO for type " + ft.toString(16));
-					out[R][C] = "##MEMO##" + dd.read_shift(4);
+					out[R][C] = "##MEMO##" + (l7 ? parseInt(s.trim(), 10): dd.read_shift(4));
 					break;
 				case 'N': out[R][C] = +s.replace(/\u0000/g,"").trim(); break;
-				case 'T':
-					var day = dd.read_shift(4), ms = dd.read_shift(4);
-					throw new Error(day + " | " + ms);
-					//out[R][C] = new Date(); // TODO
-					//break;
-				case 'Y': out[R][C] = dd.read(4,'i')/1e4; break;
+				case '@': out[R][C] = new Date(dd.read_shift(-8, 'f') - 0x388317533400); break;
+				case 'T': out[R][C] = new Date((dd.read_shift(4) - 0x253D8C) * 0x5265C00 + dd.read_shift(4)); break;
+				case 'Y': out[R][C] = dd.read_shift(4,'i')/1e4; break;
+				case 'O': out[R][C] = -dd.read_shift(-8, 'f'); break;
+				case 'B': if(vfp && fields[C].len == 8) { out[R][C] = dd.read_shift(8,'f'); break; }
+					/* falls through */
+				case 'G': case 'P': dd.l += fields[C].len; break;
 				case '0':
 					if(fields[C].name === '_NullFlags') break;
 					/* falls through */
@@ -269,7 +277,7 @@ var SYLK = (function() {
 					cw = record[rj].substr(1).split(" ");
 					for(j = parseInt(cw[0], 10); j <= parseInt(cw[1], 10); ++j) {
 						Mval = parseInt(cw[2], 10);
-						colinfo[j-1] = Mval == 0 ? {hidden:true}: {wch:Mval}; process_col(colinfo[j-1]);
+						colinfo[j-1] = Mval === 0 ? {hidden:true}: {wch:Mval}; process_col(colinfo[j-1]);
 					} break;
 				case 'C': /* default column format */
 					C = parseInt(record[rj].substr(1))-1;
@@ -279,7 +287,7 @@ var SYLK = (function() {
 					R = parseInt(record[rj].substr(1))-1;
 					if(!rowinfo[R]) rowinfo[R] = {};
 					if(Mval > 0) { rowinfo[R].hpt = Mval; rowinfo[R].hpx = pt2px(Mval); }
-					else if(Mval == 0) rowinfo[R].hidden = true;
+					else if(Mval === 0) rowinfo[R].hidden = true;
 					break;
 				default: if(opts && opts.WTF) throw new Error("SYLK bad record " + rstr);
 			}
@@ -514,16 +522,16 @@ var PRN = (function() {
 
 	// List of accepted CSV separators
 	var guess_seps = {
-		0x2C: ',',
-		0x09: "\t",
-		0x3B: ';'
+		/*::[*/0x2C/*::]*/: ',',
+		/*::[*/0x09/*::]*/: "\t",
+		/*::[*/0x3B/*::]*/: ';'
 	};
 
 	// CSV separator weights to be used in case of equal numbers
 	var guess_sep_weights = {
-		0x2C: 3,
-		0x09: 2,
-		0x3B: 1
+		/*::[*/0x2C/*::]*/: 3,
+		/*::[*/0x09/*::]*/: 2,
+		/*::[*/0x3B/*::]*/: 1
 	};
 
 	function guess_sep(str) {
@@ -567,9 +575,9 @@ var PRN = (function() {
 			var s = str.slice(start, end);
 			var cell = ({}/*:any*/);
 			if(s.charAt(0) == '"' && s.charAt(s.length - 1) == '"') s = s.slice(1,-1).replace(/""/g,'"');
-			if(s.length == 0) cell.t = 'z';
+			if(s.length === 0) cell.t = 'z';
 			else if(o.raw) { cell.t = 's'; cell.v = s; }
-			else if(s.trim().length == 0) { cell.t = 's'; cell.v = s; }
+			else if(s.trim().length === 0) { cell.t = 's'; cell.v = s; }
 			else if(s.charCodeAt(0) == 0x3D) {
 				if(s.charCodeAt(1) == 0x22 && s.charCodeAt(s.length - 1) == 0x22) { cell.t = 's'; cell.v = s.slice(2,-1).replace(/""/g,'"'); }
 				else if(fuzzyfmla(s)) { cell.t = 'n'; cell.f = s.substr(1); }
@@ -642,7 +650,7 @@ var PRN = (function() {
 				if(!cell || cell.v == null) { oo.push("          "); continue; }
 				var w = (cell.w || (format_cell(cell), cell.w) || "").substr(0,10);
 				while(w.length < 10) w += " ";
-				oo.push(w + (C == 0 ? " " : ""));
+				oo.push(w + (C === 0 ? " " : ""));
 			}
 			o.push(oo.join(""));
 		}

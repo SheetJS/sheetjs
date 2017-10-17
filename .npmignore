@@ -29,6 +29,7 @@ tmp
 *.html
 *.sheetjs
 *.exe
+*.img
 .gitignore
 .fossaignore
 .spelling

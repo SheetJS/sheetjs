@@ -9,7 +9,7 @@ Despite the library name `xlsx`, it supports numerous spreadsheet file formats:
 | Excel 2007+ Binary Format (XLSB BIFF12)                      |  :o:  |  :o:  |
 | Excel 2003-2004 XML Format (XML "SpreadsheetML")             |  :o:  |  :o:  |
 | Excel 97-2004 (XLS BIFF8)                                    |  :o:  |  :o:  |
-| Excel 5.0/95 (XLS BIFF5)                                     |  :o:  |       |
+| Excel 5.0/95 (XLS BIFF5)                                     |  :o:  |  :o:  |
 | Excel 4.0 (XLS/XLW BIFF4)                                    |  :o:  |       |
 | Excel 3.0 (XLS BIFF3)                                        |  :o:  |       |
 | Excel 2.0/2.1 (XLS BIFF2)                                    |  :o:  |  :o:  |
@@ -28,7 +28,7 @@ Despite the library name `xlsx`, it supports numerous spreadsheet file formats:
 | Quattro Pro Spreadsheet (WQ1/WQ2/WB1/WB2/WB3/QPW)            |  :o:  |       |
 | **Other Common Spreadsheet Output Formats**                  |:-----:|:-----:|
 | HTML Tables                                                  |  :o:  |  :o:  |
-| RTF Tables                                                   |       |  :o:  |
+| Rich Text Format tables (RTF)                                |       |  :o:  |
 
 ### Excel 2007+ XML (XLSX/XLSM)
 

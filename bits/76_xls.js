@@ -38,11 +38,11 @@ function slurp(R, blob, length/*:number*/, opts) {
 	var l = length;
 	var bufs = [];
 	var d = blob.slice(blob.l,blob.l+l);
-	if(opts && opts.enc && opts.enc.insitu_decrypt) switch(R.n) {
+	if(opts && opts.enc && opts.enc.insitu) switch(R.n) {
 	case 'BOF': case 'FilePass': case 'FileLock': case 'InterfaceHdr': case 'RRDInfo': case 'RRDHead': case 'UsrExcl': break;
 	default:
 		if(d.length === 0) break;
-		opts.enc.insitu_decrypt(d);
+		opts.enc.insitu(d);
 	}
 	bufs.push(d);
 	blob.l += l;
