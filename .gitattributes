@@ -1,0 +1,5 @@
+*.md        text eol=lf
+bits/*.js   text eol=lf
+test.js     text eol=lf
+xlsx*.js    text eol=lf
+*.flow.js   text eol=lf

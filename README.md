@@ -2401,6 +2401,22 @@ make book -- rebuild README and summary
 make help -- display this message
 ```
 
+As explained in [Test Files](#test-files), on Windows the release ZIP file must
+be downloaded and extracted.  If Bash on Windows is available, it is possible
+to run the OSX/Linux workflow.  The following steps prepares the environment:
+
+```bash
+# Install support programs for the build and test commands
+sudo apt-get install make git subversion mercurial
+
+# Install nodejs and NPM within the WSL
+wget -qO- https://deb.nodesource.com/setup_8.x | sudo bash
+sudo apt-get install nodejs
+
+# Install dev dependencies
+sudo npm install -g mocha voc blanket xlsjs
+```
+
 </details>
 
 ### Tests
@@ -2463,3 +2479,4 @@ granted by the Apache 2.0 License are reserved by the Original Author.
 - ISO/IEC 29500:2012(E) "Information technology — Document description and processing languages — Office Open XML File Formats"
 - Open Document Format for Office Applications Version 1.2 (29 September 2011)
 - Worksheet File Format (From Lotus) December 1984
+

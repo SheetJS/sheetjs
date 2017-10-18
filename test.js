@@ -541,6 +541,7 @@ describe('parse options', function() {
 		});
 		it('bookProps && bookSheets should not generate sheets', function() {
 			PMPaths.forEach(function(p) {
+				if(!fs.existsSync(p)) return;
 				var wb = X.read(fs.readFileSync(p), {type:TYPE, bookProps:true, bookSheets:true});
 				assert(typeof wb.Sheets === 'undefined');
 			});
