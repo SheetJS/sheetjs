@@ -660,7 +660,8 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 					/* empty */
 				} break;
 				case 'CodeName': {
-					/* empty */
+					/*:: if(!Workbook.WBProps) Workbook.WBProps = {}; */
+					if(!cur_sheet) Workbook.WBProps.codeName = val;
 				} break;
 				case 'GUIDTypeLib': {
 					/* empty */
@@ -894,5 +895,6 @@ function write_xlscfb(wb/*:Workbook*/, opts/*:WriteOpts*/)/*:CFBContainer*/ {
 	}
 	CFB.utils.cfb_add(cfb, wbpath, write_biff_buf(wb, o));
 	// TODO: SI, DSI, CO
+	if(o.biff == 8 && wb.vbaraw) fill_vba_xls(cfb, CFB.read(wb.vbaraw, {type: typeof wb.vbaraw == "string" ? "binary" : "buffer"}));
 	return cfb;
 }

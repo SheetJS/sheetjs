@@ -72,6 +72,7 @@ digraph G {
 		txt -> csf
 		csf -> txt
 		dbf -> csf
+		csf -> dbf
 		html -> csf
 		csf -> html
 	}

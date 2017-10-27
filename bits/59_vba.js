@@ -7,3 +7,12 @@ function make_vba_xls(cfb/*:CFBContainer*/) {
 	});
 	return CFB.write(newcfb);
 }
+
+function fill_vba_xls(cfb/*:CFBContainer*/, vba/*:CFBContainer*/)/*:void*/ {
+	vba.FullPaths.forEach(function(p, i) {
+		if(i == 0) return;
+		var newpath = p.replace(/[^/]*[/]/, "/_VBA_PROJECT_CUR/");
+		if(newpath.slice(-1) !== "/") CFB.utils.cfb_add(cfb, newpath, vba.FileIndex[i].content);
+	});
+}
+

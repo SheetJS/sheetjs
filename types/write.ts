@@ -102,7 +102,7 @@ wb.SheetNames.push("Hidden");
 wb.Sheets["Hidden"] = XLSX.utils.aoa_to_sheet(["Hidden".split(""), [1,2,3]]);
 wb.Workbook = {Sheets:[]};
 wb.Workbook.Sheets[1] = {Hidden:1};
-const data_2 = ["Hidden".split(""), [1,2,3]];
+const data_2 = ["Hidden".split(""), [1,true,3,'a',,'c'], [2,false,true,'sh33t',,'j5']];
 XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(data_2), "Hidden");
 XLSX.utils.book_set_sheet_visibility(wb, "Hidden", XLSX.utils.consts.SHEET_HIDDEN);
 
@@ -161,6 +161,7 @@ const filenames: Array<[string]|[string, XLSX.WritingOptions]> = [
 	['sheetjs.slk'],
 	['sheetjs.htm'],
 	['sheetjs.dif'],
+	['sheetjs.dbf', {sheet:"Hidden"}],
 	['sheetjs.rtf'],
 	['sheetjs.prn']
 ];

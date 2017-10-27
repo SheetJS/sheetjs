@@ -53,6 +53,7 @@ init: ## Initial setup for development
 DISTHDR=misc/suppress_export.js
 .PHONY: dist
 dist: dist-deps $(TARGET) bower.json ## Prepare JS files for distribution
+	mkdir -p dist
 	<$(TARGET) sed "s/require('stream')/{}/g;s/require('....*')/undefined/g" > dist/$(TARGET)
 	cp LICENSE dist/
 	uglifyjs $(DISTHDR) dist/$(TARGET) $(UGLIFYOPTS) -o dist/$(LIB).min.js --source-map dist/$(LIB).min.map --preamble "$$(head -n 1 bits/00_header.js)"
@@ -64,15 +65,17 @@ dist: dist-deps $(TARGET) bower.json ## Prepare JS files for distribution
 
 .PHONY: dist-deps
 dist-deps: ## Copy dependencies for distribution
+	mkdir -p dist
 	cp node_modules/codepage/dist/cpexcel.full.js dist/cpexcel.js
 	cp jszip.js dist/jszip.js
 
 .PHONY: aux
 aux: $(AUXTARGETS)
 
+BYTEFILE=dist/xlsx.min.js dist/xlsx.{core,full}.min.js
 .PHONY: bytes
 bytes: ## Display minified and gzipped file sizes
-	for i in dist/xlsx.min.js dist/xlsx.{core,full}.min.js; do printj "%-30s %7d %10d" $$i $$(wc -c < $$i) $$(gzip --best --stdout $$i | wc -c); done
+	for i in $(BYTEFILE); do printj "%-30s %7d %10d" $$i $$(wc -c < $$i) $$(gzip --best --stdout $$i | wc -c); done
 
 .PHONY: graph
 graph: formats.png legend.png ## Rebuild format conversion graph
@@ -176,7 +179,8 @@ old-lint: $(TARGET) $(AUXTARGETS) ## Run jshint and jscs checks
 .PHONY: tslint
 tslint: $(TARGET) ## Run typescript checks
 	#@npm install dtslint typescript
-	@npm run-script dtslint
+	#@npm run-script dtslint
+	dtslint types
 
 .PHONY: flow
 flow: lint ## Run flow checker

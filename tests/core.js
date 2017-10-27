@@ -22,7 +22,7 @@ var opts = ({cellNF: true}/*:any*/);
 var TYPE = browser ? "binary" : "buffer";
 opts.type = TYPE;
 var fullex = [".xlsb", /*".xlsm",*/ ".xlsx"/*, ".xlml", ".xls"*/];
-var ofmt = ["xlsb", "xlsm", "xlsx", "ods", "biff2", "biff5", "biff8", "xlml", "sylk", "dif"];
+var ofmt = ["xlsb", "xlsm", "xlsx", "ods", "biff2", "biff5", "biff8", "xlml", "sylk", "dif", "dbf"];
 var ex = fullex.slice(); ex = ex.concat([".ods", ".xls", ".xml", ".fods"]);
 if(typeof process != 'undefined' && ((process||{}).env)) {
 	opts.WTF = true;
@@ -505,7 +505,7 @@ describe('parse options', function() {
 				X.utils.sheet_to_csv(wb.Sheets.Merge);
 				X.utils.sheet_to_json(wb.Sheets.Merge);
 				X.utils.sheet_to_formulae(wb.Sheets.Merge);
-				ofmt.forEach(function(f) { X.write(wb, {type:TYPE, bookType:f}); });
+				ofmt.forEach(function(f) { if(f != "dbf") X.write(wb, {type:TYPE, bookType:f}); });
 			});
 		});
 		function checkcells(wb, A46, B26, C16, D2) {
@@ -541,6 +541,7 @@ describe('parse options', function() {
 		});
 		it('bookProps && bookSheets should not generate sheets', function() {
 			PMPaths.forEach(function(p) {
+				if(!fs.existsSync(p)) return;
 				var wb = X.read(fs.readFileSync(p), {type:TYPE, bookProps:true, bookSheets:true});
 				assert(typeof wb.Sheets === 'undefined');
 			});
@@ -624,6 +625,7 @@ describe('output formats', function() {
 		["sylk",  false,   true],
 		["html",   true,   true],
 		["dif",   false,   true],
+		["dbf",   false,  false],
 		["prn",   false,   true]
 	];
 	function RT(T) {
@@ -763,7 +765,7 @@ describe('parse features', function() {
 
 	describe('comments', function() {
 		if(fs.existsSync(paths.swcxlsx)) it('should have comment as part of cell properties', function(){
-			var X = require(modp);
+			X = require(modp);
 			var sheet = 'Sheet1';
 			var wb1=X.read(fs.readFileSync(paths.swcxlsx), {type:TYPE});
 			var wb2=X.read(fs.readFileSync(paths.swcxlsb), {type:TYPE});
@@ -1866,10 +1868,11 @@ describe('js -> file -> js', function() {
 	var wb, BIN="binary";
 	var bef = (function() {
 		var ws = X.utils.aoa_to_sheet([
-			[1,2,3],
-			[true, false, null, "sheetjs"],
-			["foo", "bar", fixdate, "0.3"],
-			["baz", 6.9, "qux"]
+			["number", "bool", "string",  "date"],
+			[1,        true,   "sheet"],
+			[2,        false,  "dot"],
+			[6.9,      false,  "JS", fixdate],
+			[72.62,    true,   "0.3"]
 		]);
 		wb = { SheetNames: ['Sheet1'], Sheets: {Sheet1: ws} };
 	});
@@ -1883,13 +1886,13 @@ describe('js -> file -> js', function() {
 		it(f, function() {
 			var newwb = X.read(X.write(wb, {type:BIN, bookType: f}), {type:BIN});
 			var cb = function(cell) { eqcell(wb, newwb, 'Sheet1', cell); };
-			['A1', 'B1', 'C1'].forEach(cb); /* int */
-			['B4'].forEach(cb); /* double */
-			['A2', 'B2'].forEach(cb); /* bool */
-			['D2', 'A3', 'B3', 'A4', 'C4'].forEach(cb);	/* string */
-			if(!DIF_XL) cb('C3'); /* date */
-			if(DIF_XL && f == "dif") assert.equal(get_cell(newwb.Sheets.Sheet1, 'D3').v, '=""0.3""');// dif forces string formula
-			else eqcell(wb, newwb, 'Sheet1', 'D3');
+			['A2', 'A3'].forEach(cb); /* int */
+			['A4', 'A5'].forEach(cb); /* double */
+			['B2', 'B3'].forEach(cb); /* bool */
+			['C2', 'C3'].forEach(cb); /* string */
+			if(!DIF_XL) cb('D4'); /* date */
+			if(DIF_XL && f == "dif") assert.equal(get_cell(newwb.Sheets.Sheet1, 'C5').v, '=""0.3""');// dif forces string formula
+			else eqcell(wb, newwb, 'Sheet1', 'C5');
 		});
 	});
 });

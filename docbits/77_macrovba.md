@@ -2,8 +2,9 @@
 
 VBA Macros are stored in a special data blob that is exposed in the `vbaraw`
 property of the workbook object when the `bookVBA` option is `true`.  They are
-supported in `XLSM`, `XLSB`, and `BIFF8 XLS` formats.  The `XLSM` and `XLSB`
-writers automatically insert the data blobs if it is present in the workbook.
+supported in `XLSM`, `XLSB`, and `BIFF8 XLS` formats.  The supported format
+writers automatically insert the data blobs if it is present in the workbook and
+associate with the worksheet names.
 
 <details>
 	<summary><b>Macrosheets</b> (click to show)</summary>

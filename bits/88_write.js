@@ -87,13 +87,15 @@ function writeSync(wb/*:Workbook*/, opts/*:?WriteOpts*/) {
 		case 'txt': return write_stxt_type(write_txt_str(wb, o), o);
 		case 'csv': return write_string_type(write_csv_str(wb, o), o, "\ufeff");
 		case 'dif': return write_string_type(write_dif_str(wb, o), o);
+		// $FlowIgnore
+		case 'dbf': return write_binary_type(write_dbf_buf(wb, o), o);
 		case 'prn': return write_string_type(write_prn_str(wb, o), o);
 		case 'rtf': return write_string_type(write_rtf_str(wb, o), o);
 		case 'fods': return write_string_type(write_ods(wb, o), o);
 		case 'biff2': if(!o.biff) o.biff = 2; /* falls through */
 		case 'biff3': if(!o.biff) o.biff = 3; /* falls through */
 		case 'biff4': if(!o.biff) o.biff = 4; return write_binary_type(write_biff_buf(wb, o), o);
-		case 'biff5': if(!o.biff) o.biff = 5; return write_cfb_type(wb, o);
+		case 'biff5': if(!o.biff) o.biff = 5; /* falls through */
 		case 'biff8':
 		case 'xls': if(!o.biff) o.biff = 8; return write_cfb_type(wb, o);
 		case 'xlsx':
@@ -104,26 +106,17 @@ function writeSync(wb/*:Workbook*/, opts/*:?WriteOpts*/) {
 	}
 }
 
-function resolve_book_type(o/*?WriteFileOpts*/) {
-	if(!o.bookType) switch(o.file.slice(o.file.lastIndexOf(".")).toLowerCase()) {
-		case '.xlsx': o.bookType = 'xlsx'; break;
-		case '.xlsm': o.bookType = 'xlsm'; break;
-		case '.xlsb': o.bookType = 'xlsb'; break;
-		case '.fods': o.bookType = 'fods'; break;
-		case '.xlml': o.bookType = 'xlml'; break;
-		case '.sylk': o.bookType = 'sylk'; break;
-		case '.html': o.bookType = 'html'; break;
-		case '.xls': o.bookType = 'biff8'; break;
-		case '.xml': o.bookType = 'xml'; break;
-		case '.ods': o.bookType = 'ods'; break;
-		case '.csv': o.bookType = 'csv'; break;
-		case '.txt': o.bookType = 'txt'; break;
-		case '.dif': o.bookType = 'dif'; break;
-		case '.prn': o.bookType = 'prn'; break;
-		case '.rtf': o.bookType = 'rtf'; break;
-		case '.slk': o.bookType = 'sylk'; break;
-		case '.htm': o.bookType = 'html'; break;
-	}
+function resolve_book_type(o/*:WriteFileOpts*/) {
+	if(o.bookType) return;
+	var _BT = {
+		"xls": "biff8",
+		"htm": "html",
+		"slk": "sylk",
+		"Sh33tJS": "WTF"
+	};
+	var ext = o.file.slice(o.file.lastIndexOf(".")).toLowerCase();
+	if(ext.match(/^\.[a-z]+$/)) o.bookType = ext.slice(1);
+	o.bookType = _BT[o.bookType] || o.bookType;
 }
 
 function writeFileSync(wb/*:Workbook*/, filename/*:string*/, opts/*:?WriteFileOpts*/) {

@@ -34,6 +34,7 @@ program
 	.option('-A, --arrays',   'emit rows as JS objects (raw numbers)')
 	.option('-H, --html', 'emit HTML to <sheetname> or <file>.html')
 	.option('-D, --dif',  'emit DIF  to <sheetname> or <file>.dif (Lotus DIF)')
+	.option('-U, --dbf',  'emit DBF  to <sheetname> or <file>.dbf (MSVFP DBF)')
 	.option('-K, --sylk', 'emit SYLK to <sheetname> or <file>.slk (Excel SYLK)')
 	.option('-P, --prn',  'emit PRN  to <sheetname> or <file>.prn (Lotus PRN)')
 	.option('-t, --txt',  'emit TXT  to <sheetname> or <file>.txt (UTF-8 TSV)')
@@ -186,6 +187,7 @@ try {
 	['prn', '.prn'],
 	['rtf', '.rtf'],
 	['txt', '.txt'],
+	['dbf', '.dbf'],
 	['dif', '.dif']
 ].forEach(function(m) { if(program[m[0]] || isfmt(m[1])) {
 		wopts.bookType = m[0];

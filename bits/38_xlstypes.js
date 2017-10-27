@@ -362,6 +362,14 @@ function parse_XLUnicodeString2(blob, length, opts) {
 	if(cch === 0) { blob.l++; return ""; }
 	return blob.read_shift(cch, 'sbcs-cont');
 }
+/* TODO: BIFF5 and lower, codepage awareness */
+function write_XLUnicodeString(str, opts, o) {
+	if(!o) o = new_buf(3 + 2 * str.length);
+	o.write_shift(2, str.length);
+	o.write_shift(1, 1);
+	o.write_shift(31, str, 'utf16le');
+	return o;
+}
 
 /* [MS-XLS] 2.5.61 ControlInfo */
 function parse_ControlInfo(blob, length, opts) {

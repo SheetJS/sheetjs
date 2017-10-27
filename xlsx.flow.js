@@ -4,7 +4,7 @@
 /*global global, exports, module, require:false, process:false, Buffer:false */
 var XLSX = {};
 (function make_xlsx(XLSX){
-XLSX.version = '0.11.6';
+XLSX.version = '0.11.7';
 var current_codepage = 1200;
 /*:: declare var cptable:any; */
 /*global cptable:true */
@@ -1089,7 +1089,7 @@ type CFBFiles = {[n:string]:CFBEntry};
 /* [MS-CFB] v20130118 */
 var CFB = (function _CFB(){
 var exports/*:CFBModule*/ = /*::(*/{}/*:: :any)*/;
-exports.version = '0.13.1';
+exports.version = '0.13.2';
 /* [MS-CFB] 2.6.4 */
 function namecmp(l/*:string*/, r/*:string*/)/*:number*/ {
 	var L = l.split("/"), R = r.split("/");
@@ -1110,6 +1110,8 @@ function filename(p/*:string*/)/*:string*/ {
 	var c = p.lastIndexOf("/");
 	return (c === -1) ? p : p.slice(c+1);
 }
+var fs/*:: = require('fs'); */;
+function get_fs() { return fs || (fs = require('fs')); }
 function parse(file/*:RawBytes*/, options/*:CFBReadOpts*/)/*:CFBContainer*/ {
 var mver = 3;
 var ssz = 512;
@@ -1407,9 +1409,8 @@ function read_date(blob/*:RawBytes|CFBlob*/, offset/*:number*/)/*:Date*/ {
 	return new Date(( ( (__readUInt32LE(blob,offset+4)/1e7)*Math.pow(2,32)+__readUInt32LE(blob,offset)/1e7 ) - 11644473600)*1000);
 }
 
-var fs/*:: = require('fs'); */;
 function read_file(filename/*:string*/, options/*:CFBReadOpts*/) {
-	if(fs == null) fs = require('fs');
+	get_fs();
 	return parse(fs.readFileSync(filename), options);
 }
 
@@ -1689,6 +1690,7 @@ var consts = {
 };
 
 function write_file(cfb/*:CFBContainer*/, filename/*:string*/, options/*:CFBWriteOpts*/)/*:void*/ {
+	get_fs();
 	var o = _write(cfb, options);
 	/*:: if(typeof Buffer == 'undefined' || !Buffer.isBuffer(o) || !(o instanceof Buffer)) throw new Error("unreachable"); */
 	fs.writeFileSync(filename, o);
@@ -1703,7 +1705,7 @@ function a2s(o/*:RawBytes*/)/*:string*/ {
 function write(cfb/*:CFBContainer*/, options/*:CFBWriteOpts*/)/*:RawBytes|string*/ {
 	var o = _write(cfb, options);
 	switch(options && options.type) {
-		case "file": fs.writeFileSync(options.filename, (o/*:any*/)); return o;
+		case "file": get_fs(); fs.writeFileSync(options.filename, (o/*:any*/)); return o;
 		case "binary": return a2s(o);
 		case "base64": return Base64.encode(a2s(o));
 	}
@@ -1719,13 +1721,13 @@ function cfb_add(cfb/*:CFBContainer*/, name/*:string*/, content/*:?RawBytes*/, o
 	init_cfb(cfb);
 	var file = CFB.find(cfb, name);
 	if(!file) {
-		var fpath = cfb.FullPaths[0];
+		var fpath/*:string*/ = cfb.FullPaths[0];
 		if(name.slice(0, fpath.length) == fpath) fpath = name;
 		else {
 			if(fpath.slice(-1) != "/") fpath += "/";
 			fpath = (fpath + name).replace("//","/");
 		}
-		file = ({name: filename(name)}/*:any*/);
+		file = ({name: filename(name), type: 2}/*:any*/);
 		cfb.FileIndex.push(file);
 		cfb.FullPaths.push(fpath);
 		CFB.utils.cfb_gc(cfb);
@@ -4424,6 +4426,14 @@ function parse_XLUnicodeString2(blob, length, opts) {
 	if(cch === 0) { blob.l++; return ""; }
 	return blob.read_shift(cch, 'sbcs-cont');
 }
+/* TODO: BIFF5 and lower, codepage awareness */
+function write_XLUnicodeString(str, opts, o) {
+	if(!o) o = new_buf(3 + 2 * str.length);
+	o.write_shift(2, str.length);
+	o.write_shift(1, 1);
+	o.write_shift(31, str, 'utf16le');
+	return o;
+}
 
 /* [MS-XLS] 2.5.61 ControlInfo */
 function parse_ControlInfo(blob, length, opts) {
@@ -5664,9 +5674,105 @@ function dbf_to_workbook(buf, opts)/*:Workbook*/ {
 	catch(e) { if(opts && opts.WTF) throw e; }
 	return ({SheetNames:[],Sheets:{}});
 }
+
+var _RLEN = { 'B': 8, 'C': 250, 'L': 1, 'D': 8, '?': 0, '': 0 };
+function sheet_to_dbf(ws/*:Worksheet*/, opts/*:WriteOpts*/) {
+	var o = opts || {};
+	if(o.type == "string") throw new Error("Cannot write DBF to JS string");
+	var ba = buf_array();
+	var aoa/*:AOA*/ = sheet_to_json(ws, {header:1, raw:true, cellDates:true});
+	var headers = aoa[0], data = aoa.slice(1);
+	var i = 0, j = 0, hcnt = 0, rlen = 1;
+	for(i = 0; i < headers.length; ++i) {
+		if(i == null) continue;
+		++hcnt;
+		if(typeof headers[i] !== 'string') throw new Error("DBF Invalid column name");
+		if(headers.indexOf(headers[i]) !== i) for(j=0; j<1024;++j)
+			if(headers.indexOf(headers[i] + "_" + j) == -1) { headers[i] += "_" + j; break; }
+	}
+	var range = safe_decode_range(ws['!ref']);
+	var coltypes = [];
+	for(i = 0; i <= range.e.c - range.s.c; ++i) {
+		var col/*:Array<any>*/ = [];
+		for(j=0; j < data.length; ++j) {
+			if(data[j][i] != null) col.push(data[j][i]);
+		}
+		if(col.length == 0 || headers[i] == null) { coltypes[i] = '?'; continue; }
+		var guess = '', _guess = '';
+		for(j = 0; j < col.length; ++j) {
+			switch(typeof col[j]) {
+				/* TODO: check if L2 compat is desired */
+				case 'number': _guess = 'B'; break;
+				case 'string': _guess = 'C'; break;
+				case 'boolean': _guess = 'L'; break;
+				case 'object': _guess = col[j] instanceof Date ? 'D' : 'C'; break;
+				default: _guess = 'C';
+			}
+			guess = guess && guess != _guess ? 'C' : _guess;
+			if(guess == 'C') break;
+		}
+		rlen += _RLEN[guess] || 0;
+		coltypes[i] = guess;
+	}
+
+	var h = ba.next(32);
+	h.write_shift(4, 0x13021130);
+	h.write_shift(4, data.length);
+	h.write_shift(2, 296 + 32 * hcnt);
+	h.write_shift(2, rlen);
+	for(i=0; i < 4; ++i) h.write_shift(4, 0);
+	h.write_shift(4, 0x00000300); // TODO: CP
+
+	for(i = 0, j = 0; i < headers.length; ++i) {
+		if(headers[i] == null) continue;
+		var hf = ba.next(32);
+		var _f = (headers[i].slice(-10) + "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00").slice(0, 11);
+		hf.write_shift(1, _f, "sbcs");
+		hf.write_shift(1, coltypes[i] == '?' ? 'C' : coltypes[i], "sbcs");
+		hf.write_shift(4, j);
+		hf.write_shift(1, _RLEN[coltypes[i]] || 0);
+		hf.write_shift(1, 0);
+		hf.write_shift(1, 0x02);
+		hf.write_shift(4, 0);
+		hf.write_shift(1, 0);
+		hf.write_shift(4, 0);
+		hf.write_shift(4, 0);
+		j += _RLEN[coltypes[i]] || 0;
+	}
+
+	var hb = ba.next(264);
+	hb.write_shift(4, 0x0000000D);
+	for(i=0; i < 65;++i) hb.write_shift(4, 0x00000000);
+	for(i=0; i < data.length; ++i) {
+		var rout = ba.next(rlen);
+		rout.write_shift(1, 0);
+		for(j=0; j<headers.length; ++j) {
+			if(headers[j] == null) continue;
+			switch(coltypes[j]) {
+				case 'L': rout.write_shift(1, data[i][j] == null ? 0x3F : data[i][j] ? 0x54 : 0x46); break;
+				case 'B': rout.write_shift(8, data[i][j]||0, 'f'); break;
+				case 'D':
+					if(!data[i][j]) rout.write_shift(8, "00000000", "sbcs");
+					else {
+						rout.write_shift(4, ("0000"+data[i][j].getFullYear()).slice(-4), "sbcs");
+						rout.write_shift(2, ("00"+(data[i][j].getMonth()+1)).slice(-2), "sbcs");
+						rout.write_shift(2, ("00"+data[i][j].getDate()).slice(-2), "sbcs");
+					} break;
+				case 'C':
+					var _s = String(data[i][j]||"");
+					rout.write_shift(1, _s, "sbcs");
+					for(hcnt=0; hcnt < 250-_s.length; ++hcnt) rout.write_shift(1, 0x20); break;
+			}
+		}
+		// data
+	}
+	ba.next(1).write_shift(1, 0x1A);
+	return ba.end();
+}
 	return {
 		to_workbook: dbf_to_workbook,
-		to_sheet: dbf_to_sheet
+		to_sheet: dbf_to_sheet,
+		from_sheet: sheet_to_dbf
 	};
 })();
 
@@ -8758,6 +8864,15 @@ function make_vba_xls(cfb/*:CFBContainer*/) {
 	});
 	return CFB.write(newcfb);
 }
+
+function fill_vba_xls(cfb/*:CFBContainer*/, vba/*:CFBContainer*/)/*:void*/ {
+	vba.FullPaths.forEach(function(p, i) {
+		if(i == 0) return;
+		var newpath = p.replace(/[^/]*[/]/, "/_VBA_PROJECT_CUR/");
+		if(newpath.slice(-1) !== "/") CFB.utils.cfb_add(cfb, newpath, vba.FileIndex[i].content);
+	});
+}
+
 RELS.DS = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/dialogsheet";
 RELS.MS = "http://schemas.microsoft.com/office/2006/relationships/xlMacrosheet";
 
@@ -15246,7 +15361,8 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 					/* empty */
 				} break;
 				case 'CodeName': {
-					/* empty */
+					/*:: if(!Workbook.WBProps) Workbook.WBProps = {}; */
+					if(!cur_sheet) Workbook.WBProps.codeName = val;
 				} break;
 				case 'GUIDTypeLib': {
 					/* empty */
@@ -15480,6 +15596,7 @@ function write_xlscfb(wb/*:Workbook*/, opts/*:WriteOpts*/)/*:CFBContainer*/ {
 	}
 	CFB.utils.cfb_add(cfb, wbpath, write_biff_buf(wb, o));
 	// TODO: SI, DSI, CO
+	if(o.biff == 8 && wb.vbaraw) fill_vba_xls(cfb, CFB.read(wb.vbaraw, {type: typeof wb.vbaraw == "string" ? "binary" : "buffer"}));
 	return cfb;
 }
 /* [MS-XLSB] 2.3 Record Enumeration */
@@ -16876,6 +16993,8 @@ function write_ws_biff8(idx/*:number*/, opts, wb/*:Workbook*/) {
 			write_ws_biff8_cell(ba, cell, R, C, opts);
 		}
 	}
+	var cname = ((((wb||{}).Workbook||{}).Sheets||[])[idx]||{}).name||s;
+	write_biff_rec(ba, "CodeName", write_XLUnicodeString(cname, opts));
 	/* ... */
 	write_biff_rec(ba, "EOF");
 	return ba.end();
@@ -16895,6 +17014,11 @@ function write_biff8_global(wb/*:Workbook*/, bufs, opts/*:WriteOpts*/) {
 	write_biff_rec(A, "CodePage", writeuint16(b8 ? 0x04b0 : 0x04E4));
 	if(b8) write_biff_rec(A, "DSF", writeuint16(0));
 	write_biff_rec(A, "RRTabId", write_RRTabId(wb.SheetNames.length));
+	if(b8 && wb.vbaraw) {
+		write_biff_rec(A, "ObProj");
+		var cname = ((wb.Workbook||{}).WBProps||{}).codeName || "ThisWorkbook";
+		write_biff_rec(A, "CodeName", write_XLUnicodeString(cname, opts));
+	}
 	write_biff_rec(A, "BuiltInFnGroupCount", writeuint16(0x11));
 	write_biff_rec(A, "WinProtect", writebool(false));
 	write_biff_rec(A, "Protect", writebool(false));
@@ -17868,12 +17992,16 @@ function write_ods(wb/*:any*/, opts/*:any*/) {
 	return zip;
 }
 
-/* actual implementation elsewhere, wrappers are for read/write */
+function write_sheet_index(wb/*:Workbook*/, sheet/*:?string*/)/*:number*/ {
+	if(!sheet) return 0;
+	var idx = wb.SheetNames.indexOf(sheet);
+	if(idx == -1) throw new Error("Sheet not found: " + sheet);
+	return idx;
+}
+
 function write_obj_str(factory/*:WriteObjStrFactory*/) {
 	return function write_str(wb/*:Workbook*/, o/*:WriteOpts*/)/*:string*/ {
-		var idx = 0;
-		for(var i=0;i<wb.SheetNames.length;++i) if(wb.SheetNames[i] == o.sheet) idx=i;
-		if(idx == 0 && !!o.sheet && wb.SheetNames[0] != o.sheet) throw new Error("Sheet not found: " + o.sheet);
+		var idx = write_sheet_index(wb, o.sheet);
 		return factory.from_sheet(wb.Sheets[wb.SheetNames[idx]], o, wb);
 	};
 }
@@ -17885,6 +18013,9 @@ var write_dif_str = write_obj_str(DIF);
 var write_prn_str = write_obj_str(PRN);
 var write_rtf_str = write_obj_str(RTF);
 var write_txt_str = write_obj_str({from_sheet:sheet_to_txt});
+// $FlowIgnore
+var write_dbf_buf = write_obj_str(DBF);
+
 function fix_opts_func(defaults/*:Array<Array<any> >*/)/*:{(o:any):void}*/ {
 	return function fix_opts(opts) {
 		for(var i = 0; i != defaults.length; ++i) {
@@ -18461,13 +18592,15 @@ function writeSync(wb/*:Workbook*/, opts/*:?WriteOpts*/) {
 		case 'txt': return write_stxt_type(write_txt_str(wb, o), o);
 		case 'csv': return write_string_type(write_csv_str(wb, o), o, "\ufeff");
 		case 'dif': return write_string_type(write_dif_str(wb, o), o);
+		// $FlowIgnore
+		case 'dbf': return write_binary_type(write_dbf_buf(wb, o), o);
 		case 'prn': return write_string_type(write_prn_str(wb, o), o);
 		case 'rtf': return write_string_type(write_rtf_str(wb, o), o);
 		case 'fods': return write_string_type(write_ods(wb, o), o);
 		case 'biff2': if(!o.biff) o.biff = 2; /* falls through */
 		case 'biff3': if(!o.biff) o.biff = 3; /* falls through */
 		case 'biff4': if(!o.biff) o.biff = 4; return write_binary_type(write_biff_buf(wb, o), o);
-		case 'biff5': if(!o.biff) o.biff = 5; return write_cfb_type(wb, o);
+		case 'biff5': if(!o.biff) o.biff = 5; /* falls through */
 		case 'biff8':
 		case 'xls': if(!o.biff) o.biff = 8; return write_cfb_type(wb, o);
 		case 'xlsx':
@@ -18478,26 +18611,17 @@ function writeSync(wb/*:Workbook*/, opts/*:?WriteOpts*/) {
 	}
 }
 
-function resolve_book_type(o/*?WriteFileOpts*/) {
-	if(!o.bookType) switch(o.file.slice(o.file.lastIndexOf(".")).toLowerCase()) {
-		case '.xlsx': o.bookType = 'xlsx'; break;
-		case '.xlsm': o.bookType = 'xlsm'; break;
-		case '.xlsb': o.bookType = 'xlsb'; break;
-		case '.fods': o.bookType = 'fods'; break;
-		case '.xlml': o.bookType = 'xlml'; break;
-		case '.sylk': o.bookType = 'sylk'; break;
-		case '.html': o.bookType = 'html'; break;
-		case '.xls': o.bookType = 'biff8'; break;
-		case '.xml': o.bookType = 'xml'; break;
-		case '.ods': o.bookType = 'ods'; break;
-		case '.csv': o.bookType = 'csv'; break;
-		case '.txt': o.bookType = 'txt'; break;
-		case '.dif': o.bookType = 'dif'; break;
-		case '.prn': o.bookType = 'prn'; break;
-		case '.rtf': o.bookType = 'rtf'; break;
-		case '.slk': o.bookType = 'sylk'; break;
-		case '.htm': o.bookType = 'html'; break;
-	}
+function resolve_book_type(o/*:WriteFileOpts*/) {
+	if(o.bookType) return;
+	var _BT = {
+		"xls": "biff8",
+		"htm": "html",
+		"slk": "sylk",
+		"Sh33tJS": "WTF"
+	};
+	var ext = o.file.slice(o.file.lastIndexOf(".")).toLowerCase();
+	if(ext.match(/^\.[a-z]+$/)) o.bookType = ext.slice(1);
+	o.bookType = _BT[o.bookType] || o.bookType;
 }
 
 function writeFileSync(wb/*:Workbook*/, filename/*:string*/, opts/*:?WriteFileOpts*/) {

@@ -38,7 +38,7 @@ type CFBFiles = {[n:string]:CFBEntry};
 /* [MS-CFB] v20130118 */
 var CFB = (function _CFB(){
 var exports/*:CFBModule*/ = /*::(*/{}/*:: :any)*/;
-exports.version = '0.13.1';
+exports.version = '0.13.2';
 /* [MS-CFB] 2.6.4 */
 function namecmp(l/*:string*/, r/*:string*/)/*:number*/ {
 	var L = l.split("/"), R = r.split("/");
@@ -59,6 +59,8 @@ function filename(p/*:string*/)/*:string*/ {
 	var c = p.lastIndexOf("/");
 	return (c === -1) ? p : p.slice(c+1);
 }
+var fs/*:: = require('fs'); */;
+function get_fs() { return fs || (fs = require('fs')); }
 function parse(file/*:RawBytes*/, options/*:CFBReadOpts*/)/*:CFBContainer*/ {
 var mver = 3;
 var ssz = 512;
@@ -356,9 +358,8 @@ function read_date(blob/*:RawBytes|CFBlob*/, offset/*:number*/)/*:Date*/ {
 	return new Date(( ( (__readUInt32LE(blob,offset+4)/1e7)*Math.pow(2,32)+__readUInt32LE(blob,offset)/1e7 ) - 11644473600)*1000);
 }
 
-var fs/*:: = require('fs'); */;
 function read_file(filename/*:string*/, options/*:CFBReadOpts*/) {
-	if(fs == null) fs = require('fs');
+	get_fs();
 	return parse(fs.readFileSync(filename), options);
 }
 
@@ -638,6 +639,7 @@ var consts = {
 };
 
 function write_file(cfb/*:CFBContainer*/, filename/*:string*/, options/*:CFBWriteOpts*/)/*:void*/ {
+	get_fs();
 	var o = _write(cfb, options);
 	/*:: if(typeof Buffer == 'undefined' || !Buffer.isBuffer(o) || !(o instanceof Buffer)) throw new Error("unreachable"); */
 	fs.writeFileSync(filename, o);
@@ -652,7 +654,7 @@ function a2s(o/*:RawBytes*/)/*:string*/ {
 function write(cfb/*:CFBContainer*/, options/*:CFBWriteOpts*/)/*:RawBytes|string*/ {
 	var o = _write(cfb, options);
 	switch(options && options.type) {
-		case "file": fs.writeFileSync(options.filename, (o/*:any*/)); return o;
+		case "file": get_fs(); fs.writeFileSync(options.filename, (o/*:any*/)); return o;
 		case "binary": return a2s(o);
 		case "base64": return Base64.encode(a2s(o));
 	}
@@ -668,13 +670,13 @@ function cfb_add(cfb/*:CFBContainer*/, name/*:string*/, content/*:?RawBytes*/, o
 	init_cfb(cfb);
 	var file = CFB.find(cfb, name);
 	if(!file) {
-		var fpath = cfb.FullPaths[0];
+		var fpath/*:string*/ = cfb.FullPaths[0];
 		if(name.slice(0, fpath.length) == fpath) fpath = name;
 		else {
 			if(fpath.slice(-1) != "/") fpath += "/";
 			fpath = (fpath + name).replace("//","/");
 		}
-		file = ({name: filename(name)}/*:any*/);
+		file = ({name: filename(name), type: 2}/*:any*/);
 		cfb.FileIndex.push(file);
 		cfb.FullPaths.push(fpath);
 		CFB.utils.cfb_gc(cfb);

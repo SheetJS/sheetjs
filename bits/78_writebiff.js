@@ -138,6 +138,8 @@ function write_ws_biff8(idx/*:number*/, opts, wb/*:Workbook*/) {
 			write_ws_biff8_cell(ba, cell, R, C, opts);
 		}
 	}
+	var cname = ((((wb||{}).Workbook||{}).Sheets||[])[idx]||{}).name||s;
+	write_biff_rec(ba, "CodeName", write_XLUnicodeString(cname, opts));
 	/* ... */
 	write_biff_rec(ba, "EOF");
 	return ba.end();
@@ -157,6 +159,11 @@ function write_biff8_global(wb/*:Workbook*/, bufs, opts/*:WriteOpts*/) {
 	write_biff_rec(A, "CodePage", writeuint16(b8 ? 0x04b0 : 0x04E4));
 	if(b8) write_biff_rec(A, "DSF", writeuint16(0));
 	write_biff_rec(A, "RRTabId", write_RRTabId(wb.SheetNames.length));
+	if(b8 && wb.vbaraw) {
+		write_biff_rec(A, "ObProj");
+		var cname = ((wb.Workbook||{}).WBProps||{}).codeName || "ThisWorkbook";
+		write_biff_rec(A, "CodeName", write_XLUnicodeString(cname, opts));
+	}
 	write_biff_rec(A, "BuiltInFnGroupCount", writeuint16(0x11));
 	write_biff_rec(A, "WinProtect", writebool(false));
 	write_biff_rec(A, "Protect", writebool(false));

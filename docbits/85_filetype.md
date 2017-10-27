@@ -23,7 +23,7 @@ Despite the library name `xlsx`, it supports numerous spreadsheet file formats:
 | OpenDocument Spreadsheet (ODS)                               |  :o:  |  :o:  |
 | Flat XML ODF Spreadsheet (FODS)                              |  :o:  |  :o:  |
 | Uniform Office Format Spreadsheet (标文通 UOS1/UOS2)         |  :o:  |       |
-| dBASE II/III/IV / Visual FoxPro (DBF)                        |  :o:  |       |
+| dBASE II/III/IV / Visual FoxPro (DBF)                        |  :o:  |  :o:  |
 | Lotus 1-2-3 (WKS/WK1/WK2/WK3/WK4/123)                        |  :o:  |       |
 | Quattro Pro Spreadsheet (WQ1/WQ2/WB1/WB2/WB3/QPW)            |  :o:  |       |
 | **Other Common Spreadsheet Output Formats**                  |:-----:|:-----:|
@@ -192,10 +192,12 @@ Many older formats supported only one worksheet:
 
 DBF is really a typed table format: each column can only hold one data type and
 each record omits type information.  The parser generates a header row and
-inserts records starting at the second row of the worksheet.
+inserts records starting at the second row of the worksheet.  The writer makes
+files compatible with Visual FoxPro extensions.
 
 Multi-file extensions like external memos and tables are currently unsupported,
-limited by the general ability to read arbitrary files in the web browser.
+limited by the general ability to read arbitrary files in the web browser.  The
+reader understands DBF Level 7 extensions like DATETIME.
 
 </details>
 
