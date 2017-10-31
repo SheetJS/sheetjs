@@ -164,7 +164,7 @@ var matchtag = (function() {
 })();
 
 function htmldecode(str/*:string*/)/*:string*/ {
-	return str.trim().replace(/\s+/g, " ").replace(/<\s*[bB][rR]\s*\/?/g,"\n").replace(/<[^>]*>/g,"").replace(/&nbsp;/g, " ");
+	return str.trim().replace(/\s+/g, " ").replace(/<\s*[bB][rR]\s*\/?>/g,"\n").replace(/<[^>]*>/g,"").replace(/&nbsp;/g, " ");
 }
 
 var vtregex = (function(){ var vt_cache = {};
