@@ -55,10 +55,6 @@ type CFBModule = {
 	utils:CFBUtils;
 };
 
-type CFBFullPathDir = {
-	[n:string]: CFBEntry;
-}
-
 type CFBUtils = any;
 
 type CheckFieldFunc = {(hexstr:string, fld:string):void;};
@@ -114,7 +110,6 @@ type CFBContainer = {
 		sectors:Array<any>;
 	};
 	FileIndex:CFBFileIndex;
-	FullPathDir:CFBFullPathDir;
 	FullPaths:Array<string>;
 }
 

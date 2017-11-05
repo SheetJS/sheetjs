@@ -1,5 +1,5 @@
 /* xlsx.js (C) 2013-present  SheetJS -- http://sheetjs.com */
-import * as XLSX from 'xlsx';
+import XLSX from 'xlsx';
 
 import React, { Component } from 'react';
 import { AppRegistry, StyleSheet, Text, View, Button, Alert, Image } from 'react-native';

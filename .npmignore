@@ -31,6 +31,7 @@ tmp
 *.exe
 *.img
 .gitignore
+.gitattributes
 .fossaignore
 .spelling
 .eslintrc

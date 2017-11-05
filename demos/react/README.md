@@ -10,7 +10,7 @@ into web pages with script tags:
 The library can also be imported directly from JSX code with:
 
 ```js
-import * as XLSX from 'xlsx';
+import XLSX from 'xlsx';
 ```
 
 This demo shows a simple JSX component transpiled in the browser using the babel

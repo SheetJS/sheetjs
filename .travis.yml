@@ -1,5 +1,6 @@
 language: node_js
 node_js:
+  - "9"
   - "8"
   - "7"
   - "6"
@@ -9,16 +10,18 @@ matrix:
       env: TZ="America/New_York" FMTS=misc
     - node_js: "8"
       env: TZ="America/Los_Angeles"
-    - node_js: "6"
-      env: TZ="Europe/London" FMTS=misc
     - node_js: "8"
+      env: TZ="Europe/London" FMTS=misc
+    - node_js: "6"
       env: TZ="Europe/Berlin"
     - node_js: "6"
       env: TZ="Asia/Kolkata" FMTS=misc
-    - node_js: "7"
+    - node_js: "9"
       env: TZ="Asia/Shanghai"
     - node_js: "8"
       env: TZ="Asia/Seoul" FMTS=misc
+    - node_js: "7"
+      env: TZ="America/Cancun" FMTS=misc
 
     - node_js: "5"
       env: TZ="America/Anchorage" FMTS=misc

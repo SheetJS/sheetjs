@@ -67,23 +67,16 @@ saveAs(new Blob([s2ab(wbout)]), 'SheetJS.xlsx');
 
 ## Switching between Angular versions
 
-Modules that work with Angular 2 largely work as-is with Angular 4.  Switching
+Modules that work with Angular 2 largely work as-is with Angular 4+.  Switching
 between versions is mostly a matter of installing the correct version of the
-core and associated modules.  This demo includes a `package.json` for Angular 2
-and another `package.json` for Angular 4.
+core and associated modules.  This demo includes `package.json-angular#` files
+for Angular 2, Angular 4, and Angular 5
 
-Switching to Angular 2 is as simple as:
+To test a particular Angular version, overwrite `package.json`:
 
 ```bash
+# switch to Angular 2
 $ cp package.json-angular2 package.json
-$ npm install
-$ ng serve
-```
-
-Switching to Angular 4 is as simple as:
-
-```bash
-$ cp package.json-angular4 package.json
 $ npm install
 $ ng serve
 ```

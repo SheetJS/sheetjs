@@ -1863,7 +1863,7 @@ describe('HTML', function() {
 		it('should generate strings if raw option is passed', function() { plaintext_test(X.utils.table_to_book(get_dom_element(html_str), {raw:true}), true, true); });
 		it('should handle newlines correctly', function() {
 			var table = get_dom_element("<table><tr><td>foo<br/>bar</td><td>baz</td></tr></table>");
-			var wb = X.utils.table_to_book(table)
+			var wb = X.utils.table_to_book(table);
 			assert.equal(get_cell(wb.Sheets.Sheet1, "A1").v, "foo\nbar");
 		});
 	});

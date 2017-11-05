@@ -188,7 +188,7 @@ The [`demos` directory](demos/) includes sample projects for:
 
 **Frameworks and APIs**
 - [`angular 1.x`](demos/angular/)
-- [`angular 2.x / 4.x`](demos/angular2/)
+- [`angular 2.x / 4.x / 5.x`](demos/angular2/)
 - [`meteor`](demos/meteor/)
 - [`react and react-native`](demos/react/)
 - [`vue 2.x and weex`](demos/vue/)
