@@ -33,7 +33,7 @@ state in this demo is shaped like the following object:
   cols: [{ name: "A", key: 0 }, { name: "B", key: 1 }, { name: "C", key: 2 }],
   data: [
     [ "id",    "name", "value" ],
-    [    1, "sheetjs",    7262 ]
+    [    1, "sheetjs",    7262 ],
     [    2, "js-xlsx",    6969 ]
   ]
 }
