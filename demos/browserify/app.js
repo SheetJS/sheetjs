@@ -3,7 +3,7 @@ var XLSX = require('../../'); // test against development version
 //var XLSX = require('xlsx'); // use in production
 /*jshint browser:true */
 /*global require */
-var X = require('xlsx');
+var X = XLSX;
 var XW = {
 	/* worker message */
 	msg: 'xlsx',

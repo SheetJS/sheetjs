@@ -66,7 +66,7 @@ var HTML_ = (function() {
 	function make_html_row(ws/*:Worksheet*/, r/*:Range*/, R/*:number*/, o/*:Sheet2HTMLOpts*/)/*:string*/ {
 		var M = (ws['!merges'] ||[]);
 		var oo = [];
-		var nullcell = "<td" + (o.editable ? ' contenteditable="true"' : "" ) + "></td>";
+		var nullcell = "<td>" + (o.editable ? '<span contenteditable="true"></span>' : "" ) + "</td>";
 		for(var C = r.s.c; C <= r.e.c; ++C) {
 			var RS = 0, CS = 0;
 			for(var j = 0; j < M.length; ++j) {
@@ -84,7 +84,7 @@ var HTML_ = (function() {
 			var sp = {};
 			if(RS > 1) sp.rowspan = RS;
 			if(CS > 1) sp.colspan = CS;
-			if(o.editable) sp.contenteditable = "true";
+			if(o.editable) w = '<span contenteditable="true">' + w + '</span>'
 			sp.id = "sjs-" + coord;
 			oo.push(writextag('td', w, sp));
 		}

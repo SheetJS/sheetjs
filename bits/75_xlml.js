@@ -151,7 +151,7 @@ function parse_xlml_data(xml, ss, data, cell/*:any*/, base, styles, csty, row, a
 		});
 		cell.s = S;
 	}
-	cell.ixfe = cell.StyleID !== undefined ? cell.StyleID : 'Default';
+	if(cell.StyleID !== undefined) cell.ixfe = cell.StyleID;
 }
 
 function xlml_clean_comment(comment/*:any*/) {

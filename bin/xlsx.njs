@@ -46,6 +46,7 @@ program
 	.option('--sst', 'generate shared string table for XLS* formats')
 	.option('--compress', 'use compression when writing XLSX/M/B and ODS')
 	.option('--read', 'read but do not generate output')
+	.option('--book', 'for single-sheet formats, emit a file per worksheet')
 	.option('--all', 'parse everything; write as much as possible')
 	.option('--dev', 'development mode')
 	.option('--sparse', 'sparse mode')
@@ -84,7 +85,6 @@ if(!filename) {
 	console.error(n + ": must specify a filename");
 	process.exit(1);
 }
-/*:: if(filename) { */
 if(!fs.existsSync(filename)) {
 	console.error(n + ": " + filename + ": No such file or directory");
 	process.exit(2);
@@ -112,6 +112,9 @@ if(seen) {
 } else if(program.formulae) opts.cellFormula = true;
 else opts.cellFormula = false;
 
+var wopts = ({WTF:opts.WTF, bookSST:program.sst}/*:any*/);
+if(program.compress) wopts.compression = true;
+
 if(program.all) {
 	opts.cellFormula = true;
 	opts.bookVBA = true;
@@ -120,6 +123,7 @@ if(program.all) {
 	opts.cellStyles = true;
 	opts.sheetStubs = true;
 	opts.cellDates = true;
+	wopts.cellStyles = true;
 }
 if(program.sparse) opts.dense = false; else opts.dense = true;
 
@@ -135,15 +139,12 @@ if(program.dev) {
 	process.exit(3);
 }
 if(program.read) process.exit(0);
-
-/*::   if(wb) { */
+if(!wb) { console.error(n + ": error parsing " + filename + ": empty workbook"); process.exit(0); }
+/*:: if(!wb) throw new Error("unreachable"); */
 if(program.listSheets) {
 	console.log((wb.SheetNames||[]).join("\n"));
 	process.exit(0);
 }
-
-var wopts = ({WTF:opts.WTF, bookSST:program.sst}/*:any*/);
-if(program.compress) wopts.compression = true;
 
 /* full workbook formats */
 workbook_formats.forEach(function(m) { if(program[m[0]] || isfmt(m[0])) {
@@ -176,6 +177,7 @@ try {
 	process.exit(4);
 }
 
+if(!program.quiet && !program.book) console.error(target_sheet);
 
 /* single worksheet file formats */
 [
@@ -190,27 +192,44 @@ try {
 	['dbf', '.dbf'],
 	['dif', '.dif']
 ].forEach(function(m) { if(program[m[0]] || isfmt(m[1])) {
-		wopts.bookType = m[0];
-		X.writeFile(wb, program.output || sheetname || ((filename || "") + m[1]), wopts);
-		process.exit(0);
+	wopts.bookType = m[0];
+	if(program.book) {
+		wb.SheetNames.forEach(function(n, i) {
+			wopts.sheet = n;
+			X.writeFile(wb, (program.output || sheetname || filename || "") + m[1] + "." + i, wopts);
+		});
+	} else X.writeFile(wb, program.output || sheetname || ((filename || "") + m[1]), wopts);
+	process.exit(0);
 } });
 
-var oo = "", strm = false;
-if(!program.quiet) console.error(target_sheet);
-if(program.formulae) oo = X.utils.sheet_to_formulae(ws).join("\n");
-else if(program.json) oo = JSON.stringify(X.utils.sheet_to_json(ws));
-else if(program.rawJs) oo = JSON.stringify(X.utils.sheet_to_json(ws,{raw:true}));
-else if(program.arrays) oo = JSON.stringify(X.utils.sheet_to_json(ws,{raw:true, header:1}));
-else {
-	strm = true;
-	var stream = X.stream.to_csv(ws, {FS:program.fieldSep, RS:program.rowSep});
-	if(program.output) stream.pipe(fs.createWriteStream(program.output));
-	else stream.pipe(process.stdout);
+function outit(o, fn) { if(fn) fs.writeFileSync(fn, o); else console.log(o); }
+
+function doit(cb) {
+	if(program.book) wb.SheetNames.forEach(function(n, i) {
+		outit(cb(wb.Sheets[n]), (program.output || sheetname || filename) + "." + i);
+	});
+	else outit(cb(ws), program.output);
 }
 
-if(!strm) {
-	if(program.output) fs.writeFileSync(program.output, oo);
-	else console.log(oo);
+var jso = {};
+switch(true) {
+	case program.formulae:
+		doit(function(ws) { return X.utils.sheet_to_formulae(ws).join("\n"); });
+		break;
+
+	case program.arrays: jso.header = 1;
+	/* falls through */
+	case program.rawJs: jso.raw = true;
+	/* falls through */
+	case program.json:
+		doit(function(ws) { return JSON.stringify(X.utils.sheet_to_json(ws,jso)); });
+		break;
+
+	default:
+		if(!program.book) {
+			var stream = X.stream.to_csv(ws, {FS:program.fieldSep, RS:program.rowSep});
+			if(program.output) stream.pipe(fs.createWriteStream(program.output));
+			else stream.pipe(process.stdout);
+		} else doit(function(ws) { return X.utils.sheet_to_csv(ws,{FS:program.fieldSep, RS:program.rowSep}); });
+		break;
 }
-/*::   } */
-/*:: } */

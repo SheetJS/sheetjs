@@ -1,9 +1,22 @@
 {
 	"name": "xlsx",
-	"version": "0.11.8",
+	"version": "0.11.9",
 	"author": "sheetjs",
 	"description": "SheetJS Spreadsheet data parser and writer",
-	"keywords": [ "excel", "xls", "xlsx", "xlsb", "xlsm", "ods", "csv", "dbf", "dif", "sylk", "office", "spreadsheet" ],
+	"keywords": [
+		"excel",
+		"xls",
+		"xlsx",
+		"xlsb",
+		"xlsm",
+		"ods",
+		"csv",
+		"dbf",
+		"dif",
+		"sylk",
+		"office",
+		"spreadsheet"
+	],
 	"bin": {
 		"xlsx": "./bin/xlsx.njs"
 	},
@@ -17,13 +30,13 @@
 		"fs": false
 	},
 	"dependencies": {
-		"exit-on-epipe": "~1.0.1",
-		"ssf": "~0.10.1",
-		"codepage": "~1.11.0",
-		"cfb": "~1.0.0",
-		"crc-32": "~1.1.1",
 		"adler-32": "~1.1.0",
-		"commander": "~2.11.0"
+		"cfb": "~1.0.0",
+		"codepage": "~1.11.0",
+		"commander": "~2.11.0",
+		"crc-32": "~1.1.1",
+		"exit-on-epipe": "~1.0.1",
+		"ssf": "~0.10.1"
 	},
 	"devDependencies": {
 		"mocha": "~2.5.3",
@@ -35,7 +48,10 @@
 		"dtslint": "^0.1.2",
 		"typescript": "2.2.0"
 	},
-	"repository": { "type":"git", "url":"git://github.com/SheetJS/js-xlsx.git" },
+	"repository": {
+		"type": "git",
+		"url": "git://github.com/SheetJS/js-xlsx.git"
+	},
 	"scripts": {
 		"pretest": "git submodule init && git submodule update",
 		"test": "make travis",
@@ -48,9 +64,18 @@
 			"pattern": "xlsx.js"
 		}
 	},
-	"alex": { "allow": ["wtf", "holes"] },
+	"alex": {
+		"allow": [
+			"wtf",
+			"holes"
+		]
+	},
 	"homepage": "http://sheetjs.com/opensource",
-	"bugs": { "url": "https://github.com/SheetJS/js-xlsx/issues" },
+	"bugs": {
+		"url": "https://github.com/SheetJS/js-xlsx/issues"
+	},
 	"license": "Apache-2.0",
-	"engines": { "node": ">=0.8" }
+	"engines": {
+		"node": ">=0.8"
+	}
 }

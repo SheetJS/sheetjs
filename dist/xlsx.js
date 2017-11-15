@@ -4,7 +4,7 @@
 /*global global, exports, module, require:false, process:false, Buffer:false */
 var XLSX = {};
 (function make_xlsx(XLSX){
-XLSX.version = '0.11.8';
+XLSX.version = '0.11.9';
 var current_codepage = 1200;
 /*global cptable:true */
 if(typeof module !== "undefined" && typeof require !== 'undefined') {
@@ -2430,7 +2430,7 @@ function recordhopper(data, cb, opts) {
 
 /* control buffer usage for fixed-length buffers */
 function buf_array() {
-	var bufs = [], blksz = 2048;
+	var bufs = [], blksz = has_buf ? 256 : 2048;
 	var newblk = function ba_newblk(sz) {
 		var o = (new_buf(sz));
 		prep_blob(o, 0);
@@ -6122,7 +6122,7 @@ var PRN = (function() {
 
 	function prn_to_sheet_str(str, opts) {
 		if(str.substr(0,4) == "sep=") return dsv_to_sheet_str(str, opts);
-		if(str.indexOf("\t") >= 0 || str.indexOf(",") >= 0) return dsv_to_sheet_str(str, opts);
+		if(str.indexOf("\t") >= 0 || str.indexOf(",") >= 0 || str.indexOf(";") >= 0) return dsv_to_sheet_str(str, opts);
 		return aoa_to_sheet(prn_to_aoa_str(str, opts), opts);
 	}
 
@@ -9545,12 +9545,43 @@ var PtgBinOp = {
 	PtgSub: "-"
 };
 function formula_quote_sheet_name(sname) {
-	if(!sname) return "";
+	if(!sname) throw new Error("empty sheet name");
 	if(sname.indexOf(" ") > -1) return "'" + sname + "'";
 	return sname;
 }
 function get_ixti_raw(supbooks, ixti, opts) {
-	return supbooks.SheetNames[ixti];
+	if(!supbooks) return "SH33TJSERR0";
+	if(!supbooks.XTI) return "SH33TJSERR6";
+	var XTI = supbooks.XTI[ixti];
+	if(opts.biff > 8 && !supbooks.XTI[ixti]) return supbooks.SheetNames[ixti];
+	if(opts.biff < 8) {
+		if(ixti > 10000) ixti-= 65536;
+		if(ixti < 0) ixti = -ixti;
+		return ixti == 0 ? "" : supbooks.XTI[ixti - 1];
+	}
+	if(!XTI) return "SH33TJSERR1";
+	var o = "";
+	if(opts.biff > 8) switch(supbooks[XTI[0]][0]) {
+		case 0x0165: /* 'BrtSupSelf' */
+			o = XTI[1] == -1 ? "#REF" : supbooks.SheetNames[XTI[1]];
+			return XTI[1] == XTI[2] ? o : o + ":" + supbooks.SheetNames[XTI[2]];
+		case 0x0166: /* 'BrtSupSame' */
+			if(opts.SID != null) return supbooks.SheetNames[opts.SID];
+			return "SH33TJSERR" + supbooks[XTI[0]][0];
+		case 0x0163: /* 'BrtSupBookSrc' */
+			/* falls through */
+		default: return "SH33TJSERR" + supbooks[XTI[0]][0];
+	}
+	switch(supbooks[XTI[0]][0][0]) {
+		case 0x0401:
+			o = XTI[1] == -1 ? "#REF" : (supbooks.SheetNames[XTI[1]] || "SH33TJSERR3");
+			return XTI[1] == XTI[2] ? o : o + ":" + supbooks.SheetNames[XTI[2]];
+		case 0x3A01: return "SH33TJSERR8";
+		default:
+			if(!supbooks[XTI[0]][0][3]) return "SH33TJSERR2";
+			o = XTI[1] == -1 ? "#REF" : (supbooks[XTI[0]][0][3][XTI[1]] || "SH33TJSERR4");
+			return XTI[1] == XTI[2] ? o : o + ":" + supbooks[XTI[0]][0][3][XTI[2]];
+	}
 }
 function get_ixti(supbooks, ixti, opts) {
 	return formula_quote_sheet_name(get_ixti_raw(supbooks, ixti, opts));
@@ -9672,7 +9703,8 @@ function stringify_formula(formula/*Array<any>*/, range, cell, supbooks, opts) {
 				break;
 			case 'PtgArea3d': /* 2.5.198.28 TODO */
 				type = f[1][0]; ixti = f[1][1]; r = f[1][2];
-				sname = (supbooks && supbooks[1] ? supbooks[1][ixti+1] : "**MISSING**");
+				//sname = (supbooks && supbooks[1] ? supbooks[1][ixti+1] : "**MISSING**");
+				sname = get_ixti(supbooks, ixti, opts);
 				stack.push(sname + "!" + encode_range_xls((r), opts));
 				break;
 			case 'PtgAttrSum': /* 2.5.198.41 */
@@ -9699,7 +9731,6 @@ function stringify_formula(formula/*Array<any>*/, range, cell, supbooks, opts) {
 					if(bookidx < 0) bookidx = -bookidx;
 					if(supbooks[bookidx]) externbook = supbooks[bookidx][nameidx];
 				} else {
-					var pnxname = supbooks.SheetNames[bookidx];
 					var o = "";
 					if(((supbooks[bookidx]||[])[0]||[])[0] == 0x3A01){/* empty */}
 					else if(((supbooks[bookidx]||[])[0]||[])[0] == 0x0401){
@@ -12259,12 +12290,14 @@ function parse_ws_bin(data, _opts, rels, wb, themes, styles) {
 
 	var array_formulae = [];
 	var shared_formulae = {};
-	var supbooks = ([[]]);
+	var supbooks = opts.supbooks || ([[]]);
 	supbooks.sharedf = shared_formulae;
 	supbooks.arrayf = array_formulae;
 	supbooks.SheetNames = wb.SheetNames || wb.Sheets.map(function(x) { return x.name; });
-	opts.supbooks = supbooks;
-	for(var i = 0; i < wb.Names.length; ++i) supbooks[0][i+1] = wb.Names[i];
+	if(!opts.supbooks) {
+		opts.supbooks = supbooks;
+		for(var i = 0; i < wb.Names.length; ++i) supbooks[0][i+1] = wb.Names[i];
+	}
 
 	var colinfo = [], rowinfo = [];
 	var defwidth = 0, defheight = 0; // twips / MDW respectively
@@ -13264,8 +13297,9 @@ function parse_wb_bin(data, opts) {
 	opts.biff = 12;
 
 	var Names = [];
-	var supbooks = ([]);
+	var supbooks = ([[]]);
 	supbooks.SheetNames = [];
+	supbooks.XTI = [];
 
 	recordhopper(data, function hopper_wb(val, R_n, RT) {
 		switch(RT) {
@@ -13277,7 +13311,9 @@ function parse_wb_bin(data, opts) {
 				wb.WBProps = val; break;
 
 			case 0x0027: /* 'BrtName' */
+				if(val.Sheet != null) opts.SID = val.Sheet;
 				val.Ref = stringify_formula(val.Ptg, null, null, supbooks, opts);
+				delete opts.SID;
 				delete val.Ptg;
 				Names.push(val);
 				break;
@@ -13287,7 +13323,15 @@ function parse_wb_bin(data, opts) {
 			case 0x0166: /* 'BrtSupSame' */
 			case 0x0163: /* 'BrtSupBookSrc' */
 			case 0x029B: /* 'BrtSupAddin' */
+				if(!supbooks[0].length) supbooks[0] = [RT, val];
+				else supbooks.push([RT, val]);
+				supbooks[supbooks.length - 1].XTI = [];
+				break;
 			case 0x016A: /* 'BrtExternSheet' */
+				if(supbooks.length === 0) { supbooks[0] = []; supbooks[0].XTI = []; }
+				supbooks[supbooks.length - 1].XTI = supbooks[supbooks.length - 1].XTI.concat(val);
+				supbooks.XTI = supbooks.XTI.concat(val);
+				break;
 			case 0x0169: /* 'BrtPlaceholderName' */
 				break;
 
@@ -13342,6 +13386,7 @@ function parse_wb_bin(data, opts) {
 	// $FlowIgnore
 	wb.Names = Names;
 
+	(wb).supbooks = supbooks;
 	return wb;
 }
 
@@ -13682,7 +13727,7 @@ function parse_xlml_data(xml, ss, data, cell, base, styles, csty, row, arrayf, o
 		});
 		cell.s = S;
 	}
-	cell.ixfe = cell.StyleID !== undefined ? cell.StyleID : 'Default';
+	if(cell.StyleID !== undefined) cell.ixfe = cell.StyleID;
 }
 
 function xlml_clean_comment(comment) {
@@ -15482,7 +15527,7 @@ else {
 	/* Quattro Pro 9 */
 	else if((_data=CFB.find(cfb, 'NativeContent_MAIN')) && _data.content) WorkbookP = WK_.to_workbook(_data.content, (options.type = T, options));
 	else throw new Error("Cannot find Workbook stream");
-	if(options.bookVBA && CFB.find(cfb, '/_VBA_PROJECT_CUR/VBA/dir')) WorkbookP.vbaraw = make_vba_xls(cfb);
+	if(options.bookVBA && cfb.FullPaths && CFB.find(cfb, '/_VBA_PROJECT_CUR/VBA/dir')) WorkbookP.vbaraw = make_vba_xls(cfb);
 }
 
 var props = {};
@@ -17058,7 +17103,7 @@ var HTML_ = (function() {
 	function make_html_row(ws, r, R, o) {
 		var M = (ws['!merges'] ||[]);
 		var oo = [];
-		var nullcell = "<td" + (o.editable ? ' contenteditable="true"' : "" ) + "></td>";
+		var nullcell = "<td>" + (o.editable ? '<span contenteditable="true"></span>' : "" ) + "</td>";
 		for(var C = r.s.c; C <= r.e.c; ++C) {
 			var RS = 0, CS = 0;
 			for(var j = 0; j < M.length; ++j) {
@@ -17076,7 +17121,7 @@ var HTML_ = (function() {
 			var sp = {};
 			if(RS > 1) sp.rowspan = RS;
 			if(CS > 1) sp.colspan = CS;
-			if(o.editable) sp.contenteditable = "true";
+			if(o.editable) w = '<span contenteditable="true">' + w + '</span>'
 			sp.id = "sjs-" + coord;
 			oo.push(writextag('td', w, sp));
 		}

@@ -691,12 +691,43 @@ var PtgBinOp = {
 	PtgSub: "-"
 };
 function formula_quote_sheet_name(sname/*:string*/)/*:string*/ {
-	if(!sname) return "";
+	if(!sname) throw new Error("empty sheet name");
 	if(sname.indexOf(" ") > -1) return "'" + sname + "'";
 	return sname;
 }
 function get_ixti_raw(supbooks, ixti/*:number*/, opts)/*:string*/ {
-	return supbooks.SheetNames[ixti];
+	if(!supbooks) return "SH33TJSERR0";
+	if(!supbooks.XTI) return "SH33TJSERR6";
+	var XTI = supbooks.XTI[ixti];
+	if(opts.biff > 8 && !supbooks.XTI[ixti]) return supbooks.SheetNames[ixti];
+	if(opts.biff < 8) {
+		if(ixti > 10000) ixti-= 65536;
+		if(ixti < 0) ixti = -ixti;
+		return ixti == 0 ? "" : supbooks.XTI[ixti - 1];
+	}
+	if(!XTI) return "SH33TJSERR1";
+	var o = "";
+	if(opts.biff > 8) switch(supbooks[XTI[0]][0]) {
+		case 0x0165: /* 'BrtSupSelf' */
+			o = XTI[1] == -1 ? "#REF" : supbooks.SheetNames[XTI[1]];
+			return XTI[1] == XTI[2] ? o : o + ":" + supbooks.SheetNames[XTI[2]];
+		case 0x0166: /* 'BrtSupSame' */
+			if(opts.SID != null) return supbooks.SheetNames[opts.SID];
+			return "SH33TJSERR" + supbooks[XTI[0]][0];
+		case 0x0163: /* 'BrtSupBookSrc' */
+			/* falls through */
+		default: return "SH33TJSERR" + supbooks[XTI[0]][0];
+	}
+	switch(supbooks[XTI[0]][0][0]) {
+		case 0x0401:
+			o = XTI[1] == -1 ? "#REF" : (supbooks.SheetNames[XTI[1]] || "SH33TJSERR3");
+			return XTI[1] == XTI[2] ? o : o + ":" + supbooks.SheetNames[XTI[2]];
+		case 0x3A01: return "SH33TJSERR8";
+		default:
+			if(!supbooks[XTI[0]][0][3]) return "SH33TJSERR2";
+			o = XTI[1] == -1 ? "#REF" : (supbooks[XTI[0]][0][3][XTI[1]] || "SH33TJSERR4");
+			return XTI[1] == XTI[2] ? o : o + ":" + supbooks[XTI[0]][0][3][XTI[2]];
+	}
 }
 function get_ixti(supbooks, ixti/*:number*/, opts)/*:string*/ {
 	return formula_quote_sheet_name(get_ixti_raw(supbooks, ixti, opts));
@@ -818,7 +849,8 @@ function stringify_formula(formula/*Array<any>*/, range, cell/*:any*/, supbooks,
 				break;
 			case 'PtgArea3d': /* 2.5.198.28 TODO */
 				type = f[1][0]; ixti = /*::Number(*/f[1][1]/*::)*/; r = f[1][2];
-				sname = (supbooks && supbooks[1] ? supbooks[1][ixti+1] : "**MISSING**");
+				//sname = (supbooks && supbooks[1] ? supbooks[1][ixti+1] : "**MISSING**");
+				sname = get_ixti(supbooks, ixti, opts);
 				stack.push(sname + "!" + encode_range_xls((r/*:any*/), opts));
 				break;
 			case 'PtgAttrSum': /* 2.5.198.41 */
@@ -845,7 +877,6 @@ function stringify_formula(formula/*Array<any>*/, range, cell/*:any*/, supbooks,
 					if(bookidx < 0) bookidx = -bookidx;
 					if(supbooks[bookidx]) externbook = supbooks[bookidx][nameidx];
 				} else {
-					var pnxname = supbooks.SheetNames[bookidx];
 					var o = "";
 					if(((supbooks[bookidx]||[])[0]||[])[0] == 0x3A01){/* empty */}
 					else if(((supbooks[bookidx]||[])[0]||[])[0] == 0x0401){

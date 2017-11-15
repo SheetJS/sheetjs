@@ -402,12 +402,14 @@ function parse_ws_bin(data, _opts, rels, wb, themes, styles)/*:Worksheet*/ {
 
 	var array_formulae = [];
 	var shared_formulae = {};
-	var supbooks = ([[]]/*:any*/);
+	var supbooks = opts.supbooks || ([[]]/*:any*/);
 	supbooks.sharedf = shared_formulae;
 	supbooks.arrayf = array_formulae;
 	supbooks.SheetNames = wb.SheetNames || wb.Sheets.map(function(x) { return x.name; });
-	opts.supbooks = supbooks;
-	for(var i = 0; i < wb.Names.length; ++i) supbooks[0][i+1] = wb.Names[i];
+	if(!opts.supbooks) {
+		opts.supbooks = supbooks;
+		for(var i = 0; i < wb.Names.length; ++i) supbooks[0][i+1] = wb.Names[i];
+	}
 
 	var colinfo = [], rowinfo = [];
 	var defwidth = 0, defheight = 0; // twips / MDW respectively

@@ -714,7 +714,7 @@ var PRN = (function() {
 
 	function prn_to_sheet_str(str/*:string*/, opts)/*:Worksheet*/ {
 		if(str.substr(0,4) == "sep=") return dsv_to_sheet_str(str, opts);
-		if(str.indexOf("\t") >= 0 || str.indexOf(",") >= 0) return dsv_to_sheet_str(str, opts);
+		if(str.indexOf("\t") >= 0 || str.indexOf(",") >= 0 || str.indexOf(";") >= 0) return dsv_to_sheet_str(str, opts);
 		return aoa_to_sheet(prn_to_aoa_str(str, opts), opts);
 	}
 

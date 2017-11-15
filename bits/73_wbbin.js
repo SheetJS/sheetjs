@@ -91,8 +91,9 @@ function parse_wb_bin(data, opts)/*:WorkbookFile*/ {
 	opts.biff = 12;
 
 	var Names = [];
-	var supbooks = ([]/*:any*/);
+	var supbooks = ([[]]/*:any*/);
 	supbooks.SheetNames = [];
+	supbooks.XTI = [];
 
 	recordhopper(data, function hopper_wb(val, R_n, RT) {
 		switch(RT) {
@@ -104,7 +105,9 @@ function parse_wb_bin(data, opts)/*:WorkbookFile*/ {
 				wb.WBProps = val; break;
 
 			case 0x0027: /* 'BrtName' */
+				if(val.Sheet != null) opts.SID = val.Sheet;
 				val.Ref = stringify_formula(val.Ptg, null, null, supbooks, opts);
+				delete opts.SID;
 				delete val.Ptg;
 				Names.push(val);
 				break;
@@ -114,7 +117,15 @@ function parse_wb_bin(data, opts)/*:WorkbookFile*/ {
 			case 0x0166: /* 'BrtSupSame' */
 			case 0x0163: /* 'BrtSupBookSrc' */
 			case 0x029B: /* 'BrtSupAddin' */
+				if(!supbooks[0].length) supbooks[0] = [RT, val];
+				else supbooks.push([RT, val]);
+				supbooks[supbooks.length - 1].XTI = [];
+				break;
 			case 0x016A: /* 'BrtExternSheet' */
+				if(supbooks.length === 0) { supbooks[0] = []; supbooks[0].XTI = []; }
+				supbooks[supbooks.length - 1].XTI = supbooks[supbooks.length - 1].XTI.concat(val);
+				supbooks.XTI = supbooks.XTI.concat(val);
+				break;
 			case 0x0169: /* 'BrtPlaceholderName' */
 				break;
 
@@ -169,6 +180,7 @@ function parse_wb_bin(data, opts)/*:WorkbookFile*/ {
 	// $FlowIgnore
 	wb.Names = Names;
 
+	(wb/*:any*/).supbooks = supbooks;
 	return wb;
 }
 
