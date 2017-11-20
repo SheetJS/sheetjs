@@ -13,25 +13,25 @@ function safe_parse_wbrels(wbrels, sheets) {
 	return !wbrels || wbrels.length === 0 ? null : wbrels;
 }
 
-function safe_parse_sheet(zip, path/*:string*/, relsPath/*:string*/, sheet, sheetRels, sheets, stype/*:string*/, opts, wb, themes, styles) {
+function safe_parse_sheet(zip, path/*:string*/, relsPath/*:string*/, sheet, idx/*:number*/, sheetRels, sheets, stype/*:string*/, opts, wb, themes, styles) {
 	try {
 		sheetRels[sheet]=parse_rels(getzipstr(zip, relsPath, true), path);
 		var data = getzipdata(zip, path);
 		switch(stype) {
-			case 'sheet': sheets[sheet]=parse_ws(data, path, opts,sheetRels[sheet], wb, themes, styles); break;
+			case 'sheet': sheets[sheet]=parse_ws(data, path, idx, opts, sheetRels[sheet], wb, themes, styles); break;
 			case 'chart':
-				var cs = parse_cs(data, path, opts,sheetRels[sheet], wb, themes, styles);
+				var cs = parse_cs(data, path, idx, opts, sheetRels[sheet], wb, themes, styles);
 				sheets[sheet] = cs;
 				if(!cs || !cs['!chart']) break;
 				var dfile = resolve_path(cs['!chart'].Target, path);
 				var drelsp = get_rels_path(dfile);
-				var draw = parse_drawing(getzipstr(zip, dfile, true), parse_rels(getzipstr(zip,drelsp,true), dfile));
+				var draw = parse_drawing(getzipstr(zip, dfile, true), parse_rels(getzipstr(zip, drelsp, true), dfile));
 				var chartp = resolve_path(draw, dfile);
 				var crelsp = get_rels_path(chartp);
-				cs = parse_chart(getzipstr(zip, chartp, true), chartp, opts, parse_rels(getzipstr(zip, crelsp,true), chartp), wb, cs);
+				cs = parse_chart(getzipstr(zip, chartp, true), chartp, opts, parse_rels(getzipstr(zip, crelsp, true), chartp), wb, cs);
 				break;
-			case 'macro': sheets[sheet]=parse_ms(data, path, opts,sheetRels[sheet], wb, themes, styles); break;
-			case 'dialog': sheets[sheet]=parse_ds(data, path, opts,sheetRels[sheet], wb, themes, styles); break;
+			case 'macro': sheets[sheet]=parse_ms(data, path, idx, opts, sheetRels[sheet], wb, themes, styles); break;
+			case 'dialog': sheets[sheet]=parse_ds(data, path, idx, opts, sheetRels[sheet], wb, themes, styles); break;
 		}
 	} catch(e) { if(opts.WTF) throw e; }
 }
@@ -147,7 +147,7 @@ function parse_zip(zip/*:ZIP*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
 			path = path.replace(/sheet0\./,"sheet.");
 		}
 		relsPath = path.replace(/^(.*)(\/)([^\/]*)$/, "$1/_rels/$3.rels");
-		safe_parse_sheet(zip, path, relsPath, props.SheetNames[i], sheetRels, sheets, stype, opts, wb, themes, styles);
+		safe_parse_sheet(zip, path, relsPath, props.SheetNames[i], i, sheetRels, sheets, stype, opts, wb, themes, styles);
 	}
 
 	if(dir.comments) parse_comments(zip, dir.comments, sheets, sheetRels, opts);

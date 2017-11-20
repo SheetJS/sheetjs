@@ -3,24 +3,24 @@ function parse_wb(data, name/*:string*/, opts)/*:WorkbookFile*/ {
 	return parse_wb_xml((data/*:any*/), opts);
 }
 
-function parse_ws(data, name/*:string*/, opts, rels, wb, themes, styles)/*:Worksheet*/ {
-	if(name.slice(-4)===".bin") return parse_ws_bin((data/*:any*/), opts, rels, wb, themes, styles);
-	return parse_ws_xml((data/*:any*/), opts, rels, wb, themes, styles);
+function parse_ws(data, name/*:string*/, idx/*:number*/, opts, rels, wb, themes, styles)/*:Worksheet*/ {
+	if(name.slice(-4)===".bin") return parse_ws_bin((data/*:any*/), opts, idx, rels, wb, themes, styles);
+	return parse_ws_xml((data/*:any*/), opts, idx, rels, wb, themes, styles);
 }
 
-function parse_cs(data, name/*:string*/, opts, rels, wb, themes, styles)/*:Worksheet*/ {
-	if(name.slice(-4)===".bin") return parse_cs_bin((data/*:any*/), opts, rels, wb, themes, styles);
-	return parse_cs_xml((data/*:any*/), opts, rels, wb, themes, styles);
+function parse_cs(data, name/*:string*/, idx/*:number*/, opts, rels, wb, themes, styles)/*:Worksheet*/ {
+	if(name.slice(-4)===".bin") return parse_cs_bin((data/*:any*/), opts, idx, rels, wb, themes, styles);
+	return parse_cs_xml((data/*:any*/), opts, idx, rels, wb, themes, styles);
 }
 
-function parse_ms(data, name/*:string*/, opts, rels, wb, themes, styles)/*:Worksheet*/ {
-	if(name.slice(-4)===".bin") return parse_ms_bin((data/*:any*/), opts, rels, wb, themes, styles);
-	return parse_ms_xml((data/*:any*/), opts, rels, wb, themes, styles);
+function parse_ms(data, name/*:string*/, idx/*:number*/, opts, rels, wb, themes, styles)/*:Worksheet*/ {
+	if(name.slice(-4)===".bin") return parse_ms_bin((data/*:any*/), opts, idx, rels, wb, themes, styles);
+	return parse_ms_xml((data/*:any*/), opts, idx, rels, wb, themes, styles);
 }
 
-function parse_ds(data, name/*:string*/, opts, rels, wb, themes, styles)/*:Worksheet*/ {
-	if(name.slice(-4)===".bin") return parse_ds_bin((data/*:any*/), opts, rels, wb, themes, styles);
-	return parse_ds_xml((data/*:any*/), opts, rels, wb, themes, styles);
+function parse_ds(data, name/*:string*/, idx/*:number*/, opts, rels, wb, themes, styles)/*:Worksheet*/ {
+	if(name.slice(-4)===".bin") return parse_ds_bin((data/*:any*/), opts, idx, rels, wb, themes, styles);
+	return parse_ds_xml((data/*:any*/), opts, idx, rels, wb, themes, styles);
 }
 
 function parse_sty(data, name/*:string*/, themes, opts) {

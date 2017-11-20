@@ -211,6 +211,12 @@ function write_WriteAccess(s/*:string*/, opts) {
 	return o;
 }
 
+/* 2.4.351 */
+function parse_WsBool(blob, length, opts) {
+	var flags = opts && opts.biff == 8 || length == 2 ? blob.read_shift(2) : (blob.l += length, 0);
+	return { fDialog: flags & 0x10 };
+}
+
 /* 2.4.28 */
 function parse_BoundSheet8(blob, length, opts) {
 	var pos = blob.read_shift(4);

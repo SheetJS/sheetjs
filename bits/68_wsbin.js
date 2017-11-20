@@ -382,7 +382,7 @@ function write_BrtSheetProtection(sp, o) {
 }
 
 /* [MS-XLSB] 2.1.7.61 Worksheet */
-function parse_ws_bin(data, _opts, rels, wb, themes, styles)/*:Worksheet*/ {
+function parse_ws_bin(data, _opts, idx, rels, wb, themes, styles)/*:Worksheet*/ {
 	if(!data) return data;
 	var opts = _opts || {};
 	if(!rels) rels = {'!id':{}};
@@ -412,7 +412,6 @@ function parse_ws_bin(data, _opts, rels, wb, themes, styles)/*:Worksheet*/ {
 	}
 
 	var colinfo = [], rowinfo = [];
-	var defwidth = 0, defheight = 0; // twips / MDW respectively
 	var seencol = false;
 
 	recordhopper(data, function ws_parse(val, R_n, RT) {
@@ -540,6 +539,11 @@ function parse_ws_bin(data, _opts, rels, wb, themes, styles)/*:Worksheet*/ {
 				s['!margins'] = val;
 				break;
 
+			case 0x0093: /* 'BrtWsProp' */
+				if(!wb.Sheets[idx]) wb.Sheets[idx] = {};
+				if(val.name) wb.Sheets[idx].CodeName = val.name;
+				break;
+
 			case 0x01E5: /* 'BrtWsFmtInfo' */
 			/* case 'BrtUid' */
 			case 0x00AF: /* 'BrtAFilterDateGroupItem' */
@@ -594,7 +598,6 @@ function parse_ws_bin(data, _opts, rels, wb, themes, styles)/*:Worksheet*/ {
 			case 0x0032: /* 'BrtValueMeta' */
 			case 0x0816: /* 'BrtWebExtension' */
 			case 0x0415: /* 'BrtWsFmtInfoEx14' */
-			case 0x0093: /* 'BrtWsProp' */
 				break;
 
 			case 0x0023: /* 'BrtFRTBegin' */
@@ -772,12 +775,13 @@ function write_SHEETPROTECT(ba, ws) {
 function write_ws_bin(idx/*:number*/, opts, wb/*:Workbook*/, rels) {
 	var ba = buf_array();
 	var s = wb.SheetNames[idx], ws = wb.Sheets[s] || {};
+	var c/*:string*/ = s; try { if(wb && wb.Workbook) c = wb.Workbook.Sheets[idx].CodeName || c; } catch(e) {}
 	var r = safe_decode_range(ws['!ref'] || "A1");
 	ws['!links'] = [];
 	/* passed back to write_zip and removed there */
 	ws['!comments'] = [];
 	write_record(ba, "BrtBeginSheet");
-	write_record(ba, "BrtWsProp", write_BrtWsProp(s));
+	write_record(ba, "BrtWsProp", write_BrtWsProp(c));
 	write_record(ba, "BrtWsDim", write_BrtWsDim(r));
 	write_WSVIEWS2(ba, ws);
 	write_WSFMTINFO(ba, ws);

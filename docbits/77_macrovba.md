@@ -7,6 +7,19 @@ writers automatically insert the data blobs if it is present in the workbook and
 associate with the worksheet names.
 
 <details>
+	<summary><b>Custom Code Names</b> (click to show)</summary>
+
+The workbook code name is stored in `wb.Workbook.WBProps.CodeName`.  By default,
+Excel will write `ThisWorkbook` or a translated phrase like `DieseArbeitsmappe`.
+Worksheet and Chartsheet code names are in the worksheet properties object at
+`wb.Workbook.Sheets[i].CodeName`.  Macrosheets and Dialogsheets are ignored.
+
+The readers and writers preserve the code names, but they have to be manually
+set when adding a VBA blob to a different workbook.
+
+</details>
+
+<details>
 	<summary><b>Macrosheets</b> (click to show)</summary>
 
 Older versions of Excel also supported a non-VBA "macrosheet" sheet type that

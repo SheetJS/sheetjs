@@ -105,6 +105,7 @@ function write_ws_biff8_cell(ba/*:BufArray*/, cell/*:Cell*/, R/*:number*/, C/*:n
 function write_ws_biff8(idx/*:number*/, opts, wb/*:Workbook*/) {
 	var ba = buf_array();
 	var s = wb.SheetNames[idx], ws = wb.Sheets[s] || {};
+	var _sheet/*:WBWSProp*/ = ((((wb||{}).Workbook||{}).Sheets||[])[idx]||{}/*:any*/);
 	var dense = Array.isArray(ws);
 	var ref/*:string*/, rr = "", cols/*:Array<string>*/ = [];
 	var range = safe_decode_range(ws['!ref'] || "A1");
@@ -138,7 +139,7 @@ function write_ws_biff8(idx/*:number*/, opts, wb/*:Workbook*/) {
 			write_ws_biff8_cell(ba, cell, R, C, opts);
 		}
 	}
-	var cname = ((((wb||{}).Workbook||{}).Sheets||[])[idx]||{}).name||s;
+	var cname/*:string*/ = _sheet.CodeName || _sheet.name || s;
 	write_biff_rec(ba, "CodeName", write_XLUnicodeString(cname, opts));
 	/* ... */
 	write_biff_rec(ba, "EOF");
@@ -148,6 +149,7 @@ function write_ws_biff8(idx/*:number*/, opts, wb/*:Workbook*/) {
 /* [MS-XLS] 2.1.7.20.3 */
 function write_biff8_global(wb/*:Workbook*/, bufs, opts/*:WriteOpts*/) {
 	var A = buf_array();
+	var _wb/*:WBWBProps*/ = /*::((*/(wb.Workbook||{}).WBProps||{/*::CodeName:"ThisWorkbook"*/}/*:: ):any)*/;
 	var b8 = opts.biff == 8, b5 = opts.biff == 5;
 	write_biff_rec(A, 0x0809, write_BOF(wb, 0x05, opts));
 	write_biff_rec(A, "InterfaceHdr", b8 ? writeuint16(0x04b0) : null);
@@ -161,7 +163,8 @@ function write_biff8_global(wb/*:Workbook*/, bufs, opts/*:WriteOpts*/) {
 	write_biff_rec(A, "RRTabId", write_RRTabId(wb.SheetNames.length));
 	if(b8 && wb.vbaraw) {
 		write_biff_rec(A, "ObProj");
-		var cname = ((wb.Workbook||{}).WBProps||{}).codeName || "ThisWorkbook";
+		// $FlowIgnore
+		var cname/*:string*/ = _wb.CodeName || "ThisWorkbook";
 		write_biff_rec(A, "CodeName", write_XLUnicodeString(cname, opts));
 	}
 	write_biff_rec(A, "BuiltInFnGroupCount", writeuint16(0x11));

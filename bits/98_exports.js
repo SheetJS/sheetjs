@@ -12,3 +12,4 @@ XLSX.writeFileSync = writeFileSync;
 XLSX.writeFileAsync = writeFileAsync;
 XLSX.utils = utils;
 XLSX.SSF = SSF;
+XLSX.CFB = CFB;

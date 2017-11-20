@@ -22,7 +22,7 @@ function parse_BrtWbProp(data, length)/*:WBProps*/ {
 	var flags = data.read_shift(4);
 	o.defaultThemeVersion = data.read_shift(4);
 	var strName = (length > 8) ? parse_XLWideString(data) : "";
-	if(strName.length > 0) o.codeName = strName;
+	if(strName.length > 0) o.CodeName = strName;
 	o.autoCompressPictures = !!(flags & 0x10000);
 	o.backupFile = !!(flags & 0x40);
 	o.checkCompatibility = !!(flags & 0x1000);
@@ -49,7 +49,7 @@ function write_BrtWbProp(data/*:?WBProps*/, o) {
 	}
 	o.write_shift(4, flags);
 	o.write_shift(4, 0);
-	write_XLSBCodeName("ThisWorkbook", o);
+	write_XLSBCodeName(data && data.CodeName || "ThisWorkbook", o);
 	return o.slice(0, o.l);
 }
 

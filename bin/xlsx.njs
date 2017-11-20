@@ -124,6 +124,7 @@ if(program.all) {
 	opts.sheetStubs = true;
 	opts.cellDates = true;
 	wopts.cellStyles = true;
+	wopts.bookVBA = true;
 }
 if(program.sparse) opts.dense = false; else opts.dense = true;
 
@@ -194,6 +195,7 @@ if(!program.quiet && !program.book) console.error(target_sheet);
 ].forEach(function(m) { if(program[m[0]] || isfmt(m[1])) {
 	wopts.bookType = m[0];
 	if(program.book) {
+		/*:: if(wb == null) throw new Error("Unreachable"); */
 		wb.SheetNames.forEach(function(n, i) {
 			wopts.sheet = n;
 			X.writeFile(wb, (program.output || sheetname || filename || "") + m[1] + "." + i, wopts);
@@ -205,7 +207,9 @@ if(!program.quiet && !program.book) console.error(target_sheet);
 function outit(o, fn) { if(fn) fs.writeFileSync(fn, o); else console.log(o); }
 
 function doit(cb) {
+	/*:: if(!wb) throw new Error("unreachable"); */
 	if(program.book) wb.SheetNames.forEach(function(n, i) {
+		/*:: if(!wb) throw new Error("unreachable"); */
 		outit(cb(wb.Sheets[n]), (program.output || sheetname || filename) + "." + i);
 	});
 	else outit(cb(ws), program.output);

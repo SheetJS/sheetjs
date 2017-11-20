@@ -236,6 +236,9 @@ export interface WorkBook {
 export interface SheetProps {
     /** Sheet Visibility (0=Visible 1=Hidden 2=VeryHidden) */
     Hidden?: 0 | 1 | 2;
+
+    /** Name of Document Module in associated VBA Project */
+    CodeName?: string;
 }
 
 /** Defined Name Object */
@@ -272,6 +275,9 @@ export interface WorkbookProperties {
 
     /** Warn or strip personally identifying info on save */
     filterPrivacy?: boolean;
+
+    /** Name of Document Module in associated VBA Project */
+    CodeName?: string;
 }
 
 /** Column Properties Object */

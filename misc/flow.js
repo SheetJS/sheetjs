@@ -35,7 +35,7 @@ type WBProps = {
 	autoCompressPictures?: boolean;
 	backupFile?: boolean;
 	checkCompatibility?: boolean;
-	codeName?: string;
+	CodeName?: string;
 	date1904?: boolean;
 	defaultThemeVersion?: number;
 	filterPrivacy?: boolean;
@@ -54,6 +54,7 @@ type WBProps = {
 type WBWSProp = {
 	Hidden?: number;
 	name?: string;
+	CodeName?: string;
 };
 
 interface CellAddress {

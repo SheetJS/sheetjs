@@ -134,9 +134,10 @@ function write_BrtFill(fill, o) {
 
 /* [MS-XLSB] 2.4.816 BrtXF */
 function parse_BrtXF(data, length/*:number*/) {
+	var tgt = data.l + length;
 	var ixfeParent = data.read_shift(2);
 	var ifmt = data.read_shift(2);
-	parsenoop(data, length-4);
+	data.l = tgt;
 	return {ixfe:ixfeParent, numFmtId:ifmt };
 }
 function write_BrtXF(data, ixfeP, o) {

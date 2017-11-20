@@ -84,7 +84,7 @@ var HTML_ = (function() {
 			var sp = {};
 			if(RS > 1) sp.rowspan = RS;
 			if(CS > 1) sp.colspan = CS;
-			if(o.editable) w = '<span contenteditable="true">' + w + '</span>'
+			if(o.editable) w = '<span contenteditable="true">' + w + '</span>';
 			sp.id = "sjs-" + coord;
 			oo.push(writextag('td', w, sp));
 		}

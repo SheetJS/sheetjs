@@ -11,7 +11,7 @@ var RTF = (function() {
 
 	function rtf_to_sheet_str(str/*:string*/, opts)/*:Worksheet*/ {
 		var o = opts || {};
-		var ws/*:Worksheet*/ = ({}/*:any*/);
+		var ws/*:Worksheet*/ = o.dense ? ([]/*:any*/) : ({}/*:any*/);
 		var range/*:Range*/ = ({s: {c:0, r:0}, e: {c:0, r:0}}/*:any*/);
 
 		// TODO: parse

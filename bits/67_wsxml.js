@@ -9,8 +9,9 @@ var dimregex = /"(\w*:\w*)"/;
 var colregex = /<(?:\w:)?col[^>]*[\/]?>/g;
 var afregex = /<(?:\w:)?autoFilter[^>]*([\/]|>([\s\S]*)<\/(?:\w:)?autoFilter)>/g;
 var marginregex= /<(?:\w:)?pageMargins[^>]*\/>/g;
+var sheetprregex = /<(?:\w:)?sheetPr(?:[^>a-z][^>]*)?\/>/;
 /* 18.3 Worksheets */
-function parse_ws_xml(data/*:?string*/, opts, rels, wb, themes, styles)/*:Worksheet*/ {
+function parse_ws_xml(data/*:?string*/, opts, idx, rels, wb/*:WBWBProps*/, themes, styles)/*:Worksheet*/ {
 	if(!data) return data;
 	if(DENSE != null && opts.dense == null) opts.dense = DENSE;
 
@@ -24,6 +25,10 @@ function parse_ws_xml(data/*:?string*/, opts, rels, wb, themes, styles)/*:Worksh
 		data1 = data.substr(0, mtch.index);
 		data2 = data.substr(mtch.index + mtch[0].length);
 	} else data1 = data2 = data;
+
+	/* 18.3.1.82 sheetPr CT_SheetPr */
+	var sheetPr = data1.match(sheetprregex);
+	if(sheetPr) parse_ws_xml_sheetpr(sheetPr[0], s, wb, idx);
 
 	/* 18.3.1.35 dimension CT_SheetDimension ? */
 	// $FlowIgnore
@@ -87,7 +92,14 @@ function write_ws_xml_merges(merges) {
 	return o + '</mergeCells>';
 }
 
-/* 18.3.1.85 sheetPr CT_SheetProtection */
+/* 18.3.1.82-3 sheetPr CT_ChartsheetPr / CT_SheetPr */
+function parse_ws_xml_sheetpr(sheetPr/*:string*/, s, wb/*:WBWBProps*/, idx/*:number*/) {
+	var data = parsexmltag(sheetPr);
+	if(!wb.Sheets[idx]) wb.Sheets[idx] = {};
+	if(data.codeName) wb.Sheets[idx].CodeName = data.codeName;
+}
+
+/* 18.3.1.85 sheetProtection CT_SheetProtection */
 function write_ws_xml_protection(sp)/*:string*/ {
 	// algorithmName, hashValue, saltValue, spinCountpassword
 	var o = ({sheet:1}/*:any*/);
@@ -326,7 +338,10 @@ return function parse_ws_xml_data(sdata, s, opts, guess, themes, styles) {
 			/* 18.18.11 t ST_CellType */
 			switch(p.t) {
 				case 'n':
-					p.v = parseFloat(p.v);
+					if(p.v == "" || p.v == null) {
+						if(!opts.sheetStubs) continue;
+						p.t = 'z';
+					} else p.v = parseFloat(p.v);
 					break;
 				case 's':
 					if(typeof p.v == 'undefined') {
@@ -441,7 +456,9 @@ function write_ws_xml(idx/*:number*/, opts, wb/*:Workbook*/, rels)/*:string*/ {
 	ws['!comments'] = [];
 	ws['!drawing'] = [];
 
-	o[o.length] = (writextag('sheetPr', null, {'codeName': escapexml(wb.SheetNames[idx])}));
+	var cname = wb.SheetNames[idx];
+	try { if(wb.Workbook) cname = wb.Workbook.Sheets[idx].CodeName || cname; } catch(e) {}
+	o[o.length] = (writextag('sheetPr', null, {'codeName': escapexml(cname)}));
 
 	o[o.length] = (writextag('dimension', null, {'ref': ref}));
 

@@ -849,7 +849,6 @@ function stringify_formula(formula/*Array<any>*/, range, cell/*:any*/, supbooks,
 				break;
 			case 'PtgArea3d': /* 2.5.198.28 TODO */
 				type = f[1][0]; ixti = /*::Number(*/f[1][1]/*::)*/; r = f[1][2];
-				//sname = (supbooks && supbooks[1] ? supbooks[1][ixti+1] : "**MISSING**");
 				sname = get_ixti(supbooks, ixti, opts);
 				stack.push(sname + "!" + encode_range_xls((r/*:any*/), opts));
 				break;
@@ -923,7 +922,7 @@ function stringify_formula(formula/*Array<any>*/, range, cell/*:any*/, supbooks,
 				stack.push('#REF!'); break;
 
 			case 'PtgExp': /* 2.5.198.58 TODO */
-				c = {c:f[1][1],r:f[1][0]};
+				c = {c:(f[1][1]/*:any*/),r:(f[1][0]/*:any*/)};
 				var q = ({c: cell.c, r:cell.r}/*:any*/);
 				if(supbooks.sharedf[encode_cell(c)]) {
 					var parsedf = (supbooks.sharedf[encode_cell(c)]);

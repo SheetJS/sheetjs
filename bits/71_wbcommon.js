@@ -4,7 +4,7 @@ var WBPropsDef = [
 	['autoCompressPictures',        true,  "bool"],
 	['backupFile',                  false, "bool"],
 	['checkCompatibility',          false, "bool"],
-	['codeName',                    ''],
+	['CodeName',                    ''],
 	['date1904',                    false, "bool"],
 	['defaultThemeVersion',         0,      "int"],
 	['filterPrivacy',               false, "bool"],

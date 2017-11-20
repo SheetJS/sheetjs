@@ -266,7 +266,9 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 				case 'CalcRefMode': opts.CalcRefMode = val; break; // TODO: implement R1C1
 				case 'Uncalced': break;
 				case 'ForceFullCalculation': wb.opts.FullCalc = val; break;
-				case 'WsBool': break; // TODO
+				case 'WsBool':
+					if(val.fDialog) out["!type"] = "dialog";
+					break; // TODO
 				case 'XF': XFs.push(val); break;
 				case 'ExtSST': break; // TODO
 				case 'BookExt': break; // TODO
@@ -354,6 +356,7 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 					}
 					else cur_sheet = (Directory[s] || {name:""}).name;
 					if(val.dt == 0x20) out["!type"] = "chart";
+					if(val.dt == 0x40) out["!type"] = "macro";
 					mergecells = [];
 					objects = [];
 					array_formulae = []; opts.arrayf = array_formulae;
@@ -661,7 +664,8 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 				} break;
 				case 'CodeName': {
 					/*:: if(!Workbook.WBProps) Workbook.WBProps = {}; */
-					if(!cur_sheet) Workbook.WBProps.codeName = val;
+					if(!cur_sheet) Workbook.WBProps.CodeName = val || "ThisWorkbook";
+					else wsprops.CodeName = val || wsprops.name;
 				} break;
 				case 'GUIDTypeLib': {
 					/* empty */

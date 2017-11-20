@@ -28,6 +28,7 @@ may not enforce this constraint.
 
 | Key             | Description                                         |
 |:----------------|:----------------------------------------------------|
+| `CodeName`      | [VBA Project Workbook Code Name](#vba-and-macros)   |
 | `date1904`      | epoch: 0/false for 1900 system, 1/true for 1904     |
 | `filterPrivacy` | Warn or strip personally identifying info on save   |
 

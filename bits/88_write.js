@@ -67,6 +67,7 @@ function write_binary_type(out, opts/*:WriteOpts*/)/*:any*/ {
 		case "base64":
 		case "binary":
 			var bstr = "";
+			// $FlowIgnore
 			for(var i = 0; i < out.length; ++i) bstr += String.fromCharCode(out[i]);
 			return opts.type == 'base64' ? Base64.encode(bstr) : opts.type == 'string' ? utf8read(bstr) : bstr;
 		case "file": return _fs.writeFileSync(opts.file, out);

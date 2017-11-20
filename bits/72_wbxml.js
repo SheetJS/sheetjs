@@ -36,6 +36,7 @@ function parse_wb_xml(data, opts)/*:WorkbookFile*/ {
 						default: wb.WBProps[w[0]] = y[w[0]];
 					}
 				});
+				if(y.codeName) wb.WBProps.CodeName = y.codeName;
 				break;
 			case '</workbookPr>': break;
 
@@ -170,15 +171,16 @@ function write_wb_xml(wb/*:Workbook*/, opts/*:?WriteOpts*/)/*:string*/ {
 	/* fileVersion */
 	/* fileSharing */
 
-	var workbookPr/*:WBProps*/ = ({codeName:"ThisWorkbook"}/*:any*/);
+	var workbookPr/*:any*/ = ({codeName:"ThisWorkbook"}/*:any*/);
 	if(wb.Workbook && wb.Workbook.WBProps) {
-		if(wb.Workbook.WBProps.codeName) workbookPr.codeName = wb.Workbook.WBProps.codeName;
 		WBPropsDef.forEach(function(x) {
 			/*:: if(!wb.Workbook || !wb.Workbook.WBProps) throw "unreachable"; */
 			if((wb.Workbook.WBProps[x[0]]/*:any*/) == null) return;
 			if((wb.Workbook.WBProps[x[0]]/*:any*/) == x[1]) return;
 			workbookPr[x[0]] = (wb.Workbook.WBProps[x[0]]/*:any*/);
 		});
+		/*:: if(!wb.Workbook || !wb.Workbook.WBProps) throw "unreachable"; */
+		if(wb.Workbook.WBProps.CodeName) { workbookPr.codeName = wb.Workbook.WBProps.CodeName; delete workbookPr.CodeName; }
 	}
 	o[o.length] = (writextag('workbookPr', null, workbookPr));
 
