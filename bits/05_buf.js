@@ -14,4 +14,4 @@ function s2a(s/*:string*/) {
 
 var bconcat = function(bufs) { return [].concat.apply([], bufs); };
 
-var chr0 = /\u0000/g, chr1 = /[\u0001-\u0006]/;
+var chr0 = /\u0000/g, chr1 = /[\u0001-\u0006]/g;

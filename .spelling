@@ -65,6 +65,7 @@ config
 customizable
 datagrid
 deduplication
+destructuring
 embeddable
 filesystem
 javascript

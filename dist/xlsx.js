@@ -4,7 +4,7 @@
 /*global global, exports, module, require:false, process:false, Buffer:false */
 var XLSX = {};
 (function make_xlsx(XLSX){
-XLSX.version = '0.11.10';
+XLSX.version = '0.11.11';
 var current_codepage = 1200;
 /*global cptable:true */
 if(typeof module !== "undefined" && typeof require !== 'undefined') {
@@ -105,7 +105,7 @@ function s2a(s) {
 
 var bconcat = function(bufs) { return [].concat.apply([], bufs); };
 
-var chr0 = /\u0000/g, chr1 = /[\u0001-\u0006]/;
+var chr0 = /\u0000/g, chr1 = /[\u0001-\u0006]/g;
 /* ssf.js (C) 2013-present SheetJS -- http://sheetjs.com */
 /*jshint -W041 */
 var SSF = ({});
@@ -1026,7 +1026,7 @@ var DO_NOT_EXPORT_CFB = true;
 /* [MS-CFB] v20130118 */
 var CFB = (function _CFB(){
 var exports = {};
-exports.version = '1.0.0';
+exports.version = '1.0.1';
 /* [MS-CFB] 2.6.4 */
 function namecmp(l, r) {
 	var L = l.split("/"), R = r.split("/");
@@ -6844,6 +6844,7 @@ function parse_DataSpaceMapEntry(blob) {
 	}
 	o.name = blob.read_shift(0, 'lpp4');
 	o.comps = comps;
+	if(blob.l != end) throw new Error("Bad DataSpaceMapEntry: " + blob.l + " != " + end);
 	return o;
 }
 
@@ -6872,7 +6873,7 @@ function parse_TransformInfoHeader(blob, length) {
 	var tgt = blob.l + len - 4;
 	blob.l += 4; // must be 0x1
 	o.id = blob.read_shift(0, 'lpp4');
-	// tgt == len
+	if(tgt != blob.l) throw new Error("Bad TransformInfoHeader record: " + blob.l + " != " + tgt);
 	o.name = blob.read_shift(0, 'lpp4');
 	o.R = parse_CRYPTOVersion(blob, 4);
 	o.U = parse_CRYPTOVersion(blob, 4);
@@ -6951,12 +6952,28 @@ function parse_EncInfoStd(blob, vers) {
 function parse_EncInfoExt(blob, vers) { throw new Error("File is password-protected: ECMA-376 Extensible"); }
 /* [MS-OFFCRYPTO] 2.3.4.10 EncryptionInfo Stream (Agile Encryption) */
 function parse_EncInfoAgl(blob, vers) {
+	var KeyData = ["saltSize","blockSize","keyBits","hashSize","cipherAlgorithm","cipherChaining","hashAlgorithm","saltValue"];
 	blob.l+=4;
-	return blob.read_shift(blob.length - blob.l, 'utf8');
+	var xml = blob.read_shift(blob.length - blob.l, 'utf8');
+	var o = {};
+	xml.replace(tagregex, function xml_agile(x, idx) {
+		var y = parsexmltag(x);
+		switch(strip_ns(y[0])) {
+			case '<?xml': break;
+			case '<encryption': case '</encryption>': break;
+			case '<keyData': KeyData.forEach(function(k) { o[k] = y[k]; }); break;
+			case '<dataIntegrity': o.encryptedHmacKey = y.encryptedHmacKey; o.encryptedHmacValue = y.encryptedHmacValue; break;
+			case '<keyEncryptors>': case '<keyEncryptors': o.encs = []; break;
+			case '</keyEncryptors>': break;
+
+			case '<keyEncryptor': o.uri = y.uri; break;
+			case '</keyEncryptor>': break;
+			case '<encryptedKey': o.encs.push(y); break;
+			default: throw y[0];
+		}
+	});
+	return o;
 }
-
-
-
 
 /* [MS-OFFCRYPTO] 2.3.5.1 RC4 CryptoAPI Encryption Header */
 function parse_RC4CryptoHeader(blob, length) {
@@ -15191,7 +15208,12 @@ wb.opts.Date1904 = Workbook.WBProps.date1904 = val; break;
 					sst = val;
 				} break;
 				case 'Format': { /* val = [id, fmt] */
-					SSF.load(val[1], val[0]);
+					if(opts.biff == 4) {
+						BIFF2FmtTable[BIFF2Fmt++] = val[1];
+						for(var b4idx = 0; b4idx < BIFF2Fmt + 163; ++b4idx) if(SSF._table[b4idx] == val[1]) break;
+						if(b4idx >= 163) SSF.load(val[1], BIFF2Fmt + 163);
+					}
+					else SSF.load(val[1], val[0]);
 				} break;
 				case 'BIFF2FORMAT': {
 					BIFF2FmtTable[BIFF2Fmt++] = val;
@@ -18246,40 +18268,41 @@ function parse_zip(zip, opts) {
 	return out;
 }
 
-/* references to [MS-OFFCRYPTO] */
-function parse_xlsxcfb(cfb, opts) {
-	var f = 'Version';
-	var data = CFB.find(cfb, f);
-	if(!data || !data.content) throw new Error("ECMA-376 Encrypted file missing " + f);
+/* [MS-OFFCRYPTO] 2.1.1 */
+function parse_xlsxcfb(cfb, _opts) {
+	var opts = _opts || {};
+	var f = '/!DataSpaces/Version';
+	var data = CFB.find(cfb, f); if(!data || !data.content) throw new Error("ECMA-376 Encrypted file missing " + f);
 	var version = parse_DataSpaceVersionInfo(data.content);
 
 	/* 2.3.4.1 */
-	f = 'DataSpaceMap';
-	data = CFB.find(cfb, f);
-	if(!data || !data.content) throw new Error("ECMA-376 Encrypted file missing " + f);
+	f = '/!DataSpaces/DataSpaceMap';
+	data = CFB.find(cfb, f); if(!data || !data.content) throw new Error("ECMA-376 Encrypted file missing " + f);
 	var dsm = parse_DataSpaceMap(data.content);
 	if(dsm.length !== 1 || dsm[0].comps.length !== 1 || dsm[0].comps[0].t !== 0 || dsm[0].name !== "StrongEncryptionDataSpace" || dsm[0].comps[0].v !== "EncryptedPackage")
 		throw new Error("ECMA-376 Encrypted file bad " + f);
 
-	f = 'StrongEncryptionDataSpace';
-	data = CFB.find(cfb, f);
-	if(!data || !data.content) throw new Error("ECMA-376 Encrypted file missing " + f);
+	/* 2.3.4.2 */
+	f = '/!DataSpaces/DataSpaceInfo/StrongEncryptionDataSpace';
+	data = CFB.find(cfb, f); if(!data || !data.content) throw new Error("ECMA-376 Encrypted file missing " + f);
 	var seds = parse_DataSpaceDefinition(data.content);
 	if(seds.length != 1 || seds[0] != "StrongEncryptionTransform")
 		throw new Error("ECMA-376 Encrypted file bad " + f);
 
 	/* 2.3.4.3 */
-	f = '!Primary';
-	data = CFB.find(cfb, f);
-	if(!data || !data.content) throw new Error("ECMA-376 Encrypted file missing " + f);
+	f = '/!DataSpaces/TransformInfo/StrongEncryptionTransform/!Primary';
+	data = CFB.find(cfb, f); if(!data || !data.content) throw new Error("ECMA-376 Encrypted file missing " + f);
 	var hdr = parse_Primary(data.content);
 
-	f = 'EncryptionInfo';
-	data = CFB.find(cfb, f);
-	if(!data || !data.content) throw new Error("ECMA-376 Encrypted file missing " + f);
+	f = '/EncryptionInfo';
+	data = CFB.find(cfb, f); if(!data || !data.content) throw new Error("ECMA-376 Encrypted file missing " + f);
 	var einfo = parse_EncryptionInfo(data.content);
 
-	if(einfo[0] == 0x04) throw new Error("File is password-protected: ECMA-376 Agile");
+	/* 2.3.4.4 */
+	f = '/EncryptedPackage';
+	data = CFB.find(cfb, f); if(!data || !data.content) throw new Error("ECMA-376 Encrypted file missing " + f);
+
+if(einfo[0] == 0x04 && typeof decrypt_agile !== 'undefined') return decrypt_agile(einfo[1], data.content, opts.password || "", opts);
 	throw new Error("File is password-protected");
 }
 
@@ -18867,6 +18890,7 @@ var utils = {
 	table_to_sheet: parse_dom_table,
 	table_to_book: table_to_book,
 	sheet_to_csv: sheet_to_csv,
+	sheet_to_txt: sheet_to_txt,
 	sheet_to_json: sheet_to_json,
 	sheet_to_html: HTML_.from_sheet,
 	sheet_to_formulae: sheet_to_formulae,

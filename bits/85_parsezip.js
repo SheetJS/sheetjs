@@ -176,40 +176,42 @@ function parse_zip(zip/*:ZIP*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
 	return out;
 }
 
-/* references to [MS-OFFCRYPTO] */
-function parse_xlsxcfb(cfb, opts/*:?ParseOpts*/)/*:Workbook*/ {
-	var f = 'Version';
-	var data = CFB.find(cfb, f);
-	if(!data || !data.content) throw new Error("ECMA-376 Encrypted file missing " + f);
+/* [MS-OFFCRYPTO] 2.1.1 */
+function parse_xlsxcfb(cfb, _opts/*:?ParseOpts*/)/*:Workbook*/ {
+	var opts = _opts || {};
+	var f = '/!DataSpaces/Version';
+	var data = CFB.find(cfb, f); if(!data || !data.content) throw new Error("ECMA-376 Encrypted file missing " + f);
 	var version = parse_DataSpaceVersionInfo(data.content);
 
 	/* 2.3.4.1 */
-	f = 'DataSpaceMap';
-	data = CFB.find(cfb, f);
-	if(!data || !data.content) throw new Error("ECMA-376 Encrypted file missing " + f);
+	f = '/!DataSpaces/DataSpaceMap';
+	data = CFB.find(cfb, f); if(!data || !data.content) throw new Error("ECMA-376 Encrypted file missing " + f);
 	var dsm = parse_DataSpaceMap(data.content);
 	if(dsm.length !== 1 || dsm[0].comps.length !== 1 || dsm[0].comps[0].t !== 0 || dsm[0].name !== "StrongEncryptionDataSpace" || dsm[0].comps[0].v !== "EncryptedPackage")
 		throw new Error("ECMA-376 Encrypted file bad " + f);
 
-	f = 'StrongEncryptionDataSpace';
-	data = CFB.find(cfb, f);
-	if(!data || !data.content) throw new Error("ECMA-376 Encrypted file missing " + f);
+	/* 2.3.4.2 */
+	f = '/!DataSpaces/DataSpaceInfo/StrongEncryptionDataSpace';
+	data = CFB.find(cfb, f); if(!data || !data.content) throw new Error("ECMA-376 Encrypted file missing " + f);
 	var seds = parse_DataSpaceDefinition(data.content);
 	if(seds.length != 1 || seds[0] != "StrongEncryptionTransform")
 		throw new Error("ECMA-376 Encrypted file bad " + f);
 
 	/* 2.3.4.3 */
-	f = '!Primary';
-	data = CFB.find(cfb, f);
-	if(!data || !data.content) throw new Error("ECMA-376 Encrypted file missing " + f);
+	f = '/!DataSpaces/TransformInfo/StrongEncryptionTransform/!Primary';
+	data = CFB.find(cfb, f); if(!data || !data.content) throw new Error("ECMA-376 Encrypted file missing " + f);
 	var hdr = parse_Primary(data.content);
 
-	f = 'EncryptionInfo';
-	data = CFB.find(cfb, f);
-	if(!data || !data.content) throw new Error("ECMA-376 Encrypted file missing " + f);
+	f = '/EncryptionInfo';
+	data = CFB.find(cfb, f); if(!data || !data.content) throw new Error("ECMA-376 Encrypted file missing " + f);
 	var einfo = parse_EncryptionInfo(data.content);
 
-	if(einfo[0] == 0x04) throw new Error("File is password-protected: ECMA-376 Agile");
+	/* 2.3.4.4 */
+	f = '/EncryptedPackage';
+	data = CFB.find(cfb, f); if(!data || !data.content) throw new Error("ECMA-376 Encrypted file missing " + f);
+
+/*:: declare var decrypt_agile:any; */
+	if(einfo[0] == 0x04 && typeof decrypt_agile !== 'undefined') return decrypt_agile(einfo[1], data.content, opts.password || "", opts);
 	throw new Error("File is password-protected");
 }
 

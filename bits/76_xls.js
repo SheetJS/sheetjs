@@ -486,7 +486,12 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 					sst = val;
 				} break;
 				case 'Format': { /* val = [id, fmt] */
-					SSF.load(val[1], val[0]);
+					if(opts.biff == 4) {
+						BIFF2FmtTable[BIFF2Fmt++] = val[1];
+						for(var b4idx = 0; b4idx < BIFF2Fmt + 163; ++b4idx) if(SSF._table[b4idx] == val[1]) break;
+						if(b4idx >= 163) SSF.load(val[1], BIFF2Fmt + 163);
+					}
+					else SSF.load(val[1], val[0]);
 				} break;
 				case 'BIFF2FORMAT': {
 					BIFF2FmtTable[BIFF2Fmt++] = val;

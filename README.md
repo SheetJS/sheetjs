@@ -200,6 +200,7 @@ The [`demos` directory](demos/) includes sample projects for:
 - [`requirejs`](demos/requirejs/)
 - [`rollup`](demos/rollup/)
 - [`systemjs`](demos/systemjs/)
+- [`typescript`](demos/typescript/)
 - [`webpack 2.x`](demos/webpack/)
 
 **Platforms and Integrations**
@@ -569,6 +570,7 @@ files and output the contents in various formats.  The source is available at
 Some helper functions in `XLSX.utils` generate different views of the sheets:
 
 - `XLSX.utils.sheet_to_csv` generates CSV
+- `XLSX.utils.sheet_to_txt` generates UTF16 Formatted Text
 - `XLSX.utils.sheet_to_html` generates HTML
 - `XLSX.utils.sheet_to_json` generates an array of objects
 - `XLSX.utils.sheet_to_formulae` generates a list of formulae
@@ -730,6 +732,7 @@ Utilities are available in the `XLSX.utils` object and are described in the
 
 - `sheet_to_json` converts a worksheet object to an array of JSON objects.
 - `sheet_to_csv` generates delimiter-separated-values output.
+- `sheet_to_txt` generates UTF16 formatted text.
 - `sheet_to_html` generates HTML output.
 - `sheet_to_formulae` generates a list of the formulae (with value fallbacks).
 
@@ -1849,6 +1852,8 @@ S:h:e:e:t:J:S|1:2:3:4:5:6:7|2:3:4:5:6:7:8|
 The `txt` output type uses the tab character as the field separator.  If the
 `codepage` library is available (included in full distribution but not core),
 the output will be encoded in `CP1200` and the BOM will be prepended.
+
+`XLSX.utils.sheet_to_txt` takes the same arguments as `sheet_to_csv`.
 
 ### HTML Output
 

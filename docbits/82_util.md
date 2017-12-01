@@ -170,6 +170,8 @@ The `txt` output type uses the tab character as the field separator.  If the
 `codepage` library is available (included in full distribution but not core),
 the output will be encoded in `CP1200` and the BOM will be prepended.
 
+`XLSX.utils.sheet_to_txt` takes the same arguments as `sheet_to_csv`.
+
 ### HTML Output
 
 As an alternative to the `writeFile` HTML type, `XLSX.utils.sheet_to_html` also

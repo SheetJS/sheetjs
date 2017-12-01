@@ -89,7 +89,14 @@ legend.png: misc/legend.dot
 nexe: xlsx.exe ## Build nexe standalone executable
 
 xlsx.exe: bin/xlsx.njs xlsx.js
-	nexe -i $< -o $@ --flags
+	tail -n+2 $< | sed 's#\.\./#./xlsx#g' > nexe.js
+	nexe -i nexe.js -o $@
+	head nexe.js
+	rm nexe.js
+
+.PHONY: pkg
+pkg: bin/xlsx.njs xlsx.js ## Build pkg standalone executable
+	pkg $<
 
 ## Testing
 

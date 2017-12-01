@@ -38,7 +38,7 @@ type CFBFiles = {[n:string]:CFBEntry};
 /* [MS-CFB] v20130118 */
 var CFB = (function _CFB(){
 var exports/*:CFBModule*/ = /*::(*/{}/*:: :any)*/;
-exports.version = '1.0.0';
+exports.version = '1.0.1';
 /* [MS-CFB] 2.6.4 */
 function namecmp(l/*:string*/, r/*:string*/)/*:number*/ {
 	var L = l.split("/"), R = r.split("/");

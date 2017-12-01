@@ -63,6 +63,7 @@ files and output the contents in various formats.  The source is available at
 Some helper functions in `XLSX.utils` generate different views of the sheets:
 
 - `XLSX.utils.sheet_to_csv` generates CSV
+- `XLSX.utils.sheet_to_txt` generates UTF16 Formatted Text
 - `XLSX.utils.sheet_to_html` generates HTML
 - `XLSX.utils.sheet_to_json` generates an array of objects
 - `XLSX.utils.sheet_to_formulae` generates a list of formulae

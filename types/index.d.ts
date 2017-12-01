@@ -649,6 +649,9 @@ export interface XLSX$Utils {
     /** Generates delimiter-separated-values output */
     sheet_to_csv(worksheet: WorkSheet, options?: Sheet2CSVOpts): string;
 
+    /** Generates UTF16 Formatted Text */
+    sheet_to_txt(worksheet: WorkSheet, options?: Sheet2CSVOpts): string;
+
     /** Generates HTML */
     sheet_to_html(worksheet: WorkSheet, options?: Sheet2HTMLOpts): string;
 

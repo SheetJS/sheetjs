@@ -219,6 +219,7 @@ var utils/*:any*/ = {
 	table_to_sheet: parse_dom_table,
 	table_to_book: table_to_book,
 	sheet_to_csv: sheet_to_csv,
+	sheet_to_txt: sheet_to_txt,
 	sheet_to_json: sheet_to_json,
 	sheet_to_html: HTML_.from_sheet,
 	sheet_to_formulae: sheet_to_formulae,

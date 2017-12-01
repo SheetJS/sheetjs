@@ -41,6 +41,7 @@ function parse_DataSpaceMapEntry(blob) {
 	}
 	o.name = blob.read_shift(0, 'lpp4');
 	o.comps = comps;
+	if(blob.l != end) throw new Error("Bad DataSpaceMapEntry: " + blob.l + " != " + end);
 	return o;
 }
 
@@ -69,7 +70,7 @@ function parse_TransformInfoHeader(blob, length) {
 	var tgt = blob.l + len - 4;
 	blob.l += 4; // must be 0x1
 	o.id = blob.read_shift(0, 'lpp4');
-	// tgt == len
+	if(tgt != blob.l) throw new Error("Bad TransformInfoHeader record: " + blob.l + " != " + tgt);
 	o.name = blob.read_shift(0, 'lpp4');
 	o.R = parse_CRYPTOVersion(blob, 4);
 	o.U = parse_CRYPTOVersion(blob, 4);
@@ -148,12 +149,28 @@ function parse_EncInfoStd(blob, vers) {
 function parse_EncInfoExt(blob, vers) { throw new Error("File is password-protected: ECMA-376 Extensible"); }
 /* [MS-OFFCRYPTO] 2.3.4.10 EncryptionInfo Stream (Agile Encryption) */
 function parse_EncInfoAgl(blob, vers) {
+	var KeyData = ["saltSize","blockSize","keyBits","hashSize","cipherAlgorithm","cipherChaining","hashAlgorithm","saltValue"];
 	blob.l+=4;
-	return blob.read_shift(blob.length - blob.l, 'utf8');
+	var xml = blob.read_shift(blob.length - blob.l, 'utf8');
+	var o = {};
+	xml.replace(tagregex, function xml_agile(x, idx) {
+		var y/*:any*/ = parsexmltag(x);
+		switch(strip_ns(y[0])) {
+			case '<?xml': break;
+			case '<encryption': case '</encryption>': break;
+			case '<keyData': KeyData.forEach(function(k) { o[k] = y[k]; }); break;
+			case '<dataIntegrity': o.encryptedHmacKey = y.encryptedHmacKey; o.encryptedHmacValue = y.encryptedHmacValue; break;
+			case '<keyEncryptors>': case '<keyEncryptors': o.encs = []; break;
+			case '</keyEncryptors>': break;
+
+			case '<keyEncryptor': o.uri = y.uri; break;
+			case '</keyEncryptor>': break;
+			case '<encryptedKey': o.encs.push(y); break;
+			default: throw y[0];
+		}
+	});
+	return o;
 }
-
-
-
 
 /* [MS-OFFCRYPTO] 2.3.5.1 RC4 CryptoAPI Encryption Header */
 function parse_RC4CryptoHeader(blob, length/*:number*/) {

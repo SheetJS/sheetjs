@@ -20,6 +20,7 @@ interface Tester {
 
 const jsonvalues: Tester[] = XLSX.utils.sheet_to_json<Tester>(firstworksheet);
 const csv: string = XLSX.utils.sheet_to_csv(firstworksheet);
+const txt: string = XLSX.utils.sheet_to_txt(firstworksheet);
 const formulae: string[] = XLSX.utils.sheet_to_formulae(firstworksheet);
 const aoa: any[][] = XLSX.utils.sheet_to_json<any[]>(firstworksheet, {raw:true, header:1});
 

@@ -1,0 +1,19 @@
+{
+  "name": "xlsx-ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "version": "0.0.0",
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc && browserify -o dist/browser.js src/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "private": true,
+  "dependencies": {
+		"xlsx": "*"
+  },
+  "devDependencies": {
+    "typescript": "~2.6.1",
+    "browserify": "~14.5.0"
+  }
+}

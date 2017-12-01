@@ -43,6 +43,7 @@ Utilities are available in the `XLSX.utils` object and are described in the
 
 - `sheet_to_json` converts a worksheet object to an array of JSON objects.
 - `sheet_to_csv` generates delimiter-separated-values output.
+- `sheet_to_txt` generates UTF16 formatted text.
 - `sheet_to_html` generates HTML output.
 - `sheet_to_formulae` generates a list of the formulae (with value fallbacks).
 
