@@ -21,6 +21,7 @@ program
 	.option('-X, --xlsx', 'emit XLSX to <sheetname> or <file>.xlsx')
 	.option('-Y, --ods',  'emit ODS  to <sheetname> or <file>.ods')
 	.option('-8, --xls',  'emit XLS  to <sheetname> or <file>.xls (BIFF8)')
+	.option('-5, --biff5','emit XLS  to <sheetname> or <file>.xls (BIFF5)')
 	.option('-2, --biff2','emit XLS  to <sheetname> or <file>.xls (BIFF2)')
 	.option('-6, --xlml', 'emit SSML to <sheetname> or <file>.xls (2003 XML)')
 	.option('-T, --fods', 'emit FODS to <sheetname> or <file>.fods (Flat ODS)')
@@ -31,8 +32,10 @@ program
 	.option('-A, --arrays',   'emit rows as JS objects (raw numbers)')
 	.option('-H, --html', 'emit HTML to <sheetname> or <file>.html')
 	.option('-D, --dif',  'emit DIF  to <sheetname> or <file>.dif (Lotus DIF)')
+	.option('-U, --dbf',  'emit DBF  to <sheetname> or <file>.dbf (MSVFP DBF)')
 	.option('-K, --sylk', 'emit SYLK to <sheetname> or <file>.slk (Excel SYLK)')
 	.option('-P, --prn',  'emit PRN  to <sheetname> or <file>.prn (Lotus PRN)')
+	.option('-E, --eth',  'emit ETH  to <sheetname> or <file>.eth (Ethercalc)')
 	.option('-t, --txt',  'emit TXT  to <sheetname> or <file>.txt (UTF-8 TSV)')
 	.option('-r, --rtf',  'emit RTF  to <sheetname> or <file>.txt (Table RTF)')
 
@@ -41,11 +44,11 @@ program
 	.option('-n, --sheet-rows <num>', 'Number of rows to process (0=all rows)')
 	.option('--sst', 'generate shared string table for XLS* formats')
 	.option('--compress', 'use compression when writing XLSX/M/B and ODS')
-	.option('--read-only', 'do not generate output')
+	.option('--read', 'read but do not generate output')
+	.option('--book', 'for single-sheet formats, emit a file per worksheet')
 	.option('--all', 'parse everything; write as much as possible')
 	.option('--dev', 'development mode')
 	.option('--sparse', 'sparse mode')
-	.option('--read', 'read but do not print out contents')
 	.option('-q, --quiet', 'quiet mode');
 
 program.on('--help', function() {
@@ -81,7 +84,6 @@ if(!filename) {
 	console.error(n + ": must specify a filename");
 	process.exit(1);
 }
-/*:: if(filename) { */
 if(!fs.existsSync(filename)) {
 	console.error(n + ": " + filename + ": No such file or directory");
 	process.exit(2);
@@ -109,6 +111,9 @@ if(seen) {
 } else if(program.formulae) opts.cellFormula = true;
 else opts.cellFormula = false;
 
+let wopts: X.WritingOptions = ({WTF:opts.WTF, bookSST:program.sst}/*:any*/);
+if(program.compress) wopts.compression = true;
+
 if(program.all) {
 	opts.cellFormula = true;
 	opts.bookVBA = true;
@@ -117,6 +122,8 @@ if(program.all) {
 	opts.cellStyles = true;
 	opts.sheetStubs = true;
 	opts.cellDates = true;
+	wopts.cellStyles = true;
+	wopts.bookVBA = true;
 }
 if(program.sparse) opts.dense = false; else opts.dense = true;
 
@@ -132,15 +139,12 @@ if(program.dev) {
 	process.exit(3);
 }
 if(program.read) process.exit(0);
-
-/*::   if(wb) { */
+if(!wb) { console.error(n + ": error parsing " + filename + ": empty workbook"); process.exit(0); }
+/*:: if(!wb) throw new Error("unreachable"); */
 if(program.listSheets) {
 	console.log((wb.SheetNames||[]).join("\n"));
 	process.exit(0);
 }
-
-let wopts: X.WritingOptions = ({WTF:opts.WTF, bookSST:program.sst}/*:any*/);
-if(program.compress) wopts.compression = true;
 
 /* full workbook formats */
 workbook_formats.forEach(function(m) { if(program[m[0]] || isfmt(m[0])) {
@@ -173,9 +177,9 @@ try {
 	process.exit(4);
 }
 
-if(program.readOnly) process.exit(0);
+if(!program.quiet && !program.book) console.error(target_sheet);
 
-/* single worksheet formats */
+/* single worksheet file formats */
 [
 	['biff2', '.xls'],
 	['biff3', '.xls'],
@@ -183,8 +187,10 @@ if(program.readOnly) process.exit(0);
 	['sylk', '.slk'],
 	['html', '.html'],
 	['prn', '.prn'],
+	['eth', '.eth'],
 	['rtf', '.rtf'],
 	['txt', '.txt'],
+	['dbf', '.dbf'],
 	['dif', '.dif']
 ].forEach(function(m) { if(program[m[0]] || isfmt(m[1])) {
 		wopts.bookType = <X.BookType>(m[0]);

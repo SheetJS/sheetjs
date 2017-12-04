@@ -360,7 +360,7 @@ function parse_XLUnicodeString2(blob, length, opts) {
 	if(opts.biff > 5) return parse_XLUnicodeString(blob, length, opts);
 	var cch = blob.read_shift(1);
 	if(cch === 0) { blob.l++; return ""; }
-	return blob.read_shift(cch, 'sbcs-cont');
+	return blob.read_shift(cch, opts.biff == 4 ? 'cpstr' : 'sbcs-cont');
 }
 /* TODO: BIFF5 and lower, codepage awareness */
 function write_XLUnicodeString(str, opts, o) {

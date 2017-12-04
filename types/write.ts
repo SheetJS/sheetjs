@@ -159,6 +159,7 @@ const filenames: Array<[string]|[string, XLSX.WritingOptions]> = [
 	['sheetjs.csv'],
 	['sheetjs.txt'],
 	['sheetjs.slk'],
+	['sheetjs.eth'],
 	['sheetjs.htm'],
 	['sheetjs.dif'],
 	['sheetjs.dbf', {sheet:"Hidden"}],

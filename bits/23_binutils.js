@@ -126,6 +126,12 @@ function ReadShift(size/*:number*/, t/*:?string*/)/*:number|string*/ {
 				loc+=2;
 			} o = oo.join(""); size *= 2; break;
 
+		case 'cpstr':
+			if(typeof cptable !== 'undefined') {
+				o = cptable.utils.decode(current_codepage, this.slice(this.l, this.l + size));
+				break;
+			}
+		/* falls through */
 		case 'sbcs-cont': o = ""; loc = this.l;
 			for(i = 0; i != size; ++i) {
 				if(this.lens && this.lens.indexOf(loc) !== -1) {

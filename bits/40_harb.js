@@ -580,6 +580,105 @@ var DIF = (function() {
 	};
 })();
 
+var ETH = (function() {
+	function decode(s/*:string*/)/*:string*/ { return s.replace(/\\b/g,"\\").replace(/\\c/g,":").replace(/\\n/g,"\n"); }
+	function encode(s/*:string*/)/*:string*/ { return s.replace(/\\/g, "\\b").replace(/:/g, "\\c").replace(/\n/g,"\\n"); }
+
+	function eth_to_aoa(str/*:string*/, opts)/*:AOA*/ {
+		var records = str.split('\n'), R = -1, C = -1, ri = 0, arr = [];
+		for (; ri !== records.length; ++ri) {
+			var record = records[ri].trim().split(":");
+			if(record[0] !== 'cell') continue;
+			var addr = decode_cell(record[1]);
+			if(arr.length <= addr.r) for(R = arr.length; R <= addr.r; ++R) if(!arr[R]) arr[R] = [];
+			R = addr.r; C = addr.c;
+			switch(record[2]) {
+				case 't': arr[R][C] = decode(record[3]); break;
+				case 'v': arr[R][C] = +record[3]; break;
+				case 'vtf': var _f = record[record.length - 1];
+					/* falls through */
+				case 'vtc':
+					switch(record[3]) {
+						case 'nl': arr[R][C] = +record[4] ? true : false; break;
+						default: arr[R][C] = +record[4]; break;
+					}
+					if(record[2] == 'vtf') arr[R][C] = [arr[R][C], _f];
+			}
+		}
+		return arr;
+	}
+
+	function eth_to_sheet(d/*:string*/, opts)/*:Worksheet*/ { return aoa_to_sheet(eth_to_aoa(d, opts), opts); }
+	function eth_to_workbook(d/*:string*/, opts)/*:Workbook*/ { return sheet_to_workbook(eth_to_sheet(d, opts), opts); }
+
+	var header = [
+		"socialcalc:version:1.5",
+		"MIME-Version: 1.0",
+		"Content-Type: multipart/mixed; boundary=SocialCalcSpreadsheetControlSave"
+	].join("\n");
+
+	var sep = [
+		"--SocialCalcSpreadsheetControlSave",
+		"Content-type: text/plain; charset=UTF-8"
+	].join("\n") + "\n";
+
+	/* TODO: the other parts */
+	var meta = [
+		"# SocialCalc Spreadsheet Control Save",
+		"part:sheet"
+	].join("\n");
+
+	var end = "--SocialCalcSpreadsheetControlSave--";
+
+	function sheet_to_eth_data(ws/*:Worksheet*/)/*:string*/ {
+		if(!ws || !ws['!ref']) return "";
+		var o = [], oo = [], cell, coord;
+		var r = decode_range(ws['!ref']);
+		var dense = Array.isArray(ws);
+		for(var R = r.s.r; R <= r.e.r; ++R) {
+			for(var C = r.s.c; C <= r.e.c; ++C) {
+				coord = encode_cell({r:R,c:C});
+				cell = dense ? (ws[R]||[])[C] : ws[coord];
+				if(!cell || cell.v == null || cell.t === 'z') continue;
+				oo = ["cell", coord, 't'];
+				switch(cell.t) {
+					case 's': case 'str': oo.push(encode(cell.v)); break;
+					case 'n':
+						if(!cell.f) { oo[2]='v'; oo[3]=cell.v; }
+						else { oo[2]='vtf'; oo[3]='n'; oo[4]=cell.v; oo[5]=encode(cell.f); }
+						break;
+					case 'b':
+						oo[2] = 'vt'+(cell.f?'f':'c'); oo[3]='nl'; oo[4]=+!!cell.v;
+						oo[5] = encode(cell.f||(cell.v?'TRUE':'FALSE'));
+						break;
+					case 'd':
+						var t = datenum(parseDate(cell.v));
+						oo[2] = 'vtc'; oo[3] = 'nd'; oo[4] = t;
+						oo[5] = cell.w || SSF.format(cell.z || SSF._table[14], t);
+						break;
+					case 'e': continue;
+				}
+				o.push(oo.join(":"));
+			}
+		}
+		o.push("sheet:c:" + (r.e.c-r.s.c+1) + ":r:" + (r.e.r-r.s.r+1) + ":tvf:1");
+		o.push("valueformat:1:text-wiki");
+		//o.push("copiedfrom:" + ws['!ref']); // clipboard only
+		return o.join("\n");
+	}
+
+	function sheet_to_eth(ws/*:Worksheet*/, opts/*:?any*/)/*:string*/ {
+		return [header, sep, meta, sep, sheet_to_eth_data(ws), end].join("\n");
+		// return ["version:1.5", sheet_to_eth_data(ws)].join("\n"); // clipboard form
+	}
+
+	return {
+		to_workbook: eth_to_workbook,
+		to_sheet: eth_to_sheet,
+		from_sheet: sheet_to_eth
+	};
+})();
+
 var PRN = (function() {
 	function set_text_arr(data/*:string*/, arr/*:AOA*/, R/*:number*/, C/*:number*/, o/*:any*/) {
 		if(o.raw) arr[R][C] = data;
@@ -713,7 +812,7 @@ var PRN = (function() {
 	}
 
 	function prn_to_sheet_str(str/*:string*/, opts)/*:Worksheet*/ {
-		if(str.substr(0,4) == "sep=") return dsv_to_sheet_str(str, opts);
+		if(str.slice(0,4) == "sep=") return dsv_to_sheet_str(str, opts);
 		if(str.indexOf("\t") >= 0 || str.indexOf(",") >= 0 || str.indexOf(";") >= 0) return dsv_to_sheet_str(str, opts);
 		return aoa_to_sheet(prn_to_aoa_str(str, opts), opts);
 	}
@@ -729,6 +828,7 @@ var PRN = (function() {
 			default: throw new Error("Unrecognized type " + opts.type);
 		}
 		if(bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF) str = utf8read(str.slice(3));
+		if(str.slice(0,19) == "socialcalc:version:") return ETH.to_sheet(opts.type == 'string' ? str : utf8read(str), opts);
 		return prn_to_sheet_str(str, opts);
 	}
 

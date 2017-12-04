@@ -37,6 +37,7 @@ program
 	.option('-U, --dbf',  'emit DBF  to <sheetname> or <file>.dbf (MSVFP DBF)')
 	.option('-K, --sylk', 'emit SYLK to <sheetname> or <file>.slk (Excel SYLK)')
 	.option('-P, --prn',  'emit PRN  to <sheetname> or <file>.prn (Lotus PRN)')
+	.option('-E, --eth',  'emit ETH  to <sheetname> or <file>.eth (Ethercalc)')
 	.option('-t, --txt',  'emit TXT  to <sheetname> or <file>.txt (UTF-8 TSV)')
 	.option('-r, --rtf',  'emit RTF  to <sheetname> or <file>.txt (Table RTF)')
 
@@ -188,6 +189,7 @@ if(!program.quiet && !program.book) console.error(target_sheet);
 	['sylk', '.slk'],
 	['html', '.html'],
 	['prn', '.prn'],
+	['eth', '.eth'],
 	['rtf', '.rtf'],
 	['txt', '.txt'],
 	['dbf', '.dbf'],

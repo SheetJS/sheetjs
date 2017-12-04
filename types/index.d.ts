@@ -7,6 +7,9 @@ export const version: string;
 /** SSF Formatter Library */
 export const SSF: any;
 
+/** CFB Library */
+export const CFB: any;
+
 /** Attempts to read filename and parse */
 export function readFile(filename: string, opts?: ParsingOptions): WorkBook;
 /** Attempts to parse data */
@@ -76,11 +79,25 @@ export interface CommonOptions {
     WTF?: boolean;
 
     /**
+     * When reading a file with VBA macros, expose CFB blob to `vbaraw` field
+     * When writing BIFF8/XLSB/XLSM, reseat `vbaraw` and export to file
+     * @default false
+     */
+    bookVBA?: boolean;
+
+    /**
      * When reading a file, store dates as type d (default is n)
      * When writing XLSX/XLSM file, use native date (default uses date codes)
      * @default false
      */
     cellDates?: boolean;
+
+    /**
+     * When reading a file, save style/theme info to the .s field
+     * When writing a file, export style/theme info
+     * @default false
+     */
+    cellStyles?: boolean;
 }
 
 export interface DateNFOption {
@@ -110,12 +127,6 @@ export interface ParsingOptions extends CommonOptions {
      * @default false
      */
     cellNF?: boolean;
-
-    /**
-     * Save style/theme info to the .s field
-     * @default false
-     */
-    cellStyles?: boolean;
 
     /**
      * Generate formatted text to the .w field
@@ -161,12 +172,6 @@ export interface ParsingOptions extends CommonOptions {
      * @default false
      */
     bookSheets?: boolean;
-
-    /**
-     * If true, expose vbaProject.bin to vbaraw field
-     * @default false
-     */
-    bookVBA?: boolean;
 
     /**
      * If defined and file is encrypted, use password
@@ -231,6 +236,8 @@ export interface WorkBook {
     Props?: FullProperties;
 
     Workbook?: WBProps;
+
+    vbaraw?: any;
 }
 
 export interface SheetProps {
@@ -483,7 +490,7 @@ export type ExcelDataType = 'b' | 'n' | 'e' | 's' | 'd' | 'z';
  * Type of generated workbook
  * @default 'xlsx'
  */
-export type BookType = 'xlsx' | 'xlsm' | 'xlsb' | 'xls' | 'biff8' | 'biff5' | 'biff2' | 'xlml' | 'ods' | 'fods' | 'csv' | 'txt' | 'sylk' | 'html' | 'dif' | 'rtf' | 'prn';
+export type BookType = 'xlsx' | 'xlsm' | 'xlsb' | 'xls' | 'biff8' | 'biff5' | 'biff2' | 'xlml' | 'ods' | 'fods' | 'csv' | 'txt' | 'sylk' | 'html' | 'dif' | 'rtf' | 'prn' | 'eth';
 
 /** Comment element */
 export interface Comment {
@@ -657,6 +664,15 @@ export interface XLSX$Utils {
 
     /** Generates a list of the formulae (with value fallbacks) */
     sheet_to_formulae(worksheet: WorkSheet): string[];
+
+    /** Generates DIF */
+    sheet_to_dif(worksheet: WorkSheet, options?: Sheet2HTMLOpts): string;
+
+    /** Generates SYLK (Symbolic Link) */
+    sheet_to_slk(worksheet: WorkSheet, options?: Sheet2HTMLOpts): string;
+
+    /** Generates ETH */
+    sheet_to_eth(worksheet: WorkSheet, options?: Sheet2HTMLOpts): string;
 
     /* --- Cell Address Utilities --- */
 

@@ -76,6 +76,7 @@
     + [Data Interchange Format (DIF)](README.md#data-interchange-format-dif)
     + [HTML](README.md#html)
     + [Rich Text Format (RTF)](README.md#rich-text-format-rtf)
+    + [Ethercalc Record Format (ETH)](README.md#ethercalc-record-format-eth)
 - [Testing](README.md#testing)
   * [Node](README.md#node)
   * [Browser](README.md#browser)

@@ -22,7 +22,7 @@ var opts = ({cellNF: true}/*:any*/);
 var TYPE = browser ? "binary" : "buffer";
 opts.type = TYPE;
 var fullex = [".xlsb", /*".xlsm",*/ ".xlsx"/*, ".xlml", ".xls"*/];
-var ofmt = ["xlsb", "xlsm", "xlsx", "ods", "biff2", "biff5", "biff8", "xlml", "sylk", "dif", "dbf"];
+var ofmt = ["xlsb", "xlsm", "xlsx", "ods", "biff2", "biff5", "biff8", "xlml", "sylk", "dif", "dbf", "eth"];
 var ex = fullex.slice(); ex = ex.concat([".ods", ".xls", ".xml", ".fods"]);
 if(typeof process != 'undefined' && ((process||{}).env)) {
 	opts.WTF = true;
@@ -321,7 +321,7 @@ var wbtable = {};
 	fileA.forEach(function(x) {
 		if(x.slice(-8) == ".pending" || !fs.existsSync(dir + x)) return;
 		it(x, function() {
-			var wb = X.readFile(dir + x, {WTF:opts.wtf, sheetRows:10});
+			var wb = X.readFile(dir + x, {WTF:opts.WTF, sheetRows:10});
 			parsetest(x, wb, false);
 		});
 	});
@@ -623,6 +623,7 @@ describe('output formats', function() {
 		["csv",    true,   true],
 		["txt",    true,   true],
 		["sylk",  false,   true],
+		["eth",   false,   true],
 		["html",   true,   true],
 		["dif",   false,   true],
 		["dbf",   false,  false],

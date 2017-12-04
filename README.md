@@ -128,6 +128,7 @@ enhancements, additional features by request, and dedicated support.
     + [Data Interchange Format (DIF)](#data-interchange-format-dif)
     + [HTML](#html)
     + [Rich Text Format (RTF)](#rich-text-format-rtf)
+    + [Ethercalc Record Format (ETH)](#ethercalc-record-format-eth)
 - [Testing](#testing)
   * [Node](#node)
   * [Browser](#browser)
@@ -1586,6 +1587,7 @@ Plain text format guessing follows the priority order:
 | DSV    | more unquoted `";"` chars than `"\t"` or `","` in the first 1024    |
 | TSV    | more unquoted `"\t"` chars than `","` chars in the first 1024       |
 | CSV    | one of the first 1024 characters is a comma `","`                   |
+| ETH    | starts with `socialcalc:version:`                                   |
 | PRN    | (default)                                                           |
 
 - HTML tags include: `html`, `table`, `head`, `meta`, `script`, `style`, `div`
@@ -1661,6 +1663,7 @@ output formats.  The specific file type is controlled with `bookType` option:
 | `dbf`      | `.dbf`   |   none    | single | dBASE II + VFP Extensions (DBF) |
 | `rtf`      | `.rtf`   |   none    | single | Rich Text Format (RTF)          |
 | `prn`      | `.prn`   |   none    | single | Lotus Formatted Text            |
+| `eth`      | `.eth`   |   none    | single | Ethercalc Record Format (ETH)   |
 
 - `compression` only applies to formats with ZIP containers.
 - Formats that only support a single sheet require a `sheet` option specifying
@@ -2000,6 +2003,7 @@ Despite the library name `xlsx`, it supports numerous spreadsheet file formats:
 | **Other Common Spreadsheet Output Formats**                  |:-----:|:-----:|
 | HTML Tables                                                  |  :o:  |  :o:  |
 | Rich Text Format tables (RTF)                                |       |  :o:  |
+| Ethercalc Record Format (ETH)                                |  :o:  |  :o:  |
 
 ### Excel 2007+ XML (XLSX/XLSM)
 
@@ -2232,6 +2236,16 @@ the metadata the output is valid HTML, although it does accept bare `&` symbols.
 
 Excel RTF worksheets are stored in clipboard when copying cells or ranges from a
 worksheet.  The supported codes are a subset of the Word RTF support.
+
+</details>
+
+#### Ethercalc Record Format (ETH)
+
+<details>
+  <summary>(click to show)</summary>
+
+[Ethercalc](https://ethercalc.net/) is an open source web spreadsheet powered by
+a record format reminiscent of SYLK wrapped in a MIME multi-part message.
 
 </details>
 

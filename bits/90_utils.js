@@ -222,6 +222,9 @@ var utils/*:any*/ = {
 	sheet_to_txt: sheet_to_txt,
 	sheet_to_json: sheet_to_json,
 	sheet_to_html: HTML_.from_sheet,
+	sheet_to_dif: DIF.from_sheet,
+	sheet_to_slk: SYLK.from_sheet,
+	sheet_to_eth: ETH.from_sheet,
 	sheet_to_formulae: sheet_to_formulae,
 	sheet_to_row_object_array: sheet_to_json
 };

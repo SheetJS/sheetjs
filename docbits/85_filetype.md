@@ -29,6 +29,7 @@ Despite the library name `xlsx`, it supports numerous spreadsheet file formats:
 | **Other Common Spreadsheet Output Formats**                  |:-----:|:-----:|
 | HTML Tables                                                  |  :o:  |  :o:  |
 | Rich Text Format tables (RTF)                                |       |  :o:  |
+| Ethercalc Record Format (ETH)                                |  :o:  |  :o:  |
 
 ### Excel 2007+ XML (XLSX/XLSM)
 
@@ -261,6 +262,16 @@ the metadata the output is valid HTML, although it does accept bare `&` symbols.
 
 Excel RTF worksheets are stored in clipboard when copying cells or ranges from a
 worksheet.  The supported codes are a subset of the Word RTF support.
+
+</details>
+
+#### Ethercalc Record Format (ETH)
+
+<details>
+  <summary>(click to show)</summary>
+
+[Ethercalc](https://ethercalc.net/) is an open source web spreadsheet powered by
+a record format reminiscent of SYLK wrapped in a MIME multi-part message.
 
 </details>
 

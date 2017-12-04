@@ -21,4 +21,5 @@ var write_rtf_str = write_obj_str(RTF);
 var write_txt_str = write_obj_str({from_sheet:sheet_to_txt});
 // $FlowIgnore
 var write_dbf_buf = write_obj_str(DBF);
+var write_eth_str = write_obj_str(ETH);
 

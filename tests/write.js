@@ -171,6 +171,7 @@ var filenames = [
 	['sheetjs.csv'],
 	['sheetjs.txt'],
 	['sheetjs.slk'],
+	['sheetjs.eth'],
 	['sheetjs.htm'],
 	['sheetjs.dif'],
 	['sheetjs.dbf', {sheet:"Hidden"}],

@@ -49,6 +49,7 @@ output formats.  The specific file type is controlled with `bookType` option:
 | `dbf`      | `.dbf`   |   none    | single | dBASE II + VFP Extensions (DBF) |
 | `rtf`      | `.rtf`   |   none    | single | Rich Text Format (RTF)          |
 | `prn`      | `.prn`   |   none    | single | Lotus Formatted Text            |
+| `eth`      | `.eth`   |   none    | single | Ethercalc Record Format (ETH)   |
 
 - `compression` only applies to formats with ZIP containers.
 - Formats that only support a single sheet require a `sheet` option specifying

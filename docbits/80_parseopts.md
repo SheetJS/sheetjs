@@ -100,6 +100,7 @@ Plain text format guessing follows the priority order:
 | DSV    | more unquoted `";"` chars than `"\t"` or `","` in the first 1024    |
 | TSV    | more unquoted `"\t"` chars than `","` chars in the first 1024       |
 | CSV    | one of the first 1024 characters is a comma `","`                   |
+| ETH    | starts with `socialcalc:version:`                                   |
 | PRN    | (default)                                                           |
 
 - HTML tags include: `html`, `table`, `head`, `meta`, `script`, `style`, `div`

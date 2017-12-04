@@ -92,6 +92,7 @@ function writeSync(wb/*:Workbook*/, opts/*:?WriteOpts*/) {
 		case 'dbf': return write_binary_type(write_dbf_buf(wb, o), o);
 		case 'prn': return write_string_type(write_prn_str(wb, o), o);
 		case 'rtf': return write_string_type(write_rtf_str(wb, o), o);
+		case 'eth': return write_string_type(write_eth_str(wb, o), o);
 		case 'fods': return write_string_type(write_ods(wb, o), o);
 		case 'biff2': if(!o.biff) o.biff = 2; /* falls through */
 		case 'biff3': if(!o.biff) o.biff = 3; /* falls through */
@@ -113,6 +114,7 @@ function resolve_book_type(o/*:WriteFileOpts*/) {
 		"xls": "biff8",
 		"htm": "html",
 		"slk": "sylk",
+		"socialcalc": "eth",
 		"Sh33tJS": "WTF"
 	};
 	var ext = o.file.slice(o.file.lastIndexOf(".")).toLowerCase();
