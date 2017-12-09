@@ -200,6 +200,7 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 	/* explicit override for some broken writers */
 	opts.codepage = 1200;
 	set_cp(1200);
+	var seen_codepage = false;
 	while(blob.l < blob.length - 1) {
 		var s = blob.l;
 		var RecordType = blob.read_shift(2);
@@ -247,8 +248,8 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 						case 0x8000: val = 10000; break;
 						case 0x8001: val =  1252; break;
 					}
-					opts.codepage = val;
-					set_cp(val);
+					set_cp(opts.codepage = val);
+					seen_codepage = true;
 					break;
 				case 'RRTabId': opts.rrtabid = val; break;
 				case 'WinProtect': opts.winlocked = val; break;
@@ -346,6 +347,7 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 					cell_valid = true;
 					out = ((options.dense ? [] : {})/*:any*/);
 
+					if(opts.biff < 8 && !seen_codepage) { seen_codepage = true; set_cp(opts.codepage = options.codepage || 1252); }
 					if(opts.biff < 5) {
 						if(cur_sheet === "") cur_sheet = "Sheet1";
 						range = {s:{r:0,c:0},e:{r:0,c:0}};

@@ -44,6 +44,8 @@ program
 	.option('-F, --field-sep <sep>', 'CSV field separator', ",")
 	.option('-R, --row-sep <sep>', 'CSV row separator', "\n")
 	.option('-n, --sheet-rows <num>', 'Number of rows to process (0=all rows)')
+	.option('--codepage <cp>', 'default to specified codepage when ambiguous')
+	.option('--req <module>', 'require module before processing')
 	.option('--sst', 'generate shared string table for XLS* formats')
 	.option('--compress', 'use compression when writing XLSX/M/B and ODS')
 	.option('--read', 'read but do not generate output')
@@ -91,6 +93,10 @@ if(!fs.existsSync(filename)) {
 	process.exit(2);
 }
 
+if(program.req) program.req.split(",").forEach(function(r) {
+	require((fs.existsSync(r) || fs.existsSync(r + '.js')) ? require('path').resolve(r) : r);
+});
+
 var opts = {}, wb/*:?Workbook*/;
 if(program.listSheets) opts.bookSheets = true;
 if(program.sheetRows) opts.sheetRows = program.sheetRows;
@@ -128,6 +134,7 @@ if(program.all) {
 	wopts.bookVBA = true;
 }
 if(program.sparse) opts.dense = false; else opts.dense = true;
+if(program.codepage) opts.codepage = +program.codepage;
 
 if(program.dev) {
 	opts.WTF = true;

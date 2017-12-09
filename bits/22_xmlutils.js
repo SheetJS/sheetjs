@@ -163,9 +163,17 @@ var matchtag = (function() {
 	};
 })();
 
-function htmldecode(str/*:string*/)/*:string*/ {
-	return str.trim().replace(/\s+/g, " ").replace(/<\s*[bB][rR]\s*\/?>/g,"\n").replace(/<[^>]*>/g,"").replace(/&nbsp;/g, " ");
-}
+var htmldecode = (function() {
+	var entities = [
+		['nbsp', ' '], ['middot', '·'],
+		['quot', '"'], ['apos', "'"], ['gt',   '>'], ['lt',   '<'], ['amp',  '&']
+	].map(function(x) { return [new RegExp('&' + x[0] + ';', "g"), x[1]]; });
+	return function htmldecode(str/*:string*/)/*:string*/ {
+		var o = str.trim().replace(/\s+/g, " ").replace(/<\s*[bB][rR]\s*\/?>/g,"\n").replace(/<[^>]*>/g,"");
+		for(var i = 0; i < entities.length; ++i) o = o.replace(entities[i][0], entities[i][1]);
+		return o;
+	};
+})();
 
 var vtregex = (function(){ var vt_cache = {};
 	return function vt_regex(bt) {

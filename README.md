@@ -1493,6 +1493,7 @@ The exported `read` and `readFile` functions accept an options argument:
 | :---------- | ------: | :--------------------------------------------------- |
 |`type`       |         | Input data encoding (see Input Type below)           |
 |`raw`        | false   | If true, plain text parsing will not parse values ** |
+|`codepage`   | 1252    | If specified, use code page when appropriate **      |
 |`cellFormula`| true    | Save formulae to the .f field                        |
 |`cellHTML`   | true    | Parse rich text and save HTML to the `.h` field      |
 |`cellNF`     | false   | Save number format string to the `.z` field          |
@@ -1526,6 +1527,8 @@ The exported `read` and `readFile` functions accept an options argument:
   XLSM and XLSB store the VBA CFB object in `xl/vbaProject.bin`. BIFF8 XLS mixes
   the VBA entries alongside the core Workbook entry, so the library generates a
   new XLSB-compatible blob from the XLS CFB container.
+- `codepage` is applied to BIFF2 - BIFF5 files without `CodePage` records and to
+  CSV files without BOM in `type:"binary"`.  BIFF8 XLS always defaults to 1200.
 - Currently only XOR encryption is supported.  Unsupported error will be thrown
   for files employing other encryption methods.
 - WTF is mainly for development.  By default, the parser will suppress read

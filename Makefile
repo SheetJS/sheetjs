@@ -92,7 +92,6 @@ nexe: xlsx.exe ## Build nexe standalone executable
 xlsx.exe: bin/xlsx.njs xlsx.js
 	tail -n+2 $< | sed 's#\.\./#./xlsx#g' > nexe.js
 	nexe -i nexe.js -o $@
-	head nexe.js
 	rm nexe.js
 
 .PHONY: pkg

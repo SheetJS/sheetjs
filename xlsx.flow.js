@@ -4,7 +4,7 @@
 /*global global, exports, module, require:false, process:false, Buffer:false */
 var XLSX = {};
 (function make_xlsx(XLSX){
-XLSX.version = '0.11.12';
+XLSX.version = '0.11.13';
 var current_codepage = 1200;
 /*:: declare var cptable:any; */
 /*global cptable:true */
@@ -2185,9 +2185,17 @@ var matchtag = (function() {
 	};
 })();
 
-function htmldecode(str/*:string*/)/*:string*/ {
-	return str.trim().replace(/\s+/g, " ").replace(/<\s*[bB][rR]\s*\/?>/g,"\n").replace(/<[^>]*>/g,"").replace(/&nbsp;/g, " ");
-}
+var htmldecode = (function() {
+	var entities = [
+		['nbsp', ' '], ['middot', '·'],
+		['quot', '"'], ['apos', "'"], ['gt',   '>'], ['lt',   '<'], ['amp',  '&']
+	].map(function(x) { return [new RegExp('&' + x[0] + ';', "g"), x[1]]; });
+	return function htmldecode(str/*:string*/)/*:string*/ {
+		var o = str.trim().replace(/\s+/g, " ").replace(/<\s*[bB][rR]\s*\/?>/g,"\n").replace(/<[^>]*>/g,"");
+		for(var i = 0; i < entities.length; ++i) o = o.replace(entities[i][0], entities[i][1]);
+		return o;
+	};
+})();
 
 var vtregex = (function(){ var vt_cache = {};
 	return function vt_regex(bt) {
@@ -6333,6 +6341,7 @@ var PRN = (function() {
 			default: throw new Error("Unrecognized type " + opts.type);
 		}
 		if(bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF) str = utf8read(str.slice(3));
+		else if((opts.type == 'binary' || opts.type == 'buffer') && typeof cptable !== 'undefined' && opts.codepage)  str = cptable.utils.decode(opts.codepage, cptable.utils.encode(1252,str));
 		if(str.slice(0,19) == "socialcalc:version:") return ETH.to_sheet(opts.type == 'string' ? str : utf8read(str), opts);
 		return prn_to_sheet_str(str, opts);
 	}
@@ -15128,6 +15137,7 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 	/* explicit override for some broken writers */
 	opts.codepage = 1200;
 	set_cp(1200);
+	var seen_codepage = false;
 	while(blob.l < blob.length - 1) {
 		var s = blob.l;
 		var RecordType = blob.read_shift(2);
@@ -15175,8 +15185,8 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 						case 0x8000: val = 10000; break;
 						case 0x8001: val =  1252; break;
 					}
-					opts.codepage = val;
-					set_cp(val);
+					set_cp(opts.codepage = val);
+					seen_codepage = true;
 					break;
 				case 'RRTabId': opts.rrtabid = val; break;
 				case 'WinProtect': opts.winlocked = val; break;
@@ -15274,6 +15284,7 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 					cell_valid = true;
 					out = ((options.dense ? [] : {})/*:any*/);
 
+					if(opts.biff < 8 && !seen_codepage) { seen_codepage = true; set_cp(opts.codepage = options.codepage || 1252); }
 					if(opts.biff < 5) {
 						if(cur_sheet === "") cur_sheet = "Sheet1";
 						range = {s:{r:0,c:0},e:{r:0,c:0}};

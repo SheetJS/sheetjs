@@ -12,6 +12,22 @@ $ npm install -g phantomjs
 $ phantomjs phantomjs.js
 ```
 
+## Chrome Automation
+
+This was tested in puppeteer 0.9.0 (Chromium revision 494755) and `chromeless`:
+
+```bash
+$ npm install puppeteer
+$ node puppeteer.js
+
+$ npm install -g chromeless
+$ node chromeless.js
+```
+
+Since the main process is node, the read and write features should be placed in
+the webpage.  The `dist` versions are suitable for web pages.
+
+
 ## wkhtmltopdf
 
 This was tested in wkhtmltopdf 0.12.4, installed using the official binaries:
@@ -19,18 +35,6 @@ This was tested in wkhtmltopdf 0.12.4, installed using the official binaries:
 ```bash
 $ wkhtmltopdf --javascript-delay 20000 http://oss.sheetjs.com/js-xlsx/tests/ test.pdf
 ```
-
-## Puppeteer
-
-This was tested in puppeteer 0.9.0 and Chromium revision 494755:
-
-```bash
-$ npm install puppeteer
-$ node puppeteer.js
-```
-
-Since the main process is node, the read and write features should be placed in
-the webpage.  The `dist` versions are suitable for web pages.
 
 ## SlimerJS
 

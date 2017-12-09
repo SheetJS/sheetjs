@@ -30,6 +30,7 @@ digraph G {
 		wk3   [label="WK3/4"];
 		wqb   [label="WQ*\nWB*"];
 		qpw   [label="QPW"];
+		eth   [label="ETH"];
 	}
 
 	subgraph WORKBOOK {
@@ -75,5 +76,7 @@ digraph G {
 		csf -> dbf
 		html -> csf
 		csf -> html
+		csf -> eth
+		eth -> csf
 	}
 }
