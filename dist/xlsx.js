@@ -17372,7 +17372,8 @@ function parse_dom_table(table, _opts) {
 			if((RS = +elt.getAttribute("rowspan"))>0 || CS>1) merges.push({s:{r:R,c:C},e:{r:R + (RS||1) - 1, c:C + CS - 1}});
 			var o = {t:'s', v:v};
 			if(v != null) {
-				if(v.length == 0) o.t = 'z';
+				if (elt.getAttribute(t") == 's')o.t = 's';
+				else if(v.length == 0) o.t = 'z';
 				else if(opts.raw){}
 				else if(v.trim().length == 0) o.t = 's';
 				else if(v === 'TRUE') o = {t:'b', v:true};
