@@ -253,6 +253,11 @@ Excel HTML worksheets include special metadata encoded in styles.  For example,
 `mso-number-format` is a localized string containing the number format.  Despite
 the metadata the output is valid HTML, although it does accept bare `&` symbols.
 
+The writer adds type metadata to the TD elements via the `t` tag.  The parser
+looks for those tags and overrides the default interpretation. For example, text
+like `<td>12345</td>` will be parsed as numbers but `<td t="s">12345</td>` will
+be parsed as text.
+
 </details>
 
 #### Rich Text Format (RTF)

@@ -17257,32 +17257,25 @@ var HTML_ = (function() {
 				var tag = parsexmltag(cell.slice(0, cell.indexOf(">")));
 				CS = tag.colspan ? +tag.colspan : 1;
 				if((RS = +tag.rowspan)>0 || CS>1) merges.push({s:{r:R,c:C},e:{r:R + (RS||1) - 1, c:C + CS - 1}});
+				var _t = tag.t || "";
 				/* TODO: generate stub cells */
 				if(!m.length) { C += CS; continue; }
 				m = htmldecode(unescapexml(m));
-				if(range.s.r > R) range.s.r = R;
-				if(range.e.r < R) range.e.r = R;
-				if(range.s.c > C) range.s.c = C;
-				if(range.e.c < C) range.e.c = C;
-				if(opts.dense) {
-					if(!ws[R]) ws[R] = [];
-					if(!m.length){}
-					else if(opts.raw || !m.trim().length) ws[R][C] = {t:'s', v:m};
-					else if(m === 'TRUE') ws[R][C] = {t:'b', v:true};
-					else if(m === 'FALSE') ws[R][C] = {t:'b', v:false};
-					else if(!isNaN(fuzzynum(m))) ws[R][C] = {t:'n', v:fuzzynum(m)};
-					else ws[R][C] = {t:'s', v:m};
-				} else {
-					var coord = encode_cell({r:R, c:C});
-					/* TODO: value parsing */
-					if(!m.length){}
-					else if(opts.raw) ws[coord] = {t:'s', v:m};
-					else if(opts.raw || !m.trim().length) ws[coord] = {t:'s', v:m};
-					else if(m === 'TRUE') ws[coord] = {t:'b', v:true};
-					else if(m === 'FALSE') ws[coord] = {t:'b', v:false};
-					else if(!isNaN(fuzzynum(m))) ws[coord] = {t:'n', v:fuzzynum(m)};
-					else ws[coord] = {t:'s', v:m};
+				if(range.s.r > R) range.s.r = R; if(range.e.r < R) range.e.r = R;
+				if(range.s.c > C) range.s.c = C; if(range.e.c < C) range.e.c = C;
+				if(!m.length) continue;
+				var o = {t:'s', v:m};
+				if(opts.raw || !m.trim().length || _t == 's'){}
+				else if(m === 'TRUE') o = {t:'b', v:true};
+				else if(m === 'FALSE') o = {t:'b', v:false};
+				else if(!isNaN(fuzzynum(m))) o = {t:'n', v:fuzzynum(m)};
+				else if(!isNaN(fuzzydate(m).getDate())) {
+					o = ({t:'d', v:parseDate(m)});
+					if(!opts.cellDates) o = ({t:'n', v:datenum(o.v)});
+					o.z = opts.dateNF || SSF._table[14];
 				}
+				if(opts.dense) { if(!ws[R]) ws[R] = []; ws[R][C] = o; }
+				else ws[encode_cell({r:R, c:C})] = o;
 				C += CS;
 			}
 		}
@@ -17313,6 +17306,7 @@ var HTML_ = (function() {
 			var sp = {};
 			if(RS > 1) sp.rowspan = RS;
 			if(CS > 1) sp.colspan = CS;
+			sp.t = cell.t;
 			if(o.editable) w = '<span contenteditable="true">' + w + '</span>';
 			sp.id = "sjs-" + coord;
 			oo.push(writextag('td', w, sp));
@@ -17371,10 +17365,10 @@ function parse_dom_table(table, _opts) {
 			CS = +elt.getAttribute("colspan") || 1;
 			if((RS = +elt.getAttribute("rowspan"))>0 || CS>1) merges.push({s:{r:R,c:C},e:{r:R + (RS||1) - 1, c:C + CS - 1}});
 			var o = {t:'s', v:v};
+			var _t = elt.getAttribute("t") || "";
 			if(v != null) {
-				if(v.length == 0) o.t = 'z';
-				else if(opts.raw){}
-				else if(v.trim().length == 0) o.t = 's';
+				if(v.length == 0) o.t = _t || 'z';
+				else if(opts.raw || v.trim().length == 0 || _t == "s"){}
 				else if(v === 'TRUE') o = {t:'b', v:true};
 				else if(v === 'FALSE') o = {t:'b', v:false};
 				else if(!isNaN(fuzzynum(v))) o = {t:'n', v:fuzzynum(v)};

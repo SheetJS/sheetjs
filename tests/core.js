@@ -1881,6 +1881,20 @@ describe('HTML', function() {
 		assert.equal(get_cell(ws, "A1").v, "A&B");
 		assert.equal(get_cell(ws, "B1").v, "A·B");
 	});
+	describe('type override', function() {
+		function chk(ws) {
+			assert.equal(get_cell(ws, "A1").t, "s");
+			assert.equal(get_cell(ws, "A1").v, "1234567890");
+			assert.equal(get_cell(ws, "B1").t, "n");
+			assert.equal(get_cell(ws, "B1").v, 1234567890);
+		}
+		var html = "<table><tr><td t=\"s\">1234567890</td><td>1234567890</td></tr></table>";
+		it('HTML string', function() {
+			var ws = X.read(html, {type:'string'}).Sheets.Sheet1; chk(ws);
+			chk(X.read(X.utils.sheet_to_html(ws), {type:'string'}).Sheets.Sheet1);
+		});
+		if(domtest) it('DOM', function() { chk(X.utils.table_to_sheet(get_dom_element(html))); });
+	});
 });
 
 describe('js -> file -> js', function() {

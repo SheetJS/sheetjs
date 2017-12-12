@@ -1364,7 +1364,7 @@ The exported `read` and `readFile` functions accept an options argument:
 | :---------- | ------: | :--------------------------------------------------- |
 |`type`       |         | Input data encoding (see Input Type below)           |
 |`raw`        | false   | If true, plain text parsing will not parse values ** |
-|`codepage`   | 1252    | If specified, use code page when appropriate **      |
+|`codepage`   |         | If specified, use code page when appropriate **      |
 |`cellFormula`| true    | Save formulae to the .f field                        |
 |`cellHTML`   | true    | Parse rich text and save HTML to the `.h` field      |
 |`cellNF`     | false   | Save number format string to the `.z` field          |
@@ -2026,6 +2026,11 @@ behavior from Excel.  In particular, Excel extends DIF in incompatible ways:
 Excel HTML worksheets include special metadata encoded in styles.  For example,
 `mso-number-format` is a localized string containing the number format.  Despite
 the metadata the output is valid HTML, although it does accept bare `&` symbols.
+
+The writer adds type metadata to the TD elements via the `t` tag.  The parser
+looks for those tags and overrides the default interpretation. For example, text
+like `<td>12345</td>` will be parsed as numbers but `<td t="s">12345</td>` will
+be parsed as text.
 
 
 #### Rich Text Format (RTF)
