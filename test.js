@@ -1673,6 +1673,15 @@ describe('json output', function() {
 		assert.equal(json1[2][1], 5);
 		assert.equal(json1[2][3], 3);
 	});
+	it('should preserve values when column header is missing', function() {
+		/*jshint elision:true */
+		var _data = [[,"a","b",,"c"], [1,2,3,,5],[,3,4,5,6]];
+		/*jshint elision:false */
+		var _ws = X.utils.aoa_to_sheet(_data);
+		var json1 = X.utils.sheet_to_json(_ws, { raw: true });
+		assert.equal(json1[0].__EMPTY, 1);
+		assert.equal(json1[1].__EMPTY_1, 5);
+	});
 });
 
 
