@@ -718,6 +718,9 @@ export interface XLSX$Utils {
     /** Set hyperlink for a cell */
     cell_set_hyperlink(cell: CellObject, target: string, tooltip?: string): CellObject;
 
+    /** Set internal link for a cell */
+    cell_set_internal_link(cell: CellObject, target: string, tooltip?: string): CellObject;
+
     /** Add comment to a cell */
     cell_add_comment(cell: CellObject, text: string, author?: string): void;
 

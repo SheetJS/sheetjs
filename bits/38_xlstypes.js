@@ -423,29 +423,63 @@ function parse_HyperlinkMoniker(blob, length) {
 /* [MS-OSHARED] 2.3.7.9 HyperlinkString */
 function parse_HyperlinkString(blob, length) {
 	var len = blob.read_shift(4);
-	var o = blob.read_shift(len, 'utf16le').replace(chr0, "");
+	var o = len > 0 ? blob.read_shift(len, 'utf16le').replace(chr0, "") : "";
 	return o;
 }
 
-/* [MS-OSHARED] 2.3.7.1 Hyperlink Object TODO: unify params with XLSX */
-function parse_Hyperlink(blob, length) {
+/* [MS-OSHARED] 2.3.7.1 Hyperlink Object */
+function parse_Hyperlink(blob, length)/*:Hyperlink*/ {
 	var end = blob.l + length;
 	var sVer = blob.read_shift(4);
 	if(sVer !== 2) throw new Error("Unrecognized streamVersion: " + sVer);
 	var flags = blob.read_shift(2);
 	blob.l += 2;
-	var displayName, targetFrameName, moniker, oleMoniker, location, guid, fileTime;
+	var displayName, targetFrameName, moniker, oleMoniker, Location="", guid, fileTime;
 	if(flags & 0x0010) displayName = parse_HyperlinkString(blob, end - blob.l);
 	if(flags & 0x0080) targetFrameName = parse_HyperlinkString(blob, end - blob.l);
 	if((flags & 0x0101) === 0x0101) moniker = parse_HyperlinkString(blob, end - blob.l);
 	if((flags & 0x0101) === 0x0001) oleMoniker = parse_HyperlinkMoniker(blob, end - blob.l);
-	if(flags & 0x0008) location = parse_HyperlinkString(blob, end - blob.l);
+	if(flags & 0x0008) Location = parse_HyperlinkString(blob, end - blob.l);
 	if(flags & 0x0020) guid = blob.read_shift(16);
 	if(flags & 0x0040) fileTime = parse_FILETIME(blob/*, 8*/);
 	blob.l = end;
-	var target = (targetFrameName||moniker||oleMoniker);
-	if(location) target+="#"+location;
+	var target = targetFrameName||moniker||oleMoniker||"";
+	if(target && Location) target+="#"+Location;
+	if(!target) target = "#" + Location;
 	return {Target: target};
+}
+function write_Hyperlink(hl) {
+	var out = new_buf(512), i = 0;
+	var Target = hl.Target;
+	var F = Target.indexOf("#") > -1 ? 0x1f : 0x17;
+	switch(Target.charAt(0)) { case "#": F=0x1c; break; case ".": F&=~2; break; }
+	out.write_shift(4,2); out.write_shift(4, F);
+	var data = [8,6815827,6619237,4849780,83]; for(i = 0; i < data.length; ++i) out.write_shift(4, data[i]);
+	if(F == 0x1C) {
+		Target = Target.slice(1);
+		out.write_shift(4, Target.length + 1);
+		for(i = 0; i < Target.length; ++i) out.write_shift(2, Target.charCodeAt(i));
+		out.write_shift(2, 0);
+	} else if(F & 0x02) {
+		data = "e0 c9 ea 79 f9 ba ce 11 8c 82 00 aa 00 4b a9 0b".split(" ");
+		for(i = 0; i < data.length; ++i) out.write_shift(1, parseInt(data[i], 16));
+		out.write_shift(4, 2*(Target.length + 1));
+		for(i = 0; i < Target.length; ++i) out.write_shift(2, Target.charCodeAt(i));
+		out.write_shift(2, 0);
+	} else {
+		data = "03 03 00 00 00 00 00 00 c0 00 00 00 00 00 00 46".split(" ");
+		for(i = 0; i < data.length; ++i) out.write_shift(1, parseInt(data[i], 16));
+		var P = 0;
+		while(Target.slice(P*3,P*3+3)=="../"||Target.slice(P*3,P*3+3)=="..\\") ++P;
+		out.write_shift(2, P);
+		out.write_shift(4, Target.length + 1);
+		for(i = 0; i < Target.length; ++i) out.write_shift(1, Target.charCodeAt(i) & 0xFF);
+		out.write_shift(1, 0);
+		out.write_shift(2, 0xFFFF);
+		out.write_shift(2, 0xDEAD);
+		for(i = 0; i < 6; ++i) out.write_shift(4, 0);
+	}
+	return out.slice(0, out.l);
 }
 
 /* 2.5.178 LongRGBA */

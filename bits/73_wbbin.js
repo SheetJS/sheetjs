@@ -77,8 +77,9 @@ function parse_BrtName(data, length, opts) {
 		// unusedstring2: XLNullableWideString
 	//}
 	data.l = end;
-	var out = ({Name:name, Ptg:formula, Comment:comment}/*:any*/);
+	var out = ({Name:name, Ptg:formula}/*:any*/);
 	if(itab < 0xFFFFFFF) out.Sheet = itab;
+	if(comment) out.Comment = comment;
 	return out;
 }
 

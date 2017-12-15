@@ -108,19 +108,19 @@ function parse_EncryptionHeader(blob, length/*:number*/) {
 	o.KeySize = blob.read_shift(4);
 	o.ProviderType = blob.read_shift(4);
 	blob.l += 8;
-	o.CSPName = blob.read_shift((tgt-blob.l)>>1, 'utf16le').slice(0,-1);
+	o.CSPName = blob.read_shift((tgt-blob.l)>>1, 'utf16le');
 	blob.l = tgt;
 	return o;
 }
 
 /* [MS-OFFCRYPTO] 2.3.3 Encryption Verifier */
 function parse_EncryptionVerifier(blob, length/*:number*/) {
-	var o = {};
+	var o = {}, tgt = blob.l + length;
 	blob.l += 4; // SaltSize must be 0x10
 	o.Salt = blob.slice(blob.l, blob.l+16); blob.l += 16;
 	o.Verifier = blob.slice(blob.l, blob.l+16); blob.l += 16;
 	var sz = blob.read_shift(4);
-	o.VerifierHash = blob.slice(blob.l, blob.l + sz); blob.l += sz;
+	o.VerifierHash = blob.slice(blob.l, tgt); blob.l = tgt;
 	return o;
 }
 

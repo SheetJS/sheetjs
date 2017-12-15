@@ -129,6 +129,13 @@ var paths = {
 	hlxlsx:  dir + 'hyperlink_stress_test_2011.xlsx',
 	hlxlsb:  dir + 'hyperlink_stress_test_2011.xlsb',
 
+	ilxls:   dir + 'internal_link.xls',
+	ilxls5:  dir + 'internal_link.biff5',
+	ilxml:   dir + 'internal_link.xml',
+	ilxlsx:  dir + 'internal_link.xlsx',
+	ilxlsb:  dir + 'internal_link.xlsb',
+	ilods:   dir + 'internal_link.ods',
+
 	lonxls: dir + 'LONumbers.xls',
 	lonxlsx: dir + 'LONumbers.xlsx',
 
@@ -183,6 +190,7 @@ var NFPaths =  pathit("nf",  ["xlsx", "xlsb", "xls", "xml"]);
 var DTPaths =  pathit("dt",  ["xlsx", "xlsb", "xls", "xml"]);
 var NFPaths =  pathit("nf",  ["xlsx", "xlsb", "xls", "xml"]);
 var HLPaths =  pathit("hl",  ["xlsx", "xlsb", "xls", "xml"]);
+var ILPaths =  pathit("il",  ["xlsx", "xlsb", "xls", "xml", "ods", "xls5"]);
 var OLPaths =  pathit("ol",  ["xlsx", "xlsb", "xls", "ods", "xls5"]);
 var PMPaths =  pathit("pm",  ["xlsx", "xlsb", "xls", "xml", "xls5"]);
 var SVPaths =  pathit("sv",  ["xlsx", "xlsb", "xls", "xml", "xls5"]);
@@ -714,20 +722,28 @@ function diffsty(ws, r1,r2) {
 	});
 }
 
-function hlink(ws) {
-	[
-		["A1", "http://www.sheetjs.com"],
-		["A2", "http://oss.sheetjs.com"],
-		["A3", "http://oss.sheetjs.com#foo"],
-		["A4", "mailto:dev@sheetjs.com"],
-		["A5", "mailto:dev@sheetjs.com?subject=hyperlink"],
-		["A6", "../../sheetjs/Documents/Test.xlsx"],
-		["A7", "http://sheetjs.com", "foo bar baz"]
-	].forEach(function(r) {
-		assert.equal(get_cell(ws, r[0]).l.Target, r[1]);
-		assert.equal(get_cell(ws, r[0]).l.Tooltip, r[2]);
-	});
-}
+function hlink1(ws) {[
+	["A1", "http://www.sheetjs.com"],
+	["A2", "http://oss.sheetjs.com"],
+	["A3", "http://oss.sheetjs.com#foo"],
+	["A4", "mailto:dev@sheetjs.com"],
+	["A5", "mailto:dev@sheetjs.com?subject=hyperlink"],
+	["A6", "../../sheetjs/Documents/Test.xlsx"],
+	["A7", "http://sheetjs.com", "foo bar baz"]
+].forEach(function(r) {
+	assert.equal(get_cell(ws, r[0]).l.Target, r[1]);
+	if(r[2]) assert.equal(get_cell(ws, r[0]).l.Tooltip, r[2]);
+}); }
+
+function hlink2(ws) { [
+	["A1", "#Sheet2!A1"],
+	["A2", "#WBScope"],
+	["A3", "#Sheet1!WSScope1", "#Sheet1!C7:E8"],
+	["A5", "#Sheet1!A5"]
+].forEach(function(r) {
+	if(r[2] && get_cell(ws, r[0]).l.Target == r[2]) return;
+	assert.equal(get_cell(ws, r[0]).l.Target, r[1]);
+}); }
 
 function check_margin(margins, exp) {
 	["left", "right", "top", "bottom", "header", "footer"].forEach(function(m,i) {
@@ -977,16 +993,20 @@ describe('parse features', function() {
 	});
 
 	describe('should find hyperlinks', function() {
-		var wbs;
+		var wb1, wb2;
 		var bef = (function() {
 			X = require(modp);
-			wbs = HLPaths.map(function(p) { return X.read(fs.readFileSync(p), {type:TYPE}); });
+			wb1 = HLPaths.map(function(p) { return X.read(fs.readFileSync(p), {type:TYPE}); });
+			wb2 = ILPaths.map(function(p) { return X.read(fs.readFileSync(p), {type:TYPE}); });
 		});
 		if(typeof before != 'undefined') before(bef);
 		else it('before', bef);
 
-		['XLSX', 'XLSB', 'XLS', 'XML'].forEach(function(x, i) {
-			it(x, function() { hlink(wbs[i].Sheets.Sheet1); });
+		['xlsx', 'xlsb', 'xls', 'xml'].forEach(function(x, i) {
+			it(x + " external", function() { hlink1(wb1[i].Sheets.Sheet1); });
+		});
+		['xlsx', 'xlsb', 'xls', 'xml', 'ods'].forEach(function(x, i) {
+			it(x + " internal", function() { hlink2(wb2[i].Sheets.Sheet1); });
 		});
 	});
 
@@ -1351,13 +1371,19 @@ describe('roundtrip features', function() {
 	}); }); });
 
 	describe('should preserve hyperlink', function() { [
-		['xlml', paths.hlxml],
-		['xlsx', paths.hlxlsx],
-		['xlsb', paths.hlxlsb]
-	].forEach(function(w) { it(w[0], function() {
-		var wb = X.read(fs.readFileSync(w[1]), {type:TYPE});
-		hlink(wb.Sheets.Sheet1);
-		wb = X.read(X.write(wb, {bookType:w[0], type:TYPE}), {type:TYPE});
+		['xlml', paths.hlxml,   true],
+		['xls',  paths.hlxls,   true],
+		['xlsx', paths.hlxlsx,  true],
+		['xlsb', paths.hlxlsb,  true],
+		['xlml', paths.ilxml,  false],
+		['xls',  paths.ilxls,  false],
+		['xlsx', paths.ilxlsx, false],
+		['xlsb', paths.ilxlsb, false],
+		['ods',  paths.ilods,  false]
+	].forEach(function(w) { it(w[0]+" "+(w[2]?"ex":"in")+ "ternal", function() {
+		var wb = X.read(fs.readFileSync(w[1]), {type:TYPE, WTF:opts.WTF});
+		var hlink = (w[2] ? hlink1 : hlink2); hlink(wb.Sheets.Sheet1);
+		wb = X.read(X.write(wb, {bookType:w[0], type:TYPE, WTF:opts.WTF}), {type:TYPE, WTF:opts.WTF});
 		hlink(wb.Sheets.Sheet1);
 	}); }); });
 

@@ -122,16 +122,15 @@ function parse_ws_xml_hlinks(s, data/*:Array<string>*/, rels) {
 	for(var i = 0; i != data.length; ++i) {
 		var val = parsexmltag(utf8read(data[i]), true);
 		if(!val.ref) return;
-		var rel = rels ? rels['!id'][val.id] : null;
+		var rel = ((rels || {})['!id']||[])[val.id];
 		if(rel) {
 			val.Target = rel.Target;
 			if(val.location) val.Target += "#"+val.location;
-			val.Rel = rel;
 		} else {
-			val.Target = val.location;
-			rel = {Target: val.location, TargetMode: 'Internal'};
-			val.Rel = rel;
+			val.Target = "#" + val.location;
+			rel = {Target: val.Target, TargetMode: 'Internal'};
 		}
+		val.Rel = rel;
 		if(val.tooltip) { val.Tooltip = val.tooltip; delete val.tooltip; }
 		var rng = safe_decode_range(val.ref);
 		for(var R=rng.s.r;R<=rng.e.r;++R) for(var C=rng.s.c;C<=rng.e.c;++C) {
@@ -505,8 +504,11 @@ function write_ws_xml(idx/*:number*/, opts, wb/*:Workbook*/, rels)/*:string*/ {
 		o[o.length] = "<hyperlinks>";
 		ws['!links'].forEach(function(l) {
 			if(!l[1].Target) return;
-			rId = add_rels(rels, -1, escapexml(l[1].Target).replace(/#.*$/, ""), RELS.HLINK);
-			rel = ({"ref":l[0], "r:id":"rId"+rId}/*:any*/);
+			rel = ({"ref":l[0]}/*:any*/);
+			if(l[1].Target.charAt(0) != "#") {
+				rId = add_rels(rels, -1, escapexml(l[1].Target).replace(/#.*$/, ""), RELS.HLINK);
+				rel["r:id"] = "rId"+rId;
+			}
 			if((relc = l[1].Target.indexOf("#")) > -1) rel.location = escapexml(l[1].Target.substr(relc+1));
 			if(l[1].Tooltip) rel.tooltip = escapexml(l[1].Tooltip);
 			o[o.length] = writextag("hyperlink",null,rel);

@@ -80,6 +80,7 @@ utils.cell_set_hyperlink = function(cell/*:Cell*/, target/*:string*/, tooltip/*:
 	}
 	return cell;
 };
+utils.cell_set_internal_link = function(cell/*:Cell*/, range/*:string*/, tooltip/*:?string*/) { return utils.cell_set_hyperlink(cell, "#" + range, tooltip); };
 
 /* add to cell comments */
 utils.cell_add_comment = function(cell/*:Cell*/, text/*:string*/, author/*:?string*/) {

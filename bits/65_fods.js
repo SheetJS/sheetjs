@@ -20,8 +20,13 @@ function csf_to_ods_formula(f/*:string*/)/*:string*/ {
 	return o.replace(/;/g, "|").replace(/,/g,";");
 }
 
-function ods_to_csf_range_3D(r/*:string*/)/*:[string, string]*/ {
+function ods_to_csf_3D(r/*:string*/)/*:[string, string]*/ {
 	var a = r.split(":");
 	var s = a[0].split(".")[0];
-	return [s, a[0].split(".")[1] + ":" + a[1].split(".")[1]];
+	return [s, a[0].split(".")[1] + (a.length > 1 ? (":" + (a[1].split(".")[1] || a[1].split(".")[0])) : "")];
 }
+
+function csf_to_ods_3D(r/*:string*/)/*:string*/ {
+	return r.replace(/\./,"!");
+}
+

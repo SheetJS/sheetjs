@@ -1255,6 +1255,7 @@ sense when the producer and consumer of files are in the same locale, but that
 is not always the case over the Internet.  To get around this ambiguity, parse
 functions accept the `dateNF` option to override the interpretation of that
 specific format string.
+
 #### Hyperlinks
 
 Hyperlinks are stored in the `l` key of cell objects.  The `Target` field of the
@@ -1271,6 +1272,13 @@ ws['A3'].l = { Target:"http://sheetjs.com", Tooltip:"Find us @ SheetJS.com!" };
 
 Note that Excel does not automatically style hyperlinks -- they will generally
 be displayed as normal text.
+
+Links where the target is a cell or range or defined name in the same workbook
+("Internal Links") are marked with a leading hash character:
+
+```js
+ws['A2'].l = { Target:"#E2" }; /* link to cell E2 */
+```
 
 #### Cell Comments
 

@@ -90,7 +90,12 @@ var write_content_ods/*:{(wb:any, opts:any):string}*/ = (function() {
 					//case 'e':
 					default: o.push(null_cell_xml); continue;
 				}
-				o.push('          ' + writextag('table:table-cell', writextag('text:p', write_text_p(textp), {}), ct) + '\n');
+				var text_p = write_text_p(textp);
+				if(cell.l && cell.l.Target) {
+					var _tgt = cell.l.Target; _tgt = _tgt.charAt(0) == "#" ? "#" + csf_to_ods_3D(_tgt.slice(1)) : _tgt;
+					text_p = writextag('text:a', text_p, {'xlink:href': _tgt});
+				}
+				o.push('          ' + writextag('table:table-cell', writextag('text:p', text_p, {}), ct) + '\n');
 			}
 			o.push('        </table:table-row>\n');
 		}

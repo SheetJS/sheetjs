@@ -39,7 +39,7 @@ var parse_content_xml = (function() {
 		var rowtag/*:: = {'行号':""}*/;
 		var Sheets = {}, SheetNames/*:Array<string>*/ = [];
 		var ws = opts.dense ? ([]/*:any*/) : ({}/*:any*/);
-		var Rn, q/*:: = ({t:"", v:null, z:null, w:"",c:[]}:any)*/;
+		var Rn, q/*:: :any = ({t:"", v:null, z:null, w:"",c:[],}:any)*/;
 		var ctag = ({value:""}/*:any*/);
 		var textp = "", textpidx = 0, textptag/*:: = {}*/;
 		var R = -1, C = -1, range = {s: {r:1000000,c:10000000}, e: {r:0, c:0}};
@@ -48,9 +48,12 @@ var parse_content_xml = (function() {
 		var merges = [], mrange = {}, mR = 0, mC = 0;
 		var rowinfo = [], rowpeat = 1, colpeat = 1;
 		var arrayf = [];
+		var WB = {Names:[]};
+		var atag = ({}/*:any*/);
+		var _Ref/*:[string, string]*/ = ["", ""];
 		var comments = [], comment = {};
 		var creator = "", creatoridx = 0;
-		var isstub = false;
+		var isstub = false, intable = false;
 		var i = 0;
 		xlmlregex.lastIndex = 0;
 		str = str.replace(/<!--([\s\S]*?)-->/mg,"").replace(/<!DOCTYPE[^\[]*\[[^\]]*\]>/gm,"");
@@ -64,6 +67,7 @@ var parse_content_xml = (function() {
 					sheetag.name = utf8read(sheetag['名称'] || sheetag.name);
 					SheetNames.push(sheetag.name);
 					Sheets[sheetag.name] = ws;
+					intable = false;
 				}
 				else if(Rn[0].charAt(Rn[0].length-2) !== '/') {
 					sheetag = parsexmltag(Rn[0], false);
@@ -71,6 +75,7 @@ var parse_content_xml = (function() {
 					range.s.r = range.s.c = 10000000; range.e.r = range.e.c = 0;
 					ws = opts.dense ? ([]/*:any*/) : ({}/*:any*/); merges = [];
 					rowinfo = [];
+					intable = true;
 				}
 				break;
 
@@ -167,6 +172,7 @@ var parse_content_xml = (function() {
 						q.v = textp || '';
 						isstub = textpidx == 0;
 					}
+					if(atag.Target) q.l = atag;
 					if(comments.length > 0) { q.c = comments; comments = []; }
 					if(textp && opts.cellText !== false) q.w = textp;
 					if(!isstub || opts.sheetStubs) {
@@ -190,6 +196,7 @@ var parse_content_xml = (function() {
 					q = {/*:: t:"", v:null, z:null, w:"",c:[]*/};
 					textp = "";
 				}
+				atag = ({}/*:any*/);
 				break; // 9.1.4 <table:table-cell>
 
 			/* pure state */
@@ -320,6 +327,15 @@ var parse_content_xml = (function() {
 				}
 				else pidx = Rn.index + Rn[0].length;
 				break;
+
+			case 'named-range': // 9.4.12 <table:named-range>
+				tag = parsexmltag(Rn[0], false);
+				_Ref = ods_to_csf_3D(tag['cell-range-address']);
+				var nrange = ({Name:tag.name, Ref:_Ref[0] + '!' + _Ref[1]}/*:any*/);
+				if(intable) nrange.Sheet = SheetNames.length;
+				WB.Names.push(nrange);
+				break;
+
 			case 'text-content': break; // 16.27.27 <number:text-content>
 			case 'text-properties': break; // 16.27.27 <style:text-properties>
 			case 'embedded-text': break; // 16.27.4 <number:embedded-text>
@@ -340,7 +356,6 @@ var parse_content_xml = (function() {
 			case 'graphic-properties': break; // 17.21 <style:graphic-properties>
 			case 'calculation-settings': break; // 9.4.1 <table:calculation-settings>
 			case 'named-expressions': break; // 9.4.11 <table:named-expressions>
-			case 'named-range': break; // 9.4.12 <table:named-range>
 			case 'label-range': break; // 9.4.9 <table:label-range>
 			case 'label-ranges': break; // 9.4.10 <table:label-ranges>
 			case 'named-expression': break; // 9.4.13 <table:named-expression>
@@ -360,8 +375,8 @@ var parse_content_xml = (function() {
 			case 'database-range': // 9.4.15 <table:database-range>
 				if(Rn[1]==='/') break;
 				try {
-					var AutoFilter = ods_to_csf_range_3D(parsexmltag(Rn[0])['target-range-address']);
-					Sheets[AutoFilter[0]]['!autofilter'] = { ref: AutoFilter[1] };
+					_Ref = ods_to_csf_3D(parsexmltag(Rn[0])['target-range-address']);
+					Sheets[_Ref[0]]['!autofilter'] = { ref:_Ref[1] };
 				} catch(e) {/* empty */}
 				break;
 
@@ -476,7 +491,17 @@ var parse_content_xml = (function() {
 			case 'properties': break; // 13.7 <form:properties>
 			case 'property': break; // 13.8 <form:property>
 
-			case 'a': break; // 6.1.8 hyperlink
+			case 'a': // 6.1.8 hyperlink
+				if(Rn[1]!== '/') {
+					atag = parsexmltag(Rn[0], false);
+					if(!atag.href) break;
+					atag.Target = atag.href; delete atag.href;
+					if(atag.Target.charAt(0) == "#" && atag.Target.indexOf(".") > -1) {
+						_Ref = ods_to_csf_3D(atag.Target.slice(1));
+						atag.Target = "#" + _Ref[0] + "!" + _Ref[1];
+					}
+				}
+				break;
 
 			/* non-standard */
 			case 'table-protection': break;
@@ -499,10 +524,11 @@ var parse_content_xml = (function() {
 				default: if(opts.WTF) throw new Error(Rn);
 			}
 		}
-		var out = {
+		var out/*:Workbook*/ = ({
 			Sheets: Sheets,
-			SheetNames: SheetNames
-		};
+			SheetNames: SheetNames,
+			Workbook: WB
+		}/*:any*/);
 		if(opts.bookSheets) delete out.Sheets;
 		return out;
 	};

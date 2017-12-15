@@ -85,6 +85,15 @@ function write_biff2_buf(wb/*:Workbook*/, opts/*:WriteOpts*/) {
 	return ba.end();
 }
 
+function write_ws_biff8_hlinks(ba/*:BufArray*/, ws) {
+	for(var R=0; R<ws['!links'].length; ++R) {
+		var HL = ws['!links'][R];
+		write_biff_rec(ba, "HLink", write_HLink(HL));
+		if(HL[1].Tooltip) write_biff_rec(ba, "HLinkTooltip", write_HLinkTooltip(HL));
+	}
+	delete ws['!links'];
+}
+
 function write_ws_biff8_cell(ba/*:BufArray*/, cell/*:Cell*/, R/*:number*/, C/*:number*/, opts) {
 	if(cell.v != null) switch(cell.t) {
 		case 'd': case 'n':
@@ -109,6 +118,7 @@ function write_ws_biff8(idx/*:number*/, opts, wb/*:Workbook*/) {
 	var dense = Array.isArray(ws);
 	var ref/*:string*/, rr = "", cols/*:Array<string>*/ = [];
 	var range = safe_decode_range(ws['!ref'] || "A1");
+	var b8 = opts.biff == 8, b5 = opts.biff == 5;
 	write_biff_rec(ba, 0x0809, write_BOF(wb, 0x10, opts));
 	/* ... */
 	write_biff_rec(ba, "CalcMode", writeuint16(1));
@@ -128,6 +138,7 @@ function write_ws_biff8(idx/*:number*/, opts, wb/*:Workbook*/) {
 	write_biff_rec(ba, "Dimensions", write_Dimensions(range, opts));
 	/* ... */
 
+	if(b8) ws['!links'] = [];
 	for(var R = range.s.r; R <= range.e.r; ++R) {
 		rr = encode_row(R);
 		for(var C = range.s.c; C <= range.e.c; ++C) {
@@ -137,9 +148,13 @@ function write_ws_biff8(idx/*:number*/, opts, wb/*:Workbook*/) {
 			if(!cell) continue;
 			/* write cell */
 			write_ws_biff8_cell(ba, cell, R, C, opts);
+			if(b8 && cell.l) ws['!links'].push([ref, cell.l]);
 		}
 	}
 	var cname/*:string*/ = _sheet.CodeName || _sheet.name || s;
+	/* ... */
+	if(b8) write_ws_biff8_hlinks(ba, ws);
+	/* ... */
 	write_biff_rec(ba, "CodeName", write_XLUnicodeString(cname, opts));
 	/* ... */
 	write_biff_rec(ba, "EOF");

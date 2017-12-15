@@ -84,9 +84,13 @@ ws['!rows'] = wsrows;
 
 /* TEST: hyperlink note: Excel does not automatically style hyperlinks */
 /*
+ws['A4'].l = { Target: "#E2" };
+*/
+XLSX.utils.cell_set_internal_link(ws['A4'], "E2");
+/*
 ws['A3'].l = { Target: "http://sheetjs.com", Tooltip: "Visit us <SheetJS.com!>" };
 */
-XLSX.utils.cell_set_hyperlink(ws['A3'], "http://sheetjs.com", "Visit us <SheetJS.com!>" );
+XLSX.utils.cell_set_hyperlink(ws['A3'], "http://sheetjs.com", "Visit us <SheetJS.com!>");
 
 /* TEST: built-in format */
 /*

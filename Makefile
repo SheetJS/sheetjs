@@ -102,7 +102,7 @@ pkg: bin/xlsx.njs xlsx.js ## Build pkg standalone executable
 
 .PHONY: test mocha
 test mocha: test.js ## Run test suite
-	mocha -R spec -t 20000
+	mocha -R spec -t 30000
 
 #*                      To run tests for one format, make test_<fmt>
 #*                      To run the core test suite, make test_misc
@@ -203,11 +203,11 @@ $(COVFMT): cov_%:
 	FMTS=$* make cov
 
 misc/coverage.html: $(TARGET) test.js
-	mocha --require blanket -R html-cov -t 20000 > $@
+	mocha --require blanket -R html-cov -t 30000 > $@
 
 .PHONY: coveralls
 coveralls: ## Coverage Test + Send to coveralls.io
-	mocha --require blanket --reporter mocha-lcov-reporter -t 20000 | node ./node_modules/coveralls/bin/coveralls.js
+	mocha --require blanket --reporter mocha-lcov-reporter -t 30000 | node ./node_modules/coveralls/bin/coveralls.js
 
 READEPS=$(sort $(wildcard docbits/*.md))
 README.md: $(READEPS)

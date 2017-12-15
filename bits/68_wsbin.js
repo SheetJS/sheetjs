@@ -265,8 +265,8 @@ function parse_BrtHLink(data, length, opts) {
 	if(tooltip) o.Tooltip = tooltip;
 	return o;
 }
-function write_BrtHLink(l, rId, o) {
-	if(o == null) o = new_buf(50+4*l[1].Target.length);
+function write_BrtHLink(l, rId) {
+	var o = new_buf(50+4*(l[1].Target.length + (l[1].Tooltip || "").length));
 	write_UncheckedRfX({s:decode_cell(l[0]), e:decode_cell(l[0])}, o);
 	write_RelID("rId" + rId, o);
 	var locidx = l[1].Target.indexOf("#");
@@ -493,6 +493,8 @@ function parse_ws_bin(data, _opts, idx, rels, wb, themes, styles)/*:Worksheet*/ 
 					val.Target = rel.Target;
 					if(val.loc) val.Target += "#"+val.loc;
 					val.Rel = rel;
+				} else if(val.relId == '') {
+					val.Target = "#" + val.loc;
 				}
 				for(R=val.rfx.s.r;R<=val.rfx.e.r;++R) for(C=val.rfx.s.c;C<=val.rfx.e.c;++C) {
 					if(opts.dense) {

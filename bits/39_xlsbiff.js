@@ -601,8 +601,9 @@ function parse_Lbl(blob, length, opts) {
 	var cce = blob.read_shift(opts && opts.biff == 2 ? 1 : 2);
 	var itab = 0;
 	if(!opts || opts.biff >= 5) {
-		blob.l += 2;
+		if(opts.biff != 5) blob.l += 2;
 		itab = blob.read_shift(2);
+		if(opts.biff == 5) blob.l += 2;
 		blob.l += 4;
 	}
 	var name = parse_XLUnicodeStringNoCch(blob, cch, opts);
@@ -787,6 +788,16 @@ function parse_HLink(blob, length) {
 	var hlink = parse_Hyperlink(blob, length-24);
 	return [ref, hlink];
 }
+function write_HLink(hl) {
+	var O = new_buf(24);
+	var ref = decode_cell(hl[0]);
+	O.write_shift(2, ref.r); O.write_shift(2, ref.r);
+	O.write_shift(2, ref.c); O.write_shift(2, ref.c);
+	var clsid = "d0 c9 ea 79 f9 ba ce 11 8c 82 00 aa 00 4b a9 0b".split(" ");
+	for(var i = 0; i < 16; ++i) O.write_shift(1, parseInt(clsid[i], 16));
+	return bconcat([O, write_Hyperlink(hl[1])]);
+}
+
 
 /* 2.4.141 */
 function parse_HLinkTooltip(blob, length) {
@@ -796,6 +807,17 @@ function parse_HLinkTooltip(blob, length) {
 	var wzTooltip = blob.read_shift((length-10)/2, 'dbcs-cont');
 	wzTooltip = wzTooltip.replace(chr0,"");
 	return [ref, wzTooltip];
+}
+function write_HLinkTooltip(hl) {
+	var TT = hl[1].Tooltip;
+	var O = new_buf(10 + 2 * (TT.length + 1));
+	O.write_shift(2, 0x0800);
+	var ref = decode_cell(hl[0]);
+	O.write_shift(2, ref.r); O.write_shift(2, ref.r);
+	O.write_shift(2, ref.c); O.write_shift(2, ref.c);
+	for(var i = 0; i < TT.length; ++i) O.write_shift(2, TT.charCodeAt(i));
+	O.write_shift(2, 0);
+	return O;
 }
 
 /* 2.4.63 */

@@ -70,6 +70,12 @@
 ./test_files/hyperlink_stress_test_2011.xml
 ./test_files/hyperlink_stress_test_2011.xlsx
 ./test_files/hyperlink_stress_test_2011.xlsb
+./test_files/internal_link.xls
+./test_files/internal_link.biff5
+./test_files/internal_link.xml
+./test_files/internal_link.xlsx
+./test_files/internal_link.xlsb
+./test_files/internal_link.ods
 ./test_files/LONumbers.xls
 ./test_files/LONumbers.xlsx
 ./test_files/merge_cells.xls
