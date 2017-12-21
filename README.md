@@ -3,7 +3,7 @@
 Parser and writer for various spreadsheet formats.  Pure-JS cleanroom implementation from official specifications and related documents.
 
 # About this fork
-**NOTE:** This project is a fork of the original [xlsx-style](https://github.com/protobi/js-xlsx) project.
+**NOTE:** This project is a fork of the original [xlsx-style](https://github.com/protobi/js-xlsx) project.<br/>
 Modifications made by: [The Cactus Group](https://github.com/thecactusgroup):
 1) The project had a bug that caused the output files to be much bigger in size than what expected, we made a small fix that allows the library to use compression methods when creating the file, the difference is notorious!
 
