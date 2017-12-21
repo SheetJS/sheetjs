@@ -1,5 +1,5 @@
 {
-	"name": "xlsx",
+	"name": "xlsx-style",
 	"version": "0.8.20",
 	"author": "sheetjs",
 	"description": "Excel (XLSB/XLSX/XLSM/XLS/XML) and ODS spreadsheet parser and writer (extended to enable read/write of cell formats with xlsx files)",
