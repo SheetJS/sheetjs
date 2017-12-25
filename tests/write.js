@@ -158,6 +158,7 @@ ws['!protect'] = {
 if(!wb.Workbook) wb.Workbook = {Sheets:[], WBProps:{}};
 if(!wb.Workbook.WBProps) wb.Workbook.WBProps = {};
 wb.Workbook.WBProps.filterPrivacy = true;
+//wb.Workbook.Views = [{RTL:true}];
 
 console.log("Worksheet Model:");
 console.log(ws);

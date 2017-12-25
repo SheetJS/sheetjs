@@ -271,6 +271,9 @@ export interface WBProps {
     /** Defined Names */
     Names?: DefinedName[];
 
+    /** Workbook Views */
+    Views?: any[];
+
     /** Other Workbook Properties */
     WBProps?: WorkbookProperties;
 }

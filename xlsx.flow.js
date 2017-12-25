@@ -4,7 +4,7 @@
 /*global global, exports, module, require:false, process:false, Buffer:false */
 var XLSX = {};
 (function make_xlsx(XLSX){
-XLSX.version = '0.11.14';
+XLSX.version = '0.11.15';
 var current_codepage = 1200;
 /*:: declare var cptable:any; */
 /*global cptable:true */
@@ -3468,6 +3468,7 @@ var CT_LIST = (function(){
 			xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml",
 			xlsm: "application/vnd.ms-excel.sheet.macroEnabled.main+xml",
 			xlsb: "application/vnd.ms-excel.sheet.binary.macroEnabled.main",
+			xlam: "application/vnd.ms-excel.addin.macroEnabled.main+xml",
 			xltx: "application/vnd.openxmlformats-officedocument.spreadsheetml.template.main+xml"
 		},
 		strs: { /* Shared Strings */
@@ -11836,7 +11837,10 @@ function write_ws_xml_autofilter(data)/*:string*/ {
 /* 18.3.1.88 sheetViews CT_SheetViews */
 /* 18.3.1.87 sheetView CT_SheetView */
 function write_ws_xml_sheetviews(ws, opts, idx, wb)/*:string*/ {
-	return writextag("sheetViews", writextag("sheetView", null, {workbookViewId:"0"}), {});
+	var sview = {workbookViewId:"0"};
+	// $FlowIgnore
+	if( (((wb||{}).Workbook||{}).Views||[])[0] ) sview.rightToLeft = wb.Workbook.Views[0].RTL ? "1" : "0";
+	return writextag("sheetViews", writextag("sheetView", null, sview), {});
 }
 
 function write_ws_xml_cell(cell, ref, ws, opts, idx, wb) {
@@ -12534,9 +12538,12 @@ function write_BrtMargins(margins/*:Margins*/, o) {
 }
 
 /* [MS-XLSB] 2.4.292 BrtBeginWsView */
-function write_BrtBeginWsView(ws, o) {
+function write_BrtBeginWsView(ws, Workbook, o) {
 	if(o == null) o = new_buf(30);
-	o.write_shift(2, 924); // bit flag
+	var f = 0x39c;
+	// $FlowIgnore
+	if((((Workbook||{}).Views||[])[0]||{}).RTL) f |= 0x20;
+	o.write_shift(2, f); // bit flag
 	o.write_shift(4, 0);
 	o.write_shift(4, 0); // view first row
 	o.write_shift(4, 0); // view first col
@@ -12947,11 +12954,11 @@ function write_AUTOFILTER(ba, ws) {
 	write_record(ba, "BrtEndAFilter");
 }
 
-function write_WSVIEWS2(ba, ws) {
+function write_WSVIEWS2(ba, ws, Workbook) {
 	write_record(ba, "BrtBeginWsViews");
 	{ /* 1*WSVIEW2 */
 		/* [ACUID] */
-		write_record(ba, "BrtBeginWsView", write_BrtBeginWsView(ws));
+		write_record(ba, "BrtBeginWsView", write_BrtBeginWsView(ws, Workbook));
 		/* [BrtPane] */
 		/* *4BrtSel */
 		/* *4SXSELECT */
@@ -12984,7 +12991,7 @@ function write_ws_bin(idx/*:number*/, opts, wb/*:Workbook*/, rels) {
 	write_record(ba, "BrtBeginSheet");
 	write_record(ba, "BrtWsProp", write_BrtWsProp(c));
 	write_record(ba, "BrtWsDim", write_BrtWsDim(r));
-	write_WSVIEWS2(ba, ws);
+	write_WSVIEWS2(ba, ws, wb.Workbook);
 	write_WSFMTINFO(ba, ws);
 	write_COLINFOS(ba, ws, idx, opts, wb);
 	write_CELLTABLE(ba, ws, idx, opts, wb);
@@ -17436,7 +17443,6 @@ var HTML_ = (function() {
 				var m = cell, cc = 0;
 				/* TODO: parse styles etc */
 				while(m.charAt(0) == "<" && (cc = m.indexOf(">")) > -1) m = m.slice(cc+1);
-				while(m.indexOf(">") > -1) m = m.slice(0, m.lastIndexOf("<"));
 				var tag = parsexmltag(cell.slice(0, cell.indexOf(">")));
 				CS = tag.colspan ? +tag.colspan : 1;
 				if((RS = +tag.rowspan)>0 || CS>1) merges.push({s:{r:R,c:C},e:{r:R + (RS||1) - 1, c:C + CS - 1}});

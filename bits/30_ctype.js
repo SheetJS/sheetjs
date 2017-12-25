@@ -148,6 +148,7 @@ var CT_LIST = (function(){
 			xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml",
 			xlsm: "application/vnd.ms-excel.sheet.macroEnabled.main+xml",
 			xlsb: "application/vnd.ms-excel.sheet.binary.macroEnabled.main",
+			xlam: "application/vnd.ms-excel.addin.macroEnabled.main+xml",
 			xltx: "application/vnd.openxmlformats-officedocument.spreadsheetml.template.main+xml"
 		},
 		strs: { /* Shared Strings */

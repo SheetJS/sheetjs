@@ -335,9 +335,12 @@ function write_BrtMargins(margins/*:Margins*/, o) {
 }
 
 /* [MS-XLSB] 2.4.292 BrtBeginWsView */
-function write_BrtBeginWsView(ws, o) {
+function write_BrtBeginWsView(ws, Workbook, o) {
 	if(o == null) o = new_buf(30);
-	o.write_shift(2, 924); // bit flag
+	var f = 0x39c;
+	// $FlowIgnore
+	if((((Workbook||{}).Views||[])[0]||{}).RTL) f |= 0x20;
+	o.write_shift(2, f); // bit flag
 	o.write_shift(4, 0);
 	o.write_shift(4, 0); // view first row
 	o.write_shift(4, 0); // view first col
@@ -748,11 +751,11 @@ function write_AUTOFILTER(ba, ws) {
 	write_record(ba, "BrtEndAFilter");
 }
 
-function write_WSVIEWS2(ba, ws) {
+function write_WSVIEWS2(ba, ws, Workbook) {
 	write_record(ba, "BrtBeginWsViews");
 	{ /* 1*WSVIEW2 */
 		/* [ACUID] */
-		write_record(ba, "BrtBeginWsView", write_BrtBeginWsView(ws));
+		write_record(ba, "BrtBeginWsView", write_BrtBeginWsView(ws, Workbook));
 		/* [BrtPane] */
 		/* *4BrtSel */
 		/* *4SXSELECT */
@@ -785,7 +788,7 @@ function write_ws_bin(idx/*:number*/, opts, wb/*:Workbook*/, rels) {
 	write_record(ba, "BrtBeginSheet");
 	write_record(ba, "BrtWsProp", write_BrtWsProp(c));
 	write_record(ba, "BrtWsDim", write_BrtWsDim(r));
-	write_WSVIEWS2(ba, ws);
+	write_WSVIEWS2(ba, ws, wb.Workbook);
 	write_WSFMTINFO(ba, ws);
 	write_COLINFOS(ba, ws, idx, opts, wb);
 	write_CELLTABLE(ba, ws, idx, opts, wb);

@@ -193,7 +193,10 @@ function write_ws_xml_autofilter(data)/*:string*/ {
 /* 18.3.1.88 sheetViews CT_SheetViews */
 /* 18.3.1.87 sheetView CT_SheetView */
 function write_ws_xml_sheetviews(ws, opts, idx, wb)/*:string*/ {
-	return writextag("sheetViews", writextag("sheetView", null, {workbookViewId:"0"}), {});
+	var sview = {workbookViewId:"0"};
+	// $FlowIgnore
+	if( (((wb||{}).Workbook||{}).Views||[])[0] ) sview.rightToLeft = wb.Workbook.Views[0].RTL ? "1" : "0";
+	return writextag("sheetViews", writextag("sheetView", null, sview), {});
 }
 
 function write_ws_xml_cell(cell, ref, ws, opts, idx, wb) {

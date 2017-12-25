@@ -8,3 +8,4 @@ docbits/*      linguist-documentation
 dist/*         linguist-generated=true
 xlsx.js        linguist-generated=true
 xlsxworker.js  linguist-generated=true
+tests/core.js  linguist-generated=true

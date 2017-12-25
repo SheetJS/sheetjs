@@ -24,7 +24,6 @@ var HTML_ = (function() {
 				var m = cell, cc = 0;
 				/* TODO: parse styles etc */
 				while(m.charAt(0) == "<" && (cc = m.indexOf(">")) > -1) m = m.slice(cc+1);
-				while(m.indexOf(">") > -1) m = m.slice(0, m.lastIndexOf("<"));
 				var tag = parsexmltag(cell.slice(0, cell.indexOf(">")));
 				CS = tag.colspan ? +tag.colspan : 1;
 				if((RS = +tag.rowspan)>0 || CS>1) merges.push({s:{r:R,c:C},e:{r:R + (RS||1) - 1, c:C + CS - 1}});
