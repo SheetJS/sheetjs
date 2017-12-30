@@ -655,6 +655,7 @@ describe('output formats', function() {
 	it('should write binary strings', function() { RT('binary'); });
 	it('should write base64 strings', function() { RT('base64'); });
 	it('should write JS strings', function() { RT('string'); });
+	if(typeof ArrayBuffer !== 'undefined' && (typeof process == 'undefined' || !process.version.match(/v0.12/))) it('should write array buffers', function() { RT('array'); });
 	if(!browser) it('should write buffers', function() { RT('buffer'); });
 	it('should throw if format is unknown', function() { assert.throws(function() { RT('dafuq'); }); });
 });
@@ -819,10 +820,10 @@ describe('parse features', function() {
 		var wbs=[];
 		var bef = (function() {
 			wbs = [
-				X.read(fs.readFileSync(paths.cpxlsx), {type:TYPE}),
-				X.read(fs.readFileSync(paths.cpxlsb), {type:TYPE}),
-				X.read(fs.readFileSync(paths.cpxls), {type:TYPE}),
-				X.read(fs.readFileSync(paths.cpxml), {type:TYPE})
+				X.read(fs.readFileSync(paths.cpxlsx), {type:TYPE, WTF:1}),
+				X.read(fs.readFileSync(paths.cpxlsb), {type:TYPE, WTF:1}),
+				X.read(fs.readFileSync(paths.cpxls), {type:TYPE, WTF:1}),
+				X.read(fs.readFileSync(paths.cpxml), {type:TYPE, WTF:1})
 			];
 		});
 		if(typeof before != 'undefined') before(bef);
@@ -1319,7 +1320,7 @@ describe('roundtrip features', function() {
 	}); });
 
 	describe('should preserve merge cells', function() {
-		["xlsx", "xlsb", "xlml", "ods"].forEach(function(f) { it(f, function() {
+		["xlsx", "xlsb", "xlml", "ods", "biff8"].forEach(function(f) { it(f, function() {
 			var wb1 = X.read(fs.readFileSync(paths.mcxlsx), {type:TYPE});
 			var wb2 = X.read(X.write(wb1,{bookType:f,type:'binary'}),{type:'binary'});
 			var m1 = wb1.Sheets.Merge['!merges'].map(X.utils.encode_range);
@@ -1911,8 +1912,15 @@ describe('HTML', function() {
 		it('should generate strings if raw option is passed', function() { plaintext_test(X.utils.table_to_book(get_dom_element(html_str), {raw:true}), true, true); });
 		it('should handle newlines correctly', function() {
 			var table = get_dom_element("<table><tr><td>foo<br/>bar</td><td>baz</td></tr></table>");
-			var wb = X.utils.table_to_book(table);
-			assert.equal(get_cell(wb.Sheets.Sheet1, "A1").v, "foo\nbar");
+			var ws = X.utils.table_to_sheet(table);
+			assert.equal(get_cell(ws, "A1").v, "foo\nbar");
+		});
+		it('should trim whitespace', function() {
+			if(get_dom_element("foo <br> bar").innerHTML != "foo <br> bar") return;
+			var table = get_dom_element("<table><tr><td>   foo  <br/>  bar   </td><td>  baz  qux  </td></tr></table>");
+			var ws = X.utils.table_to_sheet(table);
+			assert.equal(get_cell(ws, "A1").v.replace(/\n/g, "|"), "foo | bar");
+			assert.equal(get_cell(ws, "B1").v, "baz qux");
 		});
 	});
 	if(domtest) it('should handle entities', function() {
