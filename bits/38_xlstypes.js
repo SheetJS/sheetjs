@@ -8,8 +8,9 @@ function parse_FILETIME(blob) {
 
 /* [MS-OSHARED] 2.3.3.1.4 Lpstr */
 function parse_lpstr(blob, type, pad/*:?number*/) {
-	var str = blob.read_shift(0, 'lpstr');
-	if(pad) blob.l += (4 - ((str.length+1) & 3)) & 3;
+	var start = blob.l;
+	var str = blob.read_shift(0, 'lpstr-cp');
+	if(pad) while((blob.l - start) & 3) ++blob.l;
 	return str;
 }
 
@@ -32,15 +33,15 @@ function parse_VtString(blob, t/*:number*/, pad/*:?boolean*/) { return parse_VtS
 function parse_VtUnalignedString(blob, t/*:number*/) { if(!t) throw new Error("VtUnalignedString must have positive length"); return parse_VtStringBase(blob, t, 0); }
 
 /* [MS-OSHARED] 2.3.3.1.9 VtVecUnalignedLpstrValue */
-function parse_VtVecUnalignedLpstrValue(blob) {
+function parse_VtVecUnalignedLpstrValue(blob)/*:Array<string>*/ {
 	var length = blob.read_shift(4);
-	var ret = [];
-	for(var i = 0; i != length; ++i) ret[i] = blob.read_shift(0, 'lpstr');
+	var ret/*:Array<string>*/ = [];
+	for(var i = 0; i != length; ++i) ret[i] = blob.read_shift(0, 'lpstr-cp').replace(chr0,'');
 	return ret;
 }
 
 /* [MS-OSHARED] 2.3.3.1.10 VtVecUnalignedLpstr */
-function parse_VtVecUnalignedLpstr(blob) {
+function parse_VtVecUnalignedLpstr(blob)/*:Array<string>*/ {
 	return parse_VtVecUnalignedLpstrValue(blob);
 }
 
@@ -155,16 +156,17 @@ function parse_PropertySet(blob, PIDSI) {
 		var Offset = blob.read_shift(4);
 		Props[i] = [PropID, Offset + start_addr];
 	}
+	Props.sort(function(x,y) { return x[1] - y[1]; });
 	var PropH = {};
 	for(i = 0; i != NumProps; ++i) {
 		if(blob.l !== Props[i][1]) {
 			var fail = true;
 			if(i>0 && PIDSI) switch(PIDSI[Props[i-1][0]].t) {
-				case 0x02 /*VT_I2*/: if(blob.l +2 === Props[i][1]) { blob.l+=2; fail = false; } break;
+				case 0x02 /*VT_I2*/: if(blob.l+2 === Props[i][1]) { blob.l+=2; fail = false; } break;
 				case 0x50 /*VT_STRING*/: if(blob.l <= Props[i][1]) { blob.l=Props[i][1]; fail = false; } break;
 				case 0x100C /*VT_VECTOR|VT_VARIANT*/: if(blob.l <= Props[i][1]) { blob.l=Props[i][1]; fail = false; } break;
 			}
-			if(!PIDSI && blob.l <= Props[i][1]) { fail=false; blob.l = Props[i][1]; }
+			if((!PIDSI||i==0) && blob.l <= Props[i][1]) { fail=false; blob.l = Props[i][1]; }
 			if(fail) throw new Error("Read Error: Expected address " + Props[i][1] + ' at ' + blob.l + ' :' + i);
 		}
 		if(PIDSI) {
@@ -326,7 +328,7 @@ function parse_XLUnicodeRichExtendedString(blob) {
 	var z = {};
 	if(fRichSt) cRun = blob.read_shift(2);
 	if(fExtSt) cbExtRst = blob.read_shift(4);
-	var encoding = (flags & 0x1) ? 'dbcs-cont' : 'sbcs-cont';
+	var encoding = width == 2 ? 'dbcs-cont' : 'sbcs-cont';
 	var msg = cch === 0 ? "" : blob.read_shift(cch, encoding);
 	if(fRichSt) blob.l += 4 * cRun; //TODO: parse this
 	if(fExtSt) blob.l += cbExtRst; //TODO: parse this
@@ -398,15 +400,14 @@ function parse_URLMoniker(blob/*::, length, opts*/) {
 /* [MS-OSHARED] 2.3.7.8 FileMoniker TODO: all fields */
 function parse_FileMoniker(blob, length) {
 	var cAnti = blob.read_shift(2);
-	var ansiLength = blob.read_shift(4);
-	var ansiPath = blob.read_shift(ansiLength, 'cstr');
+	var ansiPath = blob.read_shift(0, 'lpstr-ansi');
 	var endServer = blob.read_shift(2);
-	var versionNumber = blob.read_shift(2);
-	var cbUnicodePathSize = blob.read_shift(4);
-	if(cbUnicodePathSize === 0) return ansiPath.replace(/\\/g,"/");
-	var cbUnicodePathBytes = blob.read_shift(4);
-	var usKeyValue = blob.read_shift(2);
-	var unicodePath = blob.read_shift(cbUnicodePathBytes>>1, 'utf16le').replace(chr0,"");
+	if(blob.read_shift(2) != 0xDEAD) throw new Error("Bad FileMoniker");
+	var sz = blob.read_shift(4);
+	if(sz === 0) return ansiPath.replace(/\\/g,"/");
+	var bytes = blob.read_shift(4);
+	if(blob.read_shift(2) != 3) throw new Error("Bad FileMoniker");
+	var unicodePath = blob.read_shift(bytes>>1, 'utf16le').replace(chr0,"");
 	return unicodePath;
 }
 

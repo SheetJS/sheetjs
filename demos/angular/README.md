@@ -81,18 +81,11 @@ var ws = XLSX.utils.json_to_sheet(data);
 var wb = XLSX.utils.book_new();
 XLSX.utils.book_append_sheet(wb, ws, "Presidents");
 
-/* write workbook (use type 'binary') */
-var wbout = XLSX.write(wb, {bookType:'xlsx', type:'binary'});
+/* write workbook (use type 'array' for ArrayBuffer) */
+var wbout = XLSX.write(wb, {bookType:'xlsx', type:'array'});
 
 /* generate a download */
-function s2ab(s) {
-  var buf = new ArrayBuffer(s.length);
-  var view = new Uint8Array(buf);
-  for (var i=0; i!=s.length; ++i) view[i] = s.charCodeAt(i) & 0xFF;
-  return buf;
-}
-
-saveAs(new Blob([s2ab(wbout)],{type:"application/octet-stream"}), "sheetjs.xlsx");
+saveAs(new Blob([wbout],{type:"application/octet-stream"}), "sheetjs.xlsx");
 ```
 
 

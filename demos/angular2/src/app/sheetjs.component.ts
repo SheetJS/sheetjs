@@ -8,13 +8,6 @@ import { saveAs } from 'file-saver';
 
 type AOA = Array<Array<any>>;
 
-function s2ab(s: string): ArrayBuffer {
-	const buf: ArrayBuffer = new ArrayBuffer(s.length);
-	const view: Uint8Array = new Uint8Array(buf);
-	for (let i = 0; i !== s.length; ++i) view[i] = s.charCodeAt(i) & 0xFF;
-	return buf;
-}
-
 @Component({
 	selector: 'sheetjs',
 	template: `
@@ -32,7 +25,7 @@ function s2ab(s: string): ArrayBuffer {
 
 export class SheetJSComponent {
 	data: AOA = [ [1, 2], [3, 4] ];
-	wopts: XLSX.WritingOptions = { bookType: 'xlsx', type: 'binary' };
+	wopts: XLSX.WritingOptions = { bookType: 'xlsx', type: 'array' };
 	fileName: string = 'SheetJS.xlsx';
 
 	onFileChange(evt: any) {
@@ -64,7 +57,7 @@ export class SheetJSComponent {
 		XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
 
 		/* save to file */
-		const wbout: string = XLSX.write(wb, this.wopts);
-		saveAs(new Blob([s2ab(wbout)]), this.fileName);
+		const wbout: ArrayBuffer = XLSX.write(wb, this.wopts);
+		saveAs(new Blob([wbout], { type: 'application/octet-stream' }), this.fileName);
 	}
 }

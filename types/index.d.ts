@@ -110,6 +110,9 @@ export interface ParsingOptions extends CommonOptions {
     /** Input data encoding */
     type?: 'base64' | 'binary' | 'buffer' | 'file' | 'array';
 
+    /** Default codepage */
+    codepage?: number;
+
     /**
      * Save formulae to the .f field
      * @default true
@@ -188,7 +191,7 @@ export interface ParsingOptions extends CommonOptions {
 /** Options for write and writeFile */
 export interface WritingOptions extends CommonOptions {
     /** Output data encoding */
-    type?: 'base64' | 'binary' | 'buffer' | 'file';
+    type?: 'base64' | 'binary' | 'buffer' | 'file' | 'array';
 
     /**
      * Generate Shared String Table
@@ -272,10 +275,16 @@ export interface WBProps {
     Names?: DefinedName[];
 
     /** Workbook Views */
-    Views?: any[];
+    Views?: WBView[];
 
     /** Other Workbook Properties */
     WBProps?: WorkbookProperties;
+}
+
+/** Workbook View */
+export interface WBView {
+    /** Right-to-left mode */
+    RTL?: boolean;
 }
 
 /** Other Workbook Properties */
@@ -493,7 +502,7 @@ export type ExcelDataType = 'b' | 'n' | 'e' | 's' | 'd' | 'z';
  * Type of generated workbook
  * @default 'xlsx'
  */
-export type BookType = 'xlsx' | 'xlsm' | 'xlsb' | 'xls' | 'biff8' | 'biff5' | 'biff2' | 'xlml' | 'ods' | 'fods' | 'csv' | 'txt' | 'sylk' | 'html' | 'dif' | 'rtf' | 'prn' | 'eth';
+export type BookType = 'xlsx' | 'xlsm' | 'xlsb' | 'xls' | 'xla' | 'biff8' | 'biff5' | 'biff2' | 'xlml' | 'ods' | 'fods' | 'csv' | 'txt' | 'sylk' | 'html' | 'dif' | 'rtf' | 'prn' | 'eth';
 
 /** Comment element */
 export interface Comment {

@@ -32,6 +32,7 @@
     + [Workbook File Properties](README.md#workbook-file-properties)
   * [Workbook-Level Attributes](README.md#workbook-level-attributes)
     + [Defined Names](README.md#defined-names)
+    + [Workbook Views](README.md#workbook-views)
     + [Miscellaneous Workbook Properties](README.md#miscellaneous-workbook-properties)
   * [Document Features](README.md#document-features)
     + [Formulae](README.md#formulae)

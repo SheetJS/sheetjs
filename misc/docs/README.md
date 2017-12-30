@@ -79,6 +79,7 @@ enhancements, additional features by request, and dedicated support.
     + [Workbook File Properties](#workbook-file-properties)
   * [Workbook-Level Attributes](#workbook-level-attributes)
     + [Defined Names](#defined-names)
+    + [Workbook Views](#workbook-views)
     + [Miscellaneous Workbook Properties](#miscellaneous-workbook-properties)
   * [Document Features](#document-features)
     + [Formulae](#formulae)
@@ -565,19 +566,12 @@ example uses [FileSaver](https://github.com/eligrey/FileSaver.js/):
 
 ```js
 /* bookType can be any supported output type */
-var wopts = { bookType:'xlsx', bookSST:false, type:'binary' };
+var wopts = { bookType:'xlsx', bookSST:false, type:'array' };
 
 var wbout = XLSX.write(workbook,wopts);
 
-function s2ab(s) {
-  var buf = new ArrayBuffer(s.length);
-  var view = new Uint8Array(buf);
-  for (var i=0; i!=s.length; ++i) view[i] = s.charCodeAt(i) & 0xFF;
-  return buf;
-}
-
 /* the saveAs call downloads a file on the local machine */
-saveAs(new Blob([s2ab(wbout)],{type:"application/octet-stream"}), "test.xlsx");
+saveAs(new Blob([wbout],{type:"application/octet-stream"}), "test.xlsx");
 ```
 
 
@@ -993,6 +987,14 @@ XLSX.write(wb, {Props:{Author:"SheetJS"}});
 Excel allows two sheet-scoped defined names to share the same name.  However, a
 sheet-scoped name cannot collide with a workbook-scope name.  Workbook writers
 may not enforce this constraint.
+
+#### Workbook Views
+
+`wb.Workbook.Views` is an array of workbook view objects which have the keys:
+
+| Key             | Description                                         |
+|:----------------|:----------------------------------------------------|
+| `RTL`           | If true, display right-to-left                      |
 
 #### Miscellaneous Workbook Properties
 
@@ -1558,6 +1560,7 @@ The `type` argument for `write` mirrors the `type` argument for `read`:
 | `"binary"` | string: binary string (byte `n` is `data.charCodeAt(n)`)        |
 | `"string"` | string: JS string (characters interpreted as UTF8)              |
 | `"buffer"` | nodejs Buffer                                                   |
+| `"array"`  | ArrayBuffer, fallback array of 8-bit unsigned int               |
 | `"file"`   | string: path of file that will be created (nodejs only)         |
 
 ## Utility Functions

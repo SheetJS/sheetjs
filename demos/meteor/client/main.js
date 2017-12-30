@@ -34,16 +34,9 @@ Template.sheetjs.events({
     Meteor.call('download', html, function(err, wb) {
       if (err) throw err;
       /* "Browser download file" from SheetJS README */
-      const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'binary' });
-      saveAs(new Blob([s2ab(wbout)], { type: 'application/octet-stream' }), 'sheetjs.xlsx');
+      const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+      saveAs(new Blob([wbout], { type: 'application/octet-stream' }), 'sheetjs.xlsx');
     });
   },
 });
 
-/* eslint no-bitwise:0, no-plusplus:0 */
-function s2ab(s) {
-  const buf = new ArrayBuffer(s.length);
-  const view = new Uint8Array(buf);
-  for (let i = 0; i !== s.length; ++i) view[i] = s.charCodeAt(i) & 0xFF;
-  return buf;
-}

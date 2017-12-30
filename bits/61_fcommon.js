@@ -46,3 +46,7 @@ function fuzzyfmla(f/*:string*/)/*:boolean*/ {
 	if(f.length == 1) return false;
 	return true;
 }
+
+function _xlfn(f/*:string*/)/*:string*/ {
+	return f.replace(/_xlfn\./g,"");
+}

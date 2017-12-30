@@ -43,7 +43,7 @@ function parse_cs_bin(data, opts, idx/*:number*/, rels, wb, themes, styles)/*:Wo
 	if(!data) return data;
 	if(!rels) rels = {'!id':{}};
 	var s = {'!type':"chart", '!chart':null, '!rel':""};
-	var state = [];
+	var state/*:Array<string>*/ = [];
 	var pass = false;
 	recordhopper(data, function cs_parse(val, R_n, RT) {
 		switch(RT) {

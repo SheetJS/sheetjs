@@ -87,7 +87,7 @@ var SummaryPIDSI = {
 	/*::[*/0x0F/*::]*/: { n: 'WordCount', t: VT_I4 },
 	/*::[*/0x10/*::]*/: { n: 'CharCount', t: VT_I4 },
 	/*::[*/0x11/*::]*/: { n: 'Thumbnail', t: VT_CF },
-	/*::[*/0x12/*::]*/: { n: 'ApplicationName', t: VT_LPSTR },
+	/*::[*/0x12/*::]*/: { n: 'ApplicationName', t: VT_STRING },
 	/*::[*/0x13/*::]*/: { n: 'DocumentSecurity', t: VT_I4 },
 	/*::[*/0xFF/*::]*/: {}
 };

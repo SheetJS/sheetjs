@@ -5,7 +5,6 @@ function parse_wb_xml(data, opts)/*:WorkbookFile*/ {
 	var wb = { AppVersion:{}, WBProps:{}, WBView:[], Sheets:[], CalcPr:{}, Names:[], xmlns: "" };
 	var pass = false, xmlns = "xmlns";
 	var dname = {}, dnstart = 0;
-	/*(data.match(tagregex)||[]).forEach */
 	data.replace(tagregex, function xml_wb(x, idx) {
 		var y/*:any*/ = parsexmltag(x);
 		switch(strip_ns(y[0])) {

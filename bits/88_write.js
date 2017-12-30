@@ -79,6 +79,7 @@ function write_binary_type(out, opts/*:WriteOpts*/)/*:any*/ {
 function writeSync(wb/*:Workbook*/, opts/*:?WriteOpts*/) {
 	check_wb(wb);
 	var o = opts||{};
+	if(o.type == "array") { o.type = "binary"; var out/*:string*/ = (writeSync(wb, o)/*:any*/); o.type = "array"; return s2ab(out); }
 	switch(o.bookType || 'xlsb') {
 		case 'xml':
 		case 'xlml': return write_string_type(write_xlml(wb, o), o);
@@ -99,9 +100,11 @@ function writeSync(wb/*:Workbook*/, opts/*:?WriteOpts*/) {
 		case 'biff4': if(!o.biff) o.biff = 4; return write_binary_type(write_biff_buf(wb, o), o);
 		case 'biff5': if(!o.biff) o.biff = 5; /* falls through */
 		case 'biff8':
+		case 'xla':
 		case 'xls': if(!o.biff) o.biff = 8; return write_cfb_type(wb, o);
 		case 'xlsx':
 		case 'xlsm':
+		case 'xlam':
 		case 'xlsb':
 		case 'ods': return write_zip_type(wb, o);
 		default: throw new Error ("Unrecognized bookType |" + o.bookType + "|");

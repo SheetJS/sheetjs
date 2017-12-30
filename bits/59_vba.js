@@ -16,3 +16,5 @@ function fill_vba_xls(cfb/*:CFBContainer*/, vba/*:CFBContainer*/)/*:void*/ {
 	});
 }
 
+var VBAFMTS = [ "xlsb", "xlsm", "xlam", "biff8", "xla" ];
+

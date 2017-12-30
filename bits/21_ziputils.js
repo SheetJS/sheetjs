@@ -13,7 +13,7 @@ function getdatabin(data) {
 	if(data.asNodeBuffer && has_buf) return data.asNodeBuffer();
 	if(data._data && data._data.getContent) {
 		var o = data._data.getContent();
-		if(typeof o == "string") return str2cc(o);
+		if(typeof o == "string") return char_codes(o);
 		return Array.prototype.slice.call(o);
 	}
 	return null;

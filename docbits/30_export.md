@@ -43,19 +43,12 @@ example uses [FileSaver](https://github.com/eligrey/FileSaver.js/):
 
 ```js
 /* bookType can be any supported output type */
-var wopts = { bookType:'xlsx', bookSST:false, type:'binary' };
+var wopts = { bookType:'xlsx', bookSST:false, type:'array' };
 
 var wbout = XLSX.write(workbook,wopts);
 
-function s2ab(s) {
-  var buf = new ArrayBuffer(s.length);
-  var view = new Uint8Array(buf);
-  for (var i=0; i!=s.length; ++i) view[i] = s.charCodeAt(i) & 0xFF;
-  return buf;
-}
-
 /* the saveAs call downloads a file on the local machine */
-saveAs(new Blob([s2ab(wbout)],{type:"application/octet-stream"}), "test.xlsx");
+saveAs(new Blob([wbout],{type:"application/octet-stream"}), "test.xlsx");
 ```
 
 </details>

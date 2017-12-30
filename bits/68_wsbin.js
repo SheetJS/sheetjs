@@ -335,6 +335,11 @@ function write_BrtMargins(margins/*:Margins*/, o) {
 }
 
 /* [MS-XLSB] 2.4.292 BrtBeginWsView */
+function parse_BrtBeginWsView(data, length, opts) {
+	var f = data.read_shift(2);
+	data.l += 28;
+	return { RTL: f & 0x20 };
+}
 function write_BrtBeginWsView(ws, Workbook, o) {
 	if(o == null) o = new_buf(30);
 	var f = 0x39c;
@@ -385,7 +390,7 @@ function write_BrtSheetProtection(sp, o) {
 }
 
 /* [MS-XLSB] 2.1.7.61 Worksheet */
-function parse_ws_bin(data, _opts, idx, rels, wb, themes, styles)/*:Worksheet*/ {
+function parse_ws_bin(data, _opts, idx, rels, wb/*:WBWBProps*/, themes, styles)/*:Worksheet*/ {
 	if(!data) return data;
 	var opts = _opts || {};
 	if(!rels) rels = {'!id':{}};
@@ -397,24 +402,24 @@ function parse_ws_bin(data, _opts, idx, rels, wb, themes, styles)/*:Worksheet*/ 
 
 	var pass = false, end = false;
 	var row, p, cf, R, C, addr, sstr, rr, cell/*:Cell*/;
-	var mergecells = [];
+	var merges/*:Array<Range>*/ = [];
 	opts.biff = 12;
 	opts['!row'] = 0;
 
 	var ai = 0, af = false;
 
-	var array_formulae = [];
-	var shared_formulae = {};
+	var arrayf/*:Array<[Range, string]>*/ = [];
+	var sharedf = {};
 	var supbooks = opts.supbooks || ([[]]/*:any*/);
-	supbooks.sharedf = shared_formulae;
-	supbooks.arrayf = array_formulae;
+	supbooks.sharedf = sharedf;
+	supbooks.arrayf = arrayf;
 	supbooks.SheetNames = wb.SheetNames || wb.Sheets.map(function(x) { return x.name; });
 	if(!opts.supbooks) {
 		opts.supbooks = supbooks;
-		for(var i = 0; i < wb.Names.length; ++i) supbooks[0][i+1] = wb.Names[i];
+		if(wb.Names) for(var i = 0; i < wb.Names.length; ++i) supbooks[0][i+1] = wb.Names[i];
 	}
 
-	var colinfo = [], rowinfo = [];
+	var colinfo/*:Array<ColInfo>*/ = [], rowinfo/*:Array<RowInfo>*/ = [];
 	var seencol = false;
 
 	recordhopper(data, function ws_parse(val, R_n, RT) {
@@ -457,8 +462,8 @@ function parse_ws_bin(data, _opts, idx, rels, wb, themes, styles)/*:Worksheet*/ 
 				else s[encode_col(C) + rr] = p;
 				if(opts.cellFormula) {
 					af = false;
-					for(ai = 0; ai < array_formulae.length; ++ai) {
-						var aii = array_formulae[ai];
+					for(ai = 0; ai < arrayf.length; ++ai) {
+						var aii = arrayf[ai];
 						if(row.r >= aii[0].s.r && row.r <= aii[0].e.r)
 							if(C >= aii[0].s.c && C <= aii[0].e.c) {
 								p.F = encode_range(aii[0]); af = true;
@@ -488,7 +493,7 @@ function parse_ws_bin(data, _opts, idx, rels, wb, themes, styles)/*:Worksheet*/ 
 				break;
 
 			case 0x00B0: /* 'BrtMergeCell' */
-				mergecells.push(val); break;
+				merges.push(val); break;
 
 			case 0x01EE: /* 'BrtHLink' */
 				var rel = rels['!id'][val.relId];
@@ -514,14 +519,14 @@ function parse_ws_bin(data, _opts, idx, rels, wb, themes, styles)/*:Worksheet*/ 
 
 			case 0x01AA: /* 'BrtArrFmla' */
 				if(!opts.cellFormula) break;
-				array_formulae.push(val);
+				arrayf.push(val);
 				cell = ((opts.dense ? s[R][C] : s[encode_col(C) + rr])/*:any*/);
 				cell.f = stringify_formula(val[1], refguess, {r:row.r, c:C}, supbooks, opts);
 				cell.F = encode_range(val[0]);
 				break;
 			case 0x01AB: /* 'BrtShrFmla' */
 				if(!opts.cellFormula) break;
-				shared_formulae[encode_cell(val[0].s)] = val[1];
+				sharedf[encode_cell(val[0].s)] = val[1];
 				cell = (opts.dense ? s[R][C] : s[encode_col(C) + rr]);
 				cell.f = stringify_formula(val[1], refguess, {r:row.r, c:C}, supbooks, opts);
 				break;
@@ -547,6 +552,12 @@ function parse_ws_bin(data, _opts, idx, rels, wb, themes, styles)/*:Worksheet*/ 
 			case 0x0093: /* 'BrtWsProp' */
 				if(!wb.Sheets[idx]) wb.Sheets[idx] = {};
 				if(val.name) wb.Sheets[idx].CodeName = val.name;
+				break;
+
+			case 0x0089: /* 'BrtBeginWsView' */
+				if(!wb.Views) wb.Views = [{}];
+				if(!wb.Views[0]) wb.Views[0] = {};
+				if(val.RTL) wb.Views[0].RTL = true;
 				break;
 
 			case 0x01E5: /* 'BrtWsFmtInfo' */
@@ -635,7 +646,7 @@ function parse_ws_bin(data, _opts, idx, rels, wb, themes, styles)/*:Worksheet*/ 
 			s["!ref"] = encode_range(tmpref);
 		}
 	}
-	if(mergecells.length > 0) s["!merges"] = mergecells;
+	if(merges.length > 0) s["!merges"] = merges;
 	if(colinfo.length > 0) s["!cols"] = colinfo;
 	if(rowinfo.length > 0) s["!rows"] = rowinfo;
 	return s;
@@ -687,7 +698,7 @@ function write_ws_bin_cell(ba/*:BufArray*/, cell/*:Cell*/, R/*:number*/, C/*:num
 }
 
 function write_CELLTABLE(ba, ws/*:Worksheet*/, idx/*:number*/, opts, wb/*:Workbook*/) {
-	var range = safe_decode_range(ws['!ref'] || "A1"), ref, rr = "", cols = [];
+	var range = safe_decode_range(ws['!ref'] || "A1"), ref, rr = "", cols/*:Array<string>*/ = [];
 	write_record(ba, 'BrtBeginSheetData');
 	var dense = Array.isArray(ws);
 	var cap = range.e.r;

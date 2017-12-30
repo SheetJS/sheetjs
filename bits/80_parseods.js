@@ -45,13 +45,13 @@ var parse_content_xml = (function() {
 		var R = -1, C = -1, range = {s: {r:1000000,c:10000000}, e: {r:0, c:0}};
 		var row_ol = 0;
 		var number_format_map = {};
-		var merges = [], mrange = {}, mR = 0, mC = 0;
-		var rowinfo = [], rowpeat = 1, colpeat = 1;
-		var arrayf = [];
+		var merges/*:Array<Range>*/ = [], mrange = {}, mR = 0, mC = 0;
+		var rowinfo/*:Array<RowInfo>*/ = [], rowpeat = 1, colpeat = 1;
+		var arrayf/*:Array<[Range, string]>*/ = [];
 		var WB = {Names:[]};
 		var atag = ({}/*:any*/);
 		var _Ref/*:[string, string]*/ = ["", ""];
-		var comments = [], comment = {};
+		var comments/*:Array<Comment>*/ = [], comment/*:Comment*/ = ({}/*:any*/);
 		var creator = "", creatoridx = 0;
 		var isstub = false, intable = false;
 		var i = 0;
@@ -122,7 +122,7 @@ var parse_content_xml = (function() {
 					if(C < range.s.c) range.s.c = C;
 					if(R < range.s.r) range.s.r = R;
 					ctag = parsexmltag(Rn[0], false);
-					comments = []; comment = {};
+					comments = []; comment = ({}/*:any*/);
 					q = ({t:ctag['数据类型'] || ctag['value-type'], v:null/*:: , z:null, w:"",c:[]*/}/*:any*/);
 					if(opts.cellFormula) {
 						if(ctag.formula) ctag.formula = unescapexml(ctag.formula);

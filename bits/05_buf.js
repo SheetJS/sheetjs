@@ -12,6 +12,18 @@ function s2a(s/*:string*/) {
 	return s.split("").map(function(x){ return x.charCodeAt(0) & 0xff; });
 }
 
+function s2ab(s/*:string*/) {
+	if(typeof ArrayBuffer === 'undefined') return s2a(s);
+	var buf = new ArrayBuffer(s.length), view = new Uint8Array(buf);
+	for (var i=0; i!=s.length; ++i) view[i] = s.charCodeAt(i) & 0xFF;
+	return buf;
+}
+
+function arr2str(data/*:any*/)/*:string*/ {
+	if(Array.isArray(data)) return data.map(_chr).join("");
+	var o/*:Array<string>*/ = []; for(var i = 0; i < data.length; ++i) o[i] = _chr(data[i]); return o.join("");
+}
+
 var bconcat = function(bufs) { return [].concat.apply([], bufs); };
 
 var chr0 = /\u0000/g, chr1 = /[\u0001-\u0006]/g;

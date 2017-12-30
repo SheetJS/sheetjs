@@ -10,17 +10,17 @@ if(has_buf && typeof require != 'undefined') (function() {
 		var FS = o.FS !== undefined ? o.FS : ",", fs = FS.charCodeAt(0);
 		var RS = o.RS !== undefined ? o.RS : "\n", rs = RS.charCodeAt(0);
 		var endregex = new RegExp((FS=="|" ? "\\|" : FS)+"+$");
-		var row/*:?string*/ = "", cols = [];
+		var row/*:?string*/ = "", cols/*:Array<string>*/ = [];
 		o.dense = Array.isArray(sheet);
-		var colInfos = o.skipHidden && sheet["!cols"] || [];
-		var rowInfos = o.skipHidden && sheet["!rows"] || [];
-		for(var C = r.s.c; C <= r.e.c; ++C) if (!((colInfos[C]||{}).hidden)) cols[C] = encode_col(C);
+		var colinfo/*:Array<ColInfo>*/ = o.skipHidden && sheet["!cols"] || [];
+		var rowinfo/*:Array<RowInfo>*/ = o.skipHidden && sheet["!rows"] || [];
+		for(var C = r.s.c; C <= r.e.c; ++C) if (!((colinfo[C]||{}).hidden)) cols[C] = encode_col(C);
 		var R = r.s.r;
 		stream._read = function() {
 			if(R > r.e.r) return stream.push(null);
 			while(R <= r.e.r) {
 				++R;
-				if ((rowInfos[R-1]||{}).hidden) continue;
+				if ((rowinfo[R-1]||{}).hidden) continue;
 				row = make_csv_row(sheet, r, R-1, cols, fs, rs, FS, o);
 				if(row != null) {
 					if(o.strip) row = row.replace(endregex,"");

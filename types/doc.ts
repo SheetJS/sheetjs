@@ -51,6 +51,8 @@ read_opts.type = "buffer";
 const wb3 = XLSX.read(fs.readFileSync("sheetjs.xlsx"), read_opts);
 write_opts.type = "base64";
 const out3 = XLSX.write(wb3, write_opts);
+write_opts.type = "array";
+const out4 = XLSX.write(wb3, write_opts);
 
 const ws1 = XLSX.utils.aoa_to_sheet([
     "SheetJS".split(""),

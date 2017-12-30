@@ -10,8 +10,8 @@ var HTML_ = (function() {
 		var i/*:number*/ = mtch.index, j/*:number*/ = mtch2 && mtch2.index || str.length;
 		var rows = split_regex(str.slice(i, j), /(:?<tr[^>]*>)/i, "<tr>");
 		var R = -1, C = 0, RS = 0, CS = 0;
-		var range = {s:{r:10000000, c:10000000},e:{r:0,c:0}};
-		var merges = [], midx = 0;
+		var range/*:Range*/ = {s:{r:10000000, c:10000000},e:{r:0,c:0}};
+		var merges/*:Array<Range>*/ = [], midx = 0;
 		for(i = 0; i < rows.length; ++i) {
 			var row = rows[i].trim();
 			var hd = row.substr(0,3).toLowerCase();
@@ -56,8 +56,8 @@ var HTML_ = (function() {
 		return sheet_to_workbook(html_to_sheet(str, opts), opts);
 	}
 	function make_html_row(ws/*:Worksheet*/, r/*:Range*/, R/*:number*/, o/*:Sheet2HTMLOpts*/)/*:string*/ {
-		var M = (ws['!merges'] ||[]);
-		var oo = [];
+		var M/*:Array<Range>*/ = (ws['!merges'] ||[]);
+		var oo/*:Array<string>*/ = [];
 		var nullcell = "<td>" + (o.editable ? '<span contenteditable="true"></span>' : "" ) + "</td>";
 		for(var C = r.s.c; C <= r.e.c; ++C) {
 			var RS = 0, CS = 0;
@@ -85,7 +85,7 @@ var HTML_ = (function() {
 		return preamble + oo.join("") + "</tr>";
 	}
 	function make_html_preamble(ws/*:Worksheet*/, R/*:Range*/, o/*:Sheet2HTMLOpts*/)/*:string*/ {
-		var out = [];
+		var out/*:Array<string>*/ = [];
 		return out.join("") + '<table>';
 	}
 	var _BEGIN = '<html><head><meta charset="utf-8"/><title>SheetJS Table Export</title></head><body>';
@@ -118,17 +118,17 @@ function parse_dom_table(table/*:HTMLElement*/, _opts/*:?any*/)/*:Worksheet*/ {
 	var opts = _opts || {};
 	if(DENSE != null) opts.dense = DENSE;
 	var ws/*:Worksheet*/ = opts.dense ? ([]/*:any*/) : ({}/*:any*/);
-	var rows = table.getElementsByTagName('tr');
-	var range = {s:{r:0,c:0},e:{r:rows.length - 1,c:0}};
-	var merges = [], midx = 0;
+	var rows/*:HTMLCollection<HTMLTableRowElement>*/ = table.getElementsByTagName('tr');
+	var range/*:Range*/ = {s:{r:0,c:0},e:{r:rows.length - 1,c:0}};
+	var merges/*:Array<Range>*/ = [], midx = 0;
 	var R = 0, _C = 0, C = 0, RS = 0, CS = 0;
 	for(; R < rows.length; ++R) {
-		var row = rows[R];
-		var elts = row.children;
+		var row/*:HTMLTableRowElement*/ = rows[R];
+		var elts/*:HTMLCollection<HTMLTableCellElement>*/ = (row.children/*:any*/);
 		for(_C = C = 0; _C < elts.length; ++_C) {
-			var elt = elts[_C], v = htmldecode(elts[_C].innerHTML);
+			var elt/*:HTMLTableCellElement*/ = elts[_C], v = htmldecode(elts[_C].innerHTML);
 			for(midx = 0; midx < merges.length; ++midx) {
-				var m = merges[midx];
+				var m/*:Range*/ = merges[midx];
 				if(m.s.c == C && m.s.r <= R && R <= m.e.r) { C = m.e.c+1; midx = -1; }
 			}
 			/* TODO: figure out how to extract nonstandard mso- style */

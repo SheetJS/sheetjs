@@ -1,27 +1,3 @@
-/* 18.4.1 charset to codepage mapping */
-var CS2CP = ({
-	/*::[*/0/*::]*/:    1252, /* ANSI */
-	/*::[*/1/*::]*/:   65001, /* DEFAULT */
-	/*::[*/2/*::]*/:   65001, /* SYMBOL */
-	/*::[*/77/*::]*/:  10000, /* MAC */
-	/*::[*/128/*::]*/:   932, /* SHIFTJIS */
-	/*::[*/129/*::]*/:   949, /* HANGUL */
-	/*::[*/130/*::]*/:  1361, /* JOHAB */
-	/*::[*/134/*::]*/:   936, /* GB2312 */
-	/*::[*/136/*::]*/:   950, /* CHINESEBIG5 */
-	/*::[*/161/*::]*/:  1253, /* GREEK */
-	/*::[*/162/*::]*/:  1254, /* TURKISH */
-	/*::[*/163/*::]*/:  1258, /* VIETNAMESE */
-	/*::[*/177/*::]*/:  1255, /* HEBREW */
-	/*::[*/178/*::]*/:  1256, /* ARABIC */
-	/*::[*/186/*::]*/:  1257, /* BALTIC */
-	/*::[*/204/*::]*/:  1251, /* RUSSIAN */
-	/*::[*/222/*::]*/:   874, /* THAI */
-	/*::[*/238/*::]*/:  1250, /* EASTEUROPE */
-	/*::[*/255/*::]*/:  1252, /* OEM */
-	/*::[*/69/*::]*/:   6969  /* MISC */
-}/*:any*/);
-
 /* Parse a list of <r> tags */
 var parse_rs = (function parse_rs_factory() {
 	var tregex = matchtag("t"), rpregex = matchtag("rPr"), rregex = /<(?:\w+:)?r>/g, rend = /<\/(?:\w+:)?r>/, nlregex = /\r\n/g;
@@ -122,7 +98,7 @@ var parse_rs = (function parse_rs_factory() {
 					if(y[0].charCodeAt(1) !== 47) throw 'Unrecognized rich format ' + y[0];
 			}
 		}
-		var style = [];
+		var style/*:Array<string>*/ = [];
 
 		if(font.u) style.push("text-decoration: underline;");
 		if(font.uval) style.push("text-underline-style:" + font.uval + ";");
@@ -145,14 +121,14 @@ var parse_rs = (function parse_rs_factory() {
 
 	/* 18.4.4 r CT_RElt */
 	function parse_r(r) {
-		var terms = [[],"",[]];
+		var terms/*:[Array<string>, string, Array<string>]*/ = [[],"",[]];
 		/* 18.4.12 t ST_Xstring */
 		var t = r.match(tregex), cp = 65001;
-		if(!isval(t)/*:: || !t*/) return "";
+		if(!t) return "";
 		terms[1] = t[1];
 
 		var rpr = r.match(rpregex);
-		if(isval(rpr)/*:: && rpr*/) cp = parse_rpr(rpr[1], terms[0], terms[2]);
+		if(rpr) cp = parse_rpr(rpr[1], terms[0], terms[2]);
 
 		return terms[0].join("") + terms[1].replace(nlregex,'<br/>') + terms[2].join("");
 	}
@@ -196,7 +172,7 @@ function parse_sst_xml(data/*:string*/, opts)/*:SST*/ {
 	if(!data) return s;
 	/* 18.4.9 sst CT_Sst */
 	var sst = data.match(sstr0);
-	if(isval(sst)/*:: && sst*/) {
+	if(sst) {
 		ss = sst[2].replace(sstr1,"").split(sstr2);
 		for(var i = 0; i != ss.length; ++i) {
 			var o = parse_si(ss[i].trim(), opts);

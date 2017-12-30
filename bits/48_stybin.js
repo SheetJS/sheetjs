@@ -206,7 +206,7 @@ function parse_sty_bin(data, themes, opts) {
 
 	styles.CellXf = [];
 	styles.Fonts = [];
-	var state = [];
+	var state/*:Array<string>*/ = [];
 	var pass = false;
 	recordhopper(data, function hopper_sty(val, R_n, RT) {
 		switch(RT) {

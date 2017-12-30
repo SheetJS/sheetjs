@@ -86,10 +86,11 @@ function dbf_to_aoa(buf, opts)/*:AOA*/ {
 	d.l+=2;
 	}
 	if(l7) d.l += 36;
-	var fields = [], field = {};
+/*:: type DBFField = { name:string; len:number; type:string; } */
+	var fields/*:Array<DBFField>*/ = [], field/*:DBFField*/ = ({}/*:any*/);
 	var hend = fpos - 10 - (vfp ? 264 : 0), ww = l7 ? 32 : 11;
 	while(ft == 0x02 ? d.l < d.length && d[d.l] != 0x0d: d.l < hend) {
-		field = {};
+		field = ({}/*:any*/);
 		field.name = cptable.utils.decode(current_cp, d.slice(d.l, d.l+ww)).replace(/[\u0000\r\n].*$/g,"");
 		d.l += ww;
 		field.type = String.fromCharCode(d.read_shift(1));
@@ -210,7 +211,7 @@ function sheet_to_dbf(ws/*:Worksheet*/, opts/*:WriteOpts*/) {
 			if(headers.indexOf(headers[i] + "_" + j) == -1) { headers[i] += "_" + j; break; }
 	}
 	var range = safe_decode_range(ws['!ref']);
-	var coltypes = [];
+	var coltypes/*:Array<string>*/ = [];
 	for(i = 0; i <= range.e.c - range.s.c; ++i) {
 		var col/*:Array<any>*/ = [];
 		for(j=0; j < data.length; ++j) {
@@ -307,10 +308,10 @@ var SYLK = (function() {
 		throw new Error("Unrecognized type " + opts.type);
 	}
 	function sylk_to_aoa_str(str/*:string*/, opts)/*:[AOA, Worksheet]*/ {
-		var records = str.split(/[\n\r]+/), R = -1, C = -1, ri = 0, rj = 0, arr = [];
-		var formats = [];
-		var next_cell_format = null;
-		var sht = {}, rowinfo = [], colinfo = [], cw = [];
+		var records = str.split(/[\n\r]+/), R = -1, C = -1, ri = 0, rj = 0, arr/*:AOA*/ = [];
+		var formats/*:Array<string>*/ = [];
+		var next_cell_format/*:string|null*/ = null;
+		var sht = {}, rowinfo/*:Array<RowInfo>*/ = [], colinfo/*:Array<ColInfo>*/ = [], cw/*:Array<string>*/ = [];
 		var Mval = 0, j;
 		for (; ri !== records.length; ++ri) {
 			Mval = 0;
@@ -484,7 +485,7 @@ var DIF = (function() {
 		throw new Error("Unrecognized type " + opts.type);
 	}
 	function dif_to_aoa_str(str/*:string*/, opts)/*:AOA*/ {
-		var records = str.split('\n'), R = -1, C = -1, ri = 0, arr = [];
+		var records = str.split('\n'), R = -1, C = -1, ri = 0, arr/*:AOA*/ = [];
 		for (; ri !== records.length; ++ri) {
 			if (records[ri].trim() === 'BOT') { arr[++R] = []; C = 0; continue; }
 			if (R < 0) continue;
@@ -585,7 +586,7 @@ var ETH = (function() {
 	function encode(s/*:string*/)/*:string*/ { return s.replace(/\\/g, "\\b").replace(/:/g, "\\c").replace(/\n/g,"\\n"); }
 
 	function eth_to_aoa(str/*:string*/, opts)/*:AOA*/ {
-		var records = str.split('\n'), R = -1, C = -1, ri = 0, arr = [];
+		var records = str.split('\n'), R = -1, C = -1, ri = 0, arr/*:AOA*/ = [];
 		for (; ri !== records.length; ++ri) {
 			var record = records[ri].trim().split(":");
 			if(record[0] !== 'cell') continue;
@@ -632,7 +633,7 @@ var ETH = (function() {
 
 	function sheet_to_eth_data(ws/*:Worksheet*/)/*:string*/ {
 		if(!ws || !ws['!ref']) return "";
-		var o = [], oo = [], cell, coord;
+		var o/*:Array<string>*/ = [], oo/*:Array<string>*/ = [], cell, coord = "";
 		var r = decode_range(ws['!ref']);
 		var dense = Array.isArray(ws);
 		for(var R = r.s.r; R <= r.e.r; ++R) {
@@ -648,12 +649,12 @@ var ETH = (function() {
 						else { oo[2]='vtf'; oo[3]='n'; oo[4]=cell.v; oo[5]=encode(cell.f); }
 						break;
 					case 'b':
-						oo[2] = 'vt'+(cell.f?'f':'c'); oo[3]='nl'; oo[4]=+!!cell.v;
+						oo[2] = 'vt'+(cell.f?'f':'c'); oo[3]='nl'; oo[4]=cell.v?"1":"0";
 						oo[5] = encode(cell.f||(cell.v?'TRUE':'FALSE'));
 						break;
 					case 'd':
 						var t = datenum(parseDate(cell.v));
-						oo[2] = 'vtc'; oo[3] = 'nd'; oo[4] = t;
+						oo[2] = 'vtc'; oo[3] = 'nd'; oo[4] = ""+t;
 						oo[5] = cell.w || SSF.format(cell.z || SSF._table[14], t);
 						break;
 					case 'e': continue;
@@ -840,7 +841,7 @@ var PRN = (function() {
 		var r = safe_decode_range(ws['!ref']), cell/*:Cell*/;
 		var dense = Array.isArray(ws);
 		for(var R = r.s.r; R <= r.e.r; ++R) {
-			var oo = [];
+			var oo/*:Array<string>*/ = [];
 			for(var C = r.s.c; C <= r.e.c; ++C) {
 				var coord = encode_cell({r:R,c:C});
 				cell = dense ? (ws[R]||[])[C] : ws[coord];

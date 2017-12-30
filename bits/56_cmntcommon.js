@@ -18,9 +18,9 @@ function parse_comments(zip, dirComments, sheets, sheetRels, opts) {
 	}
 }
 
-function insertCommentsIntoSheet(sheetName, sheet, comments) {
+function insertCommentsIntoSheet(sheetName, sheet, comments/*:Array<RawComment>*/) {
 	var dense = Array.isArray(sheet);
-	var cell, r;
+	var cell/*:Cell*/, r;
 	comments.forEach(function(comment) {
 		if(dense) {
 			r = decode_cell(comment.ref);
@@ -42,7 +42,7 @@ function insertCommentsIntoSheet(sheetName, sheet, comments) {
 		}
 
 		if (!cell.c) cell.c = [];
-		var o = ({a: comment.author, t: comment.t, r: comment.r}/*:any*/);
+		var o/*:Comment*/ = ({a: comment.author, t: comment.t, r: comment.r});
 		if(comment.h) o.h = comment.h;
 		cell.c.push(o);
 	});

@@ -19,12 +19,14 @@ program
 	.option('-B, --xlsb', 'emit XLSB to <sheetname> or <file>.xlsb')
 	.option('-M, --xlsm', 'emit XLSM to <sheetname> or <file>.xlsm')
 	.option('-X, --xlsx', 'emit XLSX to <sheetname> or <file>.xlsx')
+	.option('-I, --xlam', 'emit XLAM to <sheetname> or <file>.xlam')
 	.option('-Y, --ods',  'emit ODS  to <sheetname> or <file>.ods')
 	.option('-8, --xls',  'emit XLS  to <sheetname> or <file>.xls (BIFF8)')
 	.option('-5, --biff5','emit XLS  to <sheetname> or <file>.xls (BIFF5)')
 	//.option('-4, --biff4','emit XLS  to <sheetname> or <file>.xls (BIFF4)')
 	//.option('-3, --biff3','emit XLS  to <sheetname> or <file>.xls (BIFF3)')
 	.option('-2, --biff2','emit XLS  to <sheetname> or <file>.xls (BIFF2)')
+	.option('-i, --xla', 'emit XLA to <sheetname> or <file>.xla')
 	.option('-6, --xlml', 'emit SSML to <sheetname> or <file>.xls (2003 XML)')
 	.option('-T, --fods', 'emit FODS to <sheetname> or <file>.fods (Flat ODS)')
 
@@ -65,8 +67,10 @@ program.on('--help', function() {
 var workbook_formats = [
 	['xlsx',   'xlsx', 'xlsx'],
 	['xlsm',   'xlsm', 'xlsm'],
+	['xlam',   'xlam', 'xlam'],
 	['xlsb',   'xlsb', 'xlsb'],
 	['xls',     'xls',  'xls'],
+	['xla',     'xla',  'xla'],
 	['biff5', 'biff5',  'xls'],
 	['ods',     'ods',  'ods'],
 	['fods',   'fods', 'fods']

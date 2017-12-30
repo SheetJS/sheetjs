@@ -5,25 +5,25 @@ function parse_compobj(obj/*:CFBEntry*/) {
 	/*:: if(o == null) return; */
 
 	/* [MS-OLEDS] 2.3.7 CompObjHeader -- All fields MUST be ignored */
-	var l = 28, m;
-	m = __lpstr(o, l);
-	l += 4 + __readUInt32LE(o,l);
-	v.UserType = m;
+	o.l = 28;
 
-	/* [MS-OLEDS] 2.3.1 ClipboardFormatOrAnsiString */
-	m = __readUInt32LE(o,l); l+= 4;
-	switch(m) {
-		case 0x00000000: break;
-		case 0xffffffff: case 0xfffffffe: l+=4; break;
-		default:
-			if(m > 0x190) throw new Error("Unsupported Clipboard: " + m.toString(16));
-			l += m;
-	}
+	v.AnsiUserType = o.read_shift(0, "lpstr-ansi");
+	v.AnsiClipboardFormat = parse_ClipboardFormatOrAnsiString(o);
 
-	m = __lpstr(o, l); l += m.length === 0 ? 0 : 5 + m.length; v.Reserved1 = m;
+	if(o.length - o.l <= 4) return v;
 
-	if((m = __readUInt32LE(o,l)) !== 0x71b2e9f4) return v;
-	throw new Error("Unsupported Unicode Extension");
+	var m/*:number*/ = o.read_shift(4);
+	if(m == 0 || m > 40) return v;
+	o.l-=4; v.Reserved1 = o.read_shift(0, "lpstr-ansi");
+
+	if(o.length - o.l <= 4) return v;
+	m = o.read_shift(4);
+	if(m !== 0x71b239f4) return v;
+	v.UnicodeClipboardFormat = parse_ClipboardFormatOrUnicodeString(o);
+
+	m = o.read_shift(4);
+	if(m == 0 || m > 40) return v;
+	o.l-=4; v.Reserved2 = o.read_shift(0, "lpwstr");
 }
 
 /*
@@ -99,21 +99,20 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 	if(DENSE != null && options.dense == null) options.dense = DENSE;
 	var out/*:Worksheet*/ = ((options.dense ? [] : {})/*:any*/);
 	var Directory = {};
-	var found_sheet = false;
 	var range/*:Range*/ = ({}/*:any*/);
 	var last_formula = null;
-	var sst = [];
+	var sst/*:SST*/ = ([]/*:any*/);
 	var cur_sheet = "";
 	var Preamble = {};
-	var lastcell, last_cell = "", cc, cmnt, rng, rngC, rngR;
+	var lastcell, last_cell = "", cc, cmnt, rngC, rngR;
 	var shared_formulae = {};
-	var array_formulae = []; /* TODO: something more clever */
+	var arrayf/*:Array<[Range, string]>*/ = [];
 	var temp_val/*:Cell*/;
 	var country;
 	var cell_valid = true;
 	var XFs = []; /* XF records */
 	var palette = [];
-	var Workbook/*:WBWBProps*/ = ({ Sheets:[], WBProps:{date1904:false} }/*:any*/), wsprops = {};
+	var Workbook/*:WBWBProps*/ = ({ Sheets:[], WBProps:{date1904:false}, Views:[{}] }/*:any*/), wsprops = {};
 	var get_rgb = function getrgb(icv) {
 		if(icv < 8) return XLSIcv[icv];
 		if(icv < 64) return palette[icv-8] || XLSIcv[icv];
@@ -144,15 +143,15 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 			if(cell.c + 1 > range.e.c) range.e.c = cell.c + 1;
 		}
 		if(options.cellFormula && line.f) {
-			for(var afi = 0; afi < array_formulae.length; ++afi) {
-				if(array_formulae[afi][0].s.c > cell.c) continue;
-				if(array_formulae[afi][0].s.r > cell.r) continue;
-				if(array_formulae[afi][0].e.c < cell.c) continue;
-				if(array_formulae[afi][0].e.r < cell.r) continue;
-				line.F = encode_range(array_formulae[afi][0]);
-				if(array_formulae[afi][0].s.c != cell.c) delete line.f;
-				if(array_formulae[afi][0].s.r != cell.r) delete line.f;
-				if(line.f) line.f = "" + stringify_formula(array_formulae[afi][1], range, cell, supbooks, opts);
+			for(var afi = 0; afi < arrayf.length; ++afi) {
+				if(arrayf[afi][0].s.c > cell.c) continue;
+				if(arrayf[afi][0].s.r > cell.r) continue;
+				if(arrayf[afi][0].e.c < cell.c) continue;
+				if(arrayf[afi][0].e.r < cell.r) continue;
+				line.F = encode_range(arrayf[afi][0]);
+				if(arrayf[afi][0].s.c != cell.c) delete line.f;
+				if(arrayf[afi][0].s.r != cell.r) delete line.f;
+				if(line.f) line.f = "" + stringify_formula(arrayf[afi][1], range, cell, supbooks, opts);
 				break;
 			}
 		}
@@ -169,7 +168,7 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 		sbcch: 0, // cch in the preceding SupBook
 		snames: [], // sheetnames
 		sharedf: shared_formulae, // shared formulae by address
-		arrayf: array_formulae, // array formulae array
+		arrayf: arrayf, // array formulae array
 		rrtabid: [], // RRTabId
 		lastuser: "", // Last User from WriteAccess
 		biff: 8, // BIFF version
@@ -179,9 +178,10 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 		WTF: !!options && !!options.wtf
 	}/*:any*/);
 	if(options.password) opts.password = options.password;
-	var mergecells = [];
+	var themes;
+	var merges/*:Array<Range>*/ = [];
 	var objects = [];
-	var colinfo = [], rowinfo = [];
+	var colinfo/*:Array<ColInfo>*/ = [], rowinfo/*:Array<RowInfo>*/ = [];
 	var defwidth = 0, defheight = 0; // twips / MDW respectively
 	var seencol = false;
 	var supbooks = ([]/*:any*/); // 1-indexed, will hold extern names
@@ -192,8 +192,7 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 	supbooks.XTI = [];
 	var last_Rn = '';
 	var file_depth = 0; /* TODO: make a real stack */
-	var BIFF2Fmt = 0;
-	var BIFF2FmtTable/*:Array<string>*/ = [];
+	var BIFF2Fmt = 0, BIFF2FmtTable/*:Array<string>*/ = [];
 	var FilterDatabases = []; /* TODO: sort out supbooks and process elsewhere */
 	var last_lbl/*:?DefinedName*/;
 
@@ -291,7 +290,7 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 					}/*:DefinedName*/);
 					if(val.itab > 0) last_lbl.Sheet = val.itab - 1;
 					supbooks.names.push(last_lbl);
-					if(!supbooks[0]) supbooks[0] = [];
+					if(!supbooks[0]) { supbooks[0] = []; supbooks[0].XTI = []; }
 					supbooks[supbooks.length-1].push(val);
 					if(val.Name == "_xlnm._FilterDatabase" && val.itab > 0)
 						if(val.rgce && val.rgce[0] && val.rgce[0][0] && val.rgce[0][0][0] == 'PtgArea3d')
@@ -323,7 +322,7 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 							out["!ref"] = encode_range(range);
 							range.e.r++; range.e.c++;
 						}
-						if(mergecells.length > 0) out["!merges"] = mergecells;
+						if(merges.length > 0) out["!merges"] = merges;
 						if(objects.length > 0) out["!objects"] = objects;
 						if(colinfo.length > 0) out["!cols"] = colinfo;
 						if(rowinfo.length > 0) out["!rows"] = rowinfo;
@@ -333,16 +332,16 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 					out = ((options.dense ? [] : {})/*:any*/);
 				} break;
 				case 'BOF': {
-					if(opts.biff === 8) switch(RecordType) {
-						case 0x0009: opts.biff = 2; break;
-						case 0x0209: opts.biff = 3; break;
-						case 0x0409: opts.biff = 4; break;
-						default: switch(val.BIFFVer) {
-						case 0x0500: opts.biff = 5; break;
-						case 0x0600: opts.biff = 8; break;
-						case 0x0002: opts.biff = 2; break;
-						case 0x0007: opts.biff = 2; break;
-					}}
+					if(opts.biff === 8) opts.biff = {
+						/*::[*/0x0009/*::]*/:2,
+						/*::[*/0x0209/*::]*/:3,
+						/*::[*/0x0409/*::]*/:4
+					}[RecordType] || {
+						/*::[*/0x0500/*::]*/:5,
+						/*::[*/0x0600/*::]*/:8,
+						/*::[*/0x0002/*::]*/:2,
+						/*::[*/0x0007/*::]*/:2
+					}[val.BIFFVer] || 8;
 					if(file_depth++) break;
 					cell_valid = true;
 					out = ((options.dense ? [] : {})/*:any*/);
@@ -359,9 +358,9 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 					else cur_sheet = (Directory[s] || {name:""}).name;
 					if(val.dt == 0x20) out["!type"] = "chart";
 					if(val.dt == 0x40) out["!type"] = "macro";
-					mergecells = [];
+					merges = [];
 					objects = [];
-					array_formulae = []; opts.arrayf = array_formulae;
+					opts.arrayf = arrayf = [];
 					colinfo = []; rowinfo = [];
 					defwidth = defheight = 0;
 					seencol = false;
@@ -429,7 +428,7 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 					} else throw new Error("String record expects Formula");
 				} break;
 				case 'Array': {
-					array_formulae.push(val);
+					arrayf.push(val);
 					var _arraystart = encode_cell(val[0].s);
 					cc = options.dense ? (out[val[0].s.r]||[])[val[0].s.c] : out[_arraystart];
 					if(options.cellFormula && cc) {
@@ -501,7 +500,7 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 					if(b2idx >= 163) SSF.load(val, BIFF2Fmt + 163);
 				} break;
 
-				case 'MergeCells': mergecells = mergecells.concat(val); break;
+				case 'MergeCells': merges = merges.concat(val); break;
 
 				case 'Obj': objects[val.cmo[0]] = opts.lastobj = val; break;
 				case 'TxO': opts.lastobj.TxO = val; break;
@@ -572,6 +571,11 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 					out['!margins'].footer = val.footer;
 					break;
 
+				case 'Window2': // TODO
+					// $FlowIgnore
+					if(val.RTL) Workbook.Views[0].RTL = true;
+					break;
+
 				case 'Header': break; // TODO
 				case 'Footer': break; // TODO
 				case 'HCenter': break; // TODO
@@ -605,8 +609,8 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 				case 'XFCRC': break; // TODO
 				case 'Style': break; // TODO
 				case 'StyleExt': break; // TODO
-				case 'Palette': palette = val; break; // TODO
-				case 'Theme': break; // TODO
+				case 'Palette': palette = val; break;
+				case 'Theme': themes = val; break;
 				/* Protection */
 				case 'ScenarioProtect': break;
 				case 'ObjProtect': break;
@@ -710,7 +714,7 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 				case 'InterfaceHdr': case 'Mms': case 'InterfaceEnd': case 'DSF': break;
 				case 'BuiltInFnGroupCount': /* 2.4.30 0x0E or 0x10 but excel 2011 generates 0x11? */ break;
 				/* View Stuff */
-				case 'Window1': case 'Window2': case 'HideObj': case 'GridSet': case 'Guts':
+				case 'Window1': case 'HideObj': case 'GridSet': case 'Guts':
 				case 'UserBView': case 'UserSViewBegin': case 'UserSViewEnd':
 				case 'Pane': break;
 				default: switch(R.n) { /* nested */
@@ -824,6 +828,7 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 	wb.Strings = sst;
 	wb.SSF = SSF.get_table();
 	if(opts.enc) wb.Encryption = opts.enc;
+	if(themes) wb.Themes = themes;
 	wb.Metadata = {};
 	if(country !== undefined) wb.Metadata.Country = country;
 	if(supbooks.names.length > 0) Workbook.Names = supbooks.names;
@@ -838,22 +843,24 @@ function parse_props(cfb/*:CFBContainer*/, props, o) {
 	if(DSI) try {
 		var DocSummary = parse_PropertySetStream(DSI, DocSummaryPIDDSI);
 		for(var d in DocSummary) props[d] = DocSummary[d];
-	} catch(e) {if(o.WTF == 2) throw e;/* empty */}
+	} catch(e) {if(o.WTF) throw e;/* empty */}
 
 	/* [MS-OSHARED] 2.3.3.2.1 Summary Information Property Set*/
 	var SI = CFB.find(cfb, '!SummaryInformation');
 	if(SI) try {
 		var Summary = parse_PropertySetStream(SI, SummaryPIDSI);
 		for(var s in Summary) if(props[s] == null) props[s] = Summary[s];
-	} catch(e) {if(o.WTF == 2) throw e;/* empty */}
+	} catch(e) {if(o.WTF) throw e;/* empty */}
 }
 
 function parse_xlscfb(cfb/*:any*/, options/*:?ParseOpts*/)/*:Workbook*/ {
 if(!options) options = {};
 fix_read_opts(options);
 reset_cp();
+if(options.codepage) set_ansi(options.codepage);
 var CompObj/*:?CFBEntry*/, Summary, WB/*:?any*/;
 if(cfb.FullPaths) {
+	if(CFB.find(cfb, '/encryption')) throw new Error("File is password-protected");
 	CompObj = CFB.find(cfb, '!CompObj');
 	Summary = CFB.find(cfb, '!SummaryInformation');
 	WB = CFB.find(cfb, '/Workbook') || CFB.find(cfb, '/Book');
@@ -899,6 +906,8 @@ function write_xlscfb(wb/*:Workbook*/, opts/*:WriteOpts*/)/*:CFBContainer*/ {
 	var wbpath = "/Workbook";
 	switch(o.bookType || "xls") {
 		case "xls": o.bookType = "biff8";
+		/* falls through */
+		case "xla": if(!o.bookType) o.bookType = "xla";
 		/* falls through */
 		case "biff8": wbpath = "/Workbook"; o.biff = 8; break;
 		case "biff5": wbpath = "/Book"; o.biff = 5; break;

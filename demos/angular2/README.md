@@ -35,8 +35,8 @@ const wb: XLSX.WorkBook = XLSX.utils.book_new();
 XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
 
 /* save to file */
-const wbout: string = XLSX.write(wb, { bookType: 'xlsx', type: 'binary' });
-saveAs(new Blob([s2ab(wbout)]), 'SheetJS.xlsx');
+const wbout: string = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+saveAs(new Blob([wbout]), 'SheetJS.xlsx');
 ```
 
 `sheet_to_json` with the option `header:1` makes importing simple:

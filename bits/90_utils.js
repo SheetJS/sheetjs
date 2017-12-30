@@ -103,20 +103,20 @@ function make_csv_row(sheet/*:Worksheet*/, r/*:Range*/, R/*:number*/, cols/*:Arr
 }
 
 function sheet_to_csv(sheet/*:Worksheet*/, opts/*:?Sheet2CSVOpts*/)/*:string*/ {
-	var out = [];
+	var out/*:Array<string>*/ = [];
 	var o = opts == null ? {} : opts;
 	if(sheet == null || sheet["!ref"] == null) return "";
 	var r = safe_decode_range(sheet["!ref"]);
 	var FS = o.FS !== undefined ? o.FS : ",", fs = FS.charCodeAt(0);
 	var RS = o.RS !== undefined ? o.RS : "\n", rs = RS.charCodeAt(0);
 	var endregex = new RegExp((FS=="|" ? "\\|" : FS)+"+$");
-	var row = "", cols = [];
+	var row = "", cols/*:Array<string>*/ = [];
 	o.dense = Array.isArray(sheet);
-	var colInfos = o.skipHidden && sheet["!cols"] || [];
-	var rowInfos = o.skipHidden && sheet["!rows"] || [];
-	for(var C = r.s.c; C <= r.e.c; ++C) if (!((colInfos[C]||{}).hidden)) cols[C] = encode_col(C);
+	var colinfo/*:Array<ColInfo>*/ = o.skipHidden && sheet["!cols"] || [];
+	var rowinfo/*:Array<ColInfo>*/ = o.skipHidden && sheet["!rows"] || [];
+	for(var C = r.s.c; C <= r.e.c; ++C) if (!((colinfo[C]||{}).hidden)) cols[C] = encode_col(C);
 	for(var R = r.s.r; R <= r.e.r; ++R) {
-		if ((rowInfos[R]||{}).hidden) continue;
+		if ((rowinfo[R]||{}).hidden) continue;
 		row = make_csv_row(sheet, r, R, cols, fs, rs, FS, o);
 		if(row == null) { continue; }
 		if(o.strip) row = row.replace(endregex,"");
@@ -137,7 +137,7 @@ function sheet_to_txt(sheet/*:Worksheet*/, opts/*:?Sheet2CSVOpts*/) {
 function sheet_to_formulae(sheet/*:Worksheet*/)/*:Array<string>*/ {
 	var y = "", x, val="";
 	if(sheet == null || sheet["!ref"] == null) return [];
-	var r = safe_decode_range(sheet['!ref']), rr = "", cols = [], C;
+	var r = safe_decode_range(sheet['!ref']), rr = "", cols/*:Array<string>*/ = [], C;
 	var cmds/*:Array<string>*/ = [];
 	var dense = Array.isArray(sheet);
 	for(C = r.s.c; C <= r.e.c; ++C) cols[C] = encode_col(C);
@@ -173,7 +173,7 @@ function json_to_sheet(js/*:Array<any>*/, opts)/*:Worksheet*/ {
 	var ws = ({}/*:any*/);
 	var cell/*:Cell*/;
 	var range/*:Range*/ = ({s: {c:0, r:0}, e: {c:0, r:js.length}}/*:any*/);
-	var hdr = o.header || [], C = 0;
+	var hdr/*:Array<string>*/ = o.header || [], C = 0;
 
 	js.forEach(function (JS, R) {
 		keys(JS).filter(function(x) { return JS.hasOwnProperty(x); }).forEach(function(k) {

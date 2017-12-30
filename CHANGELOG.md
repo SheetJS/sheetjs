@@ -4,6 +4,11 @@ This log is intended to keep track of backwards-incompatible changes, including
 but not limited to API changes and file location changes.  Minor behavioral
 changes may not be included if they are not expected to break existing code.
 
+## 0.11.16 (2017-12-30)
+
+* XLS ANSI/CP separation
+* 'array' write type and ArrayBuffer processing
+
 ## 0.11.6 (2017-10-16)
 
 * Semicolon-delimited files are detected

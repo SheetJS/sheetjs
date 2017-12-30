@@ -1,5 +1,5 @@
-function parse_numCache(data) {
-	var col = [];
+function parse_numCache(data/*:string*/)/*:[Array<number>, string]*/ {
+	var col/*:Array<number>*/ = [];
 
 	/* 21.2.2.150 pt CT_NumVal */
 	(data.match(/<c:pt idx="(\d*)">(.*?)<\/c:pt>/mg)||[]).forEach(function(pt) {
@@ -15,8 +15,8 @@ function parse_numCache(data) {
 }
 
 /* 21.2 DrawingML - Charts */
-function parse_chart(data, name/*:string*/, opts, rels, wb, csheet) {
-	var cs = ((csheet || {"!type":"chart"})/*:any*/);
+function parse_chart(data/*:?string*/, name/*:string*/, opts, rels, wb, csheet) {
+	var cs/*:Worksheet*/ = ((csheet || {"!type":"chart"})/*:any*/);
 	if(!data) return csheet;
 	/* 21.2.2.27 chart CT_Chart */
 

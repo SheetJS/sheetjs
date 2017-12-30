@@ -37,12 +37,13 @@ function default_margins(margins/*:Margins*/, mode/*:?string*/) {
 	if(margins.footer == null) margins.footer = defs[5];
 }
 
-function get_cell_style(styles, cell, opts) {
+function get_cell_style(styles/*:Array<any>*/, cell/*:Cell*/, opts) {
 	var z = opts.revssf[cell.z != null ? cell.z : "General"];
 	var i = 0x3c, len = styles.length;
 	if(z == null && opts.ssf) {
 		for(; i < 0x188; ++i) if(opts.ssf[i] == null) {
 			SSF.load(cell.z, i);
+			// $FlowIgnore
 			opts.ssf[i] = cell.z;
 			opts.revssf[cell.z] = z = i;
 			break;
@@ -60,7 +61,7 @@ function get_cell_style(styles, cell, opts) {
 	return len;
 }
 
-function safe_format(p, fmtid/*:number*/, fillid/*:?number*/, opts, themes, styles) {
+function safe_format(p/*:Cell*/, fmtid/*:number*/, fillid/*:?number*/, opts, themes, styles) {
 	if(p.t === 'z') return;
 	if(p.t === 'd' && typeof p.v === 'string') p.v = parseDate(p.v);
 	try {

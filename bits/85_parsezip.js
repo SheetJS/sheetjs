@@ -43,7 +43,6 @@ function parse_zip(zip/*:ZIP*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
 	make_ssf(SSF);
 	opts = opts || {};
 	fix_read_opts(opts);
-	reset_cp();
 
 	/* OpenDocument Part 3 Section 2.2.1 OpenDocument Package */
 	if(safegetzipfile(zip, 'META-INF/manifest.xml')) return parse_ods(zip, opts);
@@ -67,7 +66,6 @@ function parse_zip(zip/*:ZIP*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
 		xlsb = true;
 	}
 	if(dir.workbooks[0].slice(-3) == "bin") xlsb = true;
-	if(xlsb) set_cp(1200);
 
 	var themes = ({}/*:any*/);
 	var styles = ({}/*:any*/);

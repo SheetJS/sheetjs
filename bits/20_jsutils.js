@@ -1,5 +1,3 @@
-function isval(x/*:?any*/)/*:boolean*/ { return x !== undefined && x !== null; }
-
 function keys(o/*:any*/)/*:Array<any>*/ { return Object.keys(o); }
 
 function evert_key(obj/*:any*/, key/*:string*/)/*:EvertType*/ {
@@ -96,12 +94,6 @@ function parseDate(str/*:string|Date*/, fixdate/*:?number*/)/*:Date*/ {
 function cc2str(arr/*:Array<number>*/)/*:string*/ {
 	var o = "";
 	for(var i = 0; i != arr.length; ++i) o += String.fromCharCode(arr[i]);
-	return o;
-}
-
-function str2cc(str) {
-	var o = [];
-	for(var i = 0; i != str.length; ++i) o.push(str.charCodeAt(i));
 	return o;
 }
 

@@ -265,3 +265,19 @@ function write_FontFlags(font, o) {
 	return o;
 }
 
+/* [MS-OLEDS] 2.3.1 and 2.3.2 */
+function parse_ClipboardFormatOrString(o, w/*:number*/)/*:string*/ {
+	// $FlowIgnore
+	var ClipFmt = {2:"BITMAP",3:"METAFILEPICT",8:"DIB",14:"ENHMETAFILE"};
+	var m/*:number*/ = o.read_shift(4);
+	switch(m) {
+		case 0x00000000: return "";
+		case 0xffffffff: case 0xfffffffe: return ClipFmt[o.read_shift(4)]||"";
+	}
+	if(m > 0x190) throw new Error("Unsupported Clipboard: " + m.toString(16));
+	o.l -= 4;
+	return o.read_shift(0, w == 1 ? "lpstr" : "lpwstr");
+}
+function parse_ClipboardFormatOrAnsiString(o) { return parse_ClipboardFormatOrString(o, 1); }
+function parse_ClipboardFormatOrUnicodeString(o) { return parse_ClipboardFormatOrString(o, 2); }
+

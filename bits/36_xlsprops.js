@@ -39,7 +39,7 @@ function xlml_set_prop(Props, tag/*:string*/, val) {
 }
 
 function xlml_write_docprops(Props, opts) {
-	var o = [];
+	var o/*:Array<string>*/ = [];
 	keys(XLMLDocPropsMap).map(function(m) {
 		for(var i = 0; i < CORE_PROPS.length; ++i) if(CORE_PROPS[i][1] == m) return CORE_PROPS[i];
 		for(i = 0; i < EXT_PROPS.length; ++i) if(EXT_PROPS[i][1] == m) return EXT_PROPS[i];
@@ -60,7 +60,7 @@ function xlml_write_docprops(Props, opts) {
 function xlml_write_custprops(Props, Custprops, opts) {
 	var BLACKLIST = ["Worksheets","SheetNames"];
 	var T = 'CustomDocumentProperties';
-	var o = [];
+	var o/*:Array<string>*/ = [];
 	if(Props) keys(Props).forEach(function(k) {
 		/*:: if(!Props) return; */
 		if(!Props.hasOwnProperty(k)) return;

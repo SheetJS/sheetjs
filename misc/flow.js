@@ -27,6 +27,7 @@ type Workbook = {
 type WBWBProps = {
 	Sheets: Array<WBWSProp>;
 	Names?: Array<any>;
+	Views?: Array<any>;
 	WBProps?: WBProps;
 };
 
@@ -96,7 +97,14 @@ type SST = {
 	length:number;
 };
 
-type Comment = any;
+type Comment = {
+	t:string;
+	a?:string;
+	r?:string;
+	h?:string;
+};
+
+type RawComment = any;
 
 type RowInfo = {
 	hidden?:boolean; // if true, the row is hidden

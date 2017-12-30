@@ -38,9 +38,9 @@ class SheetJSApp extends React.Component {
 		const wb = XLSX.utils.book_new();
 		XLSX.utils.book_append_sheet(wb, ws, "SheetJS");
 		/* generate XLSX file */
-		const wbout = XLSX.write(wb, {type:"binary", bookType:"xlsx"});
+		const wbout = XLSX.write(wb, {type:"array", bookType:"xlsx"});
 		/* send to client */
-		saveAs(new Blob([s2ab(wbout)],{type:"application/octet-stream"}), "sheetjs.xlsx");
+		saveAs(new Blob([wbout],{type:"application/octet-stream"}), "sheetjs.xlsx");
 	};
 	render() { return (
 <DragDropFile handleFile={this.handleFile}>
@@ -135,14 +135,6 @@ class OutTable extends React.Component {
 const SheetJSFT = [
 	"xlsx", "xlsb", "xlsm", "xls", "xml", "csv", "txt", "ods", "fods", "uos", "sylk", "dif", "dbf", "prn", "qpw", "123", "wb*", "wq*", "html", "htm"
 ].map(function(x) { return "." + x; }).join(",");
-
-/* see Browser download file example in docs */
-function s2ab(s/*:string*/)/*:ArrayBuffer*/ {
-  const buf = new ArrayBuffer(s.length);
-  const view = new Uint8Array(buf);
-  for (let i=0; i!=s.length; ++i) view[i] = s.charCodeAt(i) & 0xFF;
-  return buf;
-}
 
 /* generate an array of column objects */
 const make_cols = refstr => Array(XLSX.utils.decode_range(refstr).e.c + 1).fill(0).map((x,i) => ({name:XLSX.utils.encode_col(i), key:i}));

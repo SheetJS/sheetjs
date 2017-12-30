@@ -180,7 +180,7 @@ var CT_LIST = (function(){
 			xlsb: "application/vnd.ms-excel.styles"
 		}
 	};
-	keys(o).forEach(function(k) { if(!o[k].xlsm) o[k].xlsm = o[k].xlsx; });
+	keys(o).forEach(function(k) { ["xlsm", "xlam"].forEach(function(v) { if(!o[k][v]) o[k][v] = o[k].xlsx; }); });
 	keys(o).forEach(function(k){ keys(o[k]).forEach(function(v) { ct2type[o[k][v]] = k; }); });
 	return o;
 })();

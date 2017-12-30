@@ -13,19 +13,6 @@ var SJSTemplate = [
 	'</div>'
 ].join("");
 
-function s2ab(s) {
-	if(typeof ArrayBuffer !== 'undefined') {
-		var buf = new ArrayBuffer(s.length);
-		var view = new Uint8Array(buf);
-		for (var i=0; i!=s.length; ++i) view[i] = s.charCodeAt(i) & 0xFF;
-		return buf;
-	} else {
-		var buf = new Array(s.length);
-		for (var i=0; i!=s.length; ++i) buf[i] = s.charCodeAt(i) & 0xFF;
-		return buf;
-	}
-}
-
 Vue.component('html-preview', {
 	template: SJSTemplate,
 	methods: {
@@ -69,10 +56,10 @@ Vue.component('html-preview', {
 			/* generate workbook object from table */
 			var wb = XLSX.utils.table_to_book(document.getElementById('out-table'));
 			/* get binary string as output */
-			var wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'binary' });
+			var wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
 
 			/* force a download */
-			saveAs(new Blob([s2ab(wbout)], { type: 'application/octet-stream' }), "sheetjs.xlsx");
+			saveAs(new Blob([wbout], { type: 'application/octet-stream' }), "sheetjs.xlsx");
 		}
 	}
 });

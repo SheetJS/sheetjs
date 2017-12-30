@@ -1,6 +1,6 @@
 function _JS2ANSI(str/*:string*/)/*:Array<number>*/ {
-	if(typeof cptable !== 'undefined') return cptable.utils.encode(1252, str);
-	var o = [], oo = str.split("");
+	if(typeof cptable !== 'undefined') return cptable.utils.encode(current_ansi, str);
+	var o/*:Array<number>*/ = [], oo = str.split("");
 	for(var i = 0; i < oo.length; ++i) o[i] = oo[i].charCodeAt(0);
 	return o;
 }
@@ -31,14 +31,9 @@ function parse_DataSpaceMapEntry(blob) {
 	var end = blob.l + len - 4;
 	var o = {};
 	var cnt = blob.read_shift(4);
-	var comps = [];
-	while(cnt-- > 0) {
-		/* [MS-OFFCRYPTO] 2.1.6.2 DataSpaceReferenceComponent Structure */
-		var rc = {};
-		rc.t = blob.read_shift(4);
-		rc.v = blob.read_shift(0, 'lpp4');
-		comps.push(rc);
-	}
+	var comps/*:Array<{t:number, v:string}>*/ = [];
+	/* [MS-OFFCRYPTO] 2.1.6.2 DataSpaceReferenceComponent Structure */
+	while(cnt-- > 0) comps.push({ t: blob.read_shift(4), v: blob.read_shift(0, 'lpp4') });
 	o.name = blob.read_shift(0, 'lpp4');
 	o.comps = comps;
 	if(blob.l != end) throw new Error("Bad DataSpaceMapEntry: " + blob.l + " != " + end);
@@ -55,8 +50,8 @@ function parse_DataSpaceMap(blob, length) {
 }
 
 /* [MS-OFFCRYPTO] 2.1.7 DataSpaceDefinition */
-function parse_DataSpaceDefinition(blob, length) {
-	var o = [];
+function parse_DataSpaceDefinition(blob, length)/*:Array<string>*/ {
+	var o/*:Array<string>*/ = [];
 	blob.l += 4; // must be 0x8
 	var cnt = blob.read_shift(4);
 	while(cnt-- > 0) o.push(blob.read_shift(0, 'lpp4'));

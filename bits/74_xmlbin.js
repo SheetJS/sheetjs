@@ -37,7 +37,7 @@ function parse_sst(data, name/*:string*/, opts)/*:SST*/ {
 	return parse_sst_xml((data/*:any*/), opts);
 }
 
-function parse_cmnt(data, name/*:string*/, opts) {
+function parse_cmnt(data, name/*:string*/, opts)/*:Array<RawComment>*/ {
 	if(name.slice(-4)===".bin") return parse_comments_bin((data/*:any*/), opts);
 	return parse_comments_xml((data/*:any*/), opts);
 }

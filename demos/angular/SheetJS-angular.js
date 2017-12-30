@@ -13,12 +13,12 @@ function SheetJSExportService(uiGridExporterService) {
 		var wb = XLSX.utils.book_new(), ws = uigrid_to_sheet(data, columns);
 		XLSX.utils.book_append_sheet(wb, ws, sheetName);
 		var wbout = XLSX.write(wb, wopts);
-		saveAs(new Blob([s2ab(wbout)], { type: 'application/octet-stream' }), fileName);
+		saveAs(new Blob([wbout], { type: 'application/octet-stream' }), fileName);
 	}
 
 	var service = {};
-	service.exportXLSB = function exportXLSB(gridApi) { return exportSheetJS(gridApi, { bookType: 'xlsb', bookSST: true, type: 'binary' }); };
-	service.exportXLSX = function exportXLSX(gridApi) { return exportSheetJS(gridApi, { bookType: 'xlsx', bookSST: true, type: 'binary' }); }
+	service.exportXLSB = function exportXLSB(gridApi) { return exportSheetJS(gridApi, { bookType: 'xlsb', bookSST: true, type: 'array' }); };
+	service.exportXLSX = function exportXLSX(gridApi) { return exportSheetJS(gridApi, { bookType: 'xlsx', bookSST: true, type: 'array' }); }
 
 	return service;
 
@@ -46,19 +46,6 @@ function SheetJSExportService(uiGridExporterService) {
 		if(col.displayName) return col.displayName;
 		if(col.name) return col.name;
 		return null;
-	}
-
-	function s2ab(s) {
-		if(typeof ArrayBuffer !== 'undefined') {
-			var buf = new ArrayBuffer(s.length);
-			var view = new Uint8Array(buf);
-			for (var i=0; i!=s.length; ++i) view[i] = s.charCodeAt(i) & 0xFF;
-			return buf;
-		} else {
-			var buf = new Array(s.length);
-			for (var i=0; i!=s.length; ++i) buf[i] = s.charCodeAt(i) & 0xFF;
-			return buf;
-		}
 	}
 }
 

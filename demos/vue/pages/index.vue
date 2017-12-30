@@ -30,17 +30,7 @@
 </template>
 
 <script>
-const _XLSX = require('xlsx');
-const X = typeof XLSX !== 'undefined' ? XLSX : _XLSX;
-const make_cols = refstr => Array(X.utils.decode_range(refstr).e.c + 1).fill(0).map((x,i) => ({name:X.utils.encode_col(i), key:i}));
-
-/* see Browser download file example in docs */
-function s2ab(s) {
-  const buf = new ArrayBuffer(s.length);
-  const view = new Uint8Array(buf);
-  for (let i=0; i!=s.length; ++i) view[i] = s.charCodeAt(i) & 0xFF;
-  return buf;
-}
+const make_cols = refstr => Array(XLSX.utils.decode_range(refstr).e.c + 1).fill(0).map((x,i) => ({name:XLSX.utils.encode_col(i), key:i}));
 
 const _SheetJSFT = [
 	"xlsx", "xlsb", "xlsm", "xls", "xml", "csv", "txt", "ods", "fods", "uos", "sylk", "dif", "dbf", "prn", "qpw", "123", "wb*", "wq*", "html", "htm"
@@ -73,13 +63,13 @@ export default {
 		},
 		_export(evt) {
 			/* convert state to workbook */
-			const ws = X.utils.aoa_to_sheet(this.data);
-			const wb = X.utils.book_new();
-			X.utils.book_append_sheet(wb, ws, "SheetJS");
+			const ws = XLSX.utils.aoa_to_sheet(this.data);
+			const wb = XLSX.utils.book_new();
+			XLSX.utils.book_append_sheet(wb, ws, "SheetJS");
 			/* generate X file */
-			const wbout = X.write(wb, {type:"binary", bookType:"xlsx"});
+			const wbout = XLSX.write(wb, {type:"array", bookType:"xlsx"});
 			/* send to client */
-			saveAs(new Blob([s2ab(wbout)],{type:"application/octet-stream"}), "sheetjs.xlsx");
+			saveAs(new Blob([wbout],{type:"application/octet-stream"}), "sheetjs.xlsx");
 		},
 		_file(file) {
 			/* Boilerplate to set up FileReader */
@@ -87,12 +77,12 @@ export default {
 			reader.onload = (e) => {
 				/* Parse data */
 				const bstr = e.target.result;
-				const wb = X.read(bstr, {type:'binary'});
+				const wb = XLSX.read(bstr, {type:'binary'});
 				/* Get first worksheet */
 				const wsname = wb.SheetNames[0];
 				const ws = wb.Sheets[wsname];
 				/* Convert array of arrays */
-				const data = X.utils.sheet_to_json(ws, {header:1});
+				const data = XLSX.utils.sheet_to_json(ws, {header:1});
 				/* Update state */
 				this.data = data;
 				this.cols = make_cols(ws['!ref']);

@@ -61,6 +61,14 @@ function parse_Ref8U(blob, length) {
 	var colLast = blob.read_shift(2);
 	return {s:{c:colFirst, r:rwFirst}, e:{c:colLast,r:rwLast}};
 }
+function write_Ref8U(r/*:Range*/, o) {
+	if(!o) o = new_buf(8);
+	o.write_shift(2, r.s.r);
+	o.write_shift(2, r.e.r);
+	o.write_shift(2, r.s.c);
+	o.write_shift(2, r.e.c);
+	return o;
+}
 
 /* 2.5.211 */
 function parse_RefU(blob, length) {
@@ -165,6 +173,7 @@ function write_BOF(wb/*:Workbook*/, t/*:number*/, o) {
 		case 'biff4': h = 0x0004; w = 6; break;
 		case 'biff3': h = 0x0003; w = 6; break;
 		case 'biff2': h = 0x0002; w = 4; break;
+		case 'xla': break;
 		default: throw new Error("unsupported BIFF version");
 	}
 	var out = new_buf(w);
@@ -335,6 +344,22 @@ function write_Window1(opts) {
 	o.write_shift(2, 0);
 	o.write_shift(2, 1);
 	o.write_shift(2, 0x01f4);
+	return o;
+}
+/* 2.4.346 TODO */
+function parse_Window2(blob, length, opts) {
+	if(opts && opts.biff >= 2 && opts.biff < 8) return {};
+	var f = blob.read_shift(2);
+	return { RTL: f & 0x40 };
+}
+function write_Window2(view) {
+	var o = new_buf(18), f = 0x6b6;
+	if(view && view.RTL) f |= 0x40;
+	o.write_shift(2, f);
+	o.write_shift(4, 0);
+	o.write_shift(4, 64);
+	o.write_shift(4, 0);
+	o.write_shift(4, 0);
 	return o;
 }
 
@@ -624,7 +649,6 @@ function parse_ExternSheet(blob, length, opts) {
 	var o = [], target = blob.l + length, len = blob.read_shift(opts.biff > 8 ? 4 : 2);
 	while(len-- !== 0) o.push(parse_XTI(blob, opts.biff > 8 ? 12 : 6, opts));
 		// [iSupBook, itabFirst, itabLast];
-	var oo = [];
 	return o;
 }
 function parse_BIFF5ExternSheet(blob, length, opts) {
@@ -689,11 +713,17 @@ function parse_Note(blob, length, opts) {
 }
 
 /* 2.4.168 */
-function parse_MergeCells(blob, length) {
-	var merges = [];
+function parse_MergeCells(blob, length)/*:Array<Range>*/ {
+	var merges/*:Array<Range>*/ = [];
 	var cmcs = blob.read_shift(2);
 	while (cmcs--) merges.push(parse_Ref8U(blob,length));
 	return merges;
+}
+function write_MergeCells(merges/*:Array<Range>*/) {
+	var o = new_buf(2 + merges.length * 8);
+	o.write_shift(2, merges.length);
+	for(var i = 0; i < merges.length; ++i) write_Ref8U(merges[i], o);
+	return o;
 }
 
 /* 2.4.181 TODO: parse all the things! */
@@ -821,8 +851,8 @@ function write_HLinkTooltip(hl) {
 }
 
 /* 2.4.63 */
-function parse_Country(blob, length) {
-	var o = [], d;
+function parse_Country(blob, length)/*:[string|number, string|number]*/ {
+	var o = [0,0], d;
 	d = blob.read_shift(2); o[0] = CountryEnum[d] || d;
 	d = blob.read_shift(2); o[1] = CountryEnum[d] || d;
 	return o;

@@ -1,8 +1,8 @@
-function write_biff_rec(ba/*:BufArray*/, type/*:number|string*/, payload, length/*:?number*/) {
+function write_biff_rec(ba/*:BufArray*/, type/*:number|string*/, payload, length/*:?number*/)/*:void*/ {
 	var t/*:number*/ = +type || +XLSRE[/*::String(*/type/*::)*/];
 	if(isNaN(t)) return;
 	var len = length || (payload||[]).length || 0;
-	var o = ba.next(4 + len);
+	var o = ba.next(4);
 	o.write_shift(2, t);
 	o.write_shift(2, len);
 	if(/*:: len != null &&*/len > 0 && is_buf(payload)) ba.push(payload);
@@ -12,8 +12,7 @@ function write_BIFF2Cell(out, r/*:number*/, c/*:number*/) {
 	if(!out) out = new_buf(7);
 	out.write_shift(2, r);
 	out.write_shift(2, c);
-	out.write_shift(1, 0);
-	out.write_shift(1, 0);
+	out.write_shift(2, 0);
 	out.write_shift(1, 0);
 	return out;
 }
@@ -114,7 +113,8 @@ function write_ws_biff8_cell(ba/*:BufArray*/, cell/*:Cell*/, R/*:number*/, C/*:n
 function write_ws_biff8(idx/*:number*/, opts, wb/*:Workbook*/) {
 	var ba = buf_array();
 	var s = wb.SheetNames[idx], ws = wb.Sheets[s] || {};
-	var _sheet/*:WBWSProp*/ = ((((wb||{}).Workbook||{}).Sheets||[])[idx]||{}/*:any*/);
+	var _WB/*:WBWBProps*/ = ((wb||{}).Workbook||{}/*:any*/);
+	var _sheet/*:WBWSProp*/ = ((_WB.Sheets||[])[idx]||{}/*:any*/);
 	var dense = Array.isArray(ws);
 	var ref/*:string*/, rr = "", cols/*:Array<string>*/ = [];
 	var range = safe_decode_range(ws['!ref'] || "A1");
@@ -153,6 +153,10 @@ function write_ws_biff8(idx/*:number*/, opts, wb/*:Workbook*/) {
 	}
 	var cname/*:string*/ = _sheet.CodeName || _sheet.name || s;
 	/* ... */
+	if(b8 && _WB.Views) write_biff_rec(ba, "Window2", write_Window2(_WB.Views[0]));
+	/* ... */
+	if(b8) write_biff_rec(ba, "MergeCells", write_MergeCells(ws['!merges']||[]));
+	/* ... */
 	if(b8) write_ws_biff8_hlinks(ba, ws);
 	/* ... */
 	write_biff_rec(ba, "CodeName", write_XLUnicodeString(cname, opts));
@@ -167,6 +171,7 @@ function write_biff8_global(wb/*:Workbook*/, bufs, opts/*:WriteOpts*/) {
 	var _wb/*:WBWBProps*/ = /*::((*/(wb.Workbook||{}).WBProps||{/*::CodeName:"ThisWorkbook"*/}/*:: ):any)*/;
 	var b8 = opts.biff == 8, b5 = opts.biff == 5;
 	write_biff_rec(A, 0x0809, write_BOF(wb, 0x05, opts));
+	if(opts.bookType == "xla") write_biff_rec(A, "Addin");
 	write_biff_rec(A, "InterfaceHdr", b8 ? writeuint16(0x04b0) : null);
 	write_biff_rec(A, "Mms", writezeroes(2));
 	if(b5) write_biff_rec(A, "ToolbarHdr");

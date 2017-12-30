@@ -32,10 +32,10 @@ var write_content_ods/*:{(wb:any, opts:any):string}*/ = (function() {
 	var covered_cell_xml = '          <table:covered-table-cell/>\n';
 	var write_ws = function(ws, wb/*:Workbook*/, i/*:number*/, opts)/*:string*/ {
 		/* Section 9 Tables */
-		var o = [];
+		var o/*:Array<string>*/ = [];
 		o.push('      <table:table table:name="' + escapexml(wb.SheetNames[i]) + '">\n');
 		var R=0,C=0, range = decode_range(ws['!ref']);
-		var marr = ws['!merges'] || [], mi = 0;
+		var marr/*:Array<Range>*/ = ws['!merges'] || [], mi = 0;
 		var dense = Array.isArray(ws);
 		for(R = 0; R < range.s.r; ++R) o.push('        <table:table-row></table:table-row>\n');
 		for(; R <= range.e.r; ++R) {
@@ -186,7 +186,7 @@ function write_ods(wb/*:any*/, opts/*:any*/) {
 	var f = "";
 
 	var manifest/*:Array<Array<string> >*/ = [];
-	var rdf = [];
+	var rdf/*:Array<[string, string]>*/ = [];
 
 	/* Part 3 Section 3.3 MIME Media Type */
 	f = "mimetype";

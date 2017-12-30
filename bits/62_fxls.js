@@ -149,10 +149,10 @@ function parse_PtgAttrBaxcel(blob, length) {
 }
 
 /* 2.5.198.34 */
-function parse_PtgAttrChoose(blob, length, opts) {
+function parse_PtgAttrChoose(blob, length, opts)/*:Array<number>*/ {
 	blob.l +=2;
 	var offset = blob.read_shift(opts && opts.biff == 2 ? 1 : 2);
-	var o = [];
+	var o/*:Array<number>*/ = [];
 	/* offset is 1 less than the number of elements */
 	for(var i = 0; i <= offset; ++i) o.push(blob.read_shift(opts && opts.biff == 2 ? 1 : 2));
 	return o;
@@ -318,7 +318,7 @@ function parse_SerAr(blob, biff/*:number*/) {
 /* 2.5.198.61 */
 function parse_PtgExtraMem(blob, cce) {
 	var count = blob.read_shift(2);
-	var out = [];
+	var out/*:Array<Range>*/ = [];
 	for(var i = 0; i != count; ++i) out.push(parse_Ref8U(blob, 8));
 	return out;
 }
@@ -335,7 +335,7 @@ function parse_PtgExtraArray(blob, length, opts) {
 	}
 	if(opts.biff >= 2 && opts.biff < 8) { --rows; if(--cols == 0) cols = 0x100; }
 	// $FlowIgnore
-	for(var i = 0, o/*:Array<Array<any> >*/=[]; i != rows && (o[i] = []); ++i)
+	for(var i = 0, o/*:Array<Array<any>>*/ = []; i != rows && (o[i] = []); ++i)
 		for(var j = 0; j != cols; ++j) o[i][j] = parse_SerAr(blob, opts.biff);
 	return o;
 }
@@ -655,10 +655,10 @@ function parse_Rgce(blob, length, opts) {
 	return ptgs;
 }
 
-function stringify_array(f/*:Array<Array<any>>*/)/*:string*/ {
-	var o = [];
+function stringify_array(f/*:Array<Array<string>>*/)/*:string*/ {
+	var o/*:Array<string>*/ = [];
 	for(var i = 0; i < f.length; ++i) {
-		var x = f[i], r = [];
+		var x = f[i], r/*:Array<string>*/ = [];
 		for(var j = 0; j < x.length; ++j) {
 			var y = x[j];
 			if(y) switch(y[0]) {
@@ -713,10 +713,10 @@ function get_ixti_raw(supbooks, ixti/*:number*/, opts)/*:string*/ {
 			return XTI[1] == XTI[2] ? o : o + ":" + supbooks.SheetNames[XTI[2]];
 		case 0x0166: /* 'BrtSupSame' */
 			if(opts.SID != null) return supbooks.SheetNames[opts.SID];
-			return "SH33TJSERR" + supbooks[XTI[0]][0];
+			return "SH33TJSSAME" + supbooks[XTI[0]][0];
 		case 0x0163: /* 'BrtSupBookSrc' */
 			/* falls through */
-		default: return "SH33TJSERR" + supbooks[XTI[0]][0];
+		default: return "SH33TJSSRC" + supbooks[XTI[0]][0];
 	}
 	switch(supbooks[XTI[0]][0][0]) {
 		case 0x0401:
@@ -863,7 +863,7 @@ function stringify_formula(formula/*Array<any>*/, range, cell/*:any*/, supbooks,
 				/* f[1] = type, 0, nameindex */
 				nameidx = (f[1][2]/*:any*/);
 				var lbl = (supbooks.names||[])[nameidx-1] || (supbooks[0]||[])[nameidx];
-				var name = lbl ? lbl.Name : "SH33TJSERR7" + String(nameidx);
+				var name = lbl ? lbl.Name : "SH33TJSNAME" + String(nameidx);
 				if(name in XLSXFutureFunctions) name = XLSXFutureFunctions[name];
 				stack.push(name);
 				break;
@@ -944,7 +944,7 @@ function stringify_formula(formula/*Array<any>*/, range, cell/*:any*/, supbooks,
 				break;
 
 			case 'PtgArray': /* 2.5.198.32 TODO */
-				stack.push("{" + stringify_array(f[1]) + "}");
+				stack.push("{" + stringify_array(/*::(*/f[1]/*:: :any)*/) + "}");
 				break;
 
 			case 'PtgMemArea': /* 2.5.198.70 TODO: confirm this is a non-display */

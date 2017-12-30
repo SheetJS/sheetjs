@@ -70,7 +70,9 @@ function read_prn(data, d, o, str) {
 }
 
 function readSync(data/*:RawData*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
-	var zip, d = data, n = [0,0,0,0], str = false;
+	reset_cp();
+	if(typeof ArrayBuffer !== 'undefined' && data instanceof ArrayBuffer) return readSync(new Uint8Array(data), opts);
+	var d = data, n = [0,0,0,0], str = false;
 	var o = opts||{};
 	_ssfopts = {};
 	if(o.dateNF) _ssfopts.dateNF = o.dateNF;

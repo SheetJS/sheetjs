@@ -19,10 +19,12 @@ program
 	.option('-B, --xlsb', 'emit XLSB to <sheetname> or <file>.xlsb')
 	.option('-M, --xlsm', 'emit XLSM to <sheetname> or <file>.xlsm')
 	.option('-X, --xlsx', 'emit XLSX to <sheetname> or <file>.xlsx')
+	.option('-I, --xlam', 'emit XLAM to <sheetname> or <file>.xlam')
 	.option('-Y, --ods',  'emit ODS  to <sheetname> or <file>.ods')
 	.option('-8, --xls',  'emit XLS  to <sheetname> or <file>.xls (BIFF8)')
 	.option('-5, --biff5','emit XLS  to <sheetname> or <file>.xls (BIFF5)')
 	.option('-2, --biff2','emit XLS  to <sheetname> or <file>.xls (BIFF2)')
+	.option('-i, --xla', 'emit XLA to <sheetname> or <file>.xla')
 	.option('-6, --xlml', 'emit SSML to <sheetname> or <file>.xls (2003 XML)')
 	.option('-T, --fods', 'emit FODS to <sheetname> or <file>.fods (Flat ODS)')
 
@@ -42,6 +44,8 @@ program
 	.option('-F, --field-sep <sep>', 'CSV field separator', ",")
 	.option('-R, --row-sep <sep>', 'CSV row separator', "\n")
 	.option('-n, --sheet-rows <num>', 'Number of rows to process (0=all rows)')
+	.option('--codepage <cp>', 'default to specified codepage when ambiguous')
+	.option('--req <module>', 'require module before processing')
 	.option('--sst', 'generate shared string table for XLS* formats')
 	.option('--compress', 'use compression when writing XLSX/M/B and ODS')
 	.option('--read', 'read but do not generate output')
@@ -61,8 +65,10 @@ program.on('--help', function() {
 const workbook_formats = [
 	['xlsx',   'xlsx', 'xlsx'],
 	['xlsm',   'xlsm', 'xlsm'],
+	['xlam',   'xlam', 'xlam'],
 	['xlsb',   'xlsb', 'xlsb'],
 	['xls',     'xls',  'xls'],
+	['xla',     'xla',  'xla'],
 	['biff5', 'biff5',  'xls'],
 	['ods',     'ods',  'ods'],
 	['fods',   'fods', 'fods']
@@ -126,6 +132,7 @@ if(program.all) {
 	wopts.bookVBA = true;
 }
 if(program.sparse) opts.dense = false; else opts.dense = true;
+if(program.codepage) opts.codepage = +program.codepage;
 
 if(program.dev) {
 	opts.WTF = true;

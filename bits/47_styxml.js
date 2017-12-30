@@ -321,7 +321,7 @@ function parse_cellXfs(t, styles, opts) {
 }
 
 function write_cellXfs(cellXfs)/*:string*/ {
-	var o = [];
+	var o/*:Array<string>*/ = [];
 	o[o.length] = (writextag('cellXfs',null));
 	cellXfs.forEach(function(c) { o[o.length] = (writextag('xf', null, c)); });
 	o[o.length] = ("</cellXfs>");

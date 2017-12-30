@@ -95,13 +95,17 @@ fs.writeFileSync("sheetjs.xls", new Buffer(str, "base64"));
 
 #### Server-Rendered VueJS Components with Nuxt.js
 
-Due to webpack configuration issues on client/server bundles, the library should
-be explicitly included in the layout HTML (as script tag) and in the component:
+The scripts should be treated as external resources in `nuxt.config.js`:
 
 ```js
-const _XLSX = require('xlsx');
-const X = typeof XLSX !== 'undefined' ? XLSX : _XLSX;
-/* use the variable X rather than XLSX in the component */
+module.exports = {
+	head: {
+		script: [
+			{ src: "https://unpkg.com/xlsx/dist/xlsx.full.min.js" }, // library
+			{ src: "https://unpkg.com/file-saver/FileSaver.js" } // saveAs shim
+		]
+	}
+};
 ```
 
 [![Analytics](https://ga-beacon.appspot.com/UA-36810333-1/SheetJS/js-xlsx?pixel)](https://github.com/SheetJS/js-xlsx)

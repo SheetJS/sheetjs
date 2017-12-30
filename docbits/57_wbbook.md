@@ -22,6 +22,14 @@ Excel allows two sheet-scoped defined names to share the same name.  However, a
 sheet-scoped name cannot collide with a workbook-scope name.  Workbook writers
 may not enforce this constraint.
 
+#### Workbook Views
+
+`wb.Workbook.Views` is an array of workbook view objects which have the keys:
+
+| Key             | Description                                         |
+|:----------------|:----------------------------------------------------|
+| `RTL`           | If true, display right-to-left                      |
+
 #### Miscellaneous Workbook Properties
 
 `wb.Workbook.WBProps` holds other workbook properties:

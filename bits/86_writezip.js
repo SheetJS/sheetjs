@@ -13,7 +13,7 @@ function write_zip(wb/*:Workbook*/, opts/*:WriteOpts*/)/*:ZIP*/ {
 	opts.rels = {}; opts.wbrels = {};
 	opts.Strings = /*::((*/[]/*:: :any):SST)*/; opts.Strings.Count = 0; opts.Strings.Unique = 0;
 	var wbext = opts.bookType == "xlsb" ? "bin" : "xml";
-	var vbafmt = opts.bookType == "xlsb" || opts.bookType == "xlsm";
+	var vbafmt = VBAFMTS.indexOf(opts.bookType) > -1;
 	var ct = new_ct();
 	fix_write_opts(opts = opts || {});
 	/*:: if(!jszip) throw new Error("JSZip is not available"); */

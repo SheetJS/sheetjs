@@ -1,8 +1,15 @@
 /* [MS-XLS] 2.4.326 TODO: payload is a zip file */
 function parse_Theme(blob, length, opts) {
+	var end = blob.l + length;
 	var dwThemeVersion = blob.read_shift(4);
 	if(dwThemeVersion === 124226) return;
-	blob.l += length-4;
+	if(!opts.cellStyles || !jszip) { blob.l = end; return; }
+	var data = blob.slice(blob.l);
+	blob.l = end;
+	var zip; try { zip = new jszip(data); } catch(e) { return; }
+	var themeXML = getzipstr(zip, "theme/theme/theme1.xml", true);
+	if(!themeXML) return;
+	return parse_theme_xml(themeXML, opts);
 }
 
 /* 2.5.49 */
@@ -35,7 +42,7 @@ function parse_XFExtGradient(blob, length) {
 }
 
 /* 2.5.108 */
-function parse_ExtProp(blob, length) {
+function parse_ExtProp(blob, length)/*:Array<any>*/ {
 	var extType = blob.read_shift(2);
 	var cb = blob.read_shift(2);
 	var o = [extType];
@@ -57,7 +64,7 @@ function parse_XFExt(blob, length) {
 	var ixfe = blob.read_shift(2);
 	blob.l += 2;
 	var cexts = blob.read_shift(2);
-	var ext = [];
+	var ext/*:AOA*/ = [];
 	while(cexts-- > 0) ext.push(parse_ExtProp(blob, end-blob.l));
 	return {ixfe:ixfe, ext:ext};
 }
