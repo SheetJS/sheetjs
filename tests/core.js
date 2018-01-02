@@ -2033,6 +2033,21 @@ describe('corner cases', function() {
 	it('codepage', function() {
 		X.read(fs.readFileSync(dir + "biff5/number_format_greek.xls"), {type:TYPE});
 	});
+	it('large binary files', function() {
+		var data = [["Row Number"]];
+		for(var j = 0; j < 19; ++j) data[0].push("Column " + j+1);
+		for(var i = 0; i < 499; ++i) {
+			var o = ["Row " + i];
+			for(j = 0; j < 19; ++j) o.push(i + j);
+			data.push(o);
+		}
+		var ws = X.utils.aoa_to_sheet(data);
+		var wb = { Sheets:{ Sheet1: ws }, SheetNames: ["Sheet1"] };
+		var type = "binary";
+		["xlsb", "biff8", "biff5", "biff2"].forEach(function(btype) {
+			void X.read(X.write(wb, {bookType:btype, type:type}), {type:type});
+		});
+	});
 });
 
 describe('encryption', function() {

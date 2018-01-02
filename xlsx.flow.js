@@ -2327,7 +2327,7 @@ function write_double_le(b/*:RawBytes|CFBlob*/, v/*:number*/, idx/*:number*/) {
 	b[idx + 7] = (e >> 4) | bs;
 }
 
-var __toBuffer = function(bufs) { var x = []; for(var i = 0; i < bufs[0].length; ++i) { x.push.apply(x, bufs[0][i]); } return x; };
+var __toBuffer = function(bufs/*:Array<any>*/) { var x=[],w=10240; for(var i=0;i<bufs[0].length;++i) for(var j=0,L=bufs[0][i].length;j<L;j+=w) x.push.apply(x, bufs[0][i].slice(j,j+w)); return x; };
 var ___toBuffer = __toBuffer;
 var __utf16le = function(b/*:RawBytes|CFBlob*/,s/*:number*/,e/*:number*/)/*:string*/ { var ss/*:Array<string>*/=[]; for(var i=s; i<e; i+=2) ss.push(String.fromCharCode(__readUInt16LE(b,i))); return ss.join("").replace(chr0,''); };
 var ___utf16le = __utf16le;
