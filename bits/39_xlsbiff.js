@@ -673,7 +673,7 @@ function parse_ShrFmla(blob, length, opts) {
 	blob.l++;
 	var cUse = blob.read_shift(1);
 	length -= 8;
-	return [parse_SharedParsedFormula(blob, length, opts), cUse];
+	return [parse_SharedParsedFormula(blob, length, opts), cUse, ref];
 }
 
 /* 2.4.4 TODO */

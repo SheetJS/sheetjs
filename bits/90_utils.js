@@ -168,14 +168,29 @@ function sheet_to_formulae(sheet/*:Worksheet*/)/*:Array<string>*/ {
 	return cmds;
 }
 
-function json_to_sheet(js/*:Array<any>*/, opts)/*:Worksheet*/ {
+function sheet_add_json(_ws/*:?Worksheet*/, js/*:Array<any>*/, opts)/*:Worksheet*/ {
 	var o = opts || {};
-	var ws = ({}/*:any*/);
+	var offset = +!o.skipHeader;
+	var ws/*:Worksheet*/ = _ws || ({}/*:any*/);
+	var _R = 0, _C = 0;
+	if(ws && o.origin != null) {
+		if(typeof o.origin == 'number') _R = o.origin;
+		else {
+			var _origin/*:CellAddress*/ = typeof o.origin == "string" ? decode_cell(o.origin) : o.origin;
+			_R = _origin.r; _C = _origin.c;
+		}
+	}
 	var cell/*:Cell*/;
-	var range/*:Range*/ = ({s: {c:0, r:0}, e: {c:0, r:js.length}}/*:any*/);
+	var range/*:Range*/ = ({s: {c:0, r:0}, e: {c:_C, r:_R + js.length - 1 + offset}}/*:any*/);
+	if(ws['!ref']) {
+		var _range = safe_decode_range(ws['!ref']);
+		range.e.c = Math.max(range.e.c, _range.e.c);
+		range.e.r = Math.max(range.e.r, _range.e.r);
+		if(_R == -1) { _R = range.e.r + 1; range.e.r = _R + js.length - 1 + offset; }
+	}
 	var hdr/*:Array<string>*/ = o.header || [], C = 0;
 
-	js.forEach(function (JS, R) {
+	js.forEach(function (JS, R/*:number*/) {
 		keys(JS).filter(function(x) { return JS.hasOwnProperty(x); }).forEach(function(k) {
 			if((C=hdr.indexOf(k)) == -1) hdr[C=hdr.length] = k;
 			var v = JS[k];
@@ -189,15 +204,17 @@ function json_to_sheet(js/*:Array<any>*/, opts)/*:Worksheet*/ {
 				if(!o.cellDates) { t = 'n'; v = datenum(v); }
 				z = o.dateNF || SSF._table[14];
 			}
-			ws[encode_cell({c:C,r:R+1})] = cell = ({t:t, v:v}/*:any*/);
+			ws[encode_cell({c:_C + C,r:_R + R + offset})] = cell = ({t:t, v:v}/*:any*/);
 			if(z) cell.z = z;
 		});
 	});
-	range.e.c = hdr.length - 1;
-	for(C = 0; C < hdr.length; ++C) ws[encode_col(C) + "1"] = {t:'s', v:hdr[C]};
+	range.e.c = Math.max(range.e.c, _C + hdr.length - 1);
+	var __R = encode_row(_R);
+	if(offset) for(C = 0; C < hdr.length; ++C) ws[encode_col(C + _C) + __R] = {t:'s', v:hdr[C]};
 	ws['!ref'] = encode_range(range);
 	return ws;
 }
+function json_to_sheet(js/*:Array<any>*/, opts)/*:Worksheet*/ { return sheet_add_json(null, js, opts); }
 
 var utils/*:any*/ = {
 	encode_col: encode_col,
@@ -214,6 +231,8 @@ var utils/*:any*/ = {
 	make_csv: sheet_to_csv,
 	make_json: sheet_to_json,
 	make_formulae: sheet_to_formulae,
+	sheet_add_aoa: sheet_add_aoa,
+	sheet_add_json: sheet_add_json,
 	aoa_to_sheet: aoa_to_sheet,
 	json_to_sheet: json_to_sheet,
 	table_to_sheet: parse_dom_table,

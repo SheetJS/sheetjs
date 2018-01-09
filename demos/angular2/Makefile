@@ -21,3 +21,11 @@ angular:
 	if [ ! -e node_modules/xlsx ]; then cd node_modules; ln -s ../../../ xlsx; cd -; fi
 	ng build
 
+.PHONY: ionic
+ionic:
+	bash ./ionic.sh
+
+.PHONY: ios android browser
+ios android browser: ionic
+	cd SheetJSIonic; ionic cordova emulate $@ </dev/null; cd -
+

@@ -37,6 +37,8 @@ Utilities are available in the `XLSX.utils` object and are described in the
 - `aoa_to_sheet` converts an array of arrays of JS data to a worksheet.
 - `json_to_sheet` converts an array of JS objects to a worksheet.
 - `table_to_sheet` converts a DOM TABLE element to a worksheet.
+- `sheet_add_aoa` adds an array of arrays of JS data to an existing worksheet.
+- `sheet_add_json` adds an array of JS objects to an existing worksheet.
 
 
 **Exporting:**

@@ -62,10 +62,8 @@ function parse_DataSpaceDefinition(blob, length)/*:Array<string>*/ {
 function parse_TransformInfoHeader(blob, length) {
 	var o = {};
 	var len = blob.read_shift(4);
-	var tgt = blob.l + len - 4;
 	blob.l += 4; // must be 0x1
 	o.id = blob.read_shift(0, 'lpp4');
-	if(tgt != blob.l) throw new Error("Bad TransformInfoHeader record: " + blob.l + " != " + tgt);
 	o.name = blob.read_shift(0, 'lpp4');
 	o.R = parse_CRYPTOVersion(blob, 4);
 	o.U = parse_CRYPTOVersion(blob, 4);

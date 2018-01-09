@@ -10,6 +10,9 @@ This demo uses an array of arrays (type `Array<Array<any>>`) as the core state.
 The component template includes a file input element, a table that updates with
 the data, and a button to export the data.
 
+Other scripts in this demo show:
+- `ionic` deployment for iOS, android, and browser
+
 ## Array of Arrays
 
 `Array<Array<any>>` neatly maps to a table with `ngFor`:
@@ -112,6 +115,41 @@ SystemJS.config({
     'stream': ''  // <--|
   }
 });
+```
+
+## Ionic
+
+<img src="screen.png" width="400px"/>
+
+Reproducing the full project is a little bit tricky.  The included `ionic.sh`
+script performs the necessary installation steps.
+
+`Array<Array<any>>` neatly maps to a table with `ngFor`:
+
+```html
+<ion-grid>
+  <ion-row *ngFor="let row of data">
+    <ion-col *ngFor="let val of row">
+      {{val}}
+    </ion-col>
+  </ion-row>
+</ion-grid>
+```
+
+
+`@ionic-native/file` reads and writes files on devices. `readAsBinaryString`
+returns strings that can be parsed with the `binary` type, and `array` type can
+easily be converted to blobs that can be exported with `writeFile`:
+
+```typescript
+/* read a workbook */
+const bstr: string = await this.file.readAsBinaryString(url, filename);
+const wb: XLSX.WorkBook = XLSX.read(bstr, {type: 'binary'});
+
+/* write a workbook */
+const wbout: ArrayBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+let blob = new Blob([wbout], {type: 'application/octet-stream'});
+this.file.writeFile(url, filename, blob, {replace: true});
 ```
 
 [![Analytics](https://ga-beacon.appspot.com/UA-36810333-1/SheetJS/js-xlsx?pixel)](https://github.com/SheetJS/js-xlsx)

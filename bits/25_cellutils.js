@@ -5,8 +5,8 @@ function shift_cell_xls(cell/*:CellAddress*/, tgt/*:any*/, opts/*:?any*/)/*:Cell
 		if(out.cRel) out.c += tgt.s.c;
 		if(out.rRel) out.r += tgt.s.r;
 	} else {
-		out.c += tgt.c;
-		out.r += tgt.r;
+		if(out.cRel) out.c += tgt.c;
+		if(out.rRel) out.r += tgt.r;
 	}
 	if(!opts || opts.biff < 12) {
 		while(out.c >= 0x100) out.c -= 0x100;

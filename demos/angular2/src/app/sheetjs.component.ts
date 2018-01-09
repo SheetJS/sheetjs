@@ -6,7 +6,7 @@ import * as XLSX from 'xlsx';
 
 import { saveAs } from 'file-saver';
 
-type AOA = Array<Array<any>>;
+type AOA = any[][];
 
 @Component({
 	selector: 'sheetjs',
