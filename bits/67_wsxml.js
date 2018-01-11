@@ -23,8 +23,8 @@ function parse_ws_xml(data/*:?string*/, opts, idx/*:number*/, rels, wb/*:WBWBPro
 	var data1 = "", data2 = "";
 	var mtch/*:?any*/ = data.match(sheetdataregex);
 	if(mtch) {
-		data1 = data.substr(0, mtch.index);
-		data2 = data.substr(mtch.index + mtch[0].length);
+		data1 = data.slice(0, mtch.index);
+		data2 = data.slice(mtch.index + mtch[0].length);
 	} else data1 = data2 = data;
 
 	/* 18.3.1.82 sheetPr CT_SheetPr */
@@ -35,7 +35,7 @@ function parse_ws_xml(data/*:?string*/, opts, idx/*:number*/, rels, wb/*:WBWBPro
 	// $FlowIgnore
 	var ridx = (data1.match(/<(?:\w*:)?dimension/)||{index:-1}).index;
 	if(ridx > 0) {
-		var ref = data1.substr(ridx,50).match(dimregex);
+		var ref = data1.slice(ridx,ridx+50).match(dimregex);
 		if(ref) parse_ws_xml_dim(s, ref[1]);
 	}
 
@@ -62,7 +62,7 @@ function parse_ws_xml(data/*:?string*/, opts, idx/*:number*/, rels, wb/*:WBWBPro
 	var merges/*:Array<Range>*/ = [];
 	var _merge = data2.match(mergecregex);
 	if(_merge) for(ridx = 0; ridx != _merge.length; ++ridx)
-		merges[ridx] = safe_decode_range(_merge[ridx].substr(_merge[ridx].indexOf("\"")+1));
+		merges[ridx] = safe_decode_range(_merge[ridx].slice(_merge[ridx].indexOf("\"")+1));
 
 	/* 18.3.1.48 hyperlinks CT_Hyperlinks */
 	var hlink = data2.match(hlinkregex);
@@ -252,7 +252,7 @@ function write_ws_xml_cell(cell/*:Cell*/, ref, ws, opts, idx, wb)/*:string*/ {
 	}
 	if(cell.t != oldt) { cell.t = oldt; cell.v = oldv; }
 	if(cell.f) {
-		var ff = cell.F && cell.F.substr(0, ref.length) == ref ? {t:"array", ref:cell.F} : null;
+		var ff = cell.F && cell.F.slice(0, ref.length) == ref ? {t:"array", ref:cell.F} : null;
 		v = writextag('f', escapexml(cell.f), ff) + (cell.v != null ? v : "");
 	}
 	if(cell.l) ws['!links'].push([ref, cell.l]);
@@ -283,7 +283,7 @@ return function parse_ws_xml_data(sdata/*:string*/, s, opts, guess/*:Range*/, th
 
 		/* 18.3.1.73 row CT_Row */
 		for(ri = 0; ri < xlen; ++ri) if(x.charCodeAt(ri) === 62) break; ++ri;
-		tag = parsexmltag(x.substr(0,ri), true);
+		tag = parsexmltag(x.slice(0,ri), true);
 		tagr = tag.r != null ? parseInt(tag.r, 10) : tagr+1; tagc = -1;
 		if(opts.sheetRows && opts.sheetRows < tagr) continue;
 		if(guess.s.r > tagr - 1) guess.s.r = tagr - 1;
@@ -298,12 +298,12 @@ return function parse_ws_xml_data(sdata/*:string*/, s, opts, guess/*:Range*/, th
 		}
 
 		/* 18.3.1.4 c CT_Cell */
-		cells = x.substr(ri).split(cellregex);
+		cells = x.slice(ri).split(cellregex);
 		for(ri = 0; ri != cells.length; ++ri) {
 			x = cells[ri].trim();
 			if(x.length === 0) continue;
 			cref = x.match(rregex); idx = ri; i=0; cc=0;
-			x = "<c " + (x.substr(0,1)=="<"?">":"") + x;
+			x = "<c " + (x.slice(0,1)=="<"?">":"") + x;
 			if(cref != null && cref.length === 2) {
 				idx = 0; d=cref[1];
 				for(i=0; i != d.length; ++i) {
@@ -314,9 +314,9 @@ return function parse_ws_xml_data(sdata/*:string*/, s, opts, guess/*:Range*/, th
 				tagc = idx;
 			} else ++tagc;
 			for(i = 0; i != x.length; ++i) if(x.charCodeAt(i) === 62) break; ++i;
-			tag = parsexmltag(x.substr(0,i), true);
+			tag = parsexmltag(x.slice(0,i), true);
 			if(!tag.r) tag.r = encode_cell({r:tagr-1, c:tagc});
-			d = x.substr(i);
+			d = x.slice(i);
 			p = ({t:""}/*:any*/);
 
 			if((cref=d.match(match_v))!= null && /*::cref != null && */cref[1] !== '') p.v=unescapexml(cref[1]);
@@ -528,7 +528,7 @@ function write_ws_xml(idx/*:number*/, opts, wb/*:Workbook*/, rels)/*:string*/ {
 				rId = add_rels(rels, -1, escapexml(l[1].Target).replace(/#.*$/, ""), RELS.HLINK);
 				rel["r:id"] = "rId"+rId;
 			}
-			if((relc = l[1].Target.indexOf("#")) > -1) rel.location = escapexml(l[1].Target.substr(relc+1));
+			if((relc = l[1].Target.indexOf("#")) > -1) rel.location = escapexml(l[1].Target.slice(relc+1));
 			if(l[1].Tooltip) rel.tooltip = escapexml(l[1].Tooltip);
 			o[o.length] = writextag("hyperlink",null,rel);
 		});

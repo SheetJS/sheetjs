@@ -12,7 +12,7 @@ function write_BrtBundleSh(data, o) {
 	o.write_shift(4, data.Hidden);
 	o.write_shift(4, data.iTabID);
 	write_RelID(data.strRelID, o);
-	write_XLWideString(data.name.substr(0,31), o);
+	write_XLWideString(data.name.slice(0,31), o);
 	return o.length > o.l ? o.slice(0, o.l) : o;
 }
 

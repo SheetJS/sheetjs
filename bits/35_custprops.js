@@ -15,7 +15,7 @@ function parse_cust_props(data/*:string*/, opts) {
 			case '</property>': name = null; break;
 			default: if (x.indexOf('<vt:') === 0) {
 				var toks = x.split('>');
-				var type = toks[0].substring(4), text = toks[1];
+				var type = toks[0].slice(4), text = toks[1];
 				/* 22.4.2.32 (CT_Variant). Omit the binary types from 22.4 (Variant Types) */
 				switch(type) {
 					case 'lpstr': case 'bstr': case 'lpwstr':
@@ -40,7 +40,7 @@ function parse_cust_props(data/*:string*/, opts) {
 						if(type.slice(-1) == '/') break;
 						if(opts.WTF && typeof console !== 'undefined') console.warn('Unexpected', x, type, toks);
 				}
-			} else if(x.substr(0,2) === "</") {/* empty */
+			} else if(x.slice(0,2) === "</") {/* empty */
 			} else if(opts.WTF) throw new Error(x);
 		}
 	}

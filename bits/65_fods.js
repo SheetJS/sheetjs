@@ -1,10 +1,10 @@
 /* Part 3 TODO: actually parse formulae */
 function ods_to_csf_formula(f/*:string*/)/*:string*/ {
-	if(f.substr(0,3) == "of:") f = f.substr(3);
+	if(f.slice(0,3) == "of:") f = f.slice(3);
 	/* 5.2 Basic Expressions */
 	if(f.charCodeAt(0) == 61) {
-		f = f.substr(1);
-		if(f.charCodeAt(0) == 61) f = f.substr(1);
+		f = f.slice(1);
+		if(f.charCodeAt(0) == 61) f = f.slice(1);
 	}
 	f = f.replace(/COM\.MICROSOFT\./g, "");
 	/* Part 3 Section 5.8 References */

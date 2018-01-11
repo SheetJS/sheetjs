@@ -269,7 +269,7 @@ function parsetest(x/*:string*/, wb/*:Workbook*/, full/*:boolean*/, ext/*:?strin
 			});
 		});
 	});
-	describe(x + ext + ' should generate correct JSON output', function() {
+	if(typeof JSON !== 'undefined') describe(x + ext + ' should generate correct JSON output', function() {
 		wb.SheetNames.forEach(function(ws, i) {
 			var rawjson = getfile(dir, x, i, ".rawjson");
 			if(fs.existsSync(rawjson)) it('#' + i + ' (' + ws + ')', function() {
@@ -601,15 +601,21 @@ describe('input formats', function() {
 	it('should read base64 strings', function() { artifax.forEach(function(p) {
 		X.read(fs.readFileSync(p, 'base64'), {type: 'base64'});
 	}); });
-	var k = browser ? 'array' : 'buffer';
-	(typeof Uint8Array !== 'undefined' ? it : it.skip)('should read ' + k + 's', function() { artifax.forEach(function(p) {
-			X.read(fs.readFileSync(p, browser ? 'buffer' : null), {type: k});
-	}); });
 	(typeof Uint8Array !== 'undefined' ? it : it.skip)('should read array', function() { artifax.forEach(function(p) {
-			X.read(fs.readFileSync(p, 'binary').split("").map(function(x) { return x.charCodeAt(0); }), {type:'array'});
+		X.read(fs.readFileSync(p, 'binary').split("").map(function(x) { return x.charCodeAt(0); }), {type:'array'});
+	}); });
+	((browser || typeof Buffer === 'undefined') ? it.skip : it)('should read Buffers', function() { artifax.forEach(function(p) {
+		X.read(fs.readFileSync(p), {type: 'buffer'});
+	}); });
+	(typeof Uint8Array !== 'undefined' ? it : it.skip)('should read ArrayBuffer / Uint8Array', function() { artifax.forEach(function(p) {
+		var payload = fs.readFileSync(p, browser ? 'buffer' : null);
+		var ab = new ArrayBuffer(payload.length), vu = new Uint8Array(ab);
+		for(var i = 0; i < payload.length; ++i) vu[i] = payload[i];
+		X.read(ab, {type: 'array'});
+		X.read(vu, {type: 'array'});
 	}); });
 	it('should throw if format is unknown', function() { artifax.forEach(function(p) {
-			assert.throws(function() { X.read(fs.readFileSync(p), {type: 'dafuq'}); });
+		assert.throws(function() { X.read(fs.readFileSync(p), {type: 'dafuq'}); });
 	}); });
 
 	var T = browser ? 'base64' : 'buffer';
@@ -1011,8 +1017,8 @@ describe('parse features', function() {
 		var wb1, wb2;
 		var bef = (function() {
 			X = require(modp);
-			wb1 = HLPaths.map(function(p) { return X.read(fs.readFileSync(p), {type:TYPE}); });
-			wb2 = ILPaths.map(function(p) { return X.read(fs.readFileSync(p), {type:TYPE}); });
+			wb1 = HLPaths.map(function(p) { return X.read(fs.readFileSync(p), {type:TYPE, WTF:1}); });
+			wb2 = ILPaths.map(function(p) { return X.read(fs.readFileSync(p), {type:TYPE, WTF:1}); });
 		});
 		if(typeof before != 'undefined') before(bef);
 		else it('before', bef);
@@ -1127,7 +1133,7 @@ describe('parse features', function() {
 		var wbs=[];
 		var bef = (function() {
 			if(!fs.existsSync(paths.pmxls)) return;
-			wbs = PMPaths.map(function(p) { return X.read(fs.readFileSync(p), {type:TYPE}); });
+			wbs = PMPaths.map(function(p) { return X.read(fs.readFileSync(p), {type:TYPE, WTF:1}); });
 		});
 		if(typeof before != 'undefined') before(bef);
 		else it('before', bef);
@@ -1550,6 +1556,7 @@ describe('invalid files', function() {
 
 describe('json output', function() {
 	function seeker(json, keys, val) {
+		if(typeof keys == "string") keys = keys.split("");
 		for(var i = 0; i != json.length; ++i) {
 			for(var j = 0; j != keys.length; ++j) {
 				if(json[i][keys[j]] === val) throw new Error("found " + val + " in row " + i + " key " + keys[j]);
@@ -2031,7 +2038,7 @@ describe('corner cases', function() {
 			assert.doesNotThrow(function(x) { return X.SSF.format(f, 12345.6789);});
 		});
 	});
-	it('SSF oddities', function() {
+	if(typeof JSON !== 'undefined') it('SSF oddities', function() {
 		// $FlowIgnore
 		var ssfdata = require('./misc/ssf.json');
 		var cb = function(d, j) { return function() { return X.SSF.format(d[0], d[j][0]); }; };

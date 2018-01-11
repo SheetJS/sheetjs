@@ -49,9 +49,9 @@ function parse_isodur(s) {
 		if(!m[i]) continue;
 		mt = 1;
 		if(i > 3) time = true;
-		switch(m[i].substr(m[i].length-1)) {
+		switch(m[i].slice(m[i].length-1)) {
 			case 'Y':
-				throw new Error("Unsupported ISO Duration Field: " + m[i].substr(m[i].length-1));
+				throw new Error("Unsupported ISO Duration Field: " + m[i].slice(m[i].length-1));
 			case 'D': mt *= 24;
 				/* falls through */
 			case 'H': mt *= 60;
@@ -100,6 +100,7 @@ function cc2str(arr/*:Array<number>*/)/*:string*/ {
 function dup(o/*:any*/)/*:any*/ {
 	if(typeof JSON != 'undefined' && !Array.isArray(o)) return JSON.parse(JSON.stringify(o));
 	if(typeof o != 'object' || o == null) return o;
+	if(o instanceof Date) return new Date(o.getTime());
 	var out = {};
 	for(var k in o) if(o.hasOwnProperty(k)) out[k] = dup(o[k]);
 	return out;

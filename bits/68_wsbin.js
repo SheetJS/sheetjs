@@ -270,7 +270,7 @@ function write_BrtHLink(l, rId) {
 	write_UncheckedRfX({s:decode_cell(l[0]), e:decode_cell(l[0])}, o);
 	write_RelID("rId" + rId, o);
 	var locidx = l[1].Target.indexOf("#");
-	var loc = locidx == -1 ? "" : l[1].Target.substr(locidx+1);
+	var loc = locidx == -1 ? "" : l[1].Target.slice(locidx+1);
 	write_XLWideString(loc || "", o);
 	write_XLWideString(l[1].Tooltip || "", o);
 	write_XLWideString("", o);

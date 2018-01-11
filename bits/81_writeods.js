@@ -58,7 +58,7 @@ var write_content_ods/*:{(wb:any, opts:any):string}*/ = (function() {
 				if(cell && cell.f) {
 					ct['table:formula'] = escapexml(csf_to_ods_formula(cell.f));
 					if(cell.F) {
-						if(cell.F.substr(0, ref.length) == ref) {
+						if(cell.F.slice(0, ref.length) == ref) {
 							var _Fref = decode_range(cell.F);
 							ct['table:number-matrix-columns-spanned'] = (_Fref.e.c - _Fref.s.c + 1);
 							ct['table:number-matrix-rows-spanned'] =    (_Fref.e.r - _Fref.s.r + 1);

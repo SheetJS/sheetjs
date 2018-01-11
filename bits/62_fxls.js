@@ -690,8 +690,8 @@ var PtgBinOp = {
 	PtgPower: "^",
 	PtgSub: "-"
 };
-function formula_quote_sheet_name(sname/*:string*/)/*:string*/ {
-	if(!sname) throw new Error("empty sheet name");
+function formula_quote_sheet_name(sname/*:string*/, opts)/*:string*/ {
+	if(!sname && !(opts && opts.biff <= 5 && opts.biff >= 2)) throw new Error("empty sheet name");
 	if(sname.indexOf(" ") > -1) return "'" + sname + "'";
 	return sname;
 }
@@ -730,7 +730,7 @@ function get_ixti_raw(supbooks, ixti/*:number*/, opts)/*:string*/ {
 	}
 }
 function get_ixti(supbooks, ixti/*:number*/, opts)/*:string*/ {
-	return formula_quote_sheet_name(get_ixti_raw(supbooks, ixti, opts));
+	return formula_quote_sheet_name(get_ixti_raw(supbooks, ixti, opts), opts);
 }
 function stringify_formula(formula/*Array<any>*/, range, cell/*:any*/, supbooks, opts)/*:string*/ {
 	var _range = /*range != null ? range :*/ {s:{c:0, r:0},e:{c:0, r:0}};

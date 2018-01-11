@@ -24,6 +24,15 @@ function arr2str(data/*:any*/)/*:string*/ {
 	var o/*:Array<string>*/ = []; for(var i = 0; i < data.length; ++i) o[i] = _chr(data[i]); return o.join("");
 }
 
+function ab2a(data/*:ArrayBuffer|Uint8Array*/)/*:Array<number>*/ {
+	if(typeof ArrayBuffer == 'undefined') throw new Error("Unsupported");
+	if(data instanceof ArrayBuffer) return ab2a(new Uint8Array(data));
+	/*:: if(data instanceof ArrayBuffer) throw new Error("unreachable"); */
+	var o = new Array(data.length);
+	for(var i = 0; i < data.length; ++i) o[i] = data[i];
+	return o;
+}
+
 var bconcat = function(bufs) { return [].concat.apply([], bufs); };
 
 var chr0 = /\u0000/g, chr1 = /[\u0001-\u0006]/g;

@@ -45,7 +45,7 @@ var WK_ = (function() {
 					break;
 				case 0x06: refguess = val; break; /* RANGE */
 				case 0x0F: /* LABEL */
-					if(!o.qpro) val[1].v = val[1].v.substr(1);
+					if(!o.qpro) val[1].v = val[1].v.slice(1);
 					/* falls through */
 				case 0x0D: /* INTEGER */
 				case 0x0E: /* NUMBER */
@@ -63,7 +63,7 @@ var WK_ = (function() {
 					break;
 			} else switch(RT) {
 				case 0x16: /* LABEL16 */
-					val[1].v = val[1].v.substr(1);
+					val[1].v = val[1].v.slice(1);
 					/* falls through */
 				case 0x17: /* NUMBER17 */
 				case 0x18: /* NUMBER18 */

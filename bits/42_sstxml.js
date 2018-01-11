@@ -82,7 +82,7 @@ var parse_rs = (function parse_rs_factory() {
 
 				/* 18.3.1.15 color CT_Color TODO: tint, theme, auto, indexed */
 				case '<color':
-					if(y.rgb) font.color = y.rgb.substr(2,6);
+					if(y.rgb) font.color = y.rgb.slice(2,8);
 					break;
 
 				/* 18.8.18 family ST_FontFamily */

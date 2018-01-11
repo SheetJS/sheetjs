@@ -1,10 +1,10 @@
 function hex2RGB(h) {
-	var o = h.substr(h[0]==="#"?1:0,6);
-	return [parseInt(o.substr(0,2),16),parseInt(o.substr(2,2),16),parseInt(o.substr(4,2),16)];
+	var o = h.slice(h[0]==="#"?1:0).slice(0,6);
+	return [parseInt(o.slice(0,2),16),parseInt(o.slice(2,4),16),parseInt(o.slice(4,6),16)];
 }
 function rgb2Hex(rgb) {
 	for(var i=0,o=1; i!=3; ++i) o = o*256 + (rgb[i]>255?255:rgb[i]<0?0:rgb[i]);
-	return o.toString(16).toUpperCase().substr(1);
+	return o.toString(16).toUpperCase().slice(1);
 }
 
 function rgb2HSL(rgb) {

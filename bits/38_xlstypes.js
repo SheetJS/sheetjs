@@ -312,6 +312,7 @@ function parse_ShortXLUnicodeString(blob, length, opts) {
 	} else if(opts.biff == 12) {
 		width = 2; encoding = 'wstr';
 	}
+	if(opts.biff >= 2 && opts.biff <= 5) encoding = 'cpstr';
 	var o = cch ? blob.read_shift(cch, encoding) : "";
 	current_codepage = cp;
 	return o;
@@ -342,7 +343,7 @@ function parse_XLUnicodeRichExtendedString(blob) {
 function parse_XLUnicodeStringNoCch(blob, cch, opts) {
 	var retval;
 	if(opts) {
-		if(opts.biff >= 2 && opts.biff <= 5) return blob.read_shift(cch, 'sbcs-cont');
+		if(opts.biff >= 2 && opts.biff <= 5) return blob.read_shift(cch, 'cpstr');
 		if(opts.biff >= 12) return blob.read_shift(cch, 'dbcs-cont');
 	}
 	var fHighByte = blob.read_shift(1);
@@ -362,7 +363,7 @@ function parse_XLUnicodeString2(blob, length, opts) {
 	if(opts.biff > 5) return parse_XLUnicodeString(blob, length, opts);
 	var cch = blob.read_shift(1);
 	if(cch === 0) { blob.l++; return ""; }
-	return blob.read_shift(cch, opts.biff == 4 ? 'cpstr' : 'sbcs-cont');
+	return blob.read_shift(cch, (opts.biff <= 4 || !blob.lens ) ? 'cpstr' : 'sbcs-cont');
 }
 /* TODO: BIFF5 and lower, codepage awareness */
 function write_XLUnicodeString(str, opts, o) {

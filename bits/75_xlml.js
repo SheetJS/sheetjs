@@ -9,11 +9,11 @@ function xlml_parsexmltag(tag/*:string*/, skip_root/*:?boolean*/) {
 	if(m) for(i = 0; i != m.length; ++i) {
 		y = m[i].match(attregex2);
 /*:: if(!y || !y[2]) continue; */
-		if((j=y[1].indexOf(":")) === -1) z[y[1]] = y[2].substr(1,y[2].length-2);
+		if((j=y[1].indexOf(":")) === -1) z[y[1]] = y[2].slice(1,y[2].length-1);
 		else {
-			if(y[1].substr(0,6) === "xmlns:") w = "xmlns"+y[1].substr(6);
-			else w = y[1].substr(j+1);
-			z[w] = y[2].substr(1,y[2].length-2);
+			if(y[1].slice(0,6) === "xmlns:") w = "xmlns"+y[1].slice(6);
+			else w = y[1].slice(j+1);
+			z[w] = y[2].slice(1,y[2].length-1);
 		}
 	}
 	return z;
@@ -26,11 +26,11 @@ function xlml_parsexmltagobj(tag/*:string*/) {
 	if(m) for(i = 0; i != m.length; ++i) {
 		y = m[i].match(attregex2);
 /*:: if(!y || !y[2]) continue; */
-		if((j=y[1].indexOf(":")) === -1) z[y[1]] = y[2].substr(1,y[2].length-2);
+		if((j=y[1].indexOf(":")) === -1) z[y[1]] = y[2].slice(1,y[2].length-1);
 		else {
-			if(y[1].substr(0,6) === "xmlns:") w = "xmlns"+y[1].substr(6);
-			else w = y[1].substr(j+1);
-			z[w] = y[2].substr(1,y[2].length-2);
+			if(y[1].slice(0,6) === "xmlns:") w = "xmlns"+y[1].slice(6);
+			else w = y[1].slice(j+1);
+			z[w] = y[2].slice(1,y[2].length-1);
 		}
 	}
 	return z;
@@ -130,7 +130,7 @@ function parse_xlml_data(xml, ss, data, cell/*:any*/, base, styles, csty, row, a
 		if(cell.Formula) {
 			var fstr = unescapexml(cell.Formula);
 			/* strictly speaking, the leading = is required but some writers omit */
-			if(fstr.charCodeAt(0) == 61 /* = */) fstr = fstr.substr(1);
+			if(fstr.charCodeAt(0) == 61 /* = */) fstr = fstr.slice(1);
 			cell.f = rc_to_a1(fstr, base);
 			delete cell.Formula;
 			if(cell.ArrayRange == "RC") cell.F = rc_to_a1("RC:RC", base);
@@ -334,7 +334,7 @@ function parse_xlml_xml(d, _opts)/*:Workbook*/ {
 			var _NamedRange = parsexmltag(Rn[0]);
 			var _DefinedName/*:DefinedName*/ = ({
 				Name: _NamedRange.Name,
-				Ref: rc_to_a1(_NamedRange.RefersTo.substr(1), {r:0, c:0})
+				Ref: rc_to_a1(_NamedRange.RefersTo.slice(1), {r:0, c:0})
 			}/*:any*/);
 			if(Workbook.Sheets.length>0) _DefinedName.Sheet=Workbook.Sheets.length-1;
 			/*:: if(Workbook.Names) */Workbook.Names.push(_DefinedName);
@@ -1017,8 +1017,8 @@ function write_ws_xlml_cell(cell, ref/*:string*/, ws, opts, idx/*:number*/, wb, 
 
 	var attr = {};
 	if(cell.f) attr["ss:Formula"] = "=" + escapexml(a1_to_rc(cell.f, addr));
-	if(cell.F && cell.F.substr(0, ref.length) == ref) {
-		var end = decode_cell(cell.F.substr(ref.length + 1));
+	if(cell.F && cell.F.slice(0, ref.length) == ref) {
+		var end = decode_cell(cell.F.slice(ref.length + 1));
 		attr["ss:ArrayRange"] = "RC:R" + (end.r == addr.r ? "" : "[" + (end.r - addr.r) + "]") + "C" + (end.c == addr.c ? "" : "[" + (end.c - addr.c) + "]");
 	}
 

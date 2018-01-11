@@ -2,7 +2,7 @@ function firstbyte(f/*:RawData*/,o/*:?TypeOpts*/)/*:Array<number>*/ {
 	var x = "";
 	switch((o||{}).type || "base64") {
 		case 'buffer': return [f[0], f[1], f[2], f[3]];
-		case 'base64': x = Base64.decode(f.substr(0,24)); break;
+		case 'base64': x = Base64.decode(f.slice(0,24)); break;
 		case 'binary': x = f; break;
 		case 'array':  return [f[0], f[1], f[2], f[3]];
 		default: throw new Error("Unrecognized type " + (o && o.type || "undefined"));
@@ -79,6 +79,12 @@ function readSync(data/*:RawData*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
 	if(!o.type) o.type = (has_buf && Buffer.isBuffer(data)) ? "buffer" : "base64";
 	if(o.type == "file") { o.type = "buffer"; d = _fs.readFileSync(data); }
 	if(o.type == "string") { str = true; o.type = "binary"; d = bstrify(data); }
+	if(o.type == 'array' && typeof Uint8Array !== 'undefined' && data instanceof Uint8Array) {
+		// $FlowIgnore
+		var ab=new ArrayBuffer(3), vu=new Uint8Array(ab); vu.foo="bar";
+		// $FlowIgnore
+		if(!vu.foo) {o=dup(o); o.type='array'; return readSync(ab2a(d), o);}
+	}
 	switch((n = firstbyte(d, o))[0]) {
 		case 0xD0: return read_cfb(CFB.read(d, o), o);
 		case 0x09: return parse_xlscfb(d, o);

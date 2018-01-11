@@ -10,7 +10,7 @@ var RELS = ({
 /* 9.3.3 Representing Relationships */
 function get_rels_path(file/*:string*/)/*:string*/ {
 	var n = file.lastIndexOf("/");
-	return file.substr(0,n+1) + '_rels/' + file.substr(n+1) + ".rels";
+	return file.slice(0,n+1) + '_rels/' + file.slice(n+1) + ".rels";
 }
 
 function parse_rels(data/*:?string*/, currentFilePath/*:string*/) {

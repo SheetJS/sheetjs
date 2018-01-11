@@ -189,7 +189,7 @@ function write_wb_xml(wb/*:Workbook*/, opts/*:?WriteOpts*/)/*:string*/ {
 	o[o.length] = "<sheets>";
 	var sheets = wb.Workbook && wb.Workbook.Sheets || [];
 	for(var i = 0; i != wb.SheetNames.length; ++i) {
-		var sht = ({name:escapexml(wb.SheetNames[i].substr(0,31))}/*:any*/);
+		var sht = ({name:escapexml(wb.SheetNames[i].slice(0,31))}/*:any*/);
 		sht.sheetId = ""+(i+1);
 		sht["r:id"] = "rId"+(i+1);
 		if(sheets[i]) switch(sheets[i].Hidden) {

@@ -46,7 +46,7 @@ function parse_clrScheme(t, themes, opts) {
 					themes.themeElements.clrScheme.push(color);
 					color = {};
 				} else {
-					color.name = y[0].substring(3, y[0].length - 1);
+					color.name = y[0].slice(3, y[0].length - 1);
 				}
 				break;
 

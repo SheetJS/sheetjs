@@ -227,9 +227,9 @@ function write_BrtColor(color, o) {
 		o.write_shift(1, 0);
 	} else {
 		var rgb = (color.rgb || 'FFFFFF');
-		o.write_shift(1, parseInt(rgb.substr(0,2),16));
-		o.write_shift(1, parseInt(rgb.substr(2,2),16));
-		o.write_shift(1, parseInt(rgb.substr(4,2),16));
+		o.write_shift(1, parseInt(rgb.slice(0,2),16));
+		o.write_shift(1, parseInt(rgb.slice(2,4),16));
+		o.write_shift(1, parseInt(rgb.slice(4,6),16));
 		o.write_shift(1, 0xFF);
 	}
 	return o;

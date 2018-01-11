@@ -14,13 +14,13 @@ var HTML_ = (function() {
 		var merges/*:Array<Range>*/ = [], midx = 0;
 		for(i = 0; i < rows.length; ++i) {
 			var row = rows[i].trim();
-			var hd = row.substr(0,3).toLowerCase();
+			var hd = row.slice(0,3).toLowerCase();
 			if(hd == "<tr") { ++R; C = 0; continue; }
 			if(hd != "<td") continue;
 			var cells = row.split(/<\/td>/i);
 			for(j = 0; j < cells.length; ++j) {
 				var cell = cells[j].trim();
-				if(cell.substr(0,3).toLowerCase() != "<td") continue;
+				if(cell.slice(0,3).toLowerCase() != "<td") continue;
 				var m = cell, cc = 0;
 				/* TODO: parse styles etc */
 				while(m.charAt(0) == "<" && (cc = m.indexOf(">")) > -1) m = m.slice(cc+1);

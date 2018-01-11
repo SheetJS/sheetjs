@@ -149,7 +149,7 @@ function dbf_to_aoa(buf, opts)/*:AOA*/ {
 					out[R][C] = out[R][C].trim();
 					break;
 				case 'D':
-					if(s.length === 8) out[R][C] = new Date(+s.substr(0,4), +s.substr(4,2)-1, +s.substr(6,2));
+					if(s.length === 8) out[R][C] = new Date(+s.slice(0,4), +s.slice(4,6)-1, +s.slice(6,8));
 					else out[R][C] = s;
 					break;
 				case 'F': out[R][C] = parseFloat(s.trim()); break;
@@ -325,18 +325,18 @@ var SYLK = (function() {
 			case 'O': break; /* options? */
 			case 'P':
 				if(record[1].charAt(0) == 'P')
-					formats.push(rstr.substr(3).replace(/;;/g, ";"));
+					formats.push(rstr.slice(3).replace(/;;/g, ";"));
 				break;
 			case 'C':
 			for(rj=1; rj<record.length; ++rj) switch(record[rj].charAt(0)) {
-				case 'X': C = parseInt(record[rj].substr(1))-1; break;
+				case 'X': C = parseInt(record[rj].slice(1))-1; break;
 				case 'Y':
-					R = parseInt(record[rj].substr(1))-1; C = 0;
+					R = parseInt(record[rj].slice(1))-1; C = 0;
 					for(j = arr.length; j <= R; ++j) arr[j] = [];
 					break;
 				case 'K':
-					val = record[rj].substr(1);
-					if(val.charAt(0) === '"') val = val.substr(1,val.length - 2);
+					val = record[rj].slice(1);
+					if(val.charAt(0) === '"') val = val.slice(1,val.length - 1);
 					else if(val === 'TRUE') val = true;
 					else if(val === 'FALSE') val = false;
 					else if(!isNaN(fuzzynum(val))) {
@@ -349,7 +349,7 @@ var SYLK = (function() {
 					next_cell_format = null;
 					break;
 				case 'E':
-					var formula = rc_to_a1(record[rj].substr(1), {r:R,c:C});
+					var formula = rc_to_a1(record[rj].slice(1), {r:R,c:C});
 					arr[R][C] = [arr[R][C], formula];
 					break;
 				default: if(opts && opts.WTF) throw new Error("SYLK bad record " + rstr);
@@ -357,31 +357,31 @@ var SYLK = (function() {
 			case 'F':
 			var F_seen = 0;
 			for(rj=1; rj<record.length; ++rj) switch(record[rj].charAt(0)) {
-				case 'X': C = parseInt(record[rj].substr(1))-1; ++F_seen; break;
+				case 'X': C = parseInt(record[rj].slice(1))-1; ++F_seen; break;
 				case 'Y':
-					R = parseInt(record[rj].substr(1))-1; /*C = 0;*/
+					R = parseInt(record[rj].slice(1))-1; /*C = 0;*/
 					for(j = arr.length; j <= R; ++j) arr[j] = [];
 					break;
-				case 'M': Mval = parseInt(record[rj].substr(1)) / 20; break;
+				case 'M': Mval = parseInt(record[rj].slice(1)) / 20; break;
 				case 'F': break; /* ??? */
 				case 'P':
-					next_cell_format = formats[parseInt(record[rj].substr(1))];
+					next_cell_format = formats[parseInt(record[rj].slice(1))];
 					break;
 				case 'S': break; /* cell style */
 				case 'D': break; /* column */
 				case 'N': break; /* font */
 				case 'W':
-					cw = record[rj].substr(1).split(" ");
+					cw = record[rj].slice(1).split(" ");
 					for(j = parseInt(cw[0], 10); j <= parseInt(cw[1], 10); ++j) {
 						Mval = parseInt(cw[2], 10);
 						colinfo[j-1] = Mval === 0 ? {hidden:true}: {wch:Mval}; process_col(colinfo[j-1]);
 					} break;
 				case 'C': /* default column format */
-					C = parseInt(record[rj].substr(1))-1;
+					C = parseInt(record[rj].slice(1))-1;
 					if(!colinfo[C]) colinfo[C] = {};
 					break;
 				case 'R': /* row properties */
-					R = parseInt(record[rj].substr(1))-1;
+					R = parseInt(record[rj].slice(1))-1;
 					if(!rowinfo[R]) rowinfo[R] = {};
 					if(Mval > 0) { rowinfo[R].hpt = Mval; rowinfo[R].hpx = pt2px(Mval); }
 					else if(Mval === 0) rowinfo[R].hidden = true;
@@ -506,7 +506,7 @@ var DIF = (function() {
 					else arr[R][C] = value;
 					++C; break;
 				case 1:
-					data = data.substr(1,data.length-2);
+					data = data.slice(1,data.length-1);
 					arr[R][C++] = data !== '' ? data : null;
 					break;
 			}
@@ -761,8 +761,8 @@ var PRN = (function() {
 		var ws/*:Worksheet*/ = o.dense ? ([]/*:any*/) : ({}/*:any*/);
 		var range/*:Range*/ = ({s: {c:0, r:0}, e: {c:0, r:0}}/*:any*/);
 
-		if(str.substr(0,4) == "sep=" && str.charCodeAt(5) == 10) { sep = str.charAt(4); str = str.substr(6); }
-		else sep = guess_sep(str.substr(0,1024));
+		if(str.slice(0,4) == "sep=" && str.charCodeAt(5) == 10) { sep = str.charAt(4); str = str.slice(6); }
+		else sep = guess_sep(str.slice(0,1024));
 		var R = 0, C = 0, v = 0;
 		var start = 0, end = 0, sepcc = sep.charCodeAt(0), instr = false, cc=0;
 		str = str.replace(/\r\n/mg, "\n");
@@ -776,7 +776,7 @@ var PRN = (function() {
 			else if(s.trim().length === 0) { cell.t = 's'; cell.v = s; }
 			else if(s.charCodeAt(0) == 0x3D) {
 				if(s.charCodeAt(1) == 0x22 && s.charCodeAt(s.length - 1) == 0x22) { cell.t = 's'; cell.v = s.slice(2,-1).replace(/""/g,'"'); }
-				else if(fuzzyfmla(s)) { cell.t = 'n'; cell.f = s.substr(1); }
+				else if(fuzzyfmla(s)) { cell.t = 'n'; cell.f = s.slice(1); }
 				else { cell.t = 's'; cell.v = s; } }
 			else if(s == "TRUE") { cell.t = 'b'; cell.v = true; }
 			else if(s == "FALSE") { cell.t = 'b'; cell.v = false; }
@@ -846,7 +846,7 @@ var PRN = (function() {
 				var coord = encode_cell({r:R,c:C});
 				cell = dense ? (ws[R]||[])[C] : ws[coord];
 				if(!cell || cell.v == null) { oo.push("          "); continue; }
-				var w = (cell.w || (format_cell(cell), cell.w) || "").substr(0,10);
+				var w = (cell.w || (format_cell(cell), cell.w) || "").slice(0,10);
 				while(w.length < 10) w += " ";
 				oo.push(w + (C === 0 ? " " : ""));
 			}
