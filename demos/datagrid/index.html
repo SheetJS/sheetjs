@@ -64,6 +64,8 @@ var process_wb = (function() {
 
 		/* update canvas-datagrid */
 		if(!cDg) cDg = canvasDatagrid({ parentNode:HTMLOUT, data:data });
+		cDg.style.height = '100%';
+		cDg.style.width = '100%';
 		cDg.data = data;
 		XPORT.disabled = false;
 

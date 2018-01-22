@@ -34,6 +34,13 @@ var grid = canvasDatagrid({
 });
 ```
 
+For large data sets, it's necessary to constrain the size of the grid.
+
+```js
+grid.style.height = '100%';
+grid.style.width = '100%';
+```
+
 Once the workbook is read and the worksheet is selected, assigning the data
 variable automatically updates the view:
 
