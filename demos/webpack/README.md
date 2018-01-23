@@ -21,7 +21,6 @@ suppress the node shims:
 
 	/* suppress node shims */
 	node: {
-		fs: false,
 		process: false,
 		Buffer: false
 	}
@@ -35,7 +34,6 @@ browser but webpack disregards those.  The config should explicitly suppress:
 
 ```js
 	node: {
-		fs: false,
 		process: false,
 		Buffer: false
 	}

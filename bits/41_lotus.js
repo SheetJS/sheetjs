@@ -95,7 +95,7 @@ var WK_ = (function() {
 		return { SheetNames: snames, Sheets:sheets };
 	}
 
-	function parse_RANGE(blob, length) {
+	function parse_RANGE(blob) {
 		var o = {s:{c:0,r:0},e:{c:0,r:0}};
 		o.s.c = blob.read_shift(2);
 		o.s.r = blob.read_shift(2);
@@ -159,7 +159,7 @@ var WK_ = (function() {
 		return o;
 	}
 
-	function parse_cell_3(blob, length) {
+	function parse_cell_3(blob/*::, length*/) {
 		var o = [{c:0,r:0}, {t:'n',v:0}, 0];
 		o[0].r = blob.read_shift(2); o[3] = blob[blob.l++]; o[0].c = blob[blob.l++];
 		return o;
@@ -198,7 +198,7 @@ var WK_ = (function() {
 		var e = blob.read_shift(2);
 		if(e == 0xFFFF) { o[1].v = 0; return o; }
 		var s = e & 0x8000; e = (e&0x7FFF) - 16446;
-		o[1].v = ((e > 0 ? (v2 << e) : (v2 >>> -e)) + (e > -32 ? (v1 << (e + 32)) : (v1 >>> -(e + 32))));
+		o[1].v = (s*2 - 1) * ((e > 0 ? (v2 << e) : (v2 >>> -e)) + (e > -32 ? (v1 << (e + 32)) : (v1 >>> -(e + 32))));
 		return o;
 	}
 

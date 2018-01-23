@@ -11,7 +11,7 @@ function parse_comments_xml(data/*:string*/, opts)/*:Array<RawComment>*/ {
 		if(a) authors.push(a[1]);
 	});
 	var cmnttag = data.match(/<(?:\w+:)?commentList>([\s\S]*)<\/(?:\w+:)?commentList>/);
-	if(cmnttag && cmnttag[1]) cmnttag[1].split(/<\/\w*:?comment>/).forEach(function(x, index) {
+	if(cmnttag && cmnttag[1]) cmnttag[1].split(/<\/\w*:?comment>/).forEach(function(x) {
 		if(x === "" || x.trim() === "") return;
 		var cm = x.match(/<(?:\w+:)?comment[^>]*>/);
 		if(!cm) return;
@@ -31,7 +31,7 @@ function parse_comments_xml(data/*:string*/, opts)/*:Array<RawComment>*/ {
 }
 
 var CMNT_XML_ROOT = writextag('comments', null, { 'xmlns': XMLNS.main[0] });
-function write_comments_xml(data, opts) {
+function write_comments_xml(data/*::, opts*/) {
 	var o = [XML_HEADER, CMNT_XML_ROOT];
 
 	var iauthor/*:Array<string>*/ = [];

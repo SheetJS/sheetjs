@@ -1,7 +1,7 @@
 /* --- MS-XLS --- */
 
 /* 2.5.19 */
-function parse_XLSCell(blob, length)/*:Cell*/ {
+function parse_XLSCell(blob/*::, length*/)/*:Cell*/ {
 	var rw = blob.read_shift(2); // 0-indexed
 	var col = blob.read_shift(2);
 	var ixfe = blob.read_shift(2);
@@ -35,7 +35,7 @@ function parse_XTI(blob, length, opts) {
 }
 
 /* 2.5.218 */
-function parse_RkRec(blob, length) {
+function parse_RkRec(blob) {
 	var ixfe = blob.read_shift(2);
 	var RK = parse_RkNumber(blob);
 	return [ixfe, RK];
@@ -54,7 +54,7 @@ function parse_AddinUdf(blob, length, opts) {
 }
 
 /* 2.5.209 TODO: Check sizes */
-function parse_Ref8U(blob, length) {
+function parse_Ref8U(blob/*::, length*/) {
 	var rwFirst = blob.read_shift(2);
 	var rwLast = blob.read_shift(2);
 	var colFirst = blob.read_shift(2);
@@ -71,7 +71,7 @@ function write_Ref8U(r/*:Range*/, o) {
 }
 
 /* 2.5.211 */
-function parse_RefU(blob, length) {
+function parse_RefU(blob/*::, length*/) {
 	var rwFirst = blob.read_shift(2);
 	var rwLast = blob.read_shift(2);
 	var colFirst = blob.read_shift(1);
@@ -83,7 +83,7 @@ function parse_RefU(blob, length) {
 var parse_Ref = parse_RefU;
 
 /* 2.5.143 */
-function parse_FtCmo(blob, length) {
+function parse_FtCmo(blob/*::, length*/) {
 	blob.l += 4;
 	var ot = blob.read_shift(2);
 	var id = blob.read_shift(2);
@@ -93,7 +93,7 @@ function parse_FtCmo(blob, length) {
 }
 
 /* 2.5.149 */
-function parse_FtNts(blob, length) {
+function parse_FtNts(blob) {
 	var out = {};
 	blob.l += 4;
 	blob.l += 16; // GUID TODO
@@ -103,7 +103,7 @@ function parse_FtNts(blob, length) {
 }
 
 /* 2.5.142 */
-function parse_FtCf(blob, length) {
+function parse_FtCf(blob) {
 	var out = {};
 	blob.l += 4;
 	blob.cf = blob.read_shift(2);
@@ -111,7 +111,7 @@ function parse_FtCf(blob, length) {
 }
 
 /* 2.5.140 - 2.5.154 and friends */
-function parse_FtSkip(blob, length) { blob.l += 2; blob.l += blob.read_shift(2); }
+function parse_FtSkip(blob) { blob.l += 2; blob.l += blob.read_shift(2); }
 var FtTab = {
 	/*::[*/0x00/*::]*/: parse_FtSkip,      /* FtEnd */
 	/*::[*/0x04/*::]*/: parse_FtSkip,      /* FtMacro */
@@ -133,7 +133,7 @@ var FtTab = {
 	/*::[*/0x14/*::]*/: parse_FtSkip,      /* FtCblsFmla */
 	/*::[*/0x15/*::]*/: parse_FtCmo
 };
-function parse_FtArray(blob, length, ot) {
+function parse_FtArray(blob, length/*::, ot*/) {
 	var tgt = blob.l + length;
 	var fts = [];
 	while(blob.l < tgt) {
@@ -194,8 +194,7 @@ function write_BOF(wb/*:Workbook*/, t/*:number*/, o) {
 /* 2.4.146 */
 function parse_InterfaceHdr(blob, length) {
 	if(length === 0) return 0x04b0;
-	var q;
-	if((q=blob.read_shift(2))!==0x04b0){/* empty */}
+	if((blob.read_shift(2))!==0x04b0){/* empty */}
 	return 0x04b0;
 }
 
@@ -205,7 +204,7 @@ function parse_WriteAccess(blob, length, opts) {
 	if(opts.enc) { blob.l += length; return ""; }
 	var l = blob.l;
 	// TODO: make sure XLUnicodeString doesnt overrun
-	var UserName = parse_XLUnicodeString(blob, 0, opts);
+	var UserName = parse_XLUnicodeString2(blob, 0, opts);
 	blob.read_shift(length + l - blob.l);
 	return UserName;
 }
@@ -276,7 +275,7 @@ function parse_ExtSST(blob, length) {
 
 
 /* 2.4.221 TODO: check BIFF2-4 */
-function parse_Row(blob, length) {
+function parse_Row(blob) {
 	var z = ({}/*:any*/);
 	z.r = blob.read_shift(2);
 	z.c = blob.read_shift(2);
@@ -294,7 +293,7 @@ function parse_Row(blob, length) {
 
 
 /* 2.4.125 */
-function parse_ForceFullCalculation(blob, length) {
+function parse_ForceFullCalculation(blob) {
 	var header = parse_frtHeader(blob);
 	if(header.type != 0x08A3) throw new Error("Invalid Future Record " + header.type);
 	var fullcalc = blob.read_shift(4);
@@ -306,7 +305,7 @@ function parse_ForceFullCalculation(blob, length) {
 
 
 /* 2.4.215 rt */
-function parse_RecalcId(blob, length) {
+function parse_RecalcId(blob) {
 	blob.read_shift(2);
 	return blob.read_shift(4);
 }
@@ -326,14 +325,14 @@ function parse_DefaultRowHeight(blob, length, opts) {
 }
 
 /* 2.4.345 TODO */
-function parse_Window1(blob, length) {
+function parse_Window1(blob) {
 	var xWn = blob.read_shift(2), yWn = blob.read_shift(2), dxWn = blob.read_shift(2), dyWn = blob.read_shift(2);
 	var flags = blob.read_shift(2), iTabCur = blob.read_shift(2), iTabFirst = blob.read_shift(2);
 	var ctabSel = blob.read_shift(2), wTabRatio = blob.read_shift(2);
 	return { Pos: [xWn, yWn], Dim: [dxWn, dyWn], Flags: flags, CurTab: iTabCur,
 		FirstTab: iTabFirst, Selected: ctabSel, TabRatio: wTabRatio };
 }
-function write_Window1(opts) {
+function write_Window1(/*::opts*/) {
 	var o = new_buf(18);
 	o.write_shift(2, 0);
 	o.write_shift(2, 0);
@@ -379,7 +378,7 @@ function parse_Font(blob, length, opts) {
 }
 
 /* 2.4.149 */
-function parse_LabelSst(blob, length) {
+function parse_LabelSst(blob) {
 	var cell = parse_XLSCell(blob);
 	cell.isst = blob.read_shift(4);
 	return cell;
@@ -434,7 +433,7 @@ function write_Dimensions(range, opts) {
 }
 
 /* 2.4.220 */
-function parse_RK(blob, length) {
+function parse_RK(blob) {
 	var rw = blob.read_shift(2), col = blob.read_shift(2);
 	var rkrec = parse_RkRec(blob);
 	return {r:rw, c:col, ixfe:rkrec[0], rknum:rkrec[1]};
@@ -504,8 +503,8 @@ function parse_CellStyleXF(blob, length, style, opts) {
 	o.fsxButton = (d >> 14) & 0x01;
 	return o;
 }
-function parse_CellXF(blob, length, opts) {return parse_CellStyleXF(blob,length,0, opts);}
-function parse_StyleXF(blob, length, opts) {return parse_CellStyleXF(blob,length,1, opts);}
+//function parse_CellXF(blob, length, opts) {return parse_CellStyleXF(blob,length,0, opts);}
+//function parse_StyleXF(blob, length, opts) {return parse_CellStyleXF(blob,length,1, opts);}
 
 /* 2.4.353 TODO: actually do this right */
 function parse_XF(blob, length, opts) {
@@ -518,7 +517,7 @@ function parse_XF(blob, length, opts) {
 }
 
 /* 2.4.134 */
-function parse_Guts(blob, length) {
+function parse_Guts(blob) {
 	blob.l += 4;
 	var out = [blob.read_shift(2), blob.read_shift(2)];
 	if(out[0] !== 0) out[0]--;
@@ -551,13 +550,13 @@ function write_BoolErr(R/*:number*/, C/*:number*/, v, opts, t/*:string*/) {
 }
 
 /* 2.4.180 Number */
-function parse_Number(blob, length) {
+function parse_Number(blob) {
 	var cell = parse_XLSCell(blob, 6);
 	var xnum = parse_Xnum(blob, 8);
 	cell.val = xnum;
 	return cell;
 }
-function write_Number(R/*:number*/, C/*:number*/, v, opts) {
+function write_Number(R/*:number*/, C/*:number*/, v/*::, opts*/) {
 	var o = new_buf(14);
 	write_XLSCell(R, C, 0, o);
 	write_Xnum(v, o);
@@ -649,6 +648,7 @@ function parse_ExternSheet(blob, length, opts) {
 	var o = [], target = blob.l + length, len = blob.read_shift(opts.biff > 8 ? 4 : 2);
 	while(len-- !== 0) o.push(parse_XTI(blob, opts.biff > 8 ? 12 : 6, opts));
 		// [iSupBook, itabFirst, itabLast];
+	if(blob.l != target) throw new Error("Bad ExternSheet: " + blob.l + " != " + target);
 	return o;
 }
 function parse_BIFF5ExternSheet(blob, length, opts) {
@@ -689,7 +689,7 @@ function parse_Array(blob, length, opts) {
 }
 
 /* 2.4.173 */
-function parse_MTRSettings(blob, length) {
+function parse_MTRSettings(blob) {
 	var fMTREnabled = blob.read_shift(4) !== 0x00;
 	var fUserSetThreadCount = blob.read_shift(4) !== 0x00;
 	var cUserThreadCount = blob.read_shift(4);
@@ -735,14 +735,14 @@ function parse_Obj(blob, length, opts) {
 }
 /* from older spec */
 var parse_BIFF5OT = [];
-parse_BIFF5OT[0x08] = function(blob, length, opts) {
+parse_BIFF5OT[0x08] = function(blob, length) {
 	var tgt = blob.l + length;
 	blob.l += 10; // todo
 	var cf = blob.read_shift(2);
 	blob.l += 4;
-	var cbPictFmla = blob.read_shift(2);
+	blob.l += 2; //var cbPictFmla = blob.read_shift(2);
 	blob.l += 2;
-	var grbit = blob.read_shift(2);
+	blob.l += 2; //var grbit = blob.read_shift(2);
 	blob.l += 4;
 	var cchName = blob.read_shift(1);
 	blob.l += cchName; // TODO: stName
@@ -751,19 +751,19 @@ parse_BIFF5OT[0x08] = function(blob, length, opts) {
 };
 
 function parse_BIFF5Obj(blob, length, opts) {
-	var cnt = blob.read_shift(4);
+	blob.l += 4; //var cnt = blob.read_shift(4);
 	var ot = blob.read_shift(2);
 	var id = blob.read_shift(2);
 	var grbit = blob.read_shift(2);
-	var colL = blob.read_shift(2);
-	var dxL = blob.read_shift(2);
-	var rwT = blob.read_shift(2);
-	var dyT = blob.read_shift(2);
-	var colR = blob.read_shift(2);
-	var dxR = blob.read_shift(2);
-	var rwB = blob.read_shift(2);
-	var dyB = blob.read_shift(2);
-	var cbMacro = blob.read_shift(2);
+	blob.l += 2; //var colL = blob.read_shift(2);
+	blob.l += 2; //var dxL = blob.read_shift(2);
+	blob.l += 2; //var rwT = blob.read_shift(2);
+	blob.l += 2; //var dyT = blob.read_shift(2);
+	blob.l += 2; //var colR = blob.read_shift(2);
+	blob.l += 2; //var dxR = blob.read_shift(2);
+	blob.l += 2; //var rwB = blob.read_shift(2);
+	blob.l += 2; //var dyB = blob.read_shift(2);
+	blob.l += 2; //var cbMacro = blob.read_shift(2);
 	blob.l += 6;
 	length -= 36;
 	var fts = [];
@@ -778,12 +778,12 @@ function parse_TxO(blob, length, opts) {
 try {
 	blob.l += 4;
 	var ot = (opts.lastobj||{cmo:[0,0]}).cmo[1];
-	var controlInfo;
+	var controlInfo; // eslint-disable-line no-unused-vars
 	if([0,5,7,11,12,14].indexOf(ot) == -1) blob.l += 6;
 	else controlInfo = parse_ControlInfo(blob, 6, opts);
 	var cchText = blob.read_shift(2);
-	var cbRuns = blob.read_shift(2);
-	var ifntEmpty = parseuint16(blob, 2);
+	/*var cbRuns = */blob.read_shift(2);
+	/*var ifntEmpty = */parseuint16(blob, 2);
 	var len = blob.read_shift(2);
 	blob.l += len;
 	//var fmla = parse_ObjFmla(blob, s + length - blob.l);
@@ -831,7 +831,6 @@ function write_HLink(hl) {
 
 /* 2.4.141 */
 function parse_HLinkTooltip(blob, length) {
-	var end = blob.l + length;
 	blob.read_shift(2);
 	var ref = parse_Ref8U(blob, 8);
 	var wzTooltip = blob.read_shift((length-10)/2, 'dbcs-cont');
@@ -851,7 +850,7 @@ function write_HLinkTooltip(hl) {
 }
 
 /* 2.4.63 */
-function parse_Country(blob, length)/*:[string|number, string|number]*/ {
+function parse_Country(blob)/*:[string|number, string|number]*/ {
 	var o = [0,0], d;
 	d = blob.read_shift(2); o[0] = CountryEnum[d] || d;
 	d = blob.read_shift(2); o[1] = CountryEnum[d] || d;
@@ -865,7 +864,7 @@ function write_Country(o) {
 }
 
 /* 2.4.50 ClrtClient */
-function parse_ClrtClient(blob, length) {
+function parse_ClrtClient(blob) {
 	var ccv = blob.read_shift(2);
 	var o = [];
 	while(ccv-->0) o.push(parse_LongRGB(blob, 8));
@@ -873,7 +872,7 @@ function parse_ClrtClient(blob, length) {
 }
 
 /* 2.4.188 */
-function parse_Palette(blob, length) {
+function parse_Palette(blob) {
 	var ccv = blob.read_shift(2);
 	var o = [];
 	while(ccv-->0) o.push(parse_LongRGB(blob, 8));
@@ -881,7 +880,7 @@ function parse_Palette(blob, length) {
 }
 
 /* 2.4.354 */
-function parse_XFCRC(blob, length) {
+function parse_XFCRC(blob) {
 	blob.l += 2;
 	var o = {cxfs:0, crc:0};
 	o.cxfs = blob.read_shift(2);
@@ -904,7 +903,7 @@ function parse_ColInfo(blob, length, opts) {
 }
 
 /* 2.4.257 */
-function parse_Setup(blob, length, opts) {
+function parse_Setup(blob/*, length*/) {
 	var o = {};
 	blob.l += 16;
 	o.header = parse_Xnum(blob, 8);
@@ -934,19 +933,13 @@ var parse_Scl = parseuint16a; /* 2.4.247 num, den */
 var parse_String = parse_XLUnicodeString; /* 2.4.268 */
 
 /* --- Specific to versions before BIFF8 --- */
-function parse_ImData(blob, length, opts) {
-	var tgt = blob.l + length;
+function parse_ImData(blob) {
 	var cf = blob.read_shift(2);
 	var env = blob.read_shift(2);
 	var lcb = blob.read_shift(4);
 	var o = {fmt:cf, env:env, len:lcb, data:blob.slice(blob.l,blob.l+lcb)};
 	blob.l += lcb;
 	return o;
-}
-
-function parse_BIFF5String(blob) {
-	var len = blob.read_shift(1);
-	return blob.read_shift(len, 'sbcs-cont');
 }
 
 /* BIFF2_??? where ??? is the name from [XLS] */
@@ -959,7 +952,7 @@ function parse_BIFF2STR(blob, length, opts) {
 	return cell;
 }
 
-function parse_BIFF2NUM(blob, length, opts) {
+function parse_BIFF2NUM(blob/*::, length*/) {
 	var cell = parse_XLSCell(blob, 6);
 	++blob.l;
 	var num = parse_Xnum(blob, 8);
@@ -974,7 +967,7 @@ function write_BIFF2NUM(r/*:number*/, c/*:number*/, val/*:number*/) {
 	return out;
 }
 
-function parse_BIFF2INT(blob, length) {
+function parse_BIFF2INT(blob) {
 	var cell = parse_XLSCell(blob, 6);
 	++blob.l;
 	var num = blob.read_shift(2);
@@ -989,7 +982,7 @@ function write_BIFF2INT(r/*:number*/, c/*:number*/, val/*:number*/) {
 	return out;
 }
 
-function parse_BIFF2STRING(blob, length) {
+function parse_BIFF2STRING(blob) {
 	var cch = blob.read_shift(1);
 	if(cch === 0) { blob.l++; return ""; }
 	return blob.read_shift(cch, 'sbcs-cont');

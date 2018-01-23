@@ -22,7 +22,7 @@ function parse_cust_props(data/*:string*/, opts) {
 						p[name] = unescapexml(text);
 						break;
 					case 'bool':
-						p[name] = parsexmlbool(text, '<vt:bool>');
+						p[name] = parsexmlbool(text);
 						break;
 					case 'i1': case 'i2': case 'i4': case 'i8': case 'int': case 'uint':
 						p[name] = parseInt(text, 10);
@@ -52,7 +52,7 @@ var CUST_PROPS_XML_ROOT = writextag('Properties', null, {
 	'xmlns:vt': XMLNS.vt
 });
 
-function write_cust_props(cp, opts)/*:string*/ {
+function write_cust_props(cp/*::, opts*/)/*:string*/ {
 	var o = [XML_HEADER, CUST_PROPS_XML_ROOT];
 	if(!cp) return o.join("");
 	var pid = 1;

@@ -123,12 +123,12 @@ var parse_rs = (function parse_rs_factory() {
 	function parse_r(r) {
 		var terms/*:[Array<string>, string, Array<string>]*/ = [[],"",[]];
 		/* 18.4.12 t ST_Xstring */
-		var t = r.match(tregex), cp = 65001;
+		var t = r.match(tregex)/*, cp = 65001*/;
 		if(!t) return "";
 		terms[1] = t[1];
 
 		var rpr = r.match(rpregex);
-		if(rpr) cp = parse_rpr(rpr[1], terms[0], terms[2]);
+		if(rpr) /*cp = */parse_rpr(rpr[1], terms[0], terms[2]);
 
 		return terms[0].join("") + terms[1].replace(nlregex,'<br/>') + terms[2].join("");
 	}
@@ -144,7 +144,7 @@ function parse_si(x, opts) {
 	var html = opts ? opts.cellHTML : true;
 	var z = {};
 	if(!x) return null;
-	var y;
+	//var y;
 	/* 18.4.12 t ST_Xstring (Plaintext String) */
 	// TODO: is whitespace actually valid here?
 	if(x.match(/^\s*<(?:\w+:)?t[^>]*>/)) {
@@ -153,7 +153,7 @@ function parse_si(x, opts) {
 		if(html) z.h = escapehtml(z.t);
 	}
 	/* 18.4.4 r CT_RElt (Rich Text Run) */
-	else if((y = x.match(sirregex))) {
+	else if((/*y = */x.match(sirregex))) {
 		z.r = utf8read(x);
 		z.t = unescapexml(utf8read((x.replace(sirphregex, '').match(sitregex)||[]).join("").replace(tagregex,"")));
 		if(html) z.h = parse_rs(z.r);

@@ -79,7 +79,7 @@ function readSync(data/*:RawData*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
 	if(!o.type) o.type = (has_buf && Buffer.isBuffer(data)) ? "buffer" : "base64";
 	if(o.type == "file") { o.type = "buffer"; d = _fs.readFileSync(data); }
 	if(o.type == "string") { str = true; o.type = "binary"; d = bstrify(data); }
-	if(o.type == 'array' && typeof Uint8Array !== 'undefined' && data instanceof Uint8Array) {
+	if(o.type == 'array' && typeof Uint8Array !== 'undefined' && data instanceof Uint8Array && typeof ArrayBuffer !== 'undefined') {
 		// $FlowIgnore
 		var ab=new ArrayBuffer(3), vu=new Uint8Array(ab); vu.foo="bar";
 		// $FlowIgnore

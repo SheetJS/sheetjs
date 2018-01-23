@@ -66,17 +66,17 @@ function dbf_to_aoa(buf, opts)/*:AOA*/ {
 		case 0xF5: memo = true; break;
 		default: throw new Error("DBF Unsupported Version: " + ft.toString(16));
 	}
-	var filedate = new Date(), nrow = 0, fpos = 0;
+	var /*filedate = new Date(),*/ nrow = 0, fpos = 0;
 	if(ft == 0x02) nrow = d.read_shift(2);
-	filedate = new Date(d.read_shift(1) + 1900, d.read_shift(1) - 1, d.read_shift(1));
+	/*filedate = new Date(d.read_shift(1) + 1900, d.read_shift(1) - 1, d.read_shift(1));*/d.l += 3;
 	if(ft != 0x02) nrow = d.read_shift(4);
 	if(ft != 0x02) fpos = d.read_shift(2);
 	var rlen = d.read_shift(2);
 
-	var flags = 0, current_cp = 1252;
+	var /*flags = 0,*/ current_cp = 1252;
 	if(ft != 0x02) {
 	d.l+=16;
-	flags = d.read_shift(1);
+	/*flags = */d.read_shift(1);
 	//if(memo && ((flags & 0x02) === 0)) throw new Error("DBF Flags " + flags.toString(16) + " ft " + ft.toString(16));
 
 	/* codepage present in FoxPro */
@@ -407,7 +407,7 @@ var SYLK = (function() {
 
 	function sylk_to_workbook(d/*:RawData*/, opts)/*:Workbook*/ { return sheet_to_workbook(sylk_to_sheet(d, opts), opts); }
 
-	function write_ws_cell_sylk(cell/*:Cell*/, ws/*:Worksheet*/, R/*:number*/, C/*:number*/, opts)/*:string*/ {
+	function write_ws_cell_sylk(cell/*:Cell*/, ws/*:Worksheet*/, R/*:number*/, C/*:number*//*::, opts*/)/*:string*/ {
 		var o = "C;Y" + (R+1) + ";X" + (C+1) + ";K";
 		switch(cell.t) {
 			case 'n':
@@ -484,7 +484,7 @@ var DIF = (function() {
 		}
 		throw new Error("Unrecognized type " + opts.type);
 	}
-	function dif_to_aoa_str(str/*:string*/, opts)/*:AOA*/ {
+	function dif_to_aoa_str(str/*:string*//*::, opts*/)/*:AOA*/ {
 		var records = str.split('\n'), R = -1, C = -1, ri = 0, arr/*:AOA*/ = [];
 		for (; ri !== records.length; ++ri) {
 			if (records[ri].trim() === 'BOT') { arr[++R] = []; C = 0; continue; }
@@ -528,7 +528,7 @@ var DIF = (function() {
 			o.push(type + "," + v);
 			o.push(type == 1 ? '"' + s.replace(/"/g,'""') + '"' : s);
 		};
-		return function sheet_to_dif(ws/*:Worksheet*/, opts/*:?any*/)/*:string*/ {
+		return function sheet_to_dif(ws/*:Worksheet*//*::, opts:?any*/)/*:string*/ {
 			var o/*:Array<string>*/ = [];
 			var r = safe_decode_range(ws['!ref']), cell/*:Cell*/;
 			var dense = Array.isArray(ws);
@@ -585,7 +585,7 @@ var ETH = (function() {
 	function decode(s/*:string*/)/*:string*/ { return s.replace(/\\b/g,"\\").replace(/\\c/g,":").replace(/\\n/g,"\n"); }
 	function encode(s/*:string*/)/*:string*/ { return s.replace(/\\/g, "\\b").replace(/:/g, "\\c").replace(/\n/g,"\\n"); }
 
-	function eth_to_aoa(str/*:string*/, opts)/*:AOA*/ {
+	function eth_to_aoa(str/*:string*//*::, opts*/)/*:AOA*/ {
 		var records = str.split('\n'), R = -1, C = -1, ri = 0, arr/*:AOA*/ = [];
 		for (; ri !== records.length; ++ri) {
 			var record = records[ri].trim().split(":");
@@ -668,7 +668,7 @@ var ETH = (function() {
 		return o.join("\n");
 	}
 
-	function sheet_to_eth(ws/*:Worksheet*/, opts/*:?any*/)/*:string*/ {
+	function sheet_to_eth(ws/*:Worksheet*//*::, opts:?any*/)/*:string*/ {
 		return [header, sep, meta, sep, sheet_to_eth_data(ws), end].join("\n");
 		// return ["version:1.5", sheet_to_eth_data(ws)].join("\n"); // clipboard form
 	}
@@ -836,7 +836,7 @@ var PRN = (function() {
 
 	function prn_to_workbook(d/*:RawData*/, opts)/*:Workbook*/ { return sheet_to_workbook(prn_to_sheet(d, opts), opts); }
 
-	function sheet_to_prn(ws/*:Worksheet*/, opts/*:?any*/)/*:string*/ {
+	function sheet_to_prn(ws/*:Worksheet*//*::, opts:?any*/)/*:string*/ {
 		var o/*:Array<string>*/ = [];
 		var r = safe_decode_range(ws['!ref']), cell/*:Cell*/;
 		var dense = Array.isArray(ws);

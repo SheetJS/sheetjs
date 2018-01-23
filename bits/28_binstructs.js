@@ -17,7 +17,7 @@ function write_XLWideString(data/*:string*/, o) {
 }
 
 /* [MS-XLSB] 2.5.143 */
-function parse_StrRun(data, length/*:?number*/) {
+function parse_StrRun(data) {
 	return { ich: data.read_shift(2), ifnt: data.read_shift(2) };
 }
 function write_StrRun(run, o) {
@@ -71,7 +71,7 @@ function parse_XLSBCell(data)/*:any*/ {
 	var col = data.read_shift(4);
 	var iStyleRef = data.read_shift(2);
 	iStyleRef += data.read_shift(1) <<16;
-	var fPhShow = data.read_shift(1);
+	data.l++; //var fPhShow = data.read_shift(1);
 	return { c:col, iStyleRef: iStyleRef };
 }
 function write_XLSBCell(cell/*:any*/, o/*:?Block*/) {
@@ -101,7 +101,7 @@ function write_XLNullableWideString(data/*:string*/, o) {
 
 /* [MS-XLSB] 2.5.165 */
 var parse_XLNameWideString = parse_XLWideString;
-var write_XLNameWideString = write_XLWideString;
+//var write_XLNameWideString = write_XLWideString;
 
 /* [MS-XLSB] 2.5.114 */
 var parse_RelID = parse_XLNullableWideString;
@@ -154,7 +154,7 @@ var write_UncheckedRfX = write_RfX;
 /* [MS-XLSB] 2.5.171 */
 /* [MS-XLS] 2.5.342 */
 /* TODO: error checking, NaN and Infinity values are not valid Xnum */
-function parse_Xnum(data, length/*:?number*/) { return data.read_shift(8, 'f'); }
+function parse_Xnum(data/*::, length*/) { return data.read_shift(8, 'f'); }
 function write_Xnum(data, o) { return (o || new_buf(8)).write_shift(8, data, 'f'); }
 
 /* [MS-XLSB] 2.5.198.2 */
@@ -172,11 +172,11 @@ var BErr = {
 var RBErr = evert_num(BErr);
 
 /* [MS-XLSB] 2.4.321 BrtColor */
-function parse_BrtColor(data, length/*:number*/) {
+function parse_BrtColor(data/*::, length*/) {
 	var out = {};
 	var d = data.read_shift(1);
 
-	var fValidRGB = d & 1;
+	//var fValidRGB = d & 1;
 	var xColorType = d >>> 1;
 
 	var index = data.read_shift(1);
@@ -184,7 +184,7 @@ function parse_BrtColor(data, length/*:number*/) {
 	var bR = data.read_shift(1);
 	var bG = data.read_shift(1);
 	var bB = data.read_shift(1);
-	var bAlpha = data.read_shift(1);
+	data.l++; //var bAlpha = data.read_shift(1);
 
 	switch(xColorType) {
 		case 0: out.auto = 1; break;
@@ -236,7 +236,7 @@ function write_BrtColor(color, o) {
 }
 
 /* [MS-XLSB] 2.5.52 */
-function parse_FontFlags(data, length/*:number*/, opts) {
+function parse_FontFlags(data/*::, length, opts*/) {
 	var d = data.read_shift(1);
 	data.l++;
 	var out = {

@@ -1,10 +1,11 @@
 /* [MS-XLS] 2.5.198.1 TODO */
-function parse_ArrayParsedFormula(blob, length, opts, ref) {
+function parse_ArrayParsedFormula(blob, length, opts/*::, ref*/) {
 	var target = blob.l + length, len = opts.biff == 2 ? 1 : 2;
 	var rgcb, cce = blob.read_shift(len); // length of rgce
 	if(cce == 0xFFFF) return [[],parsenoop(blob, length-2)];
 	var rgce = parse_Rgce(blob, cce, opts);
 	if(length !== cce + len) rgcb = parse_RgbExtra(blob, length - cce - len, rgce, opts);
+	blob.l = target;
 	return [rgce, rgcb];
 }
 
@@ -15,6 +16,7 @@ function parse_XLSCellParsedFormula(blob, length, opts) {
 	if(cce == 0xFFFF) return [[],parsenoop(blob, length-2)];
 	var rgce = parse_Rgce(blob, cce, opts);
 	if(length !== cce + len) rgcb = parse_RgbExtra(blob, length - cce - len, rgce, opts);
+	blob.l = target;
 	return [rgce, rgcb];
 }
 
@@ -60,7 +62,7 @@ function parse_Formula(blob, length, opts) {
 	if(opts.biff != 2) {
 		blob.read_shift(1);
 		if(opts.biff >= 5) {
-			var chn = blob.read_shift(4);
+			/*var chn = */blob.read_shift(4);
 		}
 	}
 	var cbf = parse_XLSCellParsedFormula(blob, end - blob.l, opts);
@@ -69,7 +71,7 @@ function parse_Formula(blob, length, opts) {
 
 /* XLSB Parsed Formula records have the same shape */
 function parse_XLSBParsedFormula(data, length, opts) {
-	var end = data.l + length;
+	//var end = data.l + length;
 	var cce = data.read_shift(4);
 	var rgce = parse_Rgce(data, cce, opts);
 	var cb = data.read_shift(4);

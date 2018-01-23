@@ -60,6 +60,7 @@ function write_ws(data/*:number*/, name/*:string*/, opts, wb/*:Workbook*/, rels)
 	return (name.slice(-4)===".bin" ? write_ws_bin : write_ws_xml)(data, opts, wb, rels);
 }
 
+// eslint-disable-next-line no-unused-vars
 function write_cs(data/*:number*/, name/*:string*/, opts, wb/*:Workbook*/, rels) {
 	return (name.slice(-4)===".bin" ? write_cs_bin : write_cs_xml)(data, opts, wb, rels);
 }

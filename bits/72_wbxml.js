@@ -30,7 +30,7 @@ function parse_wb_xml(data, opts)/*:WorkbookFile*/ {
 				WBPropsDef.forEach(function(w) {
 					if(y[w[0]] == null) return;
 					switch(w[2]) {
-						case "bool": wb.WBProps[w[0]] = parsexmlbool(y[w[0]], w[0]); break;
+						case "bool": wb.WBProps[w[0]] = parsexmlbool(y[w[0]]); break;
 						case "int": wb.WBProps[w[0]] = parseInt(y[w[0]], 10); break;
 						default: wb.WBProps[w[0]] = y[w[0]];
 					}
@@ -161,7 +161,7 @@ var WB_XML_ROOT = writextag('workbook', null, {
 	'xmlns:r': XMLNS.r
 });
 
-function write_wb_xml(wb/*:Workbook*/, opts/*:?WriteOpts*/)/*:string*/ {
+function write_wb_xml(wb/*:Workbook*//*::, opts:?WriteOpts*/)/*:string*/ {
 	var o = [XML_HEADER];
 	o[o.length] = WB_XML_ROOT;
 

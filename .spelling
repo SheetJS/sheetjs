@@ -70,6 +70,7 @@ deduplication
 destructuring
 embeddable
 filesystem
+globals
 javascript
 metadata
 natively

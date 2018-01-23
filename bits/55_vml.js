@@ -14,7 +14,7 @@ function write_comments_vml(rId, comments) {
 	];
 	while(_shapeid < rId * 1000) _shapeid += 1000;
 
-	comments.map(function(x) { return decode_cell(x[0]); }).forEach(function(c,i) { o = o.concat([
+	comments.map(function(x) { return decode_cell(x[0]); }).forEach(function(c) { o = o.concat([
 	'<v:shape' + wxt_helper({
 		id:'_x0000_s' + (++_shapeid),
 		type:"#_x0000_t202",

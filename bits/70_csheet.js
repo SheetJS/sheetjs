@@ -6,7 +6,7 @@ var CS_XML_ROOT = writextag('chartsheet', null, {
 });
 
 /* 18.3 Worksheets also covers Chartsheets */
-function parse_cs_xml(data/*:?string*/, opts, idx/*:number*/, rels, wb, themes, styles)/*:Worksheet*/ {
+function parse_cs_xml(data/*:?string*/, opts, idx/*:number*/, rels, wb/*::, themes, styles*/)/*:Worksheet*/ {
 	if(!data) return data;
 	/* 18.3.1.12 chartsheet CT_ChartSheet */
 	if(!rels) rels = {'!id':{}};
@@ -39,7 +39,7 @@ function parse_BrtCsProp(data, length/*:number*/) {
 }
 
 /* [MS-XLSB] 2.1.7.7 Chart Sheet */
-function parse_cs_bin(data, opts, idx/*:number*/, rels, wb, themes, styles)/*:Worksheet*/ {
+function parse_cs_bin(data, opts, idx/*:number*/, rels, wb/*::, themes, styles*/)/*:Worksheet*/ {
 	if(!data) return data;
 	if(!rels) rels = {'!id':{}};
 	var s = {'!type':"chart", '!chart':null, '!rel':""};
@@ -85,7 +85,7 @@ function parse_cs_bin(data, opts, idx/*:number*/, rels, wb, themes, styles)/*:Wo
 	if(rels['!id'][s['!rel']]) s['!chart'] = rels['!id'][s['!rel']];
 	return s;
 }
-function write_cs_bin(idx/*:number*/, opts, wb/*:Workbook*/, rels) {
+function write_cs_bin(/*::idx:number, opts, wb:Workbook, rels*/) {
 	var ba = buf_array();
 	write_record(ba, "BrtBeginSheet");
 	/* [BrtCsProp] */

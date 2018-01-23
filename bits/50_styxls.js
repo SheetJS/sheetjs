@@ -13,10 +13,10 @@ function parse_Theme(blob, length, opts) {
 }
 
 /* 2.5.49 */
-function parse_ColorTheme(blob, length) { return blob.read_shift(4); }
+function parse_ColorTheme(blob/*::, length*/) { return blob.read_shift(4); }
 
 /* 2.5.155 */
-function parse_FullColorExt(blob, length) {
+function parse_FullColorExt(blob/*::, length*/) {
 	var o = {};
 	o.xclrType = blob.read_shift(2);
 	o.nTintShade = blob.read_shift(2);
@@ -42,7 +42,7 @@ function parse_XFExtGradient(blob, length) {
 }
 
 /* 2.5.108 */
-function parse_ExtProp(blob, length)/*:Array<any>*/ {
+function parse_ExtProp(blob/*::, length*/)/*:Array<any>*/ {
 	var extType = blob.read_shift(2);
 	var cb = blob.read_shift(2);
 	var o = [extType];

@@ -198,7 +198,7 @@ function new_ct()/*:any*/ {
 		TODO:[], xmlns: "" }/*:any*/);
 }
 
-function parse_ct(data/*:?string*/, opts) {
+function parse_ct(data/*:?string*/) {
 	var ct = new_ct();
 	if(!data || !data.match) return ct;
 	var ctext = {};

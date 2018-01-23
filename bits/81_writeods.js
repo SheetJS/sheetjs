@@ -14,7 +14,7 @@ var write_styles_ods/*:{(wb:any, opts:any):string}*/ = (function() {
 		'xmlns:of':       "urn:oasis:names:tc:opendocument:xmlns:of:1.2",
 		'office:version': "1.2"
 	}) + '></office:document-styles>';
-	return function wso(wb, opts) {
+	return function wso(/*::wb, opts*/) {
 		return XML_HEADER + payload;
 	};
 })();
@@ -30,7 +30,7 @@ var write_content_ods/*:{(wb:any, opts:any):string}*/ = (function() {
 
 	var null_cell_xml = '          <table:table-cell />\n';
 	var covered_cell_xml = '          <table:covered-table-cell/>\n';
-	var write_ws = function(ws, wb/*:Workbook*/, i/*:number*/, opts)/*:string*/ {
+	var write_ws = function(ws, wb/*:Workbook*/, i/*:number*//*::, opts*/)/*:string*/ {
 		/* Section 9 Tables */
 		var o/*:Array<string>*/ = [];
 		o.push('      <table:table table:name="' + escapexml(wb.SheetNames[i]) + '">\n');
@@ -206,18 +206,18 @@ function write_ods(wb/*:any*/, opts/*:any*/) {
 
 	/* TODO: this is hard-coded to satiate excel */
 	f = "meta.xml";
-	zip.file(f, write_meta_ods(wb, opts));
+	zip.file(f, write_meta_ods(/*::wb, opts*/));
 	manifest.push([f, "text/xml"]);
 	rdf.push([f, "MetadataFile"]);
 
 	/* Part 3 Section 6 Metadata Manifest File */
 	f = "manifest.rdf";
-	zip.file(f, write_rdf(rdf, opts));
+	zip.file(f, write_rdf(rdf/*, opts*/));
 	manifest.push([f, "application/rdf+xml"]);
 
 	/* Part 3 Section 4 Manifest File */
 	f = "META-INF/manifest.xml";
-	zip.file(f, write_manifest(manifest, opts));
+	zip.file(f, write_manifest(manifest/*, opts*/));
 
 	return zip;
 }

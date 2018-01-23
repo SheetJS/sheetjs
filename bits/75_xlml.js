@@ -185,7 +185,7 @@ function parse_xlml_xml(d, _opts)/*:Workbook*/ {
 	var state = [], tmp;
 	if(DENSE != null && opts.dense == null) opts.dense = DENSE;
 	var sheets = {}, sheetnames/*:Array<string>*/ = [], cursheet/*:Worksheet*/ = (opts.dense ? [] : {}), sheetname = "";
-	var table = {}, cell = ({}/*:any*/), row = {};
+	var table = {}, cell = ({}/*:any*/), row = {};// eslint-disable-line no-unused-vars
 	var dtag = xlml_parsexmltag('<Data ss:Type="String">'), didx = 0;
 	var c = 0, r = 0;
 	var refguess/*:Range*/ = {s: {r:2000000, c:2000000}, e: {r:0, c:0} };
@@ -848,7 +848,7 @@ function write_props_xlml(wb/*:Workbook*/, opts)/*:string*/ {
 	return o.join("");
 }
 /* TODO */
-function write_wb_xlml(wb, opts)/*:string*/ {
+function write_wb_xlml(/*::wb, opts*/)/*:string*/ {
 	/* OfficeDocumentSettings */
 	/* ExcelWorkbook */
 	return "";
@@ -865,7 +865,7 @@ function write_sty_xlml(wb, opts)/*:string*/ {
 	return writextag("Styles", styles.join(""));
 }
 function write_name_xlml(n) { return writextag("NamedRange", null, {"ss:Name": n.Name, "ss:RefersTo":"=" + a1_to_rc(n.Ref, {r:0,c:0})}); }
-function write_names_xlml(wb, opts)/*:string*/ {
+function write_names_xlml(wb/*::, opts*/)/*:string*/ {
 	if(!((wb||{}).Workbook||{}).Names) return "";
 	/*:: if(!wb || !wb.Workbook || !wb.Workbook.Names) throw new Error("unreachable"); */
 	var names/*:Array<any>*/ = wb.Workbook.Names;

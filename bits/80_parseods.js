@@ -2,7 +2,7 @@
 var parse_content_xml = (function() {
 
 	/* 6.1.2 White Space Characters */
-	var parse_text_p = function(text/*:string*/, tag)/*:string*/ {
+	var parse_text_p = function(text/*:string*//*::, tag*/)/*:string*/ {
 		return unescapexml(text
 			.replace(/[\t\r\n]/g, " ").trim().replace(/ +/g, " ")
 			.replace(/<text:s\/>/g," ")
@@ -117,10 +117,11 @@ var parse_content_xml = (function() {
 				} else if(Rn[1]!=='/') {
 					++C;
 					colpeat = 1;
+					var rptR = rowpeat ? R + rowpeat - 1 : R;
 					if(C > range.e.c) range.e.c = C;
-					if(R > range.e.r) range.e.r = R;
 					if(C < range.s.c) range.s.c = C;
 					if(R < range.s.r) range.s.r = R;
+					if(rptR > range.e.r) range.e.r = rptR;
 					ctag = parsexmltag(Rn[0], false);
 					comments = []; comment = ({}/*:any*/);
 					q = ({t:ctag['数据类型'] || ctag['value-type'], v:null/*:: , z:null, w:"",c:[]*/}/*:any*/);
@@ -537,7 +538,7 @@ var parse_content_xml = (function() {
 function parse_ods(zip/*:ZIPFile*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
 	opts = opts || ({}/*:any*/);
 	var ods = !!safegetzipfile(zip, 'objectdata');
-	if(ods) var manifest = parse_manifest(getzipdata(zip, 'META-INF/manifest.xml'), opts);
+	if(ods) parse_manifest(getzipdata(zip, 'META-INF/manifest.xml'), opts);
 	var content = getzipstr(zip, 'content.xml');
 	if(!content) throw new Error("Missing content.xml in " + (ods ? "ODS" : "UOF")+ " file");
 	var wb = parse_content_xml(ods ? content : utf8read(content), opts);

@@ -24,7 +24,7 @@ var RTF = (function() {
 	function rtf_to_workbook(d/*:RawData*/, opts)/*:Workbook*/ { return sheet_to_workbook(rtf_to_sheet(d, opts), opts); }
 
 	/* TODO: this is a stub */
-	function sheet_to_rtf(ws/*:Worksheet*/, opts)/*:string*/ {
+	function sheet_to_rtf(ws/*:Worksheet*//*::, opts*/)/*:string*/ {
 		var o = ["{\\rtf1\\ansi"];
 		var r = safe_decode_range(ws['!ref']), cell/*:Cell*/;
 		var dense = Array.isArray(ws);

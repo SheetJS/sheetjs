@@ -17,6 +17,7 @@ describe('source',function(){it('should load',function(){X=require(modp);});});
 var DIF_XL = true;
 
 var browser = typeof document !== 'undefined';
+if(!browser) try { require('./shim'); } catch(e) { }
 
 var opts = ({cellNF: true}/*:any*/);
 var TYPE = browser ? "binary" : "buffer";

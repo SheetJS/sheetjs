@@ -55,7 +55,7 @@ var unescapexml/*:StringConv*/ = (function() {
 })();
 
 var decregex=/[&<>'"]/g, charegex = /[\u0000-\u0008\u000b-\u001f]/g;
-function escapexml(text/*:string*/, xml/*:?boolean*/)/*:string*/{
+function escapexml(text/*:string*/)/*:string*/{
 	var s = text + '';
 	return s.replace(decregex, function(y) { return rencoding[y]; }).replace(charegex,function(s) { return "_x" + ("000"+s.charCodeAt(0).toString(16)).slice(-4) + "_";});
 }
@@ -82,7 +82,7 @@ var xlml_unfixstr/*:StringConv*/ = (function() {
 	return function xlml_unfixstr(str/*:string*/)/*:string*/ { return str.replace(/(\r\n|[\r\n])/g,"\&#10;"); };
 })();
 
-function parsexmlbool(value/*:any*/, tag/*:?string*/)/*:boolean*/ {
+function parsexmlbool(value/*:any*/)/*:boolean*/ {
 	switch(value) {
 		case 1: case true: case '1': case 'true': case 'TRUE': return true;
 		/* case '0': case 'false': case 'FALSE':*/

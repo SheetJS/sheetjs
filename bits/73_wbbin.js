@@ -64,8 +64,8 @@ function parse_BrtFRTArchID$(data, length) {
 /* [MS-XLSB] 2.4.680 BrtName */
 function parse_BrtName(data, length, opts) {
 	var end = data.l + length;
-	var flags = data.read_shift(4);
-	var chKey = data.read_shift(1);
+	data.l += 4; //var flags = data.read_shift(4);
+	data.l += 1; //var chKey = data.read_shift(1);
 	var itab = data.read_shift(4);
 	var name = parse_XLNameWideString(data);
 	var formula = parse_XLSBNameParsedFormula(data, 0, opts);
@@ -86,7 +86,7 @@ function parse_BrtName(data, length, opts) {
 /* [MS-XLSB] 2.1.7.60 Workbook */
 function parse_wb_bin(data, opts)/*:WorkbookFile*/ {
 	var wb = { AppVersion:{}, WBProps:{}, WBView:[], Sheets:[], CalcPr:{}, xmlns: "" };
-	var pass = false, z;
+	var pass = false;
 
 	if(!opts) opts = {};
 	opts.biff = 12;
@@ -186,7 +186,7 @@ function parse_wb_bin(data, opts)/*:WorkbookFile*/ {
 }
 
 /* [MS-XLSB] 2.1.7.60 Workbook */
-function write_BUNDLESHS(ba, wb, opts) {
+function write_BUNDLESHS(ba, wb/*::, opts*/) {
 	write_record(ba, "BrtBeginBundleShs");
 	for(var idx = 0; idx != wb.SheetNames.length; ++idx) {
 		var viz = wb.Workbook && wb.Workbook.Sheets && wb.Workbook.Sheets[idx] && wb.Workbook.Sheets[idx].Hidden || 0;
@@ -224,7 +224,7 @@ function write_BrtBookView(idx, o) {
 }
 
 /* [MS-XLSB] 2.1.7.60 Workbook */
-function write_BOOKVIEWS(ba, wb, opts) {
+function write_BOOKVIEWS(ba, wb/*::, opts*/) {
 	/* required if hidden tab appears before visible tab */
 	if(!wb.Workbook || !wb.Workbook.Sheets) return;
 	var sheets = wb.Workbook.Sheets;
@@ -241,9 +241,9 @@ function write_BOOKVIEWS(ba, wb, opts) {
 }
 
 /* [MS-XLSB] 2.4.302 BrtCalcProp */
-function write_BrtCalcProp(data, o) {
+/*function write_BrtCalcProp(data, o) {
 	if(!o) o = new_buf(26);
-	o.write_shift(4,0); /* force recalc */
+	o.write_shift(4,0); // force recalc
 	o.write_shift(4,1);
 	o.write_shift(4,0);
 	write_Xnum(0, o);
@@ -251,14 +251,14 @@ function write_BrtCalcProp(data, o) {
 	o.write_shift(1, 0x33);
 	o.write_shift(1, 0x00);
 	return o;
-}
+}*/
 
 /* [MS-XLSB] 2.4.640 BrtFileRecover */
-function write_BrtFileRecover(data, o) {
+/*function write_BrtFileRecover(data, o) {
 	if(!o) o = new_buf(1);
 	o.write_shift(1,0);
 	return o;
-}
+}*/
 
 /* [MS-XLSB] 2.1.7.60 Workbook */
 function write_wb_bin(wb, opts) {

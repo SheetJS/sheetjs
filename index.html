@@ -56,6 +56,8 @@ Use readAsBinaryString: (when available) <input type="checkbox" name="userabs" c
 /* eslint-env browser */
 /*global Uint8Array, console */
 /*global XLSX */
+/* exported b64it, setfmt */
+/* eslint no-use-before-define:0 */
 var X = XLSX;
 var XW = {
 	/* worker message */
@@ -212,9 +214,6 @@ var do_file = (function() {
 	function handleFile(e) { do_file(e.target.files); }
 	xlf.addEventListener('change', handleFile, false);
 })();
-</script>
-<script type="text/javascript">
-/* eslint no-use-before-define:0 */
 	var _gaq = _gaq || [];
 	_gaq.push(['_setAccount', 'UA-36810333-1']);
 	_gaq.push(['_trackPageview']);

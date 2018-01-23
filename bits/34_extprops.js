@@ -83,8 +83,8 @@ var EXT_PROPS_XML_ROOT = writextag('Properties', null, {
 	'xmlns:vt': XMLNS.vt
 });
 
-function write_ext_props(cp, opts)/*:string*/ {
-	var o/*:Array<string>*/ = [], p = {}, W = writextag;
+function write_ext_props(cp/*::, opts*/)/*:string*/ {
+	var o/*:Array<string>*/ = [], W = writextag;
 	if(!cp) cp = {};
 	cp.Application = "SheetJS";
 	o[o.length] = (XML_HEADER);

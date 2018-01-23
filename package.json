@@ -1,6 +1,6 @@
 {
 	"name": "xlsx",
-	"version": "0.11.17",
+	"version": "0.11.18",
 	"author": "sheetjs",
 	"description": "SheetJS Spreadsheet data parser and writer",
 	"keywords": [
@@ -23,29 +23,28 @@
 	"main": "./xlsx",
 	"types": "types",
 	"browser": {
-		"node": false,
+		"buffer": false,
 		"crypto": false,
 		"stream": false,
 		"process": false,
 		"fs": false
 	},
 	"dependencies": {
-		"adler-32": "~1.1.0",
-		"cfb": "~1.0.1",
-		"codepage": "~1.11.0",
-		"commander": "~2.11.0",
-		"crc-32": "~1.1.1",
+		"adler-32": "~1.2.0",
+		"cfb": "~1.0.2",
+		"codepage": "~1.12.0",
+		"commander": "~2.13.0",
+		"crc-32": "~1.2.0",
 		"exit-on-epipe": "~1.0.1",
 		"ssf": "~0.10.1"
 	},
 	"devDependencies": {
-		"mocha": "~2.5.3",
-		"blanket": "~1.2.3",
 		"@sheetjs/uglify-js": "~2.7.3",
-		"@types/node": "^8.0.7",
-		"@types/commander": "^2.9.0",
-		"jsdom": "~11.1.0",
+		"@types/node": "^8.5.9",
+		"blanket": "~1.2.3",
 		"dtslint": "^0.1.2",
+		"jsdom": "~11.1.0",
+		"mocha": "~2.5.3",
 		"typescript": "2.2.0"
 	},
 	"repository": {

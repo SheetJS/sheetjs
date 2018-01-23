@@ -1,8 +1,8 @@
 /* 18.6 Calculation Chain */
-function parse_cc_xml(data, name, opts) {
+function parse_cc_xml(data/*::, name, opts*/)/*:Array<any>*/ {
 	var d = [];
 	if(!data) return d;
-	var l = 0, i = 1;
+	var i = 1;
 	(data.match(tagregex)||[]).forEach(function(x) {
 		var y = parsexmltag(x);
 		switch(y[0]) {
@@ -16,10 +16,10 @@ function parse_cc_xml(data, name, opts) {
 	return d;
 }
 
-function write_cc_xml(data, opts) { }
+//function write_cc_xml(data, opts) { }
 
 /* [MS-XLSB] 2.6.4.1 */
-function parse_BrtCalcChainItem$(data, length) {
+function parse_BrtCalcChainItem$(data) {
 	var out = {};
 	out.i = data.read_shift(4);
 	var cell = {};
@@ -50,4 +50,4 @@ function parse_cc_bin(data, name, opts) {
 	return out;
 }
 
-function write_cc_bin(data, opts) { }
+//function write_cc_bin(data, opts) { }

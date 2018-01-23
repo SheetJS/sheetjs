@@ -1,6 +1,6 @@
 /* 18.14 Supplementary Workbook Data */
-function parse_xlink_xml(data, name/*:string*/, _opts) {
-	var opts = _opts || {};
+function parse_xlink_xml(/*::data, name:string, _opts*/) {
+	//var opts = _opts || {};
 	//if(opts.WTF) throw "XLSX External Link";
 }
 

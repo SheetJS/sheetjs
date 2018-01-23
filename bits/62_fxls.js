@@ -1,6 +1,5 @@
 /* --- formula references point to MS-XLS --- */
 /* Small helpers */
-function parseread(l) { return function(blob, length) { blob.l+=l; return; }; }
 function parseread1(blob) { blob.l+=1; return; }
 
 /* Rgce Helpers */
@@ -47,14 +46,14 @@ function parse_RgceLoc(blob, length, opts) {
 	var c = parse_ColRelU(blob, 2);
 	return {r:r, c:c[0], cRel:c[1], rRel:c[2]};
 }
-function parse_RgceLoc_BIFF2(blob, length, opts) {
+function parse_RgceLoc_BIFF2(blob/*::, length, opts*/) {
 	var r = parse_ColRelU(blob, 2);
 	var c = blob.read_shift(1);
 	return {r:r[0], c:c, cRel:r[1], rRel:r[2]};
 }
 
 /* 2.5.198.107 , 2.5.47 */
-function parse_RgceElfLoc(blob, length, opts) {
+function parse_RgceElfLoc(blob/*::, length, opts*/) {
 	var r = blob.read_shift(2);
 	var c = blob.read_shift(2);
 	return {r:r, c:c & 0xFF, fQuoted:!!(c & 0x4000), cRel:c>>15, rRel:c>>15 };
@@ -73,7 +72,7 @@ function parse_RgceLocRel(blob, length, opts) {
 	if(cRel == 1) while(cl > 0x1FFF) cl = cl - 0x4000;
 	return {r:r,c:cl,cRel:cRel,rRel:rRel};
 }
-function parse_RgceLocRel_BIFF2(blob, length/*::, opts*/) {
+function parse_RgceLocRel_BIFF2(blob/*::, length:number, opts*/) {
 	var rl = blob.read_shift(2);
 	var c = blob.read_shift(1);
 	var rRel = (rl & 0x8000) >> 15, cRel = (rl & 0x4000) >> 14;
@@ -141,7 +140,7 @@ function parse_PtgArray(blob, length, opts) {
 }
 
 /* 2.5.198.33 */
-function parse_PtgAttrBaxcel(blob, length) {
+function parse_PtgAttrBaxcel(blob) {
 	var bitSemi = blob[blob.l+1] & 0x01; /* 1 = volatile */
 	var bitBaxcel = 1;
 	blob.l += 4;
@@ -173,7 +172,7 @@ function parse_PtgAttrIf(blob, length, opts) {
 }
 
 /* [MS-XLSB] 2.5.97.28 */
-function parse_PtgAttrIfError(blob, length) {
+function parse_PtgAttrIfError(blob) {
 	var bitIf = (blob[blob.l+1] & 0xFF) ? 1 : 0;
 	blob.l += 2;
 	return [bitIf, blob.read_shift(2)];
@@ -187,26 +186,26 @@ function parse_PtgAttrSemi(blob, length, opts) {
 }
 
 /* 2.5.198.40 (used by PtgAttrSpace and PtgAttrSpaceSemi) */
-function parse_PtgAttrSpaceType(blob, length) {
+function parse_PtgAttrSpaceType(blob/*::, length*/) {
 	var type = blob.read_shift(1), cch = blob.read_shift(1);
 	return [type, cch];
 }
 
 /* 2.5.198.38 */
-function parse_PtgAttrSpace(blob, length) {
+function parse_PtgAttrSpace(blob) {
 	blob.read_shift(2);
 	return parse_PtgAttrSpaceType(blob, 2);
 }
 
 /* 2.5.198.39 */
-function parse_PtgAttrSpaceSemi(blob, length) {
+function parse_PtgAttrSpaceSemi(blob) {
 	blob.read_shift(2);
 	return parse_PtgAttrSpaceType(blob, 2);
 }
 
 /* 2.5.198.84 TODO */
 function parse_PtgRef(blob, length, opts) {
-	var ptg = blob[blob.l] & 0x1F;
+	//var ptg = blob[blob.l] & 0x1F;
 	var type = (blob[blob.l] & 0x60)>>5;
 	blob.l += 1;
 	var loc = parse_RgceLoc(blob, 0, opts);
@@ -233,7 +232,7 @@ function parse_PtgRef3d(blob, length, opts) {
 
 /* 2.5.198.62 TODO */
 function parse_PtgFunc(blob, length, opts) {
-	var ptg = blob[blob.l] & 0x1F;
+	//var ptg = blob[blob.l] & 0x1F;
 	var type = (blob[blob.l] & 0x60)>>5;
 	blob.l += 1;
 	var iftab = blob.read_shift(opts && opts.biff <= 3 ? 1 : 2);
@@ -246,7 +245,7 @@ function parse_PtgFuncVar(blob, length, opts) {
 	return [cparams, (tab[0] === 0 ? Ftab : Cetab)[tab[1]]];
 }
 
-function parsetab(blob, length) {
+function parsetab(blob) {
 	return [blob[blob.l+1]>>7, blob.read_shift(2) & 0x7FFF];
 }
 
@@ -254,9 +253,6 @@ function parsetab(blob, length) {
 function parse_PtgAttrSum(blob, length, opts) {
 	blob.l += opts && opts.biff == 2 ? 3 : 4; return;
 }
-
-/* 2.5.198.43 */
-var parse_PtgConcat = parseread1;
 
 /* 2.5.198.58 */
 function parse_PtgExp(blob, length, opts) {
@@ -268,16 +264,16 @@ function parse_PtgExp(blob, length, opts) {
 }
 
 /* 2.5.198.57 */
-function parse_PtgErr(blob, length) { blob.l++; return BErr[blob.read_shift(1)]; }
+function parse_PtgErr(blob) { blob.l++; return BErr[blob.read_shift(1)]; }
 
 /* 2.5.198.66 */
-function parse_PtgInt(blob, length) { blob.l++; return blob.read_shift(2); }
+function parse_PtgInt(blob) { blob.l++; return blob.read_shift(2); }
 
 /* 2.5.198.42 */
-function parse_PtgBool(blob, length) { blob.l++; return blob.read_shift(1)!==0;}
+function parse_PtgBool(blob) { blob.l++; return blob.read_shift(1)!==0;}
 
 /* 2.5.198.79 */
-function parse_PtgNum(blob, length) { blob.l++; return parse_Xnum(blob, 8); }
+function parse_PtgNum(blob) { blob.l++; return parse_Xnum(blob, 8); }
 
 /* 2.5.198.89 */
 function parse_PtgStr(blob, length, opts) { blob.l++; return parse_ShortXLUnicodeString(blob, length-1, opts); }
@@ -316,7 +312,7 @@ function parse_SerAr(blob, biff/*:number*/) {
 }
 
 /* 2.5.198.61 */
-function parse_PtgExtraMem(blob, cce) {
+function parse_PtgExtraMem(blob/*::, cce*/) {
 	var count = blob.read_shift(2);
 	var out/*:Array<Range>*/ = [];
 	for(var i = 0; i != count; ++i) out.push(parse_Ref8U(blob, 8));
@@ -361,7 +357,7 @@ function parse_PtgNameX(blob, length, opts) {
 	var nameindex = blob.read_shift(4);
 	return [type, ixti, nameindex];
 }
-function parse_PtgNameX_BIFF5(blob, length, opts) {
+function parse_PtgNameX_BIFF5(blob/*::, length, opts*/) {
 	var type = (blob.read_shift(1) >>> 5) & 0x03;
 	var ixti = blob.read_shift(2, 'i'); // XtiIndex
 	blob.l += 8;
@@ -407,45 +403,6 @@ function parse_PtgRefErr3d(blob, length, opts) {
 	return [type, ixti];
 }
 
-/* 2.5.198.26 */
-var parse_PtgAdd = parseread1;
-/* 2.5.198.45 */
-var parse_PtgDiv = parseread1;
-/* 2.5.198.56 */
-var parse_PtgEq = parseread1;
-/* 2.5.198.64 */
-var parse_PtgGe = parseread1;
-/* 2.5.198.65 */
-var parse_PtgGt = parseread1;
-/* 2.5.198.67 */
-var parse_PtgIsect = parseread1;
-/* 2.5.198.68 */
-var parse_PtgLe = parseread1;
-/* 2.5.198.69 */
-var parse_PtgLt = parseread1;
-/* 2.5.198.74 */
-var parse_PtgMissArg = parseread1;
-/* 2.5.198.75 */
-var parse_PtgMul = parseread1;
-/* 2.5.198.78 */
-var parse_PtgNe = parseread1;
-/* 2.5.198.80 */
-var parse_PtgParen = parseread1;
-/* 2.5.198.81 */
-var parse_PtgPercent = parseread1;
-/* 2.5.198.82 */
-var parse_PtgPower = parseread1;
-/* 2.5.198.83 */
-var parse_PtgRange = parseread1;
-/* 2.5.198.90 */
-var parse_PtgSub = parseread1;
-/* 2.5.198.93 */
-var parse_PtgUminus = parseread1;
-/* 2.5.198.94 */
-var parse_PtgUnion = parseread1;
-/* 2.5.198.95 */
-var parse_PtgUplus = parseread1;
-
 /* 2.5.198.71 */
 var parse_PtgMemErr = parsenoop;
 /* 2.5.198.73 */
@@ -457,7 +414,7 @@ function parse_PtgElfLoc(blob, length, opts) {
 	blob.l += 2;
 	return [parse_RgceElfLoc(blob, 4, opts)];
 }
-function parse_PtgElfNoop(blob, length, opts) {
+function parse_PtgElfNoop(blob/*::, length, opts*/) {
 	blob.l += 6;
 	return [];
 }
@@ -470,7 +427,7 @@ var parse_PtgElfColSV = parse_PtgElfNoop;
 /* 2.5.198.49 */
 var parse_PtgElfColV = parse_PtgElfLoc;
 /* 2.5.198.50 */
-function parse_PtgElfLel(blob, length, opts) {
+function parse_PtgElfLel(blob/*::, length, opts*/) {
 	blob.l += 2;
 	return [parseuint16(blob), blob.read_shift(2) & 0x01];
 }
@@ -486,14 +443,14 @@ var parse_PtgElfRw = parse_PtgElfLoc;
 var parse_PtgElfRwV = parse_PtgElfLoc;
 
 /* [MS-XLSB] 2.5.97.52 */
-function parse_PtgList(blob, length, opts) {
+function parse_PtgList(blob/*::, length, opts*/) {
 	blob.l += 2;
 	var ixti = blob.read_shift(2);
 	blob.l += 10;
-	return {};
+	return {ixti: ixti};
 }
 /* 2.5.198.91 */
-function parse_PtgSxName(blob, length, opts) {
+function parse_PtgSxName(blob/*::, length, opts*/) {
 	blob.l += 2;
 	return [blob.read_shift(4)];
 }
@@ -502,26 +459,26 @@ function parse_PtgSxName(blob, length, opts) {
 var PtgTypes = {
 	/*::[*/0x01/*::]*/: { n:'PtgExp', f:parse_PtgExp },
 	/*::[*/0x02/*::]*/: { n:'PtgTbl', f:parse_PtgTbl },
-	/*::[*/0x03/*::]*/: { n:'PtgAdd', f:parse_PtgAdd },
-	/*::[*/0x04/*::]*/: { n:'PtgSub', f:parse_PtgSub },
-	/*::[*/0x05/*::]*/: { n:'PtgMul', f:parse_PtgMul },
-	/*::[*/0x06/*::]*/: { n:'PtgDiv', f:parse_PtgDiv },
-	/*::[*/0x07/*::]*/: { n:'PtgPower', f:parse_PtgPower },
-	/*::[*/0x08/*::]*/: { n:'PtgConcat', f:parse_PtgConcat },
-	/*::[*/0x09/*::]*/: { n:'PtgLt', f:parse_PtgLt },
-	/*::[*/0x0A/*::]*/: { n:'PtgLe', f:parse_PtgLe },
-	/*::[*/0x0B/*::]*/: { n:'PtgEq', f:parse_PtgEq },
-	/*::[*/0x0C/*::]*/: { n:'PtgGe', f:parse_PtgGe },
-	/*::[*/0x0D/*::]*/: { n:'PtgGt', f:parse_PtgGt },
-	/*::[*/0x0E/*::]*/: { n:'PtgNe', f:parse_PtgNe },
-	/*::[*/0x0F/*::]*/: { n:'PtgIsect', f:parse_PtgIsect },
-	/*::[*/0x10/*::]*/: { n:'PtgUnion', f:parse_PtgUnion },
-	/*::[*/0x11/*::]*/: { n:'PtgRange', f:parse_PtgRange },
-	/*::[*/0x12/*::]*/: { n:'PtgUplus', f:parse_PtgUplus },
-	/*::[*/0x13/*::]*/: { n:'PtgUminus', f:parse_PtgUminus },
-	/*::[*/0x14/*::]*/: { n:'PtgPercent', f:parse_PtgPercent },
-	/*::[*/0x15/*::]*/: { n:'PtgParen', f:parse_PtgParen },
-	/*::[*/0x16/*::]*/: { n:'PtgMissArg', f:parse_PtgMissArg },
+	/*::[*/0x03/*::]*/: { n:'PtgAdd', f:parseread1 },
+	/*::[*/0x04/*::]*/: { n:'PtgSub', f:parseread1 },
+	/*::[*/0x05/*::]*/: { n:'PtgMul', f:parseread1 },
+	/*::[*/0x06/*::]*/: { n:'PtgDiv', f:parseread1 },
+	/*::[*/0x07/*::]*/: { n:'PtgPower', f:parseread1 },
+	/*::[*/0x08/*::]*/: { n:'PtgConcat', f:parseread1 },
+	/*::[*/0x09/*::]*/: { n:'PtgLt', f:parseread1 },
+	/*::[*/0x0A/*::]*/: { n:'PtgLe', f:parseread1 },
+	/*::[*/0x0B/*::]*/: { n:'PtgEq', f:parseread1 },
+	/*::[*/0x0C/*::]*/: { n:'PtgGe', f:parseread1 },
+	/*::[*/0x0D/*::]*/: { n:'PtgGt', f:parseread1 },
+	/*::[*/0x0E/*::]*/: { n:'PtgNe', f:parseread1 },
+	/*::[*/0x0F/*::]*/: { n:'PtgIsect', f:parseread1 },
+	/*::[*/0x10/*::]*/: { n:'PtgUnion', f:parseread1 },
+	/*::[*/0x11/*::]*/: { n:'PtgRange', f:parseread1 },
+	/*::[*/0x12/*::]*/: { n:'PtgUplus', f:parseread1 },
+	/*::[*/0x13/*::]*/: { n:'PtgUminus', f:parseread1 },
+	/*::[*/0x14/*::]*/: { n:'PtgPercent', f:parseread1 },
+	/*::[*/0x15/*::]*/: { n:'PtgParen', f:parseread1 },
+	/*::[*/0x16/*::]*/: { n:'PtgMissArg', f:parseread1 },
 	/*::[*/0x17/*::]*/: { n:'PtgStr', f:parse_PtgStr },
 	/*::[*/0x1C/*::]*/: { n:'PtgErr', f:parse_PtgErr },
 	/*::[*/0x1D/*::]*/: { n:'PtgBool', f:parse_PtgBool },
@@ -734,7 +691,7 @@ function get_ixti(supbooks, ixti/*:number*/, opts)/*:string*/ {
 }
 function stringify_formula(formula/*Array<any>*/, range, cell/*:any*/, supbooks, opts)/*:string*/ {
 	var _range = /*range != null ? range :*/ {s:{c:0, r:0},e:{c:0, r:0}};
-	var stack/*:Array<string>*/ = [], e1, e2, type, c/*:CellAddress*/, ixti=0, nameidx=0, r, sname="";
+	var stack/*:Array<string>*/ = [], e1, e2, /*::type,*/ c/*:CellAddress*/, ixti=0, nameidx=0, r, sname="";
 	if(!formula[0] || !formula[0][0]) return "";
 	var last_sp = -1, sp = "";
 	for(var ff = 0, fflen = formula[0].length; ff < fflen; ++ff) {
@@ -803,17 +760,17 @@ function stringify_formula(formula/*Array<any>*/, range, cell/*:any*/, supbooks,
 
 
 			case 'PtgRef': /* 2.5.198.84 */
-				type = f[1][0]; c = shift_cell_xls((f[1][1]/*:any*/), _range, opts);
+				/*::type = f[1][0]; */c = shift_cell_xls((f[1][1]/*:any*/), _range, opts);
 				stack.push(encode_cell_xls(c));
 				break;
 			case 'PtgRefN': /* 2.5.198.88 */
-				type = f[1][0]; c = cell ? shift_cell_xls((f[1][1]/*:any*/), cell, opts) : (f[1][1]/*:any*/);
+				/*::type = f[1][0]; */c = cell ? shift_cell_xls((f[1][1]/*:any*/), cell, opts) : (f[1][1]/*:any*/);
 				stack.push(encode_cell_xls(c));
 				break;
 			case 'PtgRef3d': /* 2.5.198.85 */
-				type = f[1][0]; ixti = /*::Number(*/f[1][1]/*::)*/; c = shift_cell_xls((f[1][2]/*:any*/), _range, opts);
+				/*::type = f[1][0]; */ixti = /*::Number(*/f[1][1]/*::)*/; c = shift_cell_xls((f[1][2]/*:any*/), _range, opts);
 				sname = get_ixti(supbooks, ixti, opts);
-				var w = sname; /* IE9 fails on defined names */
+				var w = sname; /* IE9 fails on defined names */ // eslint-disable-line no-unused-vars
 				stack.push(sname + "!" + encode_cell_xls(c));
 				break;
 
@@ -840,15 +797,15 @@ function stringify_formula(formula/*Array<any>*/, range, cell/*:any*/, supbooks,
 			case 'PtgErr': /* 2.5.198.57 */
 				stack.push(/*::String(*/f[1]/*::)*/); break;
 			case 'PtgAreaN': /* 2.5.198.31 TODO */
-				type = f[1][0]; r = shift_range_xls(f[1][1], cell ? {s:cell} : _range, opts);
+				/*::type = f[1][0]; */r = shift_range_xls(f[1][1], cell ? {s:cell} : _range, opts);
 				stack.push(encode_range_xls((r/*:any*/), opts));
 				break;
 			case 'PtgArea': /* 2.5.198.27 TODO: fixed points */
-				type = f[1][0]; r = shift_range_xls(f[1][1], _range, opts);
+				/*::type = f[1][0]; */r = shift_range_xls(f[1][1], _range, opts);
 				stack.push(encode_range_xls((r/*:any*/), opts));
 				break;
 			case 'PtgArea3d': /* 2.5.198.28 TODO */
-				type = f[1][0]; ixti = /*::Number(*/f[1][1]/*::)*/; r = f[1][2];
+				/*::type = f[1][0]; */ixti = /*::Number(*/f[1][1]/*::)*/; r = f[1][2];
 				sname = get_ixti(supbooks, ixti, opts);
 				stack.push(sname + "!" + encode_range_xls((r/*:any*/), opts));
 				break;

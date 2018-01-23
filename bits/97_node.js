@@ -3,7 +3,6 @@ if(has_buf && typeof require != 'undefined') (function() {
 
 	var write_csv_stream = function(sheet/*:Worksheet*/, opts/*:?Sheet2CSVOpts*/) {
 		var stream = Readable();
-		var out = "";
 		var o = opts == null ? {} : opts;
 		if(sheet == null || sheet["!ref"] == null) { stream.push(null); return stream; }
 		var r = safe_decode_range(sheet["!ref"]);

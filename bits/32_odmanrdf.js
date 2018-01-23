@@ -20,7 +20,7 @@ function parse_manifest(d, opts) {
 	}
 }
 
-function write_manifest(manifest/*:Array<Array<string> >*/, opts)/*:string*/ {
+function write_manifest(manifest/*:Array<Array<string> >*/)/*:string*/ {
 	var o = [XML_HEADER];
 	o.push('<manifest:manifest xmlns:manifest="urn:oasis:names:tc:opendocument:xmlns:manifest:1.0" manifest:version="1.2">\n');
 	o.push('  <manifest:file-entry manifest:full-path="/" manifest:version="1.2" manifest:media-type="application/vnd.oasis.opendocument.spreadsheet"/>\n');
@@ -44,7 +44,7 @@ function write_rdf_has(base/*:string*/, file/*:string*/) {
 		'  </rdf:Description>\n'
 	].join("");
 }
-function write_rdf(rdf, opts) {
+function write_rdf(rdf) {
 	var o = [XML_HEADER];
 	o.push('<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">\n');
 	for(var i = 0; i != rdf.length; ++i) {
@@ -58,7 +58,7 @@ function write_rdf(rdf, opts) {
 /* TODO: pull properties */
 var write_meta_ods/*:{(wb:Workbook, opts:any):string}*/ = (function() {
 	var payload = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><office:document-meta xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" xmlns:meta="urn:oasis:names:tc:opendocument:xmlns:meta:1.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:xlink="http://www.w3.org/1999/xlink" office:version="1.2"><office:meta><meta:generator>Sheet' + 'JS ' + XLSX.version + '</meta:generator></office:meta></office:document-meta>';
-	return function wmo(wb/*:Workbook*/, opts) {
+	return function wmo(/*:: wb: Workbook, opts: any*/)/*:string*/ {
 		return payload;
 	};
 })();

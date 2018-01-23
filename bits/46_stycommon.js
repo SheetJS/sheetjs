@@ -55,8 +55,8 @@ var DEF_MDW = 6, MAX_MDW = 15, MIN_MDW = 1, MDW = DEF_MDW;
 function width2px(width) { return Math.floor(( width + (Math.round(128/MDW))/256 )* MDW ); }
 function px2char(px) { return (Math.floor((px - 5)/MDW * 100 + 0.5))/100; }
 function char2width(chr) { return (Math.round((chr * MDW + 5)/MDW*256))/256; }
-function px2char_(px) { return (((px - 5)/MDW * 100 + 0.5))/100; }
-function char2width_(chr) { return (((chr * MDW + 5)/MDW*256))/256; }
+//function px2char_(px) { return (((px - 5)/MDW * 100 + 0.5))/100; }
+//function char2width_(chr) { return (((chr * MDW + 5)/MDW*256))/256; }
 function cycle_width(collw) { return char2width(px2char(width2px(collw))); }
 /* XLSX/XLSB/XLS specify width in units of MDW */
 function find_mdw_colw(collw) {
@@ -65,7 +65,7 @@ function find_mdw_colw(collw) {
 	MDW = _MDW;
 }
 /* XLML specifies width in terms of pixels */
-function find_mdw_wpx(wpx) {
+/*function find_mdw_wpx(wpx) {
 	var delta = Infinity, guess = 0, _MDW = MIN_MDW;
 	for(MDW=MIN_MDW; MDW<MAX_MDW; ++MDW) {
 		guess = char2width_(px2char_(wpx))*256;
@@ -74,7 +74,7 @@ function find_mdw_wpx(wpx) {
 		if(Math.abs(guess) < delta) { delta = Math.abs(guess); _MDW = MDW; }
 	}
 	MDW = _MDW;
-}
+}*/
 
 function process_col(coll/*:ColInfo*/) {
 	if(coll.width) {

@@ -52,7 +52,7 @@ function parse_zip(zip/*:ZIP*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
 	if(safegetzipfile(zip, 'Index/Document.iwa')) throw new Error('Unsupported NUMBERS file');
 
 	var entries = keys(zip.files).filter(nodirs).sort();
-	var dir = parse_ct((getzipstr(zip, '[Content_Types].xml')/*:?any*/), opts);
+	var dir = parse_ct((getzipstr(zip, '[Content_Types].xml')/*:?any*/));
 	var xlsb = false;
 	var sheets, binname;
 	if(dir.workbooks.length === 0) {
@@ -78,7 +78,7 @@ function parse_zip(zip/*:ZIP*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
 		if(dir.style) styles = parse_sty(getzipdata(zip, strip_front_slash(dir.style)), dir.style, themes, opts);
 	}
 
-	var externbooks = dir.links.map(function(link) {
+	/*var externbooks = */dir.links.map(function(link) {
 		return parse_xlink(getzipdata(zip, strip_front_slash(link)), link, opts);
 	});
 
@@ -179,7 +179,7 @@ function parse_xlsxcfb(cfb, _opts/*:?ParseOpts*/)/*:Workbook*/ {
 	var opts = _opts || {};
 	var f = '/!DataSpaces/Version';
 	var data = CFB.find(cfb, f); if(!data || !data.content) throw new Error("ECMA-376 Encrypted file missing " + f);
-	var version = parse_DataSpaceVersionInfo(data.content);
+	/*var version = */parse_DataSpaceVersionInfo(data.content);
 
 	/* 2.3.4.1 */
 	f = '/!DataSpaces/DataSpaceMap';
@@ -198,7 +198,7 @@ function parse_xlsxcfb(cfb, _opts/*:?ParseOpts*/)/*:Workbook*/ {
 	/* 2.3.4.3 */
 	f = '/!DataSpaces/TransformInfo/StrongEncryptionTransform/!Primary';
 	data = CFB.find(cfb, f); if(!data || !data.content) throw new Error("ECMA-376 Encrypted file missing " + f);
-	var hdr = parse_Primary(data.content);
+	/*var hdr = */parse_Primary(data.content);
 
 	f = '/EncryptionInfo';
 	data = CFB.find(cfb, f); if(!data || !data.content) throw new Error("ECMA-376 Encrypted file missing " + f);
@@ -208,8 +208,10 @@ function parse_xlsxcfb(cfb, _opts/*:?ParseOpts*/)/*:Workbook*/ {
 	f = '/EncryptedPackage';
 	data = CFB.find(cfb, f); if(!data || !data.content) throw new Error("ECMA-376 Encrypted file missing " + f);
 
+/*global decrypt_agile */
 /*:: declare var decrypt_agile:any; */
 	if(einfo[0] == 0x04 && typeof decrypt_agile !== 'undefined') return decrypt_agile(einfo[1], data.content, opts.password || "", opts);
+/*global decrypt_std76 */
 /*:: declare var decrypt_std76:any; */
 	if(einfo[0] == 0x02 && typeof decrypt_std76 !== 'undefined') return decrypt_std76(einfo[1], data.content, opts.password || "", opts);
 	throw new Error("File is password-protected");

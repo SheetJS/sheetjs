@@ -57,7 +57,7 @@ function xlml_write_docprops(Props, opts) {
 	});
 	return writextag('DocumentProperties', o.join(""), {xmlns:XLMLNS.o });
 }
-function xlml_write_custprops(Props, Custprops, opts) {
+function xlml_write_custprops(Props, Custprops/*::, opts*/) {
 	var BLACKLIST = ["Worksheets","SheetNames"];
 	var T = 'CustomDocumentProperties';
 	var o/*:Array<string>*/ = [];

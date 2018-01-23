@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /* xlsx.js (C) 2013-present  SheetJS -- http://sheetjs.com */
 /* eslint-env node */
-var n = "xlsx";
 /* vim: set ts=2 ft=javascript: */
+var n = "xlsx";
 var X = require('../');
 require('exit-on-epipe');
 var fs = require('fs'), program = require('commander');
@@ -26,7 +26,7 @@ program
 	//.option('-4, --biff4','emit XLS  to <sheetname> or <file>.xls (BIFF4)')
 	//.option('-3, --biff3','emit XLS  to <sheetname> or <file>.xls (BIFF3)')
 	.option('-2, --biff2','emit XLS  to <sheetname> or <file>.xls (BIFF2)')
-	.option('-i, --xla', 'emit XLA to <sheetname> or <file>.xla')
+	.option('-i, --xla',  'emit XLA to <sheetname> or <file>.xla')
 	.option('-6, --xlml', 'emit SSML to <sheetname> or <file>.xls (2003 XML)')
 	.option('-T, --fods', 'emit FODS to <sheetname> or <file>.fods (Flat ODS)')
 

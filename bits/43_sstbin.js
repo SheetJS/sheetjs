@@ -1,5 +1,5 @@
 /* [MS-XLSB] 2.4.219 BrtBeginSst */
-function parse_BrtBeginSst(data, length) {
+function parse_BrtBeginSst(data) {
 	return [data.read_shift(4), data.read_shift(4)];
 }
 
@@ -39,7 +39,7 @@ function write_BrtBeginSst(sst, o) {
 
 var write_BrtSSTItem = write_RichStr;
 
-function write_sst_bin(sst, opts) {
+function write_sst_bin(sst/*::, opts*/) {
 	var ba = buf_array();
 	write_record(ba, "BrtBeginSst", write_BrtBeginSst(sst));
 	for(var i = 0; i < sst.length; ++i) write_record(ba, "BrtSSTItem", write_BrtSSTItem(sst[i]));

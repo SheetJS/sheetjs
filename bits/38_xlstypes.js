@@ -97,17 +97,6 @@ function parse_ClipboardData(blob) {
 	return o;
 }
 
-/* [MS-OLEPS] 2.14 Vector and Array Property Types */
-function parse_VtVector(blob, cb) {
-	/* [MS-OLEPS] 2.14.2 VectorHeader */
-/*	var Length = blob.read_shift(4);
-	var o = [];
-	for(var i = 0; i != Length; ++i) {
-		o.push(cb(blob));
-	}
-	return o;*/
-}
-
 /* [MS-OLEPS] 2.15 TypedPropertyValue */
 function parse_TypedPropertyValue(blob, type/*:number*/, _opts)/*:any*/ {
 	var t = blob.read_shift(2), ret, opts = _opts||{};
@@ -131,17 +120,6 @@ function parse_TypedPropertyValue(blob, type/*:number*/, _opts)/*:any*/ {
 		default: throw new Error("TypedPropertyValue unrecognized type " + type + " " + t);
 	}
 }
-/* [MS-OLEPS] 2.14.2 VectorHeader */
-/*function parse_VTVectorVariant(blob) {
-	var Length = blob.read_shift(4);
-
-	if(Length & 1 !== 0) throw new Error("VectorHeader Length=" + Length + " must be even");
-	var o = [];
-	for(var i = 0; i != Length; ++i) {
-		o.push(parse_TypedPropertyValue(blob, VT_VARIANT));
-	}
-	return o;
-}*/
 
 /* [MS-OLEPS] 2.20 PropertySet */
 function parse_PropertySet(blob, PIDSI) {
@@ -243,7 +221,7 @@ function parse_PropertySetStream(file, PIDSI) {
 	var NumSets, FMTID0, FMTID1, Offset0, Offset1 = 0;
 	blob.chk('feff', 'Byte Order: ');
 
-	var vers = blob.read_shift(2); // TODO: check version
+	/*var vers = */blob.read_shift(2); // TODO: check version
 	var SystemIdentifier = blob.read_shift(4);
 	blob.chk(CFB.utils.consts.HEADER_CLSID, 'CLSID: ');
 	NumSets = blob.read_shift(4);
@@ -303,14 +281,14 @@ function write_Bes(v, t/*:string*/, o) {
 /* [MS-XLS] 2.5.240 ShortXLUnicodeString */
 function parse_ShortXLUnicodeString(blob, length, opts) {
 	var cch = blob.read_shift(opts && opts.biff >= 12 ? 2 : 1);
-	var width = 1, encoding = 'sbcs-cont';
+	var encoding = 'sbcs-cont';
 	var cp = current_codepage;
 	if(opts && opts.biff >= 8) current_codepage = 1200;
 	if(!opts || opts.biff == 8 ) {
 		var fHighByte = blob.read_shift(1);
-		if(fHighByte) { width = 2; encoding = 'dbcs-cont'; }
+		if(fHighByte) { encoding = 'dbcs-cont'; }
 	} else if(opts.biff == 12) {
-		width = 2; encoding = 'wstr';
+		encoding = 'wstr';
 	}
 	if(opts.biff >= 2 && opts.biff <= 5) encoding = 'cpstr';
 	var o = cch ? blob.read_shift(cch, encoding) : "";
@@ -323,7 +301,7 @@ function parse_XLUnicodeRichExtendedString(blob) {
 	var cp = current_codepage;
 	current_codepage = 1200;
 	var cch = blob.read_shift(2), flags = blob.read_shift(1);
-	var fHighByte = flags & 0x1, fExtSt = flags & 0x4, fRichSt = flags & 0x8;
+	var /*fHighByte = flags & 0x1,*/ fExtSt = flags & 0x4, fRichSt = flags & 0x8;
 	var width = 1 + (flags & 0x1); // 0x0 -> utf8, 0x1 -> dbcs
 	var cRun = 0, cbExtRst;
 	var z = {};
@@ -375,7 +353,7 @@ function write_XLUnicodeString(str, opts, o) {
 }
 
 /* [MS-XLS] 2.5.61 ControlInfo */
-function parse_ControlInfo(blob, length, opts) {
+function parse_ControlInfo(blob/*::, length, opts*/) {
 	var flags = blob.read_shift(1);
 	blob.l++;
 	var accel = blob.read_shift(2);
@@ -399,10 +377,10 @@ function parse_URLMoniker(blob/*::, length, opts*/) {
 }
 
 /* [MS-OSHARED] 2.3.7.8 FileMoniker TODO: all fields */
-function parse_FileMoniker(blob, length) {
-	var cAnti = blob.read_shift(2);
+function parse_FileMoniker(blob/*::, length*/) {
+	blob.l += 2; //var cAnti = blob.read_shift(2);
 	var ansiPath = blob.read_shift(0, 'lpstr-ansi');
-	var endServer = blob.read_shift(2);
+	blob.l += 2; //var endServer = blob.read_shift(2);
 	if(blob.read_shift(2) != 0xDEAD) throw new Error("Bad FileMoniker");
 	var sz = blob.read_shift(4);
 	if(sz === 0) return ansiPath.replace(/\\/g,"/");
@@ -423,7 +401,7 @@ function parse_HyperlinkMoniker(blob, length) {
 }
 
 /* [MS-OSHARED] 2.3.7.9 HyperlinkString */
-function parse_HyperlinkString(blob, length) {
+function parse_HyperlinkString(blob/*::, length*/) {
 	var len = blob.read_shift(4);
 	var o = len > 0 ? blob.read_shift(len, 'utf16le').replace(chr0, "") : "";
 	return o;
@@ -436,19 +414,23 @@ function parse_Hyperlink(blob, length)/*:Hyperlink*/ {
 	if(sVer !== 2) throw new Error("Unrecognized streamVersion: " + sVer);
 	var flags = blob.read_shift(2);
 	blob.l += 2;
-	var displayName, targetFrameName, moniker, oleMoniker, Location="", guid, fileTime;
+	var displayName, targetFrameName, moniker, oleMoniker, Loc="", guid, fileTime;
 	if(flags & 0x0010) displayName = parse_HyperlinkString(blob, end - blob.l);
 	if(flags & 0x0080) targetFrameName = parse_HyperlinkString(blob, end - blob.l);
 	if((flags & 0x0101) === 0x0101) moniker = parse_HyperlinkString(blob, end - blob.l);
 	if((flags & 0x0101) === 0x0001) oleMoniker = parse_HyperlinkMoniker(blob, end - blob.l);
-	if(flags & 0x0008) Location = parse_HyperlinkString(blob, end - blob.l);
+	if(flags & 0x0008) Loc = parse_HyperlinkString(blob, end - blob.l);
 	if(flags & 0x0020) guid = blob.read_shift(16);
 	if(flags & 0x0040) fileTime = parse_FILETIME(blob/*, 8*/);
 	blob.l = end;
 	var target = targetFrameName||moniker||oleMoniker||"";
-	if(target && Location) target+="#"+Location;
-	if(!target) target = "#" + Location;
-	return {Target: target};
+	if(target && Loc) target+="#"+Loc;
+	if(!target) target = "#" + Loc;
+	var out = ({Target:target}/*:any*/);
+	if(guid) out.guid = guid;
+	if(fileTime) out.time = fileTime;
+	if(displayName) out.Tooltip = displayName;
+	return out;
 }
 function write_Hyperlink(hl) {
 	var out = new_buf(512), i = 0;
@@ -485,7 +467,7 @@ function write_Hyperlink(hl) {
 }
 
 /* 2.5.178 LongRGBA */
-function parse_LongRGBA(blob, length) { var r = blob.read_shift(1), g = blob.read_shift(1), b = blob.read_shift(1), a = blob.read_shift(1); return [r,g,b,a]; }
+function parse_LongRGBA(blob/*::, length*/) { var r = blob.read_shift(1), g = blob.read_shift(1), b = blob.read_shift(1), a = blob.read_shift(1); return [r,g,b,a]; }
 
 /* 2.5.177 LongRGB */
 function parse_LongRGB(blob, length) { var x = parse_LongRGBA(blob, length); x[3] = 0; return x; }

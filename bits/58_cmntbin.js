@@ -1,5 +1,5 @@
 /* [MS-XLSB] 2.4.28 BrtBeginComment */
-function parse_BrtBeginComment(data, length/*:number*/) {
+function parse_BrtBeginComment(data) {
 	var out = {};
 	out.iauthor = data.read_shift(4);
 	var rfx = parse_UncheckedRfX(data, 16);
@@ -63,7 +63,7 @@ function parse_comments_bin(data, opts)/*:Array<RawComment>*/ {
 	return out;
 }
 
-function write_comments_bin(data, opts) {
+function write_comments_bin(data/*::, opts*/) {
 	var ba = buf_array();
 	var iauthor/*:Array<string>*/ = [];
 	write_record(ba, "BrtBeginComments");

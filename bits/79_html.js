@@ -11,7 +11,7 @@ var HTML_ = (function() {
 		var rows = split_regex(str.slice(i, j), /(:?<tr[^>]*>)/i, "<tr>");
 		var R = -1, C = 0, RS = 0, CS = 0;
 		var range/*:Range*/ = {s:{r:10000000, c:10000000},e:{r:0,c:0}};
-		var merges/*:Array<Range>*/ = [], midx = 0;
+		var merges/*:Array<Range>*/ = [];
 		for(i = 0; i < rows.length; ++i) {
 			var row = rows[i].trim();
 			var hd = row.slice(0,3).toLowerCase();
@@ -84,13 +84,13 @@ var HTML_ = (function() {
 		var preamble = "<tr>";
 		return preamble + oo.join("") + "</tr>";
 	}
-	function make_html_preamble(ws/*:Worksheet*/, R/*:Range*/, o/*:Sheet2HTMLOpts*/)/*:string*/ {
+	function make_html_preamble(/*::ws:Worksheet, R:Range, o:Sheet2HTMLOpts*/)/*:string*/ {
 		var out/*:Array<string>*/ = [];
 		return out.join("") + '<table>';
 	}
 	var _BEGIN = '<html><head><meta charset="utf-8"/><title>SheetJS Table Export</title></head><body>';
 	var _END = '</body></html>';
-	function sheet_to_html(ws/*:Worksheet*/, opts/*:?Sheet2HTMLOpts*/, wb/*:?Workbook*/)/*:string*/ {
+	function sheet_to_html(ws/*:Worksheet*/, opts/*:?Sheet2HTMLOpts*//*, wb:?Workbook*/)/*:string*/ {
 		var o = opts || {};
 		var header = o.header != null ? o.header : _BEGIN;
 		var footer = o.footer != null ? o.footer : _END;

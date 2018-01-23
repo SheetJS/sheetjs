@@ -1,10 +1,3 @@
-/* [MS-XLS] 2.5.198.44 */
-var PtgDataType = {
-	/*::[*/0x1/*::]*/: "REFERENCE", // reference to range
-	/*::[*/0x2/*::]*/: "VALUE", // single value
-	/*::[*/0x3/*::]*/: "ARRAY" // array of values
-};
-
 /* [MS-XLS] 2.5.198.4 */
 var Cetab = {
 	/*::[*/0x0000/*::]*/: 'BEEP',
@@ -1196,6 +1189,7 @@ var XLSXFutureFunctions = {
 	"_xlfn.HYPGEOM.DIST": "HYPGEOM.DIST",
 	"_xlfn.IFERROR": "IFERROR",
 	"_xlfn.IFNA": "IFNA",
+	"_xlfn.IFS": "IFS",
 	"_xlfn.IMCOSH": "IMCOSH",
 	"_xlfn.IMCOT": "IMCOT",
 	"_xlfn.IMCSC": "IMCSC",
@@ -1244,6 +1238,7 @@ var XLSXFutureFunctions = {
 	"_xlfn.STDEV.P": "STDEV.P",
 	"_xlfn.STDEV.S": "STDEV.S",
 	"_xlfn.SUMIFS": "SUMIFS",
+	"_xlfn.SWITCH": "SWITCH",
 	"_xlfn.T.DIST": "T.DIST",
 	"_xlfn.T.DIST.2T": "T.DIST.2T",
 	"_xlfn.T.DIST.RT": "T.DIST.RT",

@@ -276,7 +276,7 @@ function write_FMTS_bin(ba, NF/*:?SSFTable*/) {
 	write_record(ba, "BrtEndFmts");
 }
 
-function write_FONTS_bin(ba, data) {
+function write_FONTS_bin(ba/*::, data*/) {
 	var cnt = 1;
 
 	if(cnt == 0) return;
@@ -292,7 +292,7 @@ function write_FONTS_bin(ba, data) {
 	write_record(ba, "BrtEndFonts");
 }
 
-function write_FILLS_bin(ba, data) {
+function write_FILLS_bin(ba/*::, data*/) {
 	var cnt = 2;
 
 	if(cnt == 0) return;
@@ -303,7 +303,7 @@ function write_FILLS_bin(ba, data) {
 	write_record(ba, "BrtEndFills");
 }
 
-function write_BORDERS_bin(ba, data) {
+function write_BORDERS_bin(ba/*::, data*/) {
 	var cnt = 1;
 
 	if(cnt == 0) return;
@@ -313,7 +313,7 @@ function write_BORDERS_bin(ba, data) {
 	write_record(ba, "BrtEndBorders");
 }
 
-function write_CELLSTYLEXFS_bin(ba, data) {
+function write_CELLSTYLEXFS_bin(ba/*::, data*/) {
 	var cnt = 1;
 	write_record(ba, "BrtBeginCellStyleXFs", write_UInt32LE(cnt));
 	write_record(ba, "BrtXF", write_BrtXF({
@@ -333,10 +333,10 @@ function write_CELLXFS_bin(ba, data) {
 	write_record(ba, "BrtEndCellXFs");
 }
 
-function write_STYLES_bin(ba, data) {
+function write_STYLES_bin(ba/*::, data*/) {
 	var cnt = 1;
 
-	write_record(ba, "BrtBeginStyles", write_UInt32LE(1));
+	write_record(ba, "BrtBeginStyles", write_UInt32LE(cnt));
 	write_record(ba, "BrtStyle", write_BrtStyle({
 		xfId:0,
 		builtinId:0,
@@ -346,7 +346,7 @@ function write_STYLES_bin(ba, data) {
 	write_record(ba, "BrtEndStyles");
 }
 
-function write_DXFS_bin(ba, data) {
+function write_DXFS_bin(ba/*::, data*/) {
 	var cnt = 0;
 
 	write_record(ba, "BrtBeginDXFs", write_UInt32LE(cnt));
@@ -354,7 +354,7 @@ function write_DXFS_bin(ba, data) {
 	write_record(ba, "BrtEndDXFs");
 }
 
-function write_TABLESTYLES_bin(ba, data) {
+function write_TABLESTYLES_bin(ba/*::, data*/) {
 	var cnt = 0;
 
 	write_record(ba, "BrtBeginTableStyles", write_BrtBeginTableStyles(cnt, "TableStyleMedium9", "PivotStyleMedium4"));
@@ -362,7 +362,7 @@ function write_TABLESTYLES_bin(ba, data) {
 	write_record(ba, "BrtEndTableStyles");
 }
 
-function write_COLORPALETTE_bin(ba, data) {
+function write_COLORPALETTE_bin(/*::ba, data*/) {
 	return;
 	/* BrtBeginColorPalette [INDEXEDCOLORS] [MRUCOLORS] BrtEndColorPalette */
 }

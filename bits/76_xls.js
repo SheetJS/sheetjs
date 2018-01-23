@@ -179,6 +179,7 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 	var merges/*:Array<Range>*/ = [];
 	var objects = [];
 	var colinfo/*:Array<ColInfo>*/ = [], rowinfo/*:Array<RowInfo>*/ = [];
+	// eslint-disable-next-line no-unused-vars
 	var defwidth = 0, defheight = 0; // twips / MDW respectively
 	var seencol = false;
 	var supbooks = ([]/*:any*/); // 1-indexed, will hold extern names
@@ -201,7 +202,7 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 		var s = blob.l;
 		var RecordType = blob.read_shift(2);
 		if(RecordType === 0 && last_Rn === 'EOF') break;
-		var length = (blob.l === blob.length ? 0 : blob.read_shift(2)), y;
+		var length = (blob.l === blob.length ? 0 : blob.read_shift(2));
 		var R = XLSRecordEnum[RecordType];
 		//console.log(RecordType.toString(16), RecordType, R, blob.l, length, blob.length);
 		//if(!R) console.log(blob.slice(blob.l, blob.l + length));
@@ -817,10 +818,7 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 			}}}}
 		} else blob.l += length;
 	}
-	var sheetnamesraw = Object.keys(Directory).sort(function(a,b) { return Number(a) - Number(b); }).map(function(x){return Directory[x].name;});
-	var sheetnames = sheetnamesraw.slice();
-	wb.Directory=sheetnamesraw;
-	wb.SheetNames=sheetnamesraw;
+	wb.SheetNames=keys(Directory).sort(function(a,b) { return Number(a) - Number(b); }).map(function(x){return Directory[x].name;});
 	if(!options.bookSheets) wb.Sheets=Sheets;
 	if(wb.Sheets) FilterDatabases.forEach(function(r,i) { wb.Sheets[wb.SheetNames[i]]['!autofilter'] = r; });
 	wb.Preamble=Preamble;
@@ -857,11 +855,10 @@ if(!options) options = {};
 fix_read_opts(options);
 reset_cp();
 if(options.codepage) set_ansi(options.codepage);
-var CompObj/*:?CFBEntry*/, Summary, WB/*:?any*/;
+var CompObj/*:?CFBEntry*/, WB/*:?any*/;
 if(cfb.FullPaths) {
 	if(CFB.find(cfb, '/encryption')) throw new Error("File is password-protected");
 	CompObj = CFB.find(cfb, '!CompObj');
-	Summary = CFB.find(cfb, '!SummaryInformation');
 	WB = CFB.find(cfb, '/Workbook') || CFB.find(cfb, '/Book');
 } else {
 	switch(options.type) {
@@ -873,10 +870,10 @@ if(cfb.FullPaths) {
 	prep_blob(cfb, 0);
 	WB = ({content: cfb}/*:any*/);
 }
-var CompObjP, SummaryP, WorkbookP/*:: :Workbook = XLSX.utils.book_new(); */;
+var /*::CompObjP, */WorkbookP/*:: :Workbook = XLSX.utils.book_new(); */;
 
 var _data/*:?any*/;
-if(CompObj) CompObjP = parse_compobj(CompObj);
+if(CompObj) /*::CompObjP = */parse_compobj(CompObj);
 if(options.bookProps && !options.bookSheets) WorkbookP = ({}/*:any*/);
 else/*:: if(cfb instanceof CFBContainer) */ {
 	var T = has_buf ? 'buffer' : 'array';

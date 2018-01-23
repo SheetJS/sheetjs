@@ -20,7 +20,6 @@ module.exports = {
 	*/
 	/* suppress node shims */
 	node: {
-		fs: false,
 		process: false,
 		Buffer: false
 	}
