@@ -25,9 +25,12 @@ can be installed with Bash on Windows or with `cygwin`.
 - [`vue 2.x and weex`](vue/)
 - [`XMLHttpRequest and fetch`](xhr/)
 - [`nodejs server`](server/)
+- [`databases and key/value stores`](database/)
 
 **Bundlers and Tooling**
 - [`browserify`](browserify/)
+- [`fusebox`](fusebox/)
+- [`parcel`](parcel/)
 - [`requirejs`](requirejs/)
 - [`rollup`](rollup/)
 - [`systemjs`](systemjs/)

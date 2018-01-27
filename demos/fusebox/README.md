@@ -48,7 +48,7 @@ The native shims must be suppressed for browser usage:
 ```js
 const fuse = FuseBox.init({
   homeDir: ".",
-  target: "node",
+  target: "browser",
   natives: {
     Buffer: false,
     stream: false,

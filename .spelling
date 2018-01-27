@@ -37,13 +37,19 @@ CommonJS
 Ethercalc
 ExtendScript
 FileSaver
+IndexedDB
 JavaScriptCore
+LocalStorage
 NPM
 Nuxt.js
+Redis
 RequireJS
 Rollup
+SessionStorage
+SQLite
 SystemJS
 VueJS
+WebSQL
 iOS
 nodejs
 npm
@@ -57,10 +63,12 @@ ArrayBuffer
 Base64
 Booleans
 JS
+NoSQL
 README
 UTF-16
 XHR
 XMLHttpRequest
+bundler
 bundlers
 cleanroom
 config
@@ -94,6 +102,15 @@ ui-grid
  
  - demos/angular2/README.md
 angular-cli
+
+ - demos/database/README.md
+LowDB
+MariaDB
+MySQL
+PostgreSQL
+schemaless
+schemas
+storages
 
  - demos/extendscript/README.md
 Photoshop

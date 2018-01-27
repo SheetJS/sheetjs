@@ -10,9 +10,12 @@ The [`demos` directory](demos/) includes sample projects for:
 - [`vue 2.x and weex`](demos/vue/)
 - [`XMLHttpRequest and fetch`](demos/xhr/)
 - [`nodejs server`](demos/server/)
+- [`databases and key/value stores`](demos/database/)
 
 **Bundlers and Tooling**
 - [`browserify`](demos/browserify/)
+- [`fusebox`](demos/fusebox/)
+- [`parcel`](demos/parcel/)
 - [`requirejs`](demos/requirejs/)
 - [`rollup`](demos/rollup/)
 - [`systemjs`](demos/systemjs/)
