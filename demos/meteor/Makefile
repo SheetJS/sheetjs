@@ -6,7 +6,7 @@ start:
 init:
 	if [ ! -e .meteor ]; then meteor create .; fi;
 	@npm install babel-runtime meteor-node-stubs
-	@meteor add pfafman:filesaver check
+	@meteor add check
 	@mkdir -p node_modules; cd node_modules; ln -s ../../../ xlsx; cd -
 
 .PHONY: lint

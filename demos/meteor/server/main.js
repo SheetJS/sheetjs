@@ -4,11 +4,16 @@ import { check } from 'meteor/check';
 import XLSX from 'xlsx';
 
 Meteor.methods({
-  upload: (bstr, name) => {
-    /* read the data and return the workbook object to the frontend */
+  /* read the data and return the workbook object to the frontend */
+  uploadS: (bstr, name) => {
     check(bstr, String);
     check(name, String);
     return XLSX.read(bstr, { type: 'binary' });
+  },
+  uploadU: (ab, name) => {
+    check(ab, Uint8Array);
+    check(name, String);
+    return XLSX.read(ab, { type: 'array' });
   },
   download: (html) => {
     check(html, String);

@@ -87,7 +87,7 @@ The upload portion only differs in the actual request command:
 superagent.post("/upload").send(fd);
 ```
 
-### superagent Wrapper Library
+### axios Wrapper Library
 
 The `axios` library presents a Promise interface.  The axios demo uses a single
 promise, but for production deployments it may make sense to separate parsing:

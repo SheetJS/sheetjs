@@ -29,4 +29,5 @@ The [`demos` directory](demos/) includes sample projects for:
 - [`Headless Browsers`](demos/headless/)
 - [`canvas-datagrid`](demos/datagrid/)
 - [`Swift JSC and other engines`](demos/altjs/)
+- [`internet explorer`](demos/oldie/)
 

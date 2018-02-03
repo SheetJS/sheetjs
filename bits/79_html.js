@@ -84,9 +84,9 @@ var HTML_ = (function() {
 		var preamble = "<tr>";
 		return preamble + oo.join("") + "</tr>";
 	}
-	function make_html_preamble(/*::ws:Worksheet, R:Range, o:Sheet2HTMLOpts*/)/*:string*/ {
+	function make_html_preamble(ws/*:Worksheet*/, R/*:Range*/, o/*:Sheet2HTMLOpts*/)/*:string*/ {
 		var out/*:Array<string>*/ = [];
-		return out.join("") + '<table>';
+		return out.join("") + '<table' + (o && o.id ? ' id="' + o.id + '"' : "") + '>';
 	}
 	var _BEGIN = '<html><head><meta charset="utf-8"/><title>SheetJS Table Export</title></head><body>';
 	var _END = '</body></html>';

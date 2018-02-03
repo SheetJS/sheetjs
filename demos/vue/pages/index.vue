@@ -66,10 +66,8 @@ export default {
 			const ws = XLSX.utils.aoa_to_sheet(this.data);
 			const wb = XLSX.utils.book_new();
 			XLSX.utils.book_append_sheet(wb, ws, "SheetJS");
-			/* generate X file */
-			const wbout = XLSX.write(wb, {type:"array", bookType:"xlsx"});
-			/* send to client */
-			saveAs(new Blob([wbout],{type:"application/octet-stream"}), "sheetjs.xlsx");
+			/* generate file and send to client */
+			XLSX.writeFile(wb, "sheetjs.xlsx");
 		},
 		_file(file) {
 			/* Boilerplate to set up FileReader */

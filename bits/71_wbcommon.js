@@ -132,6 +132,7 @@ function check_wb_names(N) {
 }
 function check_wb(wb) {
 	if(!wb || !wb.SheetNames || !wb.Sheets) throw new Error("Invalid Workbook");
+	if(!wb.SheetNames.length) throw new Error("Workbook is empty");
 	check_wb_names(wb.SheetNames);
 	/* TODO: validate workbook */
 }

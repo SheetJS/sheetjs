@@ -51,14 +51,13 @@ function getzipstr(zip, file/*:string*/, safe/*:?boolean*/)/*:?string*/ {
 	try { return getzipstr(zip, file); } catch(e) { return null; }
 }
 
-var _fs, jszip;
+var jszip;
 /*:: declare var JSZip:any; */
 /*global JSZip:true */
 if(typeof JSZip !== 'undefined') jszip = JSZip;
-if (typeof exports !== 'undefined') {
-	if (typeof module !== 'undefined' && module.exports) {
+if(typeof exports !== 'undefined') {
+	if(typeof module !== 'undefined' && module.exports) {
 		if(typeof jszip === 'undefined') jszip = require('./jszip.js');
-		try { _fs = require('fs'); } catch(e) { }
 	}
 }
 

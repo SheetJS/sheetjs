@@ -5,7 +5,7 @@ if [ ! -e SheetJSIonic ]; then
 	ionic cordova platform add browser </dev/null
 	ionic cordova platform add ios </dev/null
 	ionic cordova plugin add cordova-plugin-file </dev/null
-	npm install --save @ionic-native/file file-saver
+	npm install --save @ionic-native/file
 	npm install --save xlsx
 
 	cp src/app/app.module.ts{,.bak}

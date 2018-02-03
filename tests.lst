@@ -439,7 +439,7 @@ smart_tags_2007.xlsx
 spout-xlsx_attack_billion_laughs.xlsx
 spout-xlsx_attack_quadratic_blowup.xlsx
 # spout-xlsx_file_corrupted.xlsx
-spout-xlsx_file_with_no_sheets_in_workbook_xml.xlsx
+# spout-xlsx_file_with_no_sheets_in_workbook_xml.xlsx # explicit error on RT
 # spout-xlsx_file_with_sheet_xml_not_matching_content_types.xlsx
 spout-xlsx_one_sheet_with_inline_strings.xlsx
 spout-xlsx_one_sheet_with_invalid_xml_characters.xlsx

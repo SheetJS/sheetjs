@@ -41,7 +41,7 @@ var worksheet = XLSX.read(htmlstr, {type:'string'});
   <summary><b>Browser download file (ajax)</b> (click to show)</summary>
 
 Note: for a more complete example that works in older browsers, check the demo
-at <http://oss.sheetjs.com/js-xlsx/ajax.html>).  The <demos/xhr/> directory also
+at <http://oss.sheetjs.com/js-xlsx/ajax.html>).  The [`xhr` demo](demos/xhr/)
 includes more examples with `XMLHttpRequest` and `fetch`.
 
 ```js
@@ -116,6 +116,8 @@ input_dom_element.addEventListener('change', handleFile, false);
 
 </details>
 
+More specialized cases, including mobile app file processing, are covered in the
+[included demos](demos/)
 
 ### Parsing Examples
 

@@ -12,8 +12,7 @@ function SheetJSExportService(uiGridExporterService) {
 
 		var wb = XLSX.utils.book_new(), ws = uigrid_to_sheet(data, columns);
 		XLSX.utils.book_append_sheet(wb, ws, sheetName);
-		var wbout = XLSX.write(wb, wopts);
-		saveAs(new Blob([wbout], { type: 'application/octet-stream' }), fileName);
+		XLSX.writeFile(wb, fileName);
 	}
 
 	var service = {};

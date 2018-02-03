@@ -1,7 +1,5 @@
 /* xlsx.js (C) 2013-present  SheetJS -- http://sheetjs.com */
 import XLSX from 'xlsx';
-/* note: saveAs is made available via the smart package */
-/* global saveAs */
 
 import { Meteor } from 'meteor/meteor';
 import { Template } from 'meteor/templating';
@@ -13,11 +11,12 @@ Template.sheetjs.events({
     /* "Browser file upload form element" from SheetJS README */
     const file = event.currentTarget.files[0];
     const reader = new FileReader();
+    const rABS = !!reader.readAsBinaryString;
     reader.onload = function(e) {
       const data = e.target.result;
       const name = file.name;
       /* Meteor magic */
-      Meteor.call('upload', data, name, function(err, wb) {
+      Meteor.call(rABS ? 'uploadS' : 'uploadU', rABS ? data : new Uint8Array(data), name, function(err, wb) {
         if (err) throw err;
         /* load the first worksheet */
         const ws = wb.Sheets[wb.SheetNames[0]];
@@ -27,15 +26,14 @@ Template.sheetjs.events({
         document.getElementById('dnload').disabled = false;
       });
     };
-    reader.readAsBinaryString(file);
+    if(rABS) reader.readAsBinaryString(file); else reader.readAsArrayBuffer(file);
   },
   'click button' () {
     const html = document.getElementById('out').innerHTML;
     Meteor.call('download', html, function(err, wb) {
       if (err) throw err;
       /* "Browser download file" from SheetJS README */
-      const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-      saveAs(new Blob([wbout], { type: 'application/octet-stream' }), 'sheetjs.xlsx');
+      XLSX.writeFile(wb, 'sheetjs.xlsx');
     });
   },
 });

@@ -6,6 +6,7 @@ export default () => (
 		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 		<title>SheetJS React Demo</title>
 		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" />
+		<script src="/static/shim.js"></script>
 		<style jsx>{`
 			body, #app { height: 100%; };
 		`}</style>

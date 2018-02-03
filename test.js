@@ -1,7 +1,9 @@
 /* xlsx.js (C) 2013-present SheetJS -- http://sheetjs.com */
 /* vim: set ts=2: */
 /*jshint mocha:true */
+/* eslint-env mocha */
 /*global process, document, require */
+/*global ArrayBuffer, Uint8Array */
 /*::
 declare type EmptyFunc = (() => void) | null;
 declare type DescribeIt = { (desc:string, test:EmptyFunc):void; skip(desc:string, test:EmptyFunc):void; };
@@ -190,7 +192,6 @@ var MCPaths =  pathit("mc",  ["xlsx", "xlsb", "xls", "xml", "ods"]);
 var CSSPaths = pathit("css", ["xlsx", "xlsb", "xls", "xml"]);
 var NFPaths =  pathit("nf",  ["xlsx", "xlsb", "xls", "xml"]);
 var DTPaths =  pathit("dt",  ["xlsx", "xlsb", "xls", "xml"]);
-var NFPaths =  pathit("nf",  ["xlsx", "xlsb", "xls", "xml"]);
 var HLPaths =  pathit("hl",  ["xlsx", "xlsb", "xls", "xml"]);
 var ILPaths =  pathit("il",  ["xlsx", "xlsb", "xls", "xml", "ods", "xls5"]);
 var OLPaths =  pathit("ol",  ["xlsx", "xlsb", "xls", "ods", "xls5"]);
@@ -318,12 +319,11 @@ var wbtable = {};
 			wbtable[dir + x] = wb;
 			parsetest(x, wb, true);
 		});
-		fullex.forEach(function(ext, idx) {
+		fullex.forEach(function(ext) {
 			it(x + ' [' + ext + ']', function(){
 				var wb = wbtable[dir + x];
 				if(!wb) wb = X.readFile(dir + x, opts);
 				wb = X.read(X.write(wb, {type:"buffer", bookType:ext.replace(/\./,"")}), {WTF:opts.WTF, cellNF: true});
-
 				parsetest(x, wb, ext.replace(/\./,"") !== "xlsb", ext);
 			});
 		});
@@ -471,7 +471,7 @@ describe('parse options', function() {
 			[paths.cssxlsx /*, paths.cssxlsb, paths.cssxls, paths.cssxml*/].forEach(function(p) {
 				var wb = X.read(fs.readFileSync(p), {type:TYPE, cellStyles:true});
 				var found = false;
-				each_sheet(wb, function(ws, i) { each_cell(ws, function(cell) {
+				each_sheet(wb, function(ws/*::, i*/) { /*:: void i; */each_cell(ws, function(cell) {
 					if(typeof cell.s !== 'undefined') return (found = true);
 				}); });
 				assert(found);
@@ -480,7 +480,7 @@ describe('parse options', function() {
 		it('should not generate cell dates by default', function() {
 			DTPaths.forEach(function(p) {
 				var wb = X.read(fs.readFileSync(p), {type:TYPE});
-				each_sheet(wb, function(ws, i) { each_cell(ws, function(cell) {
+				each_sheet(wb, function(ws/*::, i*/) { /*:: void i; */each_cell(ws, function(cell) {
 					assert(cell.t !== 'd');
 				}); });
 			});
@@ -489,7 +489,7 @@ describe('parse options', function() {
 			DTPaths.forEach(function(p) {
 				var wb = X.read(fs.readFileSync(p), {type:TYPE, cellDates: true, WTF:1});
 				var found = false;
-				each_sheet(wb, function(ws, i) { each_cell(ws, function(cell) {
+				each_sheet(wb, function(ws/*::, i*/) { /*:: void i; */each_cell(ws, function(cell) {
 					if(cell.t === 'd') return (found = true);
 				}); });
 				assert(found);
@@ -911,7 +911,7 @@ describe('parse features', function() {
 		var wbs = [], wbs_no_slk = [];
 		var bef = (function() {
 			X = require(modp);
-			wbs = CWPaths.map(function(n) { return X.read(fs.readFileSync(CWPaths[0]), {type:TYPE, cellStyles:true}); });
+			wbs = CWPaths.map(function(n) { return X.read(fs.readFileSync(n), {type:TYPE, cellStyles:true}); });
 			wbs_no_slk = wbs.slice(0, 5);
 		});
 		if(typeof before != 'undefined') before(bef);
@@ -1172,6 +1172,7 @@ describe('parse features', function() {
 			'A3:A10', 'B3:B10', 'E1:E10', 'F6:F8', /* cols */
 			'H1:J4', 'H10' /* blocks */
 		];
+		/*eslint-disable */
 		var exp/*:Array<any>*/ = [
 			{ patternType: 'darkHorizontal',
 			  fgColor: { theme: 9, raw_rgb: 'F79646' },
@@ -1198,6 +1199,7 @@ describe('parse features', function() {
 			  fgColor: { theme: 3, raw_rgb: 'EEECE1' },
 			  bgColor: { theme: 7, raw_rgb: '8064A2' } }
 		];
+		/*eslint-enable */
 		ranges.forEach(function(rng) {
 			it('XLS  | ' + rng,function(){cmparr(rn2(rng).map(function(x){ return get_cell(wsxls,x).s; }));});
 			it('XLSX | ' + rng,function(){cmparr(rn2(rng).map(function(x){ return get_cell(wsxlsx,x).s; }));});
@@ -1699,7 +1701,7 @@ describe('json output', function() {
 	});
 	it('should preserve values when column header is missing', function() {
 		/*jshint elision:true */
-		var _data = [[,"a","b",,"c"], [1,2,3,,5],[,3,4,5,6]];
+		var _data = [[,"a","b",,"c"], [1,2,3,,5],[,3,4,5,6]]; // eslint-disable-line no-sparse-arrays
 		/*jshint elision:false */
 		var _ws = X.utils.aoa_to_sheet(_data);
 		var json1 = X.utils.sheet_to_json(_ws, { raw: true });
@@ -1721,7 +1723,7 @@ var plaintext_val = [
 	["B3", 's', " ",        " "],
 	["A3"]
 ];
-function plaintext_test(wb, raw, t) {
+function plaintext_test(wb, raw) {
 	var sheet = wb.Sheets[wb.SheetNames[0]];
 	plaintext_val.forEach(function(x) {
 		var cell = get_cell(sheet, x[0]);
@@ -1791,8 +1793,8 @@ describe('CSV', function() {
 			assert.equal(cell.v.getMonth(), 2);
 			assert.equal(cell.w, "2/3/14");
 		});
-		it('should interpret values by default', function() { plaintext_test(X.read(csv_bstr, {type:"binary"}), false, false); });
-		it('should generate strings if raw option is passed', function() { plaintext_test(X.read(csv_str, {type:"string", raw:true}), true, false); });
+		it('should interpret values by default', function() { plaintext_test(X.read(csv_bstr, {type:"binary"}), false); });
+		it('should generate strings if raw option is passed', function() { plaintext_test(X.read(csv_str, {type:"string", raw:true}), true); });
 		it('should handle formulae', function() {
 			var bb = '=,=1+1,="100"';
 			var sheet = X.read(bb, {type:"binary"}).Sheets.Sheet1;
@@ -1921,9 +1923,9 @@ function get_dom_element(html) {
 
 describe('HTML', function() {
 	describe('input string', function(){
-		it('should interpret values by default', function() { plaintext_test(X.read(html_bstr, {type:"binary"}), false, false); });
-		it('should generate strings if raw option is passed', function() { plaintext_test(X.read(html_bstr, {type:"binary", raw:true}), true, false); });
-		it('should handle "string" type', function() { plaintext_test(X.read(html_str, {type:"string"}), false, false); });
+		it('should interpret values by default', function() { plaintext_test(X.read(html_bstr, {type:"binary"}), false); });
+		it('should generate strings if raw option is passed', function() { plaintext_test(X.read(html_bstr, {type:"binary", raw:true}), true); });
+		it('should handle "string" type', function() { plaintext_test(X.read(html_str, {type:"string"}), false); });
 		it('should handle newlines correctly', function() {
 			var table = "<table><tr><td>foo<br/>bar</td><td>baz</td></tr></table>";
 			var wb = X.read(table, {type:"string"});
@@ -1931,8 +1933,8 @@ describe('HTML', function() {
 		});
 	});
 	(domtest ? describe : describe.skip)('input DOM', function() {
-		it('should interpret values by default', function() { plaintext_test(X.utils.table_to_book(get_dom_element(html_str)), false, true); });
-		it('should generate strings if raw option is passed', function() { plaintext_test(X.utils.table_to_book(get_dom_element(html_str), {raw:true}), true, true); });
+		it('should interpret values by default', function() { plaintext_test(X.utils.table_to_book(get_dom_element(html_str)), false); });
+		it('should generate strings if raw option is passed', function() { plaintext_test(X.utils.table_to_book(get_dom_element(html_str), {raw:true}), true); });
 		it('should handle newlines correctly', function() {
 			var table = get_dom_element("<table><tr><td>foo<br/>bar</td><td>baz</td></tr></table>");
 			var ws = X.utils.table_to_sheet(table);
@@ -2030,14 +2032,14 @@ describe('corner cases', function() {
 	});
 	it('SSF', function() {
 		X.SSF.format("General", "dafuq");
-		assert.throws(function(x) { return X.SSF.format("General", {sheet:"js"});});
+		assert.throws(function() { return X.SSF.format("General", {sheet:"js"});});
 		X.SSF.format("b e ddd hh AM/PM", 41722.4097222222);
 		X.SSF.format("b ddd hh m", 41722.4097222222);
 		["hhh","hhh A/P","hhmmm","sss","[hhh]","G eneral"].forEach(function(f) {
-			assert.throws(function(x) { return X.SSF.format(f, 12345.6789);});
+			assert.throws(function() { return X.SSF.format(f, 12345.6789);});
 		});
 		["[m]","[s]"].forEach(function(f) {
-			assert.doesNotThrow(function(x) { return X.SSF.format(f, 12345.6789);});
+			assert.doesNotThrow(function() { return X.SSF.format(f, 12345.6789);});
 		});
 	});
 	if(typeof JSON !== 'undefined') it('SSF oddities', function() {

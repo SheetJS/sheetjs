@@ -101,8 +101,8 @@ The scripts should be treated as external resources in `nuxt.config.js`:
 module.exports = {
 	head: {
 		script: [
-			{ src: "https://unpkg.com/xlsx/dist/xlsx.full.min.js" }, // library
-			{ src: "https://unpkg.com/file-saver/FileSaver.js" } // saveAs shim
+			{ src: "https://unpkg.com/xlsx/dist/shim.min.js" },
+			{ src: "https://unpkg.com/xlsx/dist/xlsx.full.min.js" }
 		]
 	}
 };

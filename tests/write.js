@@ -1,7 +1,9 @@
 /* writing feature test -- look for TEST: in comments */
 /* vim: set ts=2 ft=javascript: */
 
-var ext = !!process.argv[2];
+if(typeof console === 'undefined') console = {log: function(){}};
+
+var ext = typeof process !== 'undefined' && !!process.argv[2];
 
 /* original data */
 var data = [
@@ -191,9 +193,21 @@ var filenames = [
 	['sheetjs.prn']
 ];
 
+var OUT = ["base64", "binary", "string", "array"];
+if(typeof Buffer !== 'undefined') OUT.push("buffer");
 filenames.forEach(function(r) {
-		/* write file */
-		XLSX.writeFile(wb, r[0], r[1]);
-		/* test by reading back files */
-		XLSX.readFile(r[0]);
+	/* write file */
+	XLSX.writeFile(wb, r[0], r[1]);
+	/* test by reading back files */
+	if(typeof process !== 'undefined') XLSX.readFile(r[0]);
+
+	var ext = r[1] && r[1].bookType || r[0].split(".")[1];
+	ext = {"htm":"html"}[ext] || ext;
+	OUT.forEach(function(type) {
+		if(type == "string" && ["xlsx", "xlsm", "xlsb", "xlam", "biff8", "biff5", "xla", "ods", "dbf"].indexOf(ext) > -1) return;
+		if(type == "array" && ["xlsx", "xlsm", "xlsb", "xlam", "ods"].indexOf(ext) > -1 && typeof Uint8Array === 'undefined') return;
+		var datout = XLSX.write(wb, {type: type, bookType: ext, sheet:r[1] && r[1].sheet || null});
+		XLSX.read(datout, {type:type});
+		if(type == "array") console.log(ext, datout);
+	});
 });

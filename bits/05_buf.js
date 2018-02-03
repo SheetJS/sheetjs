@@ -19,9 +19,14 @@ function s2ab(s/*:string*/) {
 	return buf;
 }
 
-function arr2str(data/*:any*/)/*:string*/ {
+function a2s(data/*:any*/)/*:string*/ {
 	if(Array.isArray(data)) return data.map(_chr).join("");
 	var o/*:Array<string>*/ = []; for(var i = 0; i < data.length; ++i) o[i] = _chr(data[i]); return o.join("");
+}
+
+function a2u(data/*:Array<number>*/)/*:Uint8Array*/ {
+	if(typeof Uint8Array === 'undefined') throw new Error("Unsupported");
+	return new Uint8Array(data);
 }
 
 function ab2a(data/*:ArrayBuffer|Uint8Array*/)/*:Array<number>*/ {

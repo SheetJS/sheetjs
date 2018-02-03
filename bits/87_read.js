@@ -100,7 +100,6 @@ function readSync(data/*:RawData*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
 		case 0x0A: case 0x0D: case 0x20: return read_plaintext_raw(d, o);
 	}
 	if(n[2] <= 12 && n[3] <= 31) return DBF.to_workbook(d, o);
-	if(0x20>n[0]||n[0]>0x7F) throw new Error("Unsupported file " + n.join("|"));
 	return read_prn(data, d, o, str);
 }
 

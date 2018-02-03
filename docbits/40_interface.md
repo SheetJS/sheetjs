@@ -18,7 +18,8 @@ Parse options are described in the [Parsing Options](#parsing-options) section.
 
 `XLSX.write(wb, write_opts)` attempts to write the workbook `wb`
 
-`XLSX.writeFile(wb, filename, write_opts)` attempts to write `wb` to `filename`
+`XLSX.writeFile(wb, filename, write_opts)` attempts to write `wb` to `filename`.
+In browser-based environments, it will attempt to force a client-side download.
 
 `XLSX.writeFileAsync(filename, wb, o, cb)` attempts to write `wb` to `filename`.
 If `o` is omitted, the writer will use the third argument as the callback.

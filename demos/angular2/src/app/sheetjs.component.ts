@@ -4,8 +4,6 @@ import { Component } from '@angular/core';
 
 import * as XLSX from 'xlsx';
 
-import { saveAs } from 'file-saver';
-
 type AOA = any[][];
 
 @Component({
@@ -57,7 +55,6 @@ export class SheetJSComponent {
 		XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
 
 		/* save to file */
-		const wbout: ArrayBuffer = XLSX.write(wb, this.wopts);
-		saveAs(new Blob([wbout], { type: 'application/octet-stream' }), this.fileName);
+		XLSX.writeFile(wb, this.fileName);
 	}
 }

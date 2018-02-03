@@ -4,7 +4,7 @@
 /*global global, exports, module, require:false, process:false, Buffer:false, ArrayBuffer:false */
 var XLSX = {};
 (function make_xlsx(XLSX){
-XLSX.version = '0.11.18';
+XLSX.version = '0.11.19';
 var current_codepage = 1200, current_ansi = 1252;
 /*global cptable:true */
 if(typeof module !== "undefined" && typeof require !== 'undefined') {
@@ -140,9 +140,14 @@ function s2ab(s) {
 	return buf;
 }
 
-function arr2str(data) {
+function a2s(data) {
 	if(Array.isArray(data)) return data.map(_chr).join("");
 	var o = []; for(var i = 0; i < data.length; ++i) o[i] = _chr(data[i]); return o.join("");
+}
+
+function a2u(data) {
+	if(typeof Uint8Array === 'undefined') throw new Error("Unsupported");
+	return new Uint8Array(data);
 }
 
 function ab2a(data) {
@@ -1782,6 +1787,39 @@ return exports;
 })();
 
 if(typeof require !== 'undefined' && typeof module !== 'undefined' && typeof DO_NOT_EXPORT_CFB === 'undefined') { module.exports = CFB; }
+var _fs;
+if(typeof require !== 'undefined') try { _fs = require('fs'); } catch(e) {}
+
+/* normalize data for blob ctor */
+function blobify(data) {
+	if(typeof data === "string") return s2ab(data);
+	if(Array.isArray(data)) return a2u(data);
+	return data;
+}
+/* write or download file */
+function write_dl(fname, payload, enc) {
+	/*global IE_SaveFile, Blob, navigator, saveAs, URL, document */
+	if(typeof _fs !== 'undefined' && _fs.writeFileSync) return enc ? _fs.writeFileSync(fname, payload, enc) : _fs.writeFileSync(fname, payload);
+	var data = (enc == "utf8") ? utf8write(payload) : payload;
+if(typeof IE_SaveFile !== 'undefined') return IE_SaveFile(data, fname);
+	if(typeof Blob !== 'undefined') {
+		var blob = new Blob([blobify(data)], {type:"application/octet-stream"});
+if(typeof navigator !== 'undefined' && navigator.msSaveBlob) return navigator.msSaveBlob(blob, fname);
+if(typeof saveAs !== 'undefined') return saveAs(blob, fname);
+		if(typeof URL !== 'undefined' && typeof document !== 'undefined' && document.createElement && URL.createObjectURL) {
+			var a = document.createElement("a");
+			if(a.download != null) {
+				var url = URL.createObjectURL(blob);
+a.download = fname; a.href = url; document.body.appendChild(a); a.click();
+document.body.removeChild(a);
+				if(URL.revokeObjectURL && typeof setTimeout !== 'undefined') setTimeout(function() { URL.revokeObjectURL(url); }, 60000);
+				return url;
+			}
+		}
+	}
+	throw new Error("cannot initiate download");
+}
+
 function keys(o) { return Object.keys(o); }
 
 function evert_key(obj, key) {
@@ -1973,13 +2011,12 @@ function getzipstr(zip, file, safe) {
 	try { return getzipstr(zip, file); } catch(e) { return null; }
 }
 
-var _fs, jszip;
+var jszip;
 /*global JSZip:true */
 if(typeof JSZip !== 'undefined') jszip = JSZip;
-if (typeof exports !== 'undefined') {
-	if (typeof module !== 'undefined' && module.exports) {
+if(typeof exports !== 'undefined') {
+	if(typeof module !== 'undefined' && module.exports) {
 		if(typeof jszip === 'undefined') jszip = require('./jszip.js');
-		try { _fs = require('fs'); } catch(e) { }
 	}
 }
 
@@ -13286,6 +13323,7 @@ function check_wb_names(N) {
 }
 function check_wb(wb) {
 	if(!wb || !wb.SheetNames || !wb.Sheets) throw new Error("Invalid Workbook");
+	if(!wb.SheetNames.length) throw new Error("Workbook is empty");
 	check_wb_names(wb.SheetNames);
 	/* TODO: validate workbook */
 }
@@ -14723,7 +14761,7 @@ function parse_xlml(data, opts) {
 	switch(opts.type||"base64") {
 		case "base64": return parse_xlml_xml(Base64.decode(data), opts);
 		case "binary": case "buffer": case "file": return parse_xlml_xml(data, opts);
-		case "array": return parse_xlml_xml(arr2str(data), opts);
+		case "array": return parse_xlml_xml(a2s(data), opts);
 	}
 }
 
@@ -17536,9 +17574,9 @@ var HTML_ = (function() {
 		var preamble = "<tr>";
 		return preamble + oo.join("") + "</tr>";
 	}
-	function make_html_preamble() {
+	function make_html_preamble(ws, R, o) {
 		var out = [];
-		return out.join("") + '<table>';
+		return out.join("") + '<table' + (o && o.id ? ' id="' + o.id + '"' : "") + '>';
 	}
 	var _BEGIN = '<html><head><meta charset="utf-8"/><title>SheetJS Table Export</title></head><body>';
 	var _END = '</body></html>';
@@ -18899,7 +18937,6 @@ function readSync(data, opts) {
 		case 0x0A: case 0x0D: case 0x20: return read_plaintext_raw(d, o);
 	}
 	if(n[2] <= 12 && n[3] <= 31) return DBF.to_workbook(d, o);
-	if(0x20>n[0]||n[0]>0x7F) throw new Error("Unsupported file " + n.join("|"));
 	return read_prn(data, d, o, str);
 }
 
@@ -18915,12 +18952,12 @@ function write_zip_type(wb, opts) {
 	switch(o.type) {
 		case "base64": oopts.type = "base64"; break;
 		case "binary": oopts.type = "string"; break;
-		case "string": throw new Error("'string' output type invalid for '" + o.bookType + ' files');
+		case "string": throw new Error("'string' output type invalid for '" + o.bookType + "' files");
 		case "buffer":
-		case "file": oopts.type = "nodebuffer"; break;
+		case "file": oopts.type = has_buf ? "nodebuffer" : "string"; break;
 		default: throw new Error("Unrecognized type " + o.type);
 	}
-	if(o.type === "file") return _fs.writeFileSync(o.file, z.generate(oopts));
+	if(o.type === "file") return write_dl(o.file, z.generate(oopts));
 	var out = z.generate(oopts);
 	// $FlowIgnore
 	return o.type == "string" ? utf8read(out) : out;
@@ -18932,8 +18969,8 @@ function write_cfb_type(wb, opts) {
 	switch(o.type) {
 		case "base64": case "binary": break;
 		case "buffer": case "array": o.type = ""; break;
-		case "file": return _fs.writeFileSync(o.file, CFB.write(cfb, {type:'buffer'}));
-		case "string": throw new Error("'string' output type invalid for '" + o.bookType + ' files');
+		case "file": return write_dl(o.file, CFB.write(cfb, {type:has_buf ? 'buffer' : ""}));
+		case "string": throw new Error("'string' output type invalid for '" + o.bookType + "' files");
 		default: throw new Error("Unrecognized type " + o.type);
 	}
 	return CFB.write(cfb, o);
@@ -18946,7 +18983,7 @@ function write_string_type(out, opts, bom) {
 		case "base64": return Base64.encode(utf8write(o));
 		case "binary": return utf8write(o);
 		case "string": return out;
-		case "file": return _fs.writeFileSync(opts.file, o, 'utf8');
+		case "file": return write_dl(opts.file, o, 'utf8');
 		case "buffer": {
 			if(has_buf) return new Buffer(o, 'utf8');
 			else return write_string_type(o, {type:'binary'}).split("").map(function(c) { return c.charCodeAt(0); });
@@ -18960,7 +18997,7 @@ function write_stxt_type(out, opts) {
 		case "base64": return Base64.encode(out);
 		case "binary": return out;
 		case "string": return out; /* override in sheet_to_txt */
-		case "file": return _fs.writeFileSync(opts.file, out, 'binary');
+		case "file": return write_dl(opts.file, out, 'binary');
 		case "buffer": {
 			if(has_buf) return new Buffer(out, 'binary');
 			else return out.split("").map(function(c) { return c.charCodeAt(0); });
@@ -18979,7 +19016,7 @@ function write_binary_type(out, opts) {
 			// $FlowIgnore
 			for(var i = 0; i < out.length; ++i) bstr += String.fromCharCode(out[i]);
 			return opts.type == 'base64' ? Base64.encode(bstr) : opts.type == 'string' ? utf8read(bstr) : bstr;
-		case "file": return _fs.writeFileSync(opts.file, out);
+		case "file": return write_dl(opts.file, out);
 		case "buffer": return out;
 		default: throw new Error("Unrecognized type " + opts.type);
 	}
@@ -19182,7 +19219,7 @@ function sheet_to_txt(sheet, opts) {
 	var s = sheet_to_csv(sheet, opts);
 	if(typeof cptable == 'undefined' || opts.type == 'string') return s;
 	var o = cptable.utils.encode(1200, s, 'str');
-	return "\xff\xfe" + o;
+	return String.fromCharCode(255) + String.fromCharCode(254) + o;
 }
 
 function sheet_to_formulae(sheet) {

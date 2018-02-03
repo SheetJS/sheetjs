@@ -36,7 +36,6 @@ CDNjs
 CommonJS
 Ethercalc
 ExtendScript
-FileSaver
 IndexedDB
 JavaScriptCore
 LocalStorage
@@ -58,6 +57,7 @@ webpack
 weex
 
 # Other terms
+ActiveX
 APIs
 ArrayBuffer
 Base64
@@ -66,6 +66,7 @@ JS
 NoSQL
 README
 UTF-16
+VBScript
 XHR
 XMLHttpRequest
 bundler

@@ -55,11 +55,8 @@ Vue.component('html-preview', {
 		onexport: function(evt) {
 			/* generate workbook object from table */
 			var wb = XLSX.utils.table_to_book(document.getElementById('out-table'));
-			/* get binary string as output */
-			var wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-
-			/* force a download */
-			saveAs(new Blob([wbout], { type: 'application/octet-stream' }), "sheetjs.xlsx");
+			/* generate file and force a download*/
+			XLSX.writeFile(wb, "sheetjs.xlsx");
 		}
 	}
 });

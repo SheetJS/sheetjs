@@ -833,7 +833,7 @@ function parse_xlml(data/*:RawBytes|string*/, opts)/*:Workbook*/ {
 	switch(opts.type||"base64") {
 		case "base64": return parse_xlml_xml(Base64.decode(data), opts);
 		case "binary": case "buffer": case "file": return parse_xlml_xml(data, opts);
-		case "array": return parse_xlml_xml(arr2str(data), opts);
+		case "array": return parse_xlml_xml(a2s(data), opts);
 	}
 	/*:: throw new Error("unsupported type " + opts.type); */
 }

@@ -18,10 +18,11 @@ class SheetJSApp extends React.Component {
 	handleFile(file/*:File*/) {
 		/* Boilerplate to set up FileReader */
 		const reader = new FileReader();
+		const rABS = !!reader.readAsBinaryString;
 		reader.onload = (e) => {
 			/* Parse data */
 			const bstr = e.target.result;
-			const wb = XLSX.read(bstr, {type:'binary'});
+			const wb = XLSX.read(bstr, {type:rABS ? 'binary' : 'array'});
 			/* Get first worksheet */
 			const wsname = wb.SheetNames[0];
 			const ws = wb.Sheets[wsname];
@@ -30,17 +31,15 @@ class SheetJSApp extends React.Component {
 			/* Update state */
 			this.setState({ data: data, cols: make_cols(ws['!ref']) });
 		};
-		reader.readAsBinaryString(file);
+		if(rABS) reader.readAsBinaryString(file); else reader.readAsArrayBuffer(file);
 	};
 	exportFile() {
 		/* convert state to workbook */
 		const ws = XLSX.utils.aoa_to_sheet(this.state.data);
 		const wb = XLSX.utils.book_new();
 		XLSX.utils.book_append_sheet(wb, ws, "SheetJS");
-		/* generate XLSX file */
-		const wbout = XLSX.write(wb, {type:"array", bookType:"xlsx"});
-		/* send to client */
-		saveAs(new Blob([wbout],{type:"application/octet-stream"}), "sheetjs.xlsx");
+		/* generate XLSX file and send to client */
+		XLSX.writeFile(wb, "sheetjs.xlsx")
 	};
 	render() { return (
 <DragDropFile handleFile={this.handleFile}>
@@ -137,4 +136,8 @@ const SheetJSFT = [
 ].map(function(x) { return "." + x; }).join(",");
 
 /* generate an array of column objects */
-const make_cols = refstr => Array(XLSX.utils.decode_range(refstr).e.c + 1).fill(0).map((x,i) => ({name:XLSX.utils.encode_col(i), key:i}));
+const make_cols = refstr => {
+	let o = [], C = XLSX.utils.decode_range(refstr).e.c + 1;
+	for(var i = 0; i < C; ++i) o[i] = {name:XLSX.utils.encode_col(i), key:i}
+	return o;
+};

@@ -33,6 +33,23 @@ var buf = fs.readFileSync("sheetjs.xlsx");
 var wb = XLSX.read(buf, {type:'buffer'});
 ```
 
+### Responding to Form Uploads
+
+Using `formidable`, files uploaded to forms are stored to temporary files that
+can be read with `readFile`:
+
+```js
+/* within the server callback function(request, response) { */
+var form = new formidable.IncomingForm();
+form.parse(req, function(err, fields, files) {
+	var f = files[Object.keys(files)[0]];
+	var workbook = XLSX.readFile(f.path);
+	/* DO SOMETHING WITH workbook HERE */
+});
+```
+
+The `node.js` demo shows a plain HTTP server that accepts file uploads and
+converts data to requested output format.
 
 ### Example servers
 

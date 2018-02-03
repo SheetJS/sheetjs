@@ -81,18 +81,15 @@ var ws = XLSX.utils.json_to_sheet(data);
 var wb = XLSX.utils.book_new();
 XLSX.utils.book_append_sheet(wb, ws, "Presidents");
 
-/* write workbook (use type 'array' for ArrayBuffer) */
-var wbout = XLSX.write(wb, {bookType:'xlsx', type:'array'});
-
-/* generate a download */
-saveAs(new Blob([wbout],{type:"application/octet-stream"}), "sheetjs.xlsx");
+/* write workbook and force a download */
+XLSX.writeFile(wb, "sheetjs.xlsx");
 ```
 
 
 `SheetJSExportService` exposes export functions for `XLSB` and `XLSX`.  Other
 formats are easily supported by changing the `bookType` variable.  It grabs
-values from the grid, builds an array of arrays, generates a workbook and uses
-FileSaver to generate a download.  By setting the `filename` and `sheetname`
-options in the ui-grid options, the output can be controlled.
+values from the grid, builds an array of arrays, generates a workbook and forces
+a download.  By setting the `filename` and `sheetname` options in the ui-grid
+options, the output can be controlled.
 
 [![Analytics](https://ga-beacon.appspot.com/UA-36810333-1/SheetJS/js-xlsx?pixel)](https://github.com/SheetJS/js-xlsx)

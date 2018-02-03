@@ -310,6 +310,7 @@ produces HTML output.  The function takes an options argument:
 
 | Option Name |  Default | Description                                         |
 | :---------- | :------: | :-------------------------------------------------- |
+|`id`         |          | Specify the `id` attribute for the `TABLE` element  |
 |`editable`   |  false   | If true, set `contenteditable="true"` for every TD  |
 |`header`     |          | Override header (default `html body`)               |
 |`footer`     |          | Override footer (default `/body /html`)             |

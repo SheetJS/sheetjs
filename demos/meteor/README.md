@@ -61,12 +61,8 @@ const html = document.getElementById('out').innerHTML;
 // SERVER SIDE
 const wb = XLSX.read(html, { type: 'binary' });
 // CLIENT SIDE
-const o = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-saveAs(new Blob([o], {type:'application/octet-stream'}), 'sheetjs.xlsx');
+XLSX.writeFile(wb, 'sheetjs.xlsx');
 ```
-
-This demo uses the FileSaver library for writing files, installed through the
-[`pfafman:filesaver` wrapper](https://atmospherejs.com/pfafman/filesaver).
 
 
 ## Setup
@@ -76,7 +72,6 @@ This tree does not include the `.meteor` structure.  Rebuild the project with:
 ```bash
 meteor create .
 npm install babel-runtime meteor-node-stubs xlsx
-meteor add pfafman:filesaver
 meteor
 ```
 

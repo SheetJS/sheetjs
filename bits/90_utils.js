@@ -131,7 +131,7 @@ function sheet_to_txt(sheet/*:Worksheet*/, opts/*:?Sheet2CSVOpts*/) {
 	var s = sheet_to_csv(sheet, opts);
 	if(typeof cptable == 'undefined' || opts.type == 'string') return s;
 	var o = cptable.utils.encode(1200, s, 'str');
-	return "\xff\xfe" + o;
+	return String.fromCharCode(255) + String.fromCharCode(254) + o;
 }
 
 function sheet_to_formulae(sheet/*:Worksheet*/)/*:Array<string>*/ {

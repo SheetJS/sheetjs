@@ -6,12 +6,12 @@ function write_zip_type(wb/*:Workbook*/, opts/*:?WriteOpts*/)/*:any*/ {
 	switch(o.type) {
 		case "base64": oopts.type = "base64"; break;
 		case "binary": oopts.type = "string"; break;
-		case "string": throw new Error("'string' output type invalid for '" + o.bookType + ' files');
+		case "string": throw new Error("'string' output type invalid for '" + o.bookType + "' files");
 		case "buffer":
-		case "file": oopts.type = "nodebuffer"; break;
+		case "file": oopts.type = has_buf ? "nodebuffer" : "string"; break;
 		default: throw new Error("Unrecognized type " + o.type);
 	}
-	if(o.type === "file") return _fs.writeFileSync(o.file, z.generate(oopts));
+	if(o.type === "file") return write_dl(o.file, z.generate(oopts));
 	var out = z.generate(oopts);
 	// $FlowIgnore
 	return o.type == "string" ? utf8read(out) : out;
@@ -23,8 +23,8 @@ function write_cfb_type(wb/*:Workbook*/, opts/*:?WriteOpts*/)/*:any*/ {
 	switch(o.type) {
 		case "base64": case "binary": break;
 		case "buffer": case "array": o.type = ""; break;
-		case "file": return _fs.writeFileSync(o.file, CFB.write(cfb, {type:'buffer'}));
-		case "string": throw new Error("'string' output type invalid for '" + o.bookType + ' files');
+		case "file": return write_dl(o.file, CFB.write(cfb, {type:has_buf ? 'buffer' : ""}));
+		case "string": throw new Error("'string' output type invalid for '" + o.bookType + "' files");
 		default: throw new Error("Unrecognized type " + o.type);
 	}
 	return CFB.write(cfb, o);
@@ -37,7 +37,7 @@ function write_string_type(out/*:string*/, opts/*:WriteOpts*/, bom/*:?string*/)/
 		case "base64": return Base64.encode(utf8write(o));
 		case "binary": return utf8write(o);
 		case "string": return out;
-		case "file": return _fs.writeFileSync(opts.file, o, 'utf8');
+		case "file": return write_dl(opts.file, o, 'utf8');
 		case "buffer": {
 			if(has_buf) return new Buffer(o, 'utf8');
 			else return write_string_type(o, {type:'binary'}).split("").map(function(c) { return c.charCodeAt(0); });
@@ -51,7 +51,7 @@ function write_stxt_type(out/*:string*/, opts/*:WriteOpts*/)/*:any*/ {
 		case "base64": return Base64.encode(out);
 		case "binary": return out;
 		case "string": return out; /* override in sheet_to_txt */
-		case "file": return _fs.writeFileSync(opts.file, out, 'binary');
+		case "file": return write_dl(opts.file, out, 'binary');
 		case "buffer": {
 			if(has_buf) return new Buffer(out, 'binary');
 			else return out.split("").map(function(c) { return c.charCodeAt(0); });
@@ -70,7 +70,7 @@ function write_binary_type(out, opts/*:WriteOpts*/)/*:any*/ {
 			// $FlowIgnore
 			for(var i = 0; i < out.length; ++i) bstr += String.fromCharCode(out[i]);
 			return opts.type == 'base64' ? Base64.encode(bstr) : opts.type == 'string' ? utf8read(bstr) : bstr;
-		case "file": return _fs.writeFileSync(opts.file, out);
+		case "file": return write_dl(opts.file, out);
 		case "buffer": return out;
 		default: throw new Error("Unrecognized type " + opts.type);
 	}

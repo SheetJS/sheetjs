@@ -82,7 +82,8 @@ var ws = XLSX.utils.aoa_to_sheet(prep(grid.data));
 var wb = XLSX.utils.book_new();
 XLSX.utils.book_append_sheet(wb, ws, 'SheetJS');
 
-/* .. generate download (see documentation for examples) .. */
+/* generate download */
+XLSX.writeFile(wb, "SheetJS.xlsx");
 ```
 
 ## Additional Features

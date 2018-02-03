@@ -5,7 +5,6 @@ import { Component } from '@angular/core';
 import * as XLSX from 'xlsx';
 
 import { File } from '@ionic-native/file';
-import { saveAs } from 'file-saver';
 
 type AOA = any[][];
 
@@ -48,7 +47,7 @@ export class HomePage {
     this.data = <AOA>(XLSX.utils.sheet_to_json(ws, {header: 1}));
   };
 
-  write(): ArrayBuffer {
+  write(): XLSX.WorkBook {
     /* generate worksheet */
     const ws: XLSX.WorkSheet = XLSX.utils.aoa_to_sheet(this.data);
 
@@ -56,9 +55,7 @@ export class HomePage {
     const wb: XLSX.WorkBook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'SheetJS');
 
-    /* save to ArrayBuffer */
-    const wbout: ArrayBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-    return wbout;
+    return wb;
   };
 
   /* File Input element for browser */
@@ -91,17 +88,26 @@ export class HomePage {
 
   /* Export button */
   async export() {
-    const wbout: ArrayBuffer = this.write();
+    const wb: XLSX.WorkBook = this.write();
     const filename: string = "SheetJSIonic.xlsx";
-    const blob: Blob = new Blob([wbout], {type: 'application/octet-stream'});
     try {
+      /* generate Blob */
+      const wbout: ArrayBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+      const blob: Blob = new Blob([wbout], {type: 'application/octet-stream'});
+
+      /* find appropriate path for mobile */
       const target: string = this.file.documentsDirectory || this.file.externalDataDirectory || this.file.dataDirectory || '';
       const dentry = await this.file.resolveDirectoryUrl(target);
       const url: string = dentry.nativeURL || '';
+
+      /* attempt to save blob to file */
       await this.file.writeFile(url, filename, blob, {replace: true});
       alert(`Wrote to SheetJSIonic.xlsx in ${url}`);
     } catch(e) {
-      if(e.message.match(/It was determined/)) saveAs(blob, filename);
+      if(e.message.match(/It was determined/)) {
+        /* in the browser, use writeFile */
+        XLSX.writeFile(wb, filename);
+      }
       else alert(`Error: ${e.message}`);
     }
   };

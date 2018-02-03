@@ -49,9 +49,9 @@ function sheet_to_sql(ws, sname, mode) {
 
   var out = [];
 
-	var BT = mode == "PGSQL" ? "" : "`";
-	var Q  = mode == "PGSQL" ? "'" : '"';
-	var R  = mode == "PGSQL" ? /'/g : /"/g;
+  var BT = mode == "PGSQL" ? "" : "`";
+  var Q  = mode == "PGSQL" ? "'" : '"';
+  var R  = mode == "PGSQL" ? /'/g : /"/g;
   out.push("DROP TABLE IF EXISTS " + BT + sname + BT );
   out.push("CREATE TABLE " + BT + sname + BT + " (" + names.map(function(n, i) { return BT + n + BT + " " + (types[i]||"TEXT"); }).join(", ") + ");" );
 

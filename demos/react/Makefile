@@ -4,8 +4,9 @@ react: ## Simple server for react and clones
 
 .PHONY: next
 next: init ## next.js demo
-	mkdir -p pages
+	mkdir -p pages static
 	cat nexthdr.js sheetjs.jsx > pages/sheetjs.js
+	cp ../../shim.js static/shim.js
 	next
 
 .PHONY: native
@@ -24,4 +25,3 @@ android: native ## react-native android sim
 init: ## set up node_modules and symlink
 	mkdir -p node_modules
 	cd node_modules; if [ ! -e xlsx ]; then ln -s ../../../ xlsx; fi; cd -
-	if [ ! -e node_modules/file-saver ]; then npm install file-saver; fi
