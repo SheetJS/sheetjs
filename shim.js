@@ -341,3 +341,30 @@ if(typeof Uint8Array !== 'undefined' && !Uint8Array.prototype.slice) Uint8Array.
 	while(start <= --end) out[end - start] = this[end];
 	return out;
 };
+
+// VBScript + ActiveX fallback for IE5+
+var IE_SaveFile = (function() { try {
+	if(typeof IE_SaveFile_Impl == "undefined") document.write([
+'<script type="text/vbscript" language="vbscript">',
+'IE_GetProfileAndPath_Key = "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders\\"',
+'Function IE_GetProfileAndPath(key): Set wshell = CreateObject("WScript.Shell"): IE_GetProfileAndPath = wshell.RegRead(IE_GetProfileAndPath_Key & key): IE_GetProfileAndPath = wshell.ExpandEnvironmentStrings("%USERPROFILE%") & "!" & IE_GetProfileAndPath: End Function',
+'Function IE_SaveFile_Impl(FileName, payload): Dim data, plen, i, bit: data = CStr(payload): plen = Len(data): Set fso = CreateObject("Scripting.FileSystemObject"): fso.CreateTextFile FileName, True: Set f = fso.GetFile(FileName): Set stream = f.OpenAsTextStream(2, 0): For i = 1 To plen Step 3: bit = Mid(data, i, 2): stream.write Chr(CLng("&h" & bit)): Next: stream.Close: IE_SaveFile_Impl = True: End Function',
+'|/script>'.replace("|","<")
+	].join("\r\n"));
+	if(typeof IE_SaveFile_Impl == "undefined") return void 0;
+	var IE_GetPath = (function() {
+		var DDP1 = "";
+		try { DDP1 = IE_GetProfileAndPath("{374DE290-123F-4565-9164-39C4925E467B}"); } catch(e) { try { DDP1 = IE_GetProfileAndPath("Personal"); } catch(e) { try { DDP1 = IE_GetProfileAndPath("Desktop"); } catch(e) { throw e; }}}
+		var o = DDP1.split("!");
+		DDP = o[1].replace("%USERPROFILE%", o[0]);
+		return function(path) { return DDP + "\\" + path; };
+	})();
+	function fix_data(data) {
+		var out = [];
+		var T = typeof data == "string";
+		for(var i = 0; i < data.length; ++i) out.push(("00"+(T ? data.charCodeAt(i) : data[i]).toString(16)).slice(-2));
+		var o = out.join("|");
+		return o;
+	}
+	return function(data, filename) { return IE_SaveFile_Impl(IE_GetPath(filename), fix_data(data)); };
+} catch(e) { return void 0; }})();
