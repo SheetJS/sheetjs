@@ -1,3 +1,4 @@
+var CT_VBA = "application/vnd.ms-office.vbaProject";
 function make_vba_xls(cfb/*:CFBContainer*/) {
 	var newcfb = CFB.utils.cfb_new({root:"R"});
 	cfb.FullPaths.forEach(function(p, i) {

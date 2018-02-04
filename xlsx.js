@@ -9081,6 +9081,7 @@ function write_comments_bin(data) {
 	write_record(ba, "BrtEndComments");
 	return ba.end();
 }
+var CT_VBA = "application/vnd.ms-office.vbaProject";
 function make_vba_xls(cfb) {
 	var newcfb = CFB.utils.cfb_new({root:"R"});
 	cfb.FullPaths.forEach(function(p, i) {
@@ -18665,7 +18666,7 @@ function parse_zip(zip, opts) {
 	}
 	if(opts.bookVBA) {
 		if(dir.vba.length > 0) out.vbaraw = getzipdata(zip,strip_front_slash(dir.vba[0]),true);
-		else if(dir.defaults && dir.defaults.bin === 'application/vnd.ms-office.vbaProject') out.vbaraw = getzipdata(zip,'xl/vbaProject.bin',true);
+		else if(dir.defaults && dir.defaults.bin === CT_VBA) out.vbaraw = getzipdata(zip, 'xl/vbaProject.bin',true);
 	}
 	return out;
 }
