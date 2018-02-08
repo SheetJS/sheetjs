@@ -63,6 +63,7 @@ dist: dist-deps $(TARGET) bower.json ## Prepare JS files for distribution
 	misc/strip_sourcemap.sh dist/$(LIB).core.min.js
 	uglifyjs $(DISTHDR) $(REQS) $(ADDONS) dist/$(TARGET) $(AUXTARGETS) $(UGLIFYOPTS) -o dist/$(LIB).full.min.js --source-map dist/$(LIB).full.min.map --preamble "$$(head -n 1 bits/00_header.js)"
 	misc/strip_sourcemap.sh dist/$(LIB).full.min.js
+	cat <(head -n 1 bits/00_header.js) shim.js $(DISTHDR) $(REQS) dist/$(TARGET) > dist/$(LIB).extendscript.js
 
 .PHONY: dist-deps
 dist-deps: ## Copy dependencies for distribution
@@ -73,7 +74,7 @@ dist-deps: ## Copy dependencies for distribution
 .PHONY: aux
 aux: $(AUXTARGETS)
 
-BYTEFILE=dist/xlsx.min.js dist/xlsx.{core,full}.min.js
+BYTEFILE=dist/xlsx.min.js dist/xlsx.{core,full}.min.js dist/xlsx.extendscript.js
 .PHONY: bytes
 bytes: ## Display minified and gzipped file sizes
 	for i in $(BYTEFILE); do printj "%-30s %7d %10d" $$i $$(wc -c < $$i) $$(gzip --best --stdout $$i | wc -c); done

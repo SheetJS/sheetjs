@@ -42,7 +42,7 @@ function write_BrtRowHdr(R/*:number*/, range, ws) {
 
 	var caddr = {r:R, c:0};
 	for(var i = 0; i < 16; ++i) {
-		if(range.s.c > ((i+1) << 10) || range.e.c < (i << 10)) continue;
+		if((range.s.c > ((i+1) << 10)) || (range.e.c < (i << 10))) continue;
 		var first = -1, last = -1;
 		for(var j = (i<<10); j < ((i+1)<<10); ++j) {
 			caddr.c = j;
@@ -64,7 +64,7 @@ function write_BrtRowHdr(R/*:number*/, range, ws) {
 }
 function write_row_header(ba, ws, range, R) {
 	var o = write_BrtRowHdr(R, range, ws);
-	if(o.length > 17 || (ws['!rows']||[])[R]) write_record(ba, 'BrtRowHdr', o);
+	if((o.length > 17) || (ws['!rows']||[])[R]) write_record(ba, 'BrtRowHdr', o);
 }
 
 /* [MS-XLSB] 2.4.812 BrtWsDim */

@@ -85,6 +85,7 @@ function writeSync(wb/*:Workbook*/, opts/*:?WriteOpts*/) {
 		case 'xlml': return write_string_type(write_xlml(wb, o), o);
 		case 'slk':
 		case 'sylk': return write_string_type(write_slk_str(wb, o), o);
+		case 'htm':
 		case 'html': return write_string_type(write_htm_str(wb, o), o);
 		case 'txt': return write_stxt_type(write_txt_str(wb, o), o);
 		case 'csv': return write_string_type(write_csv_str(wb, o), o, "\ufeff");

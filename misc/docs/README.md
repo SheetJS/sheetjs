@@ -299,6 +299,20 @@ var workbook = XLSX.readFile('test.xlsx');
 
 
 
+`readFile` wraps the `File` logic in Photoshop and other ExtendScript targets.
+The specified path should be an absolute path:
+
+```js
+#include "xlsx.extendscript.js"
+/* Read test.xlsx from the Documents folder */
+var workbook = XLSX.readFile(Folder.myDocuments + '/' + 'test.xlsx');
+/* DO SOMETHING WITH workbook HERE */
+```
+
+The [`extendscript` demo](demos/extendscript/) includes a more complex example.
+
+
+
 The `table_to_book` and `table_to_sheet` utility functions take a DOM TABLE
 element and iterate through the child nodes.
 
@@ -551,6 +565,20 @@ if(typeof require !== 'undefined') XLSX = require('xlsx');
 XLSX.writeFile(workbook, 'out.xlsb');
 /* at this point, out.xlsb is a file that you can distribute */
 ```
+
+
+
+`writeFile` wraps the `File` logic in Photoshop and other ExtendScript targets.
+The specified path should be an absolute path:
+
+```js
+#include "xlsx.extendscript.js"
+/* output format determined by filename */
+XLSX.writeFile(workbook, 'out.xlsx');
+/* at this point, out.xlsx is a file that you can distribute */
+```
+
+The [`extendscript` demo](demos/extendscript/) includes a more complex example.
 
 
 

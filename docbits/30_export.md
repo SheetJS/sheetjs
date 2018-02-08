@@ -20,6 +20,23 @@ XLSX.writeFile(workbook, 'out.xlsb');
 </details>
 
 <details>
+  <summary><b>Photoshop ExtendScript write a file</b> (click to show)</summary>
+
+`writeFile` wraps the `File` logic in Photoshop and other ExtendScript targets.
+The specified path should be an absolute path:
+
+```js
+#include "xlsx.extendscript.js"
+/* output format determined by filename */
+XLSX.writeFile(workbook, 'out.xlsx');
+/* at this point, out.xlsx is a file that you can distribute */
+```
+
+The [`extendscript` demo](demos/extendscript/) includes a more complex example.
+
+</details>
+
+<details>
   <summary><b>Browser add TABLE element to page</b> (click to show)</summary>
 
 The `sheet_to_html` utility function generates HTML code that can be added to

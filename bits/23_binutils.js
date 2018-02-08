@@ -3,25 +3,25 @@ function read_double_le(b/*:RawBytes|CFBlob*/, idx/*:number*/)/*:number*/ {
 	var e = ((b[idx + 7] & 0x7f) << 4) + ((b[idx + 6] >>> 4) & 0x0f);
 	var m = (b[idx+6]&0x0f);
 	for(var i = 5; i >= 0; --i) m = m * 256 + b[idx + i];
-	if(e == 0x7ff) return m == 0 ? s * Infinity : NaN;
+	if(e == 0x7ff) return m == 0 ? (s * Infinity) : NaN;
 	if(e == 0) e = -1022;
 	else { e -= 1023; m += Math.pow(2,52); }
 	return s * Math.pow(2, e - 52) * m;
 }
 
 function write_double_le(b/*:RawBytes|CFBlob*/, v/*:number*/, idx/*:number*/) {
-	var bs = ((v < 0 || 1/v == -Infinity) ? 1 : 0) << 7, e = 0, m = 0;
-	var av = bs ? -v : v;
+	var bs = ((((v < 0) || (1/v == -Infinity)) ? 1 : 0) << 7), e = 0, m = 0;
+	var av = bs ? (-v) : v;
 	if(!isFinite(av)) { e = 0x7ff; m = isNaN(v) ? 0x6969 : 0; }
 	else if(av == 0) e = m = 0;
 	else {
 		e = Math.floor(Math.log(av) / Math.LN2);
 		m = av * Math.pow(2, 52 - e);
-		if(e <= -1023 && (!isFinite(m) || m < Math.pow(2,52))) { e = -1022; }
+		if((e <= -1023) && (!isFinite(m) || (m < Math.pow(2,52)))) { e = -1022; }
 		else { m -= Math.pow(2,52); e+=1023; }
 	}
 	for(var i = 0; i <= 5; ++i, m/=256) b[idx + i] = m & 0xff;
-	b[idx + 6] = ((e & 0x0f) << 4) | m & 0xf;
+	b[idx + 6] = ((e & 0x0f) << 4) | (m & 0xf);
 	b[idx + 7] = (e >> 4) | bs;
 }
 
@@ -73,8 +73,8 @@ if(typeof cptable !== 'undefined') {
 }
 
 var __readUInt8 = function(b/*:RawBytes|CFBlob*/, idx/*:number*/)/*:number*/ { return b[idx]; };
-var __readUInt16LE = function(b/*:RawBytes|CFBlob*/, idx/*:number*/)/*:number*/ { return b[idx+1]*(1<<8)+b[idx]; };
-var __readInt16LE = function(b/*:RawBytes|CFBlob*/, idx/*:number*/)/*:number*/ { var u = b[idx+1]*(1<<8)+b[idx]; return (u < 0x8000) ? u : (0xffff - u + 1) * -1; };
+var __readUInt16LE = function(b/*:RawBytes|CFBlob*/, idx/*:number*/)/*:number*/ { return (b[idx+1]*(1<<8))+b[idx]; };
+var __readInt16LE = function(b/*:RawBytes|CFBlob*/, idx/*:number*/)/*:number*/ { var u = (b[idx+1]*(1<<8))+b[idx]; return (u < 0x8000) ? u : ((0xffff - u + 1) * -1); };
 var __readUInt32LE = function(b/*:RawBytes|CFBlob*/, idx/*:number*/)/*:number*/ { return b[idx+3]*(1<<24)+(b[idx+2]<<16)+(b[idx+1]<<8)+b[idx]; };
 var __readInt32LE = function(b/*:RawBytes|CFBlob*/, idx/*:number*/)/*:number*/ { return (b[idx+3]<<24)|(b[idx+2]<<16)|(b[idx+1]<<8)|b[idx]; };
 var __readInt32BE = function(b/*:RawBytes|CFBlob*/, idx/*:number*/)/*:number*/ { return (b[idx]<<24)|(b[idx+1]<<16)|(b[idx+2]<<8)|b[idx+3]; };
@@ -85,7 +85,7 @@ function ReadShift(size/*:number*/, t/*:?string*/)/*:number|string*/ {
 		case 'dbcs':
 			loc = this.l;
 			if(has_buf && Buffer.isBuffer(this)) o = this.slice(this.l, this.l+2*size).toString("utf16le");
-			else for(i = 0; i != size; ++i) { o+=String.fromCharCode(__readUInt16LE(this, loc)); loc+=2; }
+			else for(i = 0; i < size; ++i) { o+=String.fromCharCode(__readUInt16LE(this, loc)); loc+=2; }
 			size *= 2;
 			break;
 
@@ -116,7 +116,7 @@ function ReadShift(size/*:number*/, t/*:?string*/)/*:number|string*/ {
 
 		/* sbcs and dbcs support continue records in the SST way TODO codepages */
 		case 'dbcs-cont': o = ""; loc = this.l;
-			for(i = 0; i != size; ++i) {
+			for(i = 0; i < size; ++i) {
 				if(this.lens && this.lens.indexOf(loc) !== -1) {
 					w = __readUInt8(this, loc);
 					this.l = loc + 1;
@@ -150,7 +150,7 @@ function ReadShift(size/*:number*/, t/*:?string*/)/*:number|string*/ {
 		case 1: oI = __readUInt8(this, this.l); this.l++; return oI;
 		case 2: oI = (t === 'i' ? __readInt16LE : __readUInt16LE)(this, this.l); this.l += 2; return oI;
 		case 4: case -4:
-			if(t === 'i' || (this[this.l+3] & 0x80)===0) { oI = (size > 0 ? __readInt32LE : __readInt32BE)(this, this.l); this.l += 4; return oI; }
+			if(t === 'i' || ((this[this.l+3] & 0x80)===0)) { oI = ((size > 0) ? __readInt32LE : __readInt32BE)(this, this.l); this.l += 4; return oI; }
 			else { oR = __readUInt32LE(this, this.l); this.l += 4; } return oR;
 		case 8: case -8:
 			if(t === 'f') {
@@ -179,20 +179,20 @@ function WriteShift(t/*:number*/, val/*:string|number*/, f/*:?string*/)/*:any*/ 
 		/*:: if(typeof val !== 'string') throw new Error("unreachable"); */
 		val = val.replace(/[^\x00-\x7F]/g, "_");
 		/*:: if(typeof val !== 'string') throw new Error("unreachable"); */
-		for(i = 0; i != val.length; ++i) this[this.l + i] = val.charCodeAt(i) & 0xFF;
+		for(i = 0; i != val.length; ++i) this[this.l + i] = (val.charCodeAt(i) & 0xFF);
 		size = val.length;
 	} else if(f === 'hex') {
 		for(; i < t; ++i) {
 			/*:: if(typeof val !== "string") throw new Error("unreachable"); */
-			this[this.l++] = parseInt(val.slice(2*i, 2*i+2), 16)||0;
+			this[this.l++] = (parseInt(val.slice(2*i, 2*i+2), 16)||0);
 		} return this;
 	} else if(f === 'utf16le') {
 			/*:: if(typeof val !== "string") throw new Error("unreachable"); */
 			var end/*:number*/ = this.l + t;
 			for(i = 0; i < Math.min(val.length, t); ++i) {
 				var cc = val.charCodeAt(i);
-				this[this.l++] = cc & 0xff;
-				this[this.l++] = cc >> 8;
+				this[this.l++] = (cc & 0xff);
+				this[this.l++] = (cc >> 8);
 			}
 			while(this.l < end) this[this.l++] = 0;
 			return this;

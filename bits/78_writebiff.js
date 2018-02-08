@@ -84,6 +84,19 @@ function write_biff2_buf(wb/*:Workbook*/, opts/*:WriteOpts*/) {
 	return ba.end();
 }
 
+function write_FMTS_biff8(ba, NF/*:?SSFTable*/) {
+	if(!NF) return;
+	[[5,8],[23,26],[41,44],[/*63*/50,/*66],[164,*/392]].forEach(function(r) {
+		/*:: if(!NF) return; */
+		for(var i = r[0]; i <= r[1]; ++i) if(NF[i] != null) write_biff_rec(ba, "Format", write_Format(i, NF[i]));
+	});
+}
+function write_CELLXFS_biff8(ba, data) {
+	data.forEach(function(c) {
+		write_biff_rec(ba, "XF", write_XF(c,0));
+	});
+}
+
 function write_ws_biff8_hlinks(ba/*:BufArray*/, ws) {
 	for(var R=0; R<ws['!links'].length; ++R) {
 		var HL = ws['!links'][R];
@@ -94,19 +107,20 @@ function write_ws_biff8_hlinks(ba/*:BufArray*/, ws) {
 }
 
 function write_ws_biff8_cell(ba/*:BufArray*/, cell/*:Cell*/, R/*:number*/, C/*:number*/, opts) {
+	var os = get_cell_style(opts.cellXfs, cell, opts);
 	if(cell.v != null) switch(cell.t) {
 		case 'd': case 'n':
 			var v = cell.t == 'd' ? datenum(parseDate(cell.v)) : cell.v;
 			/* TODO: emit RK as appropriate */
-			write_biff_rec(ba, "Number", write_Number(R, C, v, opts));
+			write_biff_rec(ba, "Number", write_Number(R, C, v, os, opts));
 			return;
-		case 'b': case 'e': write_biff_rec(ba, "BoolErr", write_BoolErr(R, C, cell.v, opts, cell.t)); return;
+		case 'b': case 'e': write_biff_rec(ba, "BoolErr", write_BoolErr(R, C, cell.v, os, opts, cell.t)); return;
 		/* TODO: codepage, sst */
 		case 's': case 'str':
-			write_biff_rec(ba, "Label", write_Label(R, C, cell.v, opts));
+			write_biff_rec(ba, "Label", write_Label(R, C, cell.v, os, opts));
 			return;
 	}
-	write_biff_rec(ba, "Blank", write_XLSCell(R, C));
+	write_biff_rec(ba, "Blank", write_XLSCell(R, C, os));
 }
 
 /* [MS-XLS] 2.1.7.20.5 */
@@ -201,6 +215,9 @@ function write_biff8_global(wb/*:Workbook*/, bufs, opts/*:WriteOpts*/) {
 	if(b8) write_biff_rec(A, "RefreshAll", writebool(false));
 	write_biff_rec(A, "BookBool", writeuint16(0));
 	/* ... */
+	if(b8) write_FMTS_biff8(A, wb.SSF);
+	if(b8) write_CELLXFS_biff8(A, opts.cellXfs);
+	/* ... */
 	if(b8) write_biff_rec(A, "UsesELFs", writebool(false));
 	var a = A.end();
 
@@ -233,6 +250,20 @@ function write_biff8_global(wb/*:Workbook*/, bufs, opts/*:WriteOpts*/) {
 function write_biff8_buf(wb/*:Workbook*/, opts/*:WriteOpts*/) {
 	var o = opts || {};
 	var bufs = [];
+
+	if(wb && !wb.SSF) {
+		wb.SSF = SSF.get_table();
+	}
+	if(wb && wb.SSF) {
+		make_ssf(SSF); SSF.load_table(wb.SSF);
+		// $FlowIgnore
+		o.revssf = evert_num(wb.SSF); o.revssf[wb.SSF[65535]] = 0;
+		o.ssf = wb.SSF;
+	}
+	o.cellXfs = [];
+	o.Strings = /*::((*/[]/*:: :any):SST)*/; o.Strings.Count = 0; o.Strings.Unique = 0;
+	get_cell_style(o.cellXfs, {}, {revssf:{"General":0}});
+
 	for(var i = 0; i < wb.SheetNames.length; ++i) bufs[bufs.length] = write_ws_biff8(i, o, wb);
 	bufs.unshift(write_biff8_global(wb, bufs, o));
 	return __toBuffer([bufs]);

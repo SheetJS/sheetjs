@@ -249,7 +249,8 @@ function write_BoundSheet8(data, opts) {
 	o.write_shift(1, data.name.length);
 	if(opts.biff >= 8) o.write_shift(1, 1);
 	o.write_shift(w * data.name.length, data.name, opts.biff < 8 ? 'sbcs' : 'utf16le');
-	return o.slice(0, o.l);
+	var out = o.slice(0, o.l);
+	out.l = o.l; return out;
 }
 
 /* 2.4.265 TODO */
@@ -393,10 +394,10 @@ function parse_Label(blob, length, opts) {
 	cell.val = str;
 	return cell;
 }
-function write_Label(R/*:number*/, C/*:number*/, v/*:string*/, opts) {
+function write_Label(R/*:number*/, C/*:number*/, v/*:string*/, os/*:number*/, opts) {
 	var b8 = !opts || opts.biff == 8;
 	var o = new_buf(6 + 2 + (+b8) + (1 + b8) * v.length);
-	write_XLSCell(R, C, 0, o);
+	write_XLSCell(R, C, os, o);
 	o.write_shift(2, v.length);
 	if(b8) o.write_shift(1, 1);
 	o.write_shift((1 + b8) * v.length, v, b8 ? 'utf16le' : 'sbcs');
@@ -409,6 +410,14 @@ function parse_Format(blob, length, opts) {
 	var numFmtId = blob.read_shift(2);
 	var fmtstr = parse_XLUnicodeString2(blob, 0, opts);
 	return [numFmtId, fmtstr];
+}
+function write_Format(i/*:number*/, f/*:string*/, o) {
+	if(!o) o = new_buf(6 + 4 * f.length);
+	o.write_shift(2, i);
+	write_XLUnicodeString(f, null, o);
+	var out = (o.length > o.l) ? o.slice(0, o.l) : o;
+	if(o.l == null) o.l = o.length;
+	return out;
 }
 var parse_BIFF2Format = parse_XLUnicodeString2;
 
@@ -515,6 +524,17 @@ function parse_XF(blob, length, opts) {
 	o.data = parse_CellStyleXF(blob, length, o.fStyle, opts);
 	return o;
 }
+function write_XF(data, ixfeP, o) {
+	if(!o) o = new_buf(20);
+	o.write_shift(2, 0);
+	o.write_shift(2, data.numFmtId||0);
+	o.write_shift(2, 0);
+	o.write_shift(4, 0);
+	o.write_shift(4, 0);
+	o.write_shift(4, 0);
+	o.write_shift(2, 0);
+	return o;
+}
 
 /* 2.4.134 */
 function parse_Guts(blob) {
@@ -542,9 +562,9 @@ function parse_BoolErr(blob, length, opts) {
 	cell.t = (val === true || val === false) ? 'b' : 'e';
 	return cell;
 }
-function write_BoolErr(R/*:number*/, C/*:number*/, v, opts, t/*:string*/) {
+function write_BoolErr(R/*:number*/, C/*:number*/, v, os/*:number*/, opts, t/*:string*/) {
 	var o = new_buf(8);
-	write_XLSCell(R, C, 0, o);
+	write_XLSCell(R, C, os, o);
 	write_Bes(v, t, o);
 	return o;
 }
@@ -556,9 +576,9 @@ function parse_Number(blob) {
 	cell.val = xnum;
 	return cell;
 }
-function write_Number(R/*:number*/, C/*:number*/, v/*::, opts*/) {
+function write_Number(R/*:number*/, C/*:number*/, v, os/*:: :number, opts*/) {
 	var o = new_buf(14);
-	write_XLSCell(R, C, 0, o);
+	write_XLSCell(R, C, os, o);
 	write_Xnum(v, o);
 	return o;
 }

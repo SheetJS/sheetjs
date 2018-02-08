@@ -460,7 +460,7 @@ var SYLK = (function() {
 			for(var C = r.s.c; C <= r.e.c; ++C) {
 				var coord = encode_cell({r:R,c:C});
 				cell = dense ? (ws[R]||[])[C]: ws[coord];
-				if(!cell || cell.v == null && (!cell.f || cell.F)) continue;
+				if(!cell || (cell.v == null && (!cell.f || cell.F))) continue;
 				o.push(write_ws_cell_sylk(cell, ws, R, C, opts));
 			}
 		}

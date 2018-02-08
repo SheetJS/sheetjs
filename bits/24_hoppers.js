@@ -31,13 +31,13 @@ function buf_array()/*:BufArray*/ {
 
 	var endbuf = function ba_endbuf() {
 		if(!curbuf) return;
-		if(curbuf.length > curbuf.l) curbuf = curbuf.slice(0, curbuf.l);
+		if(curbuf.length > curbuf.l) { curbuf = curbuf.slice(0, curbuf.l); curbuf.l = curbuf.length; }
 		if(curbuf.length > 0) bufs.push(curbuf);
 		curbuf = null;
 	};
 
 	var next = function ba_next(sz/*:number*/)/*:Block*/ {
-		if(curbuf && sz < curbuf.length - curbuf.l) return curbuf;
+		if(curbuf && (sz < (curbuf.length - curbuf.l))) return curbuf;
 		endbuf();
 		return (curbuf = newblk(Math.max(sz+1, blksz)));
 	};
@@ -47,7 +47,7 @@ function buf_array()/*:BufArray*/ {
 		return __toBuffer([bufs]);
 	};
 
-	var push = function ba_push(buf) { endbuf(); curbuf = buf; next(blksz); };
+	var push = function ba_push(buf) { endbuf(); curbuf = buf; if(curbuf.l == null) curbuf.l = curbuf.length; next(blksz); };
 
 	return ({ next:next, push:push, end:end, _bufs:bufs }/*:any*/);
 }

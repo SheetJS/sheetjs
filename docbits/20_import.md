@@ -18,6 +18,23 @@ var workbook = XLSX.readFile('test.xlsx');
 </details>
 
 <details>
+  <summary><b>Photoshop ExtendScript read a file</b> (click to show)</summary>
+
+`readFile` wraps the `File` logic in Photoshop and other ExtendScript targets.
+The specified path should be an absolute path:
+
+```js
+#include "xlsx.extendscript.js"
+/* Read test.xlsx from the Documents folder */
+var workbook = XLSX.readFile(Folder.myDocuments + '/' + 'test.xlsx');
+/* DO SOMETHING WITH workbook HERE */
+```
+
+The [`extendscript` demo](demos/extendscript/) includes a more complex example.
+
+</details>
+
+<details>
   <summary><b>Browser read TABLE element from page</b> (click to show)</summary>
 
 The `table_to_book` and `table_to_sheet` utility functions take a DOM TABLE

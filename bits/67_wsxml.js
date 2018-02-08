@@ -429,7 +429,7 @@ function write_ws_xml_data(ws/*:Worksheet*/, opts, idx/*:number*/, wb/*:Workbook
 			if(_cell === undefined) continue;
 			if((cell = write_ws_xml_cell(_cell, ref, ws, opts, idx, wb)) != null) r.push(cell);
 		}
-		if(r.length > 0 || rows && rows[R]) {
+		if(r.length > 0 || (rows && rows[R])) {
 			params = ({r:rr}/*:any*/);
 			if(rows && rows[R]) {
 				row = rows[R];

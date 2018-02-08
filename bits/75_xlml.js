@@ -1013,7 +1013,7 @@ function write_ws_xlml_comment(comments/*:Array<any>*/)/*:string*/ {
 	}).join("");
 }
 function write_ws_xlml_cell(cell, ref/*:string*/, ws, opts, idx/*:number*/, wb, addr)/*:string*/{
-	if(!cell || cell.v == undefined && cell.f == undefined) return "";
+	if(!cell || (cell.v == undefined && cell.f == undefined)) return "";
 
 	var attr = {};
 	if(cell.f) attr["ss:Formula"] = "=" + escapexml(a1_to_rc(cell.f, addr));

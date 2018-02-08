@@ -8,7 +8,9 @@ function write_BrtFmt(i/*:number*/, f/*:string*/, o) {
 	if(!o) o = new_buf(6 + 4 * f.length);
 	o.write_shift(2, i);
 	write_XLWideString(f, o);
-	return o.length > o.l ? o.slice(0, o.l) : o;
+	var out = (o.length > o.l) ? o.slice(0, o.l) : o;
+	if(o.l == null) o.l = o.length;
+	return out;
 }
 
 /* [MS-XLSB] 2.4.653 BrtFont TODO */

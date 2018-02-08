@@ -9,7 +9,7 @@ function blobify(data) {
 }
 /* write or download file */
 function write_dl(fname/*:string*/, payload/*:any*/, enc/*:?string*/) {
-	/*global IE_SaveFile, Blob, navigator, saveAs, URL, document */
+	/*global IE_SaveFile, Blob, navigator, saveAs, URL, document, File */
 	if(typeof _fs !== 'undefined' && _fs.writeFileSync) return enc ? _fs.writeFileSync(fname, payload, enc) : _fs.writeFileSync(fname, payload);
 	var data = (enc == "utf8") ? utf8write(payload) : payload;
 	/*:: declare var IE_SaveFile: any; */
@@ -32,6 +32,25 @@ function write_dl(fname/*:string*/, payload/*:any*/, enc/*:?string*/) {
 			}
 		}
 	}
-	throw new Error("cannot initiate download");
+	// $FlowIgnore
+	if(typeof $ !== 'undefined' && typeof File !== 'undefined' && typeof Folder !== 'undefined') try { // extendscript
+		// $FlowIgnore
+		var out = File(fname); out.open("w"); out.encoding = "binary";
+		if(Array.isArray(payload)) payload = a2s(payload);
+		out.write(payload); out.close(); return payload;
+	} catch(e) { if(!e.message || !e.message.match(/onstruct/)) throw e; }
+	throw new Error("cannot save file " + fname);
 }
 
+/* read binary data from file */
+function read_binary(path/*:string*/) {
+	if(typeof _fs !== 'undefined') return _fs.readFileSync(path);
+	// $FlowIgnore
+	if(typeof $ !== 'undefined' && typeof File !== 'undefined' && typeof Folder !== 'undefined') try { // extendscript
+		// $FlowIgnore
+		var infile = File(path); infile.open("r"); infile.encoding = "binary";
+		var data = infile.read(); infile.close();
+		return data;
+	} catch(e) { if(!e.message || !e.message.match(/onstruct/)) throw e; }
+	throw new Error("Cannot access file " + path);
+}
