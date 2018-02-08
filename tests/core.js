@@ -591,7 +591,10 @@ describe('parse options', function() {
 			var wb = X.read(fs.readFileSync(p), {type:TYPE}); assert(typeof wb.vbaraw === 'undefined');
 		}); });
 		it('bookVBA should generate vbaraw', function() { NFVBA.forEach(function(p) {
-			var wb = X.read(fs.readFileSync(p),{type:TYPE, bookVBA:true}); assert(wb.vbaraw);
+			var wb = X.read(fs.readFileSync(p),{type: TYPE, bookVBA: true});
+			assert(wb.vbaraw);
+			var cfb = X.CFB.read(wb.vbaraw, {type: 'array'});
+			assert(X.CFB.find(cfb, '/VBA/ThisWorkbook'));
 		}); });
 	});
 });
