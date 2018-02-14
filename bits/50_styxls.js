@@ -41,17 +41,17 @@ function parse_XFExtGradient(blob, length) {
 	return parsenoop(blob, length);
 }
 
-/* 2.5.108 */
+/* [MS-XLS] 2.5.108 */
 function parse_ExtProp(blob/*::, length*/)/*:Array<any>*/ {
 	var extType = blob.read_shift(2);
-	var cb = blob.read_shift(2);
+	var cb = blob.read_shift(2) - 4;
 	var o = [extType];
 	switch(extType) {
 		case 0x04: case 0x05: case 0x07: case 0x08:
 		case 0x09: case 0x0A: case 0x0B: case 0x0D:
 			o[1] = parse_FullColorExt(blob, cb); break;
 		case 0x06: o[1] = parse_XFExtGradient(blob, cb); break;
-		case 0x0E: case 0x0F: o[1] = blob.read_shift(cb === 5 ? 1 : 2); break;
+		case 0x0E: case 0x0F: o[1] = blob.read_shift(cb === 1 ? 1 : 2); break;
 		default: throw new Error("Unrecognized ExtProp type: " + extType + " " + cb);
 	}
 	return o;

@@ -17,7 +17,7 @@ public class JSHelper {
 		byte[] b = Files.readAllBytes(Paths.get(file));
 		System.out.println(b.length);
 		StringBuilder sb = new StringBuilder();
-		for(int i = 0; i < b.length; ++i) sb.append(Character.toString((char)b[i]));
+		for(int i = 0; i < b.length; ++i) sb.append(Character.toString((char)(b[i] < 0 ? b[i] + 256 : b[i])));
 		return sb.toString();
 	}
 

@@ -1,4 +1,4 @@
-/* [MS-XLSB] 2.4.651 BrtFmt */
+/* [MS-XLSB] 2.4.657 BrtFmt */
 function parse_BrtFmt(data, length/*:number*/) {
 	var numFmtId = data.read_shift(2);
 	var stFmtCode = parse_XLWideString(data,length-2);
@@ -13,7 +13,7 @@ function write_BrtFmt(i/*:number*/, f/*:string*/, o) {
 	return out;
 }
 
-/* [MS-XLSB] 2.4.653 BrtFont TODO */
+/* [MS-XLSB] 2.4.659 BrtFont TODO */
 function parse_BrtFont(data, length/*:number*/, opts) {
 	var out = ({}/*:any*/);
 
@@ -80,7 +80,7 @@ function write_BrtFont(font, o) {
 	return o.length > o.l ? o.slice(0, o.l) : o;
 }
 
-/* [MS-XLSB] 2.4.644 BrtFill */
+/* [MS-XLSB] 2.4.650 BrtFill */
 var XLSBFillPTNames = [
 	"none",
 	"solid",
@@ -134,7 +134,7 @@ function write_BrtFill(fill, o) {
 	return o.length > o.l ? o.slice(0, o.l) : o;
 }
 
-/* [MS-XLSB] 2.4.816 BrtXF */
+/* [MS-XLSB] 2.4.824 BrtXF */
 function parse_BrtXF(data, length/*:number*/) {
 	var tgt = data.l + length;
 	var ixfeParent = data.read_shift(2);
@@ -167,7 +167,7 @@ function write_Blxf(data, o) {
 	o.write_shift(4, 0); /* color */
 	return o;
 }
-/* [MS-XLSB] 2.4.299 BrtBorder TODO */
+/* [MS-XLSB] 2.4.302 BrtBorder TODO */
 var parse_BrtBorder = parsenoop;
 function write_BrtBorder(border, o) {
 	if(!o) o = new_buf(51);
@@ -180,7 +180,7 @@ function write_BrtBorder(border, o) {
 	return o.length > o.l ? o.slice(0, o.l) : o;
 }
 
-/* [MS-XLSB] 2.4.755 BrtStyle TODO */
+/* [MS-XLSB] 2.4.763 BrtStyle TODO */
 function write_BrtStyle(style, o) {
 	if(!o) o = new_buf(12+4*10);
 	o.write_shift(4, style.xfId);
@@ -191,7 +191,7 @@ function write_BrtStyle(style, o) {
 	return o.length > o.l ? o.slice(0, o.l) : o;
 }
 
-/* [MS-XLSB] 2.4.269 BrtBeginTableStyles */
+/* [MS-XLSB] 2.4.272 BrtBeginTableStyles */
 function write_BrtBeginTableStyles(cnt, defTableStyle, defPivotStyle) {
 	var o = new_buf(4+256*2*4);
 	o.write_shift(4, cnt);

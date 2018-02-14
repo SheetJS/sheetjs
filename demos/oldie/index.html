@@ -3,7 +3,7 @@
 <!-- vim: set ts=2: -->
 <html>
 <head>
-<title>SheetJS JS-XLSX In-Browser HTML Table Export Demo</title>
+<title>SheetJS JS-XLSX In-Browser HTML Table Demo</title>
 <meta charset="utf-8" />
 <style>
 .xport, .btn {
@@ -36,11 +36,14 @@ function doit(type, fn, dl) {
 }
 </script>
 <pre>
-<h3><a href="//sheetjs.com/">SheetJS</a> JS-XLSX In-Browser HTML Table Export Demo</h3>
+<h3><a href="//sheetjs.com/">SheetJS</a> JS-XLSX In-Browser HTML Table Demo</h3>
 <b>Compatibility notes:</b>
 - Editable table leverages the HTML5 contenteditable feature, supported in most browsers.
-- IE6-9 requires ActiveX or Flash to download files.
+- IE6-9 requires ActiveX to upload files and ActiveX or Flash to download files.
 - iOS Safari file download may not work. <a href="http://git.io/ios_save">This is a known issue</a>.
+
+<b>Update Spreadsheet:</b> (submit file to update table; file parsed in browser)
+<input type="file" id="file" />
 
 <b>Editable Data Table:</b> (click a cell to edit it)
 </pre>
@@ -83,6 +86,34 @@ document.getElementById("container").innerHTML = html_string;
 </table>
 <pre><b>Powered by the <a href="//sheetjs.com/opensource">community version of js-xlsx</a></b></pre>
 <script type="text/javascript">
+var input_dom_element = document.getElementById("file");
+function process_wb(wb) {
+	var ws = wb.Sheets[wb.SheetNames[0]];
+	var html_string = XLSX.utils.sheet_to_html(ws, { id: "data-table", editable: true });
+	document.getElementById("container").innerHTML = html_string;
+}
+function handle_ie() {
+	var path = input_dom_element.value;
+	var data = IE_LoadFile(path);
+	var wb = XLSX.read(data, {type:'binary'});
+	process_wb(wb);
+}
+function handle_fr(e) {
+	var files = e.target.files, f = files[0];
+	var reader = new FileReader();
+	var rABS = !!reader.readAsBinaryString;
+	reader.onload = function(e) {
+		var data = e.target.result;
+		if(!rABS) data = new Uint8Array(data);
+		var wb = XLSX.read(data, {type: rABS ? 'binary' : 'array'});
+		process_wb(wb);
+	};
+	if(rABS) reader.readAsBinaryString(f); else reader.readAsArrayBuffer(f);
+}
+var handler = typeof IE_LoadFile !== 'undefined' ? handle_ie : handle_fr;
+if(input_dom_element.attachEvent) input_dom_element.attachEvent('onchange', handler);
+else input_dom_element.addEventListener('change', handler, false);
+
 function tableau(pid, iid, fmt, ofile) {
 	if(typeof Downloadify !== 'undefined') Downloadify.create(pid,{
 			swf: 'downloadify.swf',

@@ -631,8 +631,10 @@ var XLSBRecordEnum = {
 	/*::[*/0x0422/*::]*/: { n:"BrtBeginSparklineGroups" },
 	/*::[*/0x0423/*::]*/: { n:"BrtEndSparklineGroups" },
 	/*::[*/0x0425/*::]*/: { n:"BrtSXVD14" },
-	/*::[*/0x0426/*::]*/: { n:"BrtBeginSxview14" },
-	/*::[*/0x0427/*::]*/: { n:"BrtEndSxview14" },
+	/*::[*/0x0426/*::]*/: { n:"BrtBeginSXView14" },
+	/*::[*/0x0427/*::]*/: { n:"BrtEndSXView14" },
+	/*::[*/0x0428/*::]*/: { n:"BrtBeginSXView16" },
+	/*::[*/0x0429/*::]*/: { n:"BrtEndSXView16" },
 	/*::[*/0x042A/*::]*/: { n:"BrtBeginPCD14" },
 	/*::[*/0x042B/*::]*/: { n:"BrtEndPCD14" },
 	/*::[*/0x042C/*::]*/: { n:"BrtBeginExtConn14" },
@@ -819,6 +821,12 @@ var XLSBRecordEnum = {
 	/*::[*/0x0856/*::]*/: { n:"BrtFieldListActiveItem" },
 	/*::[*/0x0857/*::]*/: { n:"BrtPivotCacheIdVersion" },
 	/*::[*/0x0858/*::]*/: { n:"BrtSXDI15" },
+	/*::[*/0x0859/*::]*/: { n:"BrtBeginModelTimeGroupings" },
+	/*::[*/0x085A/*::]*/: { n:"BrtEndModelTimeGroupings" },
+	/*::[*/0x085B/*::]*/: { n:"BrtBeginModelTimeGrouping" },
+	/*::[*/0x085C/*::]*/: { n:"BrtEndModelTimeGrouping" },
+	/*::[*/0x085D/*::]*/: { n:"BrtModelTimeGroupingCalcCol" },
+	/*::[*/0x0C01/*::]*/: { n:"BrtRevisionPtr" },
 	/*::[*/0xFFFF/*::]*/: { n:"" }
 };
 

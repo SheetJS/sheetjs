@@ -837,15 +837,15 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 function parse_props(cfb/*:CFBContainer*/, props, o) {
 	/* [MS-OSHARED] 2.3.3.2.2 Document Summary Information Property Set */
 	var DSI = CFB.find(cfb, '!DocumentSummaryInformation');
-	if(DSI) try {
-		var DocSummary = parse_PropertySetStream(DSI, DocSummaryPIDDSI);
+	if(DSI && DSI.size > 0) try {
+		var DocSummary = parse_PropertySetStream(DSI, DocSummaryPIDDSI, "02d5cdd59c2e1b10939708002b2cf9ae");
 		for(var d in DocSummary) props[d] = DocSummary[d];
 	} catch(e) {if(o.WTF) throw e;/* empty */}
 
 	/* [MS-OSHARED] 2.3.3.2.1 Summary Information Property Set*/
 	var SI = CFB.find(cfb, '!SummaryInformation');
-	if(SI) try {
-		var Summary = parse_PropertySetStream(SI, SummaryPIDSI);
+	if(SI && SI.size > 0) try {
+		var Summary = parse_PropertySetStream(SI, SummaryPIDSI, "e0859ff2f94f6810ab9108002b27b3d9");
 		for(var s in Summary) if(props[s] == null) props[s] = Summary[s];
 	} catch(e) {if(o.WTF) throw e;/* empty */}
 }

@@ -66,7 +66,7 @@ int main(int argc, char *argv[]) {
 	DOIT("var global = (function(){ return this; }).call(null);");
 
 	/* load library */
-	res = eval_file(ctx, "xlsx.duktape.js");
+	res = eval_file(ctx, "xlsx.full.min.js");
 	if(res != 0) FAIL("library load")
 
 	/* get version string */
@@ -75,11 +75,12 @@ int main(int argc, char *argv[]) {
 	duk_pop(ctx);
 
 	/* read file */
-	res = load_file(ctx, "sheetjs.xlsx", "buf");
-	if(res != 0) FAIL("load sheetjs.xlsx")
+#define INFILE "sheetjs.xlsx"
+	res = load_file(ctx, INFILE, "buf");
+	if(res != 0) FAIL("load " INFILE)
 
 	/* parse workbook */
-	DOIT("wb = XLSX.read(buf, {type:'buffer'});");
+	DOIT("wb = XLSX.read(buf, {type:'buffer', cellNF:true});");
 	DOIT("ws = wb.Sheets[wb.SheetNames[0]]");
 
 	/* print CSV */
@@ -91,9 +92,15 @@ int main(int argc, char *argv[]) {
 	DOIT("ws['A1'].v = 3; delete ws['A1'].w;");
 
 	/* write file */
-	DOIT("newbuf = XLSX.write(wb, {type:'buffer', bookType:'xlsx'})");
-	res = save_file(ctx, "sheetjsw.xlsx", "newbuf");
-	if(res != 0) FAIL("save sheetjsw.xlsx")
+#define WRITE_TYPE(BOOKTYPE) \
+	DOIT("newbuf = (XLSX.write(wb, {type:'array', bookType:'" BOOKTYPE "'}));");\
+	res = save_file(ctx, "sheetjsw." BOOKTYPE, "newbuf");\
+	if(res != 0) FAIL("save sheetjsw." BOOKTYPE)
+
+	WRITE_TYPE("xlsb")
+	WRITE_TYPE("xlsx")
+	WRITE_TYPE("xls")
+	WRITE_TYPE("csv")
 
 	/* cleanup */
 	duk_destroy_heap(ctx);

@@ -1,8 +1,7 @@
 /* Parts enumerated in OPC spec, MS-XLSB and MS-XLSX */
 /* 12.3 Part Summary <SpreadsheetML> */
 /* 14.2 Part Summary <DrawingML> */
-/* [MS-XLSX] 2.1 Part Enumerations */
-/* [MS-XLSB] 2.1.7 Part Enumeration */
+/* [MS-XLSX] 2.1 Part Enumerations ; [MS-XLSB] 2.1.7 Part Enumeration */
 var ct2type/*{[string]:string}*/ = ({
 	/* Workbook */
 	"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml": "workbooks",

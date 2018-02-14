@@ -1,10 +1,17 @@
 #### Data Types
 
-The raw value is stored in the `v` field, interpreted based on the `t` field.
+The raw value is stored in the `v` value property, interpreted based on the `t`
+type property.  This separation allows for representation of numbers as well as
+numeric text.  There are 6 valid cell types:
 
-Type `b` is the Boolean type.  `v` is interpreted according to JS truth tables.
-
-Type `e` is the Error type. `v` holds the number and `w` holds the common name:
+| Type | Description                                                           |
+| :--: | :-------------------------------------------------------------------- |
+| `b`  | Boolean: value interpreted as JS `boolean`                            |
+| `e`  | Error: value is a numeric code and `w` property stores common name ** |
+| `n`  | Number: value is a JS `number` **                                     |
+| `d`  | Date: value is a JS `Date` object or string to be parsed as Date **   |
+| `s`  | Text: value interpreted as JS `string` and written as text **         |
+| `z`  | Stub: blank stub cell that is ignored by data processing utilities ** |
 
 <details>
   <summary><b>Error values and interpretation</b> (click to show)</summary>
@@ -33,14 +40,17 @@ Since JSON does not have a natural Date type, parsers are generally expected to
 store ISO 8601 Date strings like you would get from `date.toISOString()`.  On
 the other hand, writers and exporters should be able to handle date strings and
 JS Date objects.  Note that Excel disregards timezone modifiers and treats all
-dates in the local timezone.  js-xlsx does not correct for this error.
+dates in the local timezone.  The library does not correct for this error.
 
-Type `s` is the String type.  `v` should be explicitly stored as a string to
-avoid possible confusion.
+Type `s` is the String type.  Values are explicitly stored as text.  Excel will
+interpret these cells as "number stored as text".  Generated Excel files
+automatically suppress that class of error, but other formats may elicit errors.
 
-Type `z` represents blank stub cells.  These do not have any data or type, and
-are not processed by any of the core library functions.  By default these cells
-will not be generated; the parser `sheetStubs` option must be set to `true`.
+Type `z` represents blank stub cells.  They are generated in cases where cells
+have no assigned value but hold comments or other metadata. They are ignored by
+the core library data processing utility functions.  By default these cells are
+not generated; the parser `sheetStubs` option must be set to `true`.
+
 
 #### Dates
 

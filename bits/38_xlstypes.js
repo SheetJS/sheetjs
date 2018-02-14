@@ -213,7 +213,7 @@ function parse_PropertySet(blob, PIDSI) {
 }
 
 /* [MS-OLEPS] 2.21 PropertySetStream */
-function parse_PropertySetStream(file, PIDSI) {
+function parse_PropertySetStream(file, PIDSI, clsid) {
 	var blob = file.content;
 	if(!blob) return ({}/*:any*/);
 	prep_blob(blob, 0);
@@ -223,7 +223,8 @@ function parse_PropertySetStream(file, PIDSI) {
 
 	/*var vers = */blob.read_shift(2); // TODO: check version
 	var SystemIdentifier = blob.read_shift(4);
-	blob.chk(CFB.utils.consts.HEADER_CLSID, 'CLSID: ');
+	var CLSID = blob.read_shift(16);
+	if(CLSID !== CFB.utils.consts.HEADER_CLSID && CLSID !== clsid) throw new Error("Bad PropertySet CLSID " + CLSID);
 	NumSets = blob.read_shift(4);
 	if(NumSets !== 1 && NumSets !== 2) throw new Error("Unrecognized #Sets: " + NumSets);
 	FMTID0 = blob.read_shift(16); Offset0 = blob.read_shift(4);
@@ -274,7 +275,7 @@ function parse_Bes(blob/*::, length*/) {
 function write_Bes(v, t/*:string*/, o) {
 	if(!o) o = new_buf(2);
 	o.write_shift(1, +v);
-	o.write_shift(1, t == 'e' ? 1 : 0);
+	o.write_shift(1, ((t == 'e') ? 1 : 0));
 	return o;
 }
 

@@ -188,7 +188,7 @@ function WriteShift(t/*:number*/, val/*:string|number*/, f/*:?string*/)/*:any*/ 
 		} return this;
 	} else if(f === 'utf16le') {
 			/*:: if(typeof val !== "string") throw new Error("unreachable"); */
-			var end/*:number*/ = this.l + t;
+			var end/*:number*/ = Math.min(this.l + t, this.length);
 			for(i = 0; i < Math.min(val.length, t); ++i) {
 				var cc = val.charCodeAt(i);
 				this[this.l++] = (cc & 0xff);

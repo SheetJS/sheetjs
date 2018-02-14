@@ -2,7 +2,7 @@ function keys(o/*:any*/)/*:Array<any>*/ { return Object.keys(o); }
 
 function evert_key(obj/*:any*/, key/*:string*/)/*:EvertType*/ {
 	var o = ([]/*:any*/), K = keys(obj);
-	for(var i = 0; i !== K.length; ++i) o[obj[K[i]][key]] = K[i];
+	for(var i = 0; i !== K.length; ++i) if(o[obj[K[i]][key]] == null) o[obj[K[i]][key]] = K[i];
 	return o;
 }
 

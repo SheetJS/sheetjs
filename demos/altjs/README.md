@@ -31,7 +31,7 @@ let shared_dir = PlaygroundSupport.playgroundSharedDataDirectory;
 let lib_path = shared_dir.appendingPathComponent("xlsx.full.min.js");
 
 /* prepare JS context */
-var context:JSContext! = JSContext();
+var context: JSContext! = JSContext();
 var src = "var global = (function(){ return this; }).call(null);";
 context.evaluateScript(src);
 
@@ -50,17 +50,17 @@ Binary strings can be passed back and forth using `String.Encoding.isoLatin1`:
 ```swift
 /* parse sheetjs.xls */
 let file_path = shared_dir.appendingPathComponent("sheetjs.xls");
-let data:String! = try String(contentsOf: file_path, encoding:String.Encoding.isoLatin1);
-context.setObject(data, forKeyedSubscript:"payload" as (NSCopying & NSObjectProtocol)!);
+let data: String! = try String(contentsOf: file_path, encoding: String.Encoding.isoLatin1);
+context.setObject(data, forKeyedSubscript: "payload" as (NSCopying & NSObjectProtocol)!);
 src = "var wb = XLSX.read(payload, {type:'binary'});";
 context.evaluateScript(src);
 
-/* write to sheetjs.xlsx  */
-let out_path = shared_dir.appendingPathComponent("sheetjs.xlsx");
+/* write to sheetjsw.xlsx  */
+let out_path = shared_dir.appendingPathComponent("sheetjsw.xlsx");
 src = "var out = XLSX.write(wb, {type:'binary', bookType:'xlsx'})";
 context.evaluateScript(src);
 let outvalue: JSValue! = context.objectForKeyedSubscript("out");
-var out:String! = outvalue.toString();
+var out: String! = outvalue.toString();
 try? out.write(to: out_path, atomically: false, encoding: String.Encoding.isoLatin1);
 ```
 
@@ -70,9 +70,12 @@ try? out.write(to: out_path, atomically: false, encoding: String.Encoding.isoLat
 Nashorn ships with Java 8.  It includes a command-line tool `jjs` for running JS
 scripts.  It is somewhat limited but does offer access to the full Java runtime.
 
-`jjs` does not provide a CommonJS `require` implementation.  This demo uses a
-[`shim`](https://rawgit.com/nodyn/jvm-npm/master/src/main/javascript/jvm-npm.js)
-and manually requires the library.
+The `load` function in `jjs` can load the minified source directly:
+
+```js
+var global = (function(){ return this; }).call(null);
+load('xlsx.full.min.js');
+```
 
 The Java `nio` API provides the `Files.readAllBytes` method to read a file into
 a byte array.  To use in `XLSX.read`, the demo copies the bytes into a plain JS
@@ -115,7 +118,7 @@ duk_put_global_string(ctx, "buf");
 duk_eval_string_noresult("workbook = XLSX.read(buf, {type:'buffer'});");
 
 /* write a workbook object to a C char array */
-duk_eval_string(ctx, "XLSX.write(workbook, {type:'buffer', bookType:'xlsx'})");
+duk_eval_string(ctx, "XLSX.write(workbook, {type:'array', bookType:'xlsx'})");
 duk_size_t sz;
 char *buf = (char *)duk_get_buffer_data(ctx, -1, sz);
 duk_pop(ctx);

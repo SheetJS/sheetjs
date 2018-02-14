@@ -27,7 +27,7 @@ function write_StrRun(run, o) {
 	return o;
 }
 
-/* [MS-XLSB] 2.1.7.121 */
+/* [MS-XLSB] 2.5.121 */
 function parse_RichStr(data, length/*:number*/)/*:XLString*/ {
 	var start = data.l;
 	var flags = data.read_shift(1);
@@ -54,7 +54,7 @@ function write_RichStr(str/*:XLString*/, o/*:?Block*/)/*:Block*/ {
 	write_XLWideString(str.t, o);
 	return _null ? o.slice(0, o.l) : o;
 }
-/* [MS-XLSB] 2.4.325 BrtCommentText (RichStr w/1 run) */
+/* [MS-XLSB] 2.4.328 BrtCommentText (RichStr w/1 run) */
 var parse_BrtCommentText = parse_RichStr;
 function write_BrtCommentText(str/*:XLString*/, o/*:?Block*/)/*:Block*/ {
 	/* TODO: formatted string */
@@ -108,8 +108,7 @@ var parse_RelID = parse_XLNullableWideString;
 var write_RelID = write_XLNullableWideString;
 
 
-/* [MS-XLSB] 2.5.122 */
-/* [MS-XLS] 2.5.217 */
+/* [MS-XLS] 2.5.217 ; [MS-XLSB] 2.5.122 */
 function parse_RkNumber(data)/*:number*/ {
 	var b = data.slice(data.l, data.l+4);
 	var fX100 = (b[0] & 1), fInt = (b[0] & 2);
@@ -137,7 +136,6 @@ function parse_RfX(data /*::, length*/)/*:Range*/ {
 	cell.e.c = data.read_shift(4);
 	return cell;
 }
-
 function write_RfX(r/*:Range*/, o) {
 	if(!o) o = new_buf(16);
 	o.write_shift(4, r.s.r);
@@ -151,13 +149,12 @@ function write_RfX(r/*:Range*/, o) {
 var parse_UncheckedRfX = parse_RfX;
 var write_UncheckedRfX = write_RfX;
 
-/* [MS-XLSB] 2.5.171 */
-/* [MS-XLS] 2.5.342 */
+/* [MS-XLS] 2.5.342 ; [MS-XLSB] 2.5.171 */
 /* TODO: error checking, NaN and Infinity values are not valid Xnum */
 function parse_Xnum(data/*::, length*/) { return data.read_shift(8, 'f'); }
 function write_Xnum(data, o) { return (o || new_buf(8)).write_shift(8, data, 'f'); }
 
-/* [MS-XLSB] 2.5.198.2 */
+/* [MS-XLSB] 2.5.97.2 */
 var BErr = {
 	/*::[*/0x00/*::]*/: "#NULL!",
 	/*::[*/0x07/*::]*/: "#DIV/0!",
@@ -171,7 +168,7 @@ var BErr = {
 };
 var RBErr = evert_num(BErr);
 
-/* [MS-XLSB] 2.4.321 BrtColor */
+/* [MS-XLSB] 2.4.324 BrtColor */
 function parse_BrtColor(data/*::, length*/) {
 	var out = {};
 	var d = data.read_shift(1);

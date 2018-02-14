@@ -19,7 +19,7 @@ function write_BrtBeginComment(data, o) {
 	return o;
 }
 
-/* [MS-XLSB] 2.4.324 BrtCommentAuthor */
+/* [MS-XLSB] 2.4.327 BrtCommentAuthor */
 var parse_BrtCommentAuthor = parse_XLWideString;
 function write_BrtCommentAuthor(data) { return write_XLWideString(data.slice(0, 54)); }
 

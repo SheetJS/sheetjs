@@ -1,5 +1,5 @@
 
-/* [MS-XLSB] 2.4.718 BrtRowHdr */
+/* [MS-XLSB] 2.4.726 BrtRowHdr */
 function parse_BrtRowHdr(data, length) {
 	var z = ({}/*:any*/);
 	var tgt = data.l + length;
@@ -67,16 +67,16 @@ function write_row_header(ba, ws, range, R) {
 	if((o.length > 17) || (ws['!rows']||[])[R]) write_record(ba, 'BrtRowHdr', o);
 }
 
-/* [MS-XLSB] 2.4.812 BrtWsDim */
+/* [MS-XLSB] 2.4.820 BrtWsDim */
 var parse_BrtWsDim = parse_UncheckedRfX;
 var write_BrtWsDim = write_UncheckedRfX;
 
-/* [MS-XLSB] 2.4.813 BrtWsFmtInfo */
+/* [MS-XLSB] 2.4.821 BrtWsFmtInfo */
 function parse_BrtWsFmtInfo(/*::data, length*/) {
 }
 //function write_BrtWsFmtInfo(ws, o) { }
 
-/* [MS-XLSB] 2.4.815 BrtWsProp */
+/* [MS-XLSB] 2.4.823 BrtWsProp */
 function parse_BrtWsProp(data, length) {
 	var z = {};
 	/* TODO: pull flags */
@@ -94,7 +94,7 @@ function write_BrtWsProp(str, o) {
 	return o.slice(0, o.l);
 }
 
-/* [MS-XLSB] 2.4.303 BrtCellBlank */
+/* [MS-XLSB] 2.4.306 BrtCellBlank */
 function parse_BrtCellBlank(data) {
 	var cell = parse_XLSBCell(data);
 	return [cell];
@@ -105,7 +105,7 @@ function write_BrtCellBlank(cell, ncell, o) {
 }
 
 
-/* [MS-XLSB] 2.4.304 BrtCellBool */
+/* [MS-XLSB] 2.4.307 BrtCellBool */
 function parse_BrtCellBool(data) {
 	var cell = parse_XLSBCell(data);
 	var fBool = data.read_shift(1);
@@ -118,14 +118,14 @@ function write_BrtCellBool(cell, ncell, o) {
 	return o;
 }
 
-/* [MS-XLSB] 2.4.305 BrtCellError */
+/* [MS-XLSB] 2.4.308 BrtCellError */
 function parse_BrtCellError(data) {
 	var cell = parse_XLSBCell(data);
 	var bError = data.read_shift(1);
 	return [cell, bError, 'e'];
 }
 
-/* [MS-XLSB] 2.4.308 BrtCellIsst */
+/* [MS-XLSB] 2.4.311 BrtCellIsst */
 function parse_BrtCellIsst(data) {
 	var cell = parse_XLSBCell(data);
 	var isst = data.read_shift(4);
@@ -138,7 +138,7 @@ function write_BrtCellIsst(cell, ncell, o) {
 	return o;
 }
 
-/* [MS-XLSB] 2.4.310 BrtCellReal */
+/* [MS-XLSB] 2.4.313 BrtCellReal */
 function parse_BrtCellReal(data) {
 	var cell = parse_XLSBCell(data);
 	var value = parse_Xnum(data);
@@ -151,7 +151,7 @@ function write_BrtCellReal(cell, ncell, o) {
 	return o;
 }
 
-/* [MS-XLSB] 2.4.311 BrtCellRk */
+/* [MS-XLSB] 2.4.314 BrtCellRk */
 function parse_BrtCellRk(data) {
 	var cell = parse_XLSBCell(data);
 	var value = parse_RkNumber(data);
@@ -165,7 +165,7 @@ function write_BrtCellRk(cell, ncell, o) {
 }
 
 
-/* [MS-XLSB] 2.4.314 BrtCellSt */
+/* [MS-XLSB] 2.4.317 BrtCellSt */
 function parse_BrtCellSt(data) {
 	var cell = parse_XLSBCell(data);
 	var value = parse_XLWideString(data);
@@ -178,7 +178,7 @@ function write_BrtCellSt(cell, ncell, o) {
 	return o.length > o.l ? o.slice(0, o.l) : o;
 }
 
-/* [MS-XLSB] 2.4.647 BrtFmlaBool */
+/* [MS-XLSB] 2.4.653 BrtFmlaBool */
 function parse_BrtFmlaBool(data, length, opts) {
 	var end = data.l + length;
 	var cell = parse_XLSBCell(data);
@@ -194,7 +194,7 @@ function parse_BrtFmlaBool(data, length, opts) {
 	return o;
 }
 
-/* [MS-XLSB] 2.4.648 BrtFmlaError */
+/* [MS-XLSB] 2.4.654 BrtFmlaError */
 function parse_BrtFmlaError(data, length, opts) {
 	var end = data.l + length;
 	var cell = parse_XLSBCell(data);
@@ -210,7 +210,7 @@ function parse_BrtFmlaError(data, length, opts) {
 	return o;
 }
 
-/* [MS-XLSB] 2.4.649 BrtFmlaNum */
+/* [MS-XLSB] 2.4.655 BrtFmlaNum */
 function parse_BrtFmlaNum(data, length, opts) {
 	var end = data.l + length;
 	var cell = parse_XLSBCell(data);
@@ -226,7 +226,7 @@ function parse_BrtFmlaNum(data, length, opts) {
 	return o;
 }
 
-/* [MS-XLSB] 2.4.650 BrtFmlaString */
+/* [MS-XLSB] 2.4.656 BrtFmlaString */
 function parse_BrtFmlaString(data, length, opts) {
 	var end = data.l + length;
 	var cell = parse_XLSBCell(data);
@@ -242,17 +242,17 @@ function parse_BrtFmlaString(data, length, opts) {
 	return o;
 }
 
-/* [MS-XLSB] 2.4.676 BrtMergeCell */
+/* [MS-XLSB] 2.4.682 BrtMergeCell */
 var parse_BrtMergeCell = parse_UncheckedRfX;
 var write_BrtMergeCell = write_UncheckedRfX;
-/* [MS-XLSB] 2.4.108 BrtBeginMergeCells */
+/* [MS-XLSB] 2.4.107 BrtBeginMergeCells */
 function write_BrtBeginMergeCells(cnt, o) {
 	if(o == null) o = new_buf(4);
 	o.write_shift(4, cnt);
 	return o;
 }
 
-/* [MS-XLSB] 2.4.656 BrtHLink */
+/* [MS-XLSB] 2.4.662 BrtHLink */
 function parse_BrtHLink(data, length/*::, opts*/) {
 	var end = data.l + length;
 	var rfx = parse_UncheckedRfX(data, 16);
@@ -290,7 +290,7 @@ function parse_BrtArrFmla(data, length, opts) {
 	return o;
 }
 
-/* [MS-XLSB] 2.4.742 BrtShrFmla */
+/* [MS-XLSB] 2.4.750 BrtShrFmla */
 function parse_BrtShrFmla(data, length, opts) {
 	var end = data.l + length;
 	var rfx = parse_UncheckedRfX(data, 16);
@@ -320,7 +320,7 @@ function write_BrtColInfo(C/*:number*/, col, o) {
 	return o;
 }
 
-/* [MS-XLSB] 2.4.672 BrtMargins */
+/* [MS-XLSB] 2.4.678 BrtMargins */
 var BrtMarginKeys = ["left","right","top","bottom","header","footer"];
 function parse_BrtMargins(data/*::, length, opts*/)/*:Margins*/ {
 	var margins = ({}/*:any*/);
@@ -334,7 +334,7 @@ function write_BrtMargins(margins/*:Margins*/, o) {
 	return o;
 }
 
-/* [MS-XLSB] 2.4.292 BrtBeginWsView */
+/* [MS-XLSB] 2.4.299 BrtBeginWsView */
 function parse_BrtBeginWsView(data/*::, length, opts*/) {
 	var f = data.read_shift(2);
 	data.l += 28;
@@ -360,7 +360,16 @@ function write_BrtBeginWsView(ws, Workbook, o) {
 	return o;
 }
 
-/* [MS-XLSB] 2.4.740 BrtSheetProtection */
+/* [MS-XLSB] 2.4.309 BrtCellIgnoreEC */
+function write_BrtCellIgnoreEC(ref) {
+	var o = new_buf(24);
+	o.write_shift(4, 4);
+	o.write_shift(4, 1);
+	write_UncheckedRfX(ref, o);
+	return o;
+}
+
+/* [MS-XLSB] 2.4.748 BrtSheetProtection */
 function write_BrtSheetProtection(sp, o) {
 	if(o == null) o = new_buf(16*4+2);
 	o.write_shift(2, sp.password ? crypto_CreatePasswordVerifier_Method1(sp.password) : 0);
@@ -736,6 +745,13 @@ function write_COLINFOS(ba, ws/*:Worksheet*//*::, idx:number, opts, wb:Workbook*
 	write_record(ba, 'BrtEndColInfos');
 }
 
+function write_IGNOREECS(ba, ws/*:Worksheet*/) {
+	if(!ws || !ws['!ref']) return;
+	write_record(ba, 'BrtBeginCellIgnoreECs');
+	write_record(ba, 'BrtCellIgnoreEC', write_BrtCellIgnoreEC(safe_decode_range(ws['!ref'])));
+	write_record(ba, 'BrtEndCellIgnoreECs');
+}
+
 function write_HLINKS(ba, ws/*:Worksheet*/, rels) {
 	/* *BrtHLink */
 	ws['!links'].forEach(function(l) {
@@ -756,7 +772,7 @@ function write_LEGACYDRAWING(ba, ws/*:Worksheet*/, idx/*:number*/, rels) {
 
 function write_AUTOFILTER(ba, ws) {
 	if(!ws['!autofilter']) return;
-	write_record(ba, "BrtBeginAFilter", write_UncheckedRfX(decode_range(ws['!autofilter'].ref)));
+	write_record(ba, "BrtBeginAFilter", write_UncheckedRfX(safe_decode_range(ws['!autofilter'].ref)));
 	/* *FILTERCOLUMN */
 	/* [SORTSTATE] */
 	/* BrtEndAFilter */
@@ -798,7 +814,7 @@ function write_ws_bin(idx/*:number*/, opts, wb/*:Workbook*/, rels) {
 	/* passed back to write_zip and removed there */
 	ws['!comments'] = [];
 	write_record(ba, "BrtBeginSheet");
-	write_record(ba, "BrtWsProp", write_BrtWsProp(c));
+	if(wb.vbaraw) write_record(ba, "BrtWsProp", write_BrtWsProp(c));
 	write_record(ba, "BrtWsDim", write_BrtWsDim(r));
 	write_WSVIEWS2(ba, ws, wb.Workbook);
 	write_WSFMTINFO(ba, ws);
@@ -825,7 +841,7 @@ function write_ws_bin(idx/*:number*/, opts, wb/*:Workbook*/, rels) {
 	/* [COLBRK] */
 	/* *BrtBigName */
 	/* [CELLWATCHES] */
-	/* [IGNOREECS] */
+	write_IGNOREECS(ba, ws);
 	/* [SMARTTAGS] */
 	/* [BrtDrawing] */
 	write_LEGACYDRAWING(ba, ws, idx, rels);

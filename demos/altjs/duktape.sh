@@ -1,5 +1,5 @@
 #!/bin/bash
-DUKTAPE_VER=2.1.1
+DUKTAPE_VER=2.2.0
 if [ ! -e duktape-$DUKTAPE_VER ]; then
 	if [ ! -e duktape-$DUKTAPE_VER.tar ]; then
 		if [ ! -e duktape-$DUKTAPE_VER.tar.xz ]; then
@@ -13,5 +13,4 @@ fi
 for f in duktape.{c,h} duk_config.h; do
 	cp duktape-$DUKTAPE_VER/src/$f .
 done
-
 

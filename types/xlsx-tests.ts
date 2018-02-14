@@ -48,3 +48,9 @@ const newwb = XLSX.utils.book_new();
 XLSX.utils.book_append_sheet(newwb, aoa2, "AOA");
 XLSX.utils.book_append_sheet(newwb, js2ws, "JSON");
 const bstrxlsx: string = XLSX.write(newwb, {type: "binary", bookType: "xlsx" });
+
+const CFB = XLSX.CFB;
+const vbawb = XLSX.readFile("test.xlsm", {bookVBA:true});
+if(vbawb.vbaraw) {
+	const cfb: XLSX.CFB.CFB$Container = CFB.read(vbawb.vbaraw, {type: "buffer"});
+}

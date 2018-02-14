@@ -68,6 +68,7 @@ function safe_format(p/*:Cell*/, fmtid/*:number*/, fillid/*:?number*/, opts, the
 		if(opts.cellNF) p.z = SSF._table[fmtid];
 	} catch(e) { if(opts.WTF) throw e; }
 	if(!opts || opts.cellText !== false) try {
+		if(SSF._table[fmtid] == null) SSF.load(SSFImplicit[fmtid] || "General", fmtid);
 		if(p.t === 'e') p.w = p.w || BErr[p.v];
 		else if(fmtid === 0) {
 			if(p.t === 'n') {

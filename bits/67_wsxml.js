@@ -474,9 +474,11 @@ function write_ws_xml(idx/*:number*/, opts, wb/*:Workbook*/, rels)/*:string*/ {
 	ws['!comments'] = [];
 	ws['!drawing'] = [];
 
-	var cname = wb.SheetNames[idx];
-	try { if(wb.Workbook) cname = wb.Workbook.Sheets[idx].CodeName || cname; } catch(e) {}
-	o[o.length] = (writextag('sheetPr', null, {'codeName': escapexml(cname)}));
+	if(opts.bookType !== 'xlsx' && wb.vbaraw) {
+		var cname = wb.SheetNames[idx];
+		try { if(wb.Workbook) cname = wb.Workbook.Sheets[idx].CodeName || cname; } catch(e) {}
+		o[o.length] = (writextag('sheetPr', null, {'codeName': escapexml(cname)}));
+	}
 
 	o[o.length] = (writextag('dimension', null, {'ref': ref}));
 
@@ -547,7 +549,9 @@ function write_ws_xml(idx/*:number*/, opts, wb/*:Workbook*/, rels)/*:string*/ {
 	/* colBreaks */
 	/* customProperties */
 	/* cellWatches */
-	/* ignoredErrors */
+
+	o[o.length] = writetag("ignoredErrors", writextag("ignoredError", null, {numberStoredAsText:1, sqref:ref}));
+
 	/* smartTags */
 
 	if(ws['!drawing'].length > 0) {

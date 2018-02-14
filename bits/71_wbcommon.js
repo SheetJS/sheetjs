@@ -124,15 +124,20 @@ function check_ws_name(n/*:string*/, safe/*:?boolean*/)/*:boolean*/ {
 	});
 	return _good;
 }
-function check_wb_names(N) {
+function check_wb_names(N, S, codes) {
 	N.forEach(function(n,i) {
 		check_ws_name(n);
 		for(var j = 0; j < i; ++j) if(n == N[j]) throw new Error("Duplicate Sheet Name: " + n);
+		if(codes) {
+			var cn = (S && S[i] && S[i].CodeName) || n;
+			if(cn.charCodeAt(0) == 95 && cn.length > 22) throw new Error("Bad Code Name: Worksheet" + cn);
+		}
 	});
 }
 function check_wb(wb) {
 	if(!wb || !wb.SheetNames || !wb.Sheets) throw new Error("Invalid Workbook");
 	if(!wb.SheetNames.length) throw new Error("Workbook is empty");
-	check_wb_names(wb.SheetNames);
+	var Sheets = (wb.Workbook && wb.Workbook.Sheets) || [];
+	check_wb_names(wb.SheetNames, Sheets, !!wb.vbaraw);
 	/* TODO: validate workbook */
 }

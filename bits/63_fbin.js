@@ -71,7 +71,6 @@ function parse_Formula(blob, length, opts) {
 
 /* XLSB Parsed Formula records have the same shape */
 function parse_XLSBParsedFormula(data, length, opts) {
-	//var end = data.l + length;
 	var cce = data.read_shift(4);
 	var rgce = parse_Rgce(data, cce, opts);
 	var cb = data.read_shift(4);

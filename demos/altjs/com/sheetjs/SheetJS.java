@@ -26,7 +26,7 @@ public class SheetJS {
 		cx.evaluateString(scope, s, "<cmd>", 1, null);
 
 		/* eval library */
-		s = new Scanner(SheetJS.class.getResourceAsStream("/dist/xlsx.full.min.js")).useDelimiter("\\Z").next();
+		s = new Scanner(SheetJS.class.getResourceAsStream("/xlsx.full.min.js")).useDelimiter("\\Z").next();
 		//s = new Scanner(new File("xlsx.full.min.js")).useDelimiter("\\Z").next();
 		cx.evaluateString(scope, s, "<cmd>", 1, null);
 
@@ -41,14 +41,14 @@ public class SheetJS {
 		String d = JSHelper.read_file(filename);
 
 		/* options argument */
-		NativeObject q = (NativeObject)this.cx.evaluateString(this.scope, "q = {'type':'binary'};", "<cmd>", 2, null);
+		NativeObject q = (NativeObject)this.cx.evaluateString(this.scope, "q = {'type':'binary', 'WTF':1};", "<cmd>", 2, null);
 
 		/* set up function arguments */
-		Object functionArgs[] = {d, q};
+		Object args[] = {d, q};
 
 		/* call read -> wb workbook */
 		Function readfunc = (Function)JSHelper.get_object("XLSX.read",this.scope);
-		NativeObject wb = (NativeObject)readfunc.call(this.cx, this.scope, this.nXLSX, functionArgs);
+		NativeObject wb = (NativeObject)readfunc.call(this.cx, this.scope, this.nXLSX, args);
 
 		return new SheetJSFile(wb, this);
 	}

@@ -1,4 +1,4 @@
-/* [MS-XLSB] 2.4.219 BrtBeginSst */
+/* [MS-XLSB] 2.4.221 BrtBeginSst */
 function parse_BrtBeginSst(data) {
 	return [data.read_shift(4), data.read_shift(4)];
 }

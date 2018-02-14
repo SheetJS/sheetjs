@@ -1,5 +1,6 @@
 /* index.d.ts (C) 2015-present SheetJS and contributors */
 // TypeScript Version: 2.2
+import * as CFB from "cfb";
 
 /** Version string */
 export const version: string;
@@ -8,7 +9,7 @@ export const version: string;
 export const SSF: any;
 
 /** CFB Library */
-export const CFB: any;
+export { CFB };
 
 /** NODE ONLY! Attempts to read filename and parse */
 export function readFile(filename: string, opts?: ParsingOptions): WorkBook;

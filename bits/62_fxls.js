@@ -1,17 +1,12 @@
-/* --- formula references point to MS-XLS --- */
-/* Small helpers */
 function parseread1(blob) { blob.l+=1; return; }
 
-/* Rgce Helpers */
-
-/* 2.5.51 */
+/* [MS-XLS] 2.5.51 */
 function parse_ColRelU(blob, length) {
 	var c = blob.read_shift(length == 1 ? 1 : 2);
 	return [c & 0x3FFF, (c >> 14) & 1, (c >> 15) & 1];
 }
 
-/* [MS-XLS] 2.5.198.105 */
-/* [MS-XLSB] 2.5.97.89 */
+/* [MS-XLS] 2.5.198.105 ; [MS-XLSB] 2.5.97.89 */
 function parse_RgceArea(blob, length, opts) {
 	var w = 2;
 	if(opts) {
@@ -31,7 +26,7 @@ function parse_RgceArea_BIFF2(blob/*::, length, opts*/) {
 	return { s:{r:r[0], c:c, cRel:r[1], rRel:r[2]}, e:{r:R[0], c:C, cRel:R[1], rRel:R[2]} };
 }
 
-/* 2.5.198.105 TODO */
+/* [MS-XLS] 2.5.198.105 ; [MS-XLSB] 2.5.97.90 */
 function parse_RgceAreaRel(blob, length/*::, opts*/) {
 	var r=blob.read_shift(length == 12 ? 4 : 2), R=blob.read_shift(length == 12 ? 4 : 2);
 	var c=parse_ColRelU(blob, 2);
@@ -39,7 +34,7 @@ function parse_RgceAreaRel(blob, length/*::, opts*/) {
 	return { s:{r:r, c:c[0], cRel:c[1], rRel:c[2]}, e:{r:R, c:C[0], cRel:C[1], rRel:C[2]} };
 }
 
-/* 2.5.198.109 */
+/* [MS-XLS] 2.5.198.109 ; [MS-XLSB] 2.5.97.91 */
 function parse_RgceLoc(blob, length, opts) {
 	if(opts && opts.biff >= 2 && opts.biff <= 5) return parse_RgceLoc_BIFF2(blob, length, opts);
 	var r = blob.read_shift(opts && opts.biff == 12 ? 4 : 2);
@@ -52,15 +47,14 @@ function parse_RgceLoc_BIFF2(blob/*::, length, opts*/) {
 	return {r:r[0], c:c, cRel:r[1], rRel:r[2]};
 }
 
-/* 2.5.198.107 , 2.5.47 */
+/* [MS-XLS] 2.5.198.107, 2.5.47 */
 function parse_RgceElfLoc(blob/*::, length, opts*/) {
 	var r = blob.read_shift(2);
 	var c = blob.read_shift(2);
 	return {r:r, c:c & 0xFF, fQuoted:!!(c & 0x4000), cRel:c>>15, rRel:c>>15 };
 }
 
-/* [MS-XLS] 2.5.198.111 TODO */
-/* [MS-XLSB] 2.5.97.92 TODO */
+/* [MS-XLS] 2.5.198.111 ; [MS-XLSB] 2.5.97.92 TODO */
 function parse_RgceLocRel(blob, length, opts) {
 	var biff = opts && opts.biff ? opts.biff : 8;
 	if(biff >= 2 && biff <= 5) return parse_RgceLocRel_BIFF2(blob, length, opts);
@@ -82,17 +76,14 @@ function parse_RgceLocRel_BIFF2(blob/*::, length:number, opts*/) {
 	return {r:rl,c:c,cRel:cRel,rRel:rRel};
 }
 
-/* Ptg Tokens */
-
-/* 2.5.198.27 */
+/* [MS-XLS] 2.5.198.27 ; [MS-XLSB] 2.5.97.18 */
 function parse_PtgArea(blob, length, opts) {
 	var type = (blob[blob.l++] & 0x60) >> 5;
 	var area = parse_RgceArea(blob, opts.biff >= 2 && opts.biff <= 5 ? 6 : 8, opts);
 	return [type, area];
 }
 
-/* [MS-XLS] 2.5.198.28 */
-/* [MS-XLSB] 2.5.97.19 */
+/* [MS-XLS] 2.5.198.28 ; [MS-XLSB] 2.5.97.19 */
 function parse_PtgArea3d(blob, length, opts) {
 	var type = (blob[blob.l++] & 0x60) >> 5;
 	var ixti = blob.read_shift(2, 'i');
@@ -105,13 +96,13 @@ function parse_PtgArea3d(blob, length, opts) {
 	return [type, ixti, area];
 }
 
-/* 2.5.198.29 */
+/* [MS-XLS] 2.5.198.29 ; [MS-XLSB] 2.5.97.20 */
 function parse_PtgAreaErr(blob, length, opts) {
 	var type = (blob[blob.l++] & 0x60) >> 5;
 	blob.l += opts && opts.biff > 8 ? 12 : 8;
 	return [type];
 }
-/* 2.5.198.30 */
+/* [MS-XLS] 2.5.198.30 ; [MS-XLSB] 2.5.97.21 */
 function parse_PtgAreaErr3d(blob, length, opts) {
 	var type = (blob[blob.l++] & 0x60) >> 5;
 	var ixti = blob.read_shift(2);
@@ -124,22 +115,21 @@ function parse_PtgAreaErr3d(blob, length, opts) {
 	return [type, ixti];
 }
 
-/* 2.5.198.31 */
+/* [MS-XLS] 2.5.198.31 ; [MS-XLSB] 2.5.97.22 */
 function parse_PtgAreaN(blob, length, opts) {
 	var type = (blob[blob.l++] & 0x60) >> 5;
 	var area = parse_RgceAreaRel(blob, opts && opts.biff > 8 ? 12 : 8, opts);
 	return [type, area];
 }
 
-/* [MS-XLS] 2.5.198.32 */
-/* [MS-XLSB] 2.5.97.23 */
+/* [MS-XLS] 2.5.198.32 ; [MS-XLSB] 2.5.97.23 */
 function parse_PtgArray(blob, length, opts) {
 	var type = (blob[blob.l++] & 0x60) >> 5;
 	blob.l += opts.biff == 2 ? 6 : opts.biff == 12 ? 14 : 7;
 	return [type];
 }
 
-/* 2.5.198.33 */
+/* [MS-XLS] 2.5.198.33 ; [MS-XLSB] 2.5.97.24 */
 function parse_PtgAttrBaxcel(blob) {
 	var bitSemi = blob[blob.l+1] & 0x01; /* 1 = volatile */
 	var bitBaxcel = 1;
@@ -147,7 +137,7 @@ function parse_PtgAttrBaxcel(blob) {
 	return [bitSemi, bitBaxcel];
 }
 
-/* 2.5.198.34 */
+/* [MS-XLS] 2.5.198.34 ; [MS-XLSB] 2.5.97.25 */
 function parse_PtgAttrChoose(blob, length, opts)/*:Array<number>*/ {
 	blob.l +=2;
 	var offset = blob.read_shift(opts && opts.biff == 2 ? 1 : 2);
@@ -157,14 +147,14 @@ function parse_PtgAttrChoose(blob, length, opts)/*:Array<number>*/ {
 	return o;
 }
 
-/* 2.5.198.35 */
+/* [MS-XLS] 2.5.198.35 ; [MS-XLSB] 2.5.97.26 */
 function parse_PtgAttrGoto(blob, length, opts) {
 	var bitGoto = (blob[blob.l+1] & 0xFF) ? 1 : 0;
 	blob.l += 2;
 	return [bitGoto, blob.read_shift(opts && opts.biff == 2 ? 1 : 2)];
 }
 
-/* 2.5.198.36 */
+/* [MS-XLS] 2.5.198.36 ; [MS-XLSB] 2.5.97.27 */
 function parse_PtgAttrIf(blob, length, opts) {
 	var bitIf = (blob[blob.l+1] & 0xFF) ? 1 : 0;
 	blob.l += 2;
@@ -178,32 +168,32 @@ function parse_PtgAttrIfError(blob) {
 	return [bitIf, blob.read_shift(2)];
 }
 
-/* 2.5.198.37 */
+/* [MS-XLS] 2.5.198.37 ; [MS-XLSB] 2.5.97.29 */
 function parse_PtgAttrSemi(blob, length, opts) {
 	var bitSemi = (blob[blob.l+1] & 0xFF) ? 1 : 0;
 	blob.l += opts && opts.biff == 2 ? 3 : 4;
 	return [bitSemi];
 }
 
-/* 2.5.198.40 (used by PtgAttrSpace and PtgAttrSpaceSemi) */
+/* [MS-XLS] 2.5.198.40 ; [MS-XLSB] 2.5.97.32 */
 function parse_PtgAttrSpaceType(blob/*::, length*/) {
 	var type = blob.read_shift(1), cch = blob.read_shift(1);
 	return [type, cch];
 }
 
-/* 2.5.198.38 */
+/* [MS-XLS] 2.5.198.38 ; [MS-XLSB] 2.5.97.30 */
 function parse_PtgAttrSpace(blob) {
 	blob.read_shift(2);
 	return parse_PtgAttrSpaceType(blob, 2);
 }
 
-/* 2.5.198.39 */
+/* [MS-XLS] 2.5.198.39 ; [MS-XLSB] 2.5.97.31 */
 function parse_PtgAttrSpaceSemi(blob) {
 	blob.read_shift(2);
 	return parse_PtgAttrSpaceType(blob, 2);
 }
 
-/* 2.5.198.84 TODO */
+/* [MS-XLS] 2.5.198.84 ; [MS-XLSB] 2.5.97.68 TODO */
 function parse_PtgRef(blob, length, opts) {
 	//var ptg = blob[blob.l] & 0x1F;
 	var type = (blob[blob.l] & 0x60)>>5;
@@ -212,7 +202,7 @@ function parse_PtgRef(blob, length, opts) {
 	return [type, loc];
 }
 
-/* 2.5.198.88 TODO */
+/* [MS-XLS] 2.5.198.88 ; [MS-XLSB] 2.5.97.72 TODO */
 function parse_PtgRefN(blob, length, opts) {
 	var type = (blob[blob.l] & 0x60)>>5;
 	blob.l += 1;
@@ -220,17 +210,18 @@ function parse_PtgRefN(blob, length, opts) {
 	return [type, loc];
 }
 
-/* 2.5.198.85 TODO */
+/* [MS-XLS] 2.5.198.85 ; [MS-XLSB] 2.5.97.69 TODO */
 function parse_PtgRef3d(blob, length, opts) {
 	var type = (blob[blob.l] & 0x60)>>5;
 	blob.l += 1;
 	var ixti = blob.read_shift(2); // XtiIndex
+	if(opts && opts.biff == 5) blob.l += 12;
 	var loc = parse_RgceLoc(blob, 0, opts); // TODO: or RgceLocRel
 	return [type, ixti, loc];
 }
 
 
-/* 2.5.198.62 TODO */
+/* [MS-XLS] 2.5.198.62 ; [MS-XLSB] 2.5.97.45 TODO */
 function parse_PtgFunc(blob, length, opts) {
 	//var ptg = blob[blob.l] & 0x1F;
 	var type = (blob[blob.l] & 0x60)>>5;
@@ -238,7 +229,7 @@ function parse_PtgFunc(blob, length, opts) {
 	var iftab = blob.read_shift(opts && opts.biff <= 3 ? 1 : 2);
 	return [FtabArgc[iftab], Ftab[iftab], type];
 }
-/* 2.5.198.63 TODO */
+/* [MS-XLS] 2.5.198.63 ; [MS-XLSB] 2.5.97.46 TODO */
 function parse_PtgFuncVar(blob, length, opts) {
 	blob.l++;
 	var cparams = blob.read_shift(1), tab = opts && opts.biff <= 3 ? [0, blob.read_shift(1)]: parsetab(blob);
@@ -249,12 +240,12 @@ function parsetab(blob) {
 	return [blob[blob.l+1]>>7, blob.read_shift(2) & 0x7FFF];
 }
 
-/* 2.5.198.41 */
+/* [MS-XLS] 2.5.198.41 ; [MS-XLSB] 2.5.97.33 */
 function parse_PtgAttrSum(blob, length, opts) {
 	blob.l += opts && opts.biff == 2 ? 3 : 4; return;
 }
 
-/* 2.5.198.58 */
+/* [MS-XLS] 2.5.198.58 ; [MS-XLSB] 2.5.97.40 */
 function parse_PtgExp(blob, length, opts) {
 	blob.l++;
 	if(opts && opts.biff == 12) return [blob.read_shift(4, 'i'), 0];
@@ -263,19 +254,19 @@ function parse_PtgExp(blob, length, opts) {
 	return [row, col];
 }
 
-/* 2.5.198.57 */
+/* [MS-XLS] 2.5.198.57 ; [MS-XLSB] 2.5.97.39 */
 function parse_PtgErr(blob) { blob.l++; return BErr[blob.read_shift(1)]; }
 
-/* 2.5.198.66 */
+/* [MS-XLS] 2.5.198.66 ; [MS-XLSB] 2.5.97.49 */
 function parse_PtgInt(blob) { blob.l++; return blob.read_shift(2); }
 
-/* 2.5.198.42 */
+/* [MS-XLS] 2.5.198.42 ; [MS-XLSB] 2.5.97.34 */
 function parse_PtgBool(blob) { blob.l++; return blob.read_shift(1)!==0;}
 
-/* 2.5.198.79 */
+/* [MS-XLS] 2.5.198.79 ; [MS-XLSB] 2.5.97.63 */
 function parse_PtgNum(blob) { blob.l++; return parse_Xnum(blob, 8); }
 
-/* 2.5.198.89 */
+/* [MS-XLS] 2.5.198.89 ; [MS-XLSB] 2.5.97.74 */
 function parse_PtgStr(blob, length, opts) { blob.l++; return parse_ShortXLUnicodeString(blob, length-1, opts); }
 
 /* [MS-XLS] 2.5.192.112 + 2.5.192.11{3,4,5,6,7} */
@@ -289,37 +280,32 @@ function parse_SerAr(blob, biff/*:number*/) {
 		case 0x01: val[0] = 0x02; break; /* SerStr */
 	}
 	switch(val[0]) {
-		/* 2.5.192.113 */
 		case 0x04: /* SerBool -- boolean */
 			val[1] = parsebool(blob, 1) ? 'TRUE' : 'FALSE';
-			blob.l += 7; break;
-		/* 2.5.192.114 */
+			if(biff != 12) blob.l += 7; break;
 		case 0x10: /* SerErr -- error */
 			val[1] = BErr[blob[blob.l]];
-			blob.l += 8; break;
-		/* 2.5.192.115 */
+			blob.l += ((biff == 12) ? 4 : 8); break;
 		case 0x00: /* SerNil -- honestly, I'm not sure how to reproduce this */
 			blob.l += 8; break;
-		/* 2.5.192.116 */
 		case 0x01: /* SerNum -- Xnum */
 			val[1] = parse_Xnum(blob, 8); break;
-		/* 2.5.192.117 */
 		case 0x02: /* SerStr -- XLUnicodeString (<256 chars) */
 			val[1] = parse_XLUnicodeString2(blob, 0, {biff:biff > 0 && biff < 8 ? 2 : biff}); break;
-		// default: throw "Bad SerAr: " + val[0]; /* Unreachable */
+		default: throw "Bad SerAr: " + val[0]; /* Unreachable */
 	}
 	return val;
 }
 
-/* 2.5.198.61 */
-function parse_PtgExtraMem(blob/*::, cce*/) {
-	var count = blob.read_shift(2);
+/* [MS-XLS] 2.5.198.61 ; [MS-XLSB] 2.5.97.44 */
+function parse_PtgExtraMem(blob, cce, opts) {
+	var count = blob.read_shift((opts.biff == 12) ? 4 : 2);
 	var out/*:Array<Range>*/ = [];
-	for(var i = 0; i != count; ++i) out.push(parse_Ref8U(blob, 8));
+	for(var i = 0; i != count; ++i) out.push(((opts.biff == 12) ? parse_UncheckedRfX : parse_Ref8U)(blob, 8));
 	return out;
 }
 
-/* 2.5.198.59 */
+/* [MS-XLS] 2.5.198.59 ; [MS-XLSB] 2.5.97.41 */
 function parse_PtgExtraArray(blob, length, opts) {
 	var rows = 0, cols = 0;
 	if(opts.biff == 12) {
@@ -336,7 +322,7 @@ function parse_PtgExtraArray(blob, length, opts) {
 	return o;
 }
 
-/* 2.5.198.76 */
+/* [MS-XLS] 2.5.198.76 ; [MS-XLSB] 2.5.97.60 */
 function parse_PtgName(blob, length, opts) {
 	var type = (blob.read_shift(1) >>> 5) & 0x03;
 	var w = (!opts || (opts.biff >= 8)) ? 4 : 2;
@@ -349,7 +335,7 @@ function parse_PtgName(blob, length, opts) {
 	return [type, 0, nameindex];
 }
 
-/* 2.5.198.77 */
+/* [MS-XLS] 2.5.198.77 ; [MS-XLSB] 2.5.97.61 */
 function parse_PtgNameX(blob, length, opts) {
 	if(opts.biff == 5) return parse_PtgNameX_BIFF5(blob, length, opts);
 	var type = (blob.read_shift(1) >>> 5) & 0x03;
@@ -366,7 +352,7 @@ function parse_PtgNameX_BIFF5(blob/*::, length, opts*/) {
 	return [type, ixti, nameindex];
 }
 
-/* 2.5.198.70 */
+/* [MS-XLS] 2.5.198.70 ; [MS-XLSB] 2.5.97.54 */
 function parse_PtgMemArea(blob, length, opts) {
 	var type = (blob.read_shift(1) >>> 5) & 0x03;
 	blob.l += (opts && opts.biff == 2 ? 3 : 4);
@@ -374,7 +360,7 @@ function parse_PtgMemArea(blob, length, opts) {
 	return [type, cce];
 }
 
-/* 2.5.198.72 */
+/* [MS-XLS] 2.5.198.72 ; [MS-XLSB] 2.5.97.56 */
 function parse_PtgMemFunc(blob, length, opts) {
 	var type = (blob.read_shift(1) >>> 5) & 0x03;
 	var cce = blob.read_shift(opts && opts.biff == 2 ? 1 : 2);
@@ -382,7 +368,7 @@ function parse_PtgMemFunc(blob, length, opts) {
 }
 
 
-/* 2.5.198.86 */
+/* [MS-XLS] 2.5.198.86 ; [MS-XLSB] 2.5.97.69 */
 function parse_PtgRefErr(blob, length, opts) {
 	var type = (blob.read_shift(1) >>> 5) & 0x03;
 	blob.l += 4;
@@ -390,24 +376,24 @@ function parse_PtgRefErr(blob, length, opts) {
 	return [type];
 }
 
-/* 2.5.198.87 */
+/* [MS-XLS] 2.5.198.87 ; [MS-XLSB] 2.5.97.71 */
 function parse_PtgRefErr3d(blob, length, opts) {
 	var type = (blob[blob.l++] & 0x60) >> 5;
 	var ixti = blob.read_shift(2);
 	var w = 4;
 	if(opts) switch(opts.biff) {
-		case 5: throw new Error("PtgRefErr3d -- 5"); // TODO: find test case
+		case 5: w = 15; break;
 		case 12: w = 6; break;
 	}
 	blob.l += w;
 	return [type, ixti];
 }
 
-/* 2.5.198.71 */
+/* [MS-XLS] 2.5.198.71 ; [MS-XLSB] 2.5.97.55 */
 var parse_PtgMemErr = parsenoop;
-/* 2.5.198.73 */
+/* [MS-XLS] 2.5.198.73  ; [MS-XLSB] 2.5.97.57 */
 var parse_PtgMemNoMem = parsenoop;
-/* 2.5.198.92 */
+/* [MS-XLS] 2.5.198.92 */
 var parse_PtgTbl = parsenoop;
 
 function parse_PtgElfLoc(blob, length, opts) {
@@ -418,28 +404,28 @@ function parse_PtgElfNoop(blob/*::, length, opts*/) {
 	blob.l += 6;
 	return [];
 }
-/* 2.5.198.46 */
+/* [MS-XLS] 2.5.198.46 */
 var parse_PtgElfCol = parse_PtgElfLoc;
-/* 2.5.198.47 */
+/* [MS-XLS] 2.5.198.47 */
 var parse_PtgElfColS = parse_PtgElfNoop;
-/* 2.5.198.48 */
+/* [MS-XLS] 2.5.198.48 */
 var parse_PtgElfColSV = parse_PtgElfNoop;
-/* 2.5.198.49 */
+/* [MS-XLS] 2.5.198.49 */
 var parse_PtgElfColV = parse_PtgElfLoc;
-/* 2.5.198.50 */
+/* [MS-XLS] 2.5.198.50 */
 function parse_PtgElfLel(blob/*::, length, opts*/) {
 	blob.l += 2;
 	return [parseuint16(blob), blob.read_shift(2) & 0x01];
 }
-/* 2.5.198.51 */
+/* [MS-XLS] 2.5.198.51 */
 var parse_PtgElfRadical = parse_PtgElfLoc;
-/* 2.5.198.52 */
+/* [MS-XLS] 2.5.198.52 */
 var parse_PtgElfRadicalLel = parse_PtgElfLel;
-/* 2.5.198.53 */
+/* [MS-XLS] 2.5.198.53 */
 var parse_PtgElfRadicalS = parse_PtgElfNoop;
-/* 2.5.198.54 */
+/* [MS-XLS] 2.5.198.54 */
 var parse_PtgElfRw = parse_PtgElfLoc;
-/* 2.5.198.55 */
+/* [MS-XLS] 2.5.198.55 */
 var parse_PtgElfRwV = parse_PtgElfLoc;
 
 /* [MS-XLSB] 2.5.97.52 */
@@ -449,13 +435,13 @@ function parse_PtgList(blob/*::, length, opts*/) {
 	blob.l += 10;
 	return {ixti: ixti};
 }
-/* 2.5.198.91 */
+/* [MS-XLS] 2.5.198.91 ; [MS-XLSB] 2.5.97.76 */
 function parse_PtgSxName(blob/*::, length, opts*/) {
 	blob.l += 2;
 	return [blob.read_shift(4)];
 }
 
-/* 2.5.198.25 */
+/* [MS-XLS] 2.5.198.25 ; [MS-XLSB] 2.5.97.16 */
 var PtgTypes = {
 	/*::[*/0x01/*::]*/: { n:'PtgExp', f:parse_PtgExp },
 	/*::[*/0x02/*::]*/: { n:'PtgTbl', f:parse_PtgTbl },
@@ -558,7 +544,7 @@ var Ptg19 = {
 };
 Ptg19[0x21] = Ptg19[0x20];
 
-/* 2.5.198.103 */
+/* [MS-XLS] 2.5.198.103 ; [MS-XLSB] 2.5.97.87 */
 function parse_RgbExtra(blob, length, rgce, opts) {
 	if(opts.biff < 8) return parsenoop(blob, length);
 	var target = blob.l + length;
@@ -570,7 +556,7 @@ function parse_RgbExtra(blob, length, rgce, opts) {
 				o.push(rgce[i][1]);
 				break;
 			case 'PtgMemArea': /* PtgMemArea -> PtgExtraMem */
-				rgce[i][2] = parse_PtgExtraMem(blob, rgce[i][1]);
+				rgce[i][2] = parse_PtgExtraMem(blob, rgce[i][1], opts);
 				o.push(rgce[i][2]);
 				break;
 			case 'PtgExp': /* PtgExp -> PtgExtraCol */
@@ -593,7 +579,7 @@ function parse_RgbExtra(blob, length, rgce, opts) {
 	return o;
 }
 
-/* 2.5.198.104 */
+/* [MS-XLS] 2.5.198.104 ; [MS-XLSB] 2.5.97.88 */
 function parse_Rgce(blob, length, opts) {
 	var target = blob.l + length;
 	var R, id, ptgs = [];
@@ -631,8 +617,7 @@ function stringify_array(f/*:Array<Array<string>>*/)/*:string*/ {
 	return o.join(";");
 }
 
-/* [MS-XLS] 2.2.2 TODO */
-/* [MS-XLSB] 2.2.2 */
+/* [MS-XLS] 2.2.2 ; [MS-XLSB] 2.2.2 TODO */
 var PtgBinOp = {
 	PtgAdd: "+",
 	PtgConcat: "&",
@@ -697,25 +682,25 @@ function stringify_formula(formula/*Array<any>*/, range, cell/*:any*/, supbooks,
 	for(var ff = 0, fflen = formula[0].length; ff < fflen; ++ff) {
 		var f = formula[0][ff];
 		switch(f[0]) {
-			case 'PtgUminus': /* 2.5.198.93 */
+			case 'PtgUminus': /* [MS-XLS] 2.5.198.93 */
 				stack.push("-" + stack.pop()); break;
-			case 'PtgUplus': /* 2.5.198.95 */
+			case 'PtgUplus': /* [MS-XLS] 2.5.198.95 */
 				stack.push("+" + stack.pop()); break;
-			case 'PtgPercent': /* 2.5.198.81 */
+			case 'PtgPercent': /* [MS-XLS] 2.5.198.81 */
 				stack.push(stack.pop() + "%"); break;
 
-			case 'PtgAdd':    /* 2.5.198.26 */
-			case 'PtgConcat': /* 2.5.198.43 */
-			case 'PtgDiv':    /* 2.5.198.45 */
-			case 'PtgEq':     /* 2.5.198.56 */
-			case 'PtgGe':     /* 2.5.198.64 */
-			case 'PtgGt':     /* 2.5.198.65 */
-			case 'PtgLe':     /* 2.5.198.68 */
-			case 'PtgLt':     /* 2.5.198.69 */
-			case 'PtgMul':    /* 2.5.198.75 */
-			case 'PtgNe':     /* 2.5.198.78 */
-			case 'PtgPower':  /* 2.5.198.82 */
-			case 'PtgSub':    /* 2.5.198.90 */
+			case 'PtgAdd':    /* [MS-XLS] 2.5.198.26 */
+			case 'PtgConcat': /* [MS-XLS] 2.5.198.43 */
+			case 'PtgDiv':    /* [MS-XLS] 2.5.198.45 */
+			case 'PtgEq':     /* [MS-XLS] 2.5.198.56 */
+			case 'PtgGe':     /* [MS-XLS] 2.5.198.64 */
+			case 'PtgGt':     /* [MS-XLS] 2.5.198.65 */
+			case 'PtgLe':     /* [MS-XLS] 2.5.198.68 */
+			case 'PtgLt':     /* [MS-XLS] 2.5.198.69 */
+			case 'PtgMul':    /* [MS-XLS] 2.5.198.75 */
+			case 'PtgNe':     /* [MS-XLS] 2.5.198.78 */
+			case 'PtgPower':  /* [MS-XLS] 2.5.198.82 */
+			case 'PtgSub':    /* [MS-XLS] 2.5.198.90 */
 				e1 = stack.pop(); e2 = stack.pop();
 				if(last_sp >= 0) {
 					switch(formula[0][last_sp][1][0]) {
@@ -736,46 +721,46 @@ function stringify_formula(formula/*Array<any>*/, range, cell/*:any*/, supbooks,
 				stack.push(e2+PtgBinOp[f[0]]+e1);
 				break;
 
-			case 'PtgIsect': /* 2.5.198.67 */
+			case 'PtgIsect': /* [MS-XLS] 2.5.198.67 */
 				e1 = stack.pop(); e2 = stack.pop();
 				stack.push(e2+" "+e1);
 				break;
-			case 'PtgUnion': /* 2.5.198.94 */
+			case 'PtgUnion': /* [MS-XLS] 2.5.198.94 */
 				e1 = stack.pop(); e2 = stack.pop();
 				stack.push(e2+","+e1);
 				break;
-			case 'PtgRange': /* 2.5.198.83 */
+			case 'PtgRange': /* [MS-XLS] 2.5.198.83 */
 				e1 = stack.pop(); e2 = stack.pop();
 				stack.push(e2+":"+e1);
 				break;
 
-			case 'PtgAttrChoose': /* 2.5.198.34 */
+			case 'PtgAttrChoose': /* [MS-XLS] 2.5.198.34 */
 				break;
-			case 'PtgAttrGoto': /* 2.5.198.35 */
+			case 'PtgAttrGoto': /* [MS-XLS] 2.5.198.35 */
 				break;
-			case 'PtgAttrIf': /* 2.5.198.36 */
+			case 'PtgAttrIf': /* [MS-XLS] 2.5.198.36 */
 				break;
 			case 'PtgAttrIfError': /* [MS-XLSB] 2.5.97.28 */
 				break;
 
 
-			case 'PtgRef': /* 2.5.198.84 */
+			case 'PtgRef': /* [MS-XLS] 2.5.198.84 */
 				/*::type = f[1][0]; */c = shift_cell_xls((f[1][1]/*:any*/), _range, opts);
 				stack.push(encode_cell_xls(c));
 				break;
-			case 'PtgRefN': /* 2.5.198.88 */
+			case 'PtgRefN': /* [MS-XLS] 2.5.198.88 */
 				/*::type = f[1][0]; */c = cell ? shift_cell_xls((f[1][1]/*:any*/), cell, opts) : (f[1][1]/*:any*/);
 				stack.push(encode_cell_xls(c));
 				break;
-			case 'PtgRef3d': /* 2.5.198.85 */
+			case 'PtgRef3d': /* [MS-XLS] 2.5.198.85 */
 				/*::type = f[1][0]; */ixti = /*::Number(*/f[1][1]/*::)*/; c = shift_cell_xls((f[1][2]/*:any*/), _range, opts);
 				sname = get_ixti(supbooks, ixti, opts);
 				var w = sname; /* IE9 fails on defined names */ // eslint-disable-line no-unused-vars
 				stack.push(sname + "!" + encode_cell_xls(c));
 				break;
 
-			case 'PtgFunc': /* 2.5.198.62 */
-			case 'PtgFuncVar': /* 2.5.198.63 */
+			case 'PtgFunc': /* [MS-XLS] 2.5.198.62 */
+			case 'PtgFuncVar': /* [MS-XLS] 2.5.198.63 */
 				/* f[1] = [argc, func, type] */
 				var argc/*:number*/ = (f[1][0]/*:any*/), func/*:string*/ = (f[1][1]/*:any*/);
 				if(!argc) argc = 0;
@@ -785,38 +770,38 @@ function stringify_formula(formula/*Array<any>*/, range, cell/*:any*/, supbooks,
 				stack.push(func + "(" + args.join(",") + ")");
 				break;
 
-			case 'PtgBool': /* 2.5.198.42 */
+			case 'PtgBool': /* [MS-XLS] 2.5.198.42 */
 				stack.push(f[1] ? "TRUE" : "FALSE"); break;
-			case 'PtgInt': /* 2.5.198.66 */
+			case 'PtgInt': /* [MS-XLS] 2.5.198.66 */
 				stack.push(/*::String(*/f[1]/*::)*/); break;
-			case 'PtgNum': /* 2.5.198.79 TODO: precision? */
+			case 'PtgNum': /* [MS-XLS] 2.5.198.79 TODO: precision? */
 				stack.push(String(f[1])); break;
-			case 'PtgStr': /* 2.5.198.89 */
+			case 'PtgStr': /* [MS-XLS] 2.5.198.89 */
 				// $FlowIgnore
 				stack.push('"' + f[1] + '"'); break;
-			case 'PtgErr': /* 2.5.198.57 */
+			case 'PtgErr': /* [MS-XLS] 2.5.198.57 */
 				stack.push(/*::String(*/f[1]/*::)*/); break;
-			case 'PtgAreaN': /* 2.5.198.31 TODO */
+			case 'PtgAreaN': /* [MS-XLS] 2.5.198.31 TODO */
 				/*::type = f[1][0]; */r = shift_range_xls(f[1][1], cell ? {s:cell} : _range, opts);
 				stack.push(encode_range_xls((r/*:any*/), opts));
 				break;
-			case 'PtgArea': /* 2.5.198.27 TODO: fixed points */
+			case 'PtgArea': /* [MS-XLS] 2.5.198.27 TODO: fixed points */
 				/*::type = f[1][0]; */r = shift_range_xls(f[1][1], _range, opts);
 				stack.push(encode_range_xls((r/*:any*/), opts));
 				break;
-			case 'PtgArea3d': /* 2.5.198.28 TODO */
+			case 'PtgArea3d': /* [MS-XLS] 2.5.198.28 TODO */
 				/*::type = f[1][0]; */ixti = /*::Number(*/f[1][1]/*::)*/; r = f[1][2];
 				sname = get_ixti(supbooks, ixti, opts);
 				stack.push(sname + "!" + encode_range_xls((r/*:any*/), opts));
 				break;
-			case 'PtgAttrSum': /* 2.5.198.41 */
+			case 'PtgAttrSum': /* [MS-XLS] 2.5.198.41 */
 				stack.push("SUM(" + stack.pop() + ")");
 				break;
 
-			case 'PtgAttrSemi': /* 2.5.198.37 */
+			case 'PtgAttrSemi': /* [MS-XLS] 2.5.198.37 */
 				break;
 
-			case 'PtgName': /* 2.5.97.60 TODO: revisions */
+			case 'PtgName': /* [MS-XLS] 2.5.198.76 ; [MS-XLSB] 2.5.97.60 TODO: revisions */
 				/* f[1] = type, 0, nameindex */
 				nameidx = (f[1][2]/*:any*/);
 				var lbl = (supbooks.names||[])[nameidx-1] || (supbooks[0]||[])[nameidx];
@@ -825,7 +810,7 @@ function stringify_formula(formula/*Array<any>*/, range, cell/*:any*/, supbooks,
 				stack.push(name);
 				break;
 
-			case 'PtgNameX': /* 2.5.97.61 TODO: revisions */
+			case 'PtgNameX': /* [MS-XLS] 2.5.198.77 ; [MS-XLSB] 2.5.97.61 TODO: revisions */
 				/* f[1] = type, ixti, nameindex */
 				var bookidx/*:number*/ = (f[1][1]/*:any*/); nameidx = (f[1][2]/*:any*/); var externbook;
 				/* TODO: Properly handle missing values */
@@ -851,7 +836,7 @@ function stringify_formula(formula/*Array<any>*/, range, cell/*:any*/, supbooks,
 				stack.push(externbook.Name);
 				break;
 
-			case 'PtgParen': /* 2.5.198.80 */
+			case 'PtgParen': /* [MS-XLS] 2.5.198.80 */
 				var lp = '(', rp = ')';
 				if(last_sp >= 0) {
 					sp = "";
@@ -872,13 +857,13 @@ function stringify_formula(formula/*Array<any>*/, range, cell/*:any*/, supbooks,
 				}
 				stack.push(lp + stack.pop() + rp); break;
 
-			case 'PtgRefErr': /* 2.5.198.86 */
+			case 'PtgRefErr': /* [MS-XLS] 2.5.198.86 */
 				stack.push('#REF!'); break;
 
-			case 'PtgRefErr3d': /* 2.5.198.87 */
+			case 'PtgRefErr3d': /* [MS-XLS] 2.5.198.87 */
 				stack.push('#REF!'); break;
 
-			case 'PtgExp': /* 2.5.198.58 TODO */
+			case 'PtgExp': /* [MS-XLS] 2.5.198.58 TODO */
 				c = {c:(f[1][1]/*:any*/),r:(f[1][0]/*:any*/)};
 				var q = ({c: cell.c, r:cell.r}/*:any*/);
 				if(supbooks.sharedf[encode_cell(c)]) {
@@ -900,55 +885,55 @@ function stringify_formula(formula/*Array<any>*/, range, cell/*:any*/, supbooks,
 				}
 				break;
 
-			case 'PtgArray': /* 2.5.198.32 TODO */
+			case 'PtgArray': /* [MS-XLS] 2.5.198.32 TODO */
 				stack.push("{" + stringify_array(/*::(*/f[1]/*:: :any)*/) + "}");
 				break;
 
-			case 'PtgMemArea': /* 2.5.198.70 TODO: confirm this is a non-display */
+			case 'PtgMemArea': /* [MS-XLS] 2.5.198.70 TODO: confirm this is a non-display */
 				//stack.push("(" + f[2].map(encode_range).join(",") + ")");
 				break;
 
-			case 'PtgAttrSpace': /* 2.5.198.38 */
-			case 'PtgAttrSpaceSemi': /* 2.5.198.39 */
+			case 'PtgAttrSpace': /* [MS-XLS] 2.5.198.38 */
+			case 'PtgAttrSpaceSemi': /* [MS-XLS] 2.5.198.39 */
 				last_sp = ff;
 				break;
 
-			case 'PtgTbl': /* 2.5.198.92 TODO */
+			case 'PtgTbl': /* [MS-XLS] 2.5.198.92 TODO */
 				break;
 
-			case 'PtgMemErr': /* 2.5.198.71 */
+			case 'PtgMemErr': /* [MS-XLS] 2.5.198.71 */
 				break;
 
-			case 'PtgMissArg': /* 2.5.198.74 */
+			case 'PtgMissArg': /* [MS-XLS] 2.5.198.74 */
 				stack.push("");
 				break;
 
-			case 'PtgAreaErr': /* 2.5.198.29 */
+			case 'PtgAreaErr': /* [MS-XLS] 2.5.198.29 */
 				stack.push("#REF!"); break;
 
-			case 'PtgAreaErr3d': /* 2.5.198.30 */
+			case 'PtgAreaErr3d': /* [MS-XLS] 2.5.198.30 */
 				stack.push("#REF!"); break;
 
-			case 'PtgMemFunc': /* 2.5.198.72 TODO */
+			case 'PtgMemFunc': /* [MS-XLS] 2.5.198.72 TODO */
 				break;
-			case 'PtgMemNoMem': /* 2.5.198.73 TODO -- find a test case */
-				throw new Error('Unrecognized Formula Token: ' + String(f));
+			case 'PtgMemNoMem': /* [MS-XLS] 2.5.198.73 TODO */
+				break;
 
-			case 'PtgElfCol': /* 2.5.198.46 */
-			case 'PtgElfColS': /* 2.5.198.47 */
-			case 'PtgElfColSV': /* 2.5.198.48 */
-			case 'PtgElfColV': /* 2.5.198.49 */
-			case 'PtgElfLel': /* 2.5.198.50 */
-			case 'PtgElfRadical': /* 2.5.198.51 */
-			case 'PtgElfRadicalLel': /* 2.5.198.52 */
-			case 'PtgElfRadicalS': /* 2.5.198.53 */
-			case 'PtgElfRw': /* 2.5.198.54 */
-			case 'PtgElfRwV': /* 2.5.198.55 */
+			case 'PtgElfCol': /* [MS-XLS] 2.5.198.46 */
+			case 'PtgElfColS': /* [MS-XLS] 2.5.198.47 */
+			case 'PtgElfColSV': /* [MS-XLS] 2.5.198.48 */
+			case 'PtgElfColV': /* [MS-XLS] 2.5.198.49 */
+			case 'PtgElfLel': /* [MS-XLS] 2.5.198.50 */
+			case 'PtgElfRadical': /* [MS-XLS] 2.5.198.51 */
+			case 'PtgElfRadicalLel': /* [MS-XLS] 2.5.198.52 */
+			case 'PtgElfRadicalS': /* [MS-XLS] 2.5.198.53 */
+			case 'PtgElfRw': /* [MS-XLS] 2.5.198.54 */
+			case 'PtgElfRwV': /* [MS-XLS] 2.5.198.55 */
 				throw new Error("Unsupported ELFs");
 
-			case 'PtgAttrBaxcel': /* 2.5.198.33 TODO -- find a test case*/
+			case 'PtgAttrBaxcel': /* [MS-XLS] 2.5.198.33 TODO -- find a test case*/
 				throw new Error('Unrecognized Formula Token: ' + String(f));
-			case 'PtgSxName': /* 2.5.198.91 TODO -- find a test case */
+			case 'PtgSxName': /* [MS-XLS] 2.5.198.91 TODO -- find a test case */
 				throw new Error('Unrecognized Formula Token: ' + String(f));
 			case 'PtgList': /* [MS-XLSB] 2.5.97.52 TODO -- find a test case */
 				throw new Error('Unrecognized Formula Token: ' + String(f));

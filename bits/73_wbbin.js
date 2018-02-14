@@ -1,4 +1,4 @@
-/* [MS-XLSB] 2.4.301 BrtBundleSh */
+/* [MS-XLSB] 2.4.304 BrtBundleSh */
 function parse_BrtBundleSh(data, length/*:number*/) {
 	var z = {};
 	z.Hidden = data.read_shift(4); //hsState ST_SheetState
@@ -16,7 +16,7 @@ function write_BrtBundleSh(data, o) {
 	return o.length > o.l ? o.slice(0, o.l) : o;
 }
 
-/* [MS-XLSB] 2.4.807 BrtWbProp */
+/* [MS-XLSB] 2.4.815 BrtWbProp */
 function parse_BrtWbProp(data, length)/*:WBProps*/ {
 	var o/*:WBProps*/ = ({}/*:any*/);
 	var flags = data.read_shift(4);
@@ -61,7 +61,7 @@ function parse_BrtFRTArchID$(data, length) {
 	return o;
 }
 
-/* [MS-XLSB] 2.4.680 BrtName */
+/* [MS-XLSB] 2.4.687 BrtName */
 function parse_BrtName(data, length, opts) {
 	var end = data.l + length;
 	data.l += 4; //var flags = data.read_shift(4);
@@ -83,7 +83,7 @@ function parse_BrtName(data, length, opts) {
 	return out;
 }
 
-/* [MS-XLSB] 2.1.7.60 Workbook */
+/* [MS-XLSB] 2.1.7.61 Workbook */
 function parse_wb_bin(data, opts)/*:WorkbookFile*/ {
 	var wb = { AppVersion:{}, WBProps:{}, WBView:[], Sheets:[], CalcPr:{}, xmlns: "" };
 	var pass = false;
@@ -185,7 +185,6 @@ function parse_wb_bin(data, opts)/*:WorkbookFile*/ {
 	return wb;
 }
 
-/* [MS-XLSB] 2.1.7.60 Workbook */
 function write_BUNDLESHS(ba, wb/*::, opts*/) {
 	write_record(ba, "BrtBeginBundleShs");
 	for(var idx = 0; idx != wb.SheetNames.length; ++idx) {
@@ -196,7 +195,7 @@ function write_BUNDLESHS(ba, wb/*::, opts*/) {
 	write_record(ba, "BrtEndBundleShs");
 }
 
-/* [MS-XLSB] 2.4.643 BrtFileVersion */
+/* [MS-XLSB] 2.4.649 BrtFileVersion */
 function write_BrtFileVersion(data, o) {
 	if(!o) o = new_buf(127);
 	for(var i = 0; i != 4; ++i) o.write_shift(4, 0);
@@ -208,7 +207,7 @@ function write_BrtFileVersion(data, o) {
 	return o.length > o.l ? o.slice(0, o.l) : o;
 }
 
-/* [MS-XLSB] 2.4.298 BrtBookView */
+/* [MS-XLSB] 2.4.301 BrtBookView */
 function write_BrtBookView(idx, o) {
 	if(!o) o = new_buf(29);
 	o.write_shift(-4, 0);
@@ -223,7 +222,6 @@ function write_BrtBookView(idx, o) {
 	return o.length > o.l ? o.slice(0, o.l) : o;
 }
 
-/* [MS-XLSB] 2.1.7.60 Workbook */
 function write_BOOKVIEWS(ba, wb/*::, opts*/) {
 	/* required if hidden tab appears before visible tab */
 	if(!wb.Workbook || !wb.Workbook.Sheets) return;
@@ -240,7 +238,7 @@ function write_BOOKVIEWS(ba, wb/*::, opts*/) {
 	write_record(ba, "BrtEndBookViews");
 }
 
-/* [MS-XLSB] 2.4.302 BrtCalcProp */
+/* [MS-XLSB] 2.4.305 BrtCalcProp */
 /*function write_BrtCalcProp(data, o) {
 	if(!o) o = new_buf(26);
 	o.write_shift(4,0); // force recalc
@@ -253,14 +251,14 @@ function write_BOOKVIEWS(ba, wb/*::, opts*/) {
 	return o;
 }*/
 
-/* [MS-XLSB] 2.4.640 BrtFileRecover */
+/* [MS-XLSB] 2.4.646 BrtFileRecover */
 /*function write_BrtFileRecover(data, o) {
 	if(!o) o = new_buf(1);
 	o.write_shift(1,0);
 	return o;
 }*/
 
-/* [MS-XLSB] 2.1.7.60 Workbook */
+/* [MS-XLSB] 2.1.7.61 Workbook */
 function write_wb_bin(wb, opts) {
 	var ba = buf_array();
 	write_record(ba, "BrtBeginBook");

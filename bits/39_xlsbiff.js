@@ -1,6 +1,4 @@
-/* --- MS-XLS --- */
-
-/* 2.5.19 */
+/* [MS-XLS] 2.5.19 */
 function parse_XLSCell(blob/*::, length*/)/*:Cell*/ {
 	var rw = blob.read_shift(2); // 0-indexed
 	var col = blob.read_shift(2);
@@ -15,7 +13,7 @@ function write_XLSCell(R/*:number*/, C/*:number*/, ixfe/*:?number*/, o) {
 	return o;
 }
 
-/* 2.5.134 */
+/* [MS-XLS] 2.5.134 */
 function parse_frtHeader(blob) {
 	var rt = blob.read_shift(2);
 	var flags = blob.read_shift(2); // TODO: parse these flags
@@ -27,21 +25,21 @@ function parse_frtHeader(blob) {
 
 function parse_OptXLUnicodeString(blob, length, opts) { return length === 0 ? "" : parse_XLUnicodeString2(blob, length, opts); }
 
-/* 2.5.344 */
+/* [MS-XLS] 2.5.344 */
 function parse_XTI(blob, length, opts) {
 	var w = opts.biff > 8 ? 4 : 2;
 	var iSupBook = blob.read_shift(w), itabFirst = blob.read_shift(w,'i'), itabLast = blob.read_shift(w,'i');
 	return [iSupBook, itabFirst, itabLast];
 }
 
-/* 2.5.218 */
+/* [MS-XLS] 2.5.218 */
 function parse_RkRec(blob) {
 	var ixfe = blob.read_shift(2);
 	var RK = parse_RkNumber(blob);
 	return [ixfe, RK];
 }
 
-/* 2.5.1 */
+/* [MS-XLS] 2.5.1 */
 function parse_AddinUdf(blob, length, opts) {
 	blob.l += 4; length -= 4;
 	var l = blob.l + length;
@@ -53,7 +51,7 @@ function parse_AddinUdf(blob, length, opts) {
 	return udfName;
 }
 
-/* 2.5.209 TODO: Check sizes */
+/* [MS-XLS] 2.5.209 TODO: Check sizes */
 function parse_Ref8U(blob/*::, length*/) {
 	var rwFirst = blob.read_shift(2);
 	var rwLast = blob.read_shift(2);
@@ -70,7 +68,7 @@ function write_Ref8U(r/*:Range*/, o) {
 	return o;
 }
 
-/* 2.5.211 */
+/* [MS-XLS] 2.5.211 */
 function parse_RefU(blob/*::, length*/) {
 	var rwFirst = blob.read_shift(2);
 	var rwLast = blob.read_shift(2);
@@ -79,10 +77,10 @@ function parse_RefU(blob/*::, length*/) {
 	return {s:{c:colFirst, r:rwFirst}, e:{c:colLast,r:rwLast}};
 }
 
-/* 2.5.207 */
+/* [MS-XLS] 2.5.207 */
 var parse_Ref = parse_RefU;
 
-/* 2.5.143 */
+/* [MS-XLS] 2.5.143 */
 function parse_FtCmo(blob/*::, length*/) {
 	blob.l += 4;
 	var ot = blob.read_shift(2);
@@ -92,7 +90,7 @@ function parse_FtCmo(blob/*::, length*/) {
 	return [id, ot, flags];
 }
 
-/* 2.5.149 */
+/* [MS-XLS] 2.5.149 */
 function parse_FtNts(blob) {
 	var out = {};
 	blob.l += 4;
@@ -102,7 +100,7 @@ function parse_FtNts(blob) {
 	return out;
 }
 
-/* 2.5.142 */
+/* [MS-XLS] 2.5.142 */
 function parse_FtCf(blob) {
 	var out = {};
 	blob.l += 4;
@@ -110,7 +108,7 @@ function parse_FtCf(blob) {
 	return out;
 }
 
-/* 2.5.140 - 2.5.154 and friends */
+/* [MS-XLS] 2.5.140 - 2.5.154 and friends */
 function parse_FtSkip(blob) { blob.l += 2; blob.l += blob.read_shift(2); }
 var FtTab = {
 	/*::[*/0x00/*::]*/: parse_FtSkip,      /* FtEnd */
@@ -149,7 +147,7 @@ function parse_FtArray(blob, length/*::, ot*/) {
 
 /* --- 2.4 Records --- */
 
-/* 2.4.21 */
+/* [MS-XLS] 2.4.21 */
 function parse_BOF(blob, length) {
 	var o = {BIFFVer:0, dt:0};
 	o.BIFFVer = blob.read_shift(2); length -= 2;
@@ -191,7 +189,7 @@ function write_BOF(wb/*:Workbook*/, t/*:number*/, o) {
 }
 
 
-/* 2.4.146 */
+/* [MS-XLS] 2.4.146 */
 function parse_InterfaceHdr(blob, length) {
 	if(length === 0) return 0x04b0;
 	if((blob.read_shift(2))!==0x04b0){/* empty */}
@@ -199,7 +197,7 @@ function parse_InterfaceHdr(blob, length) {
 }
 
 
-/* 2.4.349 */
+/* [MS-XLS] 2.4.349 */
 function parse_WriteAccess(blob, length, opts) {
 	if(opts.enc) { blob.l += length; return ""; }
 	var l = blob.l;
@@ -212,20 +210,20 @@ function write_WriteAccess(s/*:string*/, opts) {
 	var b8 = !opts || opts.biff == 8;
 	var o = new_buf(b8 ? 112 : 54);
 	o.write_shift(opts.biff == 8 ? 2 : 1, 7);
-	o.write_shift(1, 0);
+	if(b8) o.write_shift(1, 0);
 	o.write_shift(4, 0x33336853);
-	o.write_shift(4, 0x00534A74);
-	while(o.l < o.length) o.write_shift(1, 0);
+	o.write_shift(4, (0x00534A74 | (b8 ? 0 : 0x20000000)));
+	while(o.l < o.length) o.write_shift(1, (b8 ? 0 : 32));
 	return o;
 }
 
-/* 2.4.351 */
+/* [MS-XLS] 2.4.351 */
 function parse_WsBool(blob, length, opts) {
 	var flags = opts && opts.biff == 8 || length == 2 ? blob.read_shift(2) : (blob.l += length, 0);
 	return { fDialog: flags & 0x10 };
 }
 
-/* 2.4.28 */
+/* [MS-XLS] 2.4.28 */
 function parse_BoundSheet8(blob, length, opts) {
 	var pos = blob.read_shift(4);
 	var hidden = blob.read_shift(1) & 0x03;
@@ -253,7 +251,7 @@ function write_BoundSheet8(data, opts) {
 	out.l = o.l; return out;
 }
 
-/* 2.4.265 TODO */
+/* [MS-XLS] 2.4.265 TODO */
 function parse_SST(blob, length)/*:SST*/ {
 	var end = blob.l + length;
 	var cnt = blob.read_shift(4);
@@ -266,7 +264,7 @@ function parse_SST(blob, length)/*:SST*/ {
 	return strs;
 }
 
-/* 2.4.107 */
+/* [MS-XLS] 2.4.107 */
 function parse_ExtSST(blob, length) {
 	var extsst = {};
 	extsst.dsst = blob.read_shift(2);
@@ -275,7 +273,7 @@ function parse_ExtSST(blob, length) {
 }
 
 
-/* 2.4.221 TODO: check BIFF2-4 */
+/* [MS-XLS] 2.4.221 TODO: check BIFF2-4 */
 function parse_Row(blob) {
 	var z = ({}/*:any*/);
 	z.r = blob.read_shift(2);
@@ -293,7 +291,7 @@ function parse_Row(blob) {
 }
 
 
-/* 2.4.125 */
+/* [MS-XLS] 2.4.125 */
 function parse_ForceFullCalculation(blob) {
 	var header = parse_frtHeader(blob);
 	if(header.type != 0x08A3) throw new Error("Invalid Future Record " + header.type);
@@ -305,13 +303,13 @@ function parse_ForceFullCalculation(blob) {
 
 
 
-/* 2.4.215 rt */
+/* [MS-XLS] 2.4.215 rt */
 function parse_RecalcId(blob) {
 	blob.read_shift(2);
 	return blob.read_shift(4);
 }
 
-/* 2.4.87 */
+/* [MS-XLS] 2.4.87 */
 function parse_DefaultRowHeight(blob, length, opts) {
 	var f = 0;
 	if(!(opts && opts.biff == 2)) {
@@ -325,7 +323,7 @@ function parse_DefaultRowHeight(blob, length, opts) {
 	return [fl, miyRw];
 }
 
-/* 2.4.345 TODO */
+/* [MS-XLS] 2.4.345 TODO */
 function parse_Window1(blob) {
 	var xWn = blob.read_shift(2), yWn = blob.read_shift(2), dxWn = blob.read_shift(2), dyWn = blob.read_shift(2);
 	var flags = blob.read_shift(2), iTabCur = blob.read_shift(2), iTabFirst = blob.read_shift(2);
@@ -346,7 +344,7 @@ function write_Window1(/*::opts*/) {
 	o.write_shift(2, 0x01f4);
 	return o;
 }
-/* 2.4.346 TODO */
+/* [MS-XLS] 2.4.346 TODO */
 function parse_Window2(blob, length, opts) {
 	if(opts && opts.biff >= 2 && opts.biff < 8) return {};
 	var f = blob.read_shift(2);
@@ -363,13 +361,13 @@ function write_Window2(view) {
 	return o;
 }
 
-/* 2.4.122 TODO */
+/* [MS-XLS] 2.4.122 TODO */
 function parse_Font(blob, length, opts) {
 	var o/*:any*/ = {
 		dyHeight: blob.read_shift(2),
 		fl: blob.read_shift(2)
 	};
-	switch(opts && opts.biff || 8) {
+	switch((opts && opts.biff) || 8) {
 		case 2: break;
 		case 3: case 4: blob.l += 2; break;
 		default: blob.l += 10; break;
@@ -377,15 +375,29 @@ function parse_Font(blob, length, opts) {
 	o.name = parse_ShortXLUnicodeString(blob, 0, opts);
 	return o;
 }
+function write_Font(data, opts) {
+	var name = data.name || "Arial";
+	var b5 = (opts && (opts.biff == 5)), w = (b5 ? (15 + name.length) : (16 + 2 * name.length));
+	var o = new_buf(w);
+	o.write_shift(2, (data.sz || 12) * 20);
+	o.write_shift(4, 0);
+	o.write_shift(2, 400);
+	o.write_shift(4, 0);
+	o.write_shift(2, 0);
+	o.write_shift(1, name.length);
+	if(!b5) o.write_shift(1, 1);
+	o.write_shift((b5 ? 1 : 2) * name.length, name, (b5 ? "sbcs" : "utf16le"));
+	return o;
+}
 
-/* 2.4.149 */
+/* [MS-XLS] 2.4.149 */
 function parse_LabelSst(blob) {
 	var cell = parse_XLSCell(blob);
 	cell.isst = blob.read_shift(4);
 	return cell;
 }
 
-/* 2.4.148 */
+/* [MS-XLS] 2.4.148 */
 function parse_Label(blob, length, opts) {
 	var target = blob.l + length;
 	var cell = parse_XLSCell(blob, 6);
@@ -405,23 +417,26 @@ function write_Label(R/*:number*/, C/*:number*/, v/*:string*/, os/*:number*/, op
 }
 
 
-/* 2.4.126 Number Formats */
+/* [MS-XLS] 2.4.126 Number Formats */
 function parse_Format(blob, length, opts) {
 	var numFmtId = blob.read_shift(2);
 	var fmtstr = parse_XLUnicodeString2(blob, 0, opts);
 	return [numFmtId, fmtstr];
 }
-function write_Format(i/*:number*/, f/*:string*/, o) {
-	if(!o) o = new_buf(6 + 4 * f.length);
+function write_Format(i/*:number*/, f/*:string*/, opts, o) {
+	var b5 = (opts && (opts.biff == 5));
+	if(!o) o = new_buf(b5 ? (3 + f.length) : (5 + 2 * f.length));
 	o.write_shift(2, i);
-	write_XLUnicodeString(f, null, o);
+	o.write_shift((b5 ? 1 : 2), f.length);
+	if(!b5) o.write_shift(1, 1);
+	o.write_shift((b5 ? 1 : 2) * f.length, f, (b5 ? 'sbcs' : 'utf16le'));
 	var out = (o.length > o.l) ? o.slice(0, o.l) : o;
-	if(o.l == null) o.l = o.length;
+	if(out.l == null) out.l = out.length;
 	return out;
 }
 var parse_BIFF2Format = parse_XLUnicodeString2;
 
-/* 2.4.90 */
+/* [MS-XLS] 2.4.90 */
 function parse_Dimensions(blob, length, opts) {
 	var end = blob.l + length;
 	var w = opts.biff == 8 || !opts.biff ? 4 : 2;
@@ -441,14 +456,14 @@ function write_Dimensions(range, opts) {
 	return o;
 }
 
-/* 2.4.220 */
+/* [MS-XLS] 2.4.220 */
 function parse_RK(blob) {
 	var rw = blob.read_shift(2), col = blob.read_shift(2);
 	var rkrec = parse_RkRec(blob);
 	return {r:rw, c:col, ixfe:rkrec[0], rknum:rkrec[1]};
 }
 
-/* 2.4.175 */
+/* [MS-XLS] 2.4.175 */
 function parse_MulRk(blob, length) {
 	var target = blob.l + length - 2;
 	var rw = blob.read_shift(2), col = blob.read_shift(2);
@@ -459,7 +474,7 @@ function parse_MulRk(blob, length) {
 	if(rkrecs.length != lastcol - col + 1) throw new Error("MulRK length mismatch");
 	return {r:rw, c:col, C:lastcol, rkrec:rkrecs};
 }
-/* 2.4.174 */
+/* [MS-XLS] 2.4.174 */
 function parse_MulBlank(blob, length) {
 	var target = blob.l + length - 2;
 	var rw = blob.read_shift(2), col = blob.read_shift(2);
@@ -471,7 +486,7 @@ function parse_MulBlank(blob, length) {
 	return {r:rw, c:col, C:lastcol, ixfe:ixfes};
 }
 
-/* 2.5.20 2.5.249 TODO: interpret values here */
+/* [MS-XLS] 2.5.20 2.5.249 TODO: interpret values here */
 function parse_CellStyleXF(blob, length, style, opts) {
 	var o = {};
 	var a = blob.read_shift(4), b = blob.read_shift(4);
@@ -515,7 +530,7 @@ function parse_CellStyleXF(blob, length, style, opts) {
 //function parse_CellXF(blob, length, opts) {return parse_CellStyleXF(blob,length,0, opts);}
 //function parse_StyleXF(blob, length, opts) {return parse_CellStyleXF(blob,length,1, opts);}
 
-/* 2.4.353 TODO: actually do this right */
+/* [MS-XLS] 2.4.353 TODO: actually do this right */
 function parse_XF(blob, length, opts) {
 	var o = {};
 	o.ifnt = blob.read_shift(2); o.numFmtId = blob.read_shift(2); o.flags = blob.read_shift(2);
@@ -524,19 +539,25 @@ function parse_XF(blob, length, opts) {
 	o.data = parse_CellStyleXF(blob, length, o.fStyle, opts);
 	return o;
 }
-function write_XF(data, ixfeP, o) {
-	if(!o) o = new_buf(20);
+function write_XF(data, ixfeP, opts, o) {
+	var b5 = (opts && (opts.biff == 5));
+	if(!o) o = new_buf(b5 ? 16 : 20);
 	o.write_shift(2, 0);
-	o.write_shift(2, data.numFmtId||0);
-	o.write_shift(2, 0);
+	if(data.style) {
+		o.write_shift(2, (data.numFmtId||0));
+		o.write_shift(2, 0xFFF4);
+	} else {
+		o.write_shift(2, (data.numFmtId||0));
+		o.write_shift(2, (ixfeP<<4));
+	}
 	o.write_shift(4, 0);
 	o.write_shift(4, 0);
-	o.write_shift(4, 0);
+	if(!b5) o.write_shift(4, 0);
 	o.write_shift(2, 0);
 	return o;
 }
 
-/* 2.4.134 */
+/* [MS-XLS] 2.4.134 */
 function parse_Guts(blob) {
 	blob.l += 4;
 	var out = [blob.read_shift(2), blob.read_shift(2)];
@@ -553,7 +574,7 @@ function write_Guts(guts/*:Array<number>*/) {
 	return o;
 }
 
-/* 2.4.24 */
+/* [MS-XLS] 2.4.24 */
 function parse_BoolErr(blob, length, opts) {
 	var cell = parse_XLSCell(blob, 6);
 	if(opts.biff == 2) ++blob.l;
@@ -569,7 +590,7 @@ function write_BoolErr(R/*:number*/, C/*:number*/, v, os/*:number*/, opts, t/*:s
 	return o;
 }
 
-/* 2.4.180 Number */
+/* [MS-XLS] 2.4.180 Number */
 function parse_Number(blob) {
 	var cell = parse_XLSCell(blob, 6);
 	var xnum = parse_Xnum(blob, 8);
@@ -585,7 +606,7 @@ function write_Number(R/*:number*/, C/*:number*/, v, os/*:: :number, opts*/) {
 
 var parse_XLHeaderFooter = parse_OptXLUnicodeString; // TODO: parse 2.4.136
 
-/* 2.4.271 */
+/* [MS-XLS] 2.4.271 */
 function parse_SupBook(blob, length, opts) {
 	var end = blob.l + length;
 	var ctab = blob.read_shift(2);
@@ -600,7 +621,7 @@ function parse_SupBook(blob, length, opts) {
 	return [cch, ctab, virtPath, rgst];
 }
 
-/* 2.4.105 TODO */
+/* [MS-XLS] 2.4.105 TODO */
 function parse_ExternName(blob, length, opts) {
 	var flags = blob.read_shift(2);
 	var body;
@@ -620,7 +641,7 @@ function parse_ExternName(blob, length, opts) {
 	return o;
 }
 
-/* 2.4.150 TODO */
+/* [MS-XLS] 2.4.150 TODO */
 var XLSLblBuiltIn = [
 	"_xlnm.Consolidate_Area",
 	"_xlnm.Auto_Open",
@@ -662,7 +683,7 @@ function parse_Lbl(blob, length, opts) {
 	};
 }
 
-/* 2.4.106 TODO: verify filename encoding */
+/* [MS-XLS] 2.4.106 TODO: verify filename encoding */
 function parse_ExternSheet(blob, length, opts) {
 	if(opts.biff < 8) return parse_BIFF5ExternSheet(blob, length, opts);
 	var o = [], target = blob.l + length, len = blob.read_shift(opts.biff > 8 ? 4 : 2);
@@ -677,7 +698,7 @@ function parse_BIFF5ExternSheet(blob, length, opts) {
 	return o.charCodeAt(0) == 0x03 ? o.slice(1) : o;
 }
 
-/* 2.4.176 TODO: check older biff */
+/* [MS-XLS] 2.4.176 TODO: check older biff */
 function parse_NameCmt(blob, length, opts) {
 	if(opts.biff < 8) { blob.l += length; return; }
 	var cchName = blob.read_shift(2);
@@ -687,7 +708,7 @@ function parse_NameCmt(blob, length, opts) {
 	return [name, comment];
 }
 
-/* 2.4.260 */
+/* [MS-XLS] 2.4.260 */
 function parse_ShrFmla(blob, length, opts) {
 	var ref = parse_RefU(blob, 6);
 	blob.l++;
@@ -696,7 +717,7 @@ function parse_ShrFmla(blob, length, opts) {
 	return [parse_SharedParsedFormula(blob, length, opts), cUse, ref];
 }
 
-/* 2.4.4 TODO */
+/* [MS-XLS] 2.4.4 TODO */
 function parse_Array(blob, length, opts) {
 	var ref = parse_Ref(blob, 6);
 	/* TODO: fAlwaysCalc */
@@ -708,7 +729,7 @@ function parse_Array(blob, length, opts) {
 	return [ref, parse_ArrayParsedFormula(blob, length, opts, ref)];
 }
 
-/* 2.4.173 */
+/* [MS-XLS] 2.4.173 */
 function parse_MTRSettings(blob) {
 	var fMTREnabled = blob.read_shift(4) !== 0x00;
 	var fUserSetThreadCount = blob.read_shift(4) !== 0x00;
@@ -716,7 +737,7 @@ function parse_MTRSettings(blob) {
 	return [fMTREnabled, fUserSetThreadCount, cUserThreadCount];
 }
 
-/* 2.5.186 TODO: BIFF5 */
+/* [MS-XLS] 2.5.186 TODO: BIFF5 */
 function parse_NoteSh(blob, length, opts) {
 	if(opts.biff < 8) return;
 	var row = blob.read_shift(2), col = blob.read_shift(2);
@@ -726,13 +747,13 @@ function parse_NoteSh(blob, length, opts) {
 	return [{r:row,c:col}, stAuthor, idObj, flags];
 }
 
-/* 2.4.179 */
+/* [MS-XLS] 2.4.179 */
 function parse_Note(blob, length, opts) {
 	/* TODO: Support revisions */
 	return parse_NoteSh(blob, length, opts);
 }
 
-/* 2.4.168 */
+/* [MS-XLS] 2.4.168 */
 function parse_MergeCells(blob, length)/*:Array<Range>*/ {
 	var merges/*:Array<Range>*/ = [];
 	var cmcs = blob.read_shift(2);
@@ -746,7 +767,7 @@ function write_MergeCells(merges/*:Array<Range>*/) {
 	return o;
 }
 
-/* 2.4.181 TODO: parse all the things! */
+/* [MS-XLS] 2.4.181 TODO: parse all the things! */
 function parse_Obj(blob, length, opts) {
 	if(opts && opts.biff < 8) return parse_BIFF5Obj(blob, length, opts);
 	var cmo = parse_FtCmo(blob, 22); // id, ot, flags
@@ -791,7 +812,7 @@ function parse_BIFF5Obj(blob, length, opts) {
 	return { cmo: [id, ot, grbit], ft:fts };
 }
 
-/* 2.4.329 TODO: parse properly */
+/* [MS-XLS] 2.4.329 TODO: parse properly */
 function parse_TxO(blob, length, opts) {
 	var s = blob.l;
 	var texts = "";
@@ -820,7 +841,7 @@ try {
 	}
 
 	blob.l = s + length;
-	/* 2.5.272 TxORuns */
+	/* [MS-XLS] 2.5.272 TxORuns */
 //	var rgTxoRuns = [];
 //	for(var j = 0; j != cbRuns/8-1; ++j) blob.l += 8;
 //	var cchText2 = blob.read_shift(2);
@@ -831,7 +852,7 @@ try {
 } catch(e) { blob.l = s + length; return { t: texts }; }
 }
 
-/* 2.4.140 */
+/* [MS-XLS] 2.4.140 */
 function parse_HLink(blob, length) {
 	var ref = parse_Ref8U(blob, 8);
 	blob.l += 16; /* CLSID */
@@ -849,7 +870,7 @@ function write_HLink(hl) {
 }
 
 
-/* 2.4.141 */
+/* [MS-XLS] 2.4.141 */
 function parse_HLinkTooltip(blob, length) {
 	blob.read_shift(2);
 	var ref = parse_Ref8U(blob, 8);
@@ -869,7 +890,7 @@ function write_HLinkTooltip(hl) {
 	return O;
 }
 
-/* 2.4.63 */
+/* [MS-XLS] 2.4.63 */
 function parse_Country(blob)/*:[string|number, string|number]*/ {
 	var o = [0,0], d;
 	d = blob.read_shift(2); o[0] = CountryEnum[d] || d;
@@ -883,7 +904,7 @@ function write_Country(o) {
 	return o;
 }
 
-/* 2.4.50 ClrtClient */
+/* [MS-XLS] 2.4.50 ClrtClient */
 function parse_ClrtClient(blob) {
 	var ccv = blob.read_shift(2);
 	var o = [];
@@ -891,7 +912,7 @@ function parse_ClrtClient(blob) {
 	return o;
 }
 
-/* 2.4.188 */
+/* [MS-XLS] 2.4.188 */
 function parse_Palette(blob) {
 	var ccv = blob.read_shift(2);
 	var o = [];
@@ -899,7 +920,7 @@ function parse_Palette(blob) {
 	return o;
 }
 
-/* 2.4.354 */
+/* [MS-XLS] 2.4.354 */
 function parse_XFCRC(blob) {
 	blob.l += 2;
 	var o = {cxfs:0, crc:0};
@@ -908,7 +929,7 @@ function parse_XFCRC(blob) {
 	return o;
 }
 
-/* 2.4.53 TODO: parse flags */
+/* [MS-XLS] 2.4.53 TODO: parse flags */
 /* [MS-XLSB] 2.4.323 TODO: parse flags */
 function parse_ColInfo(blob, length, opts) {
 	if(!opts.cellStyles) return parsenoop(blob, length);
@@ -922,9 +943,10 @@ function parse_ColInfo(blob, length, opts) {
 	return {s:colFirst, e:colLast, w:coldx, ixfe:ixfe, flags:flags};
 }
 
-/* 2.4.257 */
-function parse_Setup(blob/*, length*/) {
+/* [MS-XLS] 2.4.257 */
+function parse_Setup(blob, length) {
 	var o = {};
+	if(length < 32) return o;
 	blob.l += 16;
 	o.header = parse_Xnum(blob, 8);
 	o.footer = parse_Xnum(blob, 8);
@@ -932,7 +954,7 @@ function parse_Setup(blob/*, length*/) {
 	return o;
 }
 
-/* 2.4.261 */
+/* [MS-XLS] 2.4.261 */
 function parse_ShtProps(blob, length, opts) {
 	var def = {area:false};
 	if(opts.biff != 5) { blob.l += length; return def; }
@@ -941,16 +963,16 @@ function parse_ShtProps(blob, length, opts) {
 	return def;
 }
 
-/* 2.4.241 */
+/* [MS-XLS] 2.4.241 */
 function write_RRTabId(n/*:number*/) {
 	var out = new_buf(2 * n);
 	for(var i = 0; i < n; ++i) out.write_shift(2, i+1);
 	return out;
 }
 
-var parse_Blank = parse_XLSCell; /* 2.4.20 Just the cell */
-var parse_Scl = parseuint16a; /* 2.4.247 num, den */
-var parse_String = parse_XLUnicodeString; /* 2.4.268 */
+var parse_Blank = parse_XLSCell; /* [MS-XLS] 2.4.20 Just the cell */
+var parse_Scl = parseuint16a; /* [MS-XLS] 2.4.247 num, den */
+var parse_String = parse_XLUnicodeString; /* [MS-XLS] 2.4.268 */
 
 /* --- Specific to versions before BIFF8 --- */
 function parse_ImData(blob) {

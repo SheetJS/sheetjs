@@ -38,7 +38,7 @@ type CFBFiles = {[n:string]:CFBEntry};
 /* [MS-CFB] v20130118 */
 var CFB = (function _CFB(){
 var exports/*:CFBModule*/ = /*::(*/{}/*:: :any)*/;
-exports.version = '1.0.2';
+exports.version = '1.0.3';
 /* [MS-CFB] 2.6.4 */
 function namecmp(l/*:string*/, r/*:string*/)/*:number*/ {
 	var L = l.split("/"), R = r.split("/");
@@ -353,14 +353,14 @@ function read_directory(dir_start/*:number*/, sector_list/*:SectorList*/, sector
 			if(sector_list[o.start] === undefined) sector_list[o.start] = get_sector_list(sectors, o.start, sector_list.fat_addrs, sector_list.ssz);
 			sector_list[o.start].name = o.name;
 			o.content = (sector_list[o.start].data.slice(0,o.size)/*:any*/);
-			prep_blob(o.content, 0);
 		} else {
 			o.storage = 'minifat';
-			if(minifat_store !== ENDOFCHAIN && o.start !== ENDOFCHAIN && sector_list[minifat_store]) {
+			if(o.size < 0) o.size = 0;
+			else if(minifat_store !== ENDOFCHAIN && o.start !== ENDOFCHAIN && sector_list[minifat_store]) {
 				o.content = get_mfat_entry(o, sector_list[minifat_store].data, (sector_list[mini]||{}).data);
-				prep_blob(o.content, 0);
 			}
 		}
+		if(o.content) prep_blob(o.content, 0);
 		files[name] = o;
 		FileIndex.push(o);
 	}

@@ -368,3 +368,18 @@ var IE_SaveFile = (function() { try {
 	}
 	return function(data, filename) { return IE_SaveFile_Impl(IE_GetPath(filename), fix_data(data)); };
 } catch(e) { return void 0; }})();
+var IE_LoadFile = (function() { try {
+	if(typeof IE_LoadFile_Impl == "undefined") document.write([
+'<script type="text/vbscript" language="vbscript">',
+'Function IE_LoadFile_Impl(FileName): Dim out(), plen, i, cc: Set fso = CreateObject("Scripting.FileSystemObject"): Set f = fso.GetFile(FileName): Set stream = f.OpenAsTextStream(1, 0): plen = f.Size: ReDim out(plen): For i = 1 To plen Step 1: cc = Hex(Asc(stream.read(1))): If Len(cc) < 2 Then: cc = "0" & cc: End If: out(i) = cc: Next: IE_LoadFile_Impl = Join(out,""): End Function',
+'|/script>'.replace("|","<")
+	].join("\r\n"));
+	if(typeof IE_LoadFile_Impl == "undefined") return void 0;
+	function fix_data(data) {
+		var out = [];
+		for(var i = 0; i < data.length; i+=2) out.push(String.fromCharCode(parseInt(data.slice(i, i+2), 16)));
+		var o = out.join("");
+		return o;
+	}
+	return function(filename) { return fix_data(IE_LoadFile_Impl(filename)); };
+} catch(e) { return void 0; }})();

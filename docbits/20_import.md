@@ -131,6 +131,8 @@ function handleFile(e) {
 input_dom_element.addEventListener('change', handleFile, false);
 ```
 
+The [`oldie` demo](demos/oldie/) shows an IE-compatible fallback scenario.
+
 </details>
 
 More specialized cases, including mobile app file processing, are covered in the

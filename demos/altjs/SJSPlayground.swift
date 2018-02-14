@@ -8,7 +8,7 @@ let shared_dir = PlaygroundSupport.playgroundSharedDataDirectory;
 let lib_path = shared_dir.appendingPathComponent("xlsx.full.min.js");
 
 /* prepare JS context */
-var context:JSContext! = JSContext();
+var context: JSContext! = JSContext();
 var src = "var global = (function(){ return this; }).call(null);";
 context.evaluateScript(src);
 
@@ -23,15 +23,15 @@ var version  = XLSXversion.toString();
 
 /* parse sheetjs.xls */
 let file_path = shared_dir.appendingPathComponent("sheetjs.xls");
-let data:String! = try String(contentsOf: file_path, encoding:String.Encoding.isoLatin1);
-context.setObject(data, forKeyedSubscript:"payload" as (NSCopying & NSObjectProtocol)!);
+let data: String! = try String(contentsOf: file_path, encoding: String.Encoding.isoLatin1);
+context.setObject(data, forKeyedSubscript: "payload" as (NSCopying & NSObjectProtocol)!);
 src = "var wb = XLSX.read(payload, {type:'binary'});";
 context.evaluateScript(src);
 
-/* write to sheetjs.xlsx  */
-let out_path = shared_dir.appendingPathComponent("sheetjs.xlsx");
+/* write to sheetjsw.xlsx  */
+let out_path = shared_dir.appendingPathComponent("sheetjsw.xlsx");
 src = "var out = XLSX.write(wb, {type:'binary', bookType:'xlsx'})";
 context.evaluateScript(src);
 let outvalue: JSValue! = context.objectForKeyedSubscript("out");
-var out:String! = outvalue.toString();
+var out: String! = outvalue.toString();
 try? out.write(to: out_path, atomically: false, encoding: String.Encoding.isoLatin1);
