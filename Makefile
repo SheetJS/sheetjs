@@ -13,7 +13,6 @@ update:
 	git show master:tests/fs_.js > tests/fs_.js
 	git show master:tests/mocha.css > tests/mocha.css
 	git show master:tests/mocha.js > tests/mocha.js
-	git show master:tests/xhr-hack.js > tests/xhr-hack.js
 	git show master:tests/write.js > tests/write.js
 	git show master:tests/write.html > tests/write.html
 	git show master:demos/datagrid/index.html > datagrid.html
