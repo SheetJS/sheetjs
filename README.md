@@ -1,6 +1,6 @@
 # [SheetJS SSF](http://sheetjs.com)
 
-ssf (SpreadSheet Format) is a pure-JS library to format data using ECMA-376
+ssf (SpreadSheet Format) is a pure JS library to format data using ECMA-376
 spreadsheet format codes (used in popular spreadsheet software packages).
 
 
@@ -23,9 +23,8 @@ The browser exposes a variable `SSF`
 When installed globally, npm installs a script `ssf` that renders the format
 string with the given arguments.  Running the script with `-h` displays help.
 
-The script will manipulate `module.exports` if available (e.g. in a CommonJS
-`require` context).  This is not always desirable.  To prevent the behavior,
-define `DO_NOT_EXPORT_SSF`.
+The script will manipulate `module.exports` if available .  This is not always
+desirable.  To prevent the behavior, define `DO_NOT_EXPORT_SSF`.
 
 ## Usage
 
@@ -41,7 +40,7 @@ The options argument may contain the following keys:
 
 | Option Name | Default | Description                                          |
 | :---------- | :-----: | :--------------------------------------------------- |
-| date1904    | false   | Use 1904 date system if true, 1900 system if false   |
+| `date1904`  | false   | Use 1904 date system if true, 1900 system if false   |
 
 ### Manipulating the Internal Format Table
 
@@ -89,8 +88,9 @@ granted by the Apache 2.0 license are reserved by the Original Author.
 
 ## References
 
-- [ECMA-376] Office Open XML File Formats
-- [MS-XLSB] Excel (.xlsb) Binary File Format
+ - `ECMA-376`: Office Open XML File Formats
+ - `MS-XLS`: Excel Binary File Format (.xls) Structure Specification
+ - `MS-XLSB`: Excel (.xlsb) Binary File Format
 
 ## Badges
 

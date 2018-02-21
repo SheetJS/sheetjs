@@ -4,7 +4,7 @@
 /*:: declare var DO_NOT_EXPORT_SSF: any; */
 var SSF/*:SSFModule*/ = ({}/*:any*/);
 var make_ssf = function make_ssf(SSF/*:SSFModule*/){
-SSF.version = '0.10.1';
+SSF.version = '0.10.2';
 function _strrev(x/*:string*/)/*:string*/ { var o = "", i = x.length-1; while(i>=0) o += x.charAt(i--); return o; }
 function fill(c/*:string*/,l/*:number*/)/*:string*/ { var o = ""; while(o.length < l) o+=c; return o; }
 function pad0(v/*:any*/,d/*:number*/)/*:string*/{var t=""+v; return t.length>=d?t:fill('0',d-t.length)+t;}
@@ -793,7 +793,7 @@ function eval_fmt(fmt/*:string*/, v/*:any*/, opts/*:any*/, flen/*:number*/) {
 }
 SSF._eval = eval_fmt;
 var cfregex = /\[[=<>]/;
-var cfregex2 = /\[([=<>]*)(-?\d+\.?\d*)\]/;
+var cfregex2 = /\[(=|>[=]?|<[>=]?)(-?\d+(?:\.\d*)?)\]/;
 function chkcond(v, rr) {
 	if(rr == null) return false;
 	var thresh = parseFloat(rr[2]);

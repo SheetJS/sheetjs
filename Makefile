@@ -60,6 +60,9 @@ ctestserv: ## Start a test server on port 8000
 
 ## Code Checking
 
+.PHONY: fullint
+fullint: lint old-lint tslint flow mdlint ## Run all checks
+
 .PHONY: lint
 lint: $(TARGET) $(AUXTARGETS) ## Run eslint checks
 	@eslint --ext .js,.njs,.json,.html,.htm $(TARGET) $(AUXTARGETS) $(CMDS) $(HTMLLINT) package.json bower.json
@@ -68,12 +71,17 @@ lint: $(TARGET) $(AUXTARGETS) ## Run eslint checks
 .PHONY: old-lint
 old-lint: $(TARGET) $(AUXTARGETS) ## Run jshint and jscs checks
 	@jshint --show-non-errors $(TARGET) $(AUXTARGETS)
-	@jshint --show-non-errors test/
 	@jshint --show-non-errors $(CMDS)
-	@jshint --show-non-errors package.json
+	@jshint --show-non-errors package.json test/
 	@jshint --show-non-errors --extract=always $(HTMLLINT)
-	@jscs $(TARGET) $(AUXTARGETS)
+	@jscs $(TARGET) $(AUXTARGETS) test/*.js
 	if [ -e $(CLOSURE) ]; then java -jar $(CLOSURE) $(REQS) $(FLOWTARGET) --jscomp_warning=reportUnknownTypes >/dev/null; fi
+
+.PHONY: tslint
+tslint: $(TARGET) ## Run typescript checks
+	#@npm install dtslint typescript
+	#@npm run-script dtslint
+	dtslint types
 
 .PHONY: flow
 flow: lint ## Run flow checker
@@ -97,6 +105,11 @@ full_coveralls:
 coveralls: ## Coverage Test + Send to coveralls.io
 	MINTEST=1 make full_coveralls
 
+MDLINT=README.md
+.PHONY: mdlint
+mdlint: $(MDLINT) ## Check markdown documents
+	alex $^
+	mdspell -a -n -x -r --en-us $^
 
 .PHONY: help
 help:

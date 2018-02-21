@@ -1,7 +1,7 @@
 /* vim: set ts=2: */
 /*jshint loopfunc:true, mocha:true, node:true */
 var SSF = require('../');
-var fs = require('fs'), assert = require('assert');
+var assert = require('assert');
 describe('dateNF override', function() {
   it('should override format code 14', function() {
     assert.equal(SSF.format(14, 43880), "2/19/20");

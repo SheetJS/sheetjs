@@ -1,5 +1,5 @@
 var cfregex = /\[[=<>]/;
-var cfregex2 = /\[([=<>]*)(-?\d+\.?\d*)\]/;
+var cfregex2 = /\[(=|>[=]?|<[>=]?)(-?\d+(?:\.\d*)?)\]/;
 function chkcond(v, rr) {
 	if(rr == null) return false;
 	var thresh = parseFloat(rr[2]);

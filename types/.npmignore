@@ -1,0 +1,5 @@
+Makefile
+*ssf*.ts
+doc.ts
+write.ts
+tslint.json

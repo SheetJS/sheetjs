@@ -27,6 +27,7 @@ a { text-decoration: none }
 <script>
 /*jshint browser:true */
 /*eslint-env browser */
+/*eslint no-use-before-define:0 */
 /*global SSF */
 var F = document.getElementById('fmt');
 var V = document.getElementById('val');
@@ -55,8 +56,6 @@ if(F.addEventListener) {
 }
 
 update();
-</script>
-<script type="text/javascript">
 	var _gaq = _gaq || [];
 	_gaq.push(['_setAccount', 'UA-36810333-1']);
 	_gaq.push(['_trackPageview']);
