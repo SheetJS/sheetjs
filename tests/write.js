@@ -14,6 +14,7 @@ var data = [
 	["hidden"],
 	["visible"]
 ];
+if(isNaN(data[2][2].getYear())) data[2][2] = new Date(Date.UTC(2014, 1, 19, 14, 30, 0));
 
 var ws_name = "SheetJS";
 
