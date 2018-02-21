@@ -42,7 +42,8 @@ const WBSheets = WBProps.Sheets;
 const WBSheet0 = WBSheets[0];
 console.log(WBSheet0.Hidden);
 
-const fmt14 = XLSX.SSF._table[14];
+const fmt14 = XLSX.SSF.get_table()[14];
+XLSX.SSF.load('"This is a custom format "0.000');
 
 const newwb = XLSX.utils.book_new();
 XLSX.utils.book_append_sheet(newwb, aoa2, "AOA");

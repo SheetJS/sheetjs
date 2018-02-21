@@ -27,8 +27,9 @@ function parse_RgceArea_BIFF2(blob/*::, length, opts*/) {
 }
 
 /* [MS-XLS] 2.5.198.105 ; [MS-XLSB] 2.5.97.90 */
-function parse_RgceAreaRel(blob, length/*::, opts*/) {
-	var r=blob.read_shift(length == 12 ? 4 : 2), R=blob.read_shift(length == 12 ? 4 : 2);
+function parse_RgceAreaRel(blob, length, opts) {
+	if(opts.biff < 8) return parse_RgceArea_BIFF2(blob, length, opts);
+	var r=blob.read_shift(opts.biff == 12 ? 4 : 2), R=blob.read_shift(opts.biff == 12 ? 4 : 2);
 	var c=parse_ColRelU(blob, 2);
 	var C=parse_ColRelU(blob, 2);
 	return { s:{r:r, c:c[0], cRel:c[1], rRel:c[2]}, e:{r:R, c:C[0], cRel:C[1], rRel:C[2]} };
@@ -118,7 +119,7 @@ function parse_PtgAreaErr3d(blob, length, opts) {
 /* [MS-XLS] 2.5.198.31 ; [MS-XLSB] 2.5.97.22 */
 function parse_PtgAreaN(blob, length, opts) {
 	var type = (blob[blob.l++] & 0x60) >> 5;
-	var area = parse_RgceAreaRel(blob, opts && opts.biff > 8 ? 12 : 8, opts);
+	var area = parse_RgceAreaRel(blob, length - 1, opts);
 	return [type, area];
 }
 
@@ -372,6 +373,7 @@ function parse_PtgMemFunc(blob, length, opts) {
 function parse_PtgRefErr(blob, length, opts) {
 	var type = (blob.read_shift(1) >>> 5) & 0x03;
 	blob.l += 4;
+	if(opts.biff < 8) blob.l--;
 	if(opts.biff == 12) blob.l += 2;
 	return [type];
 }
@@ -675,6 +677,7 @@ function get_ixti(supbooks, ixti/*:number*/, opts)/*:string*/ {
 	return formula_quote_sheet_name(get_ixti_raw(supbooks, ixti, opts), opts);
 }
 function stringify_formula(formula/*Array<any>*/, range, cell/*:any*/, supbooks, opts)/*:string*/ {
+	var biff = (opts && opts.biff) || 8;
 	var _range = /*range != null ? range :*/ {s:{c:0, r:0},e:{c:0, r:0}};
 	var stack/*:Array<string>*/ = [], e1, e2, /*::type,*/ c/*:CellAddress*/, ixti=0, nameidx=0, r, sname="";
 	if(!formula[0] || !formula[0][0]) return "";
@@ -746,17 +749,17 @@ function stringify_formula(formula/*Array<any>*/, range, cell/*:any*/, supbooks,
 
 			case 'PtgRef': /* [MS-XLS] 2.5.198.84 */
 				/*::type = f[1][0]; */c = shift_cell_xls((f[1][1]/*:any*/), _range, opts);
-				stack.push(encode_cell_xls(c));
+				stack.push(encode_cell_xls(c, biff));
 				break;
 			case 'PtgRefN': /* [MS-XLS] 2.5.198.88 */
 				/*::type = f[1][0]; */c = cell ? shift_cell_xls((f[1][1]/*:any*/), cell, opts) : (f[1][1]/*:any*/);
-				stack.push(encode_cell_xls(c));
+				stack.push(encode_cell_xls(c, biff));
 				break;
 			case 'PtgRef3d': /* [MS-XLS] 2.5.198.85 */
 				/*::type = f[1][0]; */ixti = /*::Number(*/f[1][1]/*::)*/; c = shift_cell_xls((f[1][2]/*:any*/), _range, opts);
 				sname = get_ixti(supbooks, ixti, opts);
 				var w = sname; /* IE9 fails on defined names */ // eslint-disable-line no-unused-vars
-				stack.push(sname + "!" + encode_cell_xls(c));
+				stack.push(sname + "!" + encode_cell_xls(c, biff));
 				break;
 
 			case 'PtgFunc': /* [MS-XLS] 2.5.198.62 */
@@ -764,6 +767,7 @@ function stringify_formula(formula/*Array<any>*/, range, cell/*:any*/, supbooks,
 				/* f[1] = [argc, func, type] */
 				var argc/*:number*/ = (f[1][0]/*:any*/), func/*:string*/ = (f[1][1]/*:any*/);
 				if(!argc) argc = 0;
+				argc &= 0x7F;
 				var args = argc == 0 ? [] : stack.slice(-argc);
 				stack.length -= argc;
 				if(func === 'User') func = args.shift();
@@ -798,6 +802,7 @@ function stringify_formula(formula/*Array<any>*/, range, cell/*:any*/, supbooks,
 				stack.push("SUM(" + stack.pop() + ")");
 				break;
 
+			case 'PtgAttrBaxcel': /* [MS-XLS] 2.5.198.33 */
 			case 'PtgAttrSemi': /* [MS-XLS] 2.5.198.37 */
 				break;
 
@@ -931,8 +936,6 @@ function stringify_formula(formula/*Array<any>*/, range, cell/*:any*/, supbooks,
 			case 'PtgElfRwV': /* [MS-XLS] 2.5.198.55 */
 				throw new Error("Unsupported ELFs");
 
-			case 'PtgAttrBaxcel': /* [MS-XLS] 2.5.198.33 TODO -- find a test case*/
-				throw new Error('Unrecognized Formula Token: ' + String(f));
 			case 'PtgSxName': /* [MS-XLS] 2.5.198.91 TODO -- find a test case */
 				throw new Error('Unrecognized Formula Token: ' + String(f));
 			case 'PtgList': /* [MS-XLSB] 2.5.97.52 TODO -- find a test case */

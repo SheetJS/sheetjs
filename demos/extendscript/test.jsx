@@ -6,7 +6,7 @@ var basePath = thisFile.path;
 var filename = "/sheetjs.xlsx";
 
 /* Read file from disk */
-var workbook = XLSX.readFile(basePath + filename);
+var workbook = XLSX.readFile(basePath + filename, {cellDates:true});
 
 /* Display first worksheet */
 var first_sheet_name = workbook.SheetNames[0], first_worksheet = workbook.Sheets[first_sheet_name];

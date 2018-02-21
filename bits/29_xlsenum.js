@@ -23,7 +23,7 @@ var VT_UI4      = 0x0013;
 var VT_LPSTR    = 0x001E;
 //var VT_LPWSTR   = 0x001F;
 var VT_FILETIME = 0x0040;
-//var VT_BLOB     = 0x0041;
+var VT_BLOB     = 0x0041;
 //var VT_STREAM   = 0x0042;
 //var VT_STORAGE  = 0x0043;
 //var VT_STREAMED_Object  = 0x0044;
@@ -61,6 +61,7 @@ var DocSummaryPIDDSI = {
 	/*::[*/0x13/*::]*/: { n: 'SharedDoc', t: VT_BOOL },
 	/*::[*/0x16/*::]*/: { n: 'HLinksChanged', t: VT_BOOL },
 	/*::[*/0x17/*::]*/: { n: 'AppVersion', t: VT_I4, p: 'version' },
+	/*::[*/0x18/*::]*/: { n: 'DigSig', t: VT_BLOB },
 	/*::[*/0x1A/*::]*/: { n: 'ContentType', t: VT_STRING },
 	/*::[*/0x1B/*::]*/: { n: 'ContentStatus', t: VT_STRING },
 	/*::[*/0x1C/*::]*/: { n: 'Language', t: VT_STRING },

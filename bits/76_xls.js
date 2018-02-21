@@ -213,7 +213,7 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 			last_Rn = R.n;
 			if(R.r === 2 || R.r == 12) {
 				var rt = blob.read_shift(2); length -= 2;
-				if(!opts.enc && rt !== RecordType) throw new Error("rt mismatch: " + rt + "!=" + RecordType);
+				if(!opts.enc && rt !== RecordType && (((rt&0xFF)<<8)|(rt>>8)) !== RecordType) throw new Error("rt mismatch: " + rt + "!=" + RecordType);
 				if(R.r == 12){ blob.l += 10; length -= 10; } // skip FRT
 			}
 			//console.error(R,blob.l,length,blob.length);
@@ -232,7 +232,6 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 				case 'FilePass':
 					if(!opts.enc) blob.l = 0;
 					opts.enc = val;
-					if(opts.WTF) console.error(val);
 					if(!options.password) throw new Error("File is password-protected");
 					if(val.valid == null) throw new Error("Encryption scheme unsupported");
 					if(!val.valid) throw new Error("Password is incorrect");
@@ -337,6 +336,9 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 						/*::[*/0x0209/*::]*/:3,
 						/*::[*/0x0409/*::]*/:4
 					}[RecordType] || {
+						/*::[*/0x0200/*::]*/:2,
+						/*::[*/0x0300/*::]*/:3,
+						/*::[*/0x0400/*::]*/:4,
 						/*::[*/0x0500/*::]*/:5,
 						/*::[*/0x0600/*::]*/:8,
 						/*::[*/0x0002/*::]*/:2,
@@ -517,7 +519,7 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 					for(rngR = val[0].s.r; rngR <= val[0].e.r; ++rngR)
 						for(rngC = val[0].s.c; rngC <= val[0].e.c; ++rngC) {
 							cc = options.dense ? (out[rngR]||[])[rngC] : out[encode_cell({c:rngC,r:rngR})];
-							if(cc) cc.l.Tooltip = val[1];
+							if(cc && cc.l) cc.l.Tooltip = val[1];
 							}
 				} break;
 

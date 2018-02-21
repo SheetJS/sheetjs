@@ -83,6 +83,7 @@ function parse_dictionary(blob,CodePage) {
 function parse_BLOB(blob) {
 	var size = blob.read_shift(4);
 	var bytes = blob.slice(blob.l,blob.l+size);
+	blob.l += size;
 	if((size & 3) > 0) blob.l += (4 - (size & 3)) & 3;
 	return bytes;
 }
@@ -93,7 +94,7 @@ function parse_ClipboardData(blob) {
 	var o = {};
 	o.Size = blob.read_shift(4);
 	//o.Format = blob.read_shift(4);
-	blob.l += o.Size;
+	blob.l += o.Size + 3 - (o.Size - 1) % 4;
 	return o;
 }
 
@@ -239,6 +240,7 @@ function parse_PropertySetStream(file, PIDSI, clsid) {
 	rval.FMTID = FMTID0;
 	//rval.PSet0 = PSet0;
 	if(NumSets === 1) return rval;
+	if(Offset1 - blob.l == 2) blob.l += 2;
 	if(blob.l !== Offset1) throw new Error("Length mismatch 2: " + blob.l + " !== " + Offset1);
 	var PSet1;
 	try { PSet1 = parse_PropertySet(blob, null); } catch(e) {/* empty */}

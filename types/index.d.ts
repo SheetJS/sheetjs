@@ -1,12 +1,13 @@
 /* index.d.ts (C) 2015-present SheetJS and contributors */
 // TypeScript Version: 2.2
 import * as CFB from "cfb";
+import * as SSF from "ssf";
 
 /** Version string */
 export const version: string;
 
 /** SSF Formatter Library */
-export const SSF: any;
+export { SSF };
 
 /** CFB Library */
 export { CFB };

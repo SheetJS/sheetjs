@@ -3,7 +3,7 @@ function parse_numCache(data/*:string*/)/*:[Array<number>, string]*/ {
 
 	/* 21.2.2.150 pt CT_NumVal */
 	(data.match(/<c:pt idx="(\d*)">(.*?)<\/c:pt>/mg)||[]).forEach(function(pt) {
-		var q = pt.match(/<c:pt idx="(.*?)"><c:v>(.*)<\/c:v><\/c:pt>/);
+		var q = pt.match(/<c:pt idx="(\d*?)"><c:v>(.*)<\/c:v><\/c:pt>/);
 		if(!q) return;
 		col[+q[1]] = +q[2];
 	});

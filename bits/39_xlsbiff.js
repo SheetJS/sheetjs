@@ -155,6 +155,9 @@ function parse_BOF(blob, length) {
 	switch(o.BIFFVer) {
 		case 0x0600: /* BIFF8 */
 		case 0x0500: /* BIFF5 */
+		case 0x0400: /* BIFF4 */
+		case 0x0300: /* BIFF3 */
+		case 0x0200: /* BIFF2 */
 		case 0x0002: case 0x0007: /* BIFF2 */
 			break;
 		default: if(length > 6) throw new Error("Unexpected BIFF Ver " + o.BIFFVer);
