@@ -81,6 +81,11 @@ type SSFDate = {
 
 `SSF.is_date(fmt:string):boolean` returns `true` if `fmt` encodes a date format.
 
+## Examples
+
+- [Basic Demo](http://oss.sheetjs.com/ssf/)
+- [Custom Formats Builder](https://customformats.com)
+
 ## License
 
 Please consult the attached LICENSE file for details.  All rights not explicitly
