@@ -254,7 +254,7 @@ For the example sheet:
 
 ```js
 > var o = XLSX.utils.sheet_to_formulae(ws);
-> o.filter(function(v, i) { return i % 5 === 0; });
+> [o[0], o[5], o[10], o[15], o[20]];
 [ 'A1=\'S', 'F1=\'J', 'D2=4', 'B3=3', 'G3=8' ]
 ```
 </details>

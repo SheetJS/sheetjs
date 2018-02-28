@@ -37,8 +37,13 @@ if(typeof process != 'undefined' && ((process||{}).env)) {
 var exp = ex.map(function(x){ return x + ".pending"; });
 function test_file(x){ return ex.indexOf(x.slice(-5))>=0||exp.indexOf(x.slice(-13))>=0 || ex.indexOf(x.slice(-4))>=0||exp.indexOf(x.slice(-12))>=0; }
 
-var files = browser ? [] : (fs.existsSync('tests.lst') ? fs.readFileSync('tests.lst', 'utf-8').split("\n").map(function(x) { return x.trim(); }) : fs.readdirSync('test_files')).filter(test_file);
-var fileA = browser ? [] : (fs.existsSync('tests/testA.lst') ? fs.readFileSync('tests/testA.lst', 'utf-8').split("\n").map(function(x) { return x.trim(); }) : []).filter(test_file);
+var files = [], fileA = [];
+if(!browser) {
+	var _files = fs.existsSync('tests.lst') ? fs.readFileSync('tests.lst', 'utf-8').split("\n").map(function(x) { return x.trim(); }) : fs.readdirSync('test_files');
+	for(var _filesi = 0; _filesi < _files.length; ++_filesi) if(test_file(_files[_filesi])) files.push(_files[_filesi]);
+	var _fileA = fs.existsSync('tests/testA.lst') ? fs.readFileSync('tests/testA.lst', 'utf-8').split("\n").map(function(x) { return x.trim(); }) : [];
+	for(var _fileAi = 0; _fileAi < _fileA.length; ++_fileAi) if(test_file(_fileA[_fileAi])) fileA.push(_fileA[_fileAi]);
+}
 
 /* Excel enforces 31 character sheet limit, although technical file limit is 255 */
 function fixsheetname(x/*:string*/)/*:string*/ { return x.substr(0,31); }
@@ -1522,7 +1527,6 @@ describe('roundtrip features', function() {
 });
 
 //function password_file(x){return x.match(/^password.*\.xls$/); }
-//var password_files = fs.readdirSync('test_files').filter(password_file);
 var password_files = [
 	//"password_2002_40_972000.xls",
 	"password_2002_40_xor.xls"

@@ -4,7 +4,7 @@
 /*global global, exports, module, require:false, process:false, Buffer:false, ArrayBuffer:false */
 var XLSX = {};
 (function make_xlsx(XLSX){
-XLSX.version = '0.12.2';
+XLSX.version = '0.12.3';
 var current_codepage = 1200, current_ansi = 1252;
 /*:: declare var cptable:any; */
 /*global cptable:true */
@@ -1954,7 +1954,11 @@ function read_binary(path/*:string*/) {
 	} catch(e) { if(!e.message || !e.message.match(/onstruct/)) throw e; }
 	throw new Error("Cannot access file " + path);
 }
-function keys(o/*:any*/)/*:Array<any>*/ { return Object.keys(o); }
+function keys(o/*:any*/)/*:Array<any>*/ {
+	var ks = Object.keys(o), o2 = [];
+	for(var i = 0; i < ks.length; ++i) if(o.hasOwnProperty(ks[i])) o2.push(ks[i]);
+	return o2;
+}
 
 function evert_key(obj/*:any*/, key/*:string*/)/*:EvertType*/ {
 	var o = ([]/*:any*/), K = keys(obj);
@@ -2144,6 +2148,12 @@ function getzipstr(zip, file/*:string*/, safe/*:?boolean*/)/*:?string*/ {
 	if(!safe) return getdatastr(getzipfile(zip, file));
 	if(!file) return null;
 	try { return getzipstr(zip, file); } catch(e) { return null; }
+}
+
+function zipentries(zip) {
+	var k = keys(zip.files), o = [];
+	for(var i = 0; i < k.length; ++i) if(k[i].slice(-1) != '/') o.push(k[i]);
+	return o.sort();
 }
 
 var jszip;
@@ -9468,7 +9478,7 @@ function parse_PtgArea3d(blob, length, opts) {
 /* [MS-XLS] 2.5.198.29 ; [MS-XLSB] 2.5.97.20 */
 function parse_PtgAreaErr(blob, length, opts) {
 	var type = (blob[blob.l++] & 0x60) >> 5;
-	blob.l += opts && opts.biff > 8 ? 12 : 8;
+	blob.l += opts && (opts.biff > 8) ? 12 : (opts.biff < 8 ? 6 : 8);
 	return [type];
 }
 /* [MS-XLS] 2.5.198.30 ; [MS-XLSB] 2.5.97.21 */
@@ -9600,8 +9610,8 @@ function parse_PtgFunc(blob, length, opts) {
 }
 /* [MS-XLS] 2.5.198.63 ; [MS-XLSB] 2.5.97.46 TODO */
 function parse_PtgFuncVar(blob, length, opts) {
-	blob.l++;
-	var cparams = blob.read_shift(1), tab = opts && opts.biff <= 3 ? [0, blob.read_shift(1)]: parsetab(blob);
+	var type = blob[blob.l++];
+	var cparams = blob.read_shift(1), tab = opts && opts.biff <= 3 ? [(type == 0x58 ? -1 : 0), blob.read_shift(1)]: parsetab(blob);
 	return [cparams, (tab[0] === 0 ? Ftab : Cetab)[tab[1]]];
 }
 
@@ -9798,17 +9808,66 @@ var parse_PtgElfRw = parse_PtgElfLoc;
 /* [MS-XLS] 2.5.198.55 */
 var parse_PtgElfRwV = parse_PtgElfLoc;
 
-/* [MS-XLSB] 2.5.97.52 */
+/* [MS-XLSB] 2.5.97.52 TODO */
+var PtgListRT = [
+	"Data",
+	"All",
+	"Headers",
+	"??",
+	"?Data2",
+	"??",
+	"?DataHeaders",
+	"??",
+	"Totals",
+	"??",
+	"??",
+	"??",
+	"?DataTotals",
+	"??",
+	"??",
+	"??",
+	"?Current"
+];
 function parse_PtgList(blob/*::, length, opts*/) {
 	blob.l += 2;
 	var ixti = blob.read_shift(2);
-	blob.l += 10;
-	return {ixti: ixti};
+	var flags = blob.read_shift(2);
+	var idx = blob.read_shift(4);
+	var c = blob.read_shift(2);
+	var C = blob.read_shift(2);
+	var rt = PtgListRT[(flags >> 2) & 0x1F];
+	return {ixti: ixti, coltype:(flags&0x3), rt:rt, idx:idx, c:c, C:C};
 }
 /* [MS-XLS] 2.5.198.91 ; [MS-XLSB] 2.5.97.76 */
 function parse_PtgSxName(blob/*::, length, opts*/) {
 	blob.l += 2;
 	return [blob.read_shift(4)];
+}
+
+/* [XLS] old spec */
+function parse_PtgSheet(blob, length, opts) {
+	blob.l += 5;
+	blob.l += 2;
+	blob.l += (opts.biff == 2 ? 1 : 4);
+	return ["PTGSHEET"];
+}
+function parse_PtgEndSheet(blob, length, opts) {
+	blob.l += (opts.biff == 2 ? 4 : 5);
+	return ["PTGENDSHEET"];
+}
+function parse_PtgMemAreaN(blob/*::, length, opts*/) {
+	var type = (blob.read_shift(1) >>> 5) & 0x03;
+	var cce = blob.read_shift(2);
+	return [type, cce];
+}
+function parse_PtgMemNoMemN(blob/*::, length, opts*/) {
+	var type = (blob.read_shift(1) >>> 5) & 0x03;
+	var cce = blob.read_shift(2);
+	return [type, cce];
+}
+function parse_PtgAttrNoop(blob/*::, length, opts*/) {
+	blob.l += 4;
+	return [0, 0];
 }
 
 /* [MS-XLS] 2.5.198.25 ; [MS-XLSB] 2.5.97.16 */
@@ -9836,6 +9895,8 @@ var PtgTypes = {
 	/*::[*/0x15/*::]*/: { n:'PtgParen', f:parseread1 },
 	/*::[*/0x16/*::]*/: { n:'PtgMissArg', f:parseread1 },
 	/*::[*/0x17/*::]*/: { n:'PtgStr', f:parse_PtgStr },
+	/*::[*/0x1A/*::]*/: { n:'PtgSheet', f:parse_PtgSheet },
+	/*::[*/0x1B/*::]*/: { n:'PtgEndSheet', f:parse_PtgEndSheet },
 	/*::[*/0x1C/*::]*/: { n:'PtgErr', f:parse_PtgErr },
 	/*::[*/0x1D/*::]*/: { n:'PtgBool', f:parse_PtgBool },
 	/*::[*/0x1E/*::]*/: { n:'PtgInt', f:parse_PtgInt },
@@ -9854,6 +9915,8 @@ var PtgTypes = {
 	/*::[*/0x2B/*::]*/: { n:'PtgAreaErr', f:parse_PtgAreaErr },
 	/*::[*/0x2C/*::]*/: { n:'PtgRefN', f:parse_PtgRefN },
 	/*::[*/0x2D/*::]*/: { n:'PtgAreaN', f:parse_PtgAreaN },
+	/*::[*/0x2E/*::]*/: { n:'PtgMemAreaN', f:parse_PtgMemAreaN },
+	/*::[*/0x2F/*::]*/: { n:'PtgMemNoMemN', f:parse_PtgMemNoMemN },
 	/*::[*/0x39/*::]*/: { n:'PtgNameX', f:parse_PtgNameX },
 	/*::[*/0x3A/*::]*/: { n:'PtgRef3d', f:parse_PtgRef3d },
 	/*::[*/0x3B/*::]*/: { n:'PtgArea3d', f:parse_PtgArea3d },
@@ -9877,6 +9940,9 @@ var PtgDupes = {
 	/*::[*/0x4B/*::]*/: 0x2B, /*::[*/0x6B/*::]*/: 0x2B,
 	/*::[*/0x4C/*::]*/: 0x2C, /*::[*/0x6C/*::]*/: 0x2C,
 	/*::[*/0x4D/*::]*/: 0x2D, /*::[*/0x6D/*::]*/: 0x2D,
+	/*::[*/0x4E/*::]*/: 0x2E, /*::[*/0x6E/*::]*/: 0x2E,
+	/*::[*/0x4F/*::]*/: 0x2F, /*::[*/0x6F/*::]*/: 0x2F,
+	/*::[*/0x58/*::]*/: 0x22, /*::[*/0x78/*::]*/: 0x22,
 	/*::[*/0x59/*::]*/: 0x39, /*::[*/0x79/*::]*/: 0x39,
 	/*::[*/0x5A/*::]*/: 0x3A, /*::[*/0x7A/*::]*/: 0x3A,
 	/*::[*/0x5B/*::]*/: 0x3B, /*::[*/0x7B/*::]*/: 0x3B,
@@ -9901,6 +9967,7 @@ var Ptg18 = {
 	/*::[*/0xFF/*::]*/: {}
 };
 var Ptg19 = {
+	/*::[*/0x00/*::]*/: { n:'PtgAttrNoop', f:parse_PtgAttrNoop },
 	/*::[*/0x01/*::]*/: { n:'PtgAttrSemi', f:parse_PtgAttrSemi },
 	/*::[*/0x02/*::]*/: { n:'PtgAttrIf', f:parse_PtgAttrIf },
 	/*::[*/0x04/*::]*/: { n:'PtgAttrChoose', f:parse_PtgAttrChoose },
@@ -9957,10 +10024,7 @@ function parse_Rgce(blob, length, opts) {
 		length = target - blob.l;
 		id = blob[blob.l];
 		R = PtgTypes[id];
-		if(id === 0x18 || id === 0x19) {
-			id = blob[blob.l + 1];
-			R = (id === 0x18 ? Ptg18 : Ptg19)[id];
-		}
+		if(id === 0x18 || id === 0x19) R = (id === 0x18 ? Ptg18 : Ptg19)[blob[blob.l + 1]];
 		if(!R || !R.f) { /*ptgs.push*/(parsenoop(blob, length)); }
 		// $FlowIgnore
 		else { ptgs.push([R.n, R.f(blob, length, opts)]); }
@@ -10287,6 +10351,18 @@ function stringify_formula(formula/*Array<any>*/, range, cell/*:any*/, supbooks,
 			case 'PtgAreaErr3d': /* [MS-XLS] 2.5.198.30 */
 				stack.push("#REF!"); break;
 
+			case 'PtgList': /* [MS-XLSB] 2.5.97.52 */
+				// $FlowIgnore
+				stack.push("Table" + f[1].idx + "[#" + f[1].rt + "]");
+				break;
+
+			case 'PtgMemAreaN':
+			case 'PtgMemNoMemN':
+			case 'PtgAttrNoop':
+			case 'PtgSheet':
+			case 'PtgEndSheet':
+				break;
+
 			case 'PtgMemFunc': /* [MS-XLS] 2.5.198.72 TODO */
 				break;
 			case 'PtgMemNoMem': /* [MS-XLS] 2.5.198.73 TODO */
@@ -10306,13 +10382,10 @@ function stringify_formula(formula/*Array<any>*/, range, cell/*:any*/, supbooks,
 
 			case 'PtgSxName': /* [MS-XLS] 2.5.198.91 TODO -- find a test case */
 				throw new Error('Unrecognized Formula Token: ' + String(f));
-			case 'PtgList': /* [MS-XLSB] 2.5.97.52 TODO -- find a test case */
-				throw new Error('Unrecognized Formula Token: ' + String(f));
-
 			default: throw new Error('Unrecognized Formula Token: ' + String(f));
 		}
 		var PtgNonDisp = ['PtgAttrSpace', 'PtgAttrSpaceSemi', 'PtgAttrGoto'];
-		if(last_sp >= 0 && PtgNonDisp.indexOf(formula[0][ff][0]) == -1) {
+		if(opts.biff != 3) if(last_sp >= 0 && PtgNonDisp.indexOf(formula[0][ff][0]) == -1) {
 			f = formula[0][last_sp];
 			var _left = true;
 			switch(f[1][0]) {
@@ -11315,6 +11388,7 @@ var Ftab = {
 var FtabArgc = {
 	/*::[*/0x0002/*::]*/: 1, /* ISNA */
 	/*::[*/0x0003/*::]*/: 1, /* ISERROR */
+	/*::[*/0x000A/*::]*/: 0, /* NA */
 	/*::[*/0x000F/*::]*/: 1, /* SIN */
 	/*::[*/0x0010/*::]*/: 1, /* COS */
 	/*::[*/0x0011/*::]*/: 1, /* TAN */
@@ -11332,6 +11406,8 @@ var FtabArgc = {
 	/*::[*/0x001F/*::]*/: 3, /* MID */
 	/*::[*/0x0020/*::]*/: 1, /* LEN */
 	/*::[*/0x0021/*::]*/: 1, /* VALUE */
+	/*::[*/0x0022/*::]*/: 0, /* TRUE */
+	/*::[*/0x0023/*::]*/: 0, /* FALSE */
 	/*::[*/0x0026/*::]*/: 1, /* NOT */
 	/*::[*/0x0027/*::]*/: 2, /* MOD */
 	/*::[*/0x0028/*::]*/: 3, /* DCOUNT */
@@ -11344,6 +11420,7 @@ var FtabArgc = {
 	/*::[*/0x0030/*::]*/: 2, /* TEXT */
 	/*::[*/0x0035/*::]*/: 1, /* GOTO */
 	/*::[*/0x003D/*::]*/: 3, /* MIRR */
+	/*::[*/0x003F/*::]*/: 0, /* RAND */
 	/*::[*/0x0041/*::]*/: 3, /* DATE */
 	/*::[*/0x0042/*::]*/: 3, /* TIME */
 	/*::[*/0x0043/*::]*/: 1, /* DAY */
@@ -11353,6 +11430,7 @@ var FtabArgc = {
 	/*::[*/0x0047/*::]*/: 1, /* HOUR */
 	/*::[*/0x0048/*::]*/: 1, /* MINUTE */
 	/*::[*/0x0049/*::]*/: 1, /* SECOND */
+	/*::[*/0x004A/*::]*/: 0, /* NOW */
 	/*::[*/0x004B/*::]*/: 1, /* AREAS */
 	/*::[*/0x004C/*::]*/: 1, /* ROWS */
 	/*::[*/0x004D/*::]*/: 1, /* COLUMNS */
@@ -11361,13 +11439,18 @@ var FtabArgc = {
 	/*::[*/0x0053/*::]*/: 1, /* TRANSPOSE */
 	/*::[*/0x0055/*::]*/: 0, /* STEP */
 	/*::[*/0x0056/*::]*/: 1, /* TYPE */
+	/*::[*/0x0059/*::]*/: 0, /* CALLER */
 	/*::[*/0x005A/*::]*/: 1, /* DEREF */
+	/*::[*/0x005E/*::]*/: 0, /* ACTIVE.CELL */
+	/*::[*/0x005F/*::]*/: 0, /* SELECTION */
 	/*::[*/0x0061/*::]*/: 2, /* ATAN2 */
 	/*::[*/0x0062/*::]*/: 1, /* ASIN */
 	/*::[*/0x0063/*::]*/: 1, /* ACOS */
 	/*::[*/0x0065/*::]*/: 3, /* HLOOKUP */
 	/*::[*/0x0066/*::]*/: 3, /* VLOOKUP */
 	/*::[*/0x0069/*::]*/: 1, /* ISREF */
+	/*::[*/0x006A/*::]*/: 1, /* GET.FORMULA */
+	/*::[*/0x006C/*::]*/: 2, /* SET.VALUE */
 	/*::[*/0x006F/*::]*/: 1, /* CHAR */
 	/*::[*/0x0070/*::]*/: 1, /* LOWER */
 	/*::[*/0x0071/*::]*/: 1, /* UPPER */
@@ -11393,6 +11476,7 @@ var FtabArgc = {
 	/*::[*/0x008E/*::]*/: 3, /* SLN */
 	/*::[*/0x008F/*::]*/: 4, /* SYD */
 	/*::[*/0x0090/*::]*/: 4, /* DDB */
+	/*::[*/0x00A1/*::]*/: 1, /* DIALOG.BOX */
 	/*::[*/0x00A2/*::]*/: 1, /* CLEAN */
 	/*::[*/0x00A3/*::]*/: 1, /* MDETERM */
 	/*::[*/0x00A4/*::]*/: 1, /* MINVERSE */
@@ -11404,6 +11488,7 @@ var FtabArgc = {
 	/*::[*/0x00B2/*::]*/: 2, /* EXECUTE */
 	/*::[*/0x00B3/*::]*/: 1, /* TERMINATE */
 	/*::[*/0x00B8/*::]*/: 1, /* FACT */
+	/*::[*/0x00BA/*::]*/: 1, /* GET.WORKSPACE */
 	/*::[*/0x00BD/*::]*/: 3, /* DPRODUCT */
 	/*::[*/0x00BE/*::]*/: 1, /* ISNONTEXT */
 	/*::[*/0x00C3/*::]*/: 3, /* DSTDEVP */
@@ -11419,6 +11504,7 @@ var FtabArgc = {
 	/*::[*/0x00D5/*::]*/: 2, /* ROUNDDOWN */
 	/*::[*/0x00D6/*::]*/: 1, /* ASC */
 	/*::[*/0x00D7/*::]*/: 1, /* DBCS */
+	/*::[*/0x00E1/*::]*/: 0, /* END.IF */
 	/*::[*/0x00E5/*::]*/: 1, /* SINH */
 	/*::[*/0x00E6/*::]*/: 1, /* COSH */
 	/*::[*/0x00E7/*::]*/: 1, /* TANH */
@@ -18025,6 +18111,7 @@ var parse_content_xml = (function() {
 					if(merges.length) ws['!merges'] = merges;
 					if(rowinfo.length) ws["!rows"] = rowinfo;
 					sheetag.name = utf8read(sheetag['名称'] || sheetag.name);
+					if(typeof JSON !== 'undefined') JSON.stringify(sheetag);
 					SheetNames.push(sheetag.name);
 					Sheets[sheetag.name] = ws;
 					intable = false;
@@ -18839,7 +18926,6 @@ function safe_parse_sheet(zip, path/*:string*/, relsPath/*:string*/, sheet, idx/
 	} catch(e) { if(opts.WTF) throw e; }
 }
 
-var nodirs = function nodirs(x/*:string*/)/*:boolean*/{return x.slice(-1) != '/';};
 function strip_front_slash(x/*:string*/)/*:string*/ { return x.charAt(0) == '/' ? x.slice(1) : x; }
 
 function parse_zip(zip/*:ZIP*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
@@ -18854,7 +18940,7 @@ function parse_zip(zip/*:ZIP*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
 	/* Numbers */
 	if(safegetzipfile(zip, 'Index/Document.iwa')) throw new Error('Unsupported NUMBERS file');
 
-	var entries = keys(zip.files).filter(nodirs).sort();
+	var entries = zipentries(zip);
 	var dir = parse_ct((getzipstr(zip, '[Content_Types].xml')/*:?any*/));
 	var xlsb = false;
 	var sheets, binname;
@@ -19056,8 +19142,12 @@ function write_zip(wb/*:Workbook*/, opts/*:WriteOpts*/)/*:ZIP*/ {
 	f = "docProps/app.xml";
 	if(wb.Props && wb.Props.SheetNames){/* empty */}
 	else if(!wb.Workbook || !wb.Workbook.Sheets) wb.Props.SheetNames = wb.SheetNames;
-	// $FlowIgnore
-	else wb.Props.SheetNames = wb.SheetNames.map(function(x,i) { return [(wb.Workbook.Sheets[i]||{}).Hidden != 2, x];}).filter(function(x) { return x[0]; }).map(function(x) { return x[1]; });
+	else {
+		var _sn = [];
+		for(var _i = 0; _i < wb.SheetNames.length; ++_i)
+			if((wb.Workbook.Sheets[_i]||{}).Hidden != 2) _sn.push(wb.SheetNames[_i]);
+		wb.Props.SheetNames = _sn;
+	}
 	wb.Props.Worksheets = wb.Props.SheetNames.length;
 	zip.file(f, write_ext_props(wb.Props, opts));
 	ct.extprops.push(f);
@@ -19592,7 +19682,7 @@ function sheet_add_json(_ws/*:?Worksheet*/, js/*:Array<any>*/, opts)/*:Worksheet
 	var hdr/*:Array<string>*/ = o.header || [], C = 0;
 
 	js.forEach(function (JS, R/*:number*/) {
-		keys(JS).filter(function(x) { return JS.hasOwnProperty(x); }).forEach(function(k) {
+		keys(JS).forEach(function(k) {
 			if((C=hdr.indexOf(k)) == -1) hdr[C=hdr.length] = k;
 			var v = JS[k];
 			var t = 'z';

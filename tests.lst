@@ -203,7 +203,7 @@ apachepoi_Booleans.xlsx
 apachepoi_BrNotClosed.xlsx
 apachepoi_ConditionalFormattingSamples.xlsx
 apachepoi_CustomXMLMapping-singleattributenamespace.xlsx
-apachepoi_CustomXMLMappings-complex-type.xlsx
+#apachepoi_CustomXMLMappings-complex-type.xlsx # Upstream changed file
 apachepoi_CustomXMLMappings.xlsx
 apachepoi_CustomXmlMappings-inverse-order.xlsx
 apachepoi_DataTableCities.xlsx

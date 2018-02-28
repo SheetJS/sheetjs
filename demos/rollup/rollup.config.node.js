@@ -2,12 +2,16 @@
 import resolve from 'rollup-plugin-node-resolve';
 import commonjs from 'rollup-plugin-commonjs';
 export default {
+	input: 'main.js',
+	output: {
+		file: 'rollup.node.js',
+		format: 'cjs'
+	},
 	entry: 'main.js',
-	dest: 'rollup.node.js',
+	//dest: 'rollup.node.js',
 	plugins: [
 		resolve({
-			module: false,
-			browser: true,
+			module: false
 		}),
 		commonjs()
 	],

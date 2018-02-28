@@ -36,7 +36,6 @@ function safe_parse_sheet(zip, path/*:string*/, relsPath/*:string*/, sheet, idx/
 	} catch(e) { if(opts.WTF) throw e; }
 }
 
-var nodirs = function nodirs(x/*:string*/)/*:boolean*/{return x.slice(-1) != '/';};
 function strip_front_slash(x/*:string*/)/*:string*/ { return x.charAt(0) == '/' ? x.slice(1) : x; }
 
 function parse_zip(zip/*:ZIP*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
@@ -51,7 +50,7 @@ function parse_zip(zip/*:ZIP*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
 	/* Numbers */
 	if(safegetzipfile(zip, 'Index/Document.iwa')) throw new Error('Unsupported NUMBERS file');
 
-	var entries = keys(zip.files).filter(nodirs).sort();
+	var entries = zipentries(zip);
 	var dir = parse_ct((getzipstr(zip, '[Content_Types].xml')/*:?any*/));
 	var xlsb = false;
 	var sheets, binname;

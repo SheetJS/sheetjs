@@ -40,7 +40,7 @@ SheetJSRhino.class: $(RHDEPS)
 	javac -cp .:SheetJS.jar:rhino.jar SheetJSRhino.java
 
 rhino.jar:
-	if [ ! -e rhino ]; then git clone https://github.com/mozilla/rhino; fi
+	if [ ! -e rhino ]; then git clone --depth=1 https://github.com/mozilla/rhino; fi
 	#if [ ! -e rhino/build/rhino*/js.jar ]; then cd rhino; ant jar; fi
 	#cp rhino/build/rhino*/js.jar rhino.jar
 	if [ ! -e rhino/buildGradle/libs/rhino*.jar ]; then cd rhino; ./gradlew jar; fi

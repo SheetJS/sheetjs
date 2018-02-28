@@ -51,6 +51,12 @@ function getzipstr(zip, file/*:string*/, safe/*:?boolean*/)/*:?string*/ {
 	try { return getzipstr(zip, file); } catch(e) { return null; }
 }
 
+function zipentries(zip) {
+	var k = keys(zip.files), o = [];
+	for(var i = 0; i < k.length; ++i) if(k[i].slice(-1) != '/') o.push(k[i]);
+	return o.sort();
+}
+
 var jszip;
 /*:: declare var JSZip:any; */
 /*global JSZip:true */

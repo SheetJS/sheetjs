@@ -191,7 +191,7 @@ function sheet_add_json(_ws/*:?Worksheet*/, js/*:Array<any>*/, opts)/*:Worksheet
 	var hdr/*:Array<string>*/ = o.header || [], C = 0;
 
 	js.forEach(function (JS, R/*:number*/) {
-		keys(JS).filter(function(x) { return JS.hasOwnProperty(x); }).forEach(function(k) {
+		keys(JS).forEach(function(k) {
 			if((C=hdr.indexOf(k)) == -1) hdr[C=hdr.length] = k;
 			var v = JS[k];
 			var t = 'z';

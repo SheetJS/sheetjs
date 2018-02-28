@@ -20,4 +20,4 @@ worker.min.js: worker.js
 .PHONY: init
 init:
 	@npm install rollup-plugin-node-resolve rollup-plugin-commonjs
-	@mkdir -p node_modules; cd node_modules; ln -s ../../../ xlsx; cd -
+	@mkdir -p node_modules; cd node_modules; if [ ! -e xlsx ]; then ln -s ../../../ xlsx; fi; cd -

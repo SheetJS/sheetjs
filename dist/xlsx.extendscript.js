@@ -1,388 +1,146 @@
 /* xlsx.js (C) 2013-present SheetJS -- http://sheetjs.com */
+/* shim.js (C) 2013-present SheetJS -- http://sheetjs.com */
+/* ES3/5 Compatibility shims and other utilities for older browsers. */
+
 // From https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/keys
-if (!Object.keys) {
-  Object.keys = (function () {
-    var hasOwnProperty = Object.prototype.hasOwnProperty,
-        hasDontEnumBug = !({toString: null}).propertyIsEnumerable('toString'),
-        dontEnums = [
-          'toString',
-          'toLocaleString',
-          'valueOf',
-          'hasOwnProperty',
-          'isPrototypeOf',
-          'propertyIsEnumerable',
-          'constructor'
-        ],
-        dontEnumsLength = dontEnums.length;
+if(!Object.keys) Object.keys = (function() {
+  var hasOwnProperty = Object.prototype.hasOwnProperty,
+      hasDontEnumBug = !({toString: null}).propertyIsEnumerable('toString'),
+      dontEnums = [
+        'toString',
+        'toLocaleString',
+        'valueOf',
+        'hasOwnProperty',
+        'isPrototypeOf',
+        'propertyIsEnumerable',
+        'constructor'
+      ],
+      dontEnumsLength = dontEnums.length;
 
-    return function (obj) {
-      if (typeof obj !== 'object' && typeof obj !== 'function' || obj === null) throw new TypeError('Object.keys called on non-object');
+  return function(obj) {
+    if(typeof obj !== 'object' && typeof obj !== 'function' || obj === null) throw new TypeError('Object.keys called on non-object');
 
-      var result = [];
+    var result = [];
 
-      for (var prop in obj) {
-        if (hasOwnProperty.call(obj, prop)) result.push(prop);
-      }
+    for(var prop in obj) if(hasOwnProperty.call(obj, prop)) result.push(prop);
 
-      if (hasDontEnumBug) {
-        for (var i=0; i < dontEnumsLength; i++) {
-          if (hasOwnProperty.call(obj, dontEnums[i])) result.push(dontEnums[i]);
-        }
-      }
-      return result;
-    };
-  })();
-}
-
-// From https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/filter
-if (!Array.prototype.filter)
-{
-  Array.prototype.filter = function(fun /*, thisp */)
-  {
-    "use strict";
-
-    if (this == null)
-      throw new TypeError();
-
-    var t = Object(this);
-    var len = t.length >>> 0;
-    if (typeof fun != "function")
-      throw new TypeError();
-
-    var res = [];
-    var thisp = arguments[1];
-    for (var i = 0; i < len; i++)
-    {
-      if (i in t)
-      {
-        var val = t[i]; // in case fun mutates this
-        if (fun.call(thisp, val, i, t))
-          res.push(val);
-      }
-    }
-
-    return res;
+    if(hasDontEnumBug)
+      for(var i=0; i < dontEnumsLength; ++i)
+        if(hasOwnProperty.call(obj, dontEnums[i])) result.push(dontEnums[i]);
+    return result;
   };
-}
+})();
 
-// From https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/Trim
-if (!String.prototype.trim) {
-  String.prototype.trim = function () {
-    return this.replace(/^\s+|\s+$/g, '');
+if(!String.prototype.trim) String.prototype.trim = function() {
+  var s = this.replace(/^\s+/, '');
+  for(var i = s.length - 1; i >=0 ; --i) if(!s.charAt(i).match(/^\s/)) return s.slice(0,i+1);
+  return "";
+};
+
+if(!Array.prototype.forEach) Array.prototype.forEach = function(cb) {
+  var len = (this.length>>>0), self = (arguments[1]||void 0);
+  for(var i=0; i<len; ++i) if(i in this) self ? cb.call(self, this[i], i, this) : cb(this[i], i, this);
+};
+
+if(!Array.prototype.map) Array.prototype.map = function(cb) {
+  var len = (this.length>>>0), self = (arguments[1]||void 0), A = new Array(len);
+  for(var i=0; i<len; ++i) if(i in this) A[i] = self ? cb.call(self, this[i], i, this) : cb(this[i], i, this);
+  return A;
+};
+
+if(!Array.prototype.indexOf) Array.prototype.indexOf = function(needle) {
+  var len = (this.length>>>0), i = ((arguments[1]|0)||0);
+  for(i<0 && (i+=len)<0 && (i=0); i<len; ++i) if(this[i] === needle) return i;
+  return -1;
+};
+
+if(!Array.isArray) Array.isArray = function(obj) { return Object.prototype.toString.call(obj) === "[object Array]"; };
+
+if(!Date.prototype.toISOString) Date.prototype.toISOString = (function() {
+  function p(n,i) { return ('0000000' + n).slice(-(i||2)); }
+
+  return function _toISOString() {
+    var y = this.getUTCFullYear(), yr = "";
+    if(y>9999)   yr = '+' + p( y, 6);
+    else if(y<0) yr = '-' + p(-y, 6);
+    else         yr =       p( y, 4);
+
+    return [
+      yr, p(this.getUTCMonth()+1), p(this.getUTCDate())
+    ].join('-') + 'T' + [
+      p(this.getUTCHours()), p(this.getUTCMinutes()), p(this.getUTCSeconds())
+    ].join(':') + '.' + p(this.getUTCMilliseconds(),3) + 'Z';
   };
-}
-
-// From https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/forEach
-if (!Array.prototype.forEach)
-{
-  Array.prototype.forEach = function(fun /*, thisArg */)
-  {
-    "use strict";
-
-    if (this === void 0 || this === null)
-      throw new TypeError();
-
-    var t = Object(this);
-    var len = t.length >>> 0;
-    if (typeof fun !== "function")
-      throw new TypeError();
-
-    var thisArg = arguments.length >= 2 ? arguments[1] : void 0;
-    for (var i = 0; i < len; i++)
-    {
-      if (i in t)
-        fun.call(thisArg, t[i], i, t);
-    }
-  };
-}
-
-// Production steps of ECMA-262, Edition 5, 15.4.4.19
-// Reference: http://es5.github.com/#x15.4.4.19
-if (!Array.prototype.map) {
-  Array.prototype.map = function(callback, thisArg) {
-
-    var T, A, k;
-
-    if (this == null) {
-      throw new TypeError(" this is null or not defined");
-    }
-
-    // 1. Let O be the result of calling ToObject passing the |this| value as the argument.
-    var O = Object(this);
-
-    // 2. Let lenValue be the result of calling the Get internal method of O with the argument "length".
-    // 3. Let len be ToUint32(lenValue).
-    var len = O.length >>> 0;
-
-    // 4. If IsCallable(callback) is false, throw a TypeError exception.
-    // See: http://es5.github.com/#x9.11
-    if (typeof callback !== "function") {
-      throw new TypeError(callback + " is not a function");
-    }
-
-    // 5. If thisArg was supplied, let T be thisArg; else let T be undefined.
-    if (thisArg) {
-      T = thisArg;
-    }
-
-    // 6. Let A be a new array created as if by the expression new Array(len) where Array is
-    // the standard built-in constructor with that name and len is the value of len.
-    A = new Array(len);
-
-    // 7. Let k be 0
-    k = 0;
-
-    // 8. Repeat, while k < len
-    while(k < len) {
-
-      var kValue, mappedValue;
-
-      // a. Let Pk be ToString(k).
-      //   This is implicit for LHS operands of the in operator
-      // b. Let kPresent be the result of calling the HasProperty internal method of O with argument Pk.
-      //   This step can be combined with c
-      // c. If kPresent is true, then
-      if (k in O) {
-
-        // i. Let kValue be the result of calling the Get internal method of O with argument Pk.
-        kValue = O[ k ];
-
-        // ii. Let mappedValue be the result of calling the Call internal method of callback
-        // with T as the this value and argument list containing kValue, k, and O.
-        mappedValue = callback.call(T, kValue, k, O);
-
-        // iii. Call the DefineOwnProperty internal method of A with arguments
-        // Pk, Property Descriptor {Value: mappedValue, : true, Enumerable: true, Configurable: true},
-        // and false.
-
-        // In browsers that support Object.defineProperty, use the following:
-        // Object.defineProperty(A, Pk, { value: mappedValue, writable: true, enumerable: true, configurable: true });
-
-        // For best browser support, use the following:
-        A[ k ] = mappedValue;
-      }
-      // d. Increase k by 1.
-      k++;
-    }
-
-    // 9. return A
-    return A;
-  };
-}
-
-// From https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/indexOf
-if (!Array.prototype.indexOf) {
-  Array.prototype.indexOf = function (searchElement, fromIndex) {
-    if ( this === undefined || this === null ) {
-      throw new TypeError( '"this" is null or not defined' );
-    }
-
-    var length = this.length >>> 0; // Hack to convert object.length to a UInt32
-
-    fromIndex = +fromIndex || 0;
-
-    if (Math.abs(fromIndex) === Infinity) {
-      fromIndex = 0;
-    }
-
-    if (fromIndex < 0) {
-      fromIndex += length;
-      if (fromIndex < 0) {
-        fromIndex = 0;
-      }
-    }
-
-    for (;fromIndex < length; fromIndex++) {
-      if (this[fromIndex] === searchElement) {
-        return fromIndex;
-      }
-    }
-
-    return -1;
-  };
-}
-// Based on https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/isArray
-
-if (! Array.isArray) {
-    Array.isArray = function(obj) {
-        return Object.prototype.toString.call(obj) === "[object Array]";
-    };
-}
-
-// https://github.com/ttaubert/node-arraybuffer-slice
-// (c) 2013 Tim Taubert <tim@timtaubert.de>
-// arraybuffer-slice may be freely distributed under the MIT license.
-
-"use strict";
-
-if (typeof ArrayBuffer !== 'undefined' && !ArrayBuffer.prototype.slice) {
-  ArrayBuffer.prototype.slice = function (begin, end) {
-    begin = (begin|0) || 0;
-    var num = this.byteLength;
-    end = end === (void 0) ? num : (end|0);
-
-    // Handle negative values.
-    if (begin < 0) begin += num;
-    if (end < 0) end += num;
-
-    if (num === 0 || begin >= num || begin >= end) {
-      return new ArrayBuffer(0);
-    }
-
-    var length = Math.min(num - begin, end - begin);
-    var target = new ArrayBuffer(length);
-    var targetArray = new Uint8Array(target);
-    targetArray.set(new Uint8Array(this, begin, length));
-    return target;
-  };
-}
-
-// https://github.com/davidchambers/Base64.js
-// (C) 2015 David Chambers
-// Base64.js may be freely distributed under the Apache 2.0 License.
-;(function () {
-
-  var object =
-    typeof exports != 'undefined' ? exports :
-    typeof self != 'undefined' ? self : // #8: web workers
-    $.global; // #31: ExtendScript
-
-  var chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
-
-  function InvalidCharacterError(message) {
-    this.message = message;
-  }
-  InvalidCharacterError.prototype = new Error;
-  InvalidCharacterError.prototype.name = 'InvalidCharacterError';
-
-  // encoder
-  // [https://gist.github.com/999166] by [https://github.com/nignag]
-  object.btoa || (
-  object.btoa = function (input) {
-    var str = String(input);
-    for (
-      // initialize result and counter
-      var block, charCode, idx = 0, map = chars, output = '';
-      // if the next str index does not exist:
-      //   change the mapping table to "="
-      //   check if d has no fractional digits
-      str.charAt(idx | 0) || (map = '=', idx % 1);
-      // "8 - idx % 1 * 8" generates the sequence 2, 4, 6, 8
-      output += map.charAt(63 & block >> 8 - idx % 1 * 8)
-    ) {
-      charCode = str.charCodeAt(idx += 3/4);
-      if (charCode > 0xFF) {
-        throw new InvalidCharacterError("'btoa' failed: The string to be encoded contains characters outside of the Latin1 range.");
-      }
-      block = block << 8 | charCode;
-    }
-    return output;
-  });
-
-  // decoder
-  // [https://gist.github.com/1020396] by [https://github.com/atk]
-  object.atob || (
-  object.atob = function (input) {
-    var str = String(input).replace(/[=]+$/, ''); // #31: ExtendScript bad parse of /=
-    if (str.length % 4 == 1) {
-      throw new InvalidCharacterError("'atob' failed: The string to be decoded is not correctly encoded.");
-    }
-    for (
-      // initialize result and counters
-      var bc = 0, bs, buffer, idx = 0, output = '';
-      // get next character
-      buffer = str.charAt(idx++);
-      // character found in table? initialize bit storage and add its ascii value;
-      ~buffer && (bs = bc % 4 ? bs * 64 + buffer : buffer,
-        // and if not first of each 4 characters,
-        // convert the first 8 bits to one ascii character
-        bc++ % 4) ? output += String.fromCharCode(255 & bs >> (-2 * bc & 6)) : 0
-    ) {
-      // try to find character in table (0-63, not found => -1)
-      buffer = chars.indexOf(buffer);
-    }
-    return output;
-  });
 }());
 
-
-// From https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString
-if (!Date.prototype.toISOString) {
-  (function() {
-
-    function pad(number) {
-      if (number < 10) {
-        return '0' + number;
-      }
-      return number;
-    }
-
-    Date.prototype.toISOString = function() {
-      return this.getUTCFullYear() +
-        '-' + pad(this.getUTCMonth() + 1) +
-        '-' + pad(this.getUTCDate()) +
-        'T' + pad(this.getUTCHours()) +
-        ':' + pad(this.getUTCMinutes()) +
-        ':' + pad(this.getUTCSeconds()) +
-        '.' + (this.getUTCMilliseconds() / 1000).toFixed(3).slice(2, 5) +
-        'Z';
-    };
-
-  }());
-}
-
-// note: MDN shim will not work in IE
+if(typeof ArrayBuffer !== 'undefined' && !ArrayBuffer.prototype.slice) ArrayBuffer.prototype.slice = function(start, end) {
+  if(start == null) start = 0;
+  if(start < 0) { start += this.byteLength; if(start < 0) start = 0; }
+  if(start >= this.byteLength) return new Uint8Array(0);
+  if(end == null) end = this.byteLength;
+  if(end < 0) { end += this.byteLength; if(end < 0) end = 0; }
+  if(end > this.byteLength) end = this.byteLength;
+  if(start > end) return new Uint8Array(0);
+  var out = new ArrayBuffer(end - start);
+  var view = new Uint8Array(out);
+  var data = new Uint8Array(this, start, end - start)
+  /* IE10 should have Uint8Array#set */
+  if(view.set) view.set(data); else while(start <= --end) view[end - start] = data[end];
+  return out;
+};
 if(typeof Uint8Array !== 'undefined' && !Uint8Array.prototype.slice) Uint8Array.prototype.slice = function(start, end) {
-	if(start < 0) { start += this.length; if(start < 0) start = 0; }
-	if(start >= this.length) return new Uint8Array(0);
-	if(end == null) end = this.length;
-	if(end < 0) { end += this.length; if(end < 0) end = 0; }
-	if(end > this.length) end = this.length;
-	var out = new Uint8Array(end - start);
-	while(start <= --end) out[end - start] = this[end];
-	return out;
+  if(start == null) start = 0;
+  if(start < 0) { start += this.length; if(start < 0) start = 0; }
+  if(start >= this.length) return new Uint8Array(0);
+  if(end == null) end = this.length;
+  if(end < 0) { end += this.length; if(end < 0) end = 0; }
+  if(end > this.length) end = this.length;
+  if(start > end) return new Uint8Array(0);
+  var out = new Uint8Array(end - start);
+  while(start <= --end) out[end - start] = this[end];
+  return out;
 };
 
 // VBScript + ActiveX fallback for IE5+
 var IE_SaveFile = (function() { try {
-	if(typeof IE_SaveFile_Impl == "undefined") document.write([
+  if(typeof IE_SaveFile_Impl == "undefined") document.write([
 '<script type="text/vbscript" language="vbscript">',
 'IE_GetProfileAndPath_Key = "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders\\"',
 'Function IE_GetProfileAndPath(key): Set wshell = CreateObject("WScript.Shell"): IE_GetProfileAndPath = wshell.RegRead(IE_GetProfileAndPath_Key & key): IE_GetProfileAndPath = wshell.ExpandEnvironmentStrings("%USERPROFILE%") & "!" & IE_GetProfileAndPath: End Function',
 'Function IE_SaveFile_Impl(FileName, payload): Dim data, plen, i, bit: data = CStr(payload): plen = Len(data): Set fso = CreateObject("Scripting.FileSystemObject"): fso.CreateTextFile FileName, True: Set f = fso.GetFile(FileName): Set stream = f.OpenAsTextStream(2, 0): For i = 1 To plen Step 3: bit = Mid(data, i, 2): stream.write Chr(CLng("&h" & bit)): Next: stream.Close: IE_SaveFile_Impl = True: End Function',
 '|/script>'.replace("|","<")
-	].join("\r\n"));
-	if(typeof IE_SaveFile_Impl == "undefined") return void 0;
-	var IE_GetPath = (function() {
-		var DDP1 = "";
-		try { DDP1 = IE_GetProfileAndPath("{374DE290-123F-4565-9164-39C4925E467B}"); } catch(e) { try { DDP1 = IE_GetProfileAndPath("Personal"); } catch(e) { try { DDP1 = IE_GetProfileAndPath("Desktop"); } catch(e) { throw e; }}}
-		var o = DDP1.split("!");
-		DDP = o[1].replace("%USERPROFILE%", o[0]);
-		return function(path) { return DDP + "\\" + path; };
-	})();
-	function fix_data(data) {
-		var out = [];
-		var T = typeof data == "string";
-		for(var i = 0; i < data.length; ++i) out.push(("00"+(T ? data.charCodeAt(i) : data[i]).toString(16)).slice(-2));
-		var o = out.join("|");
-		return o;
-	}
-	return function(data, filename) { return IE_SaveFile_Impl(IE_GetPath(filename), fix_data(data)); };
+  ].join("\r\n"));
+  if(typeof IE_SaveFile_Impl == "undefined") return void 0;
+  var IE_GetPath = (function() {
+    var DDP1 = "";
+    try { DDP1 = IE_GetProfileAndPath("{374DE290-123F-4565-9164-39C4925E467B}"); } catch(e) { try { DDP1 = IE_GetProfileAndPath("Personal"); } catch(e) { try { DDP1 = IE_GetProfileAndPath("Desktop"); } catch(e) { throw e; }}}
+    var o = DDP1.split("!");
+    DDP = o[1].replace("%USERPROFILE%", o[0]);
+    return function(path) { return DDP + "\\" + path; };
+  })();
+  function fix_data(data) {
+    var out = [];
+    var T = typeof data == "string";
+    for(var i = 0; i < data.length; ++i) out.push(("00"+(T ? data.charCodeAt(i) : data[i]).toString(16)).slice(-2));
+    var o = out.join("|");
+    return o;
+  }
+  return function(data, filename) { return IE_SaveFile_Impl(IE_GetPath(filename), fix_data(data)); };
 } catch(e) { return void 0; }})();
 var IE_LoadFile = (function() { try {
-	if(typeof IE_LoadFile_Impl == "undefined") document.write([
+  if(typeof IE_LoadFile_Impl == "undefined") document.write([
 '<script type="text/vbscript" language="vbscript">',
 'Function IE_LoadFile_Impl(FileName): Dim out(), plen, i, cc: Set fso = CreateObject("Scripting.FileSystemObject"): Set f = fso.GetFile(FileName): Set stream = f.OpenAsTextStream(1, 0): plen = f.Size: ReDim out(plen): For i = 1 To plen Step 1: cc = Hex(Asc(stream.read(1))): If Len(cc) < 2 Then: cc = "0" & cc: End If: out(i) = cc: Next: IE_LoadFile_Impl = Join(out,""): End Function',
 '|/script>'.replace("|","<")
-	].join("\r\n"));
-	if(typeof IE_LoadFile_Impl == "undefined") return void 0;
-	function fix_data(data) {
-		var out = [];
-		for(var i = 0; i < data.length; i+=2) out.push(String.fromCharCode(parseInt(data.slice(i, i+2), 16)));
-		var o = out.join("");
-		return o;
-	}
-	return function(filename) { return fix_data(IE_LoadFile_Impl(filename)); };
+  ].join("\r\n"));
+  if(typeof IE_LoadFile_Impl == "undefined") return void 0;
+  function fix_data(data) {
+    var out = [];
+    for(var i = 0; i < data.length; i+=2) out.push(String.fromCharCode(parseInt(data.slice(i, i+2), 16)));
+    var o = out.join("");
+    return o;
+  }
+  return function(filename) { return fix_data(IE_LoadFile_Impl(filename)); };
 } catch(e) { return void 0; }})();
 var DO_NOT_EXPORT_CODEPAGE = true;
 var DO_NOT_EXPORT_JSZIP = true;
@@ -9380,7 +9138,7 @@ module.exports = ZStream;
 /*global global, exports, module, require:false, process:false, Buffer:false, ArrayBuffer:false */
 var XLSX = {};
 (function make_xlsx(XLSX){
-XLSX.version = '0.12.2';
+XLSX.version = '0.12.3';
 var current_codepage = 1200, current_ansi = 1252;
 /*global cptable:true */
 if(typeof module !== "undefined" && typeof require !== 'undefined') {
@@ -11255,7 +11013,11 @@ function read_binary(path) {
 	} catch(e) { if(!e.message || !e.message.match(/onstruct/)) throw e; }
 	throw new Error("Cannot access file " + path);
 }
-function keys(o) { return Object.keys(o); }
+function keys(o) {
+	var ks = Object.keys(o), o2 = [];
+	for(var i = 0; i < ks.length; ++i) if(o.hasOwnProperty(ks[i])) o2.push(ks[i]);
+	return o2;
+}
 
 function evert_key(obj, key) {
 	var o = ([]), K = keys(obj);
@@ -11444,6 +11206,12 @@ function getzipstr(zip, file, safe) {
 	if(!safe) return getdatastr(getzipfile(zip, file));
 	if(!file) return null;
 	try { return getzipstr(zip, file); } catch(e) { return null; }
+}
+
+function zipentries(zip) {
+	var k = keys(zip.files), o = [];
+	for(var i = 0; i < k.length; ++i) if(k[i].slice(-1) != '/') o.push(k[i]);
+	return o.sort();
 }
 
 var jszip;
@@ -18750,7 +18518,7 @@ function parse_PtgArea3d(blob, length, opts) {
 /* [MS-XLS] 2.5.198.29 ; [MS-XLSB] 2.5.97.20 */
 function parse_PtgAreaErr(blob, length, opts) {
 	var type = (blob[blob.l++] & 0x60) >> 5;
-	blob.l += opts && opts.biff > 8 ? 12 : 8;
+	blob.l += opts && (opts.biff > 8) ? 12 : (opts.biff < 8 ? 6 : 8);
 	return [type];
 }
 /* [MS-XLS] 2.5.198.30 ; [MS-XLSB] 2.5.97.21 */
@@ -18882,8 +18650,8 @@ function parse_PtgFunc(blob, length, opts) {
 }
 /* [MS-XLS] 2.5.198.63 ; [MS-XLSB] 2.5.97.46 TODO */
 function parse_PtgFuncVar(blob, length, opts) {
-	blob.l++;
-	var cparams = blob.read_shift(1), tab = opts && opts.biff <= 3 ? [0, blob.read_shift(1)]: parsetab(blob);
+	var type = blob[blob.l++];
+	var cparams = blob.read_shift(1), tab = opts && opts.biff <= 3 ? [(type == 0x58 ? -1 : 0), blob.read_shift(1)]: parsetab(blob);
 	return [cparams, (tab[0] === 0 ? Ftab : Cetab)[tab[1]]];
 }
 
@@ -19080,17 +18848,66 @@ var parse_PtgElfRw = parse_PtgElfLoc;
 /* [MS-XLS] 2.5.198.55 */
 var parse_PtgElfRwV = parse_PtgElfLoc;
 
-/* [MS-XLSB] 2.5.97.52 */
+/* [MS-XLSB] 2.5.97.52 TODO */
+var PtgListRT = [
+	"Data",
+	"All",
+	"Headers",
+	"??",
+	"?Data2",
+	"??",
+	"?DataHeaders",
+	"??",
+	"Totals",
+	"??",
+	"??",
+	"??",
+	"?DataTotals",
+	"??",
+	"??",
+	"??",
+	"?Current"
+];
 function parse_PtgList(blob) {
 	blob.l += 2;
 	var ixti = blob.read_shift(2);
-	blob.l += 10;
-	return {ixti: ixti};
+	var flags = blob.read_shift(2);
+	var idx = blob.read_shift(4);
+	var c = blob.read_shift(2);
+	var C = blob.read_shift(2);
+	var rt = PtgListRT[(flags >> 2) & 0x1F];
+	return {ixti: ixti, coltype:(flags&0x3), rt:rt, idx:idx, c:c, C:C};
 }
 /* [MS-XLS] 2.5.198.91 ; [MS-XLSB] 2.5.97.76 */
 function parse_PtgSxName(blob) {
 	blob.l += 2;
 	return [blob.read_shift(4)];
+}
+
+/* [XLS] old spec */
+function parse_PtgSheet(blob, length, opts) {
+	blob.l += 5;
+	blob.l += 2;
+	blob.l += (opts.biff == 2 ? 1 : 4);
+	return ["PTGSHEET"];
+}
+function parse_PtgEndSheet(blob, length, opts) {
+	blob.l += (opts.biff == 2 ? 4 : 5);
+	return ["PTGENDSHEET"];
+}
+function parse_PtgMemAreaN(blob) {
+	var type = (blob.read_shift(1) >>> 5) & 0x03;
+	var cce = blob.read_shift(2);
+	return [type, cce];
+}
+function parse_PtgMemNoMemN(blob) {
+	var type = (blob.read_shift(1) >>> 5) & 0x03;
+	var cce = blob.read_shift(2);
+	return [type, cce];
+}
+function parse_PtgAttrNoop(blob) {
+	blob.l += 4;
+	return [0, 0];
 }
 
 /* [MS-XLS] 2.5.198.25 ; [MS-XLSB] 2.5.97.16 */
@@ -19118,6 +18935,8 @@ var PtgTypes = {
 0x15: { n:'PtgParen', f:parseread1 },
 0x16: { n:'PtgMissArg', f:parseread1 },
 0x17: { n:'PtgStr', f:parse_PtgStr },
+0x1A: { n:'PtgSheet', f:parse_PtgSheet },
+0x1B: { n:'PtgEndSheet', f:parse_PtgEndSheet },
 0x1C: { n:'PtgErr', f:parse_PtgErr },
 0x1D: { n:'PtgBool', f:parse_PtgBool },
 0x1E: { n:'PtgInt', f:parse_PtgInt },
@@ -19136,6 +18955,8 @@ var PtgTypes = {
 0x2B: { n:'PtgAreaErr', f:parse_PtgAreaErr },
 0x2C: { n:'PtgRefN', f:parse_PtgRefN },
 0x2D: { n:'PtgAreaN', f:parse_PtgAreaN },
+0x2E: { n:'PtgMemAreaN', f:parse_PtgMemAreaN },
+0x2F: { n:'PtgMemNoMemN', f:parse_PtgMemNoMemN },
 0x39: { n:'PtgNameX', f:parse_PtgNameX },
 0x3A: { n:'PtgRef3d', f:parse_PtgRef3d },
 0x3B: { n:'PtgArea3d', f:parse_PtgArea3d },
@@ -19159,6 +18980,9 @@ var PtgDupes = {
 0x4B: 0x2B, 0x6B: 0x2B,
 0x4C: 0x2C, 0x6C: 0x2C,
 0x4D: 0x2D, 0x6D: 0x2D,
+0x4E: 0x2E, 0x6E: 0x2E,
+0x4F: 0x2F, 0x6F: 0x2F,
+0x58: 0x22, 0x78: 0x22,
 0x59: 0x39, 0x79: 0x39,
 0x5A: 0x3A, 0x7A: 0x3A,
 0x5B: 0x3B, 0x7B: 0x3B,
@@ -19183,6 +19007,7 @@ var Ptg18 = {
 0xFF: {}
 };
 var Ptg19 = {
+0x00: { n:'PtgAttrNoop', f:parse_PtgAttrNoop },
 0x01: { n:'PtgAttrSemi', f:parse_PtgAttrSemi },
 0x02: { n:'PtgAttrIf', f:parse_PtgAttrIf },
 0x04: { n:'PtgAttrChoose', f:parse_PtgAttrChoose },
@@ -19239,10 +19064,7 @@ function parse_Rgce(blob, length, opts) {
 		length = target - blob.l;
 		id = blob[blob.l];
 		R = PtgTypes[id];
-		if(id === 0x18 || id === 0x19) {
-			id = blob[blob.l + 1];
-			R = (id === 0x18 ? Ptg18 : Ptg19)[id];
-		}
+		if(id === 0x18 || id === 0x19) R = (id === 0x18 ? Ptg18 : Ptg19)[blob[blob.l + 1]];
 		if(!R || !R.f) { /*ptgs.push*/(parsenoop(blob, length)); }
 		// $FlowIgnore
 		else { ptgs.push([R.n, R.f(blob, length, opts)]); }
@@ -19568,6 +19390,18 @@ ixti = f[1][1]; r = f[1][2];
 			case 'PtgAreaErr3d': /* [MS-XLS] 2.5.198.30 */
 				stack.push("#REF!"); break;
 
+			case 'PtgList': /* [MS-XLSB] 2.5.97.52 */
+				// $FlowIgnore
+				stack.push("Table" + f[1].idx + "[#" + f[1].rt + "]");
+				break;
+
+			case 'PtgMemAreaN':
+			case 'PtgMemNoMemN':
+			case 'PtgAttrNoop':
+			case 'PtgSheet':
+			case 'PtgEndSheet':
+				break;
+
 			case 'PtgMemFunc': /* [MS-XLS] 2.5.198.72 TODO */
 				break;
 			case 'PtgMemNoMem': /* [MS-XLS] 2.5.198.73 TODO */
@@ -19587,13 +19421,10 @@ ixti = f[1][1]; r = f[1][2];
 
 			case 'PtgSxName': /* [MS-XLS] 2.5.198.91 TODO -- find a test case */
 				throw new Error('Unrecognized Formula Token: ' + String(f));
-			case 'PtgList': /* [MS-XLSB] 2.5.97.52 TODO -- find a test case */
-				throw new Error('Unrecognized Formula Token: ' + String(f));
-
 			default: throw new Error('Unrecognized Formula Token: ' + String(f));
 		}
 		var PtgNonDisp = ['PtgAttrSpace', 'PtgAttrSpaceSemi', 'PtgAttrGoto'];
-		if(last_sp >= 0 && PtgNonDisp.indexOf(formula[0][ff][0]) == -1) {
+		if(opts.biff != 3) if(last_sp >= 0 && PtgNonDisp.indexOf(formula[0][ff][0]) == -1) {
 			f = formula[0][last_sp];
 			var _left = true;
 			switch(f[1][0]) {
@@ -20596,6 +20427,7 @@ var Ftab = {
 var FtabArgc = {
 0x0002: 1, /* ISNA */
 0x0003: 1, /* ISERROR */
+0x000A: 0, /* NA */
 0x000F: 1, /* SIN */
 0x0010: 1, /* COS */
 0x0011: 1, /* TAN */
@@ -20613,6 +20445,8 @@ var FtabArgc = {
 0x001F: 3, /* MID */
 0x0020: 1, /* LEN */
 0x0021: 1, /* VALUE */
+0x0022: 0, /* TRUE */
+0x0023: 0, /* FALSE */
 0x0026: 1, /* NOT */
 0x0027: 2, /* MOD */
 0x0028: 3, /* DCOUNT */
@@ -20625,6 +20459,7 @@ var FtabArgc = {
 0x0030: 2, /* TEXT */
 0x0035: 1, /* GOTO */
 0x003D: 3, /* MIRR */
+0x003F: 0, /* RAND */
 0x0041: 3, /* DATE */
 0x0042: 3, /* TIME */
 0x0043: 1, /* DAY */
@@ -20634,6 +20469,7 @@ var FtabArgc = {
 0x0047: 1, /* HOUR */
 0x0048: 1, /* MINUTE */
 0x0049: 1, /* SECOND */
+0x004A: 0, /* NOW */
 0x004B: 1, /* AREAS */
 0x004C: 1, /* ROWS */
 0x004D: 1, /* COLUMNS */
@@ -20642,13 +20478,18 @@ var FtabArgc = {
 0x0053: 1, /* TRANSPOSE */
 0x0055: 0, /* STEP */
 0x0056: 1, /* TYPE */
+0x0059: 0, /* CALLER */
 0x005A: 1, /* DEREF */
+0x005E: 0, /* ACTIVE.CELL */
+0x005F: 0, /* SELECTION */
 0x0061: 2, /* ATAN2 */
 0x0062: 1, /* ASIN */
 0x0063: 1, /* ACOS */
 0x0065: 3, /* HLOOKUP */
 0x0066: 3, /* VLOOKUP */
 0x0069: 1, /* ISREF */
+0x006A: 1, /* GET.FORMULA */
+0x006C: 2, /* SET.VALUE */
 0x006F: 1, /* CHAR */
 0x0070: 1, /* LOWER */
 0x0071: 1, /* UPPER */
@@ -20674,6 +20515,7 @@ var FtabArgc = {
 0x008E: 3, /* SLN */
 0x008F: 4, /* SYD */
 0x0090: 4, /* DDB */
+0x00A1: 1, /* DIALOG.BOX */
 0x00A2: 1, /* CLEAN */
 0x00A3: 1, /* MDETERM */
 0x00A4: 1, /* MINVERSE */
@@ -20685,6 +20527,7 @@ var FtabArgc = {
 0x00B2: 2, /* EXECUTE */
 0x00B3: 1, /* TERMINATE */
 0x00B8: 1, /* FACT */
+0x00BA: 1, /* GET.WORKSPACE */
 0x00BD: 3, /* DPRODUCT */
 0x00BE: 1, /* ISNONTEXT */
 0x00C3: 3, /* DSTDEVP */
@@ -20700,6 +20543,7 @@ var FtabArgc = {
 0x00D5: 2, /* ROUNDDOWN */
 0x00D6: 1, /* ASC */
 0x00D7: 1, /* DBCS */
+0x00E1: 0, /* END.IF */
 0x00E5: 1, /* SINH */
 0x00E6: 1, /* COSH */
 0x00E7: 1, /* TANH */
@@ -27291,6 +27135,7 @@ var parse_content_xml = (function() {
 					if(merges.length) ws['!merges'] = merges;
 					if(rowinfo.length) ws["!rows"] = rowinfo;
 					sheetag.name = utf8read(sheetag['名称'] || sheetag.name);
+					if(typeof JSON !== 'undefined') JSON.stringify(sheetag);
 					SheetNames.push(sheetag.name);
 					Sheets[sheetag.name] = ws;
 					intable = false;
@@ -28104,7 +27949,6 @@ function safe_parse_sheet(zip, path, relsPath, sheet, idx, sheetRels, sheets, st
 	} catch(e) { if(opts.WTF) throw e; }
 }
 
-var nodirs = function nodirs(x){return x.slice(-1) != '/';};
 function strip_front_slash(x) { return x.charAt(0) == '/' ? x.slice(1) : x; }
 
 function parse_zip(zip, opts) {
@@ -28119,7 +27963,7 @@ function parse_zip(zip, opts) {
 	/* Numbers */
 	if(safegetzipfile(zip, 'Index/Document.iwa')) throw new Error('Unsupported NUMBERS file');
 
-	var entries = keys(zip.files).filter(nodirs).sort();
+	var entries = zipentries(zip);
 	var dir = parse_ct((getzipstr(zip, '[Content_Types].xml')));
 	var xlsb = false;
 	var sheets, binname;
@@ -28317,8 +28161,12 @@ var zip = new jszip();
 f = "docProps/app.xml";
 	if(wb.Props && wb.Props.SheetNames){/* empty */}
 	else if(!wb.Workbook || !wb.Workbook.Sheets) wb.Props.SheetNames = wb.SheetNames;
-	// $FlowIgnore
-	else wb.Props.SheetNames = wb.SheetNames.map(function(x,i) { return [(wb.Workbook.Sheets[i]||{}).Hidden != 2, x];}).filter(function(x) { return x[0]; }).map(function(x) { return x[1]; });
+	else {
+		var _sn = [];
+		for(var _i = 0; _i < wb.SheetNames.length; ++_i)
+			if((wb.Workbook.Sheets[_i]||{}).Hidden != 2) _sn.push(wb.SheetNames[_i]);
+		wb.Props.SheetNames = _sn;
+	}
 	wb.Props.Worksheets = wb.Props.SheetNames.length;
 	zip.file(f, write_ext_props(wb.Props, opts));
 	ct.extprops.push(f);
@@ -28852,7 +28700,7 @@ function sheet_add_json(_ws, js, opts) {
 	var hdr = o.header || [], C = 0;
 
 	js.forEach(function (JS, R) {
-		keys(JS).filter(function(x) { return JS.hasOwnProperty(x); }).forEach(function(k) {
+		keys(JS).forEach(function(k) {
 			if((C=hdr.indexOf(k)) == -1) hdr[C=hdr.length] = k;
 			var v = JS[k];
 			var t = 'z';

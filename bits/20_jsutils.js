@@ -1,4 +1,8 @@
-function keys(o/*:any*/)/*:Array<any>*/ { return Object.keys(o); }
+function keys(o/*:any*/)/*:Array<any>*/ {
+	var ks = Object.keys(o), o2 = [];
+	for(var i = 0; i < ks.length; ++i) if(o.hasOwnProperty(ks[i])) o2.push(ks[i]);
+	return o2;
+}
 
 function evert_key(obj/*:any*/, key/*:string*/)/*:EvertType*/ {
 	var o = ([]/*:any*/), K = keys(obj);

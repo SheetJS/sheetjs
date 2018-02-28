@@ -100,7 +100,7 @@ function parse_PtgArea3d(blob, length, opts) {
 /* [MS-XLS] 2.5.198.29 ; [MS-XLSB] 2.5.97.20 */
 function parse_PtgAreaErr(blob, length, opts) {
 	var type = (blob[blob.l++] & 0x60) >> 5;
-	blob.l += opts && opts.biff > 8 ? 12 : 8;
+	blob.l += opts && (opts.biff > 8) ? 12 : (opts.biff < 8 ? 6 : 8);
 	return [type];
 }
 /* [MS-XLS] 2.5.198.30 ; [MS-XLSB] 2.5.97.21 */
@@ -232,8 +232,8 @@ function parse_PtgFunc(blob, length, opts) {
 }
 /* [MS-XLS] 2.5.198.63 ; [MS-XLSB] 2.5.97.46 TODO */
 function parse_PtgFuncVar(blob, length, opts) {
-	blob.l++;
-	var cparams = blob.read_shift(1), tab = opts && opts.biff <= 3 ? [0, blob.read_shift(1)]: parsetab(blob);
+	var type = blob[blob.l++];
+	var cparams = blob.read_shift(1), tab = opts && opts.biff <= 3 ? [(type == 0x58 ? -1 : 0), blob.read_shift(1)]: parsetab(blob);
 	return [cparams, (tab[0] === 0 ? Ftab : Cetab)[tab[1]]];
 }
 
@@ -430,17 +430,66 @@ var parse_PtgElfRw = parse_PtgElfLoc;
 /* [MS-XLS] 2.5.198.55 */
 var parse_PtgElfRwV = parse_PtgElfLoc;
 
-/* [MS-XLSB] 2.5.97.52 */
+/* [MS-XLSB] 2.5.97.52 TODO */
+var PtgListRT = [
+	"Data",
+	"All",
+	"Headers",
+	"??",
+	"?Data2",
+	"??",
+	"?DataHeaders",
+	"??",
+	"Totals",
+	"??",
+	"??",
+	"??",
+	"?DataTotals",
+	"??",
+	"??",
+	"??",
+	"?Current"
+];
 function parse_PtgList(blob/*::, length, opts*/) {
 	blob.l += 2;
 	var ixti = blob.read_shift(2);
-	blob.l += 10;
-	return {ixti: ixti};
+	var flags = blob.read_shift(2);
+	var idx = blob.read_shift(4);
+	var c = blob.read_shift(2);
+	var C = blob.read_shift(2);
+	var rt = PtgListRT[(flags >> 2) & 0x1F];
+	return {ixti: ixti, coltype:(flags&0x3), rt:rt, idx:idx, c:c, C:C};
 }
 /* [MS-XLS] 2.5.198.91 ; [MS-XLSB] 2.5.97.76 */
 function parse_PtgSxName(blob/*::, length, opts*/) {
 	blob.l += 2;
 	return [blob.read_shift(4)];
+}
+
+/* [XLS] old spec */
+function parse_PtgSheet(blob, length, opts) {
+	blob.l += 5;
+	blob.l += 2;
+	blob.l += (opts.biff == 2 ? 1 : 4);
+	return ["PTGSHEET"];
+}
+function parse_PtgEndSheet(blob, length, opts) {
+	blob.l += (opts.biff == 2 ? 4 : 5);
+	return ["PTGENDSHEET"];
+}
+function parse_PtgMemAreaN(blob/*::, length, opts*/) {
+	var type = (blob.read_shift(1) >>> 5) & 0x03;
+	var cce = blob.read_shift(2);
+	return [type, cce];
+}
+function parse_PtgMemNoMemN(blob/*::, length, opts*/) {
+	var type = (blob.read_shift(1) >>> 5) & 0x03;
+	var cce = blob.read_shift(2);
+	return [type, cce];
+}
+function parse_PtgAttrNoop(blob/*::, length, opts*/) {
+	blob.l += 4;
+	return [0, 0];
 }
 
 /* [MS-XLS] 2.5.198.25 ; [MS-XLSB] 2.5.97.16 */
@@ -468,6 +517,8 @@ var PtgTypes = {
 	/*::[*/0x15/*::]*/: { n:'PtgParen', f:parseread1 },
 	/*::[*/0x16/*::]*/: { n:'PtgMissArg', f:parseread1 },
 	/*::[*/0x17/*::]*/: { n:'PtgStr', f:parse_PtgStr },
+	/*::[*/0x1A/*::]*/: { n:'PtgSheet', f:parse_PtgSheet },
+	/*::[*/0x1B/*::]*/: { n:'PtgEndSheet', f:parse_PtgEndSheet },
 	/*::[*/0x1C/*::]*/: { n:'PtgErr', f:parse_PtgErr },
 	/*::[*/0x1D/*::]*/: { n:'PtgBool', f:parse_PtgBool },
 	/*::[*/0x1E/*::]*/: { n:'PtgInt', f:parse_PtgInt },
@@ -486,6 +537,8 @@ var PtgTypes = {
 	/*::[*/0x2B/*::]*/: { n:'PtgAreaErr', f:parse_PtgAreaErr },
 	/*::[*/0x2C/*::]*/: { n:'PtgRefN', f:parse_PtgRefN },
 	/*::[*/0x2D/*::]*/: { n:'PtgAreaN', f:parse_PtgAreaN },
+	/*::[*/0x2E/*::]*/: { n:'PtgMemAreaN', f:parse_PtgMemAreaN },
+	/*::[*/0x2F/*::]*/: { n:'PtgMemNoMemN', f:parse_PtgMemNoMemN },
 	/*::[*/0x39/*::]*/: { n:'PtgNameX', f:parse_PtgNameX },
 	/*::[*/0x3A/*::]*/: { n:'PtgRef3d', f:parse_PtgRef3d },
 	/*::[*/0x3B/*::]*/: { n:'PtgArea3d', f:parse_PtgArea3d },
@@ -509,6 +562,9 @@ var PtgDupes = {
 	/*::[*/0x4B/*::]*/: 0x2B, /*::[*/0x6B/*::]*/: 0x2B,
 	/*::[*/0x4C/*::]*/: 0x2C, /*::[*/0x6C/*::]*/: 0x2C,
 	/*::[*/0x4D/*::]*/: 0x2D, /*::[*/0x6D/*::]*/: 0x2D,
+	/*::[*/0x4E/*::]*/: 0x2E, /*::[*/0x6E/*::]*/: 0x2E,
+	/*::[*/0x4F/*::]*/: 0x2F, /*::[*/0x6F/*::]*/: 0x2F,
+	/*::[*/0x58/*::]*/: 0x22, /*::[*/0x78/*::]*/: 0x22,
 	/*::[*/0x59/*::]*/: 0x39, /*::[*/0x79/*::]*/: 0x39,
 	/*::[*/0x5A/*::]*/: 0x3A, /*::[*/0x7A/*::]*/: 0x3A,
 	/*::[*/0x5B/*::]*/: 0x3B, /*::[*/0x7B/*::]*/: 0x3B,
@@ -533,6 +589,7 @@ var Ptg18 = {
 	/*::[*/0xFF/*::]*/: {}
 };
 var Ptg19 = {
+	/*::[*/0x00/*::]*/: { n:'PtgAttrNoop', f:parse_PtgAttrNoop },
 	/*::[*/0x01/*::]*/: { n:'PtgAttrSemi', f:parse_PtgAttrSemi },
 	/*::[*/0x02/*::]*/: { n:'PtgAttrIf', f:parse_PtgAttrIf },
 	/*::[*/0x04/*::]*/: { n:'PtgAttrChoose', f:parse_PtgAttrChoose },
@@ -589,10 +646,7 @@ function parse_Rgce(blob, length, opts) {
 		length = target - blob.l;
 		id = blob[blob.l];
 		R = PtgTypes[id];
-		if(id === 0x18 || id === 0x19) {
-			id = blob[blob.l + 1];
-			R = (id === 0x18 ? Ptg18 : Ptg19)[id];
-		}
+		if(id === 0x18 || id === 0x19) R = (id === 0x18 ? Ptg18 : Ptg19)[blob[blob.l + 1]];
 		if(!R || !R.f) { /*ptgs.push*/(parsenoop(blob, length)); }
 		// $FlowIgnore
 		else { ptgs.push([R.n, R.f(blob, length, opts)]); }
@@ -919,6 +973,18 @@ function stringify_formula(formula/*Array<any>*/, range, cell/*:any*/, supbooks,
 			case 'PtgAreaErr3d': /* [MS-XLS] 2.5.198.30 */
 				stack.push("#REF!"); break;
 
+			case 'PtgList': /* [MS-XLSB] 2.5.97.52 */
+				// $FlowIgnore
+				stack.push("Table" + f[1].idx + "[#" + f[1].rt + "]");
+				break;
+
+			case 'PtgMemAreaN':
+			case 'PtgMemNoMemN':
+			case 'PtgAttrNoop':
+			case 'PtgSheet':
+			case 'PtgEndSheet':
+				break;
+
 			case 'PtgMemFunc': /* [MS-XLS] 2.5.198.72 TODO */
 				break;
 			case 'PtgMemNoMem': /* [MS-XLS] 2.5.198.73 TODO */
@@ -938,13 +1004,10 @@ function stringify_formula(formula/*Array<any>*/, range, cell/*:any*/, supbooks,
 
 			case 'PtgSxName': /* [MS-XLS] 2.5.198.91 TODO -- find a test case */
 				throw new Error('Unrecognized Formula Token: ' + String(f));
-			case 'PtgList': /* [MS-XLSB] 2.5.97.52 TODO -- find a test case */
-				throw new Error('Unrecognized Formula Token: ' + String(f));
-
 			default: throw new Error('Unrecognized Formula Token: ' + String(f));
 		}
 		var PtgNonDisp = ['PtgAttrSpace', 'PtgAttrSpaceSemi', 'PtgAttrGoto'];
-		if(last_sp >= 0 && PtgNonDisp.indexOf(formula[0][ff][0]) == -1) {
+		if(opts.biff != 3) if(last_sp >= 0 && PtgNonDisp.indexOf(formula[0][ff][0]) == -1) {
 			f = formula[0][last_sp];
 			var _left = true;
 			switch(f[1][0]) {
