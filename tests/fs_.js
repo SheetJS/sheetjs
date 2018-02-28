@@ -26,8 +26,10 @@ function require(s) {
 
 var fs = {};
 fs.existsSync = function(p) { return !!fs[p]; };
-fs.readdirSync = function(p) { return Object.keys(fs).filter(function(n) {
-	return fs.hasOwnProperty(n) && n.slice(-4) != "Sync"; });
+fs.readdirSync = function(p) {
+	var k = Object.keys(fs), o = [];
+	for(var i = 0; i < k.length; ++i) if(fs.hasOwnProperty(k[i]) && k[i].match(p)) o.push(k[i]);
+	return o;
 };
 fs.readFileSync = function(f, enc) {
 	if(!fs[f]) throw new Error("File not found: " + f);
