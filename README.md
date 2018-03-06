@@ -1720,7 +1720,7 @@ expected number of rows or columns.  Extracting the range is extremely simple:
 
 ```js
 var range = XLSX.utils.decode_range(worksheet['!ref']);
-var ncols = range.e.c - range.r.c + 1, nrows = range.e.r - range.s.r + 1;
+var ncols = range.e.c - range.s.c + 1, nrows = range.e.r - range.s.r + 1;
 ```
 
 </details>

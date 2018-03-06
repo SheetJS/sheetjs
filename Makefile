@@ -192,7 +192,7 @@ tslint: $(TARGET) ## Run typescript checks
 
 .PHONY: flow
 flow: lint ## Run flow checker
-	@flow check --all --show-all-errors
+	@flow check --all --show-all-errors --include-warnings
 
 .PHONY: cov
 cov: misc/coverage.html ## Run coverage test

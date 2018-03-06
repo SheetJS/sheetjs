@@ -117,7 +117,7 @@ var process_wb = (function() {
 	var to_html = function to_html(workbook) {
 		HTMLOUT.innerHTML = "";
 		workbook.SheetNames.forEach(function(sheetName) {
-			var htmlstr = X.write(workbook, {sheet:sheetName, type:'binary', bookType:'html'});
+			var htmlstr = X.write(workbook, {sheet:sheetName, type:'string', bookType:'html'});
 			HTMLOUT.innerHTML += htmlstr;
 		});
 		return "";

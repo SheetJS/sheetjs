@@ -4,7 +4,7 @@
 /*global global, exports, module, require:false, process:false, Buffer:false, ArrayBuffer:false */
 var XLSX = {};
 (function make_xlsx(XLSX){
-XLSX.version = '0.12.3';
+XLSX.version = '0.12.4';
 var current_codepage = 1200, current_ansi = 1252;
 /*global cptable:true */
 if(typeof module !== "undefined" && typeof require !== 'undefined') {
@@ -86,12 +86,14 @@ var Base64 = (function make_b64(){
 			var c1=0, c2=0, c3=0, e1=0, e2=0, e3=0, e4=0;
 			for(var i = 0; i < input.length; ) {
 				c1 = input.charCodeAt(i++);
+				e1 = (c1 >> 2);
+
 				c2 = input.charCodeAt(i++);
-				c3 = input.charCodeAt(i++);
-				e1 = c1 >> 2;
 				e2 = ((c1 & 3) << 4) | (c2 >> 4);
+
+				c3 = input.charCodeAt(i++);
 				e3 = ((c2 & 15) << 2) | (c3 >> 6);
-				e4 = c3 & 63;
+				e4 = (c3 & 63);
 				if (isNaN(c2)) { e3 = e4 = 64; }
 				else if (isNaN(c3)) { e4 = 64; }
 				o += map.charAt(e1) + map.charAt(e2) + map.charAt(e3) + map.charAt(e4);
@@ -100,19 +102,20 @@ var Base64 = (function make_b64(){
 		},
 		decode: function b64_decode(input) {
 			var o = "";
-			var c1=0, c2=0, c3=0;
-			var e1=0, e2=0, e3=0, e4=0;
-			input = input.replace(/[^A-Za-z0-9\+\/\=]/g, "");
+			var c1=0, c2=0, c3=0, e1=0, e2=0, e3=0, e4=0;
+			input = input.replace(/[^\w\+\/\=]/g, "");
 			for(var i = 0; i < input.length;) {
 				e1 = map.indexOf(input.charAt(i++));
 				e2 = map.indexOf(input.charAt(i++));
-				e3 = map.indexOf(input.charAt(i++));
-				e4 = map.indexOf(input.charAt(i++));
 				c1 = (e1 << 2) | (e2 >> 4);
-				c2 = ((e2 & 15) << 4) | (e3 >> 2);
-				c3 = ((e3 & 3) << 6) | e4;
 				o += String.fromCharCode(c1);
+
+				e3 = map.indexOf(input.charAt(i++));
+				c2 = ((e2 & 15) << 4) | (e3 >> 2);
 				if (e3 !== 64) { o += String.fromCharCode(c2); }
+
+				e4 = map.indexOf(input.charAt(i++));
+				c3 = ((e3 & 3) << 6) | e4;
 				if (e4 !== 64) { o += String.fromCharCode(c3); }
 			}
 			return o;
@@ -1118,10 +1121,10 @@ var DO_NOT_EXPORT_CFB = true;
 /*exported CFB */
 /*global module, require:false, process:false, Buffer:false, Uint8Array:false */
 
-/* [MS-CFB] v20130118 */
+/* [MS-CFB] v20171201 */
 var CFB = (function _CFB(){
 var exports = {};
-exports.version = '1.0.3';
+exports.version = '1.0.5';
 /* [MS-CFB] 2.6.4 */
 function namecmp(l, r) {
 	var L = l.split("/"), R = r.split("/");
@@ -1145,6 +1148,7 @@ function filename(p) {
 var fs;
 function get_fs() { return fs || (fs = require('fs')); }
 function parse(file, options) {
+if(file.length < 512) throw new Error("CFB file size " + file.length + " < 512");
 var mver = 3;
 var ssz = 512;
 var nmfs = 0; // number of mini FAT sectors
@@ -1301,7 +1305,7 @@ function build_full_paths(FI, FP, Paths) {
 		if(L !== -1) { dad[L] = dad[i]; q.push(L); }
 		if(R !== -1) { dad[R] = dad[i]; q.push(R); }
 	}
-	for(i=1; i !== pl; ++i) if(dad[i] === i) {
+	for(i=1; i < pl; ++i) if(dad[i] === i) {
 		if(R !== -1 /*NOSTREAM*/ && dad[R] !== R) dad[i] = dad[R];
 		else if(L !== -1 && dad[L] !== L) dad[i] = dad[L];
 	}
@@ -1688,7 +1692,6 @@ if(file.size > 0 && file.size < 0x1000) {
 }
 /* [MS-CFB] 2.6.4 (Unicode 3.0.1 case conversion) */
 function find(cfb, path) {
-	//return cfb.find(path);
 	var UCFullPaths = cfb.FullPaths.map(function(x) { return x.toUpperCase(); });
 	var UCPaths = UCFullPaths.map(function(x) { var y = x.split("/"); return y[y.length - (x.slice(-1) == "/" ? 2 : 1)]; });
 	var k = false;
@@ -1698,10 +1701,12 @@ function find(cfb, path) {
 	var w = k === true ? UCFullPaths.indexOf(UCPath) : UCPaths.indexOf(UCPath);
 	if(w !== -1) return cfb.FileIndex[w];
 
-	UCPath = UCPath.replace(chr0,'').replace(chr1,'!');
+	var m = !UCPath.match(chr1);
+	UCPath = UCPath.replace(chr0,'');
+	if(m) UCPath = UCPath.replace(chr1,'!');
 	for(w = 0; w < UCFullPaths.length; ++w) {
-		if(UCFullPaths[w].replace(chr0,'').replace(chr1,'!') == UCPath) return cfb.FileIndex[w];
-		if(UCPaths[w].replace(chr0,'').replace(chr1,'!') == UCPath) return cfb.FileIndex[w];
+		if((m ? UCFullPaths[w].replace(chr1,'!') : UCFullPaths[w]).replace(chr0,'') == UCPath) return cfb.FileIndex[w];
+		if((m ? UCPaths[w].replace(chr1,'!') : UCPaths[w]).replace(chr0,'') == UCPath) return cfb.FileIndex[w];
 	}
 	return null;
 }
@@ -2081,8 +2086,8 @@ function zipentries(zip) {
 }
 
 var jszip;
-/*global JSZip:true */
-if(typeof JSZip !== 'undefined') jszip = JSZip;
+/*global JSZipSync:true */
+if(typeof JSZipSync !== 'undefined') jszip = JSZipSync;
 if(typeof exports !== 'undefined') {
 	if(typeof module !== 'undefined' && module.exports) {
 		if(typeof jszip === 'undefined') jszip = require('./jszip.js');
@@ -9932,7 +9937,6 @@ function parse_Rgce(blob, length, opts) {
 		R = PtgTypes[id];
 		if(id === 0x18 || id === 0x19) R = (id === 0x18 ? Ptg18 : Ptg19)[blob[blob.l + 1]];
 		if(!R || !R.f) { /*ptgs.push*/(parsenoop(blob, length)); }
-		// $FlowIgnore
 		else { ptgs.push([R.n, R.f(blob, length, opts)]); }
 	}
 	return ptgs;
@@ -12735,7 +12739,6 @@ function parse_BrtBeginWsView(data) {
 function write_BrtBeginWsView(ws, Workbook, o) {
 	if(o == null) o = new_buf(30);
 	var f = 0x39c;
-	// $FlowIgnore
 	if((((Workbook||{}).Views||[])[0]||{}).RTL) f |= 0x20;
 	o.write_shift(2, f); // bit flag
 	o.write_shift(4, 0);
@@ -15084,7 +15087,6 @@ function write_ws_xlml_wsopts(ws, opts, idx, wb) {
 
 	/* LeftColumnVisible */
 
-	// $FlowIgnore
 	if(((((wb||{}).Workbook||{}).Views||[])[0]||{}).RTL) o.push("<DisplayRightToLeft/>");
 
 	/* GridlineColorIndex */
@@ -18730,7 +18732,6 @@ var write_dif_str = write_obj_str(DIF);
 var write_prn_str = write_obj_str(PRN);
 var write_rtf_str = write_obj_str(RTF);
 var write_txt_str = write_obj_str({from_sheet:sheet_to_txt});
-// $FlowIgnore
 var write_dbf_buf = write_obj_str(DBF);
 var write_eth_str = write_obj_str(ETH);
 
@@ -19214,7 +19215,7 @@ function readSync(data, opts) {
 		case 0x3C: return parse_xlml(d, o);
 		case 0x49: if(n[1] === 0x44) return read_wb_ID(d, o); break;
 		case 0x54: if(n[1] === 0x41 && n[2] === 0x42 && n[3] === 0x4C) return DIF.to_workbook(d, o); break;
-		case 0x50: if(n[1] === 0x4B && n[2] < 0x20 && n[3] < 0x20) return read_zip(d, o); break;
+		case 0x50: return (n[1] === 0x4B && n[2] < 0x09 && n[3] < 0x09) ? read_zip(d, o) : read_prn(data, d, o, str);
 		case 0xEF: return n[3] === 0x3C ? parse_xlml(d, o) : read_prn(data, d, o, str);
 		case 0xFF: if(n[1] === 0xFE) { return read_utf16(d, o); } break;
 		case 0x00: if(n[1] === 0x00 && n[2] >= 0x02 && n[3] === 0x00) return WK_.to_workbook(d, o); break;
@@ -19245,7 +19246,6 @@ function write_zip_type(wb, opts) {
 	}
 	if(o.type === "file") return write_dl(o.file, z.generate(oopts));
 	var out = z.generate(oopts);
-	// $FlowIgnore
 	return o.type == "string" ? utf8read(out) : out;
 }
 
@@ -19322,7 +19322,6 @@ function writeSync(wb, opts) {
 		case 'txt': return write_stxt_type(write_txt_str(wb, o), o);
 		case 'csv': return write_string_type(write_csv_str(wb, o), o, "\ufeff");
 		case 'dif': return write_string_type(write_dif_str(wb, o), o);
-		// $FlowIgnore
 		case 'dbf': return write_binary_type(write_dbf_buf(wb, o), o);
 		case 'prn': return write_string_type(write_prn_str(wb, o), o);
 		case 'rtf': return write_string_type(write_rtf_str(wb, o), o);

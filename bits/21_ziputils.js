@@ -58,9 +58,9 @@ function zipentries(zip) {
 }
 
 var jszip;
-/*:: declare var JSZip:any; */
-/*global JSZip:true */
-if(typeof JSZip !== 'undefined') jszip = JSZip;
+/*:: declare var JSZipSync:any; */
+/*global JSZipSync:true */
+if(typeof JSZipSync !== 'undefined') jszip = JSZipSync;
 if(typeof exports !== 'undefined') {
 	if(typeof module !== 'undefined' && module.exports) {
 		if(typeof jszip === 'undefined') jszip = require('./jszip.js');

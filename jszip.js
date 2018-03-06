@@ -8,16 +8,19 @@ Dual licenced under the MIT license or GPLv3. See https://raw.github.com/Stuk/js
 
 JSZip uses the library pako released under the MIT license :
 https://github.com/nodeca/pako/blob/master/LICENSE
+
+Note: since JSZip 3 removed critical functionality, this version assigns to the
+`JSZipSync` variable.  Another JSZip version can be loaded in parallel.
 */
 (function(e){
 	if("object"==typeof exports&&"undefined"!=typeof module&&"undefined"==typeof DO_NOT_EXPORT_JSZIP)module.exports=e();
-	else if("function"==typeof define&&define.amd){JSZip=e();define([],e);}
+	else if("function"==typeof define&&define.amd){JSZipSync=e();define([],e);}
 	else{
 		var f;
 		"undefined"!=typeof window?f=window:
 		"undefined"!=typeof global?f=global:
 		"undefined"!=typeof $ && $.global?f=$.global:
-		"undefined"!=typeof self&&(f=self),f.JSZip=e()
+		"undefined"!=typeof self&&(f=self),f.JSZipSync=e()
 	}
 }(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
 'use strict';
@@ -505,9 +508,9 @@ Usage:
  * @param {String=|ArrayBuffer=|Uint8Array=} data the data to load, if any (optional).
  * @param {Object=} options the options for creating this objects (optional).
  */
-function JSZip(data, options) {
+function JSZipSync(data, options) {
     // if this constructor is used without `new`, it adds `new` before itself:
-    if(!(this instanceof JSZip)) return new JSZip(data, options);
+    if(!(this instanceof JSZipSync)) return new JSZipSync(data, options);
 
     // object containing the files :
     // {
@@ -524,7 +527,7 @@ function JSZip(data, options) {
         this.load(data, options);
     }
     this.clone = function() {
-        var newObj = new JSZip();
+        var newObj = new JSZipSync();
         for (var i in this) {
             if (typeof this[i] !== "function") {
                 newObj[i] = this[i];
@@ -533,18 +536,18 @@ function JSZip(data, options) {
         return newObj;
     };
 }
-JSZip.prototype = _dereq_('./object');
-JSZip.prototype.load = _dereq_('./load');
-JSZip.support = _dereq_('./support');
-JSZip.defaults = _dereq_('./defaults');
+JSZipSync.prototype = _dereq_('./object');
+JSZipSync.prototype.load = _dereq_('./load');
+JSZipSync.support = _dereq_('./support');
+JSZipSync.defaults = _dereq_('./defaults');
 
 /**
  * @deprecated
  * This namespace will be removed in a future version without replacement.
  */
-JSZip.utils = _dereq_('./deprecatedPublicUtils');
+JSZipSync.utils = _dereq_('./deprecatedPublicUtils');
 
-JSZip.base64 = {
+JSZipSync.base64 = {
     /**
      * @deprecated
      * This method will be removed in a future version without replacement.
@@ -560,8 +563,8 @@ JSZip.base64 = {
         return base64.decode(input);
     }
 };
-JSZip.compressions = _dereq_('./compressions');
-module.exports = JSZip;
+JSZipSync.compressions = _dereq_('./compressions');
+module.exports = JSZipSync;
 
 },{"./base64":1,"./compressions":3,"./defaults":6,"./deprecatedPublicUtils":7,"./load":10,"./object":13,"./support":17}],10:[function(_dereq_,module,exports){
 'use strict';

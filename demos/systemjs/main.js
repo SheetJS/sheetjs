@@ -55,7 +55,7 @@ var process_wb = (function() {
 	var to_html = function to_html(workbook) {
 		HTMLOUT.innerHTML = "";
 		workbook.SheetNames.forEach(function(sheetName) {
-			var htmlstr = X.write(workbook, {sheet:sheetName, type:'binary', bookType:'html'});
+			var htmlstr = X.write(workbook, {sheet:sheetName, type:'string', bookType:'html'});
 			HTMLOUT.innerHTML += htmlstr;
 		});
 		return "";
@@ -92,33 +92,15 @@ var do_file = (function() {
 	var domrabs = document.getElementsByName("userabs")[0];
 	if(!rABS) domrabs.disabled = !(domrabs.checked = false);
 
-	var use_worker = typeof Worker !== 'undefined';
-	var domwork = document.getElementsByName("useworker")[0];
-	if(!use_worker) domwork.disabled = !(domwork.checked = false);
-
-	var xw = function xw(data, cb) {
-		var worker = new Worker(XW.worker);
-		worker.onmessage = function(e) {
-			switch(e.data.t) {
-				case 'ready': break;
-				case 'e': console.error(e.data.d); break;
-				case XW.msg: cb(JSON.parse(e.data.d)); break;
-			}
-		};
-		worker.postMessage({d:data,b:rABS?'binary':'array'});
-	};
-
 	return function do_file(files) {
 		rABS = domrabs.checked;
-		use_worker = domwork.checked;
 		var f = files[0];
 		var reader = new FileReader();
 		reader.onload = function(e) {
-			if(typeof console !== 'undefined') console.log("onload", new Date(), rABS, use_worker);
+			if(typeof console !== 'undefined') console.log("onload", new Date(), rABS);
 			var data = e.target.result;
 			if(!rABS) data = new Uint8Array(data);
-			if(use_worker) xw(data, process_wb);
-			else process_wb(X.read(data, {type: rABS ? 'binary' : 'array'}));
+			process_wb(X.read(data, {type: rABS ? 'binary' : 'array'}));
 		};
 		if(rABS) reader.readAsBinaryString(f);
 		else reader.readAsArrayBuffer(f);

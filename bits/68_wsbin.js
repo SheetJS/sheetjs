@@ -343,7 +343,6 @@ function parse_BrtBeginWsView(data/*::, length, opts*/) {
 function write_BrtBeginWsView(ws, Workbook, o) {
 	if(o == null) o = new_buf(30);
 	var f = 0x39c;
-	// $FlowIgnore
 	if((((Workbook||{}).Views||[])[0]||{}).RTL) f |= 0x20;
 	o.write_shift(2, f); // bit flag
 	o.write_shift(4, 0);

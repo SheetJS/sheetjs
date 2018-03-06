@@ -952,7 +952,6 @@ function write_ws_xlml_wsopts(ws/*:Worksheet*/, opts, idx/*:number*/, wb/*:Workb
 
 	/* LeftColumnVisible */
 
-	// $FlowIgnore
 	if(((((wb||{}).Workbook||{}).Views||[])[0]||{}).RTL) o.push("<DisplayRightToLeft/>");
 
 	/* GridlineColorIndex */

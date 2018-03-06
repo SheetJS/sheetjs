@@ -4,6 +4,10 @@ This log is intended to keep track of backwards-incompatible changes, including
 but not limited to API changes and file location changes.  Minor behavioral
 changes may not be included if they are not expected to break existing code.
 
+## 0.12.4 (2018-03-04)
+
+* `JSZip` renamed to `JSZipSync`
+
 ## 0.12.0 (2018-02-08)
 
 * Extendscript target script in NPM package 

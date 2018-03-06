@@ -13,7 +13,6 @@ function write_zip_type(wb/*:Workbook*/, opts/*:?WriteOpts*/)/*:any*/ {
 	}
 	if(o.type === "file") return write_dl(o.file, z.generate(oopts));
 	var out = z.generate(oopts);
-	// $FlowIgnore
 	return o.type == "string" ? utf8read(out) : out;
 }
 
@@ -90,7 +89,6 @@ function writeSync(wb/*:Workbook*/, opts/*:?WriteOpts*/) {
 		case 'txt': return write_stxt_type(write_txt_str(wb, o), o);
 		case 'csv': return write_string_type(write_csv_str(wb, o), o, "\ufeff");
 		case 'dif': return write_string_type(write_dif_str(wb, o), o);
-		// $FlowIgnore
 		case 'dbf': return write_binary_type(write_dbf_buf(wb, o), o);
 		case 'prn': return write_string_type(write_prn_str(wb, o), o);
 		case 'rtf': return write_string_type(write_rtf_str(wb, o), o);
