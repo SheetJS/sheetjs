@@ -50,6 +50,13 @@ XLSX.utils.book_append_sheet(newwb, aoa2, "AOA");
 XLSX.utils.book_append_sheet(newwb, js2ws, "JSON");
 const bstrxlsx: string = XLSX.write(newwb, {type: "binary", bookType: "xlsx" });
 
+const wb_1: XLSX.WorkBook = XLSX.read(XLSX.write(newwb, {type: "base64", bookType: "xlsx" }), {type: "base64"});
+const wb_2: XLSX.WorkBook = XLSX.read(XLSX.write(newwb, {type: "binary", bookType: "xlsx" }), {type: "binary"});
+const wb_3: XLSX.WorkBook = XLSX.read(XLSX.write(newwb, {type: "buffer", bookType: "xlsx" }), {type: "buffer"});
+const wb_4: XLSX.WorkBook = XLSX.read(XLSX.write(newwb, {type: "file", bookType: "xlsx" }), {type: "file"});
+const wb_5: XLSX.WorkBook = XLSX.read(XLSX.write(newwb, {type: "array", bookType: "xlsx" }), {type: "array"});
+const wb_6: XLSX.WorkBook = XLSX.read(XLSX.write(newwb, {type: "string", bookType: "xlsx" }), {type: "string"});
+
 const CFB = XLSX.CFB;
 const vbawb = XLSX.readFile("test.xlsm", {bookVBA:true});
 if(vbawb.vbaraw) {

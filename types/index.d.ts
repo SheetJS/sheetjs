@@ -110,7 +110,7 @@ export interface DateNFOption {
 /** Options for read and readFile */
 export interface ParsingOptions extends CommonOptions {
     /** Input data encoding */
-    type?: 'base64' | 'binary' | 'buffer' | 'file' | 'array';
+    type?: 'base64' | 'binary' | 'buffer' | 'file' | 'array' | 'string';
 
     /** Default codepage */
     codepage?: number;
@@ -193,7 +193,7 @@ export interface ParsingOptions extends CommonOptions {
 /** Options for write and writeFile */
 export interface WritingOptions extends CommonOptions {
     /** Output data encoding */
-    type?: 'base64' | 'binary' | 'buffer' | 'file' | 'array';
+    type?: 'base64' | 'binary' | 'buffer' | 'file' | 'array' | 'string';
 
     /**
      * Generate Shared String Table
