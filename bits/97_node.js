@@ -15,7 +15,9 @@ if(has_buf && typeof require != 'undefined') (function() {
 		var rowinfo/*:Array<RowInfo>*/ = o.skipHidden && sheet["!rows"] || [];
 		for(var C = r.s.c; C <= r.e.c; ++C) if (!((colinfo[C]||{}).hidden)) cols[C] = encode_col(C);
 		var R = r.s.r;
+		var BOM = false;
 		stream._read = function() {
+			if(!BOM) { BOM = true; return stream.push("\uFEFF"); }
 			if(R > r.e.r) return stream.push(null);
 			while(R <= r.e.r) {
 				++R;

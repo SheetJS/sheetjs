@@ -114,6 +114,8 @@ Downloadify.create(element_id, {
 });
 ```
 
+#### Upload
+
 The demo also includes an HTML file input element for updating the data table:
 
 ```js

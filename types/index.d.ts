@@ -730,6 +730,9 @@ export interface XLSX$Utils {
     /** Converts A1 range to 0-indexed form */
     decode_range(range: string): Range;
 
+    /** Format cell */
+    format_cell(cell: CellObject, v?: any, opts?: any): string;
+
     /* --- General Utilities --- */
 
     /** Creates a new workbook */

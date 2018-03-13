@@ -56,8 +56,9 @@ document.getElementById('ulbutton').onclick = function() {
 	var wb = XLSX.utils.table_to_book(document.getElementById('htmlout'));
 	console.log(wb);
 	var fd = new FormData();
-	fd.append('file', demo + '.' + book);
-	fd.append('data', XLSX.write(wb, {bookType:book, type:'base64'}));
+	var data = XLSX.write(wb, {bookType:book, type:'array'});
+	console.log(data);
+	fd.append('data', new File([data], demo + '.' + book));
 	fetch("/upload", {method: "POST", body: fd}).then(function(r) { return r.text(); }).then(function(t) { console.log(t); });
 };
 </script>

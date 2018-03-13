@@ -67,6 +67,7 @@ async function wb_to_redis(wb, R) {
     await aoa_to_redis[M[i].type](aoa, R, M[i].key);
   }
 }
+
 module.exports = {
   redis_to_wb,
   wb_to_redis

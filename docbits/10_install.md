@@ -14,6 +14,7 @@ In the browser, just add a script tag:
 |    `unpkg` | <https://unpkg.com/xlsx/>                |
 | `jsDelivr` | <https://jsdelivr.com/package/npm/xlsx>  |
 |    `CDNjs` | <http://cdnjs.com/libraries/xlsx>        |
+|    `packd` | <https://bundle.run/xlsx?name=XLSX>      |
 
 `unpkg` makes the latest version available at:
 

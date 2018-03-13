@@ -56,7 +56,7 @@ onmessage = function(evt) {
 /* xlsxworker.js */
 var XLSX = require('xlsx');
 
-_cb = function (evt) { /* ... do work here ... */ };
+_cb = function(evt) { /* ... do work here ... */ };
 ```
 
 ## Node

@@ -49,8 +49,12 @@ scanned to determine the column "types", and there are third-party connectors
 that can push arrays of JS objects to database tables.
 
 The [`sexql`](http://sheetjs.com/sexql) browser demo uses WebSQL, which is
-limited to the SQLite fundamental types.  Its schema builder scans the first row
-to find headers:
+limited to the SQLite fundamental types.
+
+<details>
+	<summary><b>Implementation details</b> (click to show)</summary>
+
+The `sexql` schema builder scans the first row to find headers:
 
 ```js
   if(!ws || !ws['!ref']) return;
@@ -99,7 +103,10 @@ value of a column, the column is marked as `TEXT`:
   }
 ```
 
+</details>
+
 The included `SheetJSSQL.js` script demonstrates SQL statement generation.
+
 
 ## Objects, K/V and "Schema-less" Databases
 
@@ -136,6 +143,9 @@ XXX|        A        |    B    |
 ```
 
 The included `ObjUtils.js` script demonstrates object-workbook conversion:
+
+<details>
+	<summary><b>Implementation details</b> (click to show)</summary>
 
 ```js
 function deepset(obj, path, value) {
@@ -185,6 +195,8 @@ function object_to_workbook(obj) {
 }
 ```
 
+</details>
+
 
 ## Browser APIs
 
@@ -229,7 +241,7 @@ differences surround API shape and supported data types.
 
 [The `better-sqlite3` module](https://www.npmjs.com/package/better-sqlite3)
 provides a very simple API for working with SQLite databases.  `Statement#all`
-runs a prepared statement and returns an array of JS objects
+runs a prepared statement and returns an array of JS objects.
 
 `SQLiteTest.js` generates a simple two-table SQLite database (`SheetJS1.db`),
 exports to XLSX (`sqlite.xlsx`), imports the new XLSX file to a new database
@@ -255,6 +267,15 @@ The `rows` key of the object is an array of JS objects.
 tables in the `sheetjs` database, exports to XLSX, imports the new XLSX file to
 the `sheetj5` database and verifies the tables are preserved.
 
+#### Knex Query Builder
+
+[The `knex` module](https://www.npmjs.com/package/knex) builds SQL queries.  The
+same exact code can be used against Oracle Database, MSSQL, and other engines.
+
+`KnexTest.js` uses the `sqlite3` connector and follows the same procedure as the
+SQLite test.  The included `SheetJSKnex.js` script converts between the query
+builder and the common spreadsheet format.
+
 ### Key/Value Stores
 
 #### Redis
@@ -267,7 +288,7 @@ strings in a special worksheet (`_strs`), the manifest in another worksheet
 `RedisTest.js` connects to a local Redis server, populates data based on the
 official Redis tutorial, exports to XLSX, flushes the server, imports the new
 XLSX file and verifies the data round-tripped correctly.  `SheetJSRedis.js`
-includes the implementation details
+includes the implementation details.
 
 #### LowDB
 

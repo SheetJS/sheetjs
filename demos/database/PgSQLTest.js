@@ -26,8 +26,8 @@ var init = [
   "INSERT INTO fmts VALUES ('CSV',  '',    0)",
 ];
 
-var conn1 = new Client({...opts, database: "sheetjs"});
-var conn2 = new Client({...opts, database: "sheetj5"});
+var conn1 = new Client(Object.assign({}, opts, {database: "sheetjs"}));
+var conn2 = new Client(Object.assign({}, opts, {database: "sheetj5"}));
 (async () => {
   await conn1.connect();
   for(var i = 0; i < init.length; ++i) await conn1.query(init[i]);

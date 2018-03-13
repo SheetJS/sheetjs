@@ -1,4 +1,36 @@
+<!DOCTYPE html>
 <!-- xlsx.js (C) 2013-present  SheetJS http://sheetjs.com -->
+<!-- vim: set ts=2: -->
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>SheetJS SystemJS Test</title>
+<style>
+a { text-decoration: none }
+</style>
+</head>
+<body>
+<pre>
+<b><a href="http://sheetjs.com">SheetJS SystemJS Demo</a></b>
+
+<a href="https://github.com/SheetJS/js-xlsx">Source Code Repo</a>
+<a href="https://github.com/SheetJS/js-xlsx/issues">Issues?  Something look weird?  Click here and report an issue</a>
+
+Original script: <a href="main.simple.js">main.simple.js</a>
+
+<b>Console Output:</b>
+</pre>
+<pre id="console"></pre>
+<b>
+<script>
+if(typeof console !== "undefined") console = {};
+console.__log = console.log || function(){};
+console.log = function(x) {
+    console.__log.apply(console, arguments);
+    document.getElementById('console').innerText += x + "\n";
+};
+console.error = console.debug = console.info =  console.log
+</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/systemjs/0.20.16/system.js"></script>
 <script>
 SystemJS.config({
@@ -16,3 +48,5 @@ SystemJS.config({
 });
 SystemJS.import('main.simple.js');
 </script>
+</body>
+</html>

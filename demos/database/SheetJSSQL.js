@@ -1,4 +1,5 @@
 /* xlsx.js (C) 2013-present SheetJS -- http://sheetjs.com */
+/* global XLSX, require, module */
 var SheetJSSQL = (function() {
 
 var X;
@@ -51,7 +52,7 @@ function sheet_to_sql(ws, sname, mode) {
 
   var BT = mode == "PGSQL" ? "" : "`";
   var Q  = mode == "PGSQL" ? "'" : '"';
-  var R  = mode == "PGSQL" ? /'/g : /"/g;
+  var J  = mode == "PGSQL" ? /'/g : /"/g;
   out.push("DROP TABLE IF EXISTS " + BT + sname + BT );
   out.push("CREATE TABLE " + BT + sname + BT + " (" + names.map(function(n, i) { return BT + n + BT + " " + (types[i]||"TEXT"); }).join(", ") + ");" );
 
@@ -64,7 +65,7 @@ function sheet_to_sql(ws, sname, mode) {
       var val = cell.v;
       switch(types[C-range.s.c]) {
         case TYPES.n: if(cell.t == 'b' || typeof val == 'boolean' ) val = +val; break;
-        default: val = Q + val.toString().replace(R, Q + Q) + Q;
+        default: val = Q + val.toString().replace(J, Q + Q) + Q;
       }
       values.push(val);
     }

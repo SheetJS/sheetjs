@@ -77,8 +77,7 @@ Reproducing the full project is straightforward:
 react-native init SheetJS
 cd SheetJS
 npm i -S xlsx react react-native react-native-table-component react-native-fs
-cp ../react-native.js index.ios.js
-cp ../react-native.js index.android.js
+cp ../react-native.js index.js
 react-native link
 ```
 
@@ -106,6 +105,9 @@ readFile(file, 'ascii').then((res) => {
 const wbout = XLSX.write(wb, {type:'binary', bookType:"xlsx"});
 writeFile(file, wbout, 'ascii').then((r)=>{/* :) */}).catch((e)=>{/* :( */});
 ```
+
+Note: for real app deployments, the `UIFileSharingEnabled` flag must be manually
+set in the iOS project `Info.plist` file.
 
 ## Other Demos
 

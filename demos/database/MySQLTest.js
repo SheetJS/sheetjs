@@ -27,7 +27,7 @@ var init = [
 ];
 
 (async () => {
-  const conn1 = await mysql.createConnection({...opts, database: "sheetjs"});
+  const conn1 = await mysql.createConnection(Object.assign({}, opts, {database: "sheetjs"}));
   for(var i = 0; i < init.length; ++i) await conn1.query(init[i]);
 
   /* Export table to XLSX */
@@ -50,7 +50,7 @@ var init = [
   await conn1.close();
 
   /* Import XLSX to table */
-  const conn2 = await mysql.createConnection({...opts, database: "sheetj5"});
+  const conn2 = await mysql.createConnection(Object.assign({}, opts, {database: "sheetj5"}));
   var wb2 = XLSX.readFile("mysql.xlsx");
   var queries = SheetJSSQL.book_to_sql(wb2, "MYSQL");
   for(i = 0; i < queries.length; ++i) await conn2.query(queries[i]);

@@ -3,10 +3,10 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "version": "0.0.0",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "scripts": {
     "build": "tsc && browserify -o dist/browser.js src/index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "lint": "tslint lib/*.ts"
   },
   "private": true,
   "dependencies": {

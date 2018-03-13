@@ -16,14 +16,13 @@ The included demos focus on an editable table.  There are two separate flows:
 
 - When the upload button is clicked, the browser will generate a new worksheet
   using `table_to_book` and build up a new workbook.  It will then attempt to
-  generate a Base64-encoded XLSX string and upload it to the server.
+  generate a file and upload it to the server.
 
 ### Demo Server
 
 The `server.js` nodejs server serves static files on `GET` request.  On a `POST`
-request to `/upload`, the server processes the body and looks for the `file` and
-`data` fields.  It will write the Base64-decoded data from `data` to the file
-name specified in `file`.
+request to `/upload`, the server processes the body and looks for uploaded file.
+It will write the data for the first file to the indicated file name.
 
 To start the demo, run `npm start` and navigate to <http://localhost:7262/>
 
@@ -48,16 +47,16 @@ req.onload = function(e) {
 req.send();
 ```
 
-For uploading data, this demo populates a `FormData` object with string data
-generated with the `base64` output type:
+For uploading data, this demo populates a `FormData` object with an ArrayBuffer
+generated with the `array` output type:
 
 ```js
-/* generate XLSX as base64 string */
-var b64 = XLSX.write(workbook, {bookType:'xlsx', type:'base64'});
+/* generate XLSX as array buffer */
+var data = XLSX.write(workbook, {bookType: 'xlsx', type: 'array'});
 
 /* build FormData with the generated file */
 var fd = new FormData();
-fd.append('data', b64);
+fd.append('data', new File([data], 'sheetjs.xlsx'));
 
 /* send data */
 var req = new XMLHttpRequest();

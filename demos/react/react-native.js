@@ -2,8 +2,8 @@
 import XLSX from 'xlsx';
 
 import React, { Component } from 'react';
-import { AppRegistry, StyleSheet, Text, View, Button, Alert, Image } from 'react-native';
-import { Table, Row, Rows } from 'react-native-table-component';
+import { AppRegistry, StyleSheet, Text, View, Button, Alert, Image, ScrollView, TouchableWithoutFeedback } from 'react-native';
+import { Table, Row, Rows, TableWrapper } from 'react-native-table-component';
 
 // react-native-fs
 import { writeFile, readFile, DocumentDirectoryPath } from 'react-native-fs';
@@ -21,12 +21,14 @@ const output = str => str.split("").map(x => x.charCodeAt(0));
 */
 
 const make_cols = refstr => Array.from({length: XLSX.utils.decode_range(refstr).e.c + 1}, (x,i) => XLSX.utils.encode_col(i));
+const make_width = refstr => Array.from({length: XLSX.utils.decode_range(refstr).e.c + 1}, () => 60);
 
 export default class SheetJS extends Component {
 	constructor(props) {
 		super(props);
 		this.state = {
 			data: [[1,2,3],[4,5,6]],
+			widthArr: [60, 60, 60],
 			cols: make_cols("A1:C2")
 		};
 		this.importFile = this.importFile.bind(this);
@@ -46,7 +48,7 @@ export default class SheetJS extends Component {
 					const data = XLSX.utils.sheet_to_json(ws, {header:1});
 
 					/* update state */
-					this.setState({ data: data, cols: make_cols(ws['!ref']) });
+					this.setState({ data: data, cols: make_cols(ws['!ref']), widthArr: make_width(ws['!ref']) });
 				}).catch((err) => { Alert.alert("importFile Error", "Error " + err.message); });
 			}}
 		]);
@@ -67,7 +69,8 @@ export default class SheetJS extends Component {
 		}).catch((err) => { Alert.alert("exportFile Error", "Error " + err.message); });
 	};
 	render() { return (
-<View style={styles.container}>
+<ScrollView contentContainerStyle={styles.container} vertical={true}>
+	<Text style={styles.welcome}> </Text>
 	<Image style={{width: 128, height: 128}} source={require('./logo.png')} />
 	<Text style={styles.welcome}>SheetJS React Native Demo</Text>
 	<Text style={styles.instructions}>Import Data</Text>
@@ -76,11 +79,22 @@ export default class SheetJS extends Component {
 	<Button disabled={!this.state.data.length} onPress={this.exportFile} title="Export data to XLSX" color="#841584" />
 
 	<Text style={styles.instructions}>Current Data</Text>
-	<Table style={styles.table}>
-		<Row data={this.state.cols} style={styles.thead} textStyle={styles.text}/>
-		<Rows data={this.state.data} style={styles.tr} textStyle={styles.text}/>
-	</Table>
-</View>
+
+	<ScrollView style={styles.table} horizontal={true} >
+		<Table style={styles.table}>
+			<TableWrapper>
+				<Row data={this.state.cols} style={styles.thead} textStyle={styles.text} widthArr={this.state.widthArr}/>
+			</TableWrapper>
+			<TouchableWithoutFeedback>
+				<ScrollView vertical={true}>
+					<TableWrapper>
+						<Rows data={this.state.data} style={styles.tr} textStyle={styles.text} widthArr={this.state.widthArr}/>
+					</TableWrapper>
+				</ScrollView>
+			</TouchableWithoutFeedback>
+		</Table>
+	</ScrollView>
+</ScrollView>
 	); };
 };
 

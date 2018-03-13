@@ -66,6 +66,8 @@ int main(int argc, char *argv[]) {
 	DOIT("var global = (function(){ return this; }).call(null);");
 
 	/* load library */
+	res = eval_file(ctx, "shim.min.js");
+	if(res != 0) FAIL("shim load")
 	res = eval_file(ctx, "xlsx.full.min.js");
 	if(res != 0) FAIL("library load")
 
@@ -75,9 +77,9 @@ int main(int argc, char *argv[]) {
 	duk_pop(ctx);
 
 	/* read file */
-#define INFILE "sheetjs.xlsx"
-	res = load_file(ctx, INFILE, "buf");
-	if(res != 0) FAIL("load " INFILE)
+	res = load_file(ctx, argv[1], "buf");
+	if(res != 0) FAIL("file load")
+	printf("Loaded file %s\n", argv[1]);
 
 	/* parse workbook */
 	DOIT("wb = XLSX.read(buf, {type:'buffer', cellNF:true});");

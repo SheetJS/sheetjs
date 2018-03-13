@@ -21,7 +21,7 @@ var init = [
 ];
 db1.exec(init.join(";"));
 
-/* Export table to XLSX */
+/* Export database to XLSX */
 var wb = XLSX.utils.book_new();
 function book_append_table(wb, db, name) {
   var r = db.prepare('SELECT * FROM ' + name).all();
@@ -32,7 +32,7 @@ book_append_table(wb, db1, "pres");
 book_append_table(wb, db1, "fmts");
 XLSX.writeFile(wb, "sqlite.xlsx");
 
-/* Import XLSX to table */
+/* Import XLSX to database */
 var db2 = new Database('SheetJS2.db');
 var wb2 = XLSX.readFile("sqlite.xlsx");
 var queries = SheetJSSQL.book_to_sql(wb2, "SQLITE");
@@ -46,7 +46,6 @@ var F2 = db2.prepare("SELECT * FROM fmts").all();
 assert.deepEqual(P1, P2);
 assert.deepEqual(F1, F2);
 
-/* Display results */
 console.log(P2);
 console.log(F2);
 

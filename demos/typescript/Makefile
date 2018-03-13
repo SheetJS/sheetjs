@@ -1,6 +1,10 @@
 .PHONY: all
 all:
-	npm run build
+	@npm run build
+
+.PHONY: lint
+lint:
+	@npm run lint
 
 .PHONY: init
 init:

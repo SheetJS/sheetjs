@@ -106,6 +106,7 @@ ui-grid
 angular-cli
 
  - demos/database/README.md
+Knex
 LowDB
 MariaDB
 MySQL

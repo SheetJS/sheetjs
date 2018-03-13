@@ -28,13 +28,13 @@ const formulae: string[] = XLSX.utils.sheet_to_formulae(firstworksheet);
 const aoa: any[][] = XLSX.utils.sheet_to_json<any[]>(firstworksheet, {raw:true, header:1});
 
 const aoa2: XLSX.WorkSheet = XLSX.utils.aoa_to_sheet<number>([
-	[1,2,3,4,5,6,7],
-	[2,3,4,5,6,7,8]
+    [1,2,3,4,5,6,7],
+    [2,3,4,5,6,7,8]
 ]);
 
 const js2ws: XLSX.WorkSheet = XLSX.utils.json_to_sheet<Tester>([
-	{name:"Sheet", age: 12},
-	{name:"JS", age: 24}
+    {name:"Sheet", age: 12},
+    {name:"JS", age: 24}
 ]);
 
 const WBProps = workbook.Workbook;
@@ -57,8 +57,23 @@ const wb_4: XLSX.WorkBook = XLSX.read(XLSX.write(newwb, {type: "file", bookType:
 const wb_5: XLSX.WorkBook = XLSX.read(XLSX.write(newwb, {type: "array", bookType: "xlsx" }), {type: "array"});
 const wb_6: XLSX.WorkBook = XLSX.read(XLSX.write(newwb, {type: "string", bookType: "xlsx" }), {type: "string"});
 
+function get_header_row(sheet: XLSX.WorkSheet) {
+    let headers: string[] = [];
+    const range = XLSX.utils.decode_range(sheet['!ref']);
+    let C: number = 0, R: number = range.s.r;
+    for(C = range.s.c; C <= range.e.c; ++C) {
+        const cell: XLSX.CellObject = sheet[XLSX.utils.encode_cell({c:C, r:R})];
+        let hdr = "UNKNOWN " + C;
+        if(cell && cell.t) hdr = XLSX.utils.format_cell(cell);
+        headers.push(hdr);
+    }
+    return headers;
+}
+
+const headers: string[] = get_header_row(aoa2);
+
 const CFB = XLSX.CFB;
 const vbawb = XLSX.readFile("test.xlsm", {bookVBA:true});
 if(vbawb.vbaraw) {
-	const cfb: XLSX.CFB.CFB$Container = CFB.read(vbawb.vbaraw, {type: "buffer"});
+    const cfb: XLSX.CFB.CFB$Container = CFB.read(vbawb.vbaraw, {type: "buffer"});
 }

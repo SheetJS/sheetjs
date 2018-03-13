@@ -5,12 +5,16 @@ all: duktape nashorn rhinojs swift
 base:
 	if [ ! -e sheetjs.xlsx ]; then node ../../tests/write.js; fi
 	if [ ! -e xlsx.full.min.js ]; then cp ../../dist/xlsx.full.min.js .; fi
+	if [ ! -e shim.min.js ]; then cp ../../dist/shim.min.js .; fi
 
-.PHONY: duktape
-duktape: base ## duktape demo
+.PHONY: duk
+duk: base
 	bash ./duktape.sh
 	gcc -std=c99 -Wall -osheetjs.duk sheetjs.duk.c duktape.c -lm
-	./sheetjs.duk
+
+.PHONY: duktape
+duktape: duk ## duktape demo
+	for ext in xlsx xlsb biff8.xls xml.xls; do ./sheetjs.duk sheetjs.$$ext; done
 
 .PHONY: nashorn
 nashorn: base ## nashorn demo

@@ -36,13 +36,11 @@ function write_comments_xml(data/*::, opts*/) {
 
 	var iauthor/*:Array<string>*/ = [];
 	o.push("<authors>");
-	data.map(function(x) { return x[1]; }).forEach(function(comment) {
-		comment.map(function(x) { return escapexml(x.a); }).forEach(function(a) {
-			if(iauthor.indexOf(a) > -1) return;
-			iauthor.push(a);
-			o.push("<author>" + a + "</author>");
-		});
-	});
+	data.forEach(function(x) { x[1].forEach(function(w) { var a = escapexml(w.a);
+		if(iauthor.indexOf(a) > -1) return;
+		iauthor.push(a);
+		o.push("<author>" + a + "</author>");
+	}); });
 	o.push("</authors>");
 	o.push("<commentList>");
 	data.forEach(function(d) {

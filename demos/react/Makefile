@@ -15,7 +15,7 @@ native: ## Build react-native project
 
 .PHONY: ios
 ios: native ## react-native ios sim
-	cd SheetJS; react-native run-ios; cd -
+	cd SheetJS; react-native run-ios --simulator="iPhone X"; cd -
 
 .PHONY: android
 android: native ## react-native android sim
