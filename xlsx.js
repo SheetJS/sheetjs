@@ -4,7 +4,7 @@
 /*global global, exports, module, require:false, process:false, Buffer:false, ArrayBuffer:false */
 var XLSX = {};
 (function make_xlsx(XLSX){
-XLSX.version = '0.12.4';
+XLSX.version = '0.12.5';
 var current_codepage = 1200, current_ansi = 1252;
 /*global cptable:true */
 if(typeof module !== "undefined" && typeof require !== 'undefined') {
@@ -8972,7 +8972,8 @@ function write_comments_vml(rId, comments) {
 	];
 	while(_shapeid < rId * 1000) _shapeid += 1000;
 
-	comments.map(function(x) { return decode_cell(x[0]); }).forEach(function(c) { o = o.concat([
+	comments.forEach(function(x) { var c = decode_cell(x[0]);
+	o = o.concat([
 	'<v:shape' + wxt_helper({
 		id:'_x0000_s' + (++_shapeid),
 		type:"#_x0000_t202",
@@ -9088,13 +9089,11 @@ function write_comments_xml(data) {
 
 	var iauthor = [];
 	o.push("<authors>");
-	data.map(function(x) { return x[1]; }).forEach(function(comment) {
-		comment.map(function(x) { return escapexml(x.a); }).forEach(function(a) {
-			if(iauthor.indexOf(a) > -1) return;
-			iauthor.push(a);
-			o.push("<author>" + a + "</author>");
-		});
-	});
+	data.forEach(function(x) { x[1].forEach(function(w) { var a = escapexml(w.a);
+		if(iauthor.indexOf(a) > -1) return;
+		iauthor.push(a);
+		o.push("<author>" + a + "</author>");
+	}); });
 	o.push("</authors>");
 	o.push("<commentList>");
 	data.forEach(function(d) {
@@ -14303,6 +14302,8 @@ function xlml_clean_comment(comment) {
 function xlml_normalize(d) {
 	if(has_buf && Buffer.isBuffer(d)) return d.toString('utf8');
 	if(typeof d === 'string') return d;
+	/* duktape */
+	if(typeof Uint8Array !== 'undefined' && d instanceof Uint8Array) return utf8read(a2s(ab2a(d)));
 	throw new Error("Bad input format: expected Buffer or string");
 }
 
@@ -19746,7 +19747,9 @@ if(has_buf && typeof require != 'undefined') (function() {
 		var rowinfo = o.skipHidden && sheet["!rows"] || [];
 		for(var C = r.s.c; C <= r.e.c; ++C) if (!((colinfo[C]||{}).hidden)) cols[C] = encode_col(C);
 		var R = r.s.r;
+		var BOM = false;
 		stream._read = function() {
+			if(!BOM) { BOM = true; return stream.push("\uFEFF"); }
 			if(R > r.e.r) return stream.push(null);
 			while(R <= r.e.r) {
 				++R;
