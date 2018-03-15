@@ -1,6 +1,6 @@
 {
 	"name": "@willyelm/jsexcel",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"author": "sheetjs",
 	"description": "Excel spreadsheet parser and writer",
 	"keywords": [

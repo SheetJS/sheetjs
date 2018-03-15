@@ -1,3 +1,11 @@
+# JSExcel
+
+jsexcel is a fork of js-xlsx merged with some features of  https://github.com/protobi/js-xlsx to allow having the latest version of js-xlsx with enabled cell style customizations.
+
+```
+npm install @willyelm/jsexcel
+```
+
 # [SheetJS js-xlsx](http://sheetjs.com)
 
 Parser and writer for various spreadsheet formats.  Pure-JS cleanroom
