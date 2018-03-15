@@ -1,8 +1,8 @@
 {
-	"name": "xlsx",
+	"name": "jsexcel",
 	"version": "0.12.5",
 	"author": "sheetjs",
-	"description": "SheetJS Spreadsheet data parser and writer",
+	"description": "Excel spreadsheet parser and writer",
 	"keywords": [
 		"excel",
 		"xls",
@@ -71,7 +71,7 @@
 	},
 	"homepage": "http://sheetjs.com/opensource",
 	"bugs": {
-		"url": "https://github.com/SheetJS/js-xlsx/issues"
+		"url": "https://github.com/willyelm/jsexcel/issues"
 	},
 	"license": "Apache-2.0",
 	"engines": {
