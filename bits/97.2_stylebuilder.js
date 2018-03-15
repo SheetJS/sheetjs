@@ -1,3 +1,5 @@
+/// Style Builder
+
 var StyleBuilder = function (options) {
 
   var customNumFmtId = 164;

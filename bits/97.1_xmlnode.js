@@ -1,3 +1,5 @@
+// XmlNode
+
 var XmlNode = (function () {
   function XmlNode(tagName, attributes, children) {
 
