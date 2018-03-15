@@ -8,7 +8,7 @@ XLSX.version = '0.12.5';
 var current_codepage = 1200, current_ansi = 1252;
 /*global cptable:true */
 if(typeof module !== "undefined" && typeof require !== 'undefined') {
-	if(typeof cptable === 'undefined') global.cptable = require('./dist/cpexcel.js');
+	if(typeof cptable === 'undefined') global.cptable = undefined;
 }
 
 var VALID_ANSI = [ 874, 932, 936, 949, 950 ];
@@ -2090,7 +2090,7 @@ var jszip;
 if(typeof JSZipSync !== 'undefined') jszip = JSZipSync;
 if(typeof exports !== 'undefined') {
 	if(typeof module !== 'undefined' && module.exports) {
-		if(typeof jszip === 'undefined') jszip = require('./jszip.js');
+		if(typeof jszip === 'undefined') jszip = undefined;
 	}
 }
 
@@ -2708,7 +2708,7 @@ var make_offcrypto = function(O, _crypto) {
 	var crypto;
 	if(typeof _crypto !== 'undefined') crypto = _crypto;
 	else if(typeof require !== 'undefined') {
-		try { crypto = require('crypto'); }
+		try { crypto = undefined; }
 		catch(e) { crypto = null; }
 	}
 
@@ -19731,7 +19731,7 @@ return utils;
 })(utils);
 
 if(has_buf && typeof require != 'undefined') (function() {
-	var Readable = require('stream').Readable;
+	var Readable = {}.Readable;
 
 	var write_csv_stream = function(sheet, opts) {
 		var stream = Readable();
