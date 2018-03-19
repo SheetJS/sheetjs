@@ -3,7 +3,7 @@
 The [`demos` directory](demos/) includes sample projects for:
 
 **Frameworks and APIs**
-- [`angular 1.x`](demos/angular/)
+- [`angularjs`](demos/angular/)
 - [`angular 2 / 4 / 5 and ionic`](demos/angular2/)
 - [`meteor`](demos/meteor/)
 - [`react and react-native`](demos/react/)

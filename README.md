@@ -157,12 +157,12 @@ In the browser, just add a script tag:
 <details>
   <summary><b>CDN Availability</b> (click to show)</summary>
 
-|    CDN     | URL                                      |
-|-----------:|:-----------------------------------------|
-|    `unpkg` | <https://unpkg.com/xlsx/>                |
-| `jsDelivr` | <https://jsdelivr.com/package/npm/xlsx>  |
-|    `CDNjs` | <http://cdnjs.com/libraries/xlsx>        |
-|    `packd` | <https://bundle.run/xlsx?name=XLSX>      |
+|    CDN     | URL                                        |
+|-----------:|:-------------------------------------------|
+|    `unpkg` | <https://unpkg.com/xlsx/>                  |
+| `jsDelivr` | <https://jsdelivr.com/package/npm/xlsx>    |
+|    `CDNjs` | <http://cdnjs.com/libraries/xlsx>          |
+|    `packd` | <https://bundle.run/xlsx@latest?name=XLSX> |
 
 `unpkg` makes the latest version available at:
 
@@ -190,7 +190,7 @@ $ bower install js-xlsx
 The [`demos` directory](demos/) includes sample projects for:
 
 **Frameworks and APIs**
-- [`angular 1.x`](demos/angular/)
+- [`angularjs`](demos/angular/)
 - [`angular 2 / 4 / 5 and ionic`](demos/angular2/)
 - [`meteor`](demos/meteor/)
 - [`react and react-native`](demos/react/)
@@ -345,15 +345,32 @@ The `table_to_book` and `table_to_sheet` utility functions take a DOM TABLE
 element and iterate through the child nodes.
 
 ```js
-var worksheet = XLSX.utils.table_to_book(document.getElementById('tableau'));
+var workbook = XLSX.utils.table_to_book(document.getElementById('tableau'));
 /* DO SOMETHING WITH workbook HERE */
+```
+
+Multiple tables on a web page can be converted to individual worksheets:
+
+```js
+/* create new workbook */
+var workbook = XLSX.utils.book_new();
+
+/* convert table 'table1' to worksheet named "Sheet1" */
+var ws1 = XLSX.utils.table_to_book(document.getElementById('table1'));
+XLSX.utils.book_append_sheet(workbook, ws1, "Sheet1");
+
+/* convert table 'table2' to worksheet named "Sheet2" */
+var ws2 = XLSX.utils.table_to_book(document.getElementById('table2'));
+XLSX.utils.book_append_sheet(workbook, ws2, "Sheet2");
+
+/* workbook now has 2 worksheets */
 ```
 
 Alternatively, the HTML code can be extracted and parsed:
 
 ```js
 var htmlstr = document.getElementById('tableau').outerHTML;
-var worksheet = XLSX.read(htmlstr, {type:'string'});
+var workbook = XLSX.read(htmlstr, {type:'string'});
 ```
 
 </details>
@@ -362,7 +379,7 @@ var worksheet = XLSX.read(htmlstr, {type:'string'});
   <summary><b>Browser download file (ajax)</b> (click to show)</summary>
 
 Note: for a more complete example that works in older browsers, check the demo
-at <http://oss.sheetjs.com/js-xlsx/ajax.html>).  The [`xhr` demo](demos/xhr/)
+at <http://oss.sheetjs.com/js-xlsx/ajax.html>.  The [`xhr` demo](demos/xhr/)
 includes more examples with `XMLHttpRequest` and `fetch`.
 
 ```js
@@ -566,7 +583,7 @@ var desired_value = (desired_cell ? desired_cell.v : undefined);
   <summary><b>Adding a new worksheet to a workbook</b> (click to show)</summary>
 
 This example uses [`XLSX.utils.aoa_to_sheet`](#array-of-arrays-input) to make a
-worksheet and appends the new worksheet to the workbook:
+sheet and `XLSX.utils.book_append_sheet` to append the sheet to the workbook:
 
 ```js
 var new_ws_name = "SheetJS";
@@ -578,13 +595,26 @@ var ws_data = [
 ];
 var ws = XLSX.utils.aoa_to_sheet(ws_data);
 
-/* Add the sheet name to the list */
-wb.SheetNames.push(ws_name);
-
-/* Load the worksheet object */
-wb.Sheets[ws_name] = ws;
-
+/* Add the worksheet to the workbook */
+XLSX.utils.book_append_sheet(wb, ws, ws_name);
 ```
+
+</details>
+
+<details>
+  <summary><b>Creating a new workbook from scratch</b> (click to show)</summary>
+
+The workbook object contains a `SheetNames` array of names and a `Sheets` object
+mapping sheet names to sheet objects. The `XLSX.utils.book_new` utility function
+creates a new workbook object:
+
+```js
+/* create a new blank workbook */
+var wb = XLSX.utils.book_new();
+```
+
+The new workbook is blank and contains no worksheets. The write functions will
+error if the workbook is empty.
 
 </details>
 

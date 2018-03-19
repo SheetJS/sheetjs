@@ -240,7 +240,7 @@ function parse_sty_bin(data, themes, opts) {
 			case 0x046A: /* 'BrtSlicerStyleElement' */
 			case 0x0200: /* 'BrtTableStyleElement' */
 			case 0x082F: /* 'BrtTimelineStyleElement' */
-			/* case 'BrtUid' */
+			case 0x0C00: /* 'BrtUid' */
 				break;
 
 			case 0x0023: /* 'BrtFRTBegin' */

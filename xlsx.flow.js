@@ -4,7 +4,7 @@
 /*global global, exports, module, require:false, process:false, Buffer:false, ArrayBuffer:false */
 var XLSX = {};
 (function make_xlsx(XLSX){
-XLSX.version = '0.12.5';
+XLSX.version = '0.12.6';
 var current_codepage = 1200, current_ansi = 1252;
 /*:: declare var cptable:any; */
 /*global cptable:true */
@@ -8415,7 +8415,7 @@ function parse_sty_bin(data, themes, opts) {
 			case 0x046A: /* 'BrtSlicerStyleElement' */
 			case 0x0200: /* 'BrtTableStyleElement' */
 			case 0x082F: /* 'BrtTimelineStyleElement' */
-			/* case 'BrtUid' */
+			case 0x0C00: /* 'BrtUid' */
 				break;
 
 			case 0x0023: /* 'BrtFRTBegin' */
@@ -9248,7 +9248,8 @@ function parse_comments_bin(data, opts)/*:Array<RawComment>*/ {
 				if(!c.t) c.t = "";
 				delete c.rfx; out.push(c); break;
 
-			/* case 'BrtUid': */
+			case 0x0C00: /* 'BrtUid' */
+				break;
 
 			case 0x0023: /* 'BrtFRTBegin' */
 				pass = true; break;
@@ -13060,7 +13061,6 @@ function parse_ws_bin(data, _opts, idx, rels, wb/*:WBWBProps*/, themes, styles)/
 
 			case 0x01E5: /* 'BrtWsFmtInfo' */
 				break;
-			/* case 'BrtUid' */
 			case 0x00AF: /* 'BrtAFilterDateGroupItem' */
 			case 0x0284: /* 'BrtActiveX' */
 			case 0x0271: /* 'BrtBigName' */
@@ -13110,6 +13110,7 @@ function parse_ws_bin(data, _opts, idx, rels, wb/*:WBWBProps*/, themes, styles)/
 			case 0x0413: /* 'BrtSparkline' */
 			case 0x01AC: /* 'BrtTable' */
 			case 0x00AA: /* 'BrtTop10Filter' */
+			case 0x0C00: /* 'BrtUid' */
 			case 0x0032: /* 'BrtValueMeta' */
 			case 0x0816: /* 'BrtWebExtension' */
 			case 0x0415: /* 'BrtWsFmtInfoEx14' */
@@ -13443,7 +13444,6 @@ function parse_cs_bin(data, opts, idx/*:number*/, rels, wb/*::, themes, styles*/
 				if(val.name) wb.Sheets[idx].CodeName = val.name;
 				break;
 
-			/* case 'BrtUid': */
 			case 0x0232: /* 'BrtBkHim' */
 			case 0x028C: /* 'BrtCsPageSetup' */
 			case 0x029D: /* 'BrtCsProtection' */
@@ -13451,6 +13451,7 @@ function parse_cs_bin(data, opts, idx/*:number*/, rels, wb/*::, themes, styles*/
 			case 0x0227: /* 'BrtLegacyDrawing' */
 			case 0x0228: /* 'BrtLegacyDrawingHF' */
 			case 0x01DC: /* 'BrtMargins' */
+			case 0x0C00: /* 'BrtUid' */
 				break;
 
 			case 0x0023: /* 'BrtFRTBegin' */
@@ -13998,8 +13999,8 @@ function parse_wb_bin(data, opts)/*:WorkbookFile*/ {
 				break;
 
 			/* case 'BrtModelTimeGroupingCalcCol' */
-			/* case 'BrtRevisionPtr' */
-			/* case 'BrtUid' */
+			case 0x0C00: /* 'BrtUid' */
+			case 0x0C01: /* 'BrtRevisionPtr' */
 			case 0x0817: /* 'BrtAbsPath15' */
 			case 0x0216: /* 'BrtBookProtection' */
 			case 0x02A5: /* 'BrtBookProtectionIso' */
@@ -17135,6 +17136,7 @@ var XLSBRecordEnum = {
 	/*::[*/0x085B/*::]*/: { n:"BrtBeginModelTimeGrouping" },
 	/*::[*/0x085C/*::]*/: { n:"BrtEndModelTimeGrouping" },
 	/*::[*/0x085D/*::]*/: { n:"BrtModelTimeGroupingCalcCol" },
+	/*::[*/0x0C00/*::]*/: { n:"BrtUid" },
 	/*::[*/0x0C01/*::]*/: { n:"BrtRevisionPtr" },
 	/*::[*/0xFFFF/*::]*/: { n:"" }
 };
@@ -19548,7 +19550,7 @@ function sheet_to_json(sheet/*:Worksheet*/, opts/*:?Sheet2JSONOpts*/) {
 			v = val.v;
 			switch(val.t){
 				case 'z': if(v == null) break; continue;
-				case 'e': continue;
+				case 'e': v = void 0; break;
 				case 's': case 'd': case 'b': case 'n': break;
 				default: throw new Error('unrecognized type ' + val.t);
 			}

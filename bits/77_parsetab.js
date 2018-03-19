@@ -826,6 +826,7 @@ var XLSBRecordEnum = {
 	/*::[*/0x085B/*::]*/: { n:"BrtBeginModelTimeGrouping" },
 	/*::[*/0x085C/*::]*/: { n:"BrtEndModelTimeGrouping" },
 	/*::[*/0x085D/*::]*/: { n:"BrtModelTimeGroupingCalcCol" },
+	/*::[*/0x0C00/*::]*/: { n:"BrtUid" },
 	/*::[*/0x0C01/*::]*/: { n:"BrtRevisionPtr" },
 	/*::[*/0xFFFF/*::]*/: { n:"" }
 };

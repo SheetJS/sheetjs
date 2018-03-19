@@ -1,53 +1,75 @@
 <!DOCTYPE html>
 <!-- xlsx.js (C) 2013-present  SheetJS http://sheetjs.com -->
 <!-- vim: set ts=2: -->
-<html ng-app="app">
+<html ng-app="sjs">
 <head>
-	<title>SheetJS + Angular 1 + ui-grid</title>
-	<!-- Angular -->
-	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.0/angular.js"></script>
-	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.0/angular-touch.js"></script>
-	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.0/angular-animate.js"></script>
+  <title>SheetJS + AngularJS</title>
+  <!-- Angular -->
+  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular.min.js"></script>
 
-	<!-- ui-grid -->
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-grid/4.0.0/ui-grid.js"></script>
-	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/angular-ui-grid/4.0.0/ui-grid.css"/>
-
-	<!-- SheetJS js-xlsx library -->
-	<script src="shim.js"></script>
-	<script src="xlsx.full.min.js"></script>
-
-	<!-- SheetJS Service -->
-	<script src="SheetJS-angular.js"></script>
-
-<style>
-.grid1 {
-	width: 500px;
-	height: 400px;
-};
-</style>
+  <!-- SheetJS js-xlsx library -->
+  <script src="shim.js"></script>
+  <script src="xlsx.full.min.js"></script>
 </head>
 <body>
 <pre>
-<b><a href="http://sheetjs.com">SheetJS + angular 1 + ui-grid demo</a></b>
+<b><a href="http://sheetjs.com">SheetJS + AngularJS demo</a></b>
 
-The core library can be used as-is in angular applications.
+The core library can be used as-is in AngularJS applications.
 The <a href="https://github.com/sheetjs/js-xlsx">Community Edition README</a> details some common use cases.
 We also have some <a href="http://sheetjs.com/demos/">more public demos</a>
 
 This demo shows:
-- SheetJSExportService: a service for exporting data from a ui-grid
-- SheetJSImportDirective: a directive providing a file input button for import
+- $http request for XLSX file and scope update with data
+- HTML table using ng-repeat
+- XLSX table export using `XLSX.utils.table_to_book`
 
-<a href="https://obamawhitehouse.archives.gov/sites/default/files/omb/budget/fy2014/assets/receipts.xls">Sample Spreadsheet</a>
+<a href="https://sheetjs.com/pres.xlsx">Sample Spreadsheet</a>
 </pre>
 
-<div ng-controller="MainCtrl">
-	<input type="file" import-sheet-js="" opts="gridOptions" multiple="false"  />
-	<div id="grid1" ui-grid="gridOptions" ui-grid-selection ui-grid-exporter class="grid"></div>
+<div ng-controller="sheetjs">
+
+<table id="sjs-table">
+  <tr><th>Name</th><th>Index</th></tr>
+  <tr ng-repeat="row in data">
+    <td>{{row.Name}}</td>
+    <td>{{row.Index}}</td>
+  </tr>
+</table>
+
+<button id="exportbtn">Export Table</button>
+
 </div>
 
-<script src="app.js"></script>
+<script>
+var app = angular.module('sjs', []);
+app.controller('sheetjs', function($scope, $http) {
+  $http({
+    method:'GET',
+    url:'https://sheetjs.com/pres.xlsx',
+    responseType:'arraybuffer'
+  }).then(function(data) {
+    var wb = XLSX.read(data.data, {type:"array"});
+    var d = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+    $scope.data = d;
+  }, function(err) { console.log(err); });
+});
+exportbtn.addEventListener('click', function() {
+  var wb = XLSX.utils.table_to_book(document.getElementById('sjs-table'));
+  XLSX.writeFile(wb, "export.xlsx");
+});
+</script>
+<script type="text/javascript">
+/* eslint no-use-before-define:0 */
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-36810333-1']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
 </body>
 </html>
-

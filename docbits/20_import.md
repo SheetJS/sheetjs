@@ -41,15 +41,32 @@ The `table_to_book` and `table_to_sheet` utility functions take a DOM TABLE
 element and iterate through the child nodes.
 
 ```js
-var worksheet = XLSX.utils.table_to_book(document.getElementById('tableau'));
+var workbook = XLSX.utils.table_to_book(document.getElementById('tableau'));
 /* DO SOMETHING WITH workbook HERE */
+```
+
+Multiple tables on a web page can be converted to individual worksheets:
+
+```js
+/* create new workbook */
+var workbook = XLSX.utils.book_new();
+
+/* convert table 'table1' to worksheet named "Sheet1" */
+var ws1 = XLSX.utils.table_to_book(document.getElementById('table1'));
+XLSX.utils.book_append_sheet(workbook, ws1, "Sheet1");
+
+/* convert table 'table2' to worksheet named "Sheet2" */
+var ws2 = XLSX.utils.table_to_book(document.getElementById('table2'));
+XLSX.utils.book_append_sheet(workbook, ws2, "Sheet2");
+
+/* workbook now has 2 worksheets */
 ```
 
 Alternatively, the HTML code can be extracted and parsed:
 
 ```js
 var htmlstr = document.getElementById('tableau').outerHTML;
-var worksheet = XLSX.read(htmlstr, {type:'string'});
+var workbook = XLSX.read(htmlstr, {type:'string'});
 ```
 
 </details>
@@ -58,7 +75,7 @@ var worksheet = XLSX.read(htmlstr, {type:'string'});
   <summary><b>Browser download file (ajax)</b> (click to show)</summary>
 
 Note: for a more complete example that works in older browsers, check the demo
-at <http://oss.sheetjs.com/js-xlsx/ajax.html>).  The [`xhr` demo](demos/xhr/)
+at <http://oss.sheetjs.com/js-xlsx/ajax.html>.  The [`xhr` demo](demos/xhr/)
 includes more examples with `XMLHttpRequest` and `fetch`.
 
 ```js

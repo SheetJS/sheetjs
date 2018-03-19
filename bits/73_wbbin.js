@@ -130,8 +130,8 @@ function parse_wb_bin(data, opts)/*:WorkbookFile*/ {
 			case 0x0169: /* 'BrtPlaceholderName' */
 				break;
 
-			/* case 'BrtModelTimeGroupingCalcCol' */			
-			/* case 'BrtUid' */
+			/* case 'BrtModelTimeGroupingCalcCol' */
+			case 0x0C00: /* 'BrtUid' */
 			case 0x0C01: /* 'BrtRevisionPtr' */
 			case 0x0817: /* 'BrtAbsPath15' */
 			case 0x0216: /* 'BrtBookProtection' */

@@ -44,7 +44,8 @@ function parse_comments_bin(data, opts)/*:Array<RawComment>*/ {
 				if(!c.t) c.t = "";
 				delete c.rfx; out.push(c); break;
 
-			/* case 'BrtUid': */
+			case 0x0C00: /* 'BrtUid' */
+				break;
 
 			case 0x0023: /* 'BrtFRTBegin' */
 				pass = true; break;

@@ -1715,6 +1715,26 @@ describe('json output', function() {
 		assert.equal(json1[0].__EMPTY, 1);
 		assert.equal(json1[1].__EMPTY_1, 5);
 	});
+	it('should ignore errors and support default values', function() {
+		var ws = {
+			A1: {t:'s', v:"Field"}, B1: {t:'s', v:"Text"},
+			A2: {t:'e', v:0x2A, w:"#N/A" }, B2: {t:'s', v:"#N/A"},
+			A3: {t:'e', v:0x0F }, B3: {t:'s', v:"#VALUE!"},
+			A4: {t:'e', w:"#NAME?" }, B4: {t:'s', v:"#NAME?"},
+			"!ref": "A1:B4" };
+		seq(8).forEach(function(n) {
+			var opts = {};
+			if(n & 1) opts.header = 1;
+			if(n & 2) opts.raw = 1;
+			if(n & 4) opts.defval = null;
+			var J = X.utils.sheet_to_json(ws, opts);
+			// $FlowIgnore
+			for(var i = 0; i < 3; ++i) {
+				var k = ((n&1) ? J[i+1][0] : J[i].Field);
+				assert((n&4) ? (k === null) : (k !== null));
+			}
+		});
+	});
 });
 
 

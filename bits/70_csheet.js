@@ -56,7 +56,6 @@ function parse_cs_bin(data, opts, idx/*:number*/, rels, wb/*::, themes, styles*/
 				if(val.name) wb.Sheets[idx].CodeName = val.name;
 				break;
 
-			/* case 'BrtUid': */
 			case 0x0232: /* 'BrtBkHim' */
 			case 0x028C: /* 'BrtCsPageSetup' */
 			case 0x029D: /* 'BrtCsProtection' */
@@ -64,6 +63,7 @@ function parse_cs_bin(data, opts, idx/*:number*/, rels, wb/*::, themes, styles*/
 			case 0x0227: /* 'BrtLegacyDrawing' */
 			case 0x0228: /* 'BrtLegacyDrawingHF' */
 			case 0x01DC: /* 'BrtMargins' */
+			case 0x0C00: /* 'BrtUid' */
 				break;
 
 			case 0x0023: /* 'BrtFRTBegin' */

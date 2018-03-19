@@ -570,7 +570,6 @@ function parse_ws_bin(data, _opts, idx, rels, wb/*:WBWBProps*/, themes, styles)/
 
 			case 0x01E5: /* 'BrtWsFmtInfo' */
 				break;
-			/* case 'BrtUid' */
 			case 0x00AF: /* 'BrtAFilterDateGroupItem' */
 			case 0x0284: /* 'BrtActiveX' */
 			case 0x0271: /* 'BrtBigName' */
@@ -620,6 +619,7 @@ function parse_ws_bin(data, _opts, idx, rels, wb/*:WBWBProps*/, themes, styles)/
 			case 0x0413: /* 'BrtSparkline' */
 			case 0x01AC: /* 'BrtTable' */
 			case 0x00AA: /* 'BrtTop10Filter' */
+			case 0x0C00: /* 'BrtUid' */
 			case 0x0032: /* 'BrtValueMeta' */
 			case 0x0816: /* 'BrtWebExtension' */
 			case 0x0415: /* 'BrtWsFmtInfoEx14' */

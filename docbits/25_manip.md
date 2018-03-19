@@ -27,7 +27,7 @@ var desired_value = (desired_cell ? desired_cell.v : undefined);
   <summary><b>Adding a new worksheet to a workbook</b> (click to show)</summary>
 
 This example uses [`XLSX.utils.aoa_to_sheet`](#array-of-arrays-input) to make a
-worksheet and appends the new worksheet to the workbook:
+sheet and `XLSX.utils.book_append_sheet` to append the sheet to the workbook:
 
 ```js
 var new_ws_name = "SheetJS";
@@ -39,13 +39,26 @@ var ws_data = [
 ];
 var ws = XLSX.utils.aoa_to_sheet(ws_data);
 
-/* Add the sheet name to the list */
-wb.SheetNames.push(ws_name);
-
-/* Load the worksheet object */
-wb.Sheets[ws_name] = ws;
-
+/* Add the worksheet to the workbook */
+XLSX.utils.book_append_sheet(wb, ws, ws_name);
 ```
+
+</details>
+
+<details>
+  <summary><b>Creating a new workbook from scratch</b> (click to show)</summary>
+
+The workbook object contains a `SheetNames` array of names and a `Sheets` object
+mapping sheet names to sheet objects. The `XLSX.utils.book_new` utility function
+creates a new workbook object:
+
+```js
+/* create a new blank workbook */
+var wb = XLSX.utils.book_new();
+```
+
+The new workbook is blank and contains no worksheets. The write functions will
+error if the workbook is empty.
 
 </details>
 

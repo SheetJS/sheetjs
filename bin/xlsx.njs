@@ -42,6 +42,7 @@ program
 	.option('-E, --eth',  'emit ETH  to <sheetname> or <file>.eth (Ethercalc)')
 	.option('-t, --txt',  'emit TXT  to <sheetname> or <file>.txt (UTF-8 TSV)')
 	.option('-r, --rtf',  'emit RTF  to <sheetname> or <file>.txt (Table RTF)')
+	.option('-z, --dump', 'dump internal representation as JSON')
 
 	.option('-F, --field-sep <sep>', 'CSV field separator', ",")
 	.option('-R, --row-sep <sep>', 'CSV row separator', "\n")
@@ -156,6 +157,10 @@ if(!wb) { console.error(n + ": error parsing " + filename + ": empty workbook");
 /*:: if(!wb) throw new Error("unreachable"); */
 if(program.listSheets) {
 	console.log((wb.SheetNames||[]).join("\n"));
+	process.exit(0);
+}
+if(program.dump) {
+	console.log(JSON.stringify(wb));
 	process.exit(0);
 }
 

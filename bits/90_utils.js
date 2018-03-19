@@ -57,7 +57,7 @@ function sheet_to_json(sheet/*:Worksheet*/, opts/*:?Sheet2JSONOpts*/) {
 			v = val.v;
 			switch(val.t){
 				case 'z': if(v == null) break; continue;
-				case 'e': continue;
+				case 'e': v = void 0; break;
 				case 's': case 'd': case 'b': case 'n': break;
 				default: throw new Error('unrecognized type ' + val.t);
 			}
