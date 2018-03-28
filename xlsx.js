@@ -2073,13 +2073,21 @@ function getzipfile(zip, file) {
 async function getzipdata(zip, file, safe) {
 	if(!safe) return getdata(getzipfile(zip, file));
 	if(!file) return null;
-	try { return getzipdata(zip, file); } catch(e) { return null; }
+	try {
+		const data = await getzipdata(zip, file);
+		return data
+	} catch(e) {
+		return null;
+	}
 }
 
 async function getzipstr(zip, file, safe) {
 	if(!safe) return getdatastr(getzipfile(zip, file));
 	if(!file) return null;
-	try { return getzipstr(zip, file); } catch(e) { return null; }
+	try {
+		const data = await getzipstr(zip, file);
+		return data
+	} catch(e) { return null; }
 }
 
 function zipentries(zip) {
