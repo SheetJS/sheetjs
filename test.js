@@ -12,7 +12,7 @@ declare var it: DescribeIt;
 declare var before:(test:EmptyFunc)=>void;
 declare var cptable: any;
 */
-var X = require('./');
+var X;
 var modp = './';
 var fs = require('fs'), assert = require('assert');
 describe('source',function(){it('should load',function(){X=require(modp);});});
