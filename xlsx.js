@@ -2026,10 +2026,13 @@ function split_regex(str, re, def) {
 	for(var i = 1; i < p.length; ++i) { o.push(def); o.push(p[i]); }
 	return o;
 }
-function getdatastr(data) {
+async function getdatastr(data) {
 	if(!data) return null;
 	if(data.data) return debom(data.data);
-	if(data.asNodeBuffer && has_buf) return debom(data.asNodeBuffer().toString('binary'));
+	if(data.asNodeBuffer && has_buf) {
+		const buffer = await data.async('nodebuffer')
+		return debom(buffer.toString('binary'));
+  }
 	if(data.asBinary) return debom(data.asBinary());
 	if(data._data && data._data.getContent) return debom(cc2str(Array.prototype.slice.call(data._data.getContent(),0)));
 	return null;
@@ -2038,7 +2041,7 @@ function getdatastr(data) {
 function getdatabin(data) {
 	if(!data) return null;
 	if(data.data) return char_codes(data.data);
-	if(data.asNodeBuffer && has_buf) return data.asNodeBuffer();
+	if(data.asNodeBuffer && has_buf) return data.async('nodebuffer');
 	if(data._data && data._data.getContent) {
 		var o = data._data.getContent();
 		if(typeof o == "string") return char_codes(o);
@@ -2047,7 +2050,7 @@ function getdatabin(data) {
 	return null;
 }
 
-function getdata(data) { return (data && data.name.slice(-4) === ".bin") ? getdatabin(data) : getdatastr(data); }
+async function getdata(data) { return (data && data.name.slice(-4) === ".bin") ? getdatabin(data) : getdatastr(data); }
 
 /* Part 2 Section 10.1.2 "Mapping Content Types" Names are case-insensitive */
 /* OASIS does not comment on filename case sensitivity */
@@ -2067,13 +2070,13 @@ function getzipfile(zip, file) {
 	return o;
 }
 
-function getzipdata(zip, file, safe) {
+async function getzipdata(zip, file, safe) {
 	if(!safe) return getdata(getzipfile(zip, file));
 	if(!file) return null;
 	try { return getzipdata(zip, file); } catch(e) { return null; }
 }
 
-function getzipstr(zip, file, safe) {
+async function getzipstr(zip, file, safe) {
 	if(!safe) return getdatastr(getzipfile(zip, file));
 	if(!file) return null;
 	try { return getzipstr(zip, file); } catch(e) { return null; }
@@ -2090,7 +2093,7 @@ var jszip;
 if(typeof JSZipSync !== 'undefined') jszip = JSZipSync;
 if(typeof exports !== 'undefined') {
 	if(typeof module !== 'undefined' && module.exports) {
-		if(typeof jszip === 'undefined') jszip = require('./jszip.js');
+		if(typeof jszip === 'undefined') jszip = require('jszip');
 	}
 }
 
@@ -3741,7 +3744,6 @@ function parse_rels(data, currentFilePath) {
 	}
 	var rels = {};
 	var hash = {};
-
 	(data.match(tagregex)||[]).forEach(function(x) {
 		var y = parsexmltag(x);
 		/* 9.3.2.2 OPC_Relationships */
@@ -8742,7 +8744,7 @@ function write_theme(Themes, opts) {
 	return o.join("");
 }
 /* [MS-XLS] 2.4.326 TODO: payload is a zip file */
-function parse_Theme(blob, length, opts) {
+async function parse_Theme(blob, length, opts) {
 	var end = blob.l + length;
 	var dwThemeVersion = blob.read_shift(4);
 	if(dwThemeVersion === 124226) return;
@@ -8750,7 +8752,7 @@ function parse_Theme(blob, length, opts) {
 	var data = blob.slice(blob.l);
 	blob.l = end;
 	var zip; try { zip = new jszip(data); } catch(e) { return; }
-	var themeXML = getzipstr(zip, "theme/theme/theme1.xml", true);
+	var themeXML = await getzipstr(zip, "theme/theme/theme1.xml", true);
 	if(!themeXML) return;
 	return parse_theme_xml(themeXML, opts);
 }
@@ -9003,10 +9005,11 @@ function write_comments_vml(rId, comments) {
 
 RELS.CMNT = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/comments";
 
-function parse_comments(zip, dirComments, sheets, sheetRels, opts) {
+async function parse_comments(zip, dirComments, sheets, sheetRels, opts) {
 	for(var i = 0; i != dirComments.length; ++i) {
 		var canonicalpath=dirComments[i];
-		var comments=parse_cmnt(getzipdata(zip, canonicalpath.replace(/^\//,''), true), canonicalpath, opts);
+		const zipData = await getzipdata(zip, canonicalpath.replace(/^\//,''), true)
+		var comments=parse_cmnt(zipData, canonicalpath, opts);
 		if(!comments || !comments.length) continue;
 		// find the sheets targeted by these comments
 		var sheetNames = keys(sheets);
@@ -18477,14 +18480,16 @@ var parse_content_xml = (function() {
 	};
 })();
 
-function parse_ods(zip, opts) {
+async function parse_ods(zip, opts) {
 	opts = opts || ({});
 	var ods = !!safegetzipfile(zip, 'objectdata');
-	if(ods) parse_manifest(getzipdata(zip, 'META-INF/manifest.xml'), opts);
-	var content = getzipstr(zip, 'content.xml');
+	const zipData1 = await getzipdata(zip, 'META-INF/manifest.xml')
+	if(ods) parse_manifest(zipData1, opts);
+	var content = await getzipstr(zip, 'content.xml');
 	if(!content) throw new Error("Missing content.xml in " + (ods ? "ODS" : "UOF")+ " file");
 	var wb = parse_content_xml(ods ? content : utf8read(content), opts);
-	if(safegetzipfile(zip, 'meta.xml')) wb.Props = parse_core_props(getzipdata(zip, 'meta.xml'));
+	const zipData2 = await getzipdata(zip, 'meta.xml')
+	if(safegetzipfile(zip, 'meta.xml')) wb.Props = parse_core_props(zipData2);
 	return wb;
 }
 function parse_fods(data, opts) {
@@ -18796,10 +18801,11 @@ function safe_parse_wbrels(wbrels, sheets) {
 	return !wbrels || wbrels.length === 0 ? null : wbrels;
 }
 
-function safe_parse_sheet(zip, path, relsPath, sheet, idx, sheetRels, sheets, stype, opts, wb, themes, styles) {
+async function safe_parse_sheet(zip, path, relsPath, sheet, idx, sheetRels, sheets, stype, opts, wb, themes, styles) {
 	try {
-		sheetRels[sheet]=parse_rels(getzipstr(zip, relsPath, true), path);
-		var data = getzipdata(zip, path);
+		const datagetZipstr1 = await getzipstr(zip, relsPath, true)
+		sheetRels[sheet]=parse_rels(datagetZipstr1, path);
+		var data = await getzipdata(zip, path);
 		switch(stype) {
 			case 'sheet': sheets[sheet]=parse_ws(data, path, idx, opts, sheetRels[sheet], wb, themes, styles); break;
 			case 'chart':
@@ -18808,10 +18814,15 @@ function safe_parse_sheet(zip, path, relsPath, sheet, idx, sheetRels, sheets, st
 				if(!cs || !cs['!chart']) break;
 				var dfile = resolve_path(cs['!chart'].Target, path);
 				var drelsp = get_rels_path(dfile);
-				var draw = parse_drawing(getzipstr(zip, dfile, true), parse_rels(getzipstr(zip, drelsp, true), dfile));
+				const dataGetZipstr2 = await getzipstr(zip, dfile, true)
+        const dataGetZipstr2b = await getzipstr(zip, drelsp, true)
+				var draw = parse_drawing(dataGetZipstr2, parse_rels(dataGetZipstr2b, dfile));
 				var chartp = resolve_path(draw, dfile);
 				var crelsp = get_rels_path(chartp);
-				cs = parse_chart(getzipstr(zip, chartp, true), chartp, opts, parse_rels(getzipstr(zip, crelsp, true), chartp), wb, cs);
+				// dataGetZipstr3 might be the same as *2, but not sure. Mabye zip has been modified
+				const dataGetZipstr3 = await getzipstr(zip, chartp, true)
+				const dataGetZipstr3b = await getzipstr(zip, crelsp, true)
+				cs = parse_chart(dataGetZipstr3, chartp, opts, parse_rels(dataGetZipstr3b, chartp), wb, cs);
 				break;
 			case 'macro': sheets[sheet]=parse_ms(data, path, idx, opts, sheetRels[sheet], wb, themes, styles); break;
 			case 'dialog': sheets[sheet]=parse_ds(data, path, idx, opts, sheetRels[sheet], wb, themes, styles); break;
@@ -18821,7 +18832,7 @@ function safe_parse_sheet(zip, path, relsPath, sheet, idx, sheetRels, sheets, st
 
 function strip_front_slash(x) { return x.charAt(0) == '/' ? x.slice(1) : x; }
 
-function parse_zip(zip, opts) {
+async function parse_zip(zip, opts) {
 	make_ssf(SSF);
 	opts = opts || {};
 	fix_read_opts(opts);
@@ -18834,16 +18845,19 @@ function parse_zip(zip, opts) {
 	if(safegetzipfile(zip, 'Index/Document.iwa')) throw new Error('Unsupported NUMBERS file');
 
 	var entries = zipentries(zip);
-	var dir = parse_ct((getzipstr(zip, '[Content_Types].xml')));
+	const dataZipstr = await getzipstr(zip, '[Content_Types].xml')
+	var dir = parse_ct(dataZipstr);
 	var xlsb = false;
 	var sheets, binname;
 	if(dir.workbooks.length === 0) {
 		binname = "xl/workbook.xml";
-		if(getzipdata(zip,binname, true)) dir.workbooks.push(binname);
+		const zipData1 = await getzipdata(zip,binname, true)
+		if(zipData1) dir.workbooks.push(binname);
 	}
 	if(dir.workbooks.length === 0) {
 		binname = "xl/workbook.bin";
-		if(!getzipdata(zip,binname,true)) throw new Error("Could not find workbook");
+		const zipData2 = getzipdata(zip,binname,true)
+		if(!zipData2) throw new Error("Could not find workbook");
 		dir.workbooks.push(binname);
 		xlsb = true;
 	}
@@ -18853,26 +18867,35 @@ function parse_zip(zip, opts) {
 	var styles = ({});
 	if(!opts.bookSheets && !opts.bookProps) {
 		strs = [];
-		if(dir.sst) strs=parse_sst(getzipdata(zip, strip_front_slash(dir.sst)), dir.sst, opts);
+		if(dir.sst) {
+      const zipData3 = await getzipdata(zip, strip_front_slash(dir.sst))
+			strs=parse_sst(zipData3, dir.sst, opts);
+    }
 
-		if(opts.cellStyles && dir.themes.length) themes = parse_theme(getzipstr(zip, dir.themes[0].replace(/^\//,''), true)||"",dir.themes[0], opts);
-
-		if(dir.style) styles = parse_sty(getzipdata(zip, strip_front_slash(dir.style)), dir.style, themes, opts);
+		if(opts.cellStyles && dir.themes.length){
+      const dataZipstr2 = await getzipstr(zip, dir.themes[0].replace(/^\//,''), true)
+      themes = parse_theme(dataZipstr2 ||"",dir.themes[0], opts);
+		}
+		if(dir.style) {
+      const zipData4 = await getzipdata(zip, strip_front_slash(dir.style))
+			styles = parse_sty(zipData4, dir.style, themes, opts);
+    }
 	}
 
-	/*var externbooks = */dir.links.map(function(link) {
-		return parse_xlink(getzipdata(zip, strip_front_slash(link)), link, opts);
-	});
-
-	var wb = parse_wb(getzipdata(zip, strip_front_slash(dir.workbooks[0])), dir.workbooks[0], opts);
+	/*var externbooks = */await Promise.all(dir.links.map(async function(link) {
+		const zipData5 = await getzipdata(zip, strip_front_slash(link))
+		return parse_xlink(zipData5, link, opts);
+	}));
+	const zipData6 = await getzipdata(zip, strip_front_slash(dir.workbooks[0]))
+	var wb = await parse_wb(zipData6, dir.workbooks[0], opts);
 
 	var props = {}, propdata = "";
 
 	if(dir.coreprops.length) {
-		propdata = getzipdata(zip, strip_front_slash(dir.coreprops[0]), true);
+		propdata = await getzipdata(zip, strip_front_slash(dir.coreprops[0]), true);
 		if(propdata) props = parse_core_props(propdata);
 		if(dir.extprops.length !== 0) {
-			propdata = getzipdata(zip, strip_front_slash(dir.extprops[0]), true);
+			propdata = await getzipdata(zip, strip_front_slash(dir.extprops[0]), true);
 			if(propdata) parse_ext_props(propdata, props, opts);
 		}
 	}
@@ -18880,7 +18903,7 @@ function parse_zip(zip, opts) {
 	var custprops = {};
 	if(!opts.bookSheets || opts.bookProps) {
 		if (dir.custprops.length !== 0) {
-			propdata = getzipstr(zip, strip_front_slash(dir.custprops[0]), true);
+			propdata = await getzipstr(zip, strip_front_slash(dir.custprops[0]), true);
 			if(propdata) custprops = parse_cust_props(propdata, opts);
 		}
 	}
@@ -18896,7 +18919,10 @@ function parse_zip(zip, opts) {
 	sheets = {};
 
 	var deps = {};
-	if(opts.bookDeps && dir.calcchain) deps=parse_cc(getzipdata(zip, strip_front_slash(dir.calcchain)),dir.calcchain,opts);
+	if(opts.bookDeps && dir.calcchain) {
+    const zipData7 = await getzipdata(zip, strip_front_slash(dir.calcchain))
+		deps=parse_cc(zipData7,dir.calcchain,opts);
+  }
 
 	var i=0;
 	var sheetRels = ({});
@@ -18913,10 +18939,12 @@ function parse_zip(zip, opts) {
 
 	var wbext = xlsb ? "bin" : "xml";
 	var wbrelsfile = 'xl/_rels/workbook.' + wbext + '.rels';
-	var wbrels = parse_rels(getzipstr(zip, wbrelsfile, true), wbrelsfile);
+	const dataZipstr3 = await getzipstr(zip, wbrelsfile, true)
+	var wbrels = parse_rels(dataZipstr3, wbrelsfile);
 	if(wbrels) wbrels = safe_parse_wbrels(wbrels, wb.Sheets);
 	/* Numbers iOS hack */
-	var nmode = (getzipdata(zip,"xl/worksheets/sheet.xml",true))?1:0;
+	const zipData2 = await getzipdata(zip,"xl/worksheets/sheet.xml",true)
+	var nmode = (zipData2)?1:0;
 	for(i = 0; i != props.Worksheets; ++i) {
 		var stype = "sheet";
 		if(wbrels && wbrels[i]) {
@@ -18927,10 +18955,10 @@ function parse_zip(zip, opts) {
 			path = path.replace(/sheet0\./,"sheet.");
 		}
 		relsPath = path.replace(/^(.*)(\/)([^\/]*)$/, "$1/_rels/$3.rels");
-		safe_parse_sheet(zip, path, relsPath, props.SheetNames[i], i, sheetRels, sheets, stype, opts, wb, themes, styles);
+		await safe_parse_sheet(zip, path, relsPath, props.SheetNames[i], i, sheetRels, sheets, stype, opts, wb, themes, styles);
 	}
 
-	if(dir.comments) parse_comments(zip, dir.comments, sheets, sheetRels, opts);
+	if(dir.comments) await parse_comments(zip, dir.comments, sheets, sheetRels, opts);
 
 	out = ({
 		Directory: dir,
@@ -18950,8 +18978,8 @@ function parse_zip(zip, opts) {
 		out.files = zip.files;
 	}
 	if(opts.bookVBA) {
-		if(dir.vba.length > 0) out.vbaraw = getzipdata(zip,strip_front_slash(dir.vba[0]),true);
-		else if(dir.defaults && dir.defaults.bin === CT_VBA) out.vbaraw = getzipdata(zip, 'xl/vbaProject.bin',true);
+		if(dir.vba.length > 0) out.vbaraw = await getzipdata(zip,strip_front_slash(dir.vba[0]),true);
+		else if(dir.defaults && dir.defaults.bin === CT_VBA) out.vbaraw = await getzipdata(zip, 'xl/vbaProject.bin',true);
 	}
 	return out;
 }
@@ -19143,14 +19171,14 @@ function read_cfb(cfb, opts) {
 	return parse_xlscfb(cfb, opts);
 }
 
-function read_zip(data, opts) {
+async function read_zip(data, opts) {
 var zip, d = data;
 	var o = opts||{};
 	if(!o.type) o.type = (has_buf && Buffer.isBuffer(data)) ? "buffer" : "base64";
 	switch(o.type) {
-		case "base64": zip = new jszip(d, { base64:true }); break;
-		case "binary": case "array": zip = new jszip(d, { base64:false }); break;
-		case "buffer": zip = new jszip(d); break;
+		case "base64": zip = await jszip.loadAsync(d, { base64:true }); break;
+		case "binary": case "array": zip = await jszip.loadAsync(d, { base64:false }); break;
+		case "buffer": zip = await jszip.loadAsync(d); break;
 		default: throw new Error("Unrecognized type " + o.type);
 	}
 	return parse_zip(zip, o);
@@ -19196,7 +19224,7 @@ function read_prn(data, d, o, str) {
 	return PRN.to_workbook(d, o);
 }
 
-function readSync(data, opts) {
+async function readSync(data, opts) {
 	reset_cp();
 	if(typeof ArrayBuffer !== 'undefined' && data instanceof ArrayBuffer) return readSync(new Uint8Array(data), opts);
 	var d = data, n = [0,0,0,0], str = false;
@@ -19218,7 +19246,7 @@ function readSync(data, opts) {
 		case 0x3C: return parse_xlml(d, o);
 		case 0x49: if(n[1] === 0x44) return read_wb_ID(d, o); break;
 		case 0x54: if(n[1] === 0x41 && n[2] === 0x42 && n[3] === 0x4C) return DIF.to_workbook(d, o); break;
-		case 0x50: return (n[1] === 0x4B && n[2] < 0x09 && n[3] < 0x09) ? read_zip(d, o) : read_prn(data, d, o, str);
+		case 0x50: return (n[1] === 0x4B && n[2] < 0x09 && n[3] < 0x09) ? await read_zip(d, o) : read_prn(data, d, o, str);
 		case 0xEF: return n[3] === 0x3C ? parse_xlml(d, o) : read_prn(data, d, o, str);
 		case 0xFF: if(n[1] === 0xFE) { return read_utf16(d, o); } break;
 		case 0x00: if(n[1] === 0x00 && n[2] >= 0x02 && n[3] === 0x00) return WK_.to_workbook(d, o); break;
@@ -19230,11 +19258,11 @@ function readSync(data, opts) {
 	return read_prn(data, d, o, str);
 }
 
-function readFileSync(filename, opts) {
+async function readFileSync(filename, opts) {
 	var o = opts||{}; o.type = 'file';
 	return readSync(filename, o);
 }
-function write_zip_type(wb, opts) {
+async function write_zip_type(wb, opts) {
 	var o = opts||{};
 	var z = write_zip(wb, o);
 	var oopts = {};
@@ -19247,8 +19275,11 @@ function write_zip_type(wb, opts) {
 		case "file": oopts.type = has_buf ? "nodebuffer" : "string"; break;
 		default: throw new Error("Unrecognized type " + o.type);
 	}
-	if(o.type === "file") return write_dl(o.file, z.generate(oopts));
-	var out = z.generate(oopts);
+	if(o.type === "file") {
+		const file = await z.generateAsync(oopts)
+		return write_dl(o.file, file);
+  }
+	var out = await z.generateAsync(oopts);
 	return o.type == "string" ? utf8read(out) : out;
 }
 
@@ -19311,10 +19342,14 @@ function write_binary_type(out, opts) {
 	}
 }
 
-function writeSync(wb, opts) {
+async function writeSync(wb, opts) {
 	check_wb(wb);
 	var o = opts||{};
-	if(o.type == "array") { o.type = "binary"; var out = (writeSync(wb, o)); o.type = "array"; return s2ab(out); }
+	if(o.type == "array") {
+		o.type = "binary";
+		var out = await writeSync(wb, o);
+		o.type = "array"; return s2ab(out);
+	}
 	switch(o.bookType || 'xlsb') {
 		case 'xml':
 		case 'xlml': return write_string_type(write_xlml(wb, o), o);
@@ -19360,20 +19395,21 @@ function resolve_book_type(o) {
 	o.bookType = _BT[o.bookType] || o.bookType;
 }
 
-function writeFileSync(wb, filename, opts) {
+async function writeFileSync(wb, filename, opts) {
 	var o = opts||{}; o.type = 'file';
 	o.file = filename;
 	resolve_book_type(o);
 	return writeSync(wb, o);
 }
 
-function writeFileAsync(filename, wb, opts, cb) {
+async function writeFileAsync(filename, wb, opts, cb) {
 	var o = opts||{}; o.type = 'file';
 	o.file = filename;
 	resolve_book_type(o);
 	o.type = 'buffer';
 	var _cb = cb; if(!(_cb instanceof Function)) _cb = (opts);
-	return _fs.writeFile(filename, writeSync(wb, o), _cb);
+	const out = await writeSync(wb, o)
+	return _fs.writeFile(filename, out, _cb);
 }
 function sheet_to_json(sheet, opts) {
 	if(sheet == null || sheet["!ref"] == null) return [];

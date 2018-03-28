@@ -36,6 +36,7 @@
 		"commander": "~2.14.1",
 		"crc-32": "~1.2.0",
 		"exit-on-epipe": "~1.0.1",
+		"jszip": "^3.1.5",
 		"ssf": "~0.10.2"
 	},
 	"devDependencies": {

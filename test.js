@@ -319,24 +319,25 @@ var wbtable = {};
 (browser ? describe.skip : describe)('should parse test files', function() {
 	files.forEach(function(x) {
 		if(x.slice(-8) == ".pending" || !fs.existsSync(dir + x)) return;
-		it(x, function() {
-			var wb = X.readFile(dir + x, opts);
+		it(x, async function() {
+			var wb = await X.readFile(dir + x, opts);
 			wbtable[dir + x] = wb;
 			parsetest(x, wb, true);
 		});
 		fullex.forEach(function(ext) {
-			it(x + ' [' + ext + ']', function(){
+			it(x + ' [' + ext + ']', async function(){
 				var wb = wbtable[dir + x];
-				if(!wb) wb = X.readFile(dir + x, opts);
-				wb = X.read(X.write(wb, {type:"buffer", bookType:ext.replace(/\./,"")}), {WTF:opts.WTF, cellNF: true});
+				if(!wb) wb = await X.readFile(dir + x, opts);
+				const out = await X.write(wb, {type:"buffer", bookType:ext.replace(/\./,"")})
+				wb = await X.read(out, {WTF:opts.WTF, cellNF: true});
 				parsetest(x, wb, ext.replace(/\./,"") !== "xlsb", ext);
 			});
 		});
 	});
 	fileA.forEach(function(x) {
 		if(x.slice(-8) == ".pending" || !fs.existsSync(dir + x)) return;
-		it(x, function() {
-			var wb = X.readFile(dir + x, {WTF:opts.WTF, sheetRows:10});
+		it(x, async function() {
+			var wb = await X.readFile(dir + x, {WTF:opts.WTF, sheetRows:10});
 			parsetest(x, wb, false);
 		});
 	});
@@ -515,12 +516,14 @@ describe('parse options', function() {
 			});
 		});
 		it('should handle stub cells', function() {
-			MCPaths.forEach(function(p) {
-				var wb = X.read(fs.readFileSync(p), {type:TYPE, sheetStubs:true});
+			MCPaths.forEach(async function(p) {
+				var wb = await X.read(fs.readFileSync(p), {type:TYPE, sheetStubs:true});
 				X.utils.sheet_to_csv(wb.Sheets.Merge);
 				X.utils.sheet_to_json(wb.Sheets.Merge);
 				X.utils.sheet_to_formulae(wb.Sheets.Merge);
-				ofmt.forEach(function(f) { if(f != "dbf") X.write(wb, {type:TYPE, bookType:f}); });
+				for (const f of ofmt) {
+          if(f != "dbf") await X.write(wb, {type:TYPE, bookType:f});
+        }
 			});
 		});
 		function checkcells(wb, A46, B26, C16, D2) {
@@ -653,27 +656,27 @@ describe('output formats', function() {
 		["dbf",   false,  false],
 		["prn",   false,   true]
 	];
-	function RT(T) {
+	async function RT(T) {
 		if(!X) X = require(modp);
-		fmts.forEach(function(fmt) {
+		for (const fmt of fmts) {
 			var wb = X.utils.book_new();
 			X.utils.book_append_sheet(wb, X.utils.aoa_to_sheet([['R',"\u2603"],["\u0BEE",2]]), "Sheet1");
 			if(T == 'string' && !fmt[2]) return assert.throws(function() {X.write(wb, {type: T, bookType:fmt[0], WTF:1});});
-			var out = X.write(wb, {type: T, bookType:fmt[0], WTF:1});
-			var nwb = X.read(out, {type: T, WTF:1});
+			var out = await X.write(wb, {type: T, bookType:fmt[0], WTF:1});
+			var nwb = await X.read(out, {type: T, WTF:1});
 			var nws = nwb.Sheets[nwb.SheetNames[0]];
 			assert.equal(get_cell(nws, "B2").v, 2);
 			assert.equal(get_cell(nws, "A1").v, "R");
 			if(fmt[1]) assert.equal(get_cell(nws, "A2").v, "\u0BEE");
 			if(fmt[1]) assert.equal(get_cell(nws, "B1").v, "\u2603");
-		});
+		};
 	}
-	it('should write binary strings', function() { RT('binary'); });
-	it('should write base64 strings', function() { RT('base64'); });
-	it('should write JS strings', function() { RT('string'); });
-	if(typeof ArrayBuffer !== 'undefined' && (typeof process == 'undefined' || !process.version.match(/v0.12/))) it('should write array buffers', function() { RT('array'); });
-	if(!browser) it('should write buffers', function() { RT('buffer'); });
-	it('should throw if format is unknown', function() { assert.throws(function() { RT('dafuq'); }); });
+	it('should write binary strings', async function() { return RT('binary'); });
+	it('should write base64 strings', async function() { return RT('base64'); });
+	it('should write JS strings', async function() { return RT('string'); });
+	if(typeof ArrayBuffer !== 'undefined' && (typeof process == 'undefined' || !process.version.match(/v0.12/))) it('should write array buffers', async function() { return RT('array'); });
+	if(!browser) it.only('should write buffers', async function() { return RT('buffer'); });
+	it('should throw if format is unknown', async function() { assert.throws(function() { return RT('dafuq'); }); });
 });
 
 function eqarr(a,b) {
