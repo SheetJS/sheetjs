@@ -12865,7 +12865,8 @@ function parse_ws_bin(data, _opts, idx, rels, wb, themes, styles) {
 				p = ({t:val[2]});
 				switch(val[2]) {
 					case 'n': p.v = val[1]; break;
-					case 's': sstr = strs[val[1]]; p.v = sstr.t; p.r = sstr.r; break;
+					case 's':
+						sstr = strs[val[1]]; p.v = sstr.t; p.r = sstr.r; break;
 					case 'b': p.v = val[1] ? true : false; break;
 					case 'e': p.v = val[1]; if(opts.cellText !== false) p.w = BErr[p.v]; break;
 					case 'str': p.t = 's'; p.v = val[1]; break;
