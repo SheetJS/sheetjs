@@ -35,6 +35,7 @@ matrix:
       env: TZ="America/Mexico_City" FMTS=misc
 
 before_install:
+  - "npm config set strict-ssl false"
   - "npm install -g npm@4.3.0"
   - "npm install -g mocha@2.x voc"
   - "npm install blanket"

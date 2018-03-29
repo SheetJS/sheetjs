@@ -325,6 +325,8 @@ const aoa = XLSX.utils.sheet_to_json(ws);
 await db.collection('coll').insertMany(aoa, {ordered: true});
 ```
 
+</details>
+
 #### Firebase
 
 [`firebase-server`](https://www.npmjs.com/package/firebase-server) is a simple
@@ -334,7 +336,5 @@ Firebase deployment when plugging in the database connection info.
 `FirebaseDemo.html` and `FirebaseTest.js` demonstrate a whole-workbook process.
 The entire workbook object is persisted, a few cells are changed, and the stored
 data is dumped and exported to XLSX.
-
-</details>
 
 [![Analytics](https://ga-beacon.appspot.com/UA-36810333-1/SheetJS/js-xlsx?pixel)](https://github.com/SheetJS/js-xlsx)
