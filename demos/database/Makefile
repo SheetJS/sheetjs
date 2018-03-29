@@ -13,4 +13,4 @@ lint: $(FILES)
 
 .PHONY: clean
 clean:
-	rm -f *.db *.xlsx
+	rm -f *.db *.xlsx *.csv

@@ -40,10 +40,12 @@ can be installed with Bash on Windows or with `cygwin`.
 **Platforms and Integrations**
 - [`electron application`](electron/)
 - [`nw.js application`](nwjs/)
+- [`Chrome / Chromium extensions`](chrome/)
 - [`Adobe ExtendScript`](extendscript/)
 - [`Headless Browsers`](headless/)
 - [`canvas-datagrid`](datagrid/)
 - [`Swift JSC and other engines`](altjs/)
+- [`"serverless" functions`](function/)
 - [`internet explorer`](oldie/)
 
 [![Analytics](https://ga-beacon.appspot.com/UA-36810333-1/SheetJS/js-xlsx?pixel)](https://github.com/SheetJS/js-xlsx)

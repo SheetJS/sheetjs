@@ -1,0 +1,30 @@
+{
+  "manifest_version": 2,
+  "name": "SheetJS Demo",
+  "description": "Sample Extension using SheetJS to interact with Chrome",
+  "version": "0.0.1",
+  "browser_action": {
+    "default_popup": "popup.html",
+    "default_icon": "logo.png"
+  },
+  "background": {
+    "scripts": ["xlsx.full.min.js", "table.js"],
+    "persistent": false
+  },
+  "content_scripts": [{
+    "matches": ["<all_urls>"],
+    "js": ["content.js", "xlsx.full.min.js"],
+    "run_at": "document_end"
+  }],
+  "icons": {
+    "16": "logo.png"
+  },
+  "permissions": [
+    "activeTab",
+    "<all_urls>",
+    "bookmarks",
+    "contextMenus",
+    "downloads",
+    "tabs"
+  ]
+}

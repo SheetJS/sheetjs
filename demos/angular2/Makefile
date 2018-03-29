@@ -18,3 +18,13 @@ ionic:
 ios android browser: ionic
 	cd SheetJSIonic; ionic cordova emulate $@ </dev/null; cd -
 
+.PHONY: nativescript
+nativescript:
+	bash ./nscript.sh
+
+.PHONY: ns-ios ns-android
+ns-ios: nativescript
+	cd SheetJSNS; tns run ios; cd -
+ns-android: nativescript
+	cd SheetJSNS; tns run android; cd -
+

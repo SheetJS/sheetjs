@@ -90,24 +90,28 @@ prepend
 prepended
 repo
 runtime
+serverless
 submodule
 transpiled
 
  - demos/altjs/README.md
 ChakraCore
 Duktape
+Goja
 Nashorn
 
  - demos/angular/README.md
 AngularJS
  
  - demos/angular2/README.md
+NativeScript
 angular-cli
 
  - demos/database/README.md
 Knex
 LowDB
 MariaDB
+MongoDB
 MySQL
 PostgreSQL
 schemaless
@@ -117,6 +121,9 @@ storages
  - demos/extendscript/README.md
 Photoshop
 minifier
+
+ - demos/function/README.md
+microservice
 
  - demos/headless/README.md
 PhantomJS

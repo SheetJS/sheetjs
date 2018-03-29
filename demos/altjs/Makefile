@@ -1,5 +1,5 @@
 .PHONY: all
-all: duktape nashorn rhinojs swift
+all: duktape nashorn rhinojs swift goja
 
 .PHONY: base
 base:
@@ -24,6 +24,12 @@ nashorn: base ## nashorn demo
 swift: base ## swift demo
 	swiftc SheetJSCore.swift main.swift -o SheetJSSwift
 	./SheetJSSwift
+
+.PHONY: goja
+goja: base ## goja demo
+	if [ ! -e xlsx.core.min.js ]; then cp ../../dist/xlsx.core.min.js .; fi
+	go build goja.go
+	for ext in xlsx xlsb biff8.xls xml.xls; do ./goja sheetjs.$$ext; done
 
 .PHONY: chakra
 chakra: base ## Chakra demo

@@ -124,4 +124,33 @@ char *buf = (char *)duk_get_buffer_data(ctx, -1, sz);
 duk_pop(ctx);
 ```
 
+
+## Goja
+
+Goja is a pure Go implementation of ECMAScript 5.  As of this writing, there are
+some issues with processing Unicode data, but the `xlsx.core.min.js` script can
+be processed.  `[]byte` should be transformed to a binary string in the engine:
+
+```go
+/* read file */
+data, _ := ioutil.ReadFile("sheetjs.xlsx")
+
+/* load into engine */
+vm.Set("buf", data)
+
+/* convert to binary string */
+_, _ = vm.RunString("var bstr = ''; for(var i = 0; i < buf.length; ++i) bstr += String.fromCharCode(buf[i]);")
+
+/* parse */
+wb, _ = vm.RunString("wb = XLSX.read(bstr, {type:'binary', cellNF:true});")
+```
+
+On the write side, `"base64"` strings can be decoded in Go:
+
+```go
+b64str, _ := vm.RunString("XLSX.write(wb, {type:'base64', bookType:'xlsx'})")
+buf, _ := base64.StdEncoding.DecodeString(b64str.String())
+_ = ioutil.WriteFile("sheetjs.xlsx", buf, 0644)
+```
+
 [![Analytics](https://ga-beacon.appspot.com/UA-36810333-1/SheetJS/js-xlsx?pixel)](https://github.com/SheetJS/js-xlsx)

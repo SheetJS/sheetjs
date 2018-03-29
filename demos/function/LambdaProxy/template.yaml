@@ -1,0 +1,18 @@
+AWSTemplateFormatVersion : '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+Description: Sample Lambda API Gateway Normalizer
+Resources:
+  LambdaProxy:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: nodejs6.10
+      Handler: index.handler
+      BinaryMediaTypes: '*/*'
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            Path: /LambdaProxy
+            Method: any
+            BinaryMediaTypes: '*/*'

@@ -25,9 +25,11 @@ The [`demos` directory](demos/) includes sample projects for:
 **Platforms and Integrations**
 - [`electron application`](demos/electron/)
 - [`nw.js application`](demos/nwjs/)
+- [`Chrome / Chromium extensions`](demos/chrome/)
 - [`Adobe ExtendScript`](demos/extendscript/)
 - [`Headless Browsers`](demos/headless/)
 - [`canvas-datagrid`](demos/datagrid/)
 - [`Swift JSC and other engines`](demos/altjs/)
+- [`"serverless" functions`](demos/function/)
 - [`internet explorer`](demos/oldie/)
 

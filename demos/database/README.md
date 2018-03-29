@@ -296,5 +296,45 @@ LowDB is a small schemaless database powered by `lodash`.  `_.get` and `_.set`
 helper functions make storing metadata a breeze.  The included `SheetJSLowDB.js`
 script demonstrates a simple adapter that can load and dump data.
 
+### Document Databases
+
+Since document databases are capable of holding more complex objects, they can
+actually hold the underlying worksheet objects!  In some cases, where arrays are
+supported, they can even hold the workbook object.
+
+#### MongoDB
+
+MongoDB is a popular document-oriented database engine.  `MongoDBTest.js` uses
+MongoDB to hold a simple workbook and export to XLSX.
+
+`MongoDBCRUD.js` follows the SQL examples using an idiomatic collection
+structure.  Exporting and importing collections are straightforward:
+
+<details>
+	<summary><b>Example code</b> (click to show)</summary>
+
+```js
+/* generate a worksheet from a collection */
+const aoa = await db.collection('coll').find({}).toArray();
+aoa.forEach((x) => delete x._id);
+const ws = XLSX.utils.json_to_sheet(aoa);
+
+
+/* import data from a worksheet to a collection */
+const aoa = XLSX.utils.sheet_to_json(ws);
+await db.collection('coll').insertMany(aoa, {ordered: true});
+```
+
+#### Firebase
+
+[`firebase-server`](https://www.npmjs.com/package/firebase-server) is a simple
+mock Firebase server used in the tests, but the same code works in an external
+Firebase deployment when plugging in the database connection info.
+
+`FirebaseDemo.html` and `FirebaseTest.js` demonstrate a whole-workbook process.
+The entire workbook object is persisted, a few cells are changed, and the stored
+data is dumped and exported to XLSX.
+
+</details>
 
 [![Analytics](https://ga-beacon.appspot.com/UA-36810333-1/SheetJS/js-xlsx?pixel)](https://github.com/SheetJS/js-xlsx)

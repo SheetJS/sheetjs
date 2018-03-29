@@ -1,3 +1,4 @@
+/* xlsx.js (C) 2013-present SheetJS -- http://sheetjs.com */
 /* from the electron quick-start */
 var electron = require('electron');
 var XLSX = require('xlsx');

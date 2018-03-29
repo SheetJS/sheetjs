@@ -1,3 +1,7 @@
+/* xlsx.js (C) 2013-present SheetJS -- http://sheetjs.com */
+/*global Uint8Array, console */
+/* exported export_xlsx */
+/* eslint no-use-before-define:0 */
 var XLSX = require('xlsx');
 var electron = require('electron').remote;
 
@@ -60,7 +64,7 @@ var do_file = (function() {
 
 (function() {
 	var readf = document.getElementById('readf');
-	function handleF(e) {
+	function handleF(/*e*/) {
 		var o = electron.dialog.showOpenDialog({
 			title: 'Select a file',
 			filters: [{
@@ -97,3 +101,4 @@ var export_xlsx = (function() {
 		electron.dialog.showMessageBox({ message: "Exported data to " + o, buttons: ["OK"] });
 	};
 })();
+void export_xlsx;

@@ -9,7 +9,7 @@ function blobify(data) {
 }
 /* write or download file */
 function write_dl(fname/*:string*/, payload/*:any*/, enc/*:?string*/) {
-	/*global IE_SaveFile, Blob, navigator, saveAs, URL, document, File */
+	/*global IE_SaveFile, Blob, navigator, saveAs, URL, document, File, chrome */
 	if(typeof _fs !== 'undefined' && _fs.writeFileSync) return enc ? _fs.writeFileSync(fname, payload, enc) : _fs.writeFileSync(fname, payload);
 	var data = (enc == "utf8") ? utf8write(payload) : payload;
 	/*:: declare var IE_SaveFile: any; */
@@ -21,9 +21,14 @@ function write_dl(fname/*:string*/, payload/*:any*/, enc/*:?string*/) {
 		/*:: declare var saveAs: any; */
 		if(typeof saveAs !== 'undefined') return saveAs(blob, fname);
 		if(typeof URL !== 'undefined' && typeof document !== 'undefined' && document.createElement && URL.createObjectURL) {
+			var url = URL.createObjectURL(blob);
+			/*:: declare var chrome: any; */
+			if(typeof chrome === 'object' && typeof (chrome.downloads||{}).download == "function") {
+				if(URL.revokeObjectURL && typeof setTimeout !== 'undefined') setTimeout(function() { URL.revokeObjectURL(url); }, 60000);
+				return chrome.downloads.download({ url: url, filename: fname, saveAs: true});
+			}
 			var a = document.createElement("a");
 			if(a.download != null) {
-				var url = URL.createObjectURL(blob);
 				/*:: if(document.body == null) throw new Error("unreachable"); */
 				a.download = fname; a.href = url; document.body.appendChild(a); a.click();
 				/*:: if(document.body == null) throw new Error("unreachable"); */ document.body.removeChild(a);

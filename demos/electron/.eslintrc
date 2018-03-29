@@ -1,0 +1,10 @@
+{
+	"env": {
+		"browser": true,
+		"node": true
+	},
+	"parserOptions": {
+		"ecmaVersion": 8
+	},
+	"plugins": [ "html", "json" ]
+}

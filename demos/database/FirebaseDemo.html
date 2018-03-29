@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<!-- xlsx.js (C) 2013-present  SheetJS http://sheetjs.com -->
+<!-- vim: set ts=2: -->
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>SheetJS Firebase Dump Demo</title>
+<style>
+a { text-decoration: none }
+</style>
+</head>
+<body>
+<pre>
+<h3><a href="//sheetjs.com/">SheetJS</a> Firebase Dump Demo</h3>
+<b>Example Code</b>
+
+  /* ... connect to firebase */
+  const database = firebase.database();
+
+  /* import workbook */
+  await database.ref('foo').set(workbook);
+
+  /* change cells */
+  database.ref('foo').update({
+    "Sheets/Sheet1/A1": {"t": "s", "v": "J"},
+    "Sheets/Sheet1/A2": {"t": "n", "v": 5},
+  });
+
+  /* export snapshot */
+  const val = await database.ref('foo').once('value').val();
+  XLSX.writeFile(wb, "firebase.xlsx");
+
+</pre>
+<script src="xlsx.full.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/4.12.0/firebase.js"></script>
+<script>
+const Firebase = firebase;
+const config = {
+  credential: {
+    getAccessToken: () => ({
+      expires_in: 0,
+      access_token: '',
+    }),
+  },
+  databaseURL: 'ws://localhost:5555'
+};
+
+/* make new workbook object from CSV */
+const wb = XLSX.read('a,b,c\n1,2,3', {type:"binary"});
+
+let P = Promise.resolve("sheetjs");
+
+/* Connect to Firebase server and initialize collection */
+P = P.then(async () => {
+  Firebase.initializeApp(config);
+  const database = Firebase.database();
+  await database.ref('foo').set(null);
+  return [database];
+});
+
+/* Insert entire workbook object into `foo` ref */
+P = P.then(async ([database]) => {
+  await database.ref('foo').set(wb);
+  return [database];
+});
+
+/* Change cell A1 of Sheet1 to "J" and change A2 to 5 */
+P = P.then(async ([database]) => {
+  database.ref('foo').update({
+    "Sheets/Sheet1/A1": {"t": "s", "v": "J"},
+    "Sheets/Sheet1/A2": {"t": "n", "v": 5},
+  });
+  return [database];
+});
+
+/* Write to file */
+P = P.then(async ([database]) => {
+  const val = await database.ref('foo').once('value');
+  const wb = await val.val();
+  XLSX.writeFile(wb, "firebase.xlsx");
+  console.log(csv);
+  return [database];
+});
+
+/* Close connection */
+P = P.then(async ([database]) => { database.app.delete(); });
+
+</script>
+</body>

@@ -12,6 +12,7 @@ the data, and a button to export the data.
 
 Other scripts in this demo show:
 - `ionic` deployment for iOS, android, and browser
+- `nativescript` deployment for iOS and android
 
 ## Array of Arrays
 
@@ -149,6 +150,30 @@ const wb: XLSX.WorkBook = XLSX.read(bstr, {type: 'binary'});
 const wbout: ArrayBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
 let blob = new Blob([wbout], {type: 'application/octet-stream'});
 this.file.writeFile(url, filename, blob, {replace: true});
+```
+
+## NativeScript
+
+Reproducing the full project is a little bit tricky.  The included `nscript.sh`
+script performs the necessary installation steps and adds the necessary shims
+for `async` support.  Due to incompatibilities with NativeScript and TypeScript
+definitions, apps should require the `xlsx.full.min.js` file directly:
+
+```typescript
+const XLSX = require("./xlsx.full.min.js");
+```
+
+The `ISO_8859_1` encoding from the text module specifies `"binary"` strings.
+`fs.File#readText` and `fs.File#writeText` reads and writes files:
+
+```typescript
+/* read a workbook */
+const bstr: string = await file.readText(textModule.encoding.ISO_8859_1);
+const wb = XLSX.read(bstr, { type: "binary" });
+
+/* write a workbook */
+const wbout: string = XLSX.write(wb, { bookType: 'xlsx', type: 'binary' });
+await file.writeText(wbout, textModule.encoding.ISO_8859_1);
 ```
 
 [![Analytics](https://ga-beacon.appspot.com/UA-36810333-1/SheetJS/js-xlsx?pixel)](https://github.com/SheetJS/js-xlsx)
