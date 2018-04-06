@@ -38,6 +38,6 @@ chrome.runtime.onInstalled.addListener(function() {
 });
 
 function sjsexport_cb(wb) {
-	if(!wb || !wb.SheetNames || !wb.Sheets) { console.log(wb); return alert("Error in exporting table"); }
+	if(!wb || !wb.SheetNames || !wb.Sheets) { return alert("Error in exporting table"); }
 	XLSX.writeFile(wb, "export.xlsx");
 }

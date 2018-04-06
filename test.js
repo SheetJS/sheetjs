@@ -26,7 +26,7 @@ var opts = ({cellNF: true}/*:any*/);
 var TYPE = browser ? "binary" : "buffer";
 opts.type = TYPE;
 var fullex = [".xlsb", /*".xlsm",*/ ".xlsx"/*, ".xlml", ".xls"*/];
-var ofmt = ["xlsb", "xlsm", "xlsx", "ods", "biff2", "biff5", "biff8", "xlml", "sylk", "dif", "dbf", "eth"];
+var ofmt = ["xlsb", "xlsm", "xlsx", "ods", "biff2", "biff5", "biff8", "xlml", "sylk", "dif", "dbf", "eth", "fods", "csv", "txt", "html"];
 var ex = fullex.slice(); ex = ex.concat([".ods", ".xls", ".xml", ".fods"]);
 if(typeof process != 'undefined' && ((process||{}).env)) {
 	opts.WTF = true;
@@ -539,6 +539,45 @@ describe('parse options', function() {
 		}); });
 		it('sheetRows n=10', function() { FSTPaths.forEach(function(p) {
 			checkcells(X.read(fs.readFileSync(p), {type:TYPE, sheetRows:10}), false, false, false, true);
+		}); });
+		it('sheetRows n=1', function() { ofmt.forEach(function(fmt) {
+			var data = [[1,2],[3,4],[5,6]];
+			var ws = X.utils.aoa_to_sheet(data);
+			assert(ws['!ref'] === "A1:B3");
+			var wb = X.utils.book_new();
+			X.utils.book_append_sheet(wb, ws, "Sheet1");
+			var bs = X.write(wb, { bookType: fmt, type: "binary" });
+
+			var wb0 = X.read(bs, { type: "binary" });
+			var ws0 = wb0.Sheets.Sheet1;
+			assert.equal(ws0['!ref'], "A1:B3");
+			assert.equal(get_cell(ws0, "A1").v, 1);
+			assert.equal(get_cell(ws0, "B2").v, 4);
+			assert.equal(get_cell(ws0, "A3").v, 5);
+
+			var wb1 = X.read(bs, { type: "binary", sheetRows: 1 });
+			var ws1 = wb1.Sheets.Sheet1;
+			assert.equal(ws1['!ref'], "A1:B1");
+			assert.equal(get_cell(ws1, "A1").v, 1);
+			assert(!get_cell(ws1, "B2"));
+			assert(!get_cell(ws1, "A3"));
+			if(ws1['!fullref']) assert.equal(ws1['!fullref'], "A1:B3");
+
+			var wb2 = X.read(bs, { type: "binary", sheetRows: 2 });
+			var ws2 = wb2.Sheets.Sheet1;
+			assert.equal(ws2['!ref'], "A1:B2");
+			assert.equal(get_cell(ws2, "A1").v, 1);
+			assert.equal(get_cell(ws2, "B2").v, 4);
+			assert(!get_cell(ws2, "A3"));
+			if(ws2['!fullref']) assert.equal(ws2['!fullref'], "A1:B3");
+
+			var wb3 = X.read(bs, { type: "binary", sheetRows: 3 });
+			var ws3 = wb3.Sheets.Sheet1;
+			assert.equal(ws3['!ref'], "A1:B3");
+			assert.equal(get_cell(ws3, "A1").v, 1);
+			assert.equal(get_cell(ws3, "B2").v, 4);
+			assert.equal(get_cell(ws3, "A3").v, 5);
+			if(ws3['!fullref']) assert.equal(ws3['!fullref'], "A1:B3");
 		}); });
 	});
 	describe('book', function() {
@@ -1981,6 +2020,17 @@ describe('HTML', function() {
 		assert.equal(get_cell(ws, "A1").v, "A&B");
 		assert.equal(get_cell(ws, "B1").v, "A·B");
 	});
+	if(domtest) it('should honor sheetRows', function() {
+		var html = X.utils.sheet_to_html(X.utils.aoa_to_sheet([[1,2],[3,4],[5,6]]));
+		var ws = X.utils.table_to_sheet(get_dom_element(html));
+		assert.equal(ws['!ref'], "A1:B3");
+		ws = X.utils.table_to_sheet(get_dom_element(html), {sheetRows:1});
+		assert.equal(ws['!ref'], "A1:B1");
+		assert.equal(ws['!fullref'], "A1:B3");
+		ws = X.utils.table_to_sheet(get_dom_element(html), {sheetRows:2});
+		assert.equal(ws['!ref'], "A1:B2");
+		assert.equal(ws['!fullref'], "A1:B3");
+	});
 	describe('type override', function() {
 		function chk(ws) {
 			assert.equal(get_cell(ws, "A1").t, "s");
@@ -2025,7 +2075,7 @@ describe('js -> file -> js', function() {
 			['C2', 'C3'].forEach(cb); /* string */
 			if(!DIF_XL) cb('D4'); /* date */
 			if(DIF_XL && f == "dif") assert.equal(get_cell(newwb.Sheets.Sheet1, 'C5').v, '=""0.3""');// dif forces string formula
-			else eqcell(wb, newwb, 'Sheet1', 'C5');
+			else if(f != 'csv' && f != 'txt') eqcell(wb, newwb, 'Sheet1', 'C5');
 		});
 	});
 });

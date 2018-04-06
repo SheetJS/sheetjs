@@ -212,9 +212,10 @@ Both functions accept options arguments:
 
 | Option Name |  Default | Description                                         |
 | :---------- | :------: | :-------------------------------------------------- |
+|`raw`        |          | If true, every cell will hold raw strings           |
 |`dateNF`     |  FMT 14  | Use specified date format in string output          |
 |`cellDates`  |  false   | Store dates as type `d` (default is `n`)            |
-|`raw`        |          | If true, every cell will hold raw strings           |
+|`sheetRows`  |    0     | If >0, read the first `sheetRows` rows of the table |
 
 
 <details>

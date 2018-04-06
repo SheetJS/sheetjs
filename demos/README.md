@@ -26,6 +26,7 @@ can be installed with Bash on Windows or with `cygwin`.
 - [`XMLHttpRequest and fetch`](xhr/)
 - [`nodejs server`](server/)
 - [`databases and key/value stores`](database/)
+- [`typed arrays and math`](array/)
 
 **Bundlers and Tooling**
 - [`browserify`](browserify/)

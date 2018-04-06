@@ -101,7 +101,8 @@ const tbl = {}; /* document.getElementById('table'); */
 const ws3 = XLSX.utils.table_to_sheet(tbl, {
 	raw: true,
 	cellDates: true,
-	dateNF: "yyyy-mm-dd"
+	dateNF: "yyyy-mm-dd",
+	sheetRows: 1
 });
 
 const obj1 = XLSX.utils.sheet_to_formulae(ws1);

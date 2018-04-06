@@ -657,6 +657,12 @@ export interface SheetJSONOpts extends JSON2SheetOpts, OriginOption {}
 export interface Table2SheetOpts extends CommonOptions, DateNFOption {
     /* If true, plaintext parsing will not parse values */
     raw?: boolean;
+
+    /**
+     * If >0, read the first sheetRows rows
+     * @default 0
+     */
+    sheetRows?: number;
 }
 
 /** General utilities */

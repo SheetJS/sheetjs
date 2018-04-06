@@ -15,7 +15,7 @@ var HTML_ = (function() {
 		for(i = 0; i < rows.length; ++i) {
 			var row = rows[i].trim();
 			var hd = row.slice(0,3).toLowerCase();
-			if(hd == "<tr") { ++R; C = 0; continue; }
+			if(hd == "<tr") { ++R; if(opts.sheetRows && opts.sheetRows <= R) { --R; break; } C = 0; continue; }
 			if(hd != "<td") continue;
 			var cells = row.split(/<\/td>/i);
 			for(j = 0; j < cells.length; ++j) {
@@ -119,10 +119,11 @@ function parse_dom_table(table/*:HTMLElement*/, _opts/*:?any*/)/*:Worksheet*/ {
 	if(DENSE != null) opts.dense = DENSE;
 	var ws/*:Worksheet*/ = opts.dense ? ([]/*:any*/) : ({}/*:any*/);
 	var rows/*:HTMLCollection<HTMLTableRowElement>*/ = table.getElementsByTagName('tr');
-	var range/*:Range*/ = {s:{r:0,c:0},e:{r:rows.length - 1,c:0}};
+	var sheetRows = Math.min(opts.sheetRows||10000000, rows.length);
+	var range/*:Range*/ = {s:{r:0,c:0},e:{r:sheetRows - 1,c:0}};
 	var merges/*:Array<Range>*/ = [], midx = 0;
 	var R = 0, _C = 0, C = 0, RS = 0, CS = 0;
-	for(; R < rows.length; ++R) {
+	for(; R < sheetRows; ++R) {
 		var row/*:HTMLTableRowElement*/ = rows[R];
 		var elts/*:HTMLCollection<HTMLTableCellElement>*/ = (row.children/*:any*/);
 		for(_C = C = 0; _C < elts.length; ++_C) {
@@ -156,6 +157,7 @@ function parse_dom_table(table/*:HTMLElement*/, _opts/*:?any*/)/*:Worksheet*/ {
 	}
 	ws['!merges'] = merges;
 	ws['!ref'] = encode_range(range);
+	if(sheetRows < rows.length) ws['!fullref'] = encode_range((range.e.r = rows.length-1,range));
 	return ws;
 }
 

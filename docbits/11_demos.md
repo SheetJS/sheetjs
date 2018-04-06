@@ -11,6 +11,7 @@ The [`demos` directory](demos/) includes sample projects for:
 - [`XMLHttpRequest and fetch`](demos/xhr/)
 - [`nodejs server`](demos/server/)
 - [`databases and key/value stores`](demos/database/)
+- [`typed arrays and math`](demos/array/)
 
 **Bundlers and Tooling**
 - [`browserify`](demos/browserify/)

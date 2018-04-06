@@ -107,6 +107,12 @@ AngularJS
 NativeScript
 angular-cli
 
+ - demos/array/README.md
+WebGL
+WebAssembly
+dataset
+TensorFlow
+
  - demos/database/README.md
 Knex
 LowDB

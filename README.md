@@ -198,6 +198,7 @@ The [`demos` directory](demos/) includes sample projects for:
 - [`XMLHttpRequest and fetch`](demos/xhr/)
 - [`nodejs server`](demos/server/)
 - [`databases and key/value stores`](demos/database/)
+- [`typed arrays and math`](demos/array/)
 
 **Bundlers and Tooling**
 - [`browserify`](demos/browserify/)
@@ -2045,9 +2046,10 @@ Both functions accept options arguments:
 
 | Option Name |  Default | Description                                         |
 | :---------- | :------: | :-------------------------------------------------- |
+|`raw`        |          | If true, every cell will hold raw strings           |
 |`dateNF`     |  FMT 14  | Use specified date format in string output          |
 |`cellDates`  |  false   | Store dates as type `d` (default is `n`)            |
-|`raw`        |          | If true, every cell will hold raw strings           |
+|`sheetRows`  |    0     | If >0, read the first `sheetRows` rows of the table |
 
 
 <details>

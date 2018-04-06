@@ -276,7 +276,14 @@ function parse_xlml_xml(d, _opts)/*:Workbook*/ {
 			if(Rn[1]==='/'){
 				if((tmp=state.pop())[0]!==Rn[3]) throw new Error("Bad state: "+tmp.join("|"));
 				sheetnames.push(sheetname);
-				if(refguess.s.r <= refguess.e.r && refguess.s.c <= refguess.e.c) cursheet["!ref"] = encode_range(refguess);
+				if(refguess.s.r <= refguess.e.r && refguess.s.c <= refguess.e.c) {
+					cursheet["!ref"] = encode_range(refguess);
+					if(opts.sheetRows && opts.sheetRows <= refguess.e.r) {
+						cursheet["!fullref"] = cursheet["!ref"];
+						refguess.e.r = opts.sheetRows - 1;
+						cursheet["!ref"] = encode_range(refguess);
+					}
+				}
 				if(merges.length) cursheet["!merges"] = merges;
 				if(cstys.length > 0) cursheet["!cols"] = cstys;
 				if(rowinfo.length > 0) cursheet["!rows"] = rowinfo;
