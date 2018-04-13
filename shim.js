@@ -53,6 +53,12 @@ if(!Array.prototype.indexOf) Array.prototype.indexOf = function(needle) {
   return -1;
 };
 
+if(!Array.prototype.lastIndexOf) Array.prototype.lastIndexOf = function(needle) {
+  var len = (this.length>>>0), i = len - 1;
+  for(; i>=0; --i) if(this[i] === needle) return i;
+  return -1;
+};
+
 if(!Array.isArray) Array.isArray = function(obj) { return Object.prototype.toString.call(obj) === "[object Array]"; };
 
 if(!Date.prototype.toISOString) Date.prototype.toISOString = (function() {

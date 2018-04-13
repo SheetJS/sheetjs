@@ -1767,7 +1767,6 @@ describe('json output', function() {
 			if(n & 2) opts.raw = 1;
 			if(n & 4) opts.defval = null;
 			var J = X.utils.sheet_to_json(ws, opts);
-			// $FlowIgnore
 			for(var i = 0; i < 3; ++i) {
 				var k = ((n&1) ? J[i+1][0] : J[i].Field);
 				assert((n&4) ? (k === null) : (k !== null));
@@ -1953,10 +1952,10 @@ describe('CSV', function() {
 	});
 });
 
-if(fs.existsSync('./test_files/dbf/d11.dbf')) describe('dbf', function() {
+if(fs.existsSync(dir + 'dbf/d11.dbf')) describe('dbf', function() {
 	var wbs/*:Array<any>*/ = ([
-		['d11',  './test_files/dbf/d11.dbf'],
-		['vfp3', './test_files/dbf/vfp3.dbf']
+		['d11',  dir + 'dbf/d11.dbf'],
+		['vfp3', dir + 'dbf/vfp3.dbf']
 	]/*:any*/);
 	var bef = (function() {
 		wbs = wbs.map(function(x) { return [x[0], X.read(fs.readFileSync(x[1]), {type:TYPE})]; });
@@ -2149,6 +2148,10 @@ describe('corner cases', function() {
 		["xlsb", "biff8", "biff5", "biff2"].forEach(function(btype) {
 			void X.read(X.write(wb, {bookType:btype, type:type}), {type:type});
 		});
+	});
+	if(fs.existsSync(dir + 'wtf_path.xlsx')) it('OPC oddities', function() {
+		X.read(fs.readFileSync(dir + 'wtf_path.xlsx'), {WTF:1, type:TYPE});
+		X.read(fs.readFileSync(dir + 'wtf_path.xlsb'), {WTF:1, type:TYPE});
 	});
 });
 
