@@ -115,3 +115,5 @@
 ./test_files/password_2002_40_xor.xls
 ./test_files/dbf/d11.dbf
 ./test_files/dbf/vfp3.dbf
+./test_files/wtf_path.xlsx
+./test_files/wtf_path.xlsb

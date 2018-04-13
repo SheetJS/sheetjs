@@ -129,15 +129,20 @@ function parse_zip(zip/*:ZIP*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
 	}
 
 	var wbext = xlsb ? "bin" : "xml";
-	var wbrelsfile = 'xl/_rels/workbook.' + wbext + '.rels';
+	var wbrelsi = dir.workbooks[0].lastIndexOf("/");
+	var wbrelsfile = (dir.workbooks[0].slice(0, wbrelsi+1) + "_rels/" + dir.workbooks[0].slice(wbrelsi+1) + ".rels").replace(/^\//,"");
+	if(!safegetzipfile(zip, wbrelsfile)) wbrelsfile = 'xl/_rels/workbook.' + wbext + '.rels';
 	var wbrels = parse_rels(getzipstr(zip, wbrelsfile, true), wbrelsfile);
 	if(wbrels) wbrels = safe_parse_wbrels(wbrels, wb.Sheets);
+
 	/* Numbers iOS hack */
 	var nmode = (getzipdata(zip,"xl/worksheets/sheet.xml",true))?1:0;
 	for(i = 0; i != props.Worksheets; ++i) {
 		var stype = "sheet";
 		if(wbrels && wbrels[i]) {
 			path = 'xl/' + (wbrels[i][1]).replace(/[\/]?xl\//, "");
+			if(!safegetzipfile(zip, path)) path = wbrels[i][1];
+			if(!safegetzipfile(zip, path)) path = wbrelsfile.replace(/_rels\/.*$/,"") + wbrels[i][1];
 			stype = wbrels[i][2];
 		} else {
 			path = 'xl/worksheets/sheet'+(i+1-nmode)+"." + wbext;
