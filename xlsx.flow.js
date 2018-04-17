@@ -7149,7 +7149,7 @@ var parse_rs = (function parse_rs_factory() {
 
 		if(font.u) style.push("text-decoration: underline;");
 		if(font.uval) style.push("text-underline-style:" + font.uval + ";");
-		if(font.sz) style.push("font-size:" + font.sz + ";");
+		if(font.sz) style.push("font-size:" + font.sz + "pt;");
 		if(font.outline) style.push("text-effect: outline;");
 		if(font.shadow) style.push("text-shadow: auto;");
 		intro.push('<span style="' + style.join("") + '">');
