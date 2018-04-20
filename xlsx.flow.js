@@ -4,7 +4,7 @@
 /*global global, exports, module, require:false, process:false, Buffer:false, ArrayBuffer:false */
 var XLSX = {};
 (function make_xlsx(XLSX){
-XLSX.version = '0.12.9';
+XLSX.version = '0.12.10';
 var current_codepage = 1200, current_ansi = 1252;
 /*:: declare var cptable:any; */
 /*global cptable:true */
@@ -19584,7 +19584,7 @@ function sheet_to_json(sheet/*:Worksheet*/, opts/*:?Sheet2JSONOpts*/) {
 			val = dense ? sheet[R][C] : sheet[cols[C] + rr];
 			if(val === undefined || val.t === undefined) {
 				if(defval === undefined) continue;
-				if(hdr[C] != null) { row[hdr[C]] = defval; isempty = false; }
+				if(hdr[C] != null) { row[hdr[C]] = defval; }
 				continue;
 			}
 			v = val.v;
@@ -19602,7 +19602,7 @@ function sheet_to_json(sheet/*:Worksheet*/, opts/*:?Sheet2JSONOpts*/) {
 				} else {
 					row[hdr[C]] = raw ? v : format_cell(val,v,o);
 				}
-				isempty = false;
+				if(v != null) isempty = false;
 			}
 		}
 		if((isempty === false) || (header === 1 ? o.blankrows !== false : !!o.blankrows)) out[outi++] = row;
