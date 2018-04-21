@@ -36,6 +36,3 @@ module.file_ext=.js
 module.file_ext=.njs
 module.ignore_non_literal_requires=true
 suppress_comment= \\(.\\|\n\\)*\\$FlowIgnore
-
-[lints]
-deprecated-declare-exports=off

@@ -29,6 +29,7 @@ type WBWBProps = {
 	Names?: Array<any>;
 	Views?: Array<any>;
 	WBProps?: WBProps;
+	SheetNames?: Array<string>;
 };
 
 type WBProps = {
@@ -61,6 +62,8 @@ type WBWSProp = {
 interface CellAddress {
 	r:number;
 	c:number;
+	cRel?:boolean;
+	rRel?:boolean;
 };
 type CellAddrSpec = CellAddress | string;
 
@@ -122,6 +125,8 @@ type ColInfo = {
 	wch?:number;     // width in characters
 
 	MDW?:number;     // Excel's "Max Digit Width" unit, always integral
+
+	customWidth?:boolean;
 };
 
 interface Margins {

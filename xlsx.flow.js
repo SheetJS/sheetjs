@@ -132,12 +132,12 @@ function new_raw_buf(len/*:number*/) {
 	/* jshint +W056 */
 }
 
-function s2a(s/*:string*/) {
+function s2a(s/*:string*/)/*:any*/ {
 	if(has_buf) return new Buffer(s, "binary");
-	return s.split("").map(function(x){ return x.charCodeAt(0) & 0xff; });
+	return s.split("").map(function(x/*:string*/)/*:number*/{ return x.charCodeAt(0) & 0xff; });
 }
 
-function s2ab(s/*:string*/) {
+function s2ab(s/*:string*/)/*:any*/ {
 	if(typeof ArrayBuffer === 'undefined') return s2a(s);
 	var buf = new ArrayBuffer(s.length), view = new Uint8Array(buf);
 	for (var i=0; i!=s.length; ++i) view[i] = s.charCodeAt(i) & 0xFF;
@@ -4194,7 +4194,6 @@ function write_cust_props(cp/*::, opts*/)/*:string*/ {
 	if(!cp) return o.join("");
 	var pid = 1;
 	keys(cp).forEach(function custprop(k) { ++pid;
-		// $FlowIgnore
 		o[o.length] = (writextag('property', write_vt(cp[k]), {
 			'fmtid': '{D5CDD505-2E9C-101B-9397-08002B2CF9AE}',
 			'pid': pid,
@@ -8247,7 +8246,7 @@ function parse_BrtFont(data, length/*:number*/, opts) {
 
 	return out;
 }
-function write_BrtFont(font, o) {
+function write_BrtFont(font/*:any*/, o) {
 	if(!o) o = new_buf(25+4*32);
 	o.write_shift(2, font.sz * 20);
 	write_FontFlags(font, o);

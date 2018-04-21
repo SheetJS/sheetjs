@@ -7,12 +7,12 @@ function new_raw_buf(len/*:number*/) {
 	/* jshint +W056 */
 }
 
-function s2a(s/*:string*/) {
+function s2a(s/*:string*/)/*:any*/ {
 	if(has_buf) return new Buffer(s, "binary");
-	return s.split("").map(function(x){ return x.charCodeAt(0) & 0xff; });
+	return s.split("").map(function(x/*:string*/)/*:number*/{ return x.charCodeAt(0) & 0xff; });
 }
 
-function s2ab(s/*:string*/) {
+function s2ab(s/*:string*/)/*:any*/ {
 	if(typeof ArrayBuffer === 'undefined') return s2a(s);
 	var buf = new ArrayBuffer(s.length), view = new Uint8Array(buf);
 	for (var i=0; i!=s.length; ++i) view[i] = s.charCodeAt(i) & 0xFF;

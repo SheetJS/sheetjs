@@ -58,7 +58,7 @@ function parse_BrtFont(data, length/*:number*/, opts) {
 
 	return out;
 }
-function write_BrtFont(font, o) {
+function write_BrtFont(font/*:any*/, o) {
 	if(!o) o = new_buf(25+4*32);
 	o.write_shift(2, font.sz * 20);
 	write_FontFlags(font, o);
