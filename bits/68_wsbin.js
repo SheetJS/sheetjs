@@ -809,6 +809,11 @@ function write_ws_bin(idx/*:number*/, opts, wb/*:Workbook*/, rels) {
 	var s = wb.SheetNames[idx], ws = wb.Sheets[s] || {};
 	var c/*:string*/ = s; try { if(wb && wb.Workbook) c = wb.Workbook.Sheets[idx].CodeName || c; } catch(e) {}
 	var r = safe_decode_range(ws['!ref'] || "A1");
+	if(r.e.c > 0x3FFF || r.e.r > 0xFFFFF) {
+		if(opts.WTF) throw new Error("Range " + (ws['!ref'] || "A1") + " exceeds format limit A1:XFD1048576");
+		r.e.c = Math.min(r.e.c, 0x3FFF);
+		r.e.r = Math.min(r.e.c, 0xFFFFF);
+	}
 	ws['!links'] = [];
 	/* passed back to write_zip and removed there */
 	ws['!comments'] = [];

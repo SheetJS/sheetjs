@@ -139,5 +139,6 @@ function check_wb(wb) {
 	if(!wb.SheetNames.length) throw new Error("Workbook is empty");
 	var Sheets = (wb.Workbook && wb.Workbook.Sheets) || [];
 	check_wb_names(wb.SheetNames, Sheets, !!wb.vbaraw);
+	for(var i = 0; i < wb.SheetNames.length; ++i) check_ws(wb.Sheets[wb.SheetNames[i]], wb.SheetNames[i], i);
 	/* TODO: validate workbook */
 }

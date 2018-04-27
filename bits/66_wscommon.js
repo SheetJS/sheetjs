@@ -99,3 +99,10 @@ function safe_format(p/*:Cell*/, fmtid/*:number*/, fillid/*:?number*/, opts, the
 		}
 	} catch(e) { if(opts.WTF && styles.Fills) throw e; }
 }
+
+function check_ws(ws/*:Worksheet*/, sname/*:string*/, i/*:number*/) {
+	if(ws && ws['!ref']) {
+		var range = safe_decode_range(ws['!ref']);
+		if(range.e.c < range.s.c || range.e.r < range.s.r) throw new Error("Bad range (" + i + "): " + ws['!ref']);
+	}
+}

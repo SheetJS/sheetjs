@@ -469,7 +469,14 @@ function write_ws_xml(idx/*:number*/, opts, wb/*:Workbook*/, rels)/*:string*/ {
 	var s = wb.SheetNames[idx], sidx = 0, rdata = "";
 	var ws = wb.Sheets[s];
 	if(ws == null) ws = {};
-	var ref = ws['!ref']; if(ref == null) ref = 'A1';
+	var ref = ws['!ref'] || 'A1';
+	var range = safe_decode_range(ref);
+	if(range.e.c > 0x3FFF || range.e.r > 0xFFFFF) {
+		if(opts.WTF) throw new Error("Range " + ref + " exceeds format limit A1:XFD1048576");
+		range.e.c = Math.min(range.e.c, 0x3FFF);
+		range.e.r = Math.min(range.e.c, 0xFFFFF);
+		ref = encode_range(range);
+	}
 	if(!rels) rels = {};
 	ws['!comments'] = [];
 	ws['!drawing'] = [];

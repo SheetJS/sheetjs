@@ -2112,6 +2112,20 @@ Despite the library name `xlsx`, it supports numerous spreadsheet file formats:
 | Rich Text Format tables (RTF)                                |       |  :o:  |
 | Ethercalc Record Format (ETH)                                |  :o:  |  :o:  |
 
+Features not supported by a given file format will not be written.  Formats with
+range limits will be silently truncated:
+
+| Format                                    | Last Cell  | Max Cols | Max Rows |
+|:------------------------------------------|:-----------|---------:|---------:|
+| Excel 2007+ XML Formats (XLSX/XLSM)       | XFD1048576 |    16384 |  1048576 |
+| Excel 2007+ Binary Format (XLSB BIFF12)   | XFD1048576 |    16384 |  1048576 |
+| Excel 97-2004 (XLS BIFF8)                 | IV65536    |      256 |    65536 |
+| Excel 5.0/95 (XLS BIFF5)                  | IV16384    |      256 |    16384 |
+| Excel 2.0/2.1 (XLS BIFF2)                 | IV16384    |      256 |    16384 |
+
+Excel 2003 SpreadsheetML range limits are governed by the version of Excel and
+are not enforced by the writer.
+
 ### Excel 2007+ XML (XLSX/XLSM)
 
 

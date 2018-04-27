@@ -46,7 +46,7 @@ function parse_wb_xml(data, opts)/*:WorkbookFile*/ {
 			/* 18.2.1  bookViews CT_BookViews ? */
 			case '<bookViews': case '<bookViews>': case '</bookViews>': break;
 			/* 18.2.30   workbookView CT_BookView + */
-			case '<workbookView': delete y[0]; wb.WBView.push(y); break;
+			case '<workbookView': case '<workbookView/>': delete y[0]; wb.WBView.push(y); break;
 			case '</workbookView>': break;
 
 			/* 18.2.20 sheets CT_Sheets 1 */

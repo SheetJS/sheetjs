@@ -9,7 +9,8 @@ function get_data(req, res, type) {
 	var work = new Worker('worker.js');
 	work.onmessage = function(e) {
 		if(e.data.err) console.log(e.data.err);
-		return res(e.data.data);
+		var buf = new Buffer(e.data.data, "binary");
+		return res(buf);
 	};
 	work.postMessage({action:"write", type:type, data:data});
 }

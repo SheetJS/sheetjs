@@ -1326,6 +1326,27 @@ describe('write features', function() {
 			assert(str.indexOf("<b>abc</b>") > 0);
 		});
 	});
+	describe('sheet range limits', function() { [
+		["biff2", "IV16384"],
+		["biff5", "IV16384"],
+		["biff8", "IV65536"],
+		["xlsx", "XFD1048576"],
+		["xlsb", "XFD1048576"]
+	].forEach(function(r) { it(r[0], function() {
+		var C = X.utils.decode_cell(r[1]);
+		var wopts = {bookType:r[0], type:'binary', WTF:1};
+		var wb = { SheetNames: ["Sheet1"], Sheets: { Sheet1: {} } };
+
+		wb.Sheets.Sheet1['!ref'] =  "A1:" + X.utils.encode_cell({r:0, c:C.c});
+		X.write(wb, wopts);
+		wb.Sheets.Sheet1['!ref'] =  "A" + X.utils.encode_row(C.r - 5) + ":" + X.utils.encode_cell({r:C.r, c:0});
+		X.write(wb, wopts);
+
+		wb.Sheets.Sheet1['!ref'] =  "A1:" + X.utils.encode_cell({r:0, c:C.c+1});
+		assert.throws(function() { X.write(wb, wopts); });
+		wb.Sheets.Sheet1['!ref'] =  "A" + X.utils.encode_row(C.r - 5) + ":" + X.utils.encode_cell({r:C.r+1, c:0});
+		assert.throws(function() { X.write(wb, wopts); });
+	}); }); });
 });
 
 function seq(end/*:number*/, start/*:?number*/)/*:Array<number>*/ {

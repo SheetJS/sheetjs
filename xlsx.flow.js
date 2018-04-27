@@ -4,7 +4,7 @@
 /*global global, exports, module, require:false, process:false, Buffer:false, ArrayBuffer:false */
 var XLSX = {};
 (function make_xlsx(XLSX){
-XLSX.version = '0.12.10';
+XLSX.version = '0.12.11';
 var current_codepage = 1200, current_ansi = 1252;
 /*:: declare var cptable:any; */
 /*global cptable:true */
@@ -11923,6 +11923,13 @@ function safe_format(p/*:Cell*/, fmtid/*:number*/, fillid/*:?number*/, opts, the
 		}
 	} catch(e) { if(opts.WTF && styles.Fills) throw e; }
 }
+
+function check_ws(ws/*:Worksheet*/, sname/*:string*/, i/*:number*/) {
+	if(ws && ws['!ref']) {
+		var range = safe_decode_range(ws['!ref']);
+		if(range.e.c < range.s.c || range.e.r < range.s.r) throw new Error("Bad range (" + i + "): " + ws['!ref']);
+	}
+}
 function parse_ws_xml_dim(ws/*:Worksheet*/, s/*:string*/) {
 	var d = safe_decode_range(s);
 	if(d.s.r<=d.e.r && d.s.c<=d.e.c && d.s.r>=0 && d.s.c>=0) ws["!ref"] = encode_range(d);
@@ -12394,7 +12401,14 @@ function write_ws_xml(idx/*:number*/, opts, wb/*:Workbook*/, rels)/*:string*/ {
 	var s = wb.SheetNames[idx], sidx = 0, rdata = "";
 	var ws = wb.Sheets[s];
 	if(ws == null) ws = {};
-	var ref = ws['!ref']; if(ref == null) ref = 'A1';
+	var ref = ws['!ref'] || 'A1';
+	var range = safe_decode_range(ref);
+	if(range.e.c > 0x3FFF || range.e.r > 0xFFFFF) {
+		if(opts.WTF) throw new Error("Range " + ref + " exceeds format limit A1:XFD1048576");
+		range.e.c = Math.min(range.e.c, 0x3FFF);
+		range.e.r = Math.min(range.e.c, 0xFFFFF);
+		ref = encode_range(range);
+	}
 	if(!rels) rels = {};
 	ws['!comments'] = [];
 	ws['!drawing'] = [];
@@ -13313,6 +13327,11 @@ function write_ws_bin(idx/*:number*/, opts, wb/*:Workbook*/, rels) {
 	var s = wb.SheetNames[idx], ws = wb.Sheets[s] || {};
 	var c/*:string*/ = s; try { if(wb && wb.Workbook) c = wb.Workbook.Sheets[idx].CodeName || c; } catch(e) {}
 	var r = safe_decode_range(ws['!ref'] || "A1");
+	if(r.e.c > 0x3FFF || r.e.r > 0xFFFFF) {
+		if(opts.WTF) throw new Error("Range " + (ws['!ref'] || "A1") + " exceeds format limit A1:XFD1048576");
+		r.e.c = Math.min(r.e.c, 0x3FFF);
+		r.e.r = Math.min(r.e.c, 0xFFFFF);
+	}
 	ws['!links'] = [];
 	/* passed back to write_zip and removed there */
 	ws['!comments'] = [];
@@ -13646,6 +13665,7 @@ function check_wb(wb) {
 	if(!wb.SheetNames.length) throw new Error("Workbook is empty");
 	var Sheets = (wb.Workbook && wb.Workbook.Sheets) || [];
 	check_wb_names(wb.SheetNames, Sheets, !!wb.vbaraw);
+	for(var i = 0; i < wb.SheetNames.length; ++i) check_ws(wb.Sheets[wb.SheetNames[i]], wb.SheetNames[i], i);
 	/* TODO: validate workbook */
 }
 /* 18.2 Workbook */
@@ -13696,7 +13716,7 @@ function parse_wb_xml(data, opts)/*:WorkbookFile*/ {
 			/* 18.2.1  bookViews CT_BookViews ? */
 			case '<bookViews': case '<bookViews>': case '</bookViews>': break;
 			/* 18.2.30   workbookView CT_BookView + */
-			case '<workbookView': delete y[0]; wb.WBView.push(y); break;
+			case '<workbookView': case '<workbookView/>': delete y[0]; wb.WBView.push(y); break;
 			case '</workbookView>': break;
 
 			/* 18.2.20 sheets CT_Sheets 1 */
@@ -17655,6 +17675,12 @@ function write_ws_biff2_cell(ba/*:BufArray*/, cell/*:Cell*/, R/*:number*/, C/*:n
 function write_ws_biff2(ba/*:BufArray*/, ws/*:Worksheet*/, idx/*:number*/, opts/*::, wb:Workbook*/) {
 	var dense = Array.isArray(ws);
 	var range = safe_decode_range(ws['!ref'] || "A1"), ref/*:string*/, rr = "", cols/*:Array<string>*/ = [];
+	if(range.e.c > 0xFF || range.e.r > 0x3FFF) {
+		if(opts.WTF) throw new Error("Range " + (ws['!ref'] || "A1") + " exceeds format limit A1:IV16384");
+		range.e.c = Math.min(range.e.c, 0xFF);
+		range.e.r = Math.min(range.e.c, 0x3FFF);
+		ref = encode_range(range);
+	}
 	for(var R = range.s.r; R <= range.e.r; ++R) {
 		rr = encode_row(R);
 		for(var C = range.s.c; C <= range.e.c; ++C) {
@@ -17759,9 +17785,16 @@ function write_ws_biff8(idx/*:number*/, opts, wb/*:Workbook*/) {
 	var _WB/*:WBWBProps*/ = ((wb||{}).Workbook||{}/*:any*/);
 	var _sheet/*:WBWSProp*/ = ((_WB.Sheets||[])[idx]||{}/*:any*/);
 	var dense = Array.isArray(ws);
+	var b8 = opts.biff == 8;
 	var ref/*:string*/, rr = "", cols/*:Array<string>*/ = [];
 	var range = safe_decode_range(ws['!ref'] || "A1");
-	var b8 = opts.biff == 8;
+	var MAX_ROWS = b8 ? 65536 : 16384;
+	if(range.e.c > 0xFF || range.e.r >= MAX_ROWS) {
+		if(opts.WTF) throw new Error("Range " + (ws['!ref'] || "A1") + " exceeds format limit A1:IV16384");
+		range.e.c = Math.min(range.e.c, 0xFF);
+		range.e.r = Math.min(range.e.c, MAX_ROWS-1);
+	}
+
 	write_biff_rec(ba, 0x0809, write_BOF(wb, 0x10, opts));
 	/* ... */
 	write_biff_rec(ba, "CalcMode", writeuint16(1));

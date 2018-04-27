@@ -55,6 +55,12 @@ function write_ws_biff2_cell(ba/*:BufArray*/, cell/*:Cell*/, R/*:number*/, C/*:n
 function write_ws_biff2(ba/*:BufArray*/, ws/*:Worksheet*/, idx/*:number*/, opts/*::, wb:Workbook*/) {
 	var dense = Array.isArray(ws);
 	var range = safe_decode_range(ws['!ref'] || "A1"), ref/*:string*/, rr = "", cols/*:Array<string>*/ = [];
+	if(range.e.c > 0xFF || range.e.r > 0x3FFF) {
+		if(opts.WTF) throw new Error("Range " + (ws['!ref'] || "A1") + " exceeds format limit A1:IV16384");
+		range.e.c = Math.min(range.e.c, 0xFF);
+		range.e.r = Math.min(range.e.c, 0x3FFF);
+		ref = encode_range(range);
+	}
 	for(var R = range.s.r; R <= range.e.r; ++R) {
 		rr = encode_row(R);
 		for(var C = range.s.c; C <= range.e.c; ++C) {
@@ -159,9 +165,16 @@ function write_ws_biff8(idx/*:number*/, opts, wb/*:Workbook*/) {
 	var _WB/*:WBWBProps*/ = ((wb||{}).Workbook||{}/*:any*/);
 	var _sheet/*:WBWSProp*/ = ((_WB.Sheets||[])[idx]||{}/*:any*/);
 	var dense = Array.isArray(ws);
+	var b8 = opts.biff == 8;
 	var ref/*:string*/, rr = "", cols/*:Array<string>*/ = [];
 	var range = safe_decode_range(ws['!ref'] || "A1");
-	var b8 = opts.biff == 8;
+	var MAX_ROWS = b8 ? 65536 : 16384;
+	if(range.e.c > 0xFF || range.e.r >= MAX_ROWS) {
+		if(opts.WTF) throw new Error("Range " + (ws['!ref'] || "A1") + " exceeds format limit A1:IV16384");
+		range.e.c = Math.min(range.e.c, 0xFF);
+		range.e.r = Math.min(range.e.c, MAX_ROWS-1);
+	}
+
 	write_biff_rec(ba, 0x0809, write_BOF(wb, 0x10, opts));
 	/* ... */
 	write_biff_rec(ba, "CalcMode", writeuint16(1));
