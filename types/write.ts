@@ -2,7 +2,7 @@
 /* vim: set ts=2 ft=javascript: */
 
 /* original data */
-let data: any[][] = [
+const data: any[][] = [
 	[1, 2, 3],
 	[true, false, null, "sheetjs"],
 	["foo    bar", "baz", new Date("2014-02-19T14:30Z"), "0.3"],
@@ -13,7 +13,7 @@ let data: any[][] = [
 
 const ws_name = "SheetJS";
 
-let wscols: XLSX.ColInfo[] = [
+const wscols: XLSX.ColInfo[] = [
 	{wch: 6}, // "characters"
 	{wpx: 50}, // "pixels"
 	,
@@ -21,7 +21,7 @@ let wscols: XLSX.ColInfo[] = [
 ];
 
 /* At 96 PPI, 1 pt = 1 px */
-let wsrows: XLSX.RowInfo[] = [
+const wsrows: XLSX.RowInfo[] = [
 	{hpt: 12}, // "points"
 	{hpx: 16}, // "pixels"
 	,
@@ -47,7 +47,7 @@ let wb: XLSX.WorkBook = { SheetNames: <string[]>[], Sheets: {} };
 wb = XLSX.utils.book_new();
 
 /* convert an array of arrays in JS to a CSF spreadsheet */
-let ws: XLSX.WorkSheet = XLSX.utils.aoa_to_sheet(data, {cellDates:true});
+const ws: XLSX.WorkSheet = XLSX.utils.aoa_to_sheet(data, {cellDates:true});
 
 /* TEST: add worksheet to workbook */
 wb.SheetNames.push(ws_name);
@@ -177,7 +177,7 @@ const filenames: Array<[string]|[string, XLSX.WritingOptions]> = [
 
 filenames.forEach((r) => {
 		/* write file */
-		XLSX.writeFile(wb, r[0], r[1]);
+		XLSX.writeFile(wb, r[0], <XLSX.WritingOptions>r[1]);
 		/* test by reading back files */
 		XLSX.readFile(r[0]);
 });

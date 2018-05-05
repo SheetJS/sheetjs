@@ -51,15 +51,15 @@ var DocSummaryPIDDSI = {
 	/*::[*/0x08/*::]*/: { n: 'NoteCount', t: VT_I4 },
 	/*::[*/0x09/*::]*/: { n: 'HiddenCount', t: VT_I4 },
 	/*::[*/0x0a/*::]*/: { n: 'MultimediaClipCount', t: VT_I4 },
-	/*::[*/0x0b/*::]*/: { n: 'Scale', t: VT_BOOL },
-	/*::[*/0x0c/*::]*/: { n: 'HeadingPair', t: VT_VECTOR | VT_VARIANT },
-	/*::[*/0x0d/*::]*/: { n: 'DocParts', t: VT_VECTOR | VT_LPSTR },
+	/*::[*/0x0b/*::]*/: { n: 'ScaleCrop', t: VT_BOOL },
+	/*::[*/0x0c/*::]*/: { n: 'HeadingPairs', t: VT_VECTOR | VT_VARIANT },
+	/*::[*/0x0d/*::]*/: { n: 'TitlesOfParts', t: VT_VECTOR | VT_LPSTR },
 	/*::[*/0x0e/*::]*/: { n: 'Manager', t: VT_STRING },
 	/*::[*/0x0f/*::]*/: { n: 'Company', t: VT_STRING },
-	/*::[*/0x10/*::]*/: { n: 'LinksDirty', t: VT_BOOL },
+	/*::[*/0x10/*::]*/: { n: 'LinksUpToDate', t: VT_BOOL },
 	/*::[*/0x11/*::]*/: { n: 'CharacterCount', t: VT_I4 },
 	/*::[*/0x13/*::]*/: { n: 'SharedDoc', t: VT_BOOL },
-	/*::[*/0x16/*::]*/: { n: 'HLinksChanged', t: VT_BOOL },
+	/*::[*/0x16/*::]*/: { n: 'HyperlinksChanged', t: VT_BOOL },
 	/*::[*/0x17/*::]*/: { n: 'AppVersion', t: VT_I4, p: 'version' },
 	/*::[*/0x18/*::]*/: { n: 'DigSig', t: VT_BLOB },
 	/*::[*/0x1A/*::]*/: { n: 'ContentType', t: VT_STRING },
@@ -88,8 +88,8 @@ var SummaryPIDSI = {
 	/*::[*/0x0F/*::]*/: { n: 'WordCount', t: VT_I4 },
 	/*::[*/0x10/*::]*/: { n: 'CharCount', t: VT_I4 },
 	/*::[*/0x11/*::]*/: { n: 'Thumbnail', t: VT_CF },
-	/*::[*/0x12/*::]*/: { n: 'ApplicationName', t: VT_STRING },
-	/*::[*/0x13/*::]*/: { n: 'DocumentSecurity', t: VT_I4 },
+	/*::[*/0x12/*::]*/: { n: 'Application', t: VT_STRING },
+	/*::[*/0x13/*::]*/: { n: 'DocSecurity', t: VT_I4 },
 	/*::[*/0xFF/*::]*/: {}
 };
 
@@ -104,6 +104,9 @@ var SpecialProperties = {
 	for(var y in SpecialProperties) if(SpecialProperties.hasOwnProperty(y))
 	DocSummaryPIDDSI[y] = SummaryPIDSI[y] = SpecialProperties[y];
 })();
+
+var DocSummaryRE = evert_key(DocSummaryPIDDSI, "n");
+var SummaryRE = evert_key(SummaryPIDSI, "n");
 
 /* [MS-XLS] 2.4.63 Country/Region codes */
 var CountryEnum = {

@@ -43,6 +43,7 @@ program
 	.option('-t, --txt',  'emit TXT  to <sheetname> or <file>.txt (UTF-8 TSV)')
 	.option('-r, --rtf',  'emit RTF  to <sheetname> or <file>.txt (Table RTF)')
 	.option('-z, --dump', 'dump internal representation as JSON')
+	.option('--props',    'dump workbook properties as CSV')
 
 	.option('-F, --field-sep <sep>', 'CSV field separator', ",")
 	.option('-R, --row-sep <sep>', 'CSV row separator', "\n")
@@ -163,6 +164,10 @@ if(program.dump) {
 	console.log(JSON.stringify(wb));
 	process.exit(0);
 }
+if(program.props) {
+	dump_props(wb);
+	process.exit(0);
+}
 
 /* full workbook formats */
 workbook_formats.forEach(function(m) { if(program[m[0]] || isfmt(m[0])) {
@@ -254,4 +259,25 @@ switch(true) {
 			else stream.pipe(process.stdout);
 		} else doit(function(ws) { return X.utils.sheet_to_csv(ws,{FS:program.fieldSep, RS:program.rowSep}); });
 		break;
+}
+
+function dump_props(wb) {
+	var propaoa = [];
+	if(Object.assign && Object.entries) propaoa = Object.entries(Object.assign({}, wb.Props, wb.Custprops));
+	else {
+		var Keys, pi;
+		if(wb.Props) {
+			Keys = Object.keys(wb.Props);
+			for(pi = 0; pi < Keys.length; ++pi) {
+				if(Keys.hasOwnProperty(Keys[pi])) propaoa.push([Keys[pi], Keys[Keys[pi]]]);
+			}
+		}
+		if(wb.Custprops) {
+			Keys = Object.keys(wb.Custprops);
+			for(pi = 0; pi < Keys.length; ++pi) {
+				if(Keys.hasOwnProperty(Keys[pi])) propaoa.push([Keys[pi], Keys[Keys[pi]]]);
+			}
+		}
+	}
+	console.log(X.utils.sheet_to_csv(X.utils.aoa_to_sheet(propaoa)));
 }

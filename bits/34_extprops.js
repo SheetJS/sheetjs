@@ -17,6 +17,56 @@ var EXT_PROPS/*:Array<Array<string> >*/ = [
 XMLNS.EXT_PROPS = "http://schemas.openxmlformats.org/officeDocument/2006/extended-properties";
 RELS.EXT_PROPS  = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/extended-properties';
 
+var PseudoPropsPairs = [
+	"Worksheets",  "SheetNames",
+	"NamedRanges", "DefinedNames",
+	"Chartsheets", "ChartNames"
+];
+function load_props_pairs(HP/*:string|Array<Array<any>>*/, TOP, props, opts) {
+	var v = [];
+	if(typeof HP == "string") v = parseVector(HP, opts);
+	else for(var j = 0; j < HP.length; ++j) v = v.concat(HP[j].map(function(hp) { return {v:hp}; }));
+	var parts = (typeof TOP == "string") ? parseVector(TOP, opts).map(function (x) { return x.v; }) : TOP;
+	var idx = 0, len = 0;
+	if(parts.length > 0) for(var i = 0; i !== v.length; i += 2) {
+		len = +(v[i+1].v);
+		switch(v[i].v) {
+			case "Worksheets":
+			case "工作表":
+			case "Листы":
+			case "أوراق العمل":
+			case "ワークシート":
+			case "גליונות עבודה":
+			case "Arbeitsblätter":
+			case "Çalışma Sayfaları":
+			case "Feuilles de calcul":
+			case "Fogli di lavoro":
+			case "Folhas de cálculo":
+			case "Planilhas":
+			case "Regneark":
+			case "Werkbladen":
+				props.Worksheets = len;
+				props.SheetNames = parts.slice(idx, idx + len);
+				break;
+
+			case "Named Ranges":
+			case "名前付き一覧":
+			case "Benannte Bereiche":
+			case "Navngivne områder":
+				props.NamedRanges = len;
+				props.DefinedNames = parts.slice(idx, idx + len);
+				break;
+
+			case "Charts":
+			case "Diagramme":
+				props.Chartsheets = len;
+				props.ChartNames = parts.slice(idx, idx + len);
+				break;
+		}
+		idx += len;
+	}
+}
+
 function parse_ext_props(data, p, opts) {
 	var q = {}; if(!p) p = {};
 	data = utf8read(data);
@@ -32,48 +82,7 @@ function parse_ext_props(data, p, opts) {
 		}
 	});
 
-	if(q.HeadingPairs && q.TitlesOfParts) {
-		var v = parseVector(q.HeadingPairs, opts);
-		var parts = parseVector(q.TitlesOfParts, opts).map(function (x) { return x.v; });
-		var idx = 0, len = 0;
-		if(parts.length > 0) for(var i = 0; i !== v.length; i += 2) {
-			len = +(v[i+1].v);
-			switch(v[i].v) {
-				case "Worksheets":
-				case "工作表":
-				case "Листы":
-				case "أوراق العمل":
-				case "ワークシート":
-				case "גליונות עבודה":
-				case "Arbeitsblätter":
-				case "Çalışma Sayfaları":
-				case "Feuilles de calcul":
-				case "Fogli di lavoro":
-				case "Folhas de cálculo":
-				case "Planilhas":
-				case "Regneark":
-				case "Werkbladen":
-					p.Worksheets = len;
-					p.SheetNames = parts.slice(idx, idx + len);
-					break;
-
-				case "Named Ranges":
-				case "名前付き一覧":
-				case "Benannte Bereiche":
-				case "Navngivne områder":
-					p.NamedRanges = len;
-					p.DefinedNames = parts.slice(idx, idx + len);
-					break;
-
-				case "Charts":
-				case "Diagramme":
-					p.Chartsheets = len;
-					p.ChartNames = parts.slice(idx, idx + len);
-					break;
-			}
-			idx += len;
-		}
-	}
+	if(q.HeadingPairs && q.TitlesOfParts) load_props_pairs(q.HeadingPairs, q.TitlesOfParts, p, opts);
 
 	return p;
 }

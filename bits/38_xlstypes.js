@@ -5,6 +5,15 @@ function parse_FILETIME(blob) {
 	var dwLowDateTime = blob.read_shift(4), dwHighDateTime = blob.read_shift(4);
 	return new Date(((dwHighDateTime/1e7*Math.pow(2,32) + dwLowDateTime/1e7) - 11644473600)*1000).toISOString().replace(/\.000/,"");
 }
+function write_FILETIME(time/*:string|Date*/) {
+	var date = (typeof time == "string") ? new Date(Date.parse(time)) : time;
+	var t = date.getTime() / 1000 + 11644473600;
+	var l = t % Math.pow(2,32), h = (t - l) / Math.pow(2,32);
+	l *= 1e7; h *= 1e7;
+	var w = (l / Math.pow(2,32)) | 0;
+	if(w > 0) { l = l % Math.pow(2,32); h += w; }
+	var o = new_buf(8); o.write_shift(4, l); o.write_shift(4, h); return o;
+}
 
 /* [MS-OSHARED] 2.3.3.1.4 Lpstr */
 function parse_lpstr(blob, type, pad/*:?number*/) {
@@ -74,6 +83,7 @@ function parse_dictionary(blob,CodePage) {
 		var pid = blob.read_shift(4);
 		var len = blob.read_shift(4);
 		dict[pid] = blob.read_shift(len, (CodePage === 0x4B0 ?'utf16le':'utf8')).replace(chr0,'').replace(chr1,'!');
+		if(CodePage === 0x4B0 && (len % 2)) blob.l += 2;
 	}
 	if(blob.l & 3) blob.l = (blob.l>>2+1)<<2;
 	return dict;
@@ -121,6 +131,25 @@ function parse_TypedPropertyValue(blob, type/*:number*/, _opts)/*:any*/ {
 		default: throw new Error("TypedPropertyValue unrecognized type " + type + " " + t);
 	}
 }
+function write_TypedPropertyValue(type/*:number*/, value) {
+	var o = new_buf(4), p = new_buf(4);
+	o.write_shift(4, type == 0x50 ? 0x1F : type);
+	switch(type) {
+		case 0x03 /*VT_I4*/: p.write_shift(-4, value); break;
+		case 0x05 /*VT_I4*/: p = new_buf(8); p.write_shift(8, value, 'f'); break;
+		case 0x0B /*VT_BOOL*/: p.write_shift(4, value ? 0x01 : 0x00); break;
+		case 0x40 /*VT_FILETIME*/: p = write_FILETIME(value); break;
+		case 0x1F /*VT_LPWSTR*/:
+		case 0x50 /*VT_STRING*/:
+			p = new_buf(4 + 2 * (value.length + 1) + (value.length % 2 ? 0 : 2));
+			p.write_shift(4, value.length + 1);
+			p.write_shift(0, value, "dbcs");
+			while(p.l != p.length) p.write_shift(1, 0);
+			break;
+		default: throw new Error("TypedPropertyValue unrecognized type " + type + " " + value);
+	}
+	return bconcat([o, p]);
+}
 
 /* [MS-OLEPS] 2.20 PropertySet */
 function parse_PropertySet(blob, PIDSI) {
@@ -151,7 +180,7 @@ function parse_PropertySet(blob, PIDSI) {
 		if(PIDSI) {
 			var piddsi = PIDSI[Props[i][0]];
 			PropH[piddsi.n] = parse_TypedPropertyValue(blob, piddsi.t, {raw:true});
-			if(piddsi.p === 'version') PropH[piddsi.n] = String(PropH[piddsi.n] >> 16) + "." + String(PropH[piddsi.n] & 0xFFFF);
+			if(piddsi.p === 'version') PropH[piddsi.n] = String(PropH[piddsi.n] >> 16) + "." + ("0000" + String(PropH[piddsi.n] & 0xFFFF)).slice(-4);
 			if(piddsi.n == "CodePage") switch(PropH[piddsi.n]) {
 				case 0: PropH[piddsi.n] = 1252;
 					/* falls through */
@@ -196,8 +225,8 @@ function parse_PropertySet(blob, PIDSI) {
 				/* [MS-OSHARED] 2.3.3.2.3.1.2 + PROPVARIANT */
 				switch(blob[blob.l]) {
 					case 0x41 /*VT_BLOB*/: blob.l += 4; val = parse_BLOB(blob); break;
-					case 0x1E /*VT_LPSTR*/: blob.l += 4; val = parse_VtString(blob, blob[blob.l-4]); break;
-					case 0x1F /*VT_LPWSTR*/: blob.l += 4; val = parse_VtString(blob, blob[blob.l-4]); break;
+					case 0x1E /*VT_LPSTR*/: blob.l += 4; val = parse_VtString(blob, blob[blob.l-4]).replace(/\u0000+$/,""); break;
+					case 0x1F /*VT_LPWSTR*/: blob.l += 4; val = parse_VtString(blob, blob[blob.l-4]).replace(/\u0000+$/,""); break;
 					case 0x03 /*VT_I4*/: blob.l += 4; val = blob.read_shift(4, 'i'); break;
 					case 0x13 /*VT_UI4*/: blob.l += 4; val = blob.read_shift(4); break;
 					case 0x05 /*VT_R8*/: blob.l += 4; val = blob.read_shift(8, 'f'); break;
@@ -211,6 +240,79 @@ function parse_PropertySet(blob, PIDSI) {
 	}
 	blob.l = start_addr + size; /* step ahead to skip padding */
 	return PropH;
+}
+var XLSPSSkip = [ "CodePage", "Thumbnail", "_PID_LINKBASE", "_PID_HLINKS", "SystemIdentifier", "FMTID" ].concat(PseudoPropsPairs);
+function guess_property_type(val/*:any*/)/*:number*/ {
+	switch(typeof val) {
+		case "boolean": return 0x0B;
+		case "number": return ((val|0)==val) ? 0x03 : 0x05;
+		case "string": return 0x1F;
+		case "object": if(val instanceof Date) return 0x40; break;
+	}
+	return -1;
+}
+function write_PropertySet(entries, RE, PIDSI) {
+	var hdr = new_buf(8), piao = [], prop = [];
+	var sz = 8, i = 0;
+
+	var pr = new_buf(8), pio = new_buf(8);
+	pr.write_shift(4, 0x0002);
+	pr.write_shift(4, 0x04B0);
+	pio.write_shift(4, 0x0001);
+	prop.push(pr); piao.push(pio);
+	sz += 8 + pr.length;
+
+	if(!RE) {
+		pio = new_buf(8);
+		pio.write_shift(4, 0);
+		piao.unshift(pio);
+
+		var bufs = [new_buf(4)];
+		bufs[0].write_shift(4, entries.length);
+		for(i = 0; i < entries.length; ++i) {
+			var value = entries[i][0];
+			pr = new_buf(4 + 4 + 2 * (value.length + 1) + (value.length % 2 ? 0 : 2));
+			pr.write_shift(4, i+2);
+			pr.write_shift(4, value.length + 1);
+			pr.write_shift(0, value, "dbcs");
+			while(pr.l != pr.length) pr.write_shift(1, 0);
+			bufs.push(pr);
+		}
+		pr = bconcat(bufs);
+		prop.unshift(pr);
+		sz += 8 + pr.length;
+	}
+
+	for(i = 0; i < entries.length; ++i) {
+		if(RE && !RE[entries[i][0]]) continue;
+		if(XLSPSSkip.indexOf(entries[i][0]) > -1) continue;
+		if(entries[i][1] == null) continue;
+
+		var val = entries[i][1], idx = 0;
+		if(RE) {
+			idx = +RE[entries[i][0]];
+			var pinfo = PIDSI[idx];
+			if(pinfo.p == "version" && typeof val == "string") val = (+((val = val.split("."))[0])<<16) + (+val[1]||0);
+			pr = write_TypedPropertyValue(pinfo.t, val);
+		} else {
+			var T = guess_property_type(val);
+			if(T == -1) { T = 0x1F; val = String(val); }
+			pr = write_TypedPropertyValue(T, val);
+		}
+		prop.push(pr);
+
+		pio = new_buf(8);
+		pio.write_shift(4, !RE ? 2+i : idx);
+		piao.push(pio);
+
+		sz += 8 + pr.length;
+	}
+
+	var w = 8 * (prop.length + 1);
+	for(i = 0; i < prop.length; ++i) { piao[i].write_shift(4, w); w += prop[i].length; }
+	hdr.write_shift(4, sz);
+	hdr.write_shift(4, prop.length);
+	return bconcat([hdr].concat(piao).concat(prop));
 }
 
 /* [MS-OLEPS] 2.21 PropertySetStream */
@@ -248,7 +350,27 @@ function parse_PropertySetStream(file, PIDSI, clsid) {
 	rval.FMTID = [FMTID0, FMTID1]; // TODO: verify FMTID0/1
 	return rval;
 }
+function write_PropertySetStream(entries, clsid, RE, PIDSI, entries2/*:?any*/, clsid2/*:?any*/) {
+	var hdr = new_buf(entries2 ? 68 : 48);
+	var bufs = [hdr];
+	hdr.write_shift(2, 0xFFFE);
+	hdr.write_shift(2, 0x0000); /* TODO: type 1 props */
+	hdr.write_shift(4, 0x32363237);
+	hdr.write_shift(16, CFB.utils.consts.HEADER_CLSID, "hex");
+	hdr.write_shift(4, (entries2 ? 2 : 1));
+	hdr.write_shift(16, clsid, "hex");
+	hdr.write_shift(4, (entries2 ? 68 : 48));
+	var ps0 = write_PropertySet(entries, RE, PIDSI);
+	bufs.push(ps0);
 
+	if(entries2) {
+		var ps1 = write_PropertySet(entries2, null, null);
+		hdr.write_shift(16, clsid2, "hex");
+		hdr.write_shift(4, 68 + ps0.length);
+		bufs.push(ps1);
+	}
+	return bconcat(bufs);
+}
 
 function parsenoop2(blob, length) { blob.read_shift(length); return null; }
 function writezeroes(n, o) { if(!o) o=new_buf(n); for(var j=0; j<n; ++j) o.write_shift(1, 0); return o; }

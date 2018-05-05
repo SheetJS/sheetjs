@@ -120,7 +120,7 @@ function write_FEAT(ba, ws) {
 	o.write_shift(4, 0x868); o.write_shift(4, 0); o.write_shift(4, 0);
 	o.write_shift(2, 3); o.write_shift(1, 0); o.write_shift(4, 0);
 	o.write_shift(2, 1); o.write_shift(4, 4); o.write_shift(2, 0);
-	write_Ref8U(safe_decode_range(ws['!ref']), o);
+	write_Ref8U(safe_decode_range(ws['!ref']||"A1"), o);
 	o.write_shift(4, 4);
 	write_biff_rec(ba, "Feat", o);
 }

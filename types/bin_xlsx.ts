@@ -41,6 +41,8 @@ program
 	.option('-E, --eth',  'emit ETH  to <sheetname> or <file>.eth (Ethercalc)')
 	.option('-t, --txt',  'emit TXT  to <sheetname> or <file>.txt (UTF-8 TSV)')
 	.option('-r, --rtf',  'emit RTF  to <sheetname> or <file>.txt (Table RTF)')
+	.option('-z, --dump', 'dump internal representation as JSON')
+	.option('--props',    'dump workbook properties as CSV')
 
 	.option('-F, --field-sep <sep>', 'CSV field separator', ",")
 	.option('-R, --row-sep <sep>', 'CSV row separator', "\n")
@@ -96,7 +98,8 @@ if(!fs.existsSync(filename)) {
 	process.exit(2);
 }
 
-let opts: X.ParsingOptions = {}, wb: X.WorkBook;
+const opts: X.ParsingOptions = {};
+let wb: X.WorkBook;
 if(program.listSheets) opts.bookSheets = true;
 if(program.sheetRows) opts.sheetRows = program.sheetRows;
 if(program.password) opts.password = program.password;
@@ -118,7 +121,7 @@ if(seen) {
 } else if(program.formulae) opts.cellFormula = true;
 else opts.cellFormula = false;
 
-let wopts: X.WritingOptions = ({WTF:opts.WTF, bookSST:program.sst}/*:any*/);
+const wopts: X.WritingOptions = ({WTF:opts.WTF, bookSST:program.sst}/*:any*/);
 if(program.compress) wopts.compression = true;
 
 if(program.all) {
@@ -151,6 +154,14 @@ if(!wb) { console.error(n + ": error parsing " + filename + ": empty workbook");
 /*:: if(!wb) throw new Error("unreachable"); */
 if(program.listSheets) {
 	console.log((wb.SheetNames||[]).join("\n"));
+	process.exit(0);
+}
+if(program.dump) {
+	console.log(JSON.stringify(wb));
+	process.exit(0);
+}
+if(program.props) {
+	dump_props(wb);
 	process.exit(0);
 }
 
@@ -214,7 +225,7 @@ else if(program.rawJs) oo = JSON.stringify(X.utils.sheet_to_json(ws,{raw:true}))
 else if(program.arrays) oo = JSON.stringify(X.utils.sheet_to_json(ws,{raw:true, header:1}));
 else {
 	strm = true;
-	let stream: NodeJS.ReadableStream = X.stream.to_csv(ws, {FS:program.fieldSep, RS:program.rowSep});
+	const stream: NodeJS.ReadableStream = X.stream.to_csv(ws, {FS:program.fieldSep, RS:program.rowSep});
 	if(program.output) stream.pipe(fs.createWriteStream(program.output));
 	else stream.pipe(process.stdout);
 }
@@ -225,3 +236,9 @@ if(!strm) {
 }
 /*::   } */
 /*:: } */
+
+function dump_props(wb: X.WorkBook) {
+	let propaoa: any[][] = [];
+	propaoa = (<any>Object).entries({...wb.Props, ...wb.Custprops});
+	console.log(X.utils.sheet_to_csv(X.utils.aoa_to_sheet(propaoa)));
+}

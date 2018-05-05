@@ -600,8 +600,14 @@ module.exports = function(data, options) {
 },{"./base64":1,"./zipEntries":22}],11:[function(_dereq_,module,exports){
 (function (Buffer){
 'use strict';
+if(typeof Buffer !== 'undefined') {
+	// $FlowIgnore
+	if(!Buffer.from) Buffer.from = function(buf, enc) { return (enc) ? new Buffer(buf, enc) : new Buffer(buf); };
+	// $FlowIgnore
+	if(!Buffer.alloc) Buffer.alloc = function(n) { return new Buffer(n); };
+}
 module.exports = function(data, encoding){
-    return new Buffer(data, encoding);
+    return typeof data == 'number' ? Buffer.alloc(data) : Buffer.from(data, encoding);
 };
 module.exports.test = function(b){
     return Buffer.isBuffer(b);

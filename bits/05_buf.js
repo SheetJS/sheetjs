@@ -1,16 +1,22 @@
 var has_buf = (typeof Buffer !== 'undefined' && typeof process !== 'undefined' && typeof process.versions !== 'undefined' && process.versions.node);
 
+if(typeof Buffer !== 'undefined') {
+	// $FlowIgnore
+	if(!Buffer.from) Buffer.from = function(buf, enc) { return (enc) ? new Buffer(buf, enc) : new Buffer(buf); };
+	// $FlowIgnore
+	if(!Buffer.alloc) Buffer.alloc = function(n) { return new Buffer(n); };
+}
+
 function new_raw_buf(len/*:number*/) {
 	/* jshint -W056 */
-	// $FlowIgnore
-	return new (has_buf ? Buffer : Array)(len);
+	return has_buf ? Buffer.alloc(len) : new Array(len);
 	/* jshint +W056 */
 }
 
-function s2a(s/*:string*/)/*:any*/ {
-	if(has_buf) return new Buffer(s, "binary");
+var s2a = function s2a(s/*:string*/)/*:any*/ {
+	if(has_buf) return Buffer.from(s, "binary");
 	return s.split("").map(function(x/*:string*/)/*:number*/{ return x.charCodeAt(0) & 0xff; });
-}
+};
 
 function s2ab(s/*:string*/)/*:any*/ {
 	if(typeof ArrayBuffer === 'undefined') return s2a(s);

@@ -1,8 +1,11 @@
 var current_codepage = 1200, current_ansi = 1252;
 /*:: declare var cptable:any; */
-/*global cptable:true */
+/*global cptable:true, window */
 if(typeof module !== "undefined" && typeof require !== 'undefined') {
-	if(typeof cptable === 'undefined') global.cptable = require('./dist/cpexcel.js');
+	if(typeof cptable === 'undefined') {
+		if(typeof global !== 'undefined') global.cptable = require('./dist/cpexcel.js');
+		else if(typeof window !== 'undefined') window.cptable = require('./dist/cpexcel.js');
+	}
 }
 
 var VALID_ANSI = [ 874, 932, 936, 949, 950 ];

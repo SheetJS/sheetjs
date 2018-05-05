@@ -5,7 +5,7 @@ const version: string = XLSX.version;
 
 const SSF = XLSX.SSF;
 
-let read_opts: XLSX.ParsingOptions = {
+const read_opts: XLSX.ParsingOptions = {
 	type: "buffer",
 	raw: false,
 	cellFormula: false,
@@ -26,7 +26,7 @@ let read_opts: XLSX.ParsingOptions = {
 	WTF: false
 };
 
-let write_opts: XLSX.WritingOptions = {
+const write_opts: XLSX.WritingOptions = {
 	type: "buffer",
 	cellDates: false,
 	bookSST: false,

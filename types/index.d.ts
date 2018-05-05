@@ -234,11 +234,11 @@ export interface WorkBook {
     /** Ordered list of the sheet names in the workbook */
     SheetNames: string[];
 
-    /**
-     * an object storing the standard properties. wb.Custprops stores custom properties.
-     * Since the XLS standard properties deviate from the XLSX standard, XLS parsing stores core properties in both places.
-     */
+    /** Standard workbook Properties */
     Props?: FullProperties;
+
+    /** Custom workbook Properties */
+    Custprops?: object;
 
     Workbook?: WBProps;
 

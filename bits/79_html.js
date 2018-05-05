@@ -16,11 +16,11 @@ var HTML_ = (function() {
 			var row = rows[i].trim();
 			var hd = row.slice(0,3).toLowerCase();
 			if(hd == "<tr") { ++R; if(opts.sheetRows && opts.sheetRows <= R) { --R; break; } C = 0; continue; }
-			if(hd != "<td") continue;
-			var cells = row.split(/<\/td>/i);
+			if(hd != "<td" && hd != "<th") continue;
+			var cells = row.split(/<\/t[dh]>/i);
 			for(j = 0; j < cells.length; ++j) {
 				var cell = cells[j].trim();
-				if(cell.slice(0,3).toLowerCase() != "<td") continue;
+				if(!cell.match(/<t[dh]/i)) continue;
 				var m = cell, cc = 0;
 				/* TODO: parse styles etc */
 				while(m.charAt(0) == "<" && (cc = m.indexOf(">")) > -1) m = m.slice(cc+1);
@@ -155,7 +155,7 @@ function parse_dom_table(table/*:HTMLElement*/, _opts/*:?any*/)/*:Worksheet*/ {
 			C += CS;
 		}
 	}
-	ws['!merges'] = merges;
+	if(merges.length) ws['!merges'] = merges;
 	ws['!ref'] = encode_range(range);
 	if(sheetRows < rows.length) ws['!fullref'] = encode_range((range.e.r = rows.length-1,range));
 	return ws;

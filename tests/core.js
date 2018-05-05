@@ -1347,6 +1347,14 @@ describe('write features', function() {
 		wb.Sheets.Sheet1['!ref'] =  "A" + X.utils.encode_row(C.r - 5) + ":" + X.utils.encode_cell({r:C.r+1, c:0});
 		assert.throws(function() { X.write(wb, wopts); });
 	}); }); });
+	it('single worksheet formats', function() {
+		var wb = X.utils.book_new();
+		X.utils.book_append_sheet(wb, X.utils.aoa_to_sheet([[1,2],[3,4]]), "Sheet1");
+		X.utils.book_append_sheet(wb, X.utils.aoa_to_sheet([[5,6],[7,8]]), "Sheet2");
+		assert.equal(X.write(wb, {type:"string", bookType:"csv", sheet:"Sheet1"}), "1,2\n3,4\n");
+		assert.equal(X.write(wb, {type:"string", bookType:"csv", sheet:"Sheet2"}), "5,6\n7,8\n");
+		assert.throws(function() { X.write(wb, {type:"string", bookType:"csv", sheet:"Sheet3"}); });
+	});
 });
 
 function seq(end/*:number*/, start/*:?number*/)/*:Array<number>*/ {
@@ -1386,6 +1394,7 @@ describe('roundtrip features', function() {
 	if(typeof before != 'undefined') before(bef);
 	else it('before', bef);
 	describe('should preserve core properties', function() { [
+		['xls', paths.cpxls],
 		['xlml', paths.cpxml],
 		['xlsx', paths.cpxlsx],
 		['xlsb', paths.cpxlsb]
@@ -1399,6 +1408,7 @@ describe('roundtrip features', function() {
 	}); });
 
 	describe('should preserve custom properties', function() { [
+		['xls', paths.cpxls],
 		['xlml', paths.cpxml],
 		['xlsx', paths.cpxlsx],
 		['xlsb', paths.cpxlsb]
@@ -2064,6 +2074,17 @@ describe('HTML', function() {
 			chk(X.read(X.utils.sheet_to_html(ws), {type:'string'}).Sheets.Sheet1);
 		});
 		if(domtest) it('DOM', function() { chk(X.utils.table_to_sheet(get_dom_element(html))); });
+	});
+	describe('TH/THEAD/TBODY/TFOOT elements', function() {
+		var html = "<table><thead><tr><th>A</th><th>B</th></tr></thead><tbody><tr><td>1</td><td>2</td></tr><tr><td>3</td><td>4</td></tr></tbody><tfoot><tr><th>4</th><th>6</th></tr></tfoot></table>";
+		it('HTML string', function() {
+			var ws = X.read(html, {type:'string'}).Sheets.Sheet1;
+			assert.equal(X.utils.sheet_to_csv(ws),  "A,B\n1,2\n3,4\n4,6\n");
+		});
+		if(domtest) it('DOM', function() {
+			var ws = X.utils.table_to_sheet(get_dom_element(html));
+			assert.equal(X.utils.sheet_to_csv(ws),  "A,B\n1,2\n3,4\n4,6\n");
+		});
 	});
 });
 

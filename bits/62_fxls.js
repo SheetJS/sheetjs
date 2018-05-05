@@ -284,6 +284,7 @@ function parse_SerAr(blob, biff/*:number*/) {
 		case 0x04: /* SerBool -- boolean */
 			val[1] = parsebool(blob, 1) ? 'TRUE' : 'FALSE';
 			if(biff != 12) blob.l += 7; break;
+		case 0x25: /* appears to be an alias */
 		case 0x10: /* SerErr -- error */
 			val[1] = BErr[blob[blob.l]];
 			blob.l += ((biff == 12) ? 4 : 8); break;
@@ -293,7 +294,7 @@ function parse_SerAr(blob, biff/*:number*/) {
 			val[1] = parse_Xnum(blob, 8); break;
 		case 0x02: /* SerStr -- XLUnicodeString (<256 chars) */
 			val[1] = parse_XLUnicodeString2(blob, 0, {biff:biff > 0 && biff < 8 ? 2 : biff}); break;
-		default: throw "Bad SerAr: " + val[0]; /* Unreachable */
+		default: throw new Error("Bad SerAr: " + val[0]); /* Unreachable */
 	}
 	return val;
 }

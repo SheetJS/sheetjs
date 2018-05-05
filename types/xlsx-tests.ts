@@ -58,10 +58,10 @@ const wb_5: XLSX.WorkBook = XLSX.read(XLSX.write(newwb, {type: "array", bookType
 const wb_6: XLSX.WorkBook = XLSX.read(XLSX.write(newwb, {type: "string", bookType: "xlsx" }), {type: "string"});
 
 function get_header_row(sheet: XLSX.WorkSheet) {
-    let headers: string[] = [];
+    const headers: string[] = [];
     const range = XLSX.utils.decode_range(sheet['!ref']);
-    let C: number = 0, R: number = range.s.r;
-    for(C = range.s.c; C <= range.e.c; ++C) {
+    const R: number = range.s.r;
+    for(let C = range.s.c; C <= range.e.c; ++C) {
         const cell: XLSX.CellObject = sheet[XLSX.utils.encode_cell({c:C, r:R})];
         let hdr = "UNKNOWN " + C;
         if(cell && cell.t) hdr = XLSX.utils.format_cell(cell);
