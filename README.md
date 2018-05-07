@@ -2782,7 +2782,7 @@ add a feature test to the kitchen sink `tests/write.js`.
 ## License
 
 Please consult the attached LICENSE file for details.  All rights not explicitly
-granted by the Apache 2.0 License are reserved by the Original Author.
+granted by the [Apache 2.0 License](https://github.com/SheetJS/js-xlsx/blob/master/LICENSE) are reserved by the Original Author.
 
 
 ## References
