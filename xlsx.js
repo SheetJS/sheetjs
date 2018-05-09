@@ -17920,6 +17920,35 @@ var HTML_ = (function() {
 		var preamble = "<tr>";
 		return preamble + oo.join("") + "</tr>";
 	}
+  function make_html_th(ws, r, R, o) {
+    var M = (ws['!merges'] ||[]);
+    var oo = [];
+    var nullcell = "<th>" + (o.editable ? '<span contenteditable="true"></span>' : "" ) + "</th>";
+    for(var C = r.s.c; C <= r.e.c; ++C) {
+      var RS = 0, CS = 0;
+      for(var j = 0; j < M.length; ++j) {
+        if(M[j].s.r > R || M[j].s.c > C) continue;
+        if(M[j].e.r < R || M[j].e.c < C) continue;
+        if(M[j].s.r < R || M[j].s.c < C) { RS = -1; break; }
+        RS = M[j].e.r - M[j].s.r + 1; CS = M[j].e.c - M[j].s.c + 1; break;
+      }
+      if(RS < 0) continue;
+      var coord = encode_cell({r:R,c:C});
+      var cell = o.dense ? (ws[R]||[])[C] : ws[coord];
+      if(!cell || cell.v == null) { oo.push(nullcell); continue; }
+      /* TODO: html entities */
+      var w = cell.h || escapexml(cell.w || (format_cell(cell), cell.w) || "");
+      var sp = {};
+      if(RS > 1) sp.rowspan = RS;
+      if(CS > 1) sp.colspan = CS;
+      sp.t = cell.t;
+      if(o.editable) w = '<span contenteditable="true">' + w + '</span>';
+      sp.id = "sjs-" + coord;
+      oo.push(writextag('th', w, sp));
+    }
+    var preamble = "<tr>";
+    return preamble + oo.join("") + "</tr>";
+  }
 	function make_html_preamble(ws, R, o) {
 		var out = [];
 		return out.join("") + '<table' + (o && o.id ? ' id="' + o.id + '"' : "") + '>';
@@ -17934,7 +17963,10 @@ var HTML_ = (function() {
 		var r = decode_range(ws['!ref']);
 		o.dense = Array.isArray(ws);
 		out.push(make_html_preamble(ws, r, o));
-		for(var R = r.s.r; R <= r.e.r; ++R) out.push(make_html_row(ws, r, R, o));
+    out.push("<tr>");
+    out.push(make_html_row(ws, r, r.s.r, o));
+    out.push("</tr>");
+		for(var R = r.s.r+1; R <= r.e.r; ++R) out.push(make_html_row(ws, r, R, o));
 		out.push("</table>" + footer);
 		return out.join("");
 	}
@@ -17943,6 +17975,7 @@ var HTML_ = (function() {
 		to_workbook: html_to_book,
 		to_sheet: html_to_sheet,
 		_row: make_html_row,
+		_th: make_html_th,
 		BEGIN: _BEGIN,
 		END: _END,
 		_preamble: make_html_preamble,
@@ -19850,15 +19883,24 @@ if(has_buf && typeof require != 'undefined') (function() {
 		stream.push(HTML_._preamble(ws, r, o));
 		var R = r.s.r;
 		var end = false;
+    stream.push("<thead>");
+    stream.push(HTML_._th(ws, r, R, o));
+    stream.push("</thead>");
+    stream.push("<tbody>");
+    R++;
 		stream._read = function() {
 			if(R > r.e.r) {
-				if(!end) { end = true; stream.push("</table>" + footer); }
+				if(!end) {
+					end = true;
+          stream.push("</tbody>");
+					stream.push("</table>" + footer);
+				}
 				return stream.push(null);
 			}
 			while(R <= r.e.r) {
-				stream.push(HTML_._row(ws, r, R, o));
-				++R;
-				break;
+        stream.push(HTML_._row(ws, r, R, o));
+        ++R;
+        break;
 			}
 		};
 		return stream;
