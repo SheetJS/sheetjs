@@ -481,7 +481,7 @@ function hashq(str) {
 	}
 	return o;
 }
-function rnd(val, d) { var dd = Math.pow(10,d); return ""+(Math.round(val * dd)/dd); }
+function rnd(val, d) { return ""+(+(Math.round(val + "e+" + d)  + "e-" + d)); }
 function dec(val, d) {
 	if (d < ('' + Math.round((val-Math.floor(val))*Math.pow(10,d))).length) {
 		return 0;
