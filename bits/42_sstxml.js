@@ -4,6 +4,7 @@ var parse_rs = (function parse_rs_factory() {
 	/* 18.4.7 rPr CT_RPrElt */
 	var parse_rpr = function parse_rpr(rpr, intro, outro) {
 		var font = {}, cp = 65001, align = "";
+		var pass = false;
 		var m = rpr.match(tagregex), i = 0;
 		if(m) for(;i!=m.length; ++i) {
 			var y = parsexmltag(m[i]);
@@ -94,8 +95,12 @@ var parse_rs = (function parse_rs_factory() {
 				/* 18.8.35 scheme CT_FontScheme TODO */
 				case '<scheme': break;
 
+				/* 18.2.10 extLst CT_ExtensionList ? */
+				case '<extLst': case '<extLst>': case '</extLst>': break;
+				case '<ext': pass = true; break;
+				case '</ext>': pass = false; break;
 				default:
-					if(y[0].charCodeAt(1) !== 47) throw 'Unrecognized rich format ' + y[0];
+					if(y[0].charCodeAt(1) !== 47 && !pass) throw new Error('Unrecognized rich format ' + y[0]);
 			}
 		}
 		var style/*:Array<string>*/ = [];

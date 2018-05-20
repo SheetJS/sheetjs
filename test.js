@@ -1983,6 +1983,25 @@ describe('CSV', function() {
 	});
 });
 
+describe('sylk', function() {
+	var cpavail = true;
+	var bef = (function() {
+		if(typeof cptable == 'undefined') cpavail = false;
+	});
+	if(typeof before != 'undefined') before(bef);
+	describe('input', function(){
+		it('codepage', cpavail ? function() {
+			var str = "ID;PWXL;N;E\r\nC;X1;Y1;K\"a – b\"\r\nE", A1 =  "a – b";
+			assert.equal(get_cell(X.read(str, {type:"string"}).Sheets.Sheet1, "A1").v, A1);
+			assert.equal(get_cell(X.read(str.replace(/–/, "\x96"), {type:"binary", codepage:1252}).Sheets.Sheet1, "A1").v, A1);
+			if(typeof Buffer !== 'undefined' && !browser) {
+				assert.equal(get_cell(X.read(Buffer.from(str), {type:"buffer", codepage:65001}).Sheets.Sheet1, "A1").v, A1);
+				assert.equal(get_cell(X.read(Buffer.from(str.replace(/–/, "\x96"), "binary"), {type:"buffer", codepage:1252}).Sheets.Sheet1, "A1").v, A1);
+			}
+		} : null);
+	});
+});
+
 if(fs.existsSync(dir + 'dbf/d11.dbf')) describe('dbf', function() {
 	var wbs/*:Array<any>*/ = ([
 		['d11',  dir + 'dbf/d11.dbf'],

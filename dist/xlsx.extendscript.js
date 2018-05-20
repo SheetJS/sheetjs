@@ -9153,7 +9153,7 @@ module.exports = ZStream;
 /*global global, exports, module, require:false, process:false, Buffer:false, ArrayBuffer:false */
 var XLSX = {};
 (function make_xlsx(XLSX){
-XLSX.version = '0.12.12';
+XLSX.version = '0.12.13';
 var current_codepage = 1200, current_ansi = 1252;
 /*global cptable:true, window */
 if(typeof module !== "undefined" && typeof require !== 'undefined') {
@@ -11422,7 +11422,6 @@ if(has_buf) {
 	};
 	var corpus = "foo bar baz\u00e2\u0098\u0083\u00f0\u009f\u008d\u00a3";
 	if(utf8read(corpus) == utf8readb(corpus)) utf8read = utf8readb;
-	// $FlowIgnore
 	var utf8readc = function utf8readc(data) { return Buffer.from(data, 'binary').toString('utf8'); };
 	if(utf8read(corpus) == utf8readc(corpus)) utf8read = utf8readc;
 
@@ -13513,10 +13512,10 @@ function write_TypedPropertyValue(type, value) {
 		case 0x03 /*VT_I4*/: p.write_shift(-4, value); break;
 		case 0x05 /*VT_I4*/: p = new_buf(8); p.write_shift(8, value, 'f'); break;
 		case 0x0B /*VT_BOOL*/: p.write_shift(4, value ? 0x01 : 0x00); break;
-		case 0x40 /*VT_FILETIME*/: p = write_FILETIME(value); break;
+		case 0x40 /*VT_FILETIME*/:  p = write_FILETIME(value); break;
 		case 0x1F /*VT_LPWSTR*/:
 		case 0x50 /*VT_STRING*/:
-			p = new_buf(4 + 2 * (value.length + 1) + (value.length % 2 ? 0 : 2));
+p = new_buf(4 + 2 * (value.length + 1) + (value.length % 2 ? 0 : 2));
 			p.write_shift(4, value.length + 1);
 			p.write_shift(0, value, "dbcs");
 			while(p.l != p.length) p.write_shift(1, 0);
@@ -13666,8 +13665,11 @@ function write_PropertySet(entries, RE, PIDSI) {
 		var val = entries[i][1], idx = 0;
 		if(RE) {
 			idx = +RE[entries[i][0]];
-			var pinfo = PIDSI[idx];
-			if(pinfo.p == "version" && typeof val == "string") val = (+((val = val.split("."))[0])<<16) + (+val[1]||0);
+			var pinfo = (PIDSI)[idx];
+			if(pinfo.p == "version" && typeof val == "string") {
+var arr = val.split(".");
+				val = ((+arr[0])<<16) + ((+arr[1])||0);
+			}
 			pr = write_TypedPropertyValue(pinfo.t, val);
 		} else {
 			var T = guess_property_type(val);
@@ -15360,11 +15362,11 @@ var SYLK = (function() {
 					formats.push(rstr.slice(3).replace(/;;/g, ";"));
 				break;
 			case 'C':
-			var C_seen_K = false;
+			var C_seen_K = false, C_seen_X = false;
 			for(rj=1; rj<record.length; ++rj) switch(record[rj].charAt(0)) {
-				case 'X': C = parseInt(record[rj].slice(1))-1; break;
+				case 'X': C = parseInt(record[rj].slice(1))-1; C_seen_X = true; break;
 				case 'Y':
-					R = parseInt(record[rj].slice(1))-1; C = 0;
+					R = parseInt(record[rj].slice(1))-1; if(!C_seen_X) C = 0;
 					for(j = arr.length; j <= R; ++j) arr[j] = [];
 					break;
 				case 'K':
@@ -15378,6 +15380,7 @@ var SYLK = (function() {
 					} else if(!isNaN(fuzzydate(val).getDate())) {
 						val = parseDate(val);
 					}
+					if(typeof cptable !== 'undefined' && typeof val == "string" && ((opts||{}).type != "string") && (opts||{}).codepage) val = cptable.utils.decode(opts.codepage, val);
 					C_seen_K = true;
 					break;
 				case 'E':
@@ -16253,6 +16256,7 @@ var parse_rs = (function parse_rs_factory() {
 	/* 18.4.7 rPr CT_RPrElt */
 	var parse_rpr = function parse_rpr(rpr, intro, outro) {
 		var font = {}, cp = 65001, align = "";
+		var pass = false;
 		var m = rpr.match(tagregex), i = 0;
 		if(m) for(;i!=m.length; ++i) {
 			var y = parsexmltag(m[i]);
@@ -16343,8 +16347,12 @@ var parse_rs = (function parse_rs_factory() {
 				/* 18.8.35 scheme CT_FontScheme TODO */
 				case '<scheme': break;
 
+				/* 18.2.10 extLst CT_ExtensionList ? */
+				case '<extLst': case '<extLst>': case '</extLst>': break;
+				case '<ext': pass = true; break;
+				case '</ext>': pass = false; break;
 				default:
-					if(y[0].charCodeAt(1) !== 47) throw 'Unrecognized rich format ' + y[0];
+					if(y[0].charCodeAt(1) !== 47 && !pass) throw new Error('Unrecognized rich format ' + y[0]);
 			}
 		}
 		var style = [];
@@ -25516,11 +25524,13 @@ function write_xls_props(wb, cfb) {
 	var i = 0, Keys;
 	if(wb.Props) {
 		Keys = keys(wb.Props);
+		// $FlowIgnore
 		for(i = 0; i < Keys.length; ++i) (DocSummaryRE.hasOwnProperty(Keys[i]) ? DSEntries : SummaryRE.hasOwnProperty(Keys[i]) ? SEntries : CEntries).push([Keys[i], wb.Props[Keys[i]]]);
 	}
 	if(wb.Custprops) {
 		Keys = keys(wb.Custprops);
-		for(i = 0; i < Keys.length; ++i) if(!wb.Props.hasOwnProperty(Keys[i])) (DocSummaryRE.hasOwnProperty(Keys[i]) ? DSEntries : SummaryRE.hasOwnProperty(Keys[i]) ? SEntries : CEntries).push([Keys[i], wb.Custprops[Keys[i]]]);
+		// $FlowIgnore
+		for(i = 0; i < Keys.length; ++i) if(!(wb.Props||{}).hasOwnProperty(Keys[i])) (DocSummaryRE.hasOwnProperty(Keys[i]) ? DSEntries : SummaryRE.hasOwnProperty(Keys[i]) ? SEntries : CEntries).push([Keys[i], wb.Custprops[Keys[i]]]);
 	}
 	var CEntries2 = [];
 	for(i = 0; i < CEntries.length; ++i) {
@@ -28628,7 +28638,7 @@ function readSync(data, opts) {
 	if(o.dateNF) _ssfopts.dateNF = o.dateNF;
 	if(!o.type) o.type = (has_buf && Buffer.isBuffer(data)) ? "buffer" : "base64";
 	if(o.type == "file") { o.type = has_buf ? "buffer" : "binary"; d = read_binary(data); }
-	if(o.type == "string") { str = true; o.type = "binary"; d = bstrify(data); }
+	if(o.type == "string") { str = true; o.type = "binary"; o.codepage = 65001; d = bstrify(data); }
 	if(o.type == 'array' && typeof Uint8Array !== 'undefined' && data instanceof Uint8Array && typeof ArrayBuffer !== 'undefined') {
 		// $FlowIgnore
 		var ab=new ArrayBuffer(3), vu=new Uint8Array(ab); vu.foo="bar";

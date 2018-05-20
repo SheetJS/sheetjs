@@ -105,8 +105,8 @@ var SpecialProperties = {
 	DocSummaryPIDDSI[y] = SummaryPIDSI[y] = SpecialProperties[y];
 })();
 
-var DocSummaryRE = evert_key(DocSummaryPIDDSI, "n");
-var SummaryRE = evert_key(SummaryPIDSI, "n");
+var DocSummaryRE/*:{[key:string]:string}*/ = evert_key(DocSummaryPIDDSI, "n");
+var SummaryRE/*:{[key:string]:string}*/ = evert_key(SummaryPIDSI, "n");
 
 /* [MS-XLS] 2.4.63 Country/Region codes */
 var CountryEnum = {

@@ -873,11 +873,13 @@ function write_xls_props(wb/*:Workbook*/, cfb/*:CFBContainer*/) {
 	var i = 0, Keys;
 	if(wb.Props) {
 		Keys = keys(wb.Props);
+		// $FlowIgnore
 		for(i = 0; i < Keys.length; ++i) (DocSummaryRE.hasOwnProperty(Keys[i]) ? DSEntries : SummaryRE.hasOwnProperty(Keys[i]) ? SEntries : CEntries).push([Keys[i], wb.Props[Keys[i]]]);
 	}
 	if(wb.Custprops) {
 		Keys = keys(wb.Custprops);
-		for(i = 0; i < Keys.length; ++i) if(!wb.Props.hasOwnProperty(Keys[i])) (DocSummaryRE.hasOwnProperty(Keys[i]) ? DSEntries : SummaryRE.hasOwnProperty(Keys[i]) ? SEntries : CEntries).push([Keys[i], wb.Custprops[Keys[i]]]);
+		// $FlowIgnore
+		for(i = 0; i < Keys.length; ++i) if(!(wb.Props||{}).hasOwnProperty(Keys[i])) (DocSummaryRE.hasOwnProperty(Keys[i]) ? DSEntries : SummaryRE.hasOwnProperty(Keys[i]) ? SEntries : CEntries).push([Keys[i], wb.Custprops[Keys[i]]]);
 	}
 	var CEntries2 = [];
 	for(i = 0; i < CEntries.length; ++i) {

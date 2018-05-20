@@ -138,9 +138,10 @@ function write_TypedPropertyValue(type/*:number*/, value) {
 		case 0x03 /*VT_I4*/: p.write_shift(-4, value); break;
 		case 0x05 /*VT_I4*/: p = new_buf(8); p.write_shift(8, value, 'f'); break;
 		case 0x0B /*VT_BOOL*/: p.write_shift(4, value ? 0x01 : 0x00); break;
-		case 0x40 /*VT_FILETIME*/: p = write_FILETIME(value); break;
+		case 0x40 /*VT_FILETIME*/: /*:: if(typeof value !== "string" && !(value instanceof Date)) throw "unreachable"; */ p = write_FILETIME(value); break;
 		case 0x1F /*VT_LPWSTR*/:
 		case 0x50 /*VT_STRING*/:
+			/*:: if(typeof value !== "string") throw "unreachable"; */
 			p = new_buf(4 + 2 * (value.length + 1) + (value.length % 2 ? 0 : 2));
 			p.write_shift(4, value.length + 1);
 			p.write_shift(0, value, "dbcs");
@@ -291,8 +292,12 @@ function write_PropertySet(entries, RE, PIDSI) {
 		var val = entries[i][1], idx = 0;
 		if(RE) {
 			idx = +RE[entries[i][0]];
-			var pinfo = PIDSI[idx];
-			if(pinfo.p == "version" && typeof val == "string") val = (+((val = val.split("."))[0])<<16) + (+val[1]||0);
+			var pinfo = (PIDSI/*:: || {}*/)[idx]/*:: || {} */;
+			if(pinfo.p == "version" && typeof val == "string") {
+				/*:: if(typeof val !== "string") throw "unreachable"; */
+				var arr = val.split(".");
+				val = ((+arr[0])<<16) + ((+arr[1])||0);
+			}
 			pr = write_TypedPropertyValue(pinfo.t, val);
 		} else {
 			var T = guess_property_type(val);
@@ -350,7 +355,7 @@ function parse_PropertySetStream(file, PIDSI, clsid) {
 	rval.FMTID = [FMTID0, FMTID1]; // TODO: verify FMTID0/1
 	return rval;
 }
-function write_PropertySetStream(entries, clsid, RE, PIDSI, entries2/*:?any*/, clsid2/*:?any*/) {
+function write_PropertySetStream(entries, clsid, RE, PIDSI/*:{[key:string|number]:any}*/, entries2/*:?any*/, clsid2/*:?any*/) {
 	var hdr = new_buf(entries2 ? 68 : 48);
 	var bufs = [hdr];
 	hdr.write_shift(2, 0xFFFE);
