@@ -6,7 +6,7 @@ Emphasis on parsing and writing robustness, cross-format feature compatibility
 with a unified JS representation, and ES3/ES5 browser compatibility back to IE6.
 
 This is the community version.  We also offer a pro version with performance
-enhancements, additional features by request, and dedicated support.
+enhancements, additional features like styling, and dedicated support.
 
 
 [**Pro Version**](http://sheetjs.com/pro)
@@ -182,7 +182,8 @@ The [`demos` directory](demos/) includes sample projects for:
 
 **Frameworks and APIs**
 - [`angularjs`](demos/angular/)
-- [`angular 2 / 4 / 5 and ionic`](demos/angular2/)
+- [`angular 2 / 4 / 5 / 6 and ionic`](demos/angular2/)
+- [`knockout`](demos/knockout/)
 - [`meteor`](demos/meteor/)
 - [`react and react-native`](demos/react/)
 - [`vue 2.x and weex`](demos/vue/)
@@ -288,6 +289,10 @@ is spiritually similar to XLSX but files often tend up taking less than half the
 space and open much faster!  Even though an XLSX writer is available, other
 format writers are available so users can take advantage of the unique
 characteristics of each format.
+
+The primary focus of the Community Edition is correct data interchange, focused
+on extracting data from any compatible data representation and exporting data in
+various formats suitable for any third party interface.
 
 
 ## Parsing Workbooks

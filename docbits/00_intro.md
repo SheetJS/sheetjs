@@ -6,7 +6,7 @@ Emphasis on parsing and writing robustness, cross-format feature compatibility
 with a unified JS representation, and ES3/ES5 browser compatibility back to IE6.
 
 This is the community version.  We also offer a pro version with performance
-enhancements, additional features by request, and dedicated support.
+enhancements, additional features like styling, and dedicated support.
 
 
 [**Pro Version**](http://sheetjs.com/pro)

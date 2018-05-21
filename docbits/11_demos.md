@@ -4,7 +4,8 @@ The [`demos` directory](demos/) includes sample projects for:
 
 **Frameworks and APIs**
 - [`angularjs`](demos/angular/)
-- [`angular 2 / 4 / 5 and ionic`](demos/angular2/)
+- [`angular 2 / 4 / 5 / 6 and ionic`](demos/angular2/)
+- [`knockout`](demos/knockout/)
 - [`meteor`](demos/meteor/)
 - [`react and react-native`](demos/react/)
 - [`vue 2.x and weex`](demos/vue/)

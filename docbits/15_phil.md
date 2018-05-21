@@ -31,5 +31,9 @@ space and open much faster!  Even though an XLSX writer is available, other
 format writers are available so users can take advantage of the unique
 characteristics of each format.
 
+The primary focus of the Community Edition is correct data interchange, focused
+on extracting data from any compatible data representation and exporting data in
+various formats suitable for any third party interface.
+
 </details>
 
