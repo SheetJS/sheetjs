@@ -8250,6 +8250,7 @@ function parse_cellXfs(t, styles, opts) {
 	var pass = false;
 	t[0].match(tagregex).forEach(function(x) {
 		var y = parsexmltag(x), i = 0;
+		y[0] = y[0].replace(/x:/g, '');
 		switch(y[0]) {
 			case '<cellXfs': case '<cellXfs>': case '<cellXfs/>': case '</cellXfs>': break;
 
@@ -8305,11 +8306,11 @@ function write_cellXfs(cellXfs)/*:string*/ {
 
 /* 18.8 Styles CT_Stylesheet*/
 var parse_sty_xml= (function make_pstyx() {
-var numFmtRegex = /<numFmts([^>]*)>[\S\s]*?<\/numFmts>/;
-var cellXfRegex = /<cellXfs([^>]*)>[\S\s]*?<\/cellXfs>/;
-var fillsRegex = /<fills([^>]*)>[\S\s]*?<\/fills>/;
-var fontsRegex = /<fonts([^>]*)>[\S\s]*?<\/fonts>/;
-var bordersRegex = /<borders([^>]*)>[\S\s]*?<\/borders>/;
+var numFmtRegex = /<(x:)?numFmts([^>]*)>[\S\s]*?<\/(x:)?numFmts>/;
+var cellXfRegex = /<(x:)?cellXfs([^>]*)>[\S\s]*?<\/(x:)?cellXfs>/;
+var fillsRegex = /<(x:)?fills([^>]*)>[\S\s]*?<\/(x:)?fills>/;
+var fontsRegex = /<(x:)?fonts([^>]*)>[\S\s]*?<\/(x:)?fonts>/;
+var bordersRegex = /<(x:)?borders([^>]*)>[\S\s]*?<\/(x:)?borders>/;
 
 return function parse_sty_xml(data, themes, opts) {
 	var styles = {};
