@@ -2025,19 +2025,29 @@ if(fs.existsSync(dir + 'dbf/d11.dbf')) describe('dbf', function() {
 var JSDOM = null;
 // $FlowIgnore
 var domtest = browser || (function(){try{return !!(JSDOM=require('jsdom').JSDOM);}catch(e){return 0;}})();
+var inserted_dom_elements = [];
 
 function get_dom_element(html) {
 	if(browser) {
 		var domelt = document.createElement('div');
 		domelt.innerHTML = html;
-		return domelt;
+		document.body.appendChild(domelt);
+		inserted_dom_elements.push(domelt);
+		return domelt.children[0];
 	}
 	if(!JSDOM) throw new Error("Browser test fail");
 	return new JSDOM(html).window.document.body.children[0];
 }
 
 describe('HTML', function() {
-	describe('input string', function(){
+	afterEach(function () {
+		// Remove the DOM elements inserted to the page by get_dom_element
+		inserted_dom_elements.forEach(function (element) {
+			if(element.parentNode) element.parentNode.removeChild(element);
+		});
+		inserted_dom_elements = [];
+	});
+	describe('input string', function() {
 		it('should interpret values by default', function() { plaintext_test(X.read(html_bstr, {type:"binary"}), false); });
 		it('should generate strings if raw option is passed', function() { plaintext_test(X.read(html_bstr, {type:"binary", raw:true}), true); });
 		it('should handle "string" type', function() { plaintext_test(X.read(html_str, {type:"string"}), false); });
@@ -2071,6 +2081,7 @@ describe('HTML', function() {
 	});
 	if(domtest) it('should honor sheetRows', function() {
 		var html = X.utils.sheet_to_html(X.utils.aoa_to_sheet([[1,2],[3,4],[5,6]]));
+		html = /<body[^>]*>([\s\S]*)<\/body>/i.exec(html)[1];
 		var ws = X.utils.table_to_sheet(get_dom_element(html));
 		assert.equal(ws['!ref'], "A1:B3");
 		ws = X.utils.table_to_sheet(get_dom_element(html), {sheetRows:1});
@@ -2079,6 +2090,24 @@ describe('HTML', function() {
 		ws = X.utils.table_to_sheet(get_dom_element(html), {sheetRows:2});
 		assert.equal(ws['!ref'], "A1:B2");
 		assert.equal(ws['!fullref'], "A1:B3");
+	});
+	if(domtest) it('should hide hidden rows', function() {
+		var html = "<table><tr style='display: none;'><td>Foo</td></tr><tr><td style='display: none;'>Bar</td></tr><tr class='hidden'><td>Baz</td></tr></table><style>.hidden {display: none}</style>";
+		var ws = X.utils.table_to_sheet(get_dom_element(html));
+		var expected_rows = [];
+		expected_rows[0] = expected_rows[2] = {hidden: true};
+		assert.equal(ws['!ref'], "A1:A3");
+		assert.deepEqual(ws['!rows'], expected_rows);
+		assert.equal(get_cell(ws, "A1").v, "Foo");
+		assert.equal(get_cell(ws, "A2").v, "Bar");
+		assert.equal(get_cell(ws, "A3").v, "Baz");
+	});
+	if(domtest) it('should ignore hidden rows and cells when the `display` option is on', function() {
+		var html = "<table><tr style='display: none;'><td>1</td><td>2</td><td>3</td></tr><tr><td class='hidden'>Foo</td><td>Bar</td><td style='display: none;'>Baz</td></tr></table><style>.hidden {display: none}</style>";
+		var ws = X.utils.table_to_sheet(get_dom_element(html), {display: true});
+		assert.equal(ws['!ref'], "A1");
+		assert.equal(ws.hasOwnProperty('!rows'), false);
+		assert.equal(get_cell(ws, "A1").v, "Bar");
 	});
 	describe('type override', function() {
 		function chk(ws) {

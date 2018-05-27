@@ -18281,15 +18281,22 @@ function parse_dom_table(table/*:HTMLElement*/, _opts/*:?any*/)/*:Worksheet*/ {
 	if(DENSE != null) opts.dense = DENSE;
 	var ws/*:Worksheet*/ = opts.dense ? ([]/*:any*/) : ({}/*:any*/);
 	var rows/*:HTMLCollection<HTMLTableRowElement>*/ = table.getElementsByTagName('tr');
-	var sheetRows = Math.min(opts.sheetRows||10000000, rows.length);
-	var range/*:Range*/ = {s:{r:0,c:0},e:{r:sheetRows - 1,c:0}};
+	var sheetRows = opts.sheetRows || 10000000;
+	var range/*:Range*/ = {s:{r:0,c:0},e:{r:0,c:0}};
 	var merges/*:Array<Range>*/ = [], midx = 0;
-	var R = 0, _C = 0, C = 0, RS = 0, CS = 0;
-	for(; R < sheetRows; ++R) {
-		var row/*:HTMLTableRowElement*/ = rows[R];
+	var rowinfo/*:Array<RowInfo>*/ = [];
+	var _R = 0, R = 0, _C, C, RS, CS;
+	for(; _R < rows.length && R < sheetRows; ++_R) {
+		var row/*:HTMLTableRowElement*/ = rows[_R];
+		if (is_dom_element_hidden(row)) {
+			if (opts.display) continue;
+			rowinfo[R] = {hidden: true};
+		}
 		var elts/*:HTMLCollection<HTMLTableCellElement>*/ = (row.children/*:any*/);
 		for(_C = C = 0; _C < elts.length; ++_C) {
-			var elt/*:HTMLTableCellElement*/ = elts[_C], v = htmldecode(elts[_C].innerHTML);
+			var elt/*:HTMLTableCellElement*/ = elts[_C];
+			if (opts.display && is_dom_element_hidden(elt)) continue;
+			var v/*:string*/ = htmldecode(elt.innerHTML);
 			for(midx = 0; midx < merges.length; ++midx) {
 				var m/*:Range*/ = merges[midx];
 				if(m.s.c == C && m.s.r <= R && R <= m.e.r) { C = m.e.c+1; midx = -1; }
@@ -18316,15 +18323,35 @@ function parse_dom_table(table/*:HTMLElement*/, _opts/*:?any*/)/*:Worksheet*/ {
 			if(range.e.c < C) range.e.c = C;
 			C += CS;
 		}
+		++R;
 	}
 	if(merges.length) ws['!merges'] = merges;
+	if(rowinfo.length) ws['!rows'] = rowinfo;
+	range.e.r = R - 1;
 	ws['!ref'] = encode_range(range);
-	if(sheetRows < rows.length) ws['!fullref'] = encode_range((range.e.r = rows.length-1,range));
+	if(R >= sheetRows) ws['!fullref'] = encode_range((range.e.r = rows.length-_R+R-1,range)); // We can count the real number of rows to parse but we don't to improve the performance
 	return ws;
 }
 
 function table_to_book(table/*:HTMLElement*/, opts/*:?any*/)/*:Workbook*/ {
 	return sheet_to_workbook(parse_dom_table(table, opts), opts);
+}
+
+function is_dom_element_hidden(element/*:HTMLElement*/)/*:boolean*/ {
+	var display/*:string*/ = '';
+	var get_computed_style/*:?function*/ = get_get_computed_style_function(element);
+	if(get_computed_style) display = get_computed_style(element).getPropertyValue('display');
+	if(!display) display = element.style.display; // Fallback for cases when getComputedStyle is not available (e.g. an old browser or some Node.js environments) or doesn't work (e.g. if the element is not inserted to a document)
+	return display === 'none';
+}
+
+/* global getComputedStyle */
+function get_get_computed_style_function(element/*:HTMLElement*/)/*:?function*/ {
+	// The proper getComputedStyle implementation is the one defined in the element window
+	if(element.ownerDocument.defaultView && typeof element.ownerDocument.defaultView.getComputedStyle === 'function') return element.ownerDocument.defaultView.getComputedStyle;
+	// If it is not available, try to get one from the global namespace
+	if(typeof getComputedStyle === 'function') return getComputedStyle;
+	return null;
 }
 /* OpenDocument */
 var parse_content_xml = (function() {

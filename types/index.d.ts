@@ -663,6 +663,9 @@ export interface Table2SheetOpts extends CommonOptions, DateNFOption {
      * @default 0
      */
     sheetRows?: number;
+
+    /** If true, hidden rows and cells will not be parsed */
+    display?: boolean;
 }
 
 /** General utilities */

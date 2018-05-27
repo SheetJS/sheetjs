@@ -2055,6 +2055,7 @@ Both functions accept options arguments:
 |`dateNF`     |  FMT 14  | Use specified date format in string output          |
 |`cellDates`  |  false   | Store dates as type `d` (default is `n`)            |
 |`sheetRows`  |    0     | If >0, read the first `sheetRows` rows of the table |
+|`display`    |  false   | If true, hidden rows and cells will not be parsed   |
 
 
 <details>

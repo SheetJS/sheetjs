@@ -147,3 +147,8 @@ var IE_LoadFile = (function() { try {
   }
   return function(filename) { return fix_data(IE_LoadFile_Impl(filename)); };
 } catch(e) { return void 0; }})();
+
+// getComputedStyle polyfill from https://gist.github.com/8HNHoFtE/5891086
+if(typeof window !== 'undefined' && typeof window.getComputedStyle !== 'function') {
+  window.getComputedStyle = function(e,t){return this.el=e,this.getPropertyValue=function(t){var n=/(\-([a-z]){1})/g;return t=="float"&&(t="styleFloat"),n.test(t)&&(t=t.replace(n,function(){return arguments[2].toUpperCase()})),e.currentStyle[t]?e.currentStyle[t]:null},this}
+}
