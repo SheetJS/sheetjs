@@ -52,11 +52,11 @@ Multiple tables on a web page can be converted to individual worksheets:
 var workbook = XLSX.utils.book_new();
 
 /* convert table 'table1' to worksheet named "Sheet1" */
-var ws1 = XLSX.utils.table_to_book(document.getElementById('table1'));
+var ws1 = XLSX.utils.table_to_sheet(document.getElementById('table1'));
 XLSX.utils.book_append_sheet(workbook, ws1, "Sheet1");
 
 /* convert table 'table2' to worksheet named "Sheet2" */
-var ws2 = XLSX.utils.table_to_book(document.getElementById('table2'));
+var ws2 = XLSX.utils.table_to_sheet(document.getElementById('table2'));
 XLSX.utils.book_append_sheet(workbook, ws2, "Sheet2");
 
 /* workbook now has 2 worksheets */

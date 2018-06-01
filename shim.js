@@ -1,4 +1,4 @@
-/* shim.js (C) 2013-present SheetJS -- http://sheetjs.com */
+/*! shim.js (C) 2013-present SheetJS -- http://sheetjs.com */
 /* ES3/5 Compatibility shims and other utilities for older browsers. */
 
 // From https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/keys

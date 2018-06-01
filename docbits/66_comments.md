@@ -15,3 +15,14 @@ ws.A1.c.push({a:"SheetJS", t:"I'm a little comment, short and stout!"});
 Note: XLSB enforces a 54 character limit on the Author name.  Names longer than
 54 characters may cause issues with other formats.
 
+To mark a comment as normally hidden, set the `hidden` property:
+
+```js
+if(!ws.A1.c) ws.A1.c = [];
+ws.A1.c.push({a:"SheetJS", t:"This comment is visible"});
+
+if(!ws.A2.c) ws.A2.c = [];
+ws.A2.c.hidden = true;
+ws.A2.c.push({a:"SheetJS", t:"This comment will be hidden"});
+```
+

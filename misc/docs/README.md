@@ -341,11 +341,11 @@ Multiple tables on a web page can be converted to individual worksheets:
 var workbook = XLSX.utils.book_new();
 
 /* convert table 'table1' to worksheet named "Sheet1" */
-var ws1 = XLSX.utils.table_to_book(document.getElementById('table1'));
+var ws1 = XLSX.utils.table_to_sheet(document.getElementById('table1'));
 XLSX.utils.book_append_sheet(workbook, ws1, "Sheet1");
 
 /* convert table 'table2' to worksheet named "Sheet2" */
-var ws2 = XLSX.utils.table_to_book(document.getElementById('table2'));
+var ws2 = XLSX.utils.table_to_sheet(document.getElementById('table2'));
 XLSX.utils.book_append_sheet(workbook, ws2, "Sheet2");
 
 /* workbook now has 2 worksheets */
@@ -1426,6 +1426,17 @@ ws.A1.c.push({a:"SheetJS", t:"I'm a little comment, short and stout!"});
 Note: XLSB enforces a 54 character limit on the Author name.  Names longer than
 54 characters may cause issues with other formats.
 
+To mark a comment as normally hidden, set the `hidden` property:
+
+```js
+if(!ws.A1.c) ws.A1.c = [];
+ws.A1.c.push({a:"SheetJS", t:"This comment is visible"});
+
+if(!ws.A2.c) ws.A2.c = [];
+ws.A2.c.hidden = true;
+ws.A2.c.push({a:"SheetJS", t:"This comment will be hidden"});
+```
+
 #### Sheet Visibility
 
 Excel enables hiding sheets in the lower tab bar.  The sheet data is stored in
@@ -1896,6 +1907,7 @@ Both functions accept options arguments:
 |`dateNF`     |  FMT 14  | Use specified date format in string output          |
 |`cellDates`  |  false   | Store dates as type `d` (default is `n`)            |
 |`sheetRows`  |    0     | If >0, read the first `sheetRows` rows of the table |
+|`display`    |  false   | If true, hidden rows and cells will not be parsed   |
 
 
 

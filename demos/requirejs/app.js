@@ -1,5 +1,5 @@
 /* xlsx.js (C) 2013-present  SheetJS -- http://sheetjs.com */
-require(["xlsx-shim"], function(XLSX) {
+require(["xlsx"], function(XLSX) {
 console.log(XLSX);
 var X = XLSX;
 

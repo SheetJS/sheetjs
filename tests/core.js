@@ -10,6 +10,7 @@ declare type DescribeIt = { (desc:string, test:EmptyFunc):void; skip(desc:string
 declare var describe : DescribeIt;
 declare var it: DescribeIt;
 declare var before:(test:EmptyFunc)=>void;
+declare var afterEach:(test:EmptyFunc)=>void;
 declare var cptable: any;
 */
 var X;
@@ -2031,7 +2032,7 @@ function get_dom_element(html) {
 	if(browser) {
 		var domelt = document.createElement('div');
 		domelt.innerHTML = html;
-		document.body.appendChild(domelt);
+		if(document.body) document.body.appendChild(domelt);
 		inserted_dom_elements.push(domelt);
 		return domelt.children[0];
 	}

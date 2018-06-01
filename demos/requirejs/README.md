@@ -1,16 +1,7 @@
 # RequireJS
 
-The minified dist files trip up the RequireJS mechanism.  To bypass, the scripts
-automatically expose an `XLSX` variable that can be used if the require callback
-argument is `_XLSX` rather than `XLSX`.  This trick is employed in the included
-`xlsx-shim.js` script:
-
-```js
-/* xlsx-shim.js */
-define(['xlsx'], function (_XLSX) {
-	return XLSX;
-});
-```
+The module complies with the AMD `define` semantics, enabling use in RequireJS
+out of the box.
 
 The require config should set `xlsx` path to the appropriate dist file:
 
@@ -20,10 +11,10 @@ The require config should set `xlsx` path to the appropriate dist file:
 	},
 ```
 
-Once that is set, app code can freely require `"xlsx-shim"`:
+Once that is set, app code can freely require `"xlsx"`:
 
 ```js
-require(["xlsx-shim"], function(XLSX) {
+require(["xlsx"], function(XLSX) {
 	/* use XLSX here */
 });
 ```
@@ -69,7 +60,7 @@ node r.js -o build.js paths.requireLib=./require include=requireLib
 That step creates a file `app-built.js` that can be included in a page:
 
 ```html
-<!-- final bundle includes require.js, xlsx-shim, library and app code -->
+<!-- final bundle includes require.js, library and app code -->
 <script src="app-built.js"></script>
 ```
 
