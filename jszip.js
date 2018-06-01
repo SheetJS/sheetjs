@@ -1,4 +1,4 @@
-/*!
+/*
 
 JSZip - A Javascript class for generating and reading zip files
 <http://stuartk.com/jszip>
@@ -14,7 +14,7 @@ Note: since JSZip 3 removed critical functionality, this version assigns to the
 */
 (function(e){
 	if("object"==typeof exports&&"undefined"!=typeof module&&"undefined"==typeof DO_NOT_EXPORT_JSZIP)module.exports=e();
-	else if("function"==typeof define&&define.amd){JSZipSync=e();define([],e);}
+	else if("function"==typeof define&&define.amd&&"undefined"==typeof DO_NOT_EXPORT_JSZIP){JSZipSync=e();define([],e);}
 	else{
 		var f;
 		"undefined"!=typeof window?f=window:
