@@ -1,24 +1,4 @@
-function write_zip_type(wb/*:Workbook*/, opts/*:?WriteOpts*/)/*:any*/ {
-	var o = opts||{};
-	var z = write_zip(wb, o);
-	var oopts = {};
-	if(o.compression) oopts.compression = 'DEFLATE';
-	switch(o.type) {
-		case "base64": oopts.type = "base64"; break;
-		case "binary": oopts.type = "string"; break;
-		case "string": throw new Error("'string' output type invalid for '" + o.bookType + "' files");
-		case "buffer":
-		case "file": oopts.type = has_buf ? "nodebuffer" : "string"; break;
-		default: throw new Error("Unrecognized type " + o.type);
-	}
-	if(o.type === "file") return write_dl(o.file, z.generate(oopts));
-	var out = z.generate(oopts);
-	return o.type == "string" ? utf8read(out) : out;
-}
-
-function write_cfb_type(wb/*:Workbook*/, opts/*:?WriteOpts*/)/*:any*/ {
-	var o = opts||{};
-	var cfb/*:CFBContainer*/ = write_xlscfb(wb, o);
+function write_cfb_ctr(cfb/*:CFBContainer*/, o/*:WriteOpts*/)/*:any*/ {
 	switch(o.type) {
 		case "base64": case "binary": break;
 		case "buffer": case "array": o.type = ""; break;
@@ -27,6 +7,34 @@ function write_cfb_type(wb/*:Workbook*/, opts/*:?WriteOpts*/)/*:any*/ {
 		default: throw new Error("Unrecognized type " + o.type);
 	}
 	return CFB.write(cfb, o);
+}
+
+/*global encrypt_agile */
+/*:: declare var encrypt_agile:any; */
+function write_zip_type(wb/*:Workbook*/, opts/*:?WriteOpts*/)/*:any*/ {
+	var o = opts||{};
+	var z = write_zip(wb, o);
+	var oopts = {};
+	if(o.compression) oopts.compression = 'DEFLATE';
+	if(o.password) oopts.type = has_buf ? "nodebuffer" : "string";
+	else switch(o.type) {
+		case "base64": oopts.type = "base64"; break;
+		case "binary": oopts.type = "string"; break;
+		case "string": throw new Error("'string' output type invalid for '" + o.bookType + "' files");
+		case "buffer":
+		case "file": oopts.type = has_buf ? "nodebuffer" : "string"; break;
+		default: throw new Error("Unrecognized type " + o.type);
+	}
+	var out = z.generate(oopts);
+	if(o.password && typeof encrypt_agile !== 'undefined') return write_cfb_ctr(encrypt_agile(out, o.password), o);
+	if(o.type === "file") return write_dl(o.file, out);
+	return o.type == "string" ? utf8read(out) : out;
+}
+
+function write_cfb_type(wb/*:Workbook*/, opts/*:?WriteOpts*/)/*:any*/ {
+	var o = opts||{};
+	var cfb/*:CFBContainer*/ = write_xlscfb(wb, o);
+	return write_cfb_ctr(cfb, o);
 }
 
 function write_string_type(out/*:string*/, opts/*:WriteOpts*/, bom/*:?string*/)/*:any*/ {

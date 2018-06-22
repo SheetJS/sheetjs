@@ -1,7 +1,7 @@
 /* xlsx.js (C) 2013-present  SheetJS -- http://sheetjs.com */
-require(["xlsx"], function(XLSX) {
-console.log(XLSX);
-var X = XLSX;
+require(["xlsx"], function(XLSX2) {
+console.log(XLSX2);
+var X = XLSX2;
 
 var global_wb;
 
