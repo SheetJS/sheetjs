@@ -196,16 +196,20 @@ function sheet_add_json(_ws/*:?Worksheet*/, js/*:Array<any>*/, opts)/*:Worksheet
 			var v = JS[k];
 			var t = 'z';
 			var z = "";
-			if(typeof v == 'number') t = 'n';
-			else if(typeof v == 'boolean') t = 'b';
-			else if(typeof v == 'string') t = 's';
-			else if(v instanceof Date) {
-				t = 'd';
-				if(!o.cellDates) { t = 'n'; v = datenum(v); }
-				z = o.dateNF || SSF._table[14];
+			if(v && typeof v === 'object' && !(v instanceof Date)){
+				ws[encode_cell({c:_C + C,r:_R + R + offset})] = v;
+			} else {
+				if(typeof v == 'number') t = 'n';
+				else if(typeof v == 'boolean') t = 'b';
+				else if(typeof v == 'string') t = 's';
+				else if(v instanceof Date) {
+					t = 'd';
+					if(!o.cellDates) { t = 'n'; v = datenum(v); }
+					z = o.dateNF || SSF._table[14];
+				}
+				ws[encode_cell({c:_C + C,r:_R + R + offset})] = cell = ({t:t, v:v}/*:any*/);
+				if(z) cell.z = z;
 			}
-			ws[encode_cell({c:_C + C,r:_R + R + offset})] = cell = ({t:t, v:v}/*:any*/);
-			if(z) cell.z = z;
 		});
 	});
 	range.e.c = Math.max(range.e.c, _C + hdr.length - 1);
