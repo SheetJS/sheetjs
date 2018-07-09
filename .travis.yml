@@ -28,6 +28,9 @@ matrix:
       env: TZ="America/Anchorage" FMTS=misc
     - node_js: "4"
       env: TZ="America/Barbados" FMTS=misc
+    # see GH issue #1150
+    - node_js: "4.4.7"
+      env: TZ="Asia/Tokyo" FMTS=misc
     - node_js: "0.12"
       env: TZ="America/Cayman" FMTS=misc
     - node_js: "0.10"

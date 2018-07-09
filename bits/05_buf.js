@@ -1,8 +1,11 @@
 var has_buf = (typeof Buffer !== 'undefined' && typeof process !== 'undefined' && typeof process.versions !== 'undefined' && process.versions.node);
 
+var Buffer_from = /*::(*/function(){}/*:: :any)*/;
+
 if(typeof Buffer !== 'undefined') {
-	// $FlowIgnore
-	if(!Buffer.from) Buffer.from = function(buf, enc) { return (enc) ? new Buffer(buf, enc) : new Buffer(buf); };
+	var nbfs = !Buffer.from;
+	if(!nbfs) try { Buffer.from("foo", "utf8"); } catch(e) { nbfs = true; }
+	Buffer_from = nbfs ? function(buf, enc) { return (enc) ? new Buffer(buf, enc) : new Buffer(buf); } : Buffer.from.bind(Buffer);
 	// $FlowIgnore
 	if(!Buffer.alloc) Buffer.alloc = function(n) { return new Buffer(n); };
 }
@@ -14,7 +17,8 @@ function new_raw_buf(len/*:number*/) {
 }
 
 var s2a = function s2a(s/*:string*/)/*:any*/ {
-	if(has_buf) return Buffer.from(s, "binary");
+	// $FlowIgnore
+	if(has_buf) return Buffer_from(s, "binary");
 	return s.split("").map(function(x/*:string*/)/*:number*/{ return x.charCodeAt(0) & 0xff; });
 };
 

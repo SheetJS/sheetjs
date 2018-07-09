@@ -799,4 +799,6 @@ export interface StreamUtils {
     to_csv(sheet: WorkSheet, opts?: Sheet2CSVOpts): any;
     /** HTML output stream, generate one line at a time */
     to_html(sheet: WorkSheet, opts?: Sheet2HTMLOpts): any;
+    /** JSON object stream, generate one row at a time */
+    to_json(sheet: WorkSheet, opts?: Sheet2JSONOpts): any;
 }

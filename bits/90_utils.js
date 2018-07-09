@@ -1,10 +1,52 @@
+/*::
+type MJRObject = {
+	row: any;
+	isempty: boolean;
+};
+*/
+function make_json_row(sheet/*:Worksheet*/, r/*:Range*/, R/*:number*/, cols/*:Array<string>*/, header/*:number*/, hdr/*:Array<any>*/, dense/*:boolean*/, o/*:Sheet2JSONOpts*/)/*:MJRObject*/ {
+	var rr = encode_row(R);
+	var defval = o.defval, raw = o.raw;
+	var isempty = true;
+	var row/*:any*/ = (header === 1) ? [] : {};
+	if(header !== 1) {
+		if(Object.defineProperty) try { Object.defineProperty(row, '__rowNum__', {value:R, enumerable:false}); } catch(e) { row.__rowNum__ = R; }
+		else row.__rowNum__ = R;
+	}
+	if(!dense || sheet[R]) for (var C = r.s.c; C <= r.e.c; ++C) {
+		var val = dense ? sheet[R][C] : sheet[cols[C] + rr];
+		if(val === undefined || val.t === undefined) {
+			if(defval === undefined) continue;
+			if(hdr[C] != null) { row[hdr[C]] = defval; }
+			continue;
+		}
+		var v = val.v;
+		switch(val.t){
+			case 'z': if(v == null) break; continue;
+			case 'e': v = void 0; break;
+			case 's': case 'd': case 'b': case 'n': break;
+			default: throw new Error('unrecognized type ' + val.t);
+		}
+		if(hdr[C] != null) {
+			if(v == null) {
+				if(defval !== undefined) row[hdr[C]] = defval;
+				else if(raw && v === null) row[hdr[C]] = null;
+				else continue;
+			} else {
+				row[hdr[C]] = raw ? v : format_cell(val,v,o);
+			}
+			if(v != null) isempty = false;
+		}
+	}
+	return { row: row, isempty: isempty };
+}
+
+
 function sheet_to_json(sheet/*:Worksheet*/, opts/*:?Sheet2JSONOpts*/) {
 	if(sheet == null || sheet["!ref"] == null) return [];
-	var val = {t:'n',v:0}, header = 0, offset = 1, hdr/*:Array<any>*/ = [], isempty = true, v=0, vv="";
+	var val = {t:'n',v:0}, header = 0, offset = 1, hdr/*:Array<any>*/ = [], v=0, vv="";
 	var r = {s:{r:0,c:0},e:{r:0,c:0}};
 	var o = opts || {};
-	var raw = o.raw;
-	var defval = o.defval;
 	var range = o.range != null ? o.range : sheet["!ref"];
 	if(o.header === 1) header = 1;
 	else if(o.header === "A") header = 2;
@@ -37,42 +79,9 @@ function sheet_to_json(sheet/*:Worksheet*/, opts/*:?Sheet2JSONOpts*/) {
 				hdr[C] = vv;
 		}
 	}
-	var row/*:any*/ = (header === 1) ? [] : {};
 	for (R = r.s.r + offset; R <= r.e.r; ++R) {
-		rr = encode_row(R);
-		isempty = true;
-		if(header === 1) row = [];
-		else {
-			row = {};
-			if(Object.defineProperty) try { Object.defineProperty(row, '__rowNum__', {value:R, enumerable:false}); } catch(e) { row.__rowNum__ = R; }
-			else row.__rowNum__ = R;
-		}
-		if(!dense || sheet[R]) for (C = r.s.c; C <= r.e.c; ++C) {
-			val = dense ? sheet[R][C] : sheet[cols[C] + rr];
-			if(val === undefined || val.t === undefined) {
-				if(defval === undefined) continue;
-				if(hdr[C] != null) { row[hdr[C]] = defval; }
-				continue;
-			}
-			v = val.v;
-			switch(val.t){
-				case 'z': if(v == null) break; continue;
-				case 'e': v = void 0; break;
-				case 's': case 'd': case 'b': case 'n': break;
-				default: throw new Error('unrecognized type ' + val.t);
-			}
-			if(hdr[C] != null) {
-				if(v == null) {
-					if(defval !== undefined) row[hdr[C]] = defval;
-					else if(raw && v === null) row[hdr[C]] = null;
-					else continue;
-				} else {
-					row[hdr[C]] = raw ? v : format_cell(val,v,o);
-				}
-				if(v != null) isempty = false;
-			}
-		}
-		if((isempty === false) || (header === 1 ? o.blankrows !== false : !!o.blankrows)) out[outi++] = row;
+		var row = make_json_row(sheet, r, R, cols, header, hdr, dense, o);
+		if((row.isempty === false) || (header === 1 ? o.blankrows !== false : !!o.blankrows)) out[outi++] = row.row;
 	}
 	out.length = outi;
 	return out;

@@ -1,6 +1,6 @@
 /* cpexcel.js (C) 2013-present SheetJS -- http://sheetjs.com */
 /*jshint -W100 */
-var cptable = {version:"1.13.0"};
+var cptable = {version:"1.14.0"};
 cptable[437] = (function(){ var d = "\u0000\u0001\u0002\u0003\u0004\u0005\u0006\u0007\b\t\n\u000b\f\r\u000e\u000f\u0010\u0011\u0012\u0013\u0014\u0015\u0016\u0017\u0018\u0019\u001a\u001b\u001c\u001d\u001e\u001f !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~ÇüéâäàåçêëèïîìÄÅÉæÆôöòûùÿÖÜ¢£¥₧ƒáíóúñÑªº¿⌐¬½¼¡«»░▒▓│┤╡╢╖╕╣║╗╝╜╛┐└┴┬├─┼╞╟╚╔╩╦╠═╬╧╨╤╥╙╘╒╓╫╪┘┌█▄▌▐▀αßΓπΣσµτΦΘΩδ∞φε∩≡±≥≤⌠⌡÷≈°∙·√ⁿ²■ ", D = [], e = {}; for(var i=0;i!=d.length;++i) { if(d.charCodeAt(i) !== 0xFFFD) e[d.charAt(i)] = i; D[i] = d.charAt(i); } return {"enc": e, "dec": D }; })();
 cptable[620] = (function(){ var d = "\u0000\u0001\u0002\u0003\u0004\u0005\u0006\u0007\b\t\n\u000b\f\r\u000e\u000f\u0010\u0011\u0012\u0013\u0014\u0015\u0016\u0017\u0018\u0019\u001a\u001b\u001c\u001d\u001e\u001f !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~ÇüéâäàąçêëèïîćÄĄĘęłôöĆûùŚÖÜ¢Ł¥śƒŹŻóÓńŃźż¿⌐¬½¼¡«»░▒▓│┤╡╢╖╕╣║╗╝╜╛┐└┴┬├─┼╞╟╚╔╩╦╠═╬╧╨╤╥╙╘╒╓╫╪┘┌█▄▌▐▀αßΓπΣσµτΦΘΩδ∞φε∩≡±≥≤⌠⌡÷≈°∙·√ⁿ²■ ", D = [], e = {}; for(var i=0;i!=d.length;++i) { if(d.charCodeAt(i) !== 0xFFFD) e[d.charAt(i)] = i; D[i] = d.charAt(i); } return {"enc": e, "dec": D }; })();
 cptable[737] = (function(){ var d = "\u0000\u0001\u0002\u0003\u0004\u0005\u0006\u0007\b\t\n\u000b\f\r\u000e\u000f\u0010\u0011\u0012\u0013\u0014\u0015\u0016\u0017\u0018\u0019\u001a\u001b\u001c\u001d\u001e\u001f !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~ΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩαβγδεζηθικλμνξοπρσςτυφχψ░▒▓│┤╡╢╖╕╣║╗╝╜╛┐└┴┬├─┼╞╟╚╔╩╦╠═╬╧╨╤╥╙╘╒╓╫╪┘┌█▄▌▐▀ωάέήϊίόύϋώΆΈΉΊΌΎΏ±≥≤ΪΫ÷≈°∙·√ⁿ²■ ", D = [], e = {}; for(var i=0;i!=d.length;++i) { if(d.charCodeAt(i) !== 0xFFFD) e[d.charAt(i)] = i; D[i] = d.charAt(i); } return {"enc": e, "dec": D }; })();
@@ -1017,9 +1017,11 @@ if (typeof module !== 'undefined' && module.exports && typeof DO_NOT_EXPORT_CODE
   var cca = function cca(x) { return x.charCodeAt(0); };
 
   var has_buf = (typeof Buffer !== 'undefined');
+  var Buffer_from = function(){};
   if(has_buf) {
-    // $FlowIgnore
-    if(!Buffer.from) Buffer.from = function(buf, enc) { return (enc) ? new Buffer(buf, enc) : new Buffer(buf); };
+    var nbfs = !Buffer.from;
+    if(!nbfs) try { Buffer.from("foo", "utf8"); } catch(e) { nbfs = true; }
+    Buffer_from = nbfs ? function(buf, enc) { return (enc) ? new Buffer(buf, enc) : new Buffer(buf); } : Buffer.from.bind(Buffer);
     // $FlowIgnore
     if(!Buffer.allocUnsafe) Buffer.allocUnsafe = function(n) { return new Buffer(n); };
 
@@ -1292,7 +1294,7 @@ if (typeof module !== 'undefined' && module.exports && typeof DO_NOT_EXPORT_CODE
     }
     else if((M=magic[cp])) switch(M) {
       case "utf8":
-        if(has_buf && isstr) { out = Buffer.from(data, M); j = out.length; break; }
+        if(has_buf && isstr) { out = Buffer_from(data, M); j = out.length; break; }
         for(i = 0; i < len; ++i, ++j) {
           w = isstr ? data.charCodeAt(i) : data[i].charCodeAt(0);
           if(w <= 0x007F) out[j] = w;
@@ -1314,7 +1316,7 @@ if (typeof module !== 'undefined' && module.exports && typeof DO_NOT_EXPORT_CODE
         }
         break;
       case "ascii":
-        if(has_buf && typeof data === "string") { out = Buffer.from(data, M); j = out.length; break; }
+        if(has_buf && typeof data === "string") { out = Buffer_from(data, M); j = out.length; break; }
         for(i = 0; i < len; ++i, ++j) {
           w = isstr ? data.charCodeAt(i) : data[i].charCodeAt(0);
           if(w <= 0x007F) out[j] = w;
@@ -1322,7 +1324,7 @@ if (typeof module !== 'undefined' && module.exports && typeof DO_NOT_EXPORT_CODE
         }
         break;
       case "utf16le":
-        if(has_buf && typeof data === "string") { out = Buffer.from(data, M); j = out.length; break; }
+        if(has_buf && typeof data === "string") { out = Buffer_from(data, M); j = out.length; break; }
         for(i = 0; i < len; ++i) {
           w = isstr ? data.charCodeAt(i) : data[i].charCodeAt(0);
           out[j++] = w&255;

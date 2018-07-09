@@ -720,12 +720,26 @@ Stream.  They are only exposed in NodeJS.
 
 - `XLSX.stream.to_csv` is the streaming version of `XLSX.utils.sheet_to_csv`.
 - `XLSX.stream.to_html` is the streaming version of `XLSX.utils.sheet_to_html`.
+- `XLSX.stream.to_json` is the streaming version of `XLSX.utils.sheet_to_json`.
 
 
 ```js
 var output_file_name = "out.csv";
 var stream = XLSX.stream.to_csv(worksheet);
 stream.pipe(fs.createWriteStream(output_file_name));
+```
+
+
+
+```js
+/* to_json returns an object-mode stream */
+var stream = XLSX.stream.to_json(worksheet, {raw:true});
+
+/* the following stream converts JS objects to text via JSON.stringify */
+var conv = new Transform({writableObjectMode:true});
+conv._transform = function(obj, e, cb){ cb(null, JSON.stringify(obj) + "\n"); };
+
+stream.pipe(conv); conv.pipe(process.stdout);
 ```
 
 

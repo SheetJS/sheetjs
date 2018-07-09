@@ -152,10 +152,12 @@ if(has_buf) {
 	};
 	var corpus = "foo bar baz\u00e2\u0098\u0083\u00f0\u009f\u008d\u00a3";
 	if(utf8read(corpus) == utf8readb(corpus)) utf8read = utf8readb;
-	var utf8readc = function utf8readc(data) { return Buffer.from(data, 'binary').toString('utf8'); };
+	// $FlowIgnore
+	var utf8readc = function utf8readc(data) { return Buffer_from(data, 'binary').toString('utf8'); };
 	if(utf8read(corpus) == utf8readc(corpus)) utf8read = utf8readc;
 
-	utf8write = function(data) { return Buffer.from(data, 'utf8').toString("binary"); };
+	// $FlowIgnore
+	utf8write = function(data) { return Buffer_from(data, 'utf8').toString("binary"); };
 }
 
 // matches <foo>...</foo> extracts content

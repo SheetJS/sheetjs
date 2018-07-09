@@ -600,14 +600,16 @@ module.exports = function(data, options) {
 },{"./base64":1,"./zipEntries":22}],11:[function(_dereq_,module,exports){
 (function (Buffer){
 'use strict';
+var Buffer_from = /*::(*/function(){}/*:: :any)*/;
 if(typeof Buffer !== 'undefined') {
-	// $FlowIgnore
-	if(!Buffer.from) Buffer.from = function(buf, enc) { return (enc) ? new Buffer(buf, enc) : new Buffer(buf); };
+	var nbfs = !Buffer.from;
+	if(!nbfs) try { Buffer.from("foo", "utf8"); } catch(e) { nbfs = true; }
+	Buffer_from = nbfs ? function(buf, enc) { return (enc) ? new Buffer(buf, enc) : new Buffer(buf); } : Buffer.from.bind(Buffer);
 	// $FlowIgnore
 	if(!Buffer.alloc) Buffer.alloc = function(n) { return new Buffer(n); };
 }
 module.exports = function(data, encoding){
-    return typeof data == 'number' ? Buffer.alloc(data) : Buffer.from(data, encoding);
+    return typeof data == 'number' ? Buffer.alloc(data) : Buffer_from(data, encoding);
 };
 module.exports.test = function(b){
     return Buffer.isBuffer(b);

@@ -4,7 +4,7 @@
 /*global global, exports, module, require:false, process:false, Buffer:false, ArrayBuffer:false */
 var XLSX = {};
 function make_xlsx_lib(XLSX){
-XLSX.version = '0.13.1';
+XLSX.version = '0.13.2';
 var current_codepage = 1200, current_ansi = 1252;
 /*global cptable:true, window */
 if(typeof module !== "undefined" && typeof require !== 'undefined') {
@@ -127,9 +127,12 @@ var Base64 = (function make_b64(){
 })();
 var has_buf = (typeof Buffer !== 'undefined' && typeof process !== 'undefined' && typeof process.versions !== 'undefined' && process.versions.node);
 
+var Buffer_from = function(){};
+
 if(typeof Buffer !== 'undefined') {
-	// $FlowIgnore
-	if(!Buffer.from) Buffer.from = function(buf, enc) { return (enc) ? new Buffer(buf, enc) : new Buffer(buf); };
+	var nbfs = !Buffer.from;
+	if(!nbfs) try { Buffer.from("foo", "utf8"); } catch(e) { nbfs = true; }
+	Buffer_from = nbfs ? function(buf, enc) { return (enc) ? new Buffer(buf, enc) : new Buffer(buf); } : Buffer.from.bind(Buffer);
 	// $FlowIgnore
 	if(!Buffer.alloc) Buffer.alloc = function(n) { return new Buffer(n); };
 }
@@ -141,7 +144,8 @@ function new_raw_buf(len) {
 }
 
 var s2a = function s2a(s) {
-	if(has_buf) return Buffer.from(s, "binary");
+	// $FlowIgnore
+	if(has_buf) return Buffer_from(s, "binary");
 	return s.split("").map(function(x){ return x.charCodeAt(0) & 0xff; });
 };
 
@@ -1133,7 +1137,7 @@ var DO_NOT_EXPORT_CFB = true;
 /* [MS-CFB] v20171201 */
 var CFB = (function _CFB(){
 var exports = {};
-exports.version = '1.0.7';
+exports.version = '1.0.8';
 /* [MS-CFB] 2.6.4 */
 function namecmp(l, r) {
 	var L = l.split("/"), R = r.split("/");
@@ -2273,10 +2277,12 @@ if(has_buf) {
 	};
 	var corpus = "foo bar baz\u00e2\u0098\u0083\u00f0\u009f\u008d\u00a3";
 	if(utf8read(corpus) == utf8readb(corpus)) utf8read = utf8readb;
-	var utf8readc = function utf8readc(data) { return Buffer.from(data, 'binary').toString('utf8'); };
+	// $FlowIgnore
+	var utf8readc = function utf8readc(data) { return Buffer_from(data, 'binary').toString('utf8'); };
 	if(utf8read(corpus) == utf8readc(corpus)) utf8read = utf8readc;
 
-	utf8write = function(data) { return Buffer.from(data, 'utf8').toString("binary"); };
+	// $FlowIgnore
+	utf8write = function(data) { return Buffer_from(data, 'utf8').toString("binary"); };
 }
 
 // matches <foo>...</foo> extracts content
@@ -19620,7 +19626,8 @@ function write_string_type(out, opts, bom) {
 		case "string": return out;
 		case "file": return write_dl(opts.file, o, 'utf8');
 		case "buffer": {
-			if(has_buf) return Buffer.from(o, 'utf8');
+			// $FlowIgnore
+			if(has_buf) return Buffer_from(o, 'utf8');
 			else return write_string_type(o, {type:'binary'}).split("").map(function(c) { return c.charCodeAt(0); });
 		}
 	}
@@ -19634,7 +19641,8 @@ function write_stxt_type(out, opts) {
 		case "string": return out; /* override in sheet_to_txt */
 		case "file": return write_dl(opts.file, out, 'binary');
 		case "buffer": {
-			if(has_buf) return Buffer.from(out, 'binary');
+			// $FlowIgnore
+			if(has_buf) return Buffer_from(out, 'binary');
 			else return out.split("").map(function(c) { return c.charCodeAt(0); });
 		}
 	}
@@ -19721,13 +19729,49 @@ function writeFileAsync(filename, wb, opts, cb) {
 	var _cb = cb; if(!(_cb instanceof Function)) _cb = (opts);
 	return _fs.writeFile(filename, writeSync(wb, o), _cb);
 }
+function make_json_row(sheet, r, R, cols, header, hdr, dense, o) {
+	var rr = encode_row(R);
+	var defval = o.defval, raw = o.raw;
+	var isempty = true;
+	var row = (header === 1) ? [] : {};
+	if(header !== 1) {
+		if(Object.defineProperty) try { Object.defineProperty(row, '__rowNum__', {value:R, enumerable:false}); } catch(e) { row.__rowNum__ = R; }
+		else row.__rowNum__ = R;
+	}
+	if(!dense || sheet[R]) for (var C = r.s.c; C <= r.e.c; ++C) {
+		var val = dense ? sheet[R][C] : sheet[cols[C] + rr];
+		if(val === undefined || val.t === undefined) {
+			if(defval === undefined) continue;
+			if(hdr[C] != null) { row[hdr[C]] = defval; }
+			continue;
+		}
+		var v = val.v;
+		switch(val.t){
+			case 'z': if(v == null) break; continue;
+			case 'e': v = void 0; break;
+			case 's': case 'd': case 'b': case 'n': break;
+			default: throw new Error('unrecognized type ' + val.t);
+		}
+		if(hdr[C] != null) {
+			if(v == null) {
+				if(defval !== undefined) row[hdr[C]] = defval;
+				else if(raw && v === null) row[hdr[C]] = null;
+				else continue;
+			} else {
+				row[hdr[C]] = raw ? v : format_cell(val,v,o);
+			}
+			if(v != null) isempty = false;
+		}
+	}
+	return { row: row, isempty: isempty };
+}
+
+
 function sheet_to_json(sheet, opts) {
 	if(sheet == null || sheet["!ref"] == null) return [];
-	var val = {t:'n',v:0}, header = 0, offset = 1, hdr = [], isempty = true, v=0, vv="";
+	var val = {t:'n',v:0}, header = 0, offset = 1, hdr = [], v=0, vv="";
 	var r = {s:{r:0,c:0},e:{r:0,c:0}};
 	var o = opts || {};
-	var raw = o.raw;
-	var defval = o.defval;
 	var range = o.range != null ? o.range : sheet["!ref"];
 	if(o.header === 1) header = 1;
 	else if(o.header === "A") header = 2;
@@ -19760,42 +19804,9 @@ function sheet_to_json(sheet, opts) {
 				hdr[C] = vv;
 		}
 	}
-	var row = (header === 1) ? [] : {};
 	for (R = r.s.r + offset; R <= r.e.r; ++R) {
-		rr = encode_row(R);
-		isempty = true;
-		if(header === 1) row = [];
-		else {
-			row = {};
-			if(Object.defineProperty) try { Object.defineProperty(row, '__rowNum__', {value:R, enumerable:false}); } catch(e) { row.__rowNum__ = R; }
-			else row.__rowNum__ = R;
-		}
-		if(!dense || sheet[R]) for (C = r.s.c; C <= r.e.c; ++C) {
-			val = dense ? sheet[R][C] : sheet[cols[C] + rr];
-			if(val === undefined || val.t === undefined) {
-				if(defval === undefined) continue;
-				if(hdr[C] != null) { row[hdr[C]] = defval; }
-				continue;
-			}
-			v = val.v;
-			switch(val.t){
-				case 'z': if(v == null) break; continue;
-				case 'e': v = void 0; break;
-				case 's': case 'd': case 'b': case 'n': break;
-				default: throw new Error('unrecognized type ' + val.t);
-			}
-			if(hdr[C] != null) {
-				if(v == null) {
-					if(defval !== undefined) row[hdr[C]] = defval;
-					else if(raw && v === null) row[hdr[C]] = null;
-					else continue;
-				} else {
-					row[hdr[C]] = raw ? v : format_cell(val,v,o);
-				}
-				if(v != null) isempty = false;
-			}
-		}
-		if((isempty === false) || (header === 1 ? o.blankrows !== false : !!o.blankrows)) out[outi++] = row;
+		var row = make_json_row(sheet, r, R, cols, header, hdr, dense, o);
+		if((row.isempty === false) || (header === 1 ? o.blankrows !== false : !!o.blankrows)) out[outi++] = row.row;
 	}
 	out.length = outi;
 	return out;
@@ -19919,16 +19930,20 @@ function sheet_add_json(_ws, js, opts) {
 			var v = JS[k];
 			var t = 'z';
 			var z = "";
-			if(typeof v == 'number') t = 'n';
-			else if(typeof v == 'boolean') t = 'b';
-			else if(typeof v == 'string') t = 's';
-			else if(v instanceof Date) {
-				t = 'd';
-				if(!o.cellDates) { t = 'n'; v = datenum(v); }
-				z = o.dateNF || SSF._table[14];
+			if(v && typeof v === 'object' && !(v instanceof Date)){
+				ws[encode_cell({c:_C + C,r:_R + R + offset})] = v;
+			} else {
+				if(typeof v == 'number') t = 'n';
+				else if(typeof v == 'boolean') t = 'b';
+				else if(typeof v == 'string') t = 's';
+				else if(v instanceof Date) {
+					t = 'd';
+					if(!o.cellDates) { t = 'n'; v = datenum(v); }
+					z = o.dateNF || SSF._table[14];
+				}
+				ws[encode_cell({c:_C + C,r:_R + R + offset})] = cell = ({t:t, v:v});
+				if(z) cell.z = z;
 			}
-			ws[encode_cell({c:_C + C,r:_R + R + offset})] = cell = ({t:t, v:v});
-			if(z) cell.z = z;
 		});
 	});
 	range.e.c = Math.max(range.e.c, _C + hdr.length - 1);
@@ -20139,7 +20154,62 @@ if(has_buf && typeof require != 'undefined') (function() {
 		return stream;
 	};
 
+	var write_json_stream = function(sheet, opts) {
+		var stream = Readable({objectMode:true});
+
+		if(sheet == null || sheet["!ref"] == null) { stream.push(null); return stream; }
+		var val = {t:'n',v:0}, header = 0, offset = 1, hdr = [], v=0, vv="";
+		var r = {s:{r:0,c:0},e:{r:0,c:0}};
+		var o = opts || {};
+		var range = o.range != null ? o.range : sheet["!ref"];
+		if(o.header === 1) header = 1;
+		else if(o.header === "A") header = 2;
+		else if(Array.isArray(o.header)) header = 3;
+		switch(typeof range) {
+			case 'string': r = safe_decode_range(range); break;
+			case 'number': r = safe_decode_range(sheet["!ref"]); r.s.r = range; break;
+			default: r = range;
+		}
+		if(header > 0) offset = 0;
+		var rr = encode_row(r.s.r);
+		var cols = [];
+		var counter = 0;
+		var dense = Array.isArray(sheet);
+		var R = r.s.r, C = 0, CC = 0;
+		if(dense && !sheet[R]) sheet[R] = [];
+		for(C = r.s.c; C <= r.e.c; ++C) {
+			cols[C] = encode_col(C);
+			val = dense ? sheet[R][C] : sheet[cols[C] + rr];
+			switch(header) {
+				case 1: hdr[C] = C - r.s.c; break;
+				case 2: hdr[C] = cols[C]; break;
+				case 3: hdr[C] = o.header[C - r.s.c]; break;
+				default:
+					if(val == null) val = {w: "__EMPTY", t: "s"};
+					vv = v = format_cell(val, null, o);
+					counter = 0;
+					for(CC = 0; CC < hdr.length; ++CC) if(hdr[CC] == vv) vv = v + "_" + (++counter);
+					hdr[C] = vv;
+			}
+		}
+		R = r.s.r + offset;
+		stream._read = function() {
+			if(R > r.e.r) return stream.push(null);
+			while(R <= r.e.r) {
+				++R;
+				//if ((rowinfo[R-1]||{}).hidden) continue;
+				var row = make_json_row(sheet, r, R, cols, header, hdr, dense, o);
+				if((row.isempty === false) || (header === 1 ? o.blankrows !== false : !!o.blankrows)) {
+					stream.push(row.row);
+					break;
+				}
+			}
+		};
+		return stream;
+	};
+
 	XLSX.stream = {
+		to_json: write_json_stream,
 		to_html: write_html_stream,
 		to_csv: write_csv_stream
 	};

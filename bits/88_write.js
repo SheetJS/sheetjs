@@ -46,7 +46,8 @@ function write_string_type(out/*:string*/, opts/*:WriteOpts*/, bom/*:?string*/)/
 		case "string": return out;
 		case "file": return write_dl(opts.file, o, 'utf8');
 		case "buffer": {
-			if(has_buf) return Buffer.from(o, 'utf8');
+			// $FlowIgnore
+			if(has_buf) return Buffer_from(o, 'utf8');
 			else return write_string_type(o, {type:'binary'}).split("").map(function(c) { return c.charCodeAt(0); });
 		}
 	}
@@ -60,7 +61,8 @@ function write_stxt_type(out/*:string*/, opts/*:WriteOpts*/)/*:any*/ {
 		case "string": return out; /* override in sheet_to_txt */
 		case "file": return write_dl(opts.file, out, 'binary');
 		case "buffer": {
-			if(has_buf) return Buffer.from(out, 'binary');
+			// $FlowIgnore
+			if(has_buf) return Buffer_from(out, 'binary');
 			else return out.split("").map(function(c) { return c.charCodeAt(0); });
 		}
 	}

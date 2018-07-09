@@ -1,6 +1,6 @@
 {
 	"name": "xlsx",
-	"version": "0.13.1",
+	"version": "0.13.2",
 	"author": "sheetjs",
 	"description": "SheetJS Spreadsheet data parser and writer",
 	"keywords": [
@@ -31,8 +31,8 @@
 	},
 	"dependencies": {
 		"adler-32": "~1.2.0",
-		"cfb": "~1.0.7",
-		"codepage": "~1.13.0",
+		"cfb": "~1.0.8",
+		"codepage": "~1.14.0",
 		"commander": "~2.15.1",
 		"crc-32": "~1.2.0",
 		"exit-on-epipe": "~1.0.1",

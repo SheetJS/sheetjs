@@ -23,6 +23,16 @@ var browser = typeof document !== 'undefined';
 // $FlowIgnore
 if(!browser) try { require('./shim'); } catch(e) { }
 
+var Buffer_from = /*::(*/function(){}/*:: :any)*/;
+
+if(typeof Buffer !== 'undefined') {
+	var nbfs = !Buffer.from;
+	if(!nbfs) try { Buffer.from("foo", "utf8"); } catch(e) { nbfs = true; }
+	Buffer_from = nbfs ? function(buf, enc) { return (enc) ? new Buffer(buf, enc) : new Buffer(buf); } : Buffer.from.bind(Buffer);
+	// $FlowIgnore
+	if(!Buffer.alloc) Buffer.alloc = function(n) { return new Buffer(n); };
+}
+
 var opts = ({cellNF: true}/*:any*/);
 var TYPE = browser ? "binary" : "buffer";
 opts.type = TYPE;
@@ -1996,8 +2006,10 @@ describe('sylk', function() {
 			assert.equal(get_cell(X.read(str, {type:"string"}).Sheets.Sheet1, "A1").v, A1);
 			assert.equal(get_cell(X.read(str.replace(/–/, "\x96"), {type:"binary", codepage:1252}).Sheets.Sheet1, "A1").v, A1);
 			if(typeof Buffer !== 'undefined' && !browser) {
-				assert.equal(get_cell(X.read(Buffer.from(str), {type:"buffer", codepage:65001}).Sheets.Sheet1, "A1").v, A1);
-				assert.equal(get_cell(X.read(Buffer.from(str.replace(/–/, "\x96"), "binary"), {type:"buffer", codepage:1252}).Sheets.Sheet1, "A1").v, A1);
+				// $FlowIgnore
+				assert.equal(get_cell(X.read(Buffer_from(str), {type:"buffer", codepage:65001}).Sheets.Sheet1, "A1").v, A1);
+				// $FlowIgnore
+				assert.equal(get_cell(X.read(Buffer_from(str.replace(/–/, "\x96"), "binary"), {type:"buffer", codepage:1252}).Sheets.Sheet1, "A1").v, A1);
 			}
 		} : null);
 	});
