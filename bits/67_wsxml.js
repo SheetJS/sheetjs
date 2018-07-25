@@ -351,8 +351,8 @@ return function parse_ws_xml_data(sdata/*:string*/, s, opts, guess/*:Range*/, th
 				else p.t = "z";
 			}
 			else p.t = tag.t || "n";
-			if(guess.s.c > idx) guess.s.c = idx;
-			if(guess.e.c < idx) guess.e.c = idx;
+			if(guess.s.c > tagc) guess.s.c = tagc;
+			if(guess.e.c < tagc) guess.e.c = tagc;
 			/* 18.18.11 t ST_CellType */
 			switch(p.t) {
 				case 'n':
