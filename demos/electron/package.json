@@ -3,6 +3,9 @@
 	"author": "sheetjs",
 	"version": "0.0.0",
 	"main": "main.js",
+        "scripts": {
+            "start": "electron ."
+         },
 	"dependencies": {
 		"electron": "~1.7.x",
 		"xlsx": "*"
