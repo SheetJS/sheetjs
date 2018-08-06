@@ -2138,7 +2138,7 @@ function parsexmltag(tag, skip_root) {
 	if(m) for(i = 0; i != m.length; ++i) {
 		cc = m[i];
 		for(c=0; c != cc.length; ++c) if(cc.charCodeAt(c) === 61) break;
-		q = cc.slice(0,c).trim();
+		q = cc.slice(0,c).trim().toLowerCase();
 		while(cc.charCodeAt(c+1) == 32) ++c;
 		quot = ((eq=cc.charCodeAt(c+1)) == 34 || eq == 39) ? 1 : 0;
 		v = cc.slice(c+1+quot, cc.length-quot);
