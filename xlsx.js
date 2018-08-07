@@ -2138,7 +2138,7 @@ function parsexmltag(tag, skip_root) {
 	if(m) for(i = 0; i != m.length; ++i) {
 		cc = m[i];
 		for(c=0; c != cc.length; ++c) if(cc.charCodeAt(c) === 61) break;
-		q = cc.slice(0,c).trim().toLowerCase();
+		q = cc.slice(0,c).trim();
 		while(cc.charCodeAt(c+1) == 32) ++c;
 		quot = ((eq=cc.charCodeAt(c+1)) == 34 || eq == 39) ? 1 : 0;
 		v = cc.slice(c+1+quot, cc.length-quot);
@@ -2146,11 +2146,13 @@ function parsexmltag(tag, skip_root) {
 		if(j===q.length) {
 			if(q.indexOf("_") > 0) q = q.slice(0, q.indexOf("_")); // from ods
 			z[q] = v;
+			z[q.toLowerCase()] = v;
 		}
 		else {
 			var k = (j===5 && q.slice(0,5)==="xmlns"?"xmlns":"")+q.slice(j+1);
 			if(z[k] && q.slice(j-3,j) == "ext") continue; // from ods
 			z[k] = v;
+			z[k.toLowerCase()] = v;
 		}
 	}
 	return z;
