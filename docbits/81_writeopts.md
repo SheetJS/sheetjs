@@ -12,6 +12,7 @@ The exported `write` and `writeFile` functions accept an options argument:
 |`compression`|  `false` | Use ZIP compression for ZIP-based formats **        |
 |`Props`      |          | Override workbook properties when writing **        |
 |`themeXLSX`  |          | Override theme XML when writing XLSX/XLSB/XLSM **   |
+|`ignoreEC`   |   `true` | Suppress "number as text" errors **                 |
 
 - `bookSST` is slower and more memory intensive, but has better compatibility
   with older versions of iOS Numbers
@@ -24,6 +25,9 @@ The exported `write` and `writeFile` functions accept an options argument:
   the [Workbook File Properties](#workbook-file-properties) section.
 - if specified, the string from `themeXLSX` will be saved as the primary theme
   for XLSX/XLSB/XLSM files (to `xl/theme/theme1.xml` in the ZIP)
+- Due to a bug in the program, some features like "Text to Columns" will crash
+  Excel on worksheets where error conditions are ignored.  The writer will mark
+  files to ignore the error by default.  Set `ignoreEC` to `false` to suppress.
 
 ### Supported Output Formats
 

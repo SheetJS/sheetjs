@@ -9160,7 +9160,7 @@ module.exports = ZStream;
 /*global global, exports, module, require:false, process:false, Buffer:false, ArrayBuffer:false */
 var XLSX = {};
 function make_xlsx_lib(XLSX){
-XLSX.version = '0.13.3';
+XLSX.version = '0.13.4';
 var current_codepage = 1200, current_ansi = 1252;
 /*global cptable:true, window */
 if(typeof module !== "undefined" && typeof require !== 'undefined') {
@@ -11302,11 +11302,13 @@ function parsexmltag(tag, skip_root) {
 		if(j===q.length) {
 			if(q.indexOf("_") > 0) q = q.slice(0, q.indexOf("_")); // from ods
 			z[q] = v;
+			z[q.toLowerCase()] = v;
 		}
 		else {
 			var k = (j===5 && q.slice(0,5)==="xmlns"?"xmlns":"")+q.slice(j+1);
 			if(z[k] && q.slice(j-3,j) == "ext") continue; // from ods
 			z[k] = v;
+			z[k.toLowerCase()] = v;
 		}
 	}
 	return z;
@@ -12012,6 +12014,8 @@ function sheet_add_aoa(_ws, data, opts) {
 		if(_R == -1) range.e.r = _R = _range.e.r + 1;
 	}
 	for(var R = 0; R != data.length; ++R) {
+		if(!data[R]) continue;
+		if(!Array.isArray(data[R])) throw new Error("aoa_to_sheet expects an array of arrays");
 		for(var C = 0; C != data[R].length; ++C) {
 			if(typeof data[R][C] === 'undefined') continue;
 			var cell = ({v: data[R][C] });
@@ -15878,13 +15882,17 @@ var PRN = (function() {
 		switch(opts.type) {
 			case 'base64': str = Base64.decode(d); break;
 			case 'binary': str = d; break;
-			case 'buffer': str = d.toString('binary'); break;
+			case 'buffer':
+				if(opts.codepage == 65001) str = d.toString('utf8');
+				else if(opts.codepage && typeof cptable !== 'undefined') str = cptable.utils.decode(opts.codepage, d);
+				else str = d.toString('binary');
+				break;
 			case 'array': str = cc2str(d); break;
 			case 'string': str = d; break;
 			default: throw new Error("Unrecognized type " + opts.type);
 		}
 		if(bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF) str = utf8read(str.slice(3));
-		else if((opts.type == 'binary' || opts.type == 'buffer') && typeof cptable !== 'undefined' && opts.codepage)  str = cptable.utils.decode(opts.codepage, cptable.utils.encode(1252,str));
+		else if((opts.type == 'binary') && typeof cptable !== 'undefined' && opts.codepage)  str = cptable.utils.decode(opts.codepage, cptable.utils.encode(1252,str));
 		if(str.slice(0,19) == "socialcalc:version:") return ETH.to_sheet(opts.type == 'string' ? str : utf8read(str), opts);
 		return prn_to_sheet_str(str, opts);
 	}
@@ -15930,7 +15938,6 @@ function read_wb_ID(d, opts) {
 		return PRN.to_workbook(d, opts);
 	}
 }
-
 var WK_ = (function() {
 	function lotushopper(data, cb, opts) {
 		if(!data) return;
@@ -21758,7 +21765,7 @@ function write_ws_xml(idx, opts, wb, rels) {
 	/* customProperties */
 	/* cellWatches */
 
-	o[o.length] = writetag("ignoredErrors", writextag("ignoredError", null, {numberStoredAsText:1, sqref:ref}));
+	if(!opts || opts.ignoreEC || (opts.ignoreEC == (void 0))) o[o.length] = writetag("ignoredErrors", writextag("ignoredError", null, {numberStoredAsText:1, sqref:ref}));
 
 	/* smartTags */
 
@@ -22631,7 +22638,7 @@ function write_ws_bin(idx, opts, wb, rels) {
 	/* [COLBRK] */
 	/* *BrtBigName */
 	/* [CELLWATCHES] */
-	write_IGNOREECS(ba, ws);
+	if(!opts || opts.ignoreEC || (opts.ignoreEC == (void 0))) write_IGNOREECS(ba, ws);
 	/* [SMARTTAGS] */
 	/* [BrtDrawing] */
 	write_LEGACYDRAWING(ba, ws, idx, rels);
@@ -25039,6 +25046,7 @@ wb.opts.Date1904 = Workbook.WBProps.date1904 = val; break;
 0x0002:2,
 0x0007:2
 					}[val.BIFFVer] || 8;
+					if(opts.biff == 8 && val.BIFFVer == 0 && val.dt == 16) opts.biff = 2;
 					if(file_depth++) break;
 					cell_valid = true;
 					out = ((options.dense ? [] : {}));

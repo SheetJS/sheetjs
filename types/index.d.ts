@@ -219,6 +219,12 @@ export interface WritingOptions extends CommonOptions {
      */
     compression?: boolean;
 
+    /**
+     * Suppress "number stored as text" errors in generated files
+     * @default true
+     */
+    ignoreEC?: boolean;
+
     /** Override workbook properties on save */
     Props?: Properties;
 }

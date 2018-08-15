@@ -351,6 +351,7 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 						/*::[*/0x0002/*::]*/:2,
 						/*::[*/0x0007/*::]*/:2
 					}[val.BIFFVer] || 8;
+					if(opts.biff == 8 && val.BIFFVer == 0 && val.dt == 16) opts.biff = 2;
 					if(file_depth++) break;
 					cell_valid = true;
 					out = ((options.dense ? [] : {})/*:any*/);

@@ -101,6 +101,8 @@ function sheet_add_aoa(_ws/*:?Worksheet*/, data/*:AOA*/, opts/*:?any*/)/*:Worksh
 		if(_R == -1) range.e.r = _R = _range.e.r + 1;
 	}
 	for(var R = 0; R != data.length; ++R) {
+		if(!data[R]) continue;
+		if(!Array.isArray(data[R])) throw new Error("aoa_to_sheet expects an array of arrays");
 		for(var C = 0; C != data[R].length; ++C) {
 			if(typeof data[R][C] === 'undefined') continue;
 			var cell/*:Cell*/ = ({v: data[R][C] }/*:any*/);
