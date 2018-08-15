@@ -2094,6 +2094,7 @@ describe('HTML', function() {
 	});
 	if(domtest) it('should honor sheetRows', function() {
 		var html = X.utils.sheet_to_html(X.utils.aoa_to_sheet([[1,2],[3,4],[5,6]]));
+		// $FlowIgnore
 		html = /<body[^>]*>([\s\S]*)<\/body>/i.exec(html)[1];
 		var ws = X.utils.table_to_sheet(get_dom_element(html));
 		assert.equal(ws['!ref'], "A1:B3");
