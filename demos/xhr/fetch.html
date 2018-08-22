@@ -41,15 +41,11 @@ document.getElementById('outfile').innerHTML = '<a href="' + demo + '.' + book +
 
 fetch(url).then(function(res) {
 	if(!res.ok) throw new Error("fetch failed");
-	return res.blob();
-}).then(function(blob) {
-	var reader = new FileReader();
-	reader.addEventListener("loadend", function() {
-		var data = new Uint8Array(this.result);
-		var wb = XLSX.read(data, {type:"array"});
-		process_wb(wb);
-	});
-	reader.readAsArrayBuffer(blob);
+	return res.arrayBuffer();
+}).then(function(ab) {
+	var data = new Uint8Array(ab);
+	var wb = XLSX.read(data, {type:"array"});
+	process_wb(wb);
 });
 
 document.getElementById('ulbutton').onclick = function() {
