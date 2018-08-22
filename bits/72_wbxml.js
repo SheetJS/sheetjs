@@ -80,13 +80,13 @@ function parse_wb_xml(data, opts)/*:WorkbookFile*/ {
 			/* 18.2.5    definedName CT_DefinedName + */
 			case '<definedName': {
 				dname = {};
-				dname.Name = y.name;
+				dname.Name = utf8read(y.name);
 				if(y.comment) dname.Comment = y.comment;
 				if(y.localSheetId) dname.Sheet = +y.localSheetId;
 				dnstart = idx + x.length;
 			}	break;
 			case '</definedName>': {
-				dname.Ref = data.slice(dnstart, idx);
+				dname.Ref = unescapexml(utf8read(data.slice(dnstart, idx)));
 				wb.Names.push(dname);
 			} break;
 			case '<definedName/>': break;
