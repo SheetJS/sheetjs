@@ -116,27 +116,18 @@ axios("/upload", {method: "POST", data: fd});
 
 ## fetch
 
-For downloading data, `response.blob()` resolves to a `Blob` object that can be
-converted to `ArrayBuffer` using a `FileReader`:
+For downloading data, `response.ArrayBuffer()` resolves to a `ArrayBuffer`
 
 ```js
 fetch(url).then(function(res) {
-  /* get the data as a Blob */
+  /* get the data as a ArrayBuffer */
   if(!res.ok) throw new Error("fetch failed");
-  return res.blob();
-}).catch(function(err) {
-  /* error in getting data */
-}).then(function(blob) {
-  /* configure a FileReader to process the blob */
-  var reader = new FileReader();
-  reader.addEventListener("loadend", function() {
-    /* parse the data when it is received */
-    var data = new Uint8Array(this.result);
-    var workbook = XLSX.read(data, {type:"array"});
+  return res.arrayBuffer();
+}).then(function(ab) {
+  var data = new Uint8Array(ab);
+  var workbook = XLSX.read(data, {type:"array"});
 
-    /* DO SOMETHING WITH workbook HERE */
-  });
-  reader.readAsArrayBuffer(blob);
+  /* DO SOMETHING WITH workbook HERE */
 });
 ```
 
