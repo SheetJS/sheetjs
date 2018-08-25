@@ -69,7 +69,7 @@ var parse_content_xml = (function() {
 					}
 					if(merges.length) ws['!merges'] = merges;
 					if(rowinfo.length) ws["!rows"] = rowinfo;
-					sheetag.name = utf8read(sheetag['名称'] || sheetag.name);
+					sheetag.name = sheetag['名称'] || sheetag.name;
 					if(typeof JSON !== 'undefined') JSON.stringify(sheetag);
 					SheetNames.push(sheetag.name);
 					Sheets[sheetag.name] = ws;

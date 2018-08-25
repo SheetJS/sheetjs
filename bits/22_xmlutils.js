@@ -66,7 +66,7 @@ function escapexmltag(text/*:string*/)/*:string*/{ return escapexml(text).replac
 var htmlcharegex = /[\u0000-\u001f]/g;
 function escapehtml(text/*:string*/)/*:string*/{
 	var s = text + '';
-	return s.replace(decregex, function(y) { return rencoding[y]; }).replace(htmlcharegex,function(s) { return "&#x" + ("000"+s.charCodeAt(0).toString(16)).slice(-4) + ";"; });
+	return s.replace(decregex, function(y) { return rencoding[y]; }).replace(/\n/g, "<br/>").replace(htmlcharegex,function(s) { return "&#x" + ("000"+s.charCodeAt(0).toString(16)).slice(-4) + ";"; });
 }
 
 function escapexlml(text/*:string*/)/*:string*/{

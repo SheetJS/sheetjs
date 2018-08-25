@@ -893,7 +893,7 @@ function write_ws_xlml_names(ws/*:Worksheet*/, opts, idx/*:number*/, wb/*:Workbo
 	/*:: if(!wb || !wb.Workbook || !wb.Workbook.Names) throw new Error("unreachable"); */
 	var names/*:Array<any>*/ = wb.Workbook.Names;
 	var out/*:Array<string>*/ = [];
-	outer: for(var i = 0; i < names.length; ++i) {
+	for(var i = 0; i < names.length; ++i) {
 		var n = names[i];
 		if(n.Sheet != idx) continue;
 		/*switch(n.Name) {
