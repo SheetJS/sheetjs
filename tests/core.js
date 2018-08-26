@@ -133,6 +133,12 @@ var paths = {
 	dnsxlsx: dir + 'defined_names_simple.xlsx',
 	dnsxlsb: dir + 'defined_names_simple.xlsb',
 
+	dnuxls: dir + 'defined_names_unicode.xls',
+	dnuxml: dir + 'defined_names_unicode.xml',
+	dnuods: dir + 'defined_names_unicode.ods',
+	dnuxlsx: dir + 'defined_names_unicode.xlsx',
+	dnuxlsb: dir + 'defined_names_unicode.xlsb',
+
 	dtxls:  dir + 'xlsx-stream-d-date-cell.xls',
 	dtxml:  dir + 'xlsx-stream-d-date-cell.xls.xml',
 	dtxlsx:  dir + 'xlsx-stream-d-date-cell.xlsx',
@@ -1154,6 +1160,39 @@ describe('parse features', function() {
 		assert.equal(names[i].Ref, "Sheet1!$A$2");
 	}); }); });
 
+	describe('defined names unicode', function() {[
+		/* desc     path      */
+		['xlsx', paths.dnuxlsx],
+		['xlsb', paths.dnuxlsb],
+		['ods',  paths.dnuods ],
+		['xls',  paths.dnuxls ],
+		['xlml', paths.dnuxml ]
+	].forEach(function(m) { it(m[0], function() {
+		var wb = X.read(fs.readFileSync(m[1]), {type:TYPE});
+		[
+			"NoContainsJapanese",
+			"\u65E5\u672C\u8a9e\u306e\u307f",
+			"sheet\u65e5\u672c\u8a9e",
+			"\u65e5\u672c\u8a9esheet",
+			"sheet\u65e5\u672c\u8a9esheet"
+		].forEach(function(n, i) { assert.equal(wb.SheetNames[i], n); });
+		[
+			["name\u65e5\u672c\u8a9e", "sheet\u65e5\u672c\u8a9e!$A$1"],
+			["name\u65e5\u672c\u8a9ename", "sheet\u65e5\u672c\u8a9esheet!$B$2"],
+			["NoContainsJapaneseName", "\u65e5\u672c\u8a9e\u306e\u307f!$A$1"],
+			["sheet\u65e5\u672c\u8a9e", "sheet\u65e5\u672c\u8a9e!$A$1"],
+			["\u65e5\u672c\u8a9e", "NoContainsJapanese!$A$1"],
+			["\u65e5\u672c\u8a9ename", "\u65e5\u672c\u8a9esheet!$I$2"]
+		].forEach(function(n) {
+			var DN = null;
+			var arr = wb.Workbook.Names;
+			for(var j = 0; j < arr.length; ++j) if(arr[j].Name == n[0]) DN = arr[j];
+			assert(DN);
+			// $FlowIgnore
+			assert.equal(DN.Ref, n[1]);
+		});
+	}); }); });
+
 	describe('auto filter', function() {[
 		['xlsx', paths.afxlsx],
 		['xlsb', paths.afxlsb],
@@ -1185,7 +1224,7 @@ describe('parse features', function() {
 			assert.equal(get_cell(wb2.Sheets.Sheet1, "A2").h, "&amp;");
 			assert.equal(get_cell(wb2.Sheets.Sheet1, "B2").h, "&lt;");
 			assert.equal(get_cell(wb2.Sheets.Sheet1, "C2").h, "&gt;");
-			assert.equal(get_cell(wb2.Sheets.Sheet1, "D2").h, "&#x000a;");
+			assert.equal(get_cell(wb2.Sheets.Sheet1, "D2").h, "<br/>");
 		}); });
 	});
 
