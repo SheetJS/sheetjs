@@ -191,7 +191,7 @@ function write_ws_biff8(idx/*:number*/, opts, wb/*:Workbook*/) {
 	write_biff_rec(ba, "HCenter", writebool(false));
 	write_biff_rec(ba, "VCenter", writebool(false));
 	/* ... */
-	write_biff_rec(ba, "Dimensions", write_Dimensions(range, opts));
+	write_biff_rec(ba, 0x200, write_Dimensions(range, opts));
 	/* ... */
 
 	if(b8) ws['!links'] = [];
