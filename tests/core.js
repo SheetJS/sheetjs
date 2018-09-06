@@ -306,7 +306,7 @@ function parsetest(x/*:string*/, wb/*:Workbook*/, full/*:boolean*/, ext/*:?strin
 			var jsonf = getfile(dir, x, i, ".json");
 			if(fs.existsSync(jsonf)) it('#' + i + ' (' + ws + ')', function() {
 				var file = fs.readFileSync(jsonf, 'utf-8');
-				var json = X.utils.make_json(wb.Sheets[ws]);
+				var json = X.utils.make_json(wb.Sheets[ws], {raw:false});
 				assert.equal(JSON.stringify(json), fixjson(file), "JSON badness");
 			});
 		});
@@ -1103,7 +1103,7 @@ describe('parse features', function() {
 			var sheetName = 'Sheet1';
 			wb = X.read(fs.readFileSync(paths.dtxlsx), {type:TYPE});
 			ws = wb.Sheets[sheetName];
-			var sheet = X.utils.sheet_to_json(ws);
+			var sheet = X.utils.sheet_to_json(ws, {raw: false});
 			assert.equal(sheet[3]['てすと'], '2/14/14');
 		});
 		it('cellDates should not affect formatted text', function() {
@@ -1639,7 +1639,7 @@ describe('roundtrip features', function() {
 			{a:true, c:false},
 			{c:fixdate}
 		];
-		var o = X.utils.sheet_to_json(X.utils.json_to_sheet(data, {cellDates:true}), {raw:true});
+		var o = X.utils.sheet_to_json(X.utils.json_to_sheet(data, {cellDates:true}));
 		data.forEach(function(row, i) {
 			Object.keys(row).forEach(function(k) { assert.equal(row[k], o[i][k]); });
 		});
@@ -1707,7 +1707,7 @@ describe('json output', function() {
 	if(typeof before != 'undefined') before(bef);
 	else it('before', bef);
 	it('should use first-row headers and full sheet by default', function() {
-		var json = X.utils.sheet_to_json(ws);
+		var json = X.utils.sheet_to_json(ws, {raw: null});
 		assert.equal(json.length, data.length - 1);
 		assert.equal(json[0][1], "TRUE");
 		assert.equal(json[1][2], "bar");
@@ -1716,7 +1716,7 @@ describe('json output', function() {
 		assert.throws(function() { seeker(json, [1,2,3], "baz"); });
 	});
 	it('should create array of arrays if header == 1', function() {
-		var json = X.utils.sheet_to_json(ws, {header:1});
+		var json = X.utils.sheet_to_json(ws, {header:1, raw:""});
 		assert.equal(json.length, data.length);
 		assert.equal(json[1][0], "TRUE");
 		assert.equal(json[2][1], "bar");
@@ -1726,7 +1726,7 @@ describe('json output', function() {
 		assert.throws(function() { seeker(json, [0,1,2], "baz"); });
 	});
 	it('should use column names if header == "A"', function() {
-		var json = X.utils.sheet_to_json(ws, {header:'A'});
+		var json = X.utils.sheet_to_json(ws, {header:'A', raw:false});
 		assert.equal(json.length, data.length);
 		assert.equal(json[1].A, "TRUE");
 		assert.equal(json[2].B, "bar");
@@ -1736,7 +1736,7 @@ describe('json output', function() {
 		assert.throws(function() { seeker(json, "ABC", "baz"); });
 	});
 	it('should use column labels if specified', function() {
-		var json = X.utils.sheet_to_json(ws, {header:["O","D","I","N"]});
+		var json = X.utils.sheet_to_json(ws, {header:["O","D","I","N"], raw:0});
 		assert.equal(json.length, data.length);
 		assert.equal(json[1].O, "TRUE");
 		assert.equal(json[2].D, "bar");
@@ -1749,7 +1749,7 @@ describe('json output', function() {
 		it('should accept custom ' + w[0] + ' range', function() {
 			var json = X.utils.sheet_to_json(ws, {header:1, range:w[1]});
 			assert.equal(json.length, 3);
-			assert.equal(json[0][0], "TRUE");
+			assert.equal(json[0][0], true);
 			assert.equal(json[1][1], "bar");
 			assert.equal(json[2][2], "qux");
 			assert.doesNotThrow(function() { seeker(json, [0,1,2], "sheetjs"); });
@@ -1760,7 +1760,7 @@ describe('json output', function() {
 	it('should use defval if requested', function() {
 		var json = X.utils.sheet_to_json(ws, {defval: 'jimjin'});
 		assert.equal(json.length, data.length - 1);
-		assert.equal(json[0][1], "TRUE");
+		assert.equal(json[0][1], true);
 		assert.equal(json[1][2], "bar");
 		assert.equal(json[2][3], "qux");
 		assert.equal(json[2][2], "jimjin");
