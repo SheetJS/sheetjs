@@ -1,4 +1,4 @@
-var has_buf = (typeof Buffer !== 'undefined' && typeof process !== 'undefined' && typeof process.versions !== 'undefined' && process.versions.node);
+var has_buf = (typeof Buffer !== 'undefined' && typeof process !== 'undefined' && typeof process.versions !== 'undefined' && !!process.versions.node);
 
 var Buffer_from = /*::(*/function(){}/*:: :any)*/;
 
@@ -8,11 +8,19 @@ if(typeof Buffer !== 'undefined') {
 	Buffer_from = nbfs ? function(buf, enc) { return (enc) ? new Buffer(buf, enc) : new Buffer(buf); } : Buffer.from.bind(Buffer);
 	// $FlowIgnore
 	if(!Buffer.alloc) Buffer.alloc = function(n) { return new Buffer(n); };
+	// $FlowIgnore
+	if(!Buffer.allocUnsafe) Buffer.allocUnsafe = function(n) { return new Buffer(n); };
 }
 
 function new_raw_buf(len/*:number*/) {
 	/* jshint -W056 */
 	return has_buf ? Buffer.alloc(len) : new Array(len);
+	/* jshint +W056 */
+}
+
+function new_unsafe_buf(len/*:number*/) {
+	/* jshint -W056 */
+	return has_buf ? Buffer.allocUnsafe(len) : new Array(len);
 	/* jshint +W056 */
 }
 
