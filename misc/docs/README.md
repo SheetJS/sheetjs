@@ -2032,7 +2032,7 @@ takes an options argument:
 
 | Option Name |  Default | Description                                         |
 | :---------- | :------: | :-------------------------------------------------- |
-|`raw`        | `false`  | Use raw values (true) or formatted strings (false)  |
+|`raw`        | `true`   | Use raw values (true) or formatted strings (false)  |
 |`range`      | from WS  | Override Range (see table below)                    |
 |`header`     |          | Control output format (see table below)             |
 |`dateNF`     |  FMT 14  | Use specified date format in string output          |
@@ -2103,12 +2103,12 @@ Example showing the effect of `raw`:
 ```js
 > ws['A2'].w = "3";                          // set A2 formatted string value
 
-> XLSX.utils.sheet_to_json(ws, {header:1});
+> XLSX.utils.sheet_to_json(ws, {header:1, raw:false});
 [ [ 'S', 'h', 'e', 'e', 't', 'J', 'S' ],
   [ '3', '2', '3', '4', '5', '6', '7' ],     // <-- A2 uses the formatted string
   [ '2', '3', '4', '5', '6', '7', '8' ] ]
 
-> XLSX.utils.sheet_to_json(ws, {header:1, raw:true});
+> XLSX.utils.sheet_to_json(ws, {header:1});
 [ [ 'S', 'h', 'e', 'e', 't', 'J', 'S' ],
   [ 1, 2, 3, 4, 5, 6, 7 ],                   // <-- A2 uses the raw value
   [ 2, 3, 4, 5, 6, 7, 8 ] ]
