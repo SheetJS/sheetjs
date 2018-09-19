@@ -106,21 +106,24 @@ function sheet_add_aoa(_ws/*:?Worksheet*/, data/*:AOA*/, opts/*:?any*/)/*:Worksh
 		for(var C = 0; C != data[R].length; ++C) {
 			if(typeof data[R][C] === 'undefined') continue;
 			var cell/*:Cell*/ = ({v: data[R][C] }/*:any*/);
-			if(Array.isArray(cell.v)) { cell.f = data[R][C][1]; cell.v = cell.v[0]; }
 			var __R = _R + R, __C = _C + C;
 			if(range.s.r > __R) range.s.r = __R;
 			if(range.s.c > __C) range.s.c = __C;
 			if(range.e.r < __R) range.e.r = __R;
 			if(range.e.c < __C) range.e.c = __C;
-			if(cell.v === null) { if(cell.f) cell.t = 'n'; else if(!o.cellStubs) continue; else cell.t = 'z'; }
-			else if(typeof cell.v === 'number') cell.t = 'n';
-			else if(typeof cell.v === 'boolean') cell.t = 'b';
-			else if(cell.v instanceof Date) {
-				cell.z = o.dateNF || SSF._table[14];
-				if(o.cellDates) { cell.t = 'd'; cell.w = SSF.format(cell.z, datenum(cell.v)); }
-				else { cell.t = 'n'; cell.v = datenum(cell.v); cell.w = SSF.format(cell.z, cell.v); }
+			if(data[R][C] && typeof data[R][C] === 'object' && !Array.isArray(data[R][C]) && !(data[R][C] instanceof Date)) cell = data[R][C];
+			else {
+				if(Array.isArray(cell.v)) { cell.f = data[R][C][1]; cell.v = cell.v[0]; }
+				if(cell.v === null) { if(cell.f) cell.t = 'n'; else if(!o.cellStubs) continue; else cell.t = 'z'; }
+				else if(typeof cell.v === 'number') cell.t = 'n';
+				else if(typeof cell.v === 'boolean') cell.t = 'b';
+				else if(cell.v instanceof Date) {
+					cell.z = o.dateNF || SSF._table[14];
+					if(o.cellDates) { cell.t = 'd'; cell.w = SSF.format(cell.z, datenum(cell.v)); }
+					else { cell.t = 'n'; cell.v = datenum(cell.v); cell.w = SSF.format(cell.z, cell.v); }
+				}
+				else cell.t = 's';
 			}
-			else cell.t = 's';
 			if(dense) {
 				if(!ws[__R]) ws[__R] = [];
 				ws[__R][__C] = cell;

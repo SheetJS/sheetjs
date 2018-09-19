@@ -761,6 +761,13 @@ describe('API', function() {
 		X.utils.sheet_add_aoa(ws, [[4,5,6,7,8,9,0]], {origin: -1});
 		assert.equal(X.utils.sheet_to_csv(ws).trim(), "S,h,e,e,t,J,S\n1,2,,,5,6,7\n2,3,,,6,7,8\n3,4,,,7,8,9\n4,5,6,7,8,9,0");
 	});
+	it('sheet_add_aoa support object cell', function() {
+		var data = X.utils.aoa_to_sheet([
+			['url', 'name', 'id'],
+			[ { l: { Target: 'https://123.com' }, v: 'url', t: 's' }, 'tom', 'xxx' ]
+		]);
+		if(assert.deepEqual) assert.deepEqual(data.A2, { l: { Target: 'https://123.com' }, v: 'url', t: 's' });
+	});
 });
 
 function coreprop(props) {
@@ -2373,4 +2380,3 @@ mft.forEach(function(x) {
 		case "yes-formula": formulae = true; break;
 	}});
 }); });
-
