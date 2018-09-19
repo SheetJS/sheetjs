@@ -3593,7 +3593,7 @@ function sheet_add_aoa(_ws, data, opts) {
 			if(typeof data[R][C] === 'undefined') continue;
       var cell = ({v: data[R][C] });
       if(data[R][C] && typeof data[R][C] === 'object' && Object.prototype.toString.call(data[R][C] ).toLowerCase() === "[object object]"){
-        cell = data[R][C]
+          cell = data[R][C]
       }
 			if(Array.isArray(cell.v)) { cell.f = data[R][C][1]; cell.v = cell.v[0]; }
 			var __R = _R + R, __C = _C + C;
