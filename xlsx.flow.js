@@ -3683,10 +3683,13 @@ function sheet_add_aoa(_ws/*:?Worksheet*/, data/*:AOA*/, opts/*:?any*/)/*:Worksh
 		if(!Array.isArray(data[R])) throw new Error("aoa_to_sheet expects an array of arrays");
 		for(var C = 0; C != data[R].length; ++C) {
 			if(typeof data[R][C] === 'undefined') continue;
-      var cell/*:Cell*/ = ({v: data[R][C] }/*:any*/);
-      if(data[R][C] && typeof data[R][C] === 'object' && Object.prototype.toString.call(data[R][C] ).toLowerCase() === "[object object]"){
-          cell = data[R][C]
-      }
+			var cell/*:Cell*/ = ({v: data[R][C] }/*:any*/);
+			if(data[R][C] 
+        && typeof data[R][C] === 'object' 
+        && Object.prototype.toString.call(data[R][C]).toLowerCase() === "[object object]"
+			){
+        cell = data[R][C]
+			}
 			if(Array.isArray(cell.v)) { cell.f = data[R][C][1]; cell.v = cell.v[0]; }
 			var __R = _R + R, __C = _C + C;
 			if(range.s.r > __R) range.s.r = __R;
