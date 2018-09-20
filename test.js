@@ -2374,3 +2374,25 @@ mft.forEach(function(x) {
 	}});
 }); });
 
+describe('support object cell', function() {
+  var data = require('./').utils.sheet_add_aoa (null, [
+    ['url', 'name', 'id'],
+    [
+      {
+        l: {
+          Target: 'https://123.com',
+        },
+        v: 'url',
+        t: 's',
+      },
+      'tom',
+      'xxx'
+    ],
+  ]);
+  it('base', function(){
+    assert.deepEqual(data.A2,  { l: { Target: 'https://123.com' },
+    v: 'url',
+    t: 's' })
+  })
+})
+
