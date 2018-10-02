@@ -3552,6 +3552,7 @@ function safe_format_cell(cell, v) {
 
 function format_cell(cell, v, o) {
 	if(cell == null || cell.t == null || cell.t == 'z') return "";
+	if(o && o.raw && cell.v) return cell.v;
 	if(cell.w !== undefined) return cell.w;
 	if(cell.t == 'd' && !cell.z && o && o.dateNF) cell.z = o.dateNF;
 	if(v == undefined) return safe_format_cell(cell, cell.v);
