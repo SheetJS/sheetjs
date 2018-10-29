@@ -1973,7 +1973,8 @@ XLSX.utils.sheet_add_aoa(ws, [[4,5,6,7,8,9,0]], {origin: -1});
 `XLSX.utils.json_to_sheet` takes an array of objects and returns a worksheet
 with automatically-generated "headers" based on the keys of the objects.  The
 default column order is determined by the first appearance of the field using
-`Object.keys`, but can be overridden using the options argument:
+`Object.keys`, but can be overridden using the `header` key of the options
+argument:
 
 | Option Name |  Default | Description                                         |
 | :---------- | :------: | :-------------------------------------------------- |
@@ -1981,6 +1982,10 @@ default column order is determined by the first appearance of the field using
 |`dateNF`     |  FMT 14  | Use specified date format in string output          |
 |`cellDates`  |  false   | Store dates as type `d` (default is `n`)            |
 |`skipHeader` |  false   | If true, do not include header row in output        |
+
+Cell types are autodetected based on the type of each value in the object.
+For example, a `Date` object will generate a Date cell, and a `String` will
+generate a cell value prefixed with `'`.
 
 <details>
   <summary><b>Examples</b> (click to show)</summary>
