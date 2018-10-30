@@ -2761,7 +2761,6 @@ function numdate(v/*:number*/)/*:Date*/ {
 	}
 	return out;
 }
-module.exports = {basedate, refdate, dnthresh, refoffset, datenum, numdate};
 
 /* ISO 8601 Duration */
 function parse_isodur(s) {
