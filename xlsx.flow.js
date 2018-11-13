@@ -4,7 +4,7 @@
 /*global global, exports, module, require:false, process:false, Buffer:false, ArrayBuffer:false */
 var XLSX = {};
 function make_xlsx_lib(XLSX){
-XLSX.version = '0.14.0';
+XLSX.version = '0.14.1';
 var current_codepage = 1200, current_ansi = 1252;
 /*:: declare var cptable:any; */
 /*global cptable:true, window */
@@ -13076,8 +13076,21 @@ function parse_ws_xml_autofilter(data/*:string*/) {
 	var o = { ref: (data.match(/ref="([^"]*)"/)||[])[1]};
 	return o;
 }
-function write_ws_xml_autofilter(data)/*:string*/ {
-	return writextag("autoFilter", null, {ref:data.ref});
+function write_ws_xml_autofilter(data, ws, wb, idx)/*:string*/ {
+	var ref = typeof data.ref == "string" ? data.ref : encode_range(data.ref);
+	if(!wb.Workbook) wb.Workbook = {};
+	if(!wb.Workbook.Names) wb.Workbook.Names = [];
+	var names/*: Array<any> */ = wb.Workbook.Names;
+	var range = decode_range(ref);
+	if(range.s.r == range.e.r) { range.e.r = decode_range(ws["!ref"]).e.r; ref = encode_range(range); }
+	for(var i = 0; i < names.length; ++i) {
+		var name = names[i];
+		if(name.Name != '_xlnm._FilterDatabase') continue;
+		if(name.Sheet != idx) continue;
+		name.Ref = "'" + wb.SheetNames[idx] + "'!" + ref; break;
+	}
+	if(i == names.length) names.push({ Name: '_xlnm._FilterDatabase', Sheet: idx, Ref: "'" + wb.SheetNames[idx] + "'!" + ref  });
+	return writextag("autoFilter", null, {ref:ref});
 }
 
 /* 18.3.1.88 sheetViews CT_SheetViews */
@@ -13400,7 +13413,7 @@ function write_ws_xml(idx/*:number*/, opts, wb/*:Workbook*/, rels)/*:string*/ {
 	/* protectedRanges */
 	/* scenarios */
 
-	if(ws['!autofilter'] != null) o[o.length] = write_ws_xml_autofilter(ws['!autofilter']);
+	if(ws['!autofilter'] != null) o[o.length] = write_ws_xml_autofilter(ws['!autofilter'], ws, wb, idx);
 
 	/* sortState */
 	/* dataConsolidate */
@@ -16520,14 +16533,11 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 		delete line.ixfe; delete line.XF;
 		lastcell = cell;
 		last_cell = encode_cell(cell);
-		if(range.s) {
-			if(cell.r < range.s.r) range.s.r = cell.r;
-			if(cell.c < range.s.c) range.s.c = cell.c;
-		}
-		if(range.e) {
-			if(cell.r + 1 > range.e.r) range.e.r = cell.r + 1;
-			if(cell.c + 1 > range.e.c) range.e.c = cell.c + 1;
-		}
+		if(!range || !range.s || !range.e) range = {s:{r:0,c:0},e:{r:0,c:0}};
+		if(cell.r < range.s.r) range.s.r = cell.r;
+		if(cell.c < range.s.c) range.s.c = cell.c;
+		if(cell.r + 1 > range.e.r) range.e.r = cell.r + 1;
+		if(cell.c + 1 > range.e.c) range.e.c = cell.c + 1;
 		if(options.cellFormula && line.f) {
 			for(var afi = 0; afi < arrayf.length; ++afi) {
 				if(arrayf[afi][0].s.c > cell.c || arrayf[afi][0].s.r > cell.r) continue;
@@ -21063,9 +21073,9 @@ if(has_buf && typeof require != 'undefined') (function() {
 		stream._read = function() {
 			if(R > r.e.r) return stream.push(null);
 			while(R <= r.e.r) {
-				++R;
 				//if ((rowinfo[R-1]||{}).hidden) continue;
 				var row = make_json_row(sheet, r, R, cols, header, hdr, dense, o);
+				++R;
 				if((row.isempty === false) || (header === 1 ? o.blankrows !== false : !!o.blankrows)) {
 					stream.push(row.row);
 					break;

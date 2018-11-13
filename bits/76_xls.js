@@ -135,14 +135,11 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 		delete line.ixfe; delete line.XF;
 		lastcell = cell;
 		last_cell = encode_cell(cell);
-		if(range.s) {
-			if(cell.r < range.s.r) range.s.r = cell.r;
-			if(cell.c < range.s.c) range.s.c = cell.c;
-		}
-		if(range.e) {
-			if(cell.r + 1 > range.e.r) range.e.r = cell.r + 1;
-			if(cell.c + 1 > range.e.c) range.e.c = cell.c + 1;
-		}
+		if(!range || !range.s || !range.e) range = {s:{r:0,c:0},e:{r:0,c:0}};
+		if(cell.r < range.s.r) range.s.r = cell.r;
+		if(cell.c < range.s.c) range.s.c = cell.c;
+		if(cell.r + 1 > range.e.r) range.e.r = cell.r + 1;
+		if(cell.c + 1 > range.e.c) range.e.c = cell.c + 1;
 		if(options.cellFormula && line.f) {
 			for(var afi = 0; afi < arrayf.length; ++afi) {
 				if(arrayf[afi][0].s.c > cell.c || arrayf[afi][0].s.r > cell.r) continue;

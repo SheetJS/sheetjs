@@ -191,8 +191,21 @@ function parse_ws_xml_autofilter(data/*:string*/) {
 	var o = { ref: (data.match(/ref="([^"]*)"/)||[])[1]};
 	return o;
 }
-function write_ws_xml_autofilter(data)/*:string*/ {
-	return writextag("autoFilter", null, {ref:data.ref});
+function write_ws_xml_autofilter(data, ws, wb, idx)/*:string*/ {
+	var ref = typeof data.ref == "string" ? data.ref : encode_range(data.ref);
+	if(!wb.Workbook) wb.Workbook = {};
+	if(!wb.Workbook.Names) wb.Workbook.Names = [];
+	var names/*: Array<any> */ = wb.Workbook.Names;
+	var range = decode_range(ref);
+	if(range.s.r == range.e.r) { range.e.r = decode_range(ws["!ref"]).e.r; ref = encode_range(range); }
+	for(var i = 0; i < names.length; ++i) {
+		var name = names[i];
+		if(name.Name != '_xlnm._FilterDatabase') continue;
+		if(name.Sheet != idx) continue;
+		name.Ref = "'" + wb.SheetNames[idx] + "'!" + ref; break;
+	}
+	if(i == names.length) names.push({ Name: '_xlnm._FilterDatabase', Sheet: idx, Ref: "'" + wb.SheetNames[idx] + "'!" + ref  });
+	return writextag("autoFilter", null, {ref:ref});
 }
 
 /* 18.3.1.88 sheetViews CT_SheetViews */
@@ -515,7 +528,7 @@ function write_ws_xml(idx/*:number*/, opts, wb/*:Workbook*/, rels)/*:string*/ {
 	/* protectedRanges */
 	/* scenarios */
 
-	if(ws['!autofilter'] != null) o[o.length] = write_ws_xml_autofilter(ws['!autofilter']);
+	if(ws['!autofilter'] != null) o[o.length] = write_ws_xml_autofilter(ws['!autofilter'], ws, wb, idx);
 
 	/* sortState */
 	/* dataConsolidate */
