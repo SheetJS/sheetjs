@@ -13075,7 +13075,7 @@ function get_cell_style(styles /*:Array<any>*/ , cell /*:Cell*/ , opts) {
                 break;
             }
     }
-    if (cell.p && !styles.find(s => !!s.applyProtection)) {
+    if (cell.p && !styles.find(function(s){ return !!s.applyProtection; })) {
         styles[styles.length] = {
             numFmtId: z,
             fontId: 0,
@@ -13096,8 +13096,8 @@ function get_cell_style(styles /*:Array<any>*/ , cell /*:Cell*/ , opts) {
         }
     }
     if (result == undefined) {
-        let length = styles.length;
-        styles[length] = {
+        var len = styles.length;
+        styles[len] = {
             numFmtId: z,
             fontId: 0,
             fillId: 0,
@@ -13105,7 +13105,7 @@ function get_cell_style(styles /*:Array<any>*/ , cell /*:Cell*/ , opts) {
             xfId: 0,
             applyNumberFormat: 1
         };
-        result = length;
+        result = len;
     }
     return result;
 }
