@@ -926,6 +926,7 @@ Cell objects are plain JS objects with keys and values following the convention:
 | `z` | number format string associated with the cell (if requested)           |
 | `l` | cell hyperlink object (`.Target` holds link, `.Tooltip` is tooltip)    |
 | `s` | the style/theme of the cell (if applicable)                            |
+| `p` | set to truthy value to remove the lock for a password protected cell   |
 
 Built-in export utilities (such as the CSV exporter) will use the `w` text if it
 is available.  To change a value, be sure to delete `cell.w` (or set it to
@@ -934,6 +935,8 @@ text from the number format (`cell.z`) and the raw value if possible.
 
 The actual array formula is stored in the `f` field of the first cell in the
 array range.  Other cells in the range will omit the `f` field.
+
+When protecting a sheet with ws["!protect"] use cell.p to unlock the cell
 
 #### Data Types
 
