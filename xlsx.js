@@ -11083,6 +11083,18 @@ var WS_XML_ROOT = writextag('worksheet', null, {
 	'xmlns:r': XMLNS.r
 });
 
+function write_ws_xml_datavalidation(validations) {
+	var o = '<dataValidations>';
+	for(var i=0; i < validations.length; i++) {
+		var validation = validations[i];
+		o += '<dataValidation type="list" allowBlank="1" sqref="' + validation.sqref + '">';
+		o += '<formula1>&quot;' + validation.values + '&quot;</formula1>';
+		o += '</dataValidation>';
+	}
+	o += '</dataValidations>';
+	return o;
+}
+
 function write_ws_xml(idx, opts, wb, rels) {
 	var o = [XML_HEADER, WS_XML_ROOT];
 	var s = wb.SheetNames[idx], sidx = 0, rdata = "";
@@ -11126,6 +11138,9 @@ function write_ws_xml(idx, opts, wb, rels) {
 	/* customSheetViews */
 
 	if(ws['!merges'] != null && ws['!merges'].length > 0) o[o.length] = (write_ws_xml_merges(ws['!merges']));
+
+	// 增加对enum的数据验证支持
+	if(ws['!dataValidation']) o[o.length] = write_ws_xml_datavalidation(ws['!dataValidation']);
 
 	/* phoneticPr */
 	/* conditionalFormatting */
