@@ -11084,15 +11084,19 @@ var WS_XML_ROOT = writextag('worksheet', null, {
 });
 
 function write_ws_xml_datavalidation(validations) {
-	var o = '<dataValidations>';
+	var o = '<dataValidations> ';
 	for(var i=0; i < validations.length; i++) {
 		var validation = validations[i];
-		o += '<dataValidation type="list" allowBlank="1" sqref="' + validation.sqref + '">';
-		o += '<formula1>&quot;' + validation.values + '&quot;</formula1>';
-		o += '</dataValidation>';
+		var formula = validation.type === 'list' ? writetag('formula1', '"' + validation.values + '"') : null;
+		o += writextag('dataValidation', formula, {
+			sqref: validation.sqref,
+			type: validation.type,
+			allowBlank: typeof validation.allowBlank === 'boolean' ? validation.allowBlank : true,
+			showErrorMessage: typeof validation.showErrorMessage === 'boolean' ? validation.showErrorMessage : true,
+		});
 	}
 	o += '</dataValidations>';
-	return o;
+	return o;	
 }
 
 function write_ws_xml(idx, opts, wb, rels) {
