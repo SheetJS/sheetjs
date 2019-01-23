@@ -7114,6 +7114,38 @@ function parse_cellXfs(t, styles, opts) {
 	});
 }
 
+function write_fonts(fonts) {
+	fonts = fonts || [];
+	var o = [];
+	o[o.length] = (writextag('fonts', null));
+	o[o.length] = ('<font><sz val="12"/><color theme="1"/><name val="Calibri"/><family val="2"/><scheme val="minor"/></font>');
+	fonts.forEach(function(f) {
+		o[o.length] = ("<font>")
+		if (!f.sz) {
+			f.sz = {val: 12};
+		}
+		if (!f.color) {
+			f.folor = {theme: 1};
+		}
+		if (!f.name) {
+			f.name = {val: 'Calibri'};
+		}
+		if (!f.family) {
+			f.family = {val: 2};
+		}
+		if (!f.scheme) {
+			f.scheme = {val: 'minor'};
+		}
+		Object.keys(f).forEach(function(k) {
+			o[o.length] = writextag(k, null, f[k]);
+		})
+		o[o.length] = ("</font>");
+	});
+	o[o.length] = ("</fonts>");
+	o[0] = writextag('fonts',null, {count: fonts.length + 1}).replace("/>",">");
+	return o.join("");
+}
+
 function write_cellXfs(cellXfs) {
 	var o = [];
 	o[o.length] = (writextag('cellXfs',null));
@@ -7176,7 +7208,7 @@ RELS.STY = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/
 function write_sty_xml(wb, opts) {
 	var o = [XML_HEADER, STYLES_XML_ROOT], w;
 	if(wb.SSF && (w = write_numFmts(wb.SSF)) != null) o[o.length] = w;
-	o[o.length] = ('<fonts count="1"><font><sz val="12"/><color theme="1"/><name val="Calibri"/><family val="2"/><scheme val="minor"/></font></fonts>');
+	o[o.length] = (write_fonts(opts.fonts));
 	o[o.length] = ('<fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills>');
 	o[o.length] = ('<borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders>');
 	o[o.length] = ('<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>');
@@ -10620,6 +10652,10 @@ function get_cell_style(styles, cell, opts) {
 			opts.revssf[cell.z] = z = i;
 			break;
 		}
+	}
+	// if specify xfId
+	if (cell.s && !isNaN(cell.s) && styles[cell.s]) {
+		return cell.s;
 	}
 	for(i = 0; i != len; ++i) if(styles[i].numFmtId === z) return i;
 	styles[len] = {
@@ -17237,12 +17273,15 @@ function write_zip(wb, opts) {
 		calcchains:[], vba: [], drawings: [],
 		TODO:[], xmlns: "" });
 	fix_write_opts(opts = opts || {});
-var zip = new jszip();
+	var zip = new jszip();
 	var f = "", rId = 0;
-
+	var cellXfs = opts.cellXfs;
 	opts.cellXfs = [];
 	get_cell_style(opts.cellXfs, {}, {revssf:{"General":0}});
-
+	// if customized cellXfs exists, add it
+	if (cellXfs && cellXfs.length) {
+		opts.cellXfs = opts.cellXfs.concat(cellXfs);
+	}
 	if(!wb.Props) wb.Props = {};
 
 	f = "docProps/core.xml";
@@ -17250,7 +17289,7 @@ var zip = new jszip();
 	ct.coreprops.push(f);
 	add_rels(opts.rels, 2, f, RELS.CORE_PROPS);
 
-f = "docProps/app.xml";
+	f = "docProps/app.xml";
 	if(wb.Props && wb.Props.SheetNames){/* empty */}
 	else if(!wb.Workbook || !wb.Workbook.Sheets) wb.Props.SheetNames = wb.SheetNames;
 	// $FlowIgnore
