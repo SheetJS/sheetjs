@@ -59,6 +59,20 @@ function utf16beread(data) {
 	return o.join("");
 }
 
+function getTimezoneOffsetMS(date) {
+	var fullYear = date.getFullYear();
+	var month = date.getMonth();
+	var day = date.getDate();
+	var hours = date.getHours();
+	var minutes = date.getMinutes();
+	var seconds = date.getSeconds();
+	var ms = date.getMilliseconds();
+
+	var time = date.getTime();
+	var utcTime = Date.UTC(fullYear, month, day, hours, minutes, seconds, ms);
+	return time - utcTime;
+}
+
 var debom = function(data) {
 	var c1 = data.charCodeAt(0), c2 = data.charCodeAt(1);
 	if(c1 == 0xFF && c2 == 0xFE) return utf16leread(data.slice(2));
@@ -254,20 +268,6 @@ function init_table(t) {
 	t[49]= '@';
 	t[56]= '"上午/下午 "hh"時"mm"分"ss"秒 "';
 	t[65535]= 'General';
-}
-
-function getTimezoneOffsetMS(date) {
-	var fullYear = date.getFullYear();
-	var month = date.getMonth();
-	var day = date.getDate();
-	var hours = date.getHours();
-	var minutes = date.getMinutes();
-	var seconds = date.getSeconds();
-	var ms = date.getMilliseconds();
-
-	var time = date.getTime();
-	var utcTime = Date.UTC(fullYear, month, day, hours, minutes, seconds, ms);
-	return time - utcTime;
 }
 
 var table_fmt = {};
