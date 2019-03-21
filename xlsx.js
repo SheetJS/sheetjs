@@ -20668,7 +20668,10 @@ function sheet_add_json(_ws, js, opts) {
 		var _range = safe_decode_range(ws['!ref']);
 		range.e.c = Math.max(range.e.c, _range.e.c);
 		range.e.r = Math.max(range.e.r, _range.e.r);
-		if(_R == -1) { _R = range.e.r + 1; range.e.r = _R + js.length - 1 + offset; }
+		if(_R < 0) {
+			_R = _range.e.r  + 1;
+			range.e.r = _R + js.length + offset;
+		}
 	}
 	var hdr = o.header || [], C = 0;
 
