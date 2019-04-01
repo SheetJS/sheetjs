@@ -1,0 +1,708 @@
+
+<!DOCTYPE html>
+<!-- (C) 2013-present  SheetJS http://sheetjs.com -->
+<!-- vim: set ts=2: -->
+<html>
+<head>
+  <title>SheetJS JS-XLSX In-Browser HTML Table Export Demo</title>
+  <style>
+    .xport, .btn {
+      display: inline;
+      text-align:center;
+    }
+    a { text-decoration: none }
+
+    .button {
+      padding: 20px;
+      border-radius: 10px;
+      background-color:#9b6;
+      display: block;
+      width: 200px;
+    }
+  </style>
+</head>
+<body>
+<!-- SheetJS js-xlsx library -->
+<script type="text/javascript" src="http://rawgit.com/protobi/js-xlsx/master/shim.js"></script>
+<script type="text/javascript" src="http://rawgit.com/protobi/js-xlsx/master/dist/xlsx.full.min.js"></script>
+
+<!-- FileSaver.js is the library of choice for Chrome -->
+<script type="text/javascript" src="http://rawgit.com/eligrey/Blob.js/master/Blob.js"></script>
+<script type="text/javascript" src="https://fastcdn.org/FileSaver.js/1.1.20151003/FileSaver.min.js"></script>
+
+<!-- FileSaver doesn't work in older IE and newer Safari; Downloadify is the flash fallback -->
+<script type="text/javascript" src="http://sheetjs.com/demos/swfobject.js"></script>
+<script type="text/javascript" src="http://sheetjs.com/demos/downloadify.min.js"></script>
+<script type="text/javascript" src="http://sheetjs.com/demos/base64.min.js"></script>
+
+<script type="text/javascript">
+  function export_table_to_excel() {
+    var wb = {
+      "SheetNames": [
+        "Main"
+      ],
+      "Sheets": {
+        "Main": {
+          "!merges": [
+            {
+              "s": {
+                "c": 0,
+                "r": 0
+              },
+              "e": {
+                "c": 2,
+                "r": 1
+              }
+            }
+          ],
+          "A1": {
+            "v": "This is a submerged cell",
+            "s": {
+              "border": {
+                "left": {
+                  "style": "thick",
+                  "color": {
+                    "auto": 1
+                  }
+                },
+                "top": {
+                  "style": "thick",
+                  "color": {
+                    "auto": 1
+                  }
+                },
+                "bottom": {
+                  "style": "thick",
+                  "color": {
+                    "auto": 1
+                  }
+                }
+              }
+            },
+            "t": "s"
+          },
+          "B1": {
+            "v": "Pirate ship",
+            "s": {
+              "border": {
+                "top": {
+                  "style": "thick",
+                  "color": {
+                    "auto": 1
+                  }
+                },
+                "bottom": {
+                  "style": "thick",
+                  "color": {
+                    "auto": 1
+                  }
+                }
+              }
+            },
+            "t": "s"
+          },
+          "C1": {
+            "v": "Sunken treasure",
+            "s": {
+              "border": {
+                "right": {
+                  "style": "thick",
+                  "color": {
+                    "auto": 1
+                  }
+                },
+                "top": {
+                  "style": "thick",
+                  "color": {
+                    "auto": 1
+                  }
+                },
+                "bottom": {
+                  "style": "thick",
+                  "color": {
+                    "auto": 1
+                  }
+                }
+              }
+            },
+            "t": "s"
+          },
+          "A2": {
+            "v": "Blank",
+            "t": "s",
+            "s":{
+              "border": {
+                "left": {
+                  "style": "thick",
+                  "color": {
+                    "auto": 1
+                  }
+                },
+                "top": {
+                  "style": "thick",
+                  "color": {
+                    "auto": 1
+                  }
+                },
+                "bottom": {
+                  "style": "thick",
+                  "color": {
+                    "auto": 1
+                  }
+                }
+              }
+            }
+          },
+          "B2": {
+            "v": "Red",
+            "s": {
+              "fill": {
+                "fgColor": {
+                  "rgb": "FFFF0000"
+                }
+              },
+
+              "border": {
+
+                "bottom": {
+                  "style": "thick",
+                  "color": {
+                    "auto": 1
+                  }
+                }
+              }
+            },
+            "t": "s"
+          },
+          "C2": {
+            "v": "Green",
+            "s": {
+              "fill": {
+                "fgColor": {
+                  "rgb": "FF00FF00"
+                }
+              },
+              "border": {
+
+                "bottom": {
+                  "style": "thick",
+                  "color": {
+                    "auto": 1
+                  }
+                },
+                "right": {
+                  "style": "thick",
+                  "color": {
+                    "auto": 1
+                  }
+                }
+              }
+
+            },
+            "t": "s"
+          },
+          "D2": {
+            "v": "Blue",
+            "s": {
+              "fill": {
+                "fgColor": {
+                  "rgb": "FF0000FF"
+                }
+              }
+            },
+            "t": "s"
+          },
+          "E2": {
+            "v": "Theme 5",
+            "s": {
+              "fill": {
+                "fgColor": {
+                  "theme": 5
+                }
+              }
+            },
+            "t": "s"
+          },
+          "F2": {
+            "v": "Theme 5 Tint -0.5",
+            "s": {
+              "fill": {
+                "fgColor": {
+                  "theme": 5,
+                  "tint": -0.5
+                }
+              }
+            },
+            "t": "s"
+          },
+          "A3": {
+            "v": "Default",
+            "t": "s"
+          },
+          "B3": {
+            "v": "Arial",
+            "s": {
+              "font": {
+                "name": "Arial",
+                "sz": 24,
+                "color": {
+                  "theme": "5"
+                }
+              }
+            },
+            "t": "s"
+          },
+          "C3": {
+            "v": "Times New Roman",
+            "s": {
+              "font": {
+                "name": "Times New Roman",
+                bold: true,
+                underline: true,
+                italic: true,
+                strike: true,
+                outline: true,
+                shadow: true,
+                vertAlign: "superscript",
+                "sz": 16,
+                "color": {
+                  "rgb": "FF2222FF"
+                }
+              }
+            },
+            "t": "s"
+          },
+          "D3": {
+            "v": "Courier New",
+            "s": {
+              "font": {
+                "name": "Courier New",
+                "sz": 14
+              }
+            },
+            "t": "s"
+          },
+          "A4": {
+            "v": 0.618033989,
+            "t": "n"
+          },
+          "B4": {
+            "v": 0.618033989,
+            "t": "n"
+          },
+          "C4": {
+            "v": 0.618033989,
+            "t": "n"
+          },
+          "D4": {
+            "v": 0.618033989,
+            "t": "n",
+            "s": {
+              "numFmt": "0.00%"
+            }
+          },
+          "E4": {
+            "v": 0.618033989,
+            "t": "n",
+            "s": {
+              "numFmt": "0.00%",
+              "fill": {
+                "fgColor": {
+                  "rgb": "FFFFCC00"
+                }
+              }
+            }
+          },
+          "A5": {
+            "v": 0.618033989,
+            "t": "n",
+            "s": {
+              "numFmt": "0%"
+            }
+          },
+          "B5": {
+            "v": 0.618033989,
+            "t": "n",
+            "s": {
+              "numFmt": "0.0%"
+            }
+          },
+          "C5": {
+            "v": 0.618033989,
+            "t": "n",
+            "s": {
+              "numFmt": "0.00%"
+            }
+          },
+          "D5": {
+            "v": 0.618033989,
+            "t": "n",
+            "s": {
+              "numFmt": "0.000%"
+            }
+          },
+          "E5": {
+            "v": 0.618033989,
+            "t": "n",
+            "s": {
+              "numFmt": "0.0000%"
+            }
+          },
+          "F5": {
+            "v": 0,
+            "t": "n",
+            "s": {
+              "numFmt": "0.00%;\\(0.00%\\);\\-;@",
+              "fill": {
+                "fgColor": {
+                  "rgb": "FFFFCC00"
+                }
+              }
+            }
+          },
+          "A6": {
+            "v": "Sat Mar 21 2015 23:47:34 GMT-0400 (EDT)",
+            "t": "s"
+          },
+          "B6": {
+            "v": 42084.99137416667,
+            "t": "n"
+          },
+          "C6": {
+            "v": 42084.99137416667,
+            "s": {
+              "numFmt": "d-mmm-yy"
+            },
+            "t": "n"
+          },
+          "A7": {
+            "v": "left",
+            "s": {
+              "alignment": {
+                "horizontal": "left"
+              }
+            },
+            "t": "s"
+          },
+          "B7": {
+            "v": "center",
+            "s": {
+              "alignment": {
+                "horizontal": "center"
+              }
+            },
+            "t": "s"
+          },
+          "C7": {
+            "v": "right",
+            "s": {
+              "alignment": {
+                "horizontal": "right"
+              }
+            },
+            "t": "s"
+          },
+          "A8": {
+            "v": "vertical",
+            "s": {
+              "alignment": {
+                "vertical": "top"
+              }
+            },
+            "t": "s"
+          },
+          "B8": {
+            "v": "vertical",
+            "s": {
+              "alignment": {
+                "vertical": "center"
+              }
+            },
+            "t": "s"
+          },
+          "C8": {
+            "v": "vertical",
+            "s": {
+              "alignment": {
+                "vertical": "bottom"
+              }
+            },
+            "t": "s"
+          },
+          "A9": {
+            "v": "indent",
+            "s": {
+              "alignment": {
+                "indent": "1"
+              }
+            },
+            "t": "s"
+          },
+          "B9": {
+            "v": "indent",
+            "s": {
+              "alignment": {
+                "indent": "2"
+              }
+            },
+            "t": "s"
+          },
+          "C9": {
+            "v": "indent",
+            "s": {
+              "alignment": {
+                "indent": "3"
+              }
+            },
+            "t": "s"
+          },
+          "A10": {
+            "v": "In publishing and graphic design, lorem ipsum is a filler text commonly used to demonstrate the graphic elements of a document or visual presentation. ",
+            "s": {
+              "alignment": {
+                "wrapText": 1,
+                "horizontal": "right",
+                "vertical": "center",
+                "indent": 1
+              }
+            },
+            "t": "s"
+          },
+          "A11": {
+            "v": 41684.35264774306,
+            "s": {
+              "numFmt": "m/d/yy"
+            },
+            "t": "n"
+          },
+          "B11": {
+            "v": 41684.35264774306,
+            "s": {
+              "numFmt": "d-mmm-yy"
+            },
+            "t": "n"
+          },
+          "C11": {
+            "v": 41684.35264774306,
+            "s": {
+              "numFmt": "h:mm:ss AM/PM"
+            },
+            "t": "n"
+          },
+          "D11": {
+            "v": 42084.99137416667,
+            "s": {
+              "numFmt": "m/d/yy"
+            },
+            "t": "n"
+          },
+          "E11": {
+            "v": 42065.02247239584,
+            "s": {
+              "numFmt": "m/d/yy"
+            },
+            "t": "n"
+          },
+          "F11": {
+            "v": 42084.99137416667,
+            "s": {
+              "numFmt": "m/d/yy h:mm:ss AM/PM"
+            },
+            "t": "n"
+          },
+          "A12": {
+            "v": "Apple",
+            "s": {
+              "border": {
+                "top": {
+                  "style": "thin"
+                },
+                "left": {
+                  "style": "thin"
+                },
+                "right": {
+                  "style": "thin"
+                },
+                "bottom": {
+                  "style": "thin"
+                }
+              }
+            },
+            "t": "s"
+          },
+          "C12": {
+            "v": "Apple",
+            "s": {
+              "border": {
+                "diagonalUp": 1,
+                "diagonalDown": 1,
+                "top": {
+                  "style": "dashed",
+                  "color": {
+                    "auto": 1
+                  }
+                },
+                "right": {
+                  "style": "medium",
+                  "color": {
+                    "theme": "5"
+                  }
+                },
+                "bottom": {
+                  "style": "hair",
+                  "color": {
+                    "theme": 5,
+                    "tint": "-0.3"
+                  }
+                },
+                "left": {
+                  "style": "thin",
+                  "color": {
+                    "rgb": "FFFFAA00"
+                  }
+                },
+                "diagonal": {
+                  "style": "dotted",
+                  "color": {
+                    "auto": 1
+                  }
+                }
+              }
+            },
+            "t": "s"
+          },
+          "E12": {
+            "v": "Pear",
+            "s": {
+              "border": {
+                "diagonalUp": 1,
+                "diagonalDown": 1,
+                "top": {
+                  "style": "dashed",
+                  "color": {
+                    "auto": 1
+                  }
+                },
+                "right": {
+                  "style": "dotted",
+                  "color": {
+                    "theme": "5"
+                  }
+                },
+                "bottom": {
+                  "style": "mediumDashed",
+                  "color": {
+                    "theme": 5,
+                    "tint": "-0.3"
+                  }
+                },
+                "left": {
+                  "style": "double",
+                  "color": {
+                    "rgb": "FFFFAA00"
+                  }
+                },
+                "diagonal": {
+                  "style": "hair",
+                  "color": {
+                    "auto": 1
+                  }
+                }
+              }
+            },
+            "t": "s"
+          },
+          "A13": {
+            "v": "Up 90",
+            "s": {
+              "alignment": {
+                "textRotation": 90
+              }
+            },
+            "t": "s"
+          },
+          "B13": {
+            "v": "Up 45",
+            "s": {
+              "alignment": {
+                "textRotation": 45
+              }
+            },
+            "t": "s"
+          },
+          "C13": {
+            "v": "Horizontal",
+            "s": {
+              "alignment": {
+                "textRotation": 0
+              }
+            },
+            "t": "s"
+          },
+          "D13": {
+            "v": "Down 45",
+            "s": {
+              "alignment": {
+                "textRotation": 135
+              }
+            },
+            "t": "s"
+          },
+          "E13": {
+            "v": "Down 90",
+            "s": {
+              "alignment": {
+                "textRotation": 180
+              }
+            },
+            "t": "s"
+          },
+          "F13": {
+            "v": "Vertical",
+            "s": {
+              "alignment": {
+                "textRotation": 255
+              }
+            },
+            "t": "s"
+          },
+          "A14": {
+            "v": "Font color test",
+            "s": {
+              "font": {
+                "color": {
+                  "rgb": "FFC6EFCE"
+                }
+              }
+            },
+            "t": "s"
+          },
+          "!ref": "A1:F14"
+        }
+      }
+    }
+
+    var wbout = XLSX.write(wb, {bookType:'xlsx', bookSST:true, type: 'binary'});
+    var fname =   'test.xlsx';
+    try {
+      saveAs(new Blob([s2ab(wbout)],{type:"application/octet-stream"}), fname);
+    } catch(e) { if(typeof console != 'undefined') console.log(e, wbout); }
+    return wbout;
+  }
+  function s2ab(s) {
+    if(typeof ArrayBuffer !== 'undefined') {
+      var buf = new ArrayBuffer(s.length);
+      var view = new Uint8Array(buf);
+      for (var i=0; i!=s.length; ++i) view[i] = s.charCodeAt(i) & 0xFF;
+      return buf;
+    } else {
+      var buf = new Array(s.length);
+      for (var i=0; i!=s.length; ++i) buf[i] = s.charCodeAt(i) & 0xFF;
+      return buf;
+    }
+  }
+</script>
+
+<button class="button" onclick="export_table_to_excel()">Export</button>
+</body>
+</html>
