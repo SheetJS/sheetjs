@@ -1,4 +1,6 @@
 # [SheetJS js-xlsx](http://sheetjs.com)
+[![Backers on Open Collective](https://opencollective.com/s5s/backers/badge.svg)](#backers)
+[![Sponsors on Open Collective](https://opencollective.com/s5s/sponsors/badge.svg)](#sponsors) 
 
 Parser and writer for various spreadsheet formats.  Pure-JS cleanroom
 implementation from official specifications, related documents, and test files.
@@ -37,7 +39,7 @@ enhancements, additional features like styling, and dedicated support.
 [![Build Status](https://saucelabs.com/browser-matrix/sheetjs.svg)](https://saucelabs.com/u/sheetjs)
 
 [![Build Status](https://travis-ci.org/SheetJS/js-xlsx.svg?branch=master)](https://travis-ci.org/SheetJS/js-xlsx)
-[![Build Status](https://semaphoreci.com/api/v1/sheetjs/js-xlsx/branches/master/shields_badge.svg)](https://semaphoreci.com/sheetjs/js-xlsx)
+[![Backers on Open Collective](https://opencollective.com/s5s/backers/badge.svg)](#backers) [![Sponsors on Open Collective](https://opencollective.com/s5s/sponsors/badge.svg)](#sponsors) [![Build Status](https://semaphoreci.com/api/v1/sheetjs/js-xlsx/branches/master/shields_badge.svg)](https://semaphoreci.com/sheetjs/js-xlsx)
 [![Coverage Status](http://img.shields.io/coveralls/SheetJS/js-xlsx/master.svg)](https://coveralls.io/r/SheetJS/js-xlsx?branch=master)
 [![Dependencies Status](https://david-dm.org/sheetjs/js-xlsx/status.svg)](https://david-dm.org/sheetjs/js-xlsx)
 [![npm Downloads](https://img.shields.io/npm/dt/xlsx.svg)](https://npmjs.org/package/xlsx)
@@ -2807,6 +2809,36 @@ and verifying that the feature is preserved.
 For tests involving a new write feature without an existing read ability, please
 add a feature test to the kitchen sink `tests/write.js`.
 </details>
+
+## Contributors
+
+This project exists thanks to all the people who contribute. [[Contribute](CONTRIBUTING.md)].
+<a href="https://github.com/SheetJS/js-xlsx/graphs/contributors"><img src="https://opencollective.com/s5s/contributors.svg?width=890&button=false" /></a>
+
+
+## Backers
+
+Thank you to all our backers! 🙏 [[Become a backer](https://opencollective.com/s5s#backer)]
+
+<a href="https://opencollective.com/s5s#backers" target="_blank"><img src="https://opencollective.com/s5s/backers.svg?width=890"></a>
+
+
+## Sponsors
+
+Support this project by becoming a sponsor. Your logo will show up here with a link to your website. [[Become a sponsor](https://opencollective.com/s5s#sponsor)]
+
+<a href="https://opencollective.com/s5s/sponsor/0/website" target="_blank"><img src="https://opencollective.com/s5s/sponsor/0/avatar.svg"></a>
+<a href="https://opencollective.com/s5s/sponsor/1/website" target="_blank"><img src="https://opencollective.com/s5s/sponsor/1/avatar.svg"></a>
+<a href="https://opencollective.com/s5s/sponsor/2/website" target="_blank"><img src="https://opencollective.com/s5s/sponsor/2/avatar.svg"></a>
+<a href="https://opencollective.com/s5s/sponsor/3/website" target="_blank"><img src="https://opencollective.com/s5s/sponsor/3/avatar.svg"></a>
+<a href="https://opencollective.com/s5s/sponsor/4/website" target="_blank"><img src="https://opencollective.com/s5s/sponsor/4/avatar.svg"></a>
+<a href="https://opencollective.com/s5s/sponsor/5/website" target="_blank"><img src="https://opencollective.com/s5s/sponsor/5/avatar.svg"></a>
+<a href="https://opencollective.com/s5s/sponsor/6/website" target="_blank"><img src="https://opencollective.com/s5s/sponsor/6/avatar.svg"></a>
+<a href="https://opencollective.com/s5s/sponsor/7/website" target="_blank"><img src="https://opencollective.com/s5s/sponsor/7/avatar.svg"></a>
+<a href="https://opencollective.com/s5s/sponsor/8/website" target="_blank"><img src="https://opencollective.com/s5s/sponsor/8/avatar.svg"></a>
+<a href="https://opencollective.com/s5s/sponsor/9/website" target="_blank"><img src="https://opencollective.com/s5s/sponsor/9/avatar.svg"></a>
+
+
 
 ## License
 
