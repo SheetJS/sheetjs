@@ -36,7 +36,9 @@
 		"commander": "~2.17.1",
 		"crc-32": "~1.2.0",
 		"exit-on-epipe": "~1.0.1",
-		"ssf": "~0.10.2"
+		"opencollective-postinstall": "^2.0.2",
+		"ssf": "~0.10.2",
+		"opencollective": "^1.0.3"
 	},
 	"devDependencies": {
 		"@sheetjs/uglify-js": "~2.7.3",
@@ -56,7 +58,8 @@
 		"test": "make travis",
 		"build": "make",
 		"lint": "make fullint",
-		"dtslint": "dtslint types"
+		"dtslint": "dtslint types",
+		"postinstall": "opencollective-postinstall"
 	},
 	"config": {
 		"blanket": {
@@ -77,5 +80,9 @@
 	"license": "Apache-2.0",
 	"engines": {
 		"node": ">=0.8"
+	},
+	"collective": {
+		"type": "opencollective",
+		"url": "https://opencollective.com/s5s"
 	}
 }
