@@ -4,7 +4,7 @@
 /*global global, exports, module, require:false, process:false, Buffer:false, ArrayBuffer:false */
 var XLSX = {};
 function make_xlsx_lib(XLSX){
-XLSX.version = '0.14.2';
+XLSX.version = '0.14.3';
 var current_codepage = 1200, current_ansi = 1252;
 /*:: declare var cptable:any; */
 /*global cptable:true, window */
@@ -11019,9 +11019,9 @@ function formula_quote_sheet_name(sname/*:string*/, opts)/*:string*/ {
 }
 function get_ixti_raw(supbooks, ixti/*:number*/, opts)/*:string*/ {
 	if(!supbooks) return "SH33TJSERR0";
+	if(opts.biff > 8 && (!supbooks.XTI || !supbooks.XTI[ixti])) return supbooks.SheetNames[ixti];
 	if(!supbooks.XTI) return "SH33TJSERR6";
 	var XTI = supbooks.XTI[ixti];
-	if(opts.biff > 8 && !supbooks.XTI[ixti]) return supbooks.SheetNames[ixti];
 	if(opts.biff < 8) {
 		if(ixti > 10000) ixti-= 65536;
 		if(ixti < 0) ixti = -ixti;
@@ -12893,7 +12893,7 @@ var dimregex = /"(\w*:\w*)"/;
 var colregex = /<(?:\w:)?col\b[^>]*[\/]?>/g;
 var afregex = /<(?:\w:)?autoFilter[^>]*([\/]|>([\s\S]*)<\/(?:\w:)?autoFilter)>/g;
 var marginregex= /<(?:\w:)?pageMargins[^>]*\/>/g;
-var sheetprregex = /<(?:\w:)?sheetPr(?:[^>a-z][^>]*)?\/>/;
+var sheetprregex = /<(?:\w:)?sheetPr\b(?:[^>a-z][^>]*)?\/>/;
 var svsregex = /<(?:\w:)?sheetViews[^>]*(?:[\/]|>([\s\S]*)<\/(?:\w:)?sheetViews)>/;
 /* 18.3 Worksheets */
 function parse_ws_xml(data/*:?string*/, opts, idx/*:number*/, rels, wb/*:WBWBProps*/, themes, styles)/*:Worksheet*/ {
@@ -13227,11 +13227,11 @@ return function parse_ws_xml_data(sdata/*:string*/, s, opts, guess/*:Range*/, th
 					} else if(/*::cref != null && cref[0] != null && */cref[0].indexOf('t="shared"') > -1) {
 						// TODO: parse formula
 						ftag = parsexmltag(cref[0]);
-						sharedf[parseInt(ftag.si, 10)] = [ftag, _xlfn(unescapexml(utf8read(cref[1])))];
+						sharedf[parseInt(ftag.si, 10)] = [ftag, _xlfn(unescapexml(utf8read(cref[1]))), tag.r];
 					}
 				} else if((cref=d.match(/<f[^>]*\/>/))) {
 					ftag = parsexmltag(cref[0]);
-					if(sharedf[ftag.si]) p.f = shift_formula_xlsx(sharedf[ftag.si][1], sharedf[ftag.si][0].ref, tag.r);
+					if(sharedf[ftag.si]) p.f = shift_formula_xlsx(sharedf[ftag.si][1], sharedf[ftag.si][2]/*[0].ref*/, tag.r);
 				}
 				/* TODO: factor out contains logic */
 				var _tag = decode_cell(tag.r);
@@ -13901,7 +13901,7 @@ function parse_ws_bin(data, _opts, idx, rels, wb/*:WBWBProps*/, themes, styles)/
 
 	var arrayf/*:Array<[Range, string]>*/ = [];
 	var sharedf = {};
-	var supbooks = opts.supbooks || ([[]]/*:any*/);
+	var supbooks = opts.supbooks || wb.supbooks || ([[]]/*:any*/);
 	supbooks.sharedf = sharedf;
 	supbooks.arrayf = arrayf;
 	supbooks.SheetNames = wb.SheetNames || wb.Sheets.map(function(x) { return x.name; });

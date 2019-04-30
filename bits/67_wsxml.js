@@ -9,7 +9,7 @@ var dimregex = /"(\w*:\w*)"/;
 var colregex = /<(?:\w:)?col\b[^>]*[\/]?>/g;
 var afregex = /<(?:\w:)?autoFilter[^>]*([\/]|>([\s\S]*)<\/(?:\w:)?autoFilter)>/g;
 var marginregex= /<(?:\w:)?pageMargins[^>]*\/>/g;
-var sheetprregex = /<(?:\w:)?sheetPr(?:[^>a-z][^>]*)?\/>/;
+var sheetprregex = /<(?:\w:)?sheetPr\b(?:[^>a-z][^>]*)?\/>/;
 var svsregex = /<(?:\w:)?sheetViews[^>]*(?:[\/]|>([\s\S]*)<\/(?:\w:)?sheetViews)>/;
 /* 18.3 Worksheets */
 function parse_ws_xml(data/*:?string*/, opts, idx/*:number*/, rels, wb/*:WBWBProps*/, themes, styles)/*:Worksheet*/ {
@@ -343,11 +343,11 @@ return function parse_ws_xml_data(sdata/*:string*/, s, opts, guess/*:Range*/, th
 					} else if(/*::cref != null && cref[0] != null && */cref[0].indexOf('t="shared"') > -1) {
 						// TODO: parse formula
 						ftag = parsexmltag(cref[0]);
-						sharedf[parseInt(ftag.si, 10)] = [ftag, _xlfn(unescapexml(utf8read(cref[1])))];
+						sharedf[parseInt(ftag.si, 10)] = [ftag, _xlfn(unescapexml(utf8read(cref[1]))), tag.r];
 					}
 				} else if((cref=d.match(/<f[^>]*\/>/))) {
 					ftag = parsexmltag(cref[0]);
-					if(sharedf[ftag.si]) p.f = shift_formula_xlsx(sharedf[ftag.si][1], sharedf[ftag.si][0].ref, tag.r);
+					if(sharedf[ftag.si]) p.f = shift_formula_xlsx(sharedf[ftag.si][1], sharedf[ftag.si][2]/*[0].ref*/, tag.r);
 				}
 				/* TODO: factor out contains logic */
 				var _tag = decode_cell(tag.r);

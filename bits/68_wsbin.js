@@ -418,7 +418,7 @@ function parse_ws_bin(data, _opts, idx, rels, wb/*:WBWBProps*/, themes, styles)/
 
 	var arrayf/*:Array<[Range, string]>*/ = [];
 	var sharedf = {};
-	var supbooks = opts.supbooks || ([[]]/*:any*/);
+	var supbooks = opts.supbooks || wb.supbooks || ([[]]/*:any*/);
 	supbooks.sharedf = sharedf;
 	supbooks.arrayf = arrayf;
 	supbooks.SheetNames = wb.SheetNames || wb.Sheets.map(function(x) { return x.name; });

@@ -695,9 +695,9 @@ function formula_quote_sheet_name(sname/*:string*/, opts)/*:string*/ {
 }
 function get_ixti_raw(supbooks, ixti/*:number*/, opts)/*:string*/ {
 	if(!supbooks) return "SH33TJSERR0";
+	if(opts.biff > 8 && (!supbooks.XTI || !supbooks.XTI[ixti])) return supbooks.SheetNames[ixti];
 	if(!supbooks.XTI) return "SH33TJSERR6";
 	var XTI = supbooks.XTI[ixti];
-	if(opts.biff > 8 && !supbooks.XTI[ixti]) return supbooks.SheetNames[ixti];
 	if(opts.biff < 8) {
 		if(ixti > 10000) ixti-= 65536;
 		if(ixti < 0) ixti = -ixti;
