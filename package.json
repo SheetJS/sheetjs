@@ -20,7 +20,7 @@
 	"bin": {
 		"xlsx": "./bin/xlsx.njs"
 	},
-	"main": xlsx.js",
+	"main": "xlsx.js",
 	"types": "types",
 	"browser": {
 		"buffer": false,
