@@ -39,7 +39,22 @@ var dbf_codepage_map = {
 
 	/*::[*/0xFF/*::]*/: 16969
 };
-
+var dbf_reverse_map = evert({
+	/*::[*/0x01/*::]*/:   437,           /*::[*/0x02/*::]*/:   850,
+	/*::[*/0x03/*::]*/:  1252,           /*::[*/0x04/*::]*/: 10000,
+	/*::[*/0x64/*::]*/:   852,           /*::[*/0x65/*::]*/:   866,
+	/*::[*/0x66/*::]*/:   865,           /*::[*/0x67/*::]*/:   861,
+	/*::[*/0x68/*::]*/:   895,           /*::[*/0x69/*::]*/:   620,
+	/*::[*/0x6A/*::]*/:   737,           /*::[*/0x6B/*::]*/:   857,
+	/*::[*/0x78/*::]*/:   950,           /*::[*/0x79/*::]*/:   949,
+	/*::[*/0x7A/*::]*/:   936,           /*::[*/0x7B/*::]*/:   932,
+	/*::[*/0x7C/*::]*/:   874,           /*::[*/0x7D/*::]*/:  1255,
+	/*::[*/0x7E/*::]*/:  1256,           /*::[*/0x96/*::]*/: 10007,
+	/*::[*/0x97/*::]*/: 10029,           /*::[*/0x98/*::]*/: 10006,
+	/*::[*/0xC8/*::]*/:  1250,           /*::[*/0xC9/*::]*/:  1251,
+	/*::[*/0xCA/*::]*/:  1254,           /*::[*/0xCB/*::]*/:  1253,
+	/*::[*/0x00/*::]*/: 20127
+});
 /* TODO: find an actual specification */
 function dbf_to_aoa(buf, opts)/*:AOA*/ {
 	var out/*:AOA*/ = [];
@@ -199,9 +214,10 @@ function dbf_to_workbook(buf, opts)/*:Workbook*/ {
 var _RLEN = { 'B': 8, 'C': 250, 'L': 1, 'D': 8, '?': 0, '': 0 };
 function sheet_to_dbf(ws/*:Worksheet*/, opts/*:WriteOpts*/) {
 	var o = opts || {};
+	if(+o.codepage >= 0) set_cp(+o.codepage);
 	if(o.type == "string") throw new Error("Cannot write DBF to JS string");
 	var ba = buf_array();
-	var aoa/*:AOA*/ = sheet_to_json(ws, {header:1, cellDates:true});
+	var aoa/*:AOA*/ = sheet_to_json(ws, {header:1, raw:true, cellDates:true});
 	var headers = aoa[0], data = aoa.slice(1);
 	var i = 0, j = 0, hcnt = 0, rlen = 1;
 	for(i = 0; i < headers.length; ++i) {
@@ -243,7 +259,7 @@ function sheet_to_dbf(ws/*:Worksheet*/, opts/*:WriteOpts*/) {
 	h.write_shift(2, 296 + 32 * hcnt);
 	h.write_shift(2, rlen);
 	for(i=0; i < 4; ++i) h.write_shift(4, 0);
-	h.write_shift(4, 0x00000300); // TODO: CP
+	h.write_shift(4, 0x00000000 | ((+dbf_reverse_map[current_ansi] || 0x03)<<8));
 
 	for(i = 0, j = 0; i < headers.length; ++i) {
 		if(headers[i] == null) continue;
@@ -299,6 +315,27 @@ function sheet_to_dbf(ws/*:Worksheet*/, opts/*:WriteOpts*/) {
 })();
 
 var SYLK = (function() {
+	/* TODO: stress test sequences */
+	var sylk_escapes = {
+		AA:'À', BA:'Á', CA:'Â', DA:195, HA:'Ä', JA:197,
+		AE:'È', BE:'É', CE:'Ê',         HE:'Ë',
+		AI:'Ì', BI:'Í', CI:'Î',         HI:'Ï',
+		AO:'Ò', BO:'Ó', CO:'Ô', DO:213, HO:'Ö',
+		AU:'Ù', BU:'Ú', CU:'Û',         HU:'Ü',
+		Aa:'à', Ba:'á', Ca:'â', Da:227, Ha:'ä', Ja:229,
+		Ae:'è', Be:'é', Ce:'ê',         He:'ë',
+		Ai:'ì', Bi:'í', Ci:'î',         Hi:'ï',
+		Ao:'ò', Bo:'ó', Co:'ô', Do:245, Ho:'ö',
+		Au:'ù', Bu:'ú', Cu:'û',         Hu:'ü',
+		KC:'Ç', Kc:'ç', q:'æ',  z:'œ',  a:'Æ',  j:'Œ',
+		DN:209, Dn:241, Hy:255,
+		S:169,  c:170,  R:174,  0:176,  1:177,  2:178,  3:179,  B:180,  5:181,
+		6:182,  7:183,  Q:185,  k:186,  b:208,  i:216,  l:222,  s:240,  y:248,
+		"!":161, '"':162, "#":163, "(":164, "%":165, "'":167, "H ":168,
+		"+":171, ";":187, "<":188, "=":189, ">":190, "?":191, "{":223
+	};
+	var sylk_char_regex = new RegExp("\u001BN(" + keys(sylk_escapes).join("|").replace(/\|\|\|/, "|\\||").replace(/([?()+])/g,"\\$1") + "|\\|)", "gm");
+	sylk_escapes["|"] = 254;
 	/* TODO: find an actual specification */
 	function sylk_to_aoa(d/*:RawData*/, opts)/*:[AOA, Worksheet]*/ {
 		switch(opts.type) {
@@ -315,10 +352,17 @@ var SYLK = (function() {
 		var next_cell_format/*:string|null*/ = null;
 		var sht = {}, rowinfo/*:Array<RowInfo>*/ = [], colinfo/*:Array<ColInfo>*/ = [], cw/*:Array<string>*/ = [];
 		var Mval = 0, j;
+		if(+opts.codepage >= 0) set_cp(+opts.codepage);
 		for (; ri !== records.length; ++ri) {
 			Mval = 0;
-			var rstr=records[ri].trim();
-			var record=rstr.replace(/;;/g, "\u0001").split(";").map(function(x) { return x.replace(/\u0001/g, ";"); });
+			var rstr=records[ri].trim().replace(/\x1B([\x20-\x2F])([\x30-\x3F])/g, function($$, $1, $2) {
+				var newcc = (($1.charCodeAt(0) - 0x20)<<4) | ($2.charCodeAt(0) - 0x30);
+				return newcc == 59 ? $$ : _getansi(newcc);
+			}).replace(sylk_char_regex, function(_, $1){
+				var o = sylk_escapes[$1];
+				return typeof o == "number" ? _getansi(o) : o;
+			});
+			var record=rstr.replace(/;;/g, "\u0000").split(";").map(function(x) { return x.replace(/\u0000/g, ";"); });
 			var RT=record[0], val;
 			if(rstr.length > 0) switch(RT) {
 			case 'ID': break; /* header */
@@ -889,3 +933,4 @@ function read_wb_ID(d, opts) {
 		return PRN.to_workbook(d, opts);
 	}
 }
+
