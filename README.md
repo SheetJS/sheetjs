@@ -585,7 +585,7 @@ This example uses [`XLSX.utils.aoa_to_sheet`](#array-of-arrays-input) to make a
 sheet and `XLSX.utils.book_append_sheet` to append the sheet to the workbook:
 
 ```js
-var new_ws_name = "SheetJS";
+var ws_name = "SheetJS";
 
 /* make worksheet */
 var ws_data = [
