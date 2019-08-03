@@ -75,5 +75,5 @@ if(typeof cptable !== 'undefined') {
 	};
 	_getansi = function _ga2(x/*:number*/)/*:string*/ {
 		return cptable.utils.decode(current_ansi, [x])[0];
-	}
+	};
 }

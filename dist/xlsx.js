@@ -4,7 +4,7 @@
 /*global global, exports, module, require:false, process:false, Buffer:false, ArrayBuffer:false */
 var XLSX = {};
 function make_xlsx_lib(XLSX){
-XLSX.version = '0.14.4';
+XLSX.version = '0.14.5';
 var current_codepage = 1200, current_ansi = 1252;
 /*global cptable:true, window */
 if(typeof module !== "undefined" && typeof require !== 'undefined') {
@@ -81,7 +81,7 @@ if(typeof cptable !== 'undefined') {
 	};
 	_getansi = function _ga2(x) {
 		return cptable.utils.decode(current_ansi, [x])[0];
-	}
+	};
 }
 var DENSE = null;
 var DIF_XL = true;
@@ -6964,6 +6964,8 @@ var SYLK = (function() {
 		"+":171, ";":187, "<":188, "=":189, ">":190, "?":191, "{":223
 	};
 	var sylk_char_regex = new RegExp("\u001BN(" + keys(sylk_escapes).join("|").replace(/\|\|\|/, "|\\||").replace(/([?()+])/g,"\\$1") + "|\\|)", "gm");
+	var sylk_char_fn = function(_, $1){ var o = sylk_escapes[$1]; return typeof o == "number" ? _getansi(o) : o; };
+	var decode_sylk_char = function($$, $1, $2) { var newcc = (($1.charCodeAt(0) - 0x20)<<4) | ($2.charCodeAt(0) - 0x30); return newcc == 59 ? $$ : _getansi(newcc); };
 	sylk_escapes["|"] = 254;
 	/* TODO: find an actual specification */
 	function sylk_to_aoa(d, opts) {
@@ -6984,13 +6986,7 @@ var SYLK = (function() {
 		if(+opts.codepage >= 0) set_cp(+opts.codepage);
 		for (; ri !== records.length; ++ri) {
 			Mval = 0;
-			var rstr=records[ri].trim().replace(/\x1B([\x20-\x2F])([\x30-\x3F])/g, function($$, $1, $2) {
-				var newcc = (($1.charCodeAt(0) - 0x20)<<4) | ($2.charCodeAt(0) - 0x30);
-				return newcc == 59 ? $$ : _getansi(newcc);
-			}).replace(sylk_char_regex, function(_, $1){
-				var o = sylk_escapes[$1];
-				return typeof o == "number" ? _getansi(o) : o;
-			});
+			var rstr=records[ri].trim().replace(/\x1B([\x20-\x2F])([\x30-\x3F])/g, decode_sylk_char).replace(sylk_char_regex, sylk_char_fn);
 			var record=rstr.replace(/;;/g, "\u0000").split(";").map(function(x) { return x.replace(/\u0000/g, ";"); });
 			var RT=record[0], val;
 			if(rstr.length > 0) switch(RT) {
@@ -10992,7 +10988,7 @@ function get_ixti_raw(supbooks, ixti, opts) {
 		case 0x0401:
 			o = XTI[1] == -1 ? "#REF" : (supbooks.SheetNames[XTI[1]] || "SH33TJSERR3");
 			return XTI[1] == XTI[2] ? o : o + ":" + supbooks.SheetNames[XTI[2]];
-		case 0x3A01: return "SH33TJSERR8";
+		case 0x3A01: return supbooks[XTI[0]].slice(1).map(function(name) { return name.Name; }).join(";;"); //return "SH33TJSERR8";
 		default:
 			if(!supbooks[XTI[0]][0][3]) return "SH33TJSERR2";
 			o = XTI[1] == -1 ? "#REF" : (supbooks[XTI[0]][0][3][XTI[1]] || "SH33TJSERR4");
@@ -11108,7 +11104,7 @@ ixti = f[1][1]; c = shift_cell_xls((f[1][2]), _range, opts);
 				stack.push(String(f[1])); break;
 			case 'PtgStr': /* [MS-XLS] 2.5.198.89 */
 				// $FlowIgnore
-				stack.push('"' + f[1] + '"'); break;
+				stack.push('"' + f[1].replace(/"/g, '""') + '"'); break;
 			case 'PtgErr': /* [MS-XLS] 2.5.198.57 */
 				stack.push(f[1]); break;
 			case 'PtgAreaN': /* [MS-XLS] 2.5.198.31 TODO */
@@ -11144,7 +11140,7 @@ ixti = f[1][1]; r = f[1][2];
 			case 'PtgNameX': /* [MS-XLS] 2.5.198.77 ; [MS-XLSB] 2.5.97.61 TODO: revisions */
 				/* f[1] = type, ixti, nameindex */
 				var bookidx = (f[1][1]); nameidx = (f[1][2]); var externbook;
-				/* TODO: Properly handle missing values */
+				/* TODO: Properly handle missing values -- this should be using get_ixti_raw primarily */
 				if(opts.biff <= 5) {
 					if(bookidx < 0) bookidx = -bookidx;
 					if(supbooks[bookidx]) externbook = supbooks[bookidx][nameidx];
@@ -11159,7 +11155,11 @@ ixti = f[1][1]; r = f[1][2];
 					else o = supbooks.SheetNames[nameidx-1]+ "!";
 					if(supbooks[bookidx] && supbooks[bookidx][nameidx]) o += supbooks[bookidx][nameidx].Name;
 					else if(supbooks[0] && supbooks[0][nameidx]) o += supbooks[0][nameidx].Name;
-					else o += "SH33TJSERRX";
+					else {
+						var ixtidata = get_ixti_raw(supbooks, bookidx, opts).split(";;");
+						if(ixtidata[nameidx - 1]) o = ixtidata[nameidx - 1]; // TODO: confirm this is correct
+						else o += "SH33TJSERRX";
+					}
 					stack.push(o);
 					break;
 				}
@@ -16874,7 +16874,18 @@ wb.opts.Date1904 = Workbook.WBProps.date1904 = val; break;
 					if(opts.biff <= 5 && opts.biff >= 2) break; /* TODO: BIFF5 */
 					cc = options.dense ? (out[val[0].r]||[])[val[0].c] : out[encode_cell(val[0])];
 					var noteobj = objects[val[2]];
-					if(!cc) break;
+					if(!cc) {
+						if(options.dense) {
+							if(!out[val[0].r]) out[val[0].r] = [];
+							cc = out[val[0].r][val[0].c] = {t:"z"};
+						} else {
+							cc = out[encode_cell(val[0])] = {t:"z"};
+						}
+						range.e.r = Math.max(range.e.r, val[0].r);
+						range.s.r = Math.min(range.s.r, val[0].r);
+						range.e.c = Math.max(range.e.c, val[0].c);
+						range.s.c = Math.min(range.s.c, val[0].c);
+					}
 					if(!cc.c) cc.c = [];
 					cmnt = {a:val[1],t:noteobj.TxO.t};
 					cc.c.push(cmnt);

@@ -534,7 +534,18 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 					if(opts.biff <= 5 && opts.biff >= 2) break; /* TODO: BIFF5 */
 					cc = options.dense ? (out[val[0].r]||[])[val[0].c] : out[encode_cell(val[0])];
 					var noteobj = objects[val[2]];
-					if(!cc) break;
+					if(!cc) {
+						if(options.dense) {
+							if(!out[val[0].r]) out[val[0].r] = [];
+							cc = out[val[0].r][val[0].c] = {t:"z"};
+						} else {
+							cc = out[encode_cell(val[0])] = {t:"z"};
+						}
+						range.e.r = Math.max(range.e.r, val[0].r);
+						range.s.r = Math.min(range.s.r, val[0].r);
+						range.e.c = Math.max(range.e.c, val[0].c);
+						range.s.c = Math.min(range.s.c, val[0].c);
+					}
 					if(!cc.c) cc.c = [];
 					cmnt = {a:val[1],t:noteobj.TxO.t};
 					cc.c.push(cmnt);

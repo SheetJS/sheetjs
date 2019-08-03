@@ -335,6 +335,8 @@ var SYLK = (function() {
 		"+":171, ";":187, "<":188, "=":189, ">":190, "?":191, "{":223
 	};
 	var sylk_char_regex = new RegExp("\u001BN(" + keys(sylk_escapes).join("|").replace(/\|\|\|/, "|\\||").replace(/([?()+])/g,"\\$1") + "|\\|)", "gm");
+	var sylk_char_fn = function(_, $1){ var o = sylk_escapes[$1]; return typeof o == "number" ? _getansi(o) : o; };
+	var decode_sylk_char = function($$, $1, $2) { var newcc = (($1.charCodeAt(0) - 0x20)<<4) | ($2.charCodeAt(0) - 0x30); return newcc == 59 ? $$ : _getansi(newcc); };
 	sylk_escapes["|"] = 254;
 	/* TODO: find an actual specification */
 	function sylk_to_aoa(d/*:RawData*/, opts)/*:[AOA, Worksheet]*/ {
@@ -355,13 +357,7 @@ var SYLK = (function() {
 		if(+opts.codepage >= 0) set_cp(+opts.codepage);
 		for (; ri !== records.length; ++ri) {
 			Mval = 0;
-			var rstr=records[ri].trim().replace(/\x1B([\x20-\x2F])([\x30-\x3F])/g, function($$, $1, $2) {
-				var newcc = (($1.charCodeAt(0) - 0x20)<<4) | ($2.charCodeAt(0) - 0x30);
-				return newcc == 59 ? $$ : _getansi(newcc);
-			}).replace(sylk_char_regex, function(_, $1){
-				var o = sylk_escapes[$1];
-				return typeof o == "number" ? _getansi(o) : o;
-			});
+			var rstr=records[ri].trim().replace(/\x1B([\x20-\x2F])([\x30-\x3F])/g, decode_sylk_char).replace(sylk_char_regex, sylk_char_fn);
 			var record=rstr.replace(/;;/g, "\u0000").split(";").map(function(x) { return x.replace(/\u0000/g, ";"); });
 			var RT=record[0], val;
 			if(rstr.length > 0) switch(RT) {
