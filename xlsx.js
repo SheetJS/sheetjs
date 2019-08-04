@@ -4,7 +4,7 @@
 /*global global, exports, module, require:false, process:false, Buffer:false, ArrayBuffer:false */
 var XLSX = {};
 function make_xlsx_lib(XLSX){
-XLSX.version = '0.14.5';
+XLSX.version = '0.15.0';
 var current_codepage = 1200, current_ansi = 1252;
 /*global cptable:true, window */
 if(typeof module !== "undefined" && typeof require !== 'undefined') {
@@ -169,8 +169,8 @@ function s2ab(s) {
 }
 
 function a2s(data) {
-	if(Array.isArray(data)) return data.map(_chr).join("");
-	var o = []; for(var i = 0; i < data.length; ++i) o[i] = _chr(data[i]); return o.join("");
+	if(Array.isArray(data)) return data.map(function(c) { return String.fromCharCode(c); }).join("");
+	var o = []; for(var i = 0; i < data.length; ++i) o[i] = String.fromCharCode(data[i]); return o.join("");
 }
 
 function a2u(data) {
@@ -1250,7 +1250,7 @@ CRC32.str = crc32_str;
 /* [MS-CFB] v20171201 */
 var CFB = (function _CFB(){
 var exports = {};
-exports.version = '1.1.2';
+exports.version = '1.1.3';
 /* [MS-CFB] 2.6.4 */
 function namecmp(l, r) {
 	var L = l.split("/"), R = r.split("/");
@@ -2393,7 +2393,7 @@ function parse_local_file(blob, csz, usz, o, EF) {
 	if(_csz != csz) warn_or_throw(wrn, "Bad compressed size: " + csz + " != " + _csz);
 	if(_usz != usz) warn_or_throw(wrn, "Bad uncompressed size: " + usz + " != " + _usz);
 	var _crc32 = CRC32.buf(data, 0);
-	if(crc32 != _crc32) warn_or_throw(wrn, "Bad CRC32 checksum: " + crc32 + " != " + _crc32);
+	if((crc32>>0) != (_crc32>>0)) warn_or_throw(wrn, "Bad CRC32 checksum: " + crc32 + " != " + _crc32);
 	cfb_add(o, name, data, {unsafe: true, mt: date});
 }
 function write_zip(cfb, options) {
@@ -2783,6 +2783,7 @@ function getdatastr(data) {
 	if(data.asNodeBuffer && has_buf) return debom(data.asNodeBuffer().toString('binary'));
 	if(data.asBinary) return debom(data.asBinary());
 	if(data._data && data._data.getContent) return debom(cc2str(Array.prototype.slice.call(data._data.getContent(),0)));
+	if(data.content && data.type) return debom(cc2str(data.content));
 	return null;
 }
 
@@ -2795,6 +2796,7 @@ function getdatabin(data) {
 		if(typeof o == "string") return char_codes(o);
 		return Array.prototype.slice.call(o);
 	}
+	if(data.content && data.type) return data.content;
 	return null;
 }
 
@@ -2803,7 +2805,7 @@ function getdata(data) { return (data && data.name.slice(-4) === ".bin") ? getda
 /* Part 2 Section 10.1.2 "Mapping Content Types" Names are case-insensitive */
 /* OASIS does not comment on filename case sensitivity */
 function safegetzipfile(zip, file) {
-	var k = keys(zip.files);
+	var k = zip.FullPaths || keys(zip.files);
 	var f = file.toLowerCase(), g = f.replace(/\//g,'\\');
 	for(var i=0; i<k.length; ++i) {
 		var n = k[i].toLowerCase();
@@ -2831,9 +2833,25 @@ function getzipstr(zip, file, safe) {
 }
 
 function zipentries(zip) {
-	var k = keys(zip.files), o = [];
+	var k = zip.FullPaths || keys(zip.files), o = [];
 	for(var i = 0; i < k.length; ++i) if(k[i].slice(-1) != '/') o.push(k[i]);
 	return o.sort();
+}
+
+function zip_add_file(zip, path, content) {
+	if(zip.FullPaths) CFB.utils.cfb_add(zip, path, content);
+	else zip.file(path, content);
+}
+
+function zip_read(d, o) {
+	var zip;
+	switch(o.type) {
+		case "base64": zip = new jszip(d, { base64:true }); break;
+		case "binary": case "array": zip = new jszip(d, { base64:false }); break;
+		case "buffer": zip = new jszip(d); break;
+		default: throw new Error("Unrecognized type " + o.type);
+	}
+	return zip;
 }
 
 var jszip;
@@ -2843,6 +2861,10 @@ if(typeof exports !== 'undefined') {
 	if(typeof module !== 'undefined' && module.exports) {
 		if(typeof jszip === 'undefined') jszip = require('./jszip.js');
 	}
+}
+
+function zip_new() {
+	return new jszip();
 }
 
 function resolve_path(path, base) {
@@ -15191,7 +15213,6 @@ function write_cc(data, name:string, opts) {
 */
 var attregexg2=/([\w:]+)=((?:")([^"]*)(?:")|(?:')([^']*)(?:'))/g;
 var attregex2=/([\w:]+)=((?:")(?:[^"]*)(?:")|(?:')(?:[^']*)(?:'))/;
-var _chr = function(c) { return String.fromCharCode(c); };
 function xlml_parsexmltag(tag, skip_root) {
 	var words = tag.split(/\s+/);
 	var z = ([]); if(!skip_root) z[0] = words[0];
@@ -19836,7 +19857,7 @@ var write_content_ods = (function() {
 function write_ods(wb, opts) {
 	if(opts.bookType == "fods") return write_content_ods(wb, opts);
 
-var zip = new jszip();
+var zip = zip_new();
 	var f = "";
 
 	var manifest = [];
@@ -19844,34 +19865,34 @@ var zip = new jszip();
 
 	/* Part 3 Section 3.3 MIME Media Type */
 	f = "mimetype";
-	zip.file(f, "application/vnd.oasis.opendocument.spreadsheet");
+	zip_add_file(zip, f, "application/vnd.oasis.opendocument.spreadsheet");
 
 	/* Part 1 Section 2.2 Documents */
 	f = "content.xml";
-	zip.file(f, write_content_ods(wb, opts));
+	zip_add_file(zip, f, write_content_ods(wb, opts));
 	manifest.push([f, "text/xml"]);
 	rdf.push([f, "ContentFile"]);
 
 	/* TODO: these are hard-coded styles to satiate excel */
 	f = "styles.xml";
-	zip.file(f, write_styles_ods(wb, opts));
+	zip_add_file(zip, f, write_styles_ods(wb, opts));
 	manifest.push([f, "text/xml"]);
 	rdf.push([f, "StylesFile"]);
 
 	/* TODO: this is hard-coded to satiate excel */
 	f = "meta.xml";
-	zip.file(f, write_meta_ods());
+	zip_add_file(zip, f, write_meta_ods());
 	manifest.push([f, "text/xml"]);
 	rdf.push([f, "MetadataFile"]);
 
 	/* Part 3 Section 6 Metadata Manifest File */
 	f = "manifest.rdf";
-	zip.file(f, write_rdf(rdf/*, opts*/));
+	zip_add_file(zip, f, write_rdf(rdf/*, opts*/));
 	manifest.push([f, "application/rdf+xml"]);
 
 	/* Part 3 Section 4 Manifest File */
 	f = "META-INF/manifest.xml";
-	zip.file(f, write_manifest(manifest/*, opts*/));
+	zip_add_file(zip, f, write_manifest(manifest/*, opts*/));
 
 	return zip;
 }
@@ -19892,13 +19913,13 @@ function write_obj_str(factory) {
 
 var write_htm_str = write_obj_str(HTML_);
 var write_csv_str = write_obj_str({from_sheet:sheet_to_csv});
-var write_slk_str = write_obj_str(SYLK);
-var write_dif_str = write_obj_str(DIF);
-var write_prn_str = write_obj_str(PRN);
-var write_rtf_str = write_obj_str(RTF);
+var write_slk_str = write_obj_str(typeof SYLK !== "undefined" ? SYLK : {});
+var write_dif_str = write_obj_str(typeof DIF !== "undefined" ? DIF : {});
+var write_prn_str = write_obj_str(typeof PRN !== "undefined" ? PRN : {});
+var write_rtf_str = write_obj_str(typeof RTF !== "undefined" ? RTF : {});
 var write_txt_str = write_obj_str({from_sheet:sheet_to_txt});
-var write_dbf_buf = write_obj_str(DBF);
-var write_eth_str = write_obj_str(ETH);
+var write_dbf_buf = write_obj_str(typeof DBF !== "undefined" ? DBF : {});
+var write_eth_str = write_obj_str(typeof ETH !== "undefined" ? ETH : {});
 
 function fix_opts_func(defaults) {
 	return function fix_opts(opts) {
@@ -20187,7 +20208,7 @@ function write_zip(wb, opts) {
 	var vbafmt = VBAFMTS.indexOf(opts.bookType) > -1;
 	var ct = new_ct();
 	fix_write_opts(opts = opts || {});
-var zip = new jszip();
+var zip = zip_new();
 	var f = "", rId = 0;
 
 	opts.cellXfs = [];
@@ -20196,7 +20217,7 @@ var zip = new jszip();
 	if(!wb.Props) wb.Props = {};
 
 	f = "docProps/core.xml";
-	zip.file(f, write_core_props(wb.Props, opts));
+	zip_add_file(zip, f, write_core_props(wb.Props, opts));
 	ct.coreprops.push(f);
 	add_rels(opts.rels, 2, f, RELS.CORE_PROPS);
 
@@ -20210,13 +20231,13 @@ f = "docProps/app.xml";
 		wb.Props.SheetNames = _sn;
 	}
 	wb.Props.Worksheets = wb.Props.SheetNames.length;
-	zip.file(f, write_ext_props(wb.Props, opts));
+	zip_add_file(zip, f, write_ext_props(wb.Props, opts));
 	ct.extprops.push(f);
 	add_rels(opts.rels, 3, f, RELS.EXT_PROPS);
 
 	if(wb.Custprops !== wb.Props && keys(wb.Custprops||{}).length > 0) {
 		f = "docProps/custom.xml";
-		zip.file(f, write_cust_props(wb.Custprops, opts));
+		zip_add_file(zip, f, write_cust_props(wb.Custprops, opts));
 		ct.custprops.push(f);
 		add_rels(opts.rels, 4, f, RELS.CUST_PROPS);
 	}
@@ -20228,14 +20249,14 @@ f = "docProps/app.xml";
 		switch(_type) {
 		case "chart": /*
 			f = "xl/chartsheets/sheet" + rId + "." + wbext;
-			zip.file(f, write_cs(rId-1, f, opts, wb, wsrels));
+			zip_add_file(zip, f, write_cs(rId-1, f, opts, wb, wsrels));
 			ct.charts.push(f);
 			add_rels(wsrels, -1, "chartsheets/sheet" + rId + "." + wbext, RELS.CS);
 			break; */
 			/* falls through */
 		default:
 			f = "xl/worksheets/sheet" + rId + "." + wbext;
-			zip.file(f, write_ws(rId-1, f, opts, wb, wsrels));
+			zip_add_file(zip, f, write_ws(rId-1, f, opts, wb, wsrels));
 			ct.sheets.push(f);
 			add_rels(opts.wbrels, -1, "worksheets/sheet" + rId + "." + wbext, RELS.WS[0]);
 		}
@@ -20245,57 +20266,57 @@ f = "docProps/app.xml";
 			var need_vml = false;
 			if(comments && comments.length > 0) {
 				var cf = "xl/comments" + rId + "." + wbext;
-				zip.file(cf, write_cmnt(comments, cf, opts));
+				zip_add_file(zip, cf, write_cmnt(comments, cf, opts));
 				ct.comments.push(cf);
 				add_rels(wsrels, -1, "../comments" + rId + "." + wbext, RELS.CMNT);
 				need_vml = true;
 			}
 			if(ws['!legacy']) {
-				if(need_vml) zip.file("xl/drawings/vmlDrawing" + (rId) + ".vml", write_comments_vml(rId, ws['!comments']));
+				if(need_vml) zip_add_file(zip, "xl/drawings/vmlDrawing" + (rId) + ".vml", write_comments_vml(rId, ws['!comments']));
 			}
 			delete ws['!comments'];
 			delete ws['!legacy'];
 		}
 
-		if(wsrels['!id'].rId1) zip.file(get_rels_path(f), write_rels(wsrels));
+		if(wsrels['!id'].rId1) zip_add_file(zip, get_rels_path(f), write_rels(wsrels));
 	}
 
 	if(opts.Strings != null && opts.Strings.length > 0) {
 		f = "xl/sharedStrings." + wbext;
-		zip.file(f, write_sst(opts.Strings, f, opts));
+		zip_add_file(zip, f, write_sst(opts.Strings, f, opts));
 		ct.strs.push(f);
 		add_rels(opts.wbrels, -1, "sharedStrings." + wbext, RELS.SST);
 	}
 
 	f = "xl/workbook." + wbext;
-	zip.file(f, write_wb(wb, f, opts));
+	zip_add_file(zip, f, write_wb(wb, f, opts));
 	ct.workbooks.push(f);
 	add_rels(opts.rels, 1, f, RELS.WB);
 
 	/* TODO: something more intelligent with themes */
 
 	f = "xl/theme/theme1.xml";
-	zip.file(f, write_theme(wb.Themes, opts));
+	zip_add_file(zip, f, write_theme(wb.Themes, opts));
 	ct.themes.push(f);
 	add_rels(opts.wbrels, -1, "theme/theme1.xml", RELS.THEME);
 
 	/* TODO: something more intelligent with styles */
 
 	f = "xl/styles." + wbext;
-	zip.file(f, write_sty(wb, f, opts));
+	zip_add_file(zip, f, write_sty(wb, f, opts));
 	ct.styles.push(f);
 	add_rels(opts.wbrels, -1, "styles." + wbext, RELS.STY);
 
 	if(wb.vbaraw && vbafmt) {
 		f = "xl/vbaProject.bin";
-		zip.file(f, wb.vbaraw);
+		zip_add_file(zip, f, wb.vbaraw);
 		ct.vba.push(f);
 		add_rels(opts.wbrels, -1, "vbaProject.bin", RELS.VBA);
 	}
 
-	zip.file("[Content_Types].xml", write_ct(ct, opts));
-	zip.file('_rels/.rels', write_rels(opts.rels));
-	zip.file('xl/_rels/workbook.' + wbext + '.rels', write_rels(opts.wbrels));
+	zip_add_file(zip, "[Content_Types].xml", write_ct(ct, opts));
+	zip_add_file(zip, '_rels/.rels', write_rels(opts.rels));
+	zip_add_file(zip, 'xl/_rels/workbook.' + wbext + '.rels', write_rels(opts.wbrels));
 
 	delete opts.revssf; delete opts.ssf;
 	return zip;
@@ -20321,12 +20342,7 @@ function read_zip(data, opts) {
 var zip, d = data;
 	var o = opts||{};
 	if(!o.type) o.type = (has_buf && Buffer.isBuffer(data)) ? "buffer" : "base64";
-	switch(o.type) {
-		case "base64": zip = new jszip(d, { base64:true }); break;
-		case "binary": case "array": zip = new jszip(d, { base64:false }); break;
-		case "buffer": zip = new jszip(d); break;
-		default: throw new Error("Unrecognized type " + o.type);
-	}
+	zip = zip_read(d, o);
 	return parse_zip(zip, o);
 }
 
@@ -20434,7 +20450,7 @@ function write_zip_type(wb, opts) {
 		case "file": oopts.type = has_buf ? "nodebuffer" : "string"; break;
 		default: throw new Error("Unrecognized type " + o.type);
 	}
-	var out = z.generate(oopts);
+	var out = z.FullPaths ? CFB.write(z, {fileType:"zip", type: {"nodebuffer": "buffer", "string": "binary"}[oopts.type] || oopts.type}) : z.generate(oopts);
 	if(o.password && typeof encrypt_agile !== 'undefined') return write_cfb_ctr(encrypt_agile(out, o.password), o);
 	if(o.type === "file") return write_dl(o.file, out);
 	return o.type == "string" ? utf8read(out) : out;
@@ -20808,9 +20824,6 @@ var utils = {
 	sheet_to_txt: sheet_to_txt,
 	sheet_to_json: sheet_to_json,
 	sheet_to_html: HTML_.from_sheet,
-	sheet_to_dif: DIF.from_sheet,
-	sheet_to_slk: SYLK.from_sheet,
-	sheet_to_eth: ETH.from_sheet,
 	sheet_to_formulae: sheet_to_formulae,
 	sheet_to_row_object_array: sheet_to_json
 };
@@ -21044,10 +21057,7 @@ if(has_buf && typeof require != 'undefined') (function() {
 	};
 })();
 
-XLSX.parse_xlscfb = parse_xlscfb;
-XLSX.parse_ods = parse_ods;
-XLSX.parse_fods = parse_fods;
-XLSX.write_ods = write_ods;
+if(typeof parse_xlscfb !== "undefined") XLSX.parse_xlscfb = parse_xlscfb;
 XLSX.parse_zip = parse_zip;
 XLSX.read = readSync; //xlsread
 XLSX.readFile = readFileSync; //readFile
@@ -21058,7 +21068,7 @@ XLSX.writeFileSync = writeFileSync;
 XLSX.writeFileAsync = writeFileAsync;
 XLSX.utils = utils;
 XLSX.SSF = SSF;
-XLSX.CFB = CFB;
+if(typeof CFB !== "undefined") XLSX.CFB = CFB;
 }
 /*global define */
 if(typeof exports !== 'undefined') make_xlsx_lib(exports);

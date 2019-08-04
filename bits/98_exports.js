@@ -1,7 +1,4 @@
-XLSX.parse_xlscfb = parse_xlscfb;
-XLSX.parse_ods = parse_ods;
-XLSX.parse_fods = parse_fods;
-XLSX.write_ods = write_ods;
+if(typeof parse_xlscfb !== "undefined") XLSX.parse_xlscfb = parse_xlscfb;
 XLSX.parse_zip = parse_zip;
 XLSX.read = readSync; //xlsread
 XLSX.readFile = readFileSync; //readFile
@@ -12,4 +9,4 @@ XLSX.writeFileSync = writeFileSync;
 XLSX.writeFileAsync = writeFileAsync;
 XLSX.utils = utils;
 XLSX.SSF = SSF;
-XLSX.CFB = CFB;
+if(typeof CFB !== "undefined") XLSX.CFB = CFB;

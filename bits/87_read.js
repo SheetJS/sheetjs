@@ -20,12 +20,7 @@ function read_zip(data/*:RawData*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
 	var zip, d = data;
 	var o = opts||{};
 	if(!o.type) o.type = (has_buf && Buffer.isBuffer(data)) ? "buffer" : "base64";
-	switch(o.type) {
-		case "base64": zip = new jszip(d, { base64:true }); break;
-		case "binary": case "array": zip = new jszip(d, { base64:false }); break;
-		case "buffer": zip = new jszip(d); break;
-		default: throw new Error("Unrecognized type " + o.type);
-	}
+	zip = zip_read(d, o);
 	return parse_zip(zip, o);
 }
 

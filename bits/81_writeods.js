@@ -182,7 +182,7 @@ function write_ods(wb/*:any*/, opts/*:any*/) {
 	if(opts.bookType == "fods") return write_content_ods(wb, opts);
 
 	/*:: if(!jszip) throw new Error("JSZip is not available"); */
-	var zip = new jszip();
+	var zip = zip_new();
 	var f = "";
 
 	var manifest/*:Array<Array<string> >*/ = [];
@@ -190,34 +190,34 @@ function write_ods(wb/*:any*/, opts/*:any*/) {
 
 	/* Part 3 Section 3.3 MIME Media Type */
 	f = "mimetype";
-	zip.file(f, "application/vnd.oasis.opendocument.spreadsheet");
+	zip_add_file(zip, f, "application/vnd.oasis.opendocument.spreadsheet");
 
 	/* Part 1 Section 2.2 Documents */
 	f = "content.xml";
-	zip.file(f, write_content_ods(wb, opts));
+	zip_add_file(zip, f, write_content_ods(wb, opts));
 	manifest.push([f, "text/xml"]);
 	rdf.push([f, "ContentFile"]);
 
 	/* TODO: these are hard-coded styles to satiate excel */
 	f = "styles.xml";
-	zip.file(f, write_styles_ods(wb, opts));
+	zip_add_file(zip, f, write_styles_ods(wb, opts));
 	manifest.push([f, "text/xml"]);
 	rdf.push([f, "StylesFile"]);
 
 	/* TODO: this is hard-coded to satiate excel */
 	f = "meta.xml";
-	zip.file(f, write_meta_ods(/*::wb, opts*/));
+	zip_add_file(zip, f, write_meta_ods(/*::wb, opts*/));
 	manifest.push([f, "text/xml"]);
 	rdf.push([f, "MetadataFile"]);
 
 	/* Part 3 Section 6 Metadata Manifest File */
 	f = "manifest.rdf";
-	zip.file(f, write_rdf(rdf/*, opts*/));
+	zip_add_file(zip, f, write_rdf(rdf/*, opts*/));
 	manifest.push([f, "application/rdf+xml"]);
 
 	/* Part 3 Section 4 Manifest File */
 	f = "META-INF/manifest.xml";
-	zip.file(f, write_manifest(manifest/*, opts*/));
+	zip_add_file(zip, f, write_manifest(manifest/*, opts*/));
 
 	return zip;
 }

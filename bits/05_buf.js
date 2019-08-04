@@ -38,8 +38,8 @@ function s2ab(s/*:string*/)/*:any*/ {
 }
 
 function a2s(data/*:any*/)/*:string*/ {
-	if(Array.isArray(data)) return data.map(_chr).join("");
-	var o/*:Array<string>*/ = []; for(var i = 0; i < data.length; ++i) o[i] = _chr(data[i]); return o.join("");
+	if(Array.isArray(data)) return data.map(function(c) { return String.fromCharCode(c); }).join("");
+	var o/*:Array<string>*/ = []; for(var i = 0; i < data.length; ++i) o[i] = String.fromCharCode(data[i]); return o.join("");
 }
 
 function a2u(data/*:Array<number>*/)/*:Uint8Array*/ {

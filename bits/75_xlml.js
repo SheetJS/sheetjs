@@ -1,6 +1,5 @@
 var attregexg2=/([\w:]+)=((?:")([^"]*)(?:")|(?:')([^']*)(?:'))/g;
 var attregex2=/([\w:]+)=((?:")(?:[^"]*)(?:")|(?:')(?:[^']*)(?:'))/;
-var _chr = function(c) { return String.fromCharCode(c); };
 function xlml_parsexmltag(tag/*:string*/, skip_root/*:?boolean*/) {
 	var words = tag.split(/\s+/);
 	var z/*:any*/ = ([]/*:any*/); if(!skip_root) z[0] = words[0];

@@ -27,10 +27,10 @@ function getdata(data) { return (data && data.name.slice(-4) === ".bin") ? getda
 /* OASIS does not comment on filename case sensitivity */
 function safegetzipfile(zip, file/*:string*/) {
 	var k = zip.FullPaths || keys(zip.files);
-	var f = file.toLowerCase(), g = f.replace(/\//g,'\\');
+	var f = file.toLowerCase(), g = f.replace(/\\/g,'\/');
 	for(var i=0; i<k.length; ++i) {
-		var n = k[i].toLowerCase();
-		if(f == n || g == n) return zip.files[k[i]];
+		var n = k[i].replace(/^Root Entry[\/]/,"").toLowerCase();
+		if(f == n || g == n) return zip.FileIndex[i];
 	}
 	return null;
 }
@@ -55,38 +55,29 @@ function getzipstr(zip, file/*:string*/, safe/*:?boolean*/)/*:?string*/ {
 
 function zipentries(zip) {
 	var k = zip.FullPaths || keys(zip.files), o = [];
-	for(var i = 0; i < k.length; ++i) if(k[i].slice(-1) != '/') o.push(k[i]);
+	for(var i = 0; i < k.length; ++i) if(k[i].slice(-1) != '/') o.push(k[i].replace(/^Root Entry[\/]/, ""));
 	return o.sort();
 }
 
 function zip_add_file(zip, path, content) {
-	if(zip.FullPaths) CFB.utils.cfb_add(zip, path, content);
+	if(zip.FullPaths) CFB.utils.cfb_add(zip, path, typeof content == "string" ? (has_buf ? Buffer_from(content) : s2a(utf8write(content))) : content);
 	else zip.file(path, content);
 }
 
 function zip_read(d, o) {
 	var zip;
 	switch(o.type) {
-		case "base64": zip = new jszip(d, { base64:true }); break;
-		case "binary": case "array": zip = new jszip(d, { base64:false }); break;
-		case "buffer": zip = new jszip(d); break;
+		case "base64": zip = CFB.read(d, { type: "base64" }); break;
+		case "binary": zip = CFB.read(d, { type: "binary" }); break;
+		case "buffer": case "array": zip = CFB.read(d, { type: "buffer" }); break;
 		default: throw new Error("Unrecognized type " + o.type);
 	}
 	return zip;
 }
 
-var jszip;
-/*:: declare var JSZipSync:any; */
-/*global JSZipSync:true */
-if(typeof JSZipSync !== 'undefined') jszip = JSZipSync;
-if(typeof exports !== 'undefined') {
-	if(typeof module !== 'undefined' && module.exports) {
-		if(typeof jszip === 'undefined') jszip = require('./jszip.js');
-	}
-}
 
 function zip_new() {
-	return new jszip();
+	return CFB.utils.cfb_new();
 }
 
 function resolve_path(path/*:string*/, base/*:string*/)/*:string*/ {
