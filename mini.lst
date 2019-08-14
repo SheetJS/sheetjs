@@ -1,6 +1,6 @@
 bits/00_header.js
 bits/01_version.js
-bits/02_codepage.js
+misc/02_codepage.js
 bits/03_consts.js
 bits/04_base64.js
 bits/05_buf.js

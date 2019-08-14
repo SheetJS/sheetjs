@@ -4,6 +4,43 @@ This log is intended to keep track of backwards-incompatible changes, including
 but not limited to API changes and file location changes.  Minor behavioral
 changes may not be included if they are not expected to break existing code.
 
+## v0.15.1 (2019-08-14)
+
+* XLSX ignore XML artifacts
+* HTML capture and persist merges
+
+## v0.15.0
+
+* `dist/xlsx.mini.min.js` mini build with XLSX read/write and some utilities
+* Removed legacy conversion utility functions
+
+## v0.14.5
+
+* XLS PtgNameX lookup
+* XLS always create stub cells for blank cells with comments
+
+
+## v0.14.4
+
+* Better treatment of `skipHidden` in CSV output
+* Ignore CLSID in XLS
+* SYLK 7-bit character encoding
+* SYLK and DBF codepage support
+
+## v0.14.3
+
+* Proper shifting of addresses in Shared Formulae
+
+## v0.14.2
+
+* Proper XML encoding of comments
+
+## v0.14.1
+
+* raw cell objects can be passed to `sheet_add_aoa`
+* `_FilterDatabase` fix for AutoFilter-related crashes
+* `stream.to_json` doesn't end up accidentally scanning to max row
+
 ## 0.14.0 (2018-09-06)
 
 * `sheet_to_json` default flipped to `raw: true`

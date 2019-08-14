@@ -4,15 +4,8 @@
 /*global global, exports, module, require:false, process:false, Buffer:false, ArrayBuffer:false */
 var XLSX = {};
 function make_xlsx_lib(XLSX){
-XLSX.version = '0.15.0';
+XLSX.version = '0.15.1';
 var current_codepage = 1200, current_ansi = 1252;
-/*global cptable:true, window */
-if(typeof module !== "undefined" && typeof require !== 'undefined') {
-	if(typeof cptable === 'undefined') {
-		if(typeof global !== 'undefined') global.cptable = require('./dist/cpexcel.js');
-		else if(typeof window !== 'undefined') window.cptable = require('./dist/cpexcel.js');
-	}
-}
 
 var VALID_ANSI = [ 874, 932, 936, 949, 950 ];
 for(var i = 0; i <= 8; ++i) VALID_ANSI.push(1250 + i);
@@ -69,20 +62,6 @@ var debom = function(data) {
 
 var _getchar = function _gc1(x) { return String.fromCharCode(x); };
 var _getansi = function _ga1(x) { return String.fromCharCode(x); };
-if(typeof cptable !== 'undefined') {
-	set_cp = function(cp) { current_codepage = cp; set_ansi(cp); };
-	debom = function(data) {
-		if(data.charCodeAt(0) === 0xFF && data.charCodeAt(1) === 0xFE) { return cptable.utils.decode(1200, char_codes(data.slice(2))); }
-		return data;
-	};
-	_getchar = function _gc2(x) {
-		if(current_codepage === 1200) return String.fromCharCode(x);
-		return cptable.utils.decode(current_codepage, [x&255,x>>8])[0];
-	};
-	_getansi = function _ga2(x) {
-		return cptable.utils.decode(current_ansi, [x])[0];
-	};
-}
 var DENSE = null;
 var DIF_XL = true;
 var Base64 = (function make_b64(){
@@ -5981,7 +5960,7 @@ function parse_ws_xml_dim(ws, s) {
 	if(d.s.r<=d.e.r && d.s.c<=d.e.c && d.s.r>=0 && d.s.c>=0) ws["!ref"] = encode_range(d);
 }
 var mergecregex = /<(?:\w:)?mergeCell ref="[A-Z0-9:]+"\s*[\/]?>/g;
-var sheetdataregex = /<(?:\w+:)?sheetData>([\s\S]*)<\/(?:\w+:)?sheetData>/;
+var sheetdataregex = /<(?:\w+:)?sheetData[^>]*>([\s\S]*)<\/(?:\w+:)?sheetData>/;
 var hlinkregex = /<(?:\w:)?hyperlink [^>]*>/mg;
 var dimregex = /"(\w*:\w*)"/;
 var colregex = /<(?:\w:)?col\b[^>]*[\/]?>/g;
@@ -7209,6 +7188,10 @@ var HTML_ = (function() {
 				var m = cell, cc = 0;
 				/* TODO: parse styles etc */
 				while(m.charAt(0) == "<" && (cc = m.indexOf(">")) > -1) m = m.slice(cc+1);
+				for(var midx = 0; midx < merges.length; ++midx) {
+					var _merge = merges[midx];
+					if(_merge.s.c == C && _merge.s.r < R && R <= _merge.e.r) { C = _merge.e.c + 1; midx = -1; }
+				}
 				var tag = parsexmltag(cell.slice(0, cell.indexOf(">")));
 				CS = tag.colspan ? +tag.colspan : 1;
 				if((RS = +tag.rowspan)>1 || CS>1) merges.push({s:{r:R,c:C},e:{r:R + (RS||1) - 1, c:C + CS - 1}});
@@ -7235,6 +7218,7 @@ var HTML_ = (function() {
 			}
 		}
 		ws['!ref'] = encode_range(range);
+		if(merges.length) ws["!merges"] = merges;
 		return ws;
 	}
 	function html_to_book(str, opts) {
@@ -7254,11 +7238,11 @@ var HTML_ = (function() {
 			if(RS < 0) continue;
 			var coord = encode_cell({r:R,c:C});
 			var cell = o.dense ? (ws[R]||[])[C] : ws[coord];
-			var sp = {};
-			if(RS > 1) sp.rowspan = RS;
-			if(CS > 1) sp.colspan = CS;
 			/* TODO: html entities */
 			var w = (cell && cell.v != null) && (cell.h || escapehtml(cell.w || (format_cell(cell), cell.w) || "")) || "";
+			var sp = ({});
+			if(RS > 1) sp.rowspan = RS;
+			if(CS > 1) sp.colspan = CS;
 			sp.t = cell && cell.t || 'z';
 			if(o.editable) w = '<span contenteditable="true">' + w + '</span>';
 			sp.id = "sjs-" + coord;
