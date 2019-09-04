@@ -1,0 +1,3 @@
+/*! s.js (C) 2019-present SheetJS -- https://sheetjs.com */
+export { Workbook } from "./s/Workbook";
+export { get_XLSX, set_XLSX } from "./s/XLSXWrapper";
