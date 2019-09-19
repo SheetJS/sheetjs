@@ -19044,29 +19044,37 @@ function parse_dom_table(table, _opts) {
 	var rows = table.getElementsByTagName('tr');
 	var sheetRows = opts.sheetRows || 10000000;
 	var range = {s:{r:0,c:0},e:{r:0,c:0}};
-	var merges = [], midx = 0;
+	var merges = [], midx = 0, m, cInRange = [], cache = {};
 	var rowinfo = [];
-	var _R = 0, R = 0, _C, C, RS, CS;
+	var _R = 0, R = 0, _C, C, RS, CS, row, elts, elt, h, v, o, _t;
 	for(; _R < rows.length && R < sheetRows; ++_R) {
-		var row = rows[_R];
+		row = rows[_R];
 		if (is_dom_element_hidden(row)) {
 			if (opts.display) continue;
 			rowinfo[R] = {hidden: true};
 		}
-		var elts = (row.children);
+		elts = (row.children);
 		for(_C = C = 0; _C < elts.length; ++_C) {
-			var elt = elts[_C];
+			elt = elts[_C];
 			if (opts.display && is_dom_element_hidden(elt)) continue;
-			var v = htmldecode(elt.innerHTML);
-			for(midx = 0; midx < merges.length; ++midx) {
-				var m = merges[midx];
-				if(m.s.c == C && m.s.r <= R && R <= m.e.r) { C = m.e.c+1; midx = -1; }
+			h = elt.innerHTML;
+			v = h || (cache[h] = htmldecode(elt.innerHTML));
+			cInRange.length = 0;
+			midx = merges.length;
+			while (midx--) {
+				m = merges[midx];
+				if(m.s.r <= R && R <= m.e.r) {
+					cInRange.push(m.e.c);
+				}
+			}
+			if (cInRange.indexOf(C) !== -1) {
+				C = Math.max.apply(null, cInRange) + 1;
 			}
 			/* TODO: figure out how to extract nonstandard mso- style */
-			CS = +elt.getAttribute("colspan") || 1;
-			if((RS = +elt.getAttribute("rowspan"))>0 || CS>1) merges.push({s:{r:R,c:C},e:{r:R + (RS||1) - 1, c:C + CS - 1}});
-			var o = {t:'s', v:v};
-			var _t = elt.getAttribute("t") || "";
+			CS = +elt.colSpan || 1;
+			if((RS = +elt.rowSpan)>0 || CS>1) merges.push({s:{r:R,c:C},e:{r:R + (RS||1) - 1, c:C + CS - 1}});
+			o = {t:'s', v:v};
+			_t = elt.getAttribute("t") || "";
 			if(v != null) {
 				if(v.length == 0) o.t = _t || 'z';
 				else if(opts.raw || v.trim().length == 0 || _t == "s"){}

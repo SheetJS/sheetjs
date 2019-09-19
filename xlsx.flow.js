@@ -19160,29 +19160,37 @@ function parse_dom_table(table/*:HTMLElement*/, _opts/*:?any*/)/*:Worksheet*/ {
 	var rows/*:HTMLCollection<HTMLTableRowElement>*/ = table.getElementsByTagName('tr');
 	var sheetRows = opts.sheetRows || 10000000;
 	var range/*:Range*/ = {s:{r:0,c:0},e:{r:0,c:0}};
-	var merges/*:Array<Range>*/ = [], midx = 0;
+	var merges/*:Array<Range>*/ = [], midx = 0, m, cInRange/*:Array<Range>*/ = [], cache/*:Object<Cache>*/ = {};
 	var rowinfo/*:Array<RowInfo>*/ = [];
-	var _R = 0, R = 0, _C, C, RS, CS;
+	var _R = 0, R = 0, _C, C, RS, CS, row, elts, elt, h, v, o, _t;
 	for(; _R < rows.length && R < sheetRows; ++_R) {
-		var row/*:HTMLTableRowElement*/ = rows[_R];
+		row/*:HTMLTableRowElement*/ = rows[_R];
 		if (is_dom_element_hidden(row)) {
 			if (opts.display) continue;
 			rowinfo[R] = {hidden: true};
 		}
-		var elts/*:HTMLCollection<HTMLTableCellElement>*/ = (row.children/*:any*/);
+		elts/*:HTMLCollection<HTMLTableCellElement>*/ = (row.children/*:any*/);
 		for(_C = C = 0; _C < elts.length; ++_C) {
-			var elt/*:HTMLTableCellElement*/ = elts[_C];
+			elt/*:HTMLTableCellElement*/ = elts[_C];
 			if (opts.display && is_dom_element_hidden(elt)) continue;
-			var v/*:string*/ = htmldecode(elt.innerHTML);
-			for(midx = 0; midx < merges.length; ++midx) {
-				var m/*:Range*/ = merges[midx];
-				if(m.s.c == C && m.s.r <= R && R <= m.e.r) { C = m.e.c+1; midx = -1; }
+			h/*:string*/ = elt.innerHTML;
+			v/*:string*/ = cache[h] || (cache[h] = htmldecode(elt.innerHTML));
+			cInRange.length = 0;
+			midx/*:number*/ = merges.length;
+			while (midx--) {
+				m/*:Range*/ = merges[midx];
+				if(m.s.r <= R && R <= m.e.r) {
+					cInRange.push(m.e.c);
+				}
+			}
+			if (cInRange.indexOf(C) !== -1) {
+				C = Math.max.apply(null, cInRange) + 1;
 			}
 			/* TODO: figure out how to extract nonstandard mso- style */
-			CS = +elt.getAttribute("colspan") || 1;
-			if((RS = +elt.getAttribute("rowspan"))>0 || CS>1) merges.push({s:{r:R,c:C},e:{r:R + (RS||1) - 1, c:C + CS - 1}});
-			var o/*:Cell*/ = {t:'s', v:v};
-			var _t/*:string*/ = elt.getAttribute("t") || "";
+			CS = +elt.colSpan || 1;
+			if((RS = +elt.rowSpan)>0 || CS>1) merges.push({s:{r:R,c:C},e:{r:R + (RS||1) - 1, c:C + CS - 1}});
+			o/*:Cell*/ = {t:'s', v:v};
+			_t/*:string*/ = elt.getAttribute("t") || "";
 			if(v != null) {
 				if(v.length == 0) o.t = _t || 'z';
 				else if(opts.raw || v.trim().length == 0 || _t == "s"){}
