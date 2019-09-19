@@ -7316,7 +7316,7 @@ function parse_dom_table(table, _opts) {
 			}
 			/* TODO: figure out how to extract nonstandard mso- style */
 			CS = +elt.colSpan || 1;
-			if((RS = +elt.rowSpan)>0 || CS>1) merges.push({s:{r:R,c:C},e:{r:R + (RS||1) - 1, c:C + CS - 1}});
+			if((RS = +elt.rowSpan)>1 || CS>1) merges.push({s:{r:R,c:C},e:{r:R + (RS||1) - 1, c:C + CS - 1}});
 			o = {t:'s', v:v};
 			_t = elt.getAttribute("t") || "";
 			if(v != null) {
