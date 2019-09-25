@@ -7403,7 +7403,12 @@ function parse_dom_table(table/*:HTMLElement*/, _opts/*:?any*/)/*:Worksheet*/ {
 				}
 			}
 			if (cInRange.indexOf(C) !== -1) {
-				C = Math.max.apply(null, cInRange) + 1;
+				for (let i = 0; i < cInRange.length; i++) {
+					C += 1;
+					if (cInRange.indexOf(C) === -1) {
+						break;
+					}
+				}
 			}
 			/* TODO: figure out how to extract nonstandard mso- style */
 			CS = +elt.colSpan || 1;
