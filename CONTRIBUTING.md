@@ -60,4 +60,4 @@ Keep these in mind as you work:
 
 Before contributions are merged, you will receive an email (at the address
 associated with the git commit) and will be asked to confirm the aforementioned
-items.  Ensure that the email addresses associated with the commits is valid.
+items.  Ensure that the email addresses associated with the commits are valid.
