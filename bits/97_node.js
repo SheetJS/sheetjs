@@ -18,7 +18,6 @@ if(has_buf && typeof require != 'undefined') (function() {
 		var BOM = false;
 		stream._read = function() {
 			if(!BOM) { BOM = true; return stream.push("\uFEFF"); }
-			if(R > r.e.r) return stream.push(null);
 			while(R <= r.e.r) {
 				++R;
 				if ((rowinfo[R-1]||{}).hidden) continue;
@@ -29,6 +28,7 @@ if(has_buf && typeof require != 'undefined') (function() {
 					break;
 				}
 			}
+			if(R > r.e.r) return stream.push(null);
 		};
 		return stream;
 	};
@@ -101,9 +101,9 @@ if(has_buf && typeof require != 'undefined') (function() {
 		stream._read = function() {
 			if(R > r.e.r) return stream.push(null);
 			while(R <= r.e.r) {
-				++R;
 				//if ((rowinfo[R-1]||{}).hidden) continue;
 				var row = make_json_row(sheet, r, R, cols, header, hdr, dense, o);
+				++R;
 				if((row.isempty === false) || (header === 1 ? o.blankrows !== false : !!o.blankrows)) {
 					stream.push(row.row);
 					break;

@@ -21,8 +21,6 @@ enhancements, additional features like styling, and dedicated support.
 
 [**Issues and Bug Reports**](https://github.com/sheetjs/js-xlsx/issues)
 
-[**Other General Support Issues**](https://discourse.sheetjs.com)
-
 [**File format support for known spreadsheet data formats:**](#file-formats)
 
 
@@ -40,7 +38,6 @@ enhancements, additional features like styling, and dedicated support.
 [![Coverage Status](http://img.shields.io/coveralls/SheetJS/js-xlsx/master.svg)](https://coveralls.io/r/SheetJS/js-xlsx?branch=master)
 [![Dependencies Status](https://david-dm.org/sheetjs/js-xlsx/status.svg)](https://david-dm.org/sheetjs/js-xlsx)
 [![npm Downloads](https://img.shields.io/npm/dt/xlsx.svg)](https://npmjs.org/package/xlsx)
-[![ghit.me](https://ghit.me/badge.svg?repo=sheetjs/js-xlsx)](https://ghit.me/repo/sheetjs/js-xlsx)
 [![Analytics](https://ga-beacon.appspot.com/UA-36810333-1/SheetJS/js-xlsx?pixel)](https://github.com/SheetJS/js-xlsx)
 
 ## Table of Contents
@@ -230,6 +227,8 @@ An appropriate version for each dependency is included in the dist/ directory.
 
 The complete single-file version is generated at `dist/xlsx.full.min.js`
 
+A slimmer build with XLSX / HTML support is generated at `dist/xlsx.mini.min.js`
+
 Webpack and Browserify builds include optional modules by default.  Webpack can
 be configured to remove support with `resolve.alias`:
 
@@ -384,24 +383,20 @@ req.send();
 
 
 
-Drag-and-drop uses the HTML5 `FileReader` API, loading the data with
-`readAsBinaryString` or `readAsArrayBuffer`.  Since not all browsers support the
-full `FileReader` API, dynamic feature tests are highly recommended.
+Drag-and-drop uses the HTML5 `FileReader` API.
 
 ```js
-var rABS = true; // true: readAsBinaryString ; false: readAsArrayBuffer
 function handleDrop(e) {
   e.stopPropagation(); e.preventDefault();
   var files = e.dataTransfer.files, f = files[0];
   var reader = new FileReader();
   reader.onload = function(e) {
-    var data = e.target.result;
-    if(!rABS) data = new Uint8Array(data);
-    var workbook = XLSX.read(data, {type: rABS ? 'binary' : 'array'});
+    var data = new Uint8Array(e.target.result);
+    var workbook = XLSX.read(data, {type: 'array'});
 
     /* DO SOMETHING WITH workbook HERE */
   };
-  if(rABS) reader.readAsBinaryString(f); else reader.readAsArrayBuffer(f);
+  reader.readAsArrayBuffer(f);
 }
 drop_dom_element.addEventListener('drop', handleDrop, false);
 ```
@@ -412,18 +407,16 @@ Data from file input elements can be processed using the same `FileReader` API
 as in the drag-and-drop example:
 
 ```js
-var rABS = true; // true: readAsBinaryString ; false: readAsArrayBuffer
 function handleFile(e) {
   var files = e.target.files, f = files[0];
   var reader = new FileReader();
   reader.onload = function(e) {
-    var data = e.target.result;
-    if(!rABS) data = new Uint8Array(data);
-    var workbook = XLSX.read(data, {type: rABS ? 'binary' : 'array'});
+    var data = new Uint8Array(e.target.result);
+    var workbook = XLSX.read(data, {type: 'array'});
 
     /* DO SOMETHING WITH workbook HERE */
   };
-  if(rABS) reader.readAsBinaryString(f); else reader.readAsArrayBuffer(f);
+  reader.readAsArrayBuffer(f);
 }
 input_dom_element.addEventListener('change', handleFile, false);
 ```
@@ -544,7 +537,7 @@ This example uses [`XLSX.utils.aoa_to_sheet`](#array-of-arrays-input) to make a
 sheet and `XLSX.utils.book_append_sheet` to append the sheet to the workbook:
 
 ```js
-var new_ws_name = "SheetJS";
+var ws_name = "SheetJS";
 
 /* make worksheet */
 var ws_data = [

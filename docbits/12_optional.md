@@ -17,6 +17,8 @@ An appropriate version for each dependency is included in the dist/ directory.
 
 The complete single-file version is generated at `dist/xlsx.full.min.js`
 
+A slimmer build with XLSX / HTML support is generated at `dist/xlsx.mini.min.js`
+
 Webpack and Browserify builds include optional modules by default.  Webpack can
 be configured to remove support with `resolve.alias`:
 

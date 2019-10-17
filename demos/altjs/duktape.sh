@@ -3,7 +3,7 @@ DUKTAPE_VER=2.2.0
 if [ ! -e duktape-$DUKTAPE_VER ]; then
 	if [ ! -e duktape-$DUKTAPE_VER.tar ]; then
 		if [ ! -e duktape-$DUKTAPE_VER.tar.xz ]; then
-			curl -O http://duktape.org/duktape-$DUKTAPE_VER.tar.xz
+			curl -O https://duktape.org/duktape-$DUKTAPE_VER.tar.xz
 		fi
 		xz -d duktape-$DUKTAPE_VER.tar.xz
 	fi

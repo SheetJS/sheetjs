@@ -125,6 +125,36 @@ duk_pop(ctx);
 ```
 
 
+## QuickJS
+
+QuickJS is an embeddable JS engine written in C.  It provides a separate set of
+functions for interacting with the filesystem and the global object.  It can run
+the browser dist build.
+
+The `global` object is available as `std.global`.  To make it visible to the
+loader, create a reference to itself:
+
+```js
+std.global.global = std.global;
+std.loadScript("xlsx.full.min.js");
+```
+
+The filesystem interaction mirrors POSIX, including separate allocations:
+
+```js
+/* read file */
+var rh = std.open(filename, "rb"); rh.seek(0, std.SEEK_END);
+var sz = rh.tell(); rh.seek();
+var ab = new ArrayBuffer(sz); rh.read(ab, 0, sz); rh.close();
+var wb = XLSX.read(ab, {type: 'array'});
+
+/* write file */
+var ab = XLSX.write(wb, {type: 'array'});
+var wh = std.open("sheetjs.qjs.xlsx", "wb");
+wh.write(out, 0, ab.byteLength); wh.close();
+```
+
+
 ## Goja
 
 Goja is a pure Go implementation of ECMAScript 5.  As of this writing, there are

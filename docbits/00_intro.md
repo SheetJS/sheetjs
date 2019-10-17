@@ -21,8 +21,6 @@ enhancements, additional features like styling, and dedicated support.
 
 [**Issues and Bug Reports**](https://github.com/sheetjs/js-xlsx/issues)
 
-[**Other General Support Issues**](https://discourse.sheetjs.com)
-
 [**File format support for known spreadsheet data formats:**](#file-formats)
 
 <details>
@@ -43,6 +41,5 @@ enhancements, additional features like styling, and dedicated support.
 [![Coverage Status](http://img.shields.io/coveralls/SheetJS/js-xlsx/master.svg)](https://coveralls.io/r/SheetJS/js-xlsx?branch=master)
 [![Dependencies Status](https://david-dm.org/sheetjs/js-xlsx/status.svg)](https://david-dm.org/sheetjs/js-xlsx)
 [![npm Downloads](https://img.shields.io/npm/dt/xlsx.svg)](https://npmjs.org/package/xlsx)
-[![ghit.me](https://ghit.me/badge.svg?repo=sheetjs/js-xlsx)](https://ghit.me/repo/sheetjs/js-xlsx)
 [![Analytics](https://ga-beacon.appspot.com/UA-36810333-1/SheetJS/js-xlsx?pixel)](https://github.com/SheetJS/js-xlsx)
 

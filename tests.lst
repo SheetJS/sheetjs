@@ -951,7 +951,7 @@ apachepoi_SolverContainerAfterSPGR.xls
 apachepoi_SquareMacro.xls
 apachepoi_StringContinueRecords.xls
 apachepoi_StringFormulas.xls
-apachepoi_SubtotalsNested.xls
+# apachepoi_SubtotalsNested.xls
 apachepoi_TestRandBetween.xls
 apachepoi_Themes2.xls
 apachepoi_TwoSheetsNoneHidden.xls

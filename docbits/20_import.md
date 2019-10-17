@@ -101,24 +101,20 @@ req.send();
 <details>
   <summary><b>Browser drag-and-drop</b> (click to show)</summary>
 
-Drag-and-drop uses the HTML5 `FileReader` API, loading the data with
-`readAsBinaryString` or `readAsArrayBuffer`.  Since not all browsers support the
-full `FileReader` API, dynamic feature tests are highly recommended.
+Drag-and-drop uses the HTML5 `FileReader` API.
 
 ```js
-var rABS = true; // true: readAsBinaryString ; false: readAsArrayBuffer
 function handleDrop(e) {
   e.stopPropagation(); e.preventDefault();
   var files = e.dataTransfer.files, f = files[0];
   var reader = new FileReader();
   reader.onload = function(e) {
-    var data = e.target.result;
-    if(!rABS) data = new Uint8Array(data);
-    var workbook = XLSX.read(data, {type: rABS ? 'binary' : 'array'});
+    var data = new Uint8Array(e.target.result);
+    var workbook = XLSX.read(data, {type: 'array'});
 
     /* DO SOMETHING WITH workbook HERE */
   };
-  if(rABS) reader.readAsBinaryString(f); else reader.readAsArrayBuffer(f);
+  reader.readAsArrayBuffer(f);
 }
 drop_dom_element.addEventListener('drop', handleDrop, false);
 ```
@@ -132,18 +128,16 @@ Data from file input elements can be processed using the same `FileReader` API
 as in the drag-and-drop example:
 
 ```js
-var rABS = true; // true: readAsBinaryString ; false: readAsArrayBuffer
 function handleFile(e) {
   var files = e.target.files, f = files[0];
   var reader = new FileReader();
   reader.onload = function(e) {
-    var data = e.target.result;
-    if(!rABS) data = new Uint8Array(data);
-    var workbook = XLSX.read(data, {type: rABS ? 'binary' : 'array'});
+    var data = new Uint8Array(e.target.result);
+    var workbook = XLSX.read(data, {type: 'array'});
 
     /* DO SOMETHING WITH workbook HERE */
   };
-  if(rABS) reader.readAsBinaryString(f); else reader.readAsArrayBuffer(f);
+  reader.readAsArrayBuffer(f);
 }
 input_dom_element.addEventListener('change', handleFile, false);
 ```
