@@ -22,7 +22,9 @@ function parse_wb_xml(data, opts)/*:WorkbookFile*/ {
 			case '<fileVersion/>': case '</fileVersion>': break;
 
 			/* 18.2.12 fileSharing CT_FileSharing ? */
-			case '<fileSharing': case '<fileSharing/>': break;
+			case '<fileSharing':
+				break;
+			case '<fileSharing/>': break;
 
 			/* 18.2.28 workbookPr CT_WorkbookPr ? */
 			case '<workbookPr':
@@ -40,7 +42,8 @@ function parse_wb_xml(data, opts)/*:WorkbookFile*/ {
 			case '</workbookPr>': break;
 
 			/* 18.2.29 workbookProtection CT_WorkbookProtection ? */
-			case '<workbookProtection': break;
+			case '<workbookProtection':
+				break;
 			case '<workbookProtection/>': break;
 
 			/* 18.2.1  bookViews CT_BookViews ? */
@@ -102,7 +105,7 @@ function parse_wb_xml(data, opts)/*:WorkbookFile*/ {
 
 			/* 18.2.4  customWorkbookViews CT_CustomWorkbookViews ? */
 			case '<customWorkbookViews>': case '</customWorkbookViews>': case '<customWorkbookViews': break;
-			/* 18.2.3    customWorkbookView CT_CustomWorkbookView + */
+			/* 18.2.3  customWorkbookView CT_CustomWorkbookView + */
 			case '<customWorkbookView': case '</customWorkbookView>': break;
 
 			/* 18.2.18 pivotCaches CT_PivotCaches ? */
@@ -115,7 +118,7 @@ function parse_wb_xml(data, opts)/*:WorkbookFile*/ {
 
 			/* 18.2.23 smartTagTypes CT_SmartTagTypes ? */
 			case '<smartTagTypes': case '<smartTagTypes>': case '</smartTagTypes>': break;
-			/* 18.2.22   smartTagType CT_SmartTagType ? */
+			/* 18.2.22 smartTagType CT_SmartTagType ? */
 			case '<smartTagType': break;
 
 			/* 18.2.24 webPublishing CT_WebPublishing ? */
@@ -131,7 +134,7 @@ function parse_wb_xml(data, opts)/*:WorkbookFile*/ {
 
 			/* 18.2.10 extLst CT_ExtensionList ? */
 			case '<extLst': case '<extLst>': case '</extLst>': case '<extLst/>': break;
-			/* 18.2.7    ext CT_Extension + */
+			/* 18.2.7  ext CT_Extension + */
 			case '<ext': pass=true; break; //TODO: check with versions of excel
 			case '</ext>': pass=false; break;
 

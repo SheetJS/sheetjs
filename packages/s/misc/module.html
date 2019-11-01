@@ -1,0 +1,10 @@
+<script src="xlsx.mini.min.js"></script>
+<script type="module">
+import * as S from "../dist/mjs/index.mjs";
+function assert(x) { if(!x) throw "assert failed"; }
+
+assert(S != null);
+S.set_XLSX(XLSX);
+assert(S.get_XLSX() == XLSX);
+assert(S.get_XLSX().version);
+</script>

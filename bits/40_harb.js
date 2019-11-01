@@ -259,7 +259,7 @@ function sheet_to_dbf(ws/*:Worksheet*/, opts/*:WriteOpts*/) {
 	h.write_shift(2, 296 + 32 * hcnt);
 	h.write_shift(2, rlen);
 	for(i=0; i < 4; ++i) h.write_shift(4, 0);
-	h.write_shift(4, 0x00000000 | ((+dbf_reverse_map[current_ansi] || 0x03)<<8));
+	h.write_shift(4, 0x00000000 | ((+dbf_reverse_map[/*::String(*/current_ansi/*::)*/] || 0x03)<<8));
 
 	for(i = 0, j = 0; i < headers.length; ++i) {
 		if(headers[i] == null) continue;
@@ -316,7 +316,7 @@ function sheet_to_dbf(ws/*:Worksheet*/, opts/*:WriteOpts*/) {
 
 var SYLK = (function() {
 	/* TODO: stress test sequences */
-	var sylk_escapes = {
+	var sylk_escapes = ({
 		AA:'À', BA:'Á', CA:'Â', DA:195, HA:'Ä', JA:197,
 		AE:'È', BE:'É', CE:'Ê',         HE:'Ë',
 		AI:'Ì', BI:'Í', CI:'Î',         HI:'Ï',
@@ -329,11 +329,13 @@ var SYLK = (function() {
 		Au:'ù', Bu:'ú', Cu:'û',         Hu:'ü',
 		KC:'Ç', Kc:'ç', q:'æ',  z:'œ',  a:'Æ',  j:'Œ',
 		DN:209, Dn:241, Hy:255,
-		S:169,  c:170,  R:174,  0:176,  1:177,  2:178,  3:179,  B:180,  5:181,
-		6:182,  7:183,  Q:185,  k:186,  b:208,  i:216,  l:222,  s:240,  y:248,
+		S:169,  c:170,  R:174,  B:180,
+		/*::[*/0/*::]*/:176,    /*::[*/1/*::]*/:177,  /*::[*/2/*::]*/:178,
+		/*::[*/3/*::]*/:179,    /*::[*/5/*::]*/:181,  /*::[*/6/*::]*/:182,
+		/*::[*/7/*::]*/:183,    Q:185,  k:186,  b:208,  i:216,  l:222,  s:240,  y:248,
 		"!":161, '"':162, "#":163, "(":164, "%":165, "'":167, "H ":168,
 		"+":171, ";":187, "<":188, "=":189, ">":190, "?":191, "{":223
-	};
+	}/*:any*/);
 	var sylk_char_regex = new RegExp("\u001BN(" + keys(sylk_escapes).join("|").replace(/\|\|\|/, "|\\||").replace(/([?()+])/g,"\\$1") + "|\\|)", "gm");
 	var sylk_char_fn = function(_, $1){ var o = sylk_escapes[$1]; return typeof o == "number" ? _getansi(o) : o; };
 	var decode_sylk_char = function($$, $1, $2) { var newcc = (($1.charCodeAt(0) - 0x20)<<4) | ($2.charCodeAt(0) - 0x30); return newcc == 59 ? $$ : _getansi(newcc); };

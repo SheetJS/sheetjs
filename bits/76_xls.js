@@ -34,7 +34,7 @@ function parse_compobj(obj/*:CFBEntry*/) {
 	- 2.4.61 ContinueFrt11
 	- 2.4.62 ContinueFrt12
 */
-function slurp(R, blob, length/*:number*/, opts) {
+function slurp(R, blob, length/*:number*/, opts)/*:any*/ {
 	var l = length;
 	var bufs = [];
 	var d = blob.slice(blob.l,blob.l+l);
@@ -104,16 +104,16 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 	var sst/*:SST*/ = ([]/*:any*/);
 	var cur_sheet = "";
 	var Preamble = {};
-	var lastcell, last_cell = "", cc, cmnt, rngC, rngR;
+	var lastcell, last_cell = "", cc/*:Cell*/, cmnt, rngC, rngR;
 	var sharedf = {};
 	var arrayf/*:Array<[Range, string]>*/ = [];
 	var temp_val/*:Cell*/;
 	var country;
 	var cell_valid = true;
 	var XFs = []; /* XF records */
-	var palette = [];
+	var palette/*:Array<[number, number, number]>*/ = [];
 	var Workbook/*:WBWBProps*/ = ({ Sheets:[], WBProps:{date1904:false}, Views:[{}] }/*:any*/), wsprops = {};
-	var get_rgb = function getrgb(icv) {
+	var get_rgb = function getrgb(icv/*:number*/)/*:[number, number, number]*/ {
 		if(icv < 8) return XLSIcv[icv];
 		if(icv < 64) return palette[icv-8] || XLSIcv[icv];
 		return XLSIcv[icv];
@@ -214,10 +214,11 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 				if(R.r == 12){ blob.l += 10; length -= 10; } // skip FRT
 			}
 			//console.error(R,blob.l,length,blob.length);
-			var val;
-			if(R.n === 'EOF') val = R.f(blob, length, opts);
-			else val = slurp(R, blob, length, opts);
+			var val/*:any*/ = ({}/*:any*/);
+			if(R.n === 'EOF') val = /*::(*/R.f(blob, length, opts)/*:: :any)*/;
+			else val = /*::(*/slurp(R, blob, length, opts)/*:: :any)*/;
 			var Rn = R.n;
+			/*:: val = (val:any); */
 			if(file_depth == 0 && Rn != 'BOF') continue;
 			/* nested switch statements to workaround V8 128 limit */
 			switch(Rn) {
@@ -236,13 +237,14 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 				case 'WriteAccess': opts.lastuser = val; break;
 				case 'FileSharing': break; //TODO
 				case 'CodePage':
+					var cpval = Number(val);
 					/* overrides based on test cases */
-					switch(val) {
-						case 0x5212: val =  1200; break;
-						case 0x8000: val = 10000; break;
-						case 0x8001: val =  1252; break;
+					switch(cpval) {
+						case 0x5212: cpval =  1200; break;
+						case 0x8000: cpval = 10000; break;
+						case 0x8001: cpval =  1252; break;
 					}
-					set_cp(opts.codepage = val);
+					set_cp(opts.codepage = cpval);
 					seen_codepage = true;
 					break;
 				case 'RRTabId': opts.rrtabid = val; break;
@@ -537,9 +539,9 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 					if(!cc) {
 						if(options.dense) {
 							if(!out[val[0].r]) out[val[0].r] = [];
-							cc = out[val[0].r][val[0].c] = {t:"z"};
+							cc = out[val[0].r][val[0].c] = ({t:"z"}/*:any*/);
 						} else {
-							cc = out[encode_cell(val[0])] = {t:"z"};
+							cc = out[encode_cell(val[0])] = ({t:"z"}/*:any*/);
 						}
 						range.e.r = Math.max(range.e.r, val[0].r);
 						range.s.r = Math.min(range.s.r, val[0].r);
@@ -734,7 +736,7 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 				case 'BuiltInFnGroupCount': /* 2.4.30 0x0E or 0x10 but excel 2011 generates 0x11? */ break;
 				/* View Stuff */
 				case 'Window1': case 'HideObj': case 'GridSet': case 'Guts':
-				case 'UserBView': case 'UserSViewBegin': case 'UserSViewEnd':
+				case 'UserBView': case 'UserSViewBegin': case 'UserSViewEnd': break;
 				case 'Pane': break;
 				default: switch(R.n) { /* nested */
 				/* Chart */

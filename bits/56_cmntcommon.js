@@ -1,24 +1,6 @@
 RELS.CMNT = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/comments";
 
-function parse_comments(zip, dirComments, sheets, sheetRels, opts) {
-	for(var i = 0; i != dirComments.length; ++i) {
-		var canonicalpath=dirComments[i];
-		var comments=parse_cmnt(getzipdata(zip, canonicalpath.replace(/^\//,''), true), canonicalpath, opts);
-		if(!comments || !comments.length) continue;
-		// find the sheets targeted by these comments
-		var sheetNames = keys(sheets);
-		for(var j = 0; j != sheetNames.length; ++j) {
-			var sheetName = sheetNames[j];
-			var rels = sheetRels[sheetName];
-			if(rels) {
-				var rel = rels[canonicalpath];
-				if(rel) insertCommentsIntoSheet(sheetName, sheets[sheetName], comments);
-			}
-		}
-	}
-}
-
-function insertCommentsIntoSheet(sheetName, sheet, comments/*:Array<RawComment>*/) {
+function sheet_insert_comments(sheet, comments/*:Array<RawComment>*/) {
 	var dense = Array.isArray(sheet);
 	var cell/*:Cell*/;
 	comments.forEach(function(comment) {
@@ -28,7 +10,7 @@ function insertCommentsIntoSheet(sheetName, sheet, comments/*:Array<RawComment>*
 			cell = sheet[r.r][r.c];
 		} else cell = sheet[comment.ref];
 		if (!cell) {
-			cell = {};
+			cell = ({t:"z"}/*:any*/);
 			if(dense) sheet[r.r][r.c] = cell;
 			else sheet[comment.ref] = cell;
 			var range = safe_decode_range(sheet["!ref"]||"BDWGO1000001:A1");

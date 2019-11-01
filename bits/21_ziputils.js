@@ -64,17 +64,6 @@ function zip_add_file(zip, path, content) {
 	else zip.file(path, content);
 }
 
-function zip_read(d, o) {
-	var zip;
-	switch(o.type) {
-		case "base64": zip = new jszip(d, { base64:true }); break;
-		case "binary": case "array": zip = new jszip(d, { base64:false }); break;
-		case "buffer": zip = new jszip(d); break;
-		default: throw new Error("Unrecognized type " + o.type);
-	}
-	return zip;
-}
-
 var jszip;
 /*:: declare var JSZipSync:any; */
 /*global JSZipSync:true */
@@ -86,10 +75,29 @@ if(typeof exports !== 'undefined') {
 }
 
 function zip_new() {
+	if(!jszip) return CFB.utils.cfb_new();
 	return new jszip();
 }
 
+function zip_read(d, o) {
+	var zip;
+	if(jszip) switch(o.type) {
+		case "base64": zip = new jszip(d, { base64:true }); break;
+		case "binary": case "array": zip = new jszip(d, { base64:false }); break;
+		case "buffer": zip = new jszip(d); break;
+		default: throw new Error("Unrecognized type " + o.type);
+	}
+	else switch(o.type) {
+		case "base64": zip = CFB.read(d, { type: "base64" }); break;
+		case "binary": zip = CFB.read(d, { type: "binary" }); break;
+		case "buffer": case "array": zip = CFB.read(d, { type: "buffer" }); break;
+		default: throw new Error("Unrecognized type " + o.type);
+	}
+	return zip;
+}
+
 function resolve_path(path/*:string*/, base/*:string*/)/*:string*/ {
+	if(path.charAt(0) == "/") return path.slice(1);
 	var result = base.split('/');
 	if(base.slice(-1) != "/") result.pop(); // folder path
 	var target = path.split('/');

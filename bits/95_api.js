@@ -7,12 +7,21 @@ function get_default(x/*:any*/, y/*:any*/, z/*:any*/)/*:any*/ { return x[y] != n
 /* get cell, creating a stub if necessary */
 function ws_get_cell_stub(ws/*:Worksheet*/, R, C/*:?number*/)/*:Cell*/ {
 	/* A1 cell address */
-	if(typeof R == "string") return ws[R] || (ws[R] = {t:'z'});
+	if(typeof R == "string") {
+		/* dense */
+		if(Array.isArray(ws)) {
+			var RC = decode_cell(R);
+			if(!ws[RC.r]) ws[RC.r] = [];
+			return ws[RC.r][RC.c] || (ws[RC.r][RC.c] = {t:'z'});
+		}
+		return ws[R] || (ws[R] = {t:'z'});
+	}
 	/* cell address object */
 	if(typeof R != "number") return ws_get_cell_stub(ws, encode_cell(R));
 	/* R and C are 0-based indices */
 	return ws_get_cell_stub(ws, encode_cell({r:R,c:C||0}));
 }
+utils.sheet_get_cell = ws_get_cell_stub;
 
 /* find sheet index for given name / validate index */
 function wb_sheet_idx(wb/*:Workbook*/, sh/*:number|string*/) {

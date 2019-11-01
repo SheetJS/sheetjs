@@ -1,17 +1,24 @@
-function parse_numCache(data/*:string*/)/*:[Array<number>, string]*/ {
-	var col/*:Array<number>*/ = [];
+RELS.CHART = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/chart";
+RELS.CHARTEX = "http://schemas.microsoft.com/office/2014/relationships/chartEx";
+
+function parse_Cache(data/*:string*/)/*:[Array<number|string>, string, ?string]*/ {
+	var col/*:Array<number|string>*/ = [];
+	var num = data.match(/^<c:numCache>/);
+	var f;
 
 	/* 21.2.2.150 pt CT_NumVal */
 	(data.match(/<c:pt idx="(\d*)">(.*?)<\/c:pt>/mg)||[]).forEach(function(pt) {
 		var q = pt.match(/<c:pt idx="(\d*?)"><c:v>(.*)<\/c:v><\/c:pt>/);
 		if(!q) return;
-		col[+q[1]] = +q[2];
+		col[+q[1]] = num ? +q[2] : q[2];
 	});
 
 	/* 21.2.2.71 formatCode CT_Xstring */
 	var nf = unescapexml((data.match(/<c:formatCode>([\s\S]*?)<\/c:formatCode>/) || ["","General"])[1]);
 
-	return [col, nf];
+	(data.match(/<c:f>(.*?)<\/c:f>/mg)||[]).forEach(function(F) { f = F.replace(/<.*?>/g,""); });
+
+	return [col, nf, f];
 }
 
 /* 21.2 DrawingML - Charts */
@@ -25,7 +32,7 @@ function parse_chart(data/*:?string*/, name/*:string*/, opts, rels, wb, csheet) 
 
 	/* 21.2.2.120 numCache CT_NumData */
 	(data.match(/<c:numCache>[\s\S]*?<\/c:numCache>/gm)||[]).forEach(function(nc) {
-		var cache = parse_numCache(nc);
+		var cache = parse_Cache(nc);
 		refguess.s.r = refguess.s.c = 0;
 		refguess.e.c = C;
 		col = encode_col(C);

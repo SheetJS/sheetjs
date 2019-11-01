@@ -149,6 +149,7 @@ function write_RfX(r/*:Range*/, o) {
 var parse_UncheckedRfX = parse_RfX;
 var write_UncheckedRfX = write_RfX;
 
+
 /* [MS-XLS] 2.5.342 ; [MS-XLSB] 2.5.171 */
 /* TODO: error checking, NaN and Infinity values are not valid Xnum */
 function parse_Xnum(data/*::, length*/) { return data.read_shift(8, 'f'); }
@@ -204,10 +205,10 @@ function parse_BrtColor(data/*::, length*/) {
 function write_BrtColor(color, o) {
 	if(!o) o = new_buf(8);
 	if(!color||color.auto) { o.write_shift(4, 0); o.write_shift(4, 0); return o; }
-	if(color.index) {
+	if(color.index != null) {
 		o.write_shift(1, 0x02);
 		o.write_shift(1, color.index);
-	} else if(color.theme) {
+	} else if(color.theme != null) {
 		o.write_shift(1, 0x06);
 		o.write_shift(1, color.theme);
 	} else {
@@ -218,12 +219,13 @@ function write_BrtColor(color, o) {
 	if(nTS > 0) nTS *= 32767;
 	else if(nTS < 0) nTS *= 32768;
 	o.write_shift(2, nTS);
-	if(!color.rgb) {
+	if(!color.rgb || color.theme != null) {
 		o.write_shift(2, 0);
 		o.write_shift(1, 0);
 		o.write_shift(1, 0);
 	} else {
 		var rgb = (color.rgb || 'FFFFFF');
+		if(typeof rgb == 'number') rgb = ("000000" + rgb.toString(16)).slice(-6);
 		o.write_shift(1, parseInt(rgb.slice(0,2),16));
 		o.write_shift(1, parseInt(rgb.slice(2,4),16));
 		o.write_shift(1, parseInt(rgb.slice(4,6),16));
@@ -237,9 +239,9 @@ function parse_FontFlags(data/*::, length, opts*/) {
 	var d = data.read_shift(1);
 	data.l++;
 	var out = {
-		/* fBold: d & 0x01 */
+		fBold: d & 0x01,
 		fItalic: d & 0x02,
-		/* fUnderline: d & 0x04 */
+		fUnderline: d & 0x04,
 		fStrikeout: d & 0x08,
 		fOutline: d & 0x10,
 		fShadow: d & 0x20,

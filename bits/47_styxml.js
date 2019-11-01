@@ -3,7 +3,7 @@ function parse_borders(t, styles, themes, opts) {
 	styles.Borders = [];
 	var border = {}/*, sub_border = {}*/;
 	var pass = false;
-	t[0].match(tagregex).forEach(function(x) {
+	(t[0].match(tagregex)||[]).forEach(function(x) {
 		var y = parsexmltag(x);
 		switch(strip_ns(y[0])) {
 			case '<borders': case '<borders>': case '</borders>': break;
@@ -11,8 +11,8 @@ function parse_borders(t, styles, themes, opts) {
 			/* 18.8.4 border CT_Border */
 			case '<border': case '<border>': case '<border/>':
 				border = {};
-				if (y.diagonalUp) { border.diagonalUp = y.diagonalUp; }
-				if (y.diagonalDown) { border.diagonalDown = y.diagonalDown; }
+				if(y.diagonalUp) border.diagonalUp = parsexmlbool(y.diagonalUp);
+				if(y.diagonalDown) border.diagonalDown = parsexmlbool(y.diagonalDown);
 				styles.Borders.push(border);
 				break;
 			case '</border>': break;
@@ -58,7 +58,8 @@ function parse_borders(t, styles, themes, opts) {
 			case '</end>': break;
 
 			/* 18.8.? color CT_Color */
-			case '<color': case '<color>': break;
+			case '<color': case '<color>':
+				break;
 			case '<color/>': case '</color>': break;
 
 			/* 18.2.10 extLst CT_ExtensionList ? */
@@ -77,7 +78,7 @@ function parse_fills(t, styles, themes, opts) {
 	styles.Fills = [];
 	var fill = {};
 	var pass = false;
-	t[0].match(tagregex).forEach(function(x) {
+	(t[0].match(tagregex)||[]).forEach(function(x) {
 		var y = parsexmltag(x);
 		switch(strip_ns(y[0])) {
 			case '<fills': case '<fills>': case '</fills>': break;
@@ -115,7 +116,7 @@ function parse_fills(t, styles, themes, opts) {
 				if(y.theme) fill.fgColor.theme = parseInt(y.theme, 10);
 				if(y.tint) fill.fgColor.tint = parseFloat(y.tint);
 				/* Excel uses ARGB strings */
-				if(y.rgb) fill.fgColor.rgb = y.rgb.slice(-6);
+				if(y.rgb != null) fill.fgColor.rgb = y.rgb.slice(-6);
 				break;
 			case '<fgColor/>': case '</fgColor>': break;
 
@@ -143,7 +144,7 @@ function parse_fonts(t, styles, themes, opts) {
 	styles.Fonts = [];
 	var font = {};
 	var pass = false;
-	t[0].match(tagregex).forEach(function(x) {
+	(t[0].match(tagregex)||[]).forEach(function(x) {
 		var y = parsexmltag(x);
 		switch(strip_ns(y[0])) {
 			case '<fonts': case '<fonts>': case '</fonts>': break;
@@ -243,6 +244,10 @@ function parse_fonts(t, styles, themes, opts) {
 				break;
 			case '<color/>': case '</color>': break;
 
+			/* note: sometimes mc:AlternateContent appears bare */
+			case '<AlternateContent': pass = true; break;
+			case '</AlternateContent>': pass = false; break;
+
 			/* 18.2.10 extLst CT_ExtensionList ? */
 			case '<extLst': case '<extLst>': case '</extLst>': break;
 			case '<ext': pass = true; break;
@@ -300,7 +305,7 @@ function parse_cellXfs(t, styles, opts) {
 	styles.CellXf = [];
 	var xf;
 	var pass = false;
-	t[0].match(tagregex).forEach(function(x) {
+	(t[0].match(tagregex)||[]).forEach(function(x) {
 		var y = parsexmltag(x), i = 0;
 		switch(strip_ns(y[0])) {
 			case '<cellXfs': case '<cellXfs>': case '<cellXfs/>': case '</cellXfs>': break;
@@ -326,13 +331,19 @@ function parse_cellXfs(t, styles, opts) {
 				if(y.horizontal) alignment.horizontal = y.horizontal;
 				if(y.textRotation != null) alignment.textRotation = y.textRotation;
 				if(y.indent) alignment.indent = y.indent;
-				if(y.wrapText) alignment.wrapText = y.wrapText;
+				if(y.wrapText) alignment.wrapText = parsexmlbool(y.wrapText);
 				xf.alignment = alignment;
 				break;
 			case '</alignment>': break;
 
 			/* 18.8.33 protection CT_CellProtection */
-			case '<protection': case '</protection>': case '<protection/>': break;
+			case '<protection':
+				break;
+			case '</protection>': case '<protection/>': break;
+
+			/* note: sometimes mc:AlternateContent appears bare */
+			case '<AlternateContent': pass = true; break;
+			case '</AlternateContent>': pass = false; break;
 
 			/* 18.2.10 extLst CT_ExtensionList ? */
 			case '<extLst': case '<extLst>': case '</extLst>': break;
@@ -348,7 +359,9 @@ function parse_cellXfs(t, styles, opts) {
 function write_cellXfs(cellXfs)/*:string*/ {
 	var o/*:Array<string>*/ = [];
 	o[o.length] = (writextag('cellXfs',null));
-	cellXfs.forEach(function(c) { o[o.length] = (writextag('xf', null, c)); });
+	cellXfs.forEach(function(c) {
+		o[o.length] = (writextag('xf', null, c));
+	});
 	o[o.length] = ("</cellXfs>");
 	if(o.length === 2) return "";
 	o[0] = writextag('cellXfs',null, {count:o.length-2}).replace("/>",">");

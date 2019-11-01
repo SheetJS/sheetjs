@@ -26,11 +26,17 @@ var ct2type/*{[string]:string}*/ = ({
 	"application/vnd.ms-excel.pivotTable": "TODO",
 	"application/vnd.openxmlformats-officedocument.spreadsheetml.pivotTable+xml": "TODO",
 
+	/* Chart Objects */
+	"application/vnd.openxmlformats-officedocument.drawingml.chart+xml": "TODO",
+
 	/* Chart Colors */
 	"application/vnd.ms-office.chartcolorstyle+xml": "TODO",
 
 	/* Chart Style */
 	"application/vnd.ms-office.chartstyle+xml": "TODO",
+
+	/* Chart Advanced */
+	"application/vnd.ms-office.chartex+xml": "TODO",
 
 	/* Calculation Chain */
 	"application/vnd.ms-excel.calcChain": "calcchains",
@@ -122,7 +128,6 @@ var ct2type/*{[string]:string}*/ = ({
 
 	/* Drawing */
 	"application/vnd.openxmlformats-officedocument.drawing+xml": "drawings",
-	"application/vnd.openxmlformats-officedocument.drawingml.chart+xml": "TODO",
 	"application/vnd.openxmlformats-officedocument.drawingml.chartshapes+xml": "TODO",
 	"application/vnd.openxmlformats-officedocument.drawingml.diagramColors+xml": "TODO",
 	"application/vnd.openxmlformats-officedocument.drawingml.diagramData+xml": "TODO",
@@ -231,6 +236,7 @@ var CTYPE_DEFAULTS = [
 	['xml', 'application/xml'],
 	['bin', 'application/vnd.ms-excel.sheet.binary.macroEnabled.main'],
 	['vml', 'application/vnd.openxmlformats-officedocument.vmlDrawing'],
+	['data', 'application/vnd.openxmlformats-officedocument.model+data'],
 	/* from test files */
 	['bmp', 'image/bmp'],
 	['png', 'image/png'],
@@ -250,6 +256,8 @@ function write_ct(ct, opts)/*:string*/ {
 	o[o.length] = (XML_HEADER);
 	o[o.length] = (CTYPE_XML_ROOT);
 	o = o.concat(CTYPE_DEFAULTS);
+
+	/* only write first instance */
 	var f1 = function(w) {
 		if(ct[w] && ct[w].length > 0) {
 			v = ct[w][0];
@@ -259,6 +267,8 @@ function write_ct(ct, opts)/*:string*/ {
 			}));
 		}
 	};
+
+	/* book type-specific */
 	var f2 = function(w) {
 		(ct[w]||[]).forEach(function(v) {
 			o[o.length] = (writextag('Override', null, {
@@ -267,6 +277,8 @@ function write_ct(ct, opts)/*:string*/ {
 			}));
 		});
 	};
+
+	/* standard type */
 	var f3 = function(t) {
 		(ct[t]||[]).forEach(function(v) {
 			o[o.length] = (writextag('Override', null, {
@@ -275,6 +287,7 @@ function write_ct(ct, opts)/*:string*/ {
 			}));
 		});
 	};
+
 	f1('workbooks');
 	f2('sheets');
 	f2('charts');

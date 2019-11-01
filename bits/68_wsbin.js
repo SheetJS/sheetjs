@@ -315,8 +315,8 @@ function write_BrtColInfo(C/*:number*/, col, o) {
 	var flags = 0;
 	if(col.hidden) flags |= 0x01;
 	if(typeof p.width == 'number') flags |= 0x02;
-	o.write_shift(1, flags); // bit flag
-	o.write_shift(1, 0); // bit flag
+	if(col.level) flags |= (col.level << 8);
+	o.write_shift(2, flags); // bit flag
 	return o;
 }
 
@@ -408,6 +408,7 @@ function parse_ws_bin(data, _opts, idx, rels, wb/*:WBWBProps*/, themes, styles)/
 	var ref;
 	var refguess = {s: {r:2000000, c:2000000}, e: {r:0, c:0} };
 
+	var state/*:Array<string>*/ = [];
 	var pass = false, end = false;
 	var row, p, cf, R, C, addr, sstr, rr, cell/*:Cell*/;
 	var merges/*:Array<Range>*/ = [];
@@ -418,7 +419,7 @@ function parse_ws_bin(data, _opts, idx, rels, wb/*:WBWBProps*/, themes, styles)/
 
 	var arrayf/*:Array<[Range, string]>*/ = [];
 	var sharedf = {};
-	var supbooks = opts.supbooks || wb.supbooks || ([[]]/*:any*/);
+	var supbooks = opts.supbooks || /*::(*/wb/*:: :any)*/.supbooks || ([[]]/*:any*/);
 	supbooks.sharedf = sharedf;
 	supbooks.arrayf = arrayf;
 	supbooks.SheetNames = wb.SheetNames || wb.Sheets.map(function(x) { return x.name; });
@@ -543,7 +544,7 @@ function parse_ws_bin(data, _opts, idx, rels, wb/*:WBWBProps*/, themes, styles)/
 			case 0x003C: /* 'BrtColInfo' */
 				if(!opts.cellStyles) break;
 				while(val.e >= val.s) {
-					colinfo[val.e--] = { width: val.w/256, hidden: !!(val.flags & 0x01) };
+					colinfo[val.e--] = { width: val.w/256, hidden: !!(val.flags & 0x01), level: val.level };
 					if(!seencol) { seencol = true; find_mdw_colw(val.w/256); }
 					process_col(colinfo[val.e+1]);
 				}
@@ -570,6 +571,13 @@ function parse_ws_bin(data, _opts, idx, rels, wb/*:WBWBProps*/, themes, styles)/
 
 			case 0x01E5: /* 'BrtWsFmtInfo' */
 				break;
+
+			case 0x0040: /* 'BrtDVal' */
+			case 0x041D: /* 'BrtDVal14' */
+				break;
+
+			case 0x0097: /* 'BrtPane' */
+				break;
 			case 0x00AF: /* 'BrtAFilterDateGroupItem' */
 			case 0x0284: /* 'BrtActiveX' */
 			case 0x0271: /* 'BrtBigName' */
@@ -590,8 +598,6 @@ function parse_ws_bin(data, _opts, idx, rels, wb/*:WBWBProps*/, themes, styles)/
 			case 0x00AE: /* 'BrtCustomFilter' */
 			case 0x049C: /* 'BrtCustomFilter14' */
 			case 0x01F3: /* 'BrtDRef' */
-			case 0x0040: /* 'BrtDVal' */
-			case 0x041D: /* 'BrtDVal14' */
 			case 0x0226: /* 'BrtDrawing' */
 			case 0x00AB: /* 'BrtDynamicFilter' */
 			case 0x00A7: /* 'BrtFilter' */
@@ -603,7 +609,6 @@ function parse_ws_bin(data, _opts, idx, rels, wb/*:WBWBProps*/, themes, styles)/
 			case 0x0295: /* 'BrtListPart' */
 			case 0x027F: /* 'BrtOleObject' */
 			case 0x01DE: /* 'BrtPageSetup' */
-			case 0x0097: /* 'BrtPane' */
 			case 0x0219: /* 'BrtPhoneticInfo' */
 			case 0x01DD: /* 'BrtPrintOptions' */
 			case 0x0218: /* 'BrtRangeProtection' */
@@ -629,8 +634,10 @@ function parse_ws_bin(data, _opts, idx, rels, wb/*:WBWBProps*/, themes, styles)/
 				pass = true; break;
 			case 0x0024: /* 'BrtFRTEnd' */
 				pass = false; break;
-			case 0x0025: /* 'BrtACBegin' */ break;
-			case 0x0026: /* 'BrtACEnd' */ break;
+			case 0x0025: /* 'BrtACBegin' */
+				state.push(R_n); pass = true; break;
+			case 0x0026: /* 'BrtACEnd' */
+				state.pop(); pass = false; break;
 
 			default:
 				if((R_n||"").indexOf("Begin") > 0){/* empty */}
@@ -663,7 +670,7 @@ function parse_ws_bin(data, _opts, idx, rels, wb/*:WBWBProps*/, themes, styles)/
 
 /* TODO: something useful -- this is a stub */
 function write_ws_bin_cell(ba/*:BufArray*/, cell/*:Cell*/, R/*:number*/, C/*:number*/, opts, ws/*:Worksheet*/) {
-	if(cell.v === undefined) return "";
+	if(cell.v === undefined) return;
 	var vv = "";
 	switch(cell.t) {
 		case 'b': vv = cell.v ? "1" : "0"; break;
@@ -769,9 +776,26 @@ function write_LEGACYDRAWING(ba, ws/*:Worksheet*/, idx/*:number*/, rels) {
 	}
 }
 
-function write_AUTOFILTER(ba, ws) {
+function write_AUTOFILTER(ba, ws, wb, idx) {
 	if(!ws['!autofilter']) return;
-	write_record(ba, "BrtBeginAFilter", write_UncheckedRfX(safe_decode_range(ws['!autofilter'].ref)));
+	var data = ws['!autofilter'];
+	var ref = typeof data.ref === "string" ? data.ref : encode_range(data.ref);
+
+	/* Update FilterDatabase defined name for the worksheet */
+	if(!wb.Workbook) wb.Workbook = ({Sheets:[]}/*:any*/);
+	if(!wb.Workbook.Names) wb.Workbook.Names = [];
+	var names/*: Array<any> */ = wb.Workbook.Names;
+	var range = decode_range(ref);
+	if(range.s.r == range.e.r) { range.e.r = decode_range(ws["!ref"]).e.r; ref = encode_range(range); }
+	for(var i = 0; i < names.length; ++i) {
+		var name = names[i];
+		if(name.Name != '_xlnm._FilterDatabase') continue;
+		if(name.Sheet != idx) continue;
+		name.Ref = "'" + wb.SheetNames[idx] + "'!" + ref; break;
+	}
+	if(i == names.length) names.push({ Name: '_xlnm._FilterDatabase', Sheet: idx, Ref: "'" + wb.SheetNames[idx] + "'!" + ref  });
+
+	write_record(ba, "BrtBeginAFilter", write_UncheckedRfX(safe_decode_range(ref)));
 	/* *FILTERCOLUMN */
 	/* [SORTSTATE] */
 	/* BrtEndAFilter */
@@ -828,7 +852,7 @@ function write_ws_bin(idx/*:number*/, opts, wb/*:Workbook*/, rels) {
 	write_SHEETPROTECT(ba, ws);
 	/* *([BrtRangeProtectionIso] BrtRangeProtection) */
 	/* [SCENMAN] */
-	write_AUTOFILTER(ba, ws);
+	write_AUTOFILTER(ba, ws, wb, idx);
 	/* [SORTSTATE] */
 	/* [DCON] */
 	/* [USERSHVIEWS] */

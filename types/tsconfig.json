@@ -9,6 +9,7 @@
         "paths": { "xlsx": ["."] },
         "types": [],
         "noEmit": true,
+        "strictFunctionTypes": true,
         "forceConsistentCasingInFileNames": true
     }
 }

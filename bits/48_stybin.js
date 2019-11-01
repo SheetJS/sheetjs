@@ -151,7 +151,8 @@ function write_BrtXF(data, ixfeP, o) {
 	o.write_shift(2, 0); /* ixBorder */
 	o.write_shift(1, 0); /* trot */
 	o.write_shift(1, 0); /* indent */
-	o.write_shift(1, 0); /* flags */
+	var flow = 0;
+	o.write_shift(1, flow); /* flags */
 	o.write_shift(1, 0); /* flags */
 	o.write_shift(1, 0); /* xfGrbitAtr */
 	o.write_shift(1, 0);
@@ -222,8 +223,10 @@ function parse_sty_bin(data, themes, opts) {
 				}
 				break;
 			case 0x0401: /* 'BrtKnownFonts' */ break;
-			case 0x002D: /* 'BrtFill' */ break;
-			case 0x002E: /* 'BrtBorder' */ break;
+			case 0x002D: /* 'BrtFill' */
+				break;
+			case 0x002E: /* 'BrtBorder' */
+				break;
 			case 0x002F: /* 'BrtXF' */
 				if(state[state.length - 1] == "BrtBeginCellXFs") {
 					styles.CellXf.push(val);
@@ -248,14 +251,14 @@ function parse_sty_bin(data, themes, opts) {
 			case 0x0024: /* 'BrtFRTEnd' */
 				pass = false; break;
 			case 0x0025: /* 'BrtACBegin' */
-				state.push(R_n); break;
+				state.push(R_n); pass = true; break;
 			case 0x0026: /* 'BrtACEnd' */
-				state.pop(); break;
+				state.pop(); pass = false; break;
 
 			default:
 				if((R_n||"").indexOf("Begin") > 0) state.push(R_n);
 				else if((R_n||"").indexOf("End") > 0) state.pop();
-				else if(!pass || opts.WTF) throw new Error("Unexpected record " + RT + " " + R_n);
+				else if(!pass || (opts.WTF && state[state.length-1] != "BrtACBegin")) throw new Error("Unexpected record " + RT + " " + R_n);
 		}
 	});
 	return styles;
@@ -319,10 +322,10 @@ function write_CELLSTYLEXFS_bin(ba/*::, data*/) {
 	var cnt = 1;
 	write_record(ba, "BrtBeginCellStyleXFs", write_UInt32LE(cnt));
 	write_record(ba, "BrtXF", write_BrtXF({
-		numFmtId:0,
-		fontId:0,
-		fillId:0,
-		borderId:0
+		numFmtId: 0,
+		fontId:   0,
+		fillId:   0,
+		borderId: 0
 	}, 0xFFFF));
 	/* 1*65430(BrtXF *FRT) */
 	write_record(ba, "BrtEndCellStyleXFs");

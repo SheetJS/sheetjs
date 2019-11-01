@@ -8,11 +8,14 @@
 .*/misc/.*
 .*/perf/.*
 .*/_book/.*
+.*/packages/.*
 
 .*/demo/browser.js
 .*/shim.js
 
 .*/xlsx.js
+.*/xlsx.mini.js
+.*/xlsx.mini.flow.js
 .*/xlsxworker.js
 .*/jszip.js
 .*/tests/.*

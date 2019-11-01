@@ -4,6 +4,9 @@ var RELS = ({
 	SHEET: "http://sheetjs.openxmlformats.org/officeDocument/2006/relationships/officeDocument",
 	HLINK: "http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink",
 	VML: "http://schemas.openxmlformats.org/officeDocument/2006/relationships/vmlDrawing",
+	XPATH: "http://schemas.openxmlformats.org/officeDocument/2006/relationships/externalLinkPath",
+	XMISS: "http://schemas.microsoft.com/office/2006/relationships/xlExternalLinkPath/xlPathMissing",
+	XLINK: "http://schemas.openxmlformats.org/officeDocument/2006/relationships/externalLink",
 	VBA: "http://schemas.microsoft.com/office/2006/relationships/vbaProject"
 }/*:any*/);
 
@@ -52,14 +55,16 @@ function write_rels(rels)/*:string*/ {
 	return o.join("");
 }
 
-function add_rels(rels, rId, f, type, relobj)/*:number*/ {
+var RELS_EXTERN = [RELS.HLINK, RELS.XPATH, RELS.XMISS];
+function add_rels(rels, rId/*:number*/, f, type, relobj, targetmode/*:?string*/)/*:number*/ {
 	if(!relobj) relobj = {};
 	if(!rels['!id']) rels['!id'] = {};
 	if(rId < 0) for(rId = 1; rels['!id']['rId' + rId]; ++rId){/* empty */}
 	relobj.Id = 'rId' + rId;
 	relobj.Type = type;
 	relobj.Target = f;
-	if(relobj.Type == RELS.HLINK) relobj.TargetMode = "External";
+	if(targetmode) relobj.TargetMode = targetmode;
+	else if(RELS_EXTERN.indexOf(relobj.Type) > -1) relobj.TargetMode = "External";
 	if(rels['!id'][relobj.Id]) throw new Error("Cannot rewrite rId " + rId);
 	rels['!id'][relobj.Id] = relobj;
 	rels[('/' + relobj.Target).replace("//","/")] = relobj;

@@ -206,8 +206,10 @@ function sheet_add_json(_ws/*:?Worksheet*/, js/*:Array<any>*/, opts)/*:Worksheet
 			var v = JS[k];
 			var t = 'z';
 			var z = "";
+			var ref = encode_cell({c:_C + C,r:_R + R + offset});
+			cell = utils.sheet_get_cell(ws, ref);
 			if(v && typeof v === 'object' && !(v instanceof Date)){
-				ws[encode_cell({c:_C + C,r:_R + R + offset})] = v;
+				ws[ref] = v;
 			} else {
 				if(typeof v == 'number') t = 'n';
 				else if(typeof v == 'boolean') t = 'b';
@@ -215,9 +217,14 @@ function sheet_add_json(_ws/*:?Worksheet*/, js/*:Array<any>*/, opts)/*:Worksheet
 				else if(v instanceof Date) {
 					t = 'd';
 					if(!o.cellDates) { t = 'n'; v = datenum(v); }
-					z = o.dateNF || SSF._table[14];
+					z = (o.dateNF || SSF._table[14]);
 				}
-				ws[encode_cell({c:_C + C,r:_R + R + offset})] = cell = ({t:t, v:v}/*:any*/);
+				if(!cell) ws[ref] = cell = ({t:t, v:v}/*:any*/);
+				else {
+					cell.t = t; cell.v = v;
+					delete cell.w; delete cell.R;
+					if(z) cell.z = z;
+				}
 				if(z) cell.z = z;
 			}
 		});

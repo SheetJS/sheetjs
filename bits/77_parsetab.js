@@ -594,6 +594,7 @@ var XLSBRecordEnum = {
 	/*::[*/0x02A6/*::]*/: { n:"BrtSheetProtectionIso" },
 	/*::[*/0x02A7/*::]*/: { n:"BrtCsProtectionIso" },
 	/*::[*/0x02A8/*::]*/: { n:"BrtRangeProtectionIso" },
+	/*::[*/0x02A9/*::]*/: { n:"BrtDValList" },
 	/*::[*/0x0400/*::]*/: { n:"BrtRwDescent" },
 	/*::[*/0x0401/*::]*/: { n:"BrtKnownFonts" },
 	/*::[*/0x0402/*::]*/: { n:"BrtBeginSXTupleSet" },

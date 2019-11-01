@@ -4,6 +4,7 @@ var HTML_ = (function() {
 		var opts = _opts || {};
 		if(DENSE != null && opts.dense == null) opts.dense = DENSE;
 		var ws/*:Worksheet*/ = opts.dense ? ([]/*:any*/) : ({}/*:any*/);
+		str = str.replace(/<!--.*?-->/g, "");
 		var mtch/*:any*/ = str.match(/<table/i);
 		if(!mtch) throw new Error("Invalid HTML: could not find <table>");
 		var mtch2/*:any*/ = str.match(/<\/table/i);
@@ -81,7 +82,7 @@ var HTML_ = (function() {
 			if(CS > 1) sp.colspan = CS;
 			sp.t = cell && cell.t || 'z';
 			if(o.editable) w = '<span contenteditable="true">' + w + '</span>';
-			sp.id = "sjs-" + coord;
+			sp.id = (o.id || "sjs") + "-" + coord;
 			oo.push(writextag('td', w, sp));
 		}
 		var preamble = "<tr>";
@@ -126,7 +127,7 @@ function parse_dom_table(table/*:HTMLElement*/, _opts/*:?any*/)/*:Worksheet*/ {
 	var range/*:Range*/ = {s:{r:0,c:0},e:{r:0,c:0}};
 	var merges/*:Array<Range>*/ = [], midx = 0;
 	var rowinfo/*:Array<RowInfo>*/ = [];
-	var _R = 0, R = 0, _C, C, RS, CS;
+	var _R = 0, R = 0, _C = 0, C = 0, RS = 0, CS = 0;
 	for(; _R < rows.length && R < sheetRows; ++_R) {
 		var row/*:HTMLTableRowElement*/ = rows[_R];
 		if (is_dom_element_hidden(row)) {

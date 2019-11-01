@@ -25,7 +25,6 @@ function new_unsafe_buf(len/*:number*/) {
 }
 
 var s2a = function s2a(s/*:string*/)/*:any*/ {
-	// $FlowIgnore
 	if(has_buf) return Buffer_from(s, "binary");
 	return s.split("").map(function(x/*:string*/)/*:number*/{ return x.charCodeAt(0) & 0xff; });
 };

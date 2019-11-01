@@ -39,8 +39,8 @@ function parse_comments_bin(data, opts)/*:Array<RawComment>*/ {
 				c.t = val.t; c.h = val.h; c.r = val.r; break;
 			case 0x027C: /* 'BrtEndComment' */
 				c.author = authors[c.iauthor];
-				delete c.iauthor;
-				if(opts.sheetRows && opts.sheetRows <= c.rfx.r) break;
+				delete (c/*:any*/).iauthor;
+				if(opts.sheetRows && c.rfx && opts.sheetRows <= c.rfx.r) break;
 				if(!c.t) c.t = "";
 				delete c.rfx; out.push(c); break;
 

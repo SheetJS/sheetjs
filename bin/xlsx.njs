@@ -261,21 +261,21 @@ switch(true) {
 		break;
 }
 
-function dump_props(wb) {
+function dump_props(wb/*:Workbook*/) {
 	var propaoa = [];
 	if(Object.assign && Object.entries) propaoa = Object.entries(Object.assign({}, wb.Props, wb.Custprops));
 	else {
-		var Keys, pi;
+		var Keys/*:: :Array<string> = []*/, pi;
 		if(wb.Props) {
 			Keys = Object.keys(wb.Props);
 			for(pi = 0; pi < Keys.length; ++pi) {
-				if(Keys.hasOwnProperty(Keys[pi])) propaoa.push([Keys[pi], Keys[Keys[pi]]]);
+				if(Keys.hasOwnProperty(Keys[pi])) propaoa.push([Keys[pi], Keys[/*::+*/Keys[pi]]]);
 			}
 		}
 		if(wb.Custprops) {
 			Keys = Object.keys(wb.Custprops);
 			for(pi = 0; pi < Keys.length; ++pi) {
-				if(Keys.hasOwnProperty(Keys[pi])) propaoa.push([Keys[pi], Keys[Keys[pi]]]);
+				if(Keys.hasOwnProperty(Keys[pi])) propaoa.push([Keys[pi], Keys[/*::+*/Keys[pi]]]);
 			}
 		}
 	}

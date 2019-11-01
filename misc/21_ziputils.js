@@ -64,6 +64,11 @@ function zip_add_file(zip, path, content) {
 	else zip.file(path, content);
 }
 
+
+function zip_new() {
+	return CFB.utils.cfb_new();
+}
+
 function zip_read(d, o) {
 	var zip;
 	switch(o.type) {
@@ -75,12 +80,8 @@ function zip_read(d, o) {
 	return zip;
 }
 
-
-function zip_new() {
-	return CFB.utils.cfb_new();
-}
-
 function resolve_path(path/*:string*/, base/*:string*/)/*:string*/ {
+	if(path.charAt(0) == "/") return path.slice(1);
 	var result = base.split('/');
 	if(base.slice(-1) != "/") result.pop(); // folder path
 	var target = path.split('/');

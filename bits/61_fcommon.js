@@ -1,13 +1,20 @@
 /* TODO: it will be useful to parse the function str */
 var rc_to_a1 = (function(){
-	var rcregex = /(^|[^A-Za-z])R(\[?)(-?\d+|)\]?C(\[?)(-?\d+|)\]?/g;
+	var rcregex = /(^|[^A-Za-z_])R(\[?-?\d+\]|[1-9]\d*|)C(\[?-?\d+\]|[1-9]\d*|)(?![A-Za-z0-9_])/g;
 	var rcbase/*:Cell*/ = ({r:0,c:0}/*:any*/);
-	function rcfunc($$,$1,$2,$3,$4,$5) {
-		var R = $3.length>0?parseInt($3,10)|0:0, C = $5.length>0?parseInt($5,10)|0:0;
-		if(C<0 && $4.length === 0) C=0;
+	function rcfunc($$,$1,$2,$3) {
 		var cRel = false, rRel = false;
-		if($4.length > 0 || $5.length == 0) cRel = true; if(cRel) C += rcbase.c; else --C;
-		if($2.length > 0 || $3.length == 0) rRel = true; if(rRel) R += rcbase.r; else --R;
+
+		if($2.length == 0) rRel = true;
+		else if($2.charAt(0) == "[") { rRel = true; $2 = $2.slice(1, -1); }
+
+		if($3.length == 0) cRel = true;
+		else if($3.charAt(0) == "[") { cRel = true; $3 = $3.slice(1, -1); }
+
+		var R = $2.length>0?parseInt($2,10)|0:0, C = $3.length>0?parseInt($3,10)|0:0;
+
+		if(cRel) C += rcbase.c; else --C;
+		if(rRel) R += rcbase.r; else --R;
 		return $1 + (cRel ? "" : "$") + encode_col(C) + (rRel ? "" : "$") + encode_row(R);
 	}
 	return function rc_to_a1(fstr/*:string*/, base/*:Cell*/)/*:string*/ {

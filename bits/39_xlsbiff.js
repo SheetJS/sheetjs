@@ -943,7 +943,9 @@ function parse_ColInfo(blob, length, opts) {
 	var ixfe = blob.read_shift(w);
 	var flags = blob.read_shift(2);
 	if(w == 2) blob.l += 2;
-	return {s:colFirst, e:colLast, w:coldx, ixfe:ixfe, flags:flags};
+	var o = ({s:colFirst, e:colLast, w:coldx, ixfe:ixfe, flags:flags}/*:any*/);
+	if(opts.biff >= 5 || !opts.biff) o.level = (flags >> 8) & 0x7;
+	return o;
 }
 
 /* [MS-XLS] 2.4.257 */

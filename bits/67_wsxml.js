@@ -11,9 +11,11 @@ var afregex = /<(?:\w:)?autoFilter[^>]*([\/]|>([\s\S]*)<\/(?:\w:)?autoFilter)>/g
 var marginregex= /<(?:\w:)?pageMargins[^>]*\/>/g;
 var sheetprregex = /<(?:\w:)?sheetPr\b(?:[^>a-z][^>]*)?\/>/;
 var svsregex = /<(?:\w:)?sheetViews[^>]*(?:[\/]|>([\s\S]*)<\/(?:\w:)?sheetViews)>/;
+
 /* 18.3 Worksheets */
 function parse_ws_xml(data/*:?string*/, opts, idx/*:number*/, rels, wb/*:WBWBProps*/, themes, styles)/*:Worksheet*/ {
 	if(!data) return data;
+	if(!rels) rels = {'!id':{}};
 	if(DENSE != null && opts.dense == null) opts.dense = DENSE;
 
 	/* 18.3.1.99 worksheet CT_Worksheet */
@@ -32,7 +34,6 @@ function parse_ws_xml(data/*:?string*/, opts, idx/*:number*/, rels, wb/*:WBWBPro
 	if(sheetPr) parse_ws_xml_sheetpr(sheetPr[0], s, wb, idx);
 
 	/* 18.3.1.35 dimension CT_SheetDimension */
-	// $FlowIgnore
 	var ridx = (data1.match(/<(?:\w*:)?dimension/)||{index:-1}).index;
 	if(ridx > 0) {
 		var ref = data1.slice(ridx,ridx+50).match(dimregex);
@@ -105,18 +106,18 @@ function parse_ws_xml_sheetpr(sheetPr/*:string*/, s, wb/*:WBWBProps*/, idx/*:num
 }
 
 /* 18.3.1.85 sheetProtection CT_SheetProtection */
+var sheetprot_deffalse = ["objects", "scenarios", "selectLockedCells", "selectUnlockedCells"];
+var sheetprot_deftrue = [
+	"formatColumns", "formatRows", "formatCells",
+	"insertColumns", "insertRows", "insertHyperlinks",
+	"deleteColumns", "deleteRows",
+	"sort", "autoFilter", "pivotTables"
+];
 function write_ws_xml_protection(sp)/*:string*/ {
 	// algorithmName, hashValue, saltValue, spinCountpassword
 	var o = ({sheet:1}/*:any*/);
-	var deffalse = ["objects", "scenarios", "selectLockedCells", "selectUnlockedCells"];
-	var deftrue = [
-		"formatColumns", "formatRows", "formatCells",
-		"insertColumns", "insertRows", "insertHyperlinks",
-		"deleteColumns", "deleteRows",
-		"sort", "autoFilter", "pivotTables"
-	];
-	deffalse.forEach(function(n) { if(sp[n] != null && sp[n]) o[n] = "1"; });
-	deftrue.forEach(function(n) { if(sp[n] != null && !sp[n]) o[n] = "0"; });
+	sheetprot_deffalse.forEach(function(n) { if(sp[n] != null && sp[n]) o[n] = "1"; });
+	sheetprot_deftrue.forEach(function(n) { if(sp[n] != null && !sp[n]) o[n] = "0"; });
 	/* TODO: algorithm */
 	if(sp.password) o.password = crypto_CreatePasswordVerifier_Method1(sp.password).toString(16).toUpperCase();
 	return writextag('sheetProtection', null, o);
@@ -176,7 +177,6 @@ function parse_ws_xml_cols(columns, cols) {
 		while(colm <= colM) columns[colm++] = dup(coll);
 	}
 }
-
 function write_ws_xml_cols(ws, cols)/*:string*/ {
 	var o = ["<cols>"], col;
 	for(var i = 0; i != cols.length; ++i) {
@@ -193,7 +193,7 @@ function parse_ws_xml_autofilter(data/*:string*/) {
 }
 function write_ws_xml_autofilter(data, ws, wb, idx)/*:string*/ {
 	var ref = typeof data.ref == "string" ? data.ref : encode_range(data.ref);
-	if(!wb.Workbook) wb.Workbook = {};
+	if(!wb.Workbook) wb.Workbook = ({Sheets:[]}/*:any*/);
 	if(!wb.Workbook.Names) wb.Workbook.Names = [];
 	var names/*: Array<any> */ = wb.Workbook.Names;
 	var range = decode_range(ref);
@@ -210,21 +210,21 @@ function write_ws_xml_autofilter(data, ws, wb, idx)/*:string*/ {
 
 /* 18.3.1.88 sheetViews CT_SheetViews */
 /* 18.3.1.87 sheetView CT_SheetView */
-var sviewregex = /<(?:\w:)?sheetView(?:[^>a-z][^>]*)?\/>/;
+var sviewregex = /<(?:\w:)?sheetView(?:[^>a-z][^>]*)?\/?>/;
 function parse_ws_xml_sheetviews(data, wb/*:WBWBProps*/) {
-	(data.match(sviewregex)||[]).forEach(function(r/*:string*/) {
+	if(!wb.Views) wb.Views = [{}];
+	(data.match(sviewregex)||[]).forEach(function(r/*:string*/, i/*:number*/) {
 		var tag = parsexmltag(r);
-		if(parsexmlbool(tag.rightToLeft)) {
-			if(!wb.Views) wb.Views = [{}];
-			if(!wb.Views[0]) wb.Views[0] = {};
-			wb.Views[0].RTL = true;
-		}
+		// $FlowIgnore
+		if(!wb.Views[i]) wb.Views[i] = {};
+		// $FlowIgnore
+		if(parsexmlbool(tag.rightToLeft)) wb.Views[i].RTL = true;
 	});
 }
 function write_ws_xml_sheetviews(ws, opts, idx, wb)/*:string*/ {
-	var sview = {workbookViewId:"0"};
+	var sview = ({workbookViewId:"0"}/*:any*/);
 	// $FlowIgnore
-	if( (((wb||{}).Workbook||{}).Views||[])[0] ) sview.rightToLeft = wb.Workbook.Views[0].RTL ? "1" : "0";
+	if((((wb||{}).Workbook||{}).Views||[])[0]) sview.rightToLeft = wb.Workbook.Views[0].RTL ? "1" : "0";
 	return writextag("sheetViews", writextag("sheetView", null, sview), {});
 }
 
@@ -232,12 +232,12 @@ function write_ws_xml_cell(cell/*:Cell*/, ref, ws, opts/*::, idx, wb*/)/*:string
 	if(cell.v === undefined && cell.f === undefined || cell.t === 'z') return "";
 	var vv = "";
 	var oldt = cell.t, oldv = cell.v;
-	switch(cell.t) {
+	if(cell.t !== "z") switch(cell.t) {
 		case 'b': vv = cell.v ? "1" : "0"; break;
 		case 'n': vv = ''+cell.v; break;
 		case 'e': vv = BErr[cell.v]; break;
 		case 'd':
-			if(opts.cellDates) vv = parseDate(cell.v, -1).toISOString();
+			if(opts && opts.cellDates) vv = parseDate(cell.v, -1).toISOString();
 			else {
 				cell = dup(cell);
 				cell.t = 'n';
@@ -312,6 +312,8 @@ return function parse_ws_xml_data(sdata/*:string*/, s, opts, guess/*:Range*/, th
 
 		/* 18.3.1.4 c CT_Cell */
 		cells = x.slice(ri).split(cellregex);
+		for(var rslice = 0; rslice != cells.length; ++rslice) if(cells[rslice].trim().charAt(0) != "<") break;
+		cells = cells.slice(rslice);
 		for(ri = 0; ri != cells.length; ++ri) {
 			x = cells[ri].trim();
 			if(x.length === 0) continue;
@@ -393,7 +395,10 @@ return function parse_ws_xml_data(sdata/*:string*/, s, opts, guess/*:Range*/, th
 				case 'inlineStr':
 					cref = d.match(isregex);
 					p.t = 's';
-					if(cref != null && (sstr = parse_si(cref[1]))) p.v = sstr.t; else p.v = "";
+					if(cref != null && (sstr = parse_si(cref[1]))) {
+						p.v = sstr.t;
+						if(opts.cellHTML) p.h = sstr.h;
+					} else p.v = "";
 					break;
 				case 'b': p.v = parsexmlbool(p.v); break;
 				case 'd':
@@ -407,6 +412,7 @@ return function parse_ws_xml_data(sdata/*:string*/, s, opts, guess/*:Range*/, th
 			}
 			/* formatting */
 			fmtid = fillid = 0;
+			cf = null;
 			if(do_format && tag.s !== undefined) {
 				cf = styles.CellXf[tag.s];
 				if(cf != null) {
@@ -541,9 +547,9 @@ function write_ws_xml(idx/*:number*/, opts, wb/*:Workbook*/, rels)/*:string*/ {
 	/* dataValidations */
 
 	var relc = -1, rel, rId = -1;
-	if(ws['!links'].length > 0) {
+	if(/*::(*/ws['!links']/*::||[])*/.length > 0) {
 		o[o.length] = "<hyperlinks>";
-		ws['!links'].forEach(function(l) {
+		/*::(*/ws['!links']/*::||[])*/.forEach(function(l) {
 			if(!l[1].Target) return;
 			rel = ({"ref":l[0]}/*:any*/);
 			if(l[1].Target.charAt(0) != "#") {
@@ -562,7 +568,6 @@ function write_ws_xml(idx/*:number*/, opts, wb/*:Workbook*/, rels)/*:string*/ {
 	if (ws['!margins'] != null) o[o.length] =  write_ws_xml_margins(ws['!margins']);
 	/* pageSetup */
 
-	//var hfidx = o.length;
 	o[o.length] = "";
 
 	/* rowBreaks */
@@ -574,7 +579,7 @@ function write_ws_xml(idx/*:number*/, opts, wb/*:Workbook*/, rels)/*:string*/ {
 
 	/* smartTags */
 
-	if(ws['!drawing'].length > 0) {
+	if(/*::(*/ws['!drawing']/*::||[])*/.length > 0) {
 		rId = add_rels(rels, -1, "../drawings/drawing" + (idx+1) + ".xml", RELS.DRAW);
 		o[o.length] = writextag("drawing", null, {"r:id":"rId" + rId});
 	}

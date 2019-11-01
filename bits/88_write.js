@@ -25,10 +25,10 @@ function write_zip_type(wb/*:Workbook*/, opts/*:?WriteOpts*/)/*:any*/ {
 		case "file": oopts.type = has_buf ? "nodebuffer" : "string"; break;
 		default: throw new Error("Unrecognized type " + o.type);
 	}
-	var out = z.FullPaths ? CFB.write(z, {fileType:"zip", type: {"nodebuffer": "buffer", "string": "binary"}[oopts.type] || oopts.type}) : z.generate(oopts);
+	var out = z.FullPaths ? CFB.write(z, {fileType:"zip", type: /*::(*/{"nodebuffer": "buffer", "string": "binary"}/*:: :any)*/[oopts.type] || oopts.type}) : z.generate(oopts);
 	if(o.password && typeof encrypt_agile !== 'undefined') return write_cfb_ctr(encrypt_agile(out, o.password), o);
 	if(o.type === "file") return write_dl(o.file, out);
-	return o.type == "string" ? utf8read(out) : out;
+	return o.type == "string" ? utf8read(/*::(*/out/*:: :any)*/) : out;
 }
 
 function write_cfb_type(wb/*:Workbook*/, opts/*:?WriteOpts*/)/*:any*/ {
@@ -46,7 +46,6 @@ function write_string_type(out/*:string*/, opts/*:WriteOpts*/, bom/*:?string*/)/
 		case "string": return out;
 		case "file": return write_dl(opts.file, o, 'utf8');
 		case "buffer": {
-			// $FlowIgnore
 			if(has_buf) return Buffer_from(o, 'utf8');
 			else return write_string_type(o, {type:'binary'}).split("").map(function(c) { return c.charCodeAt(0); });
 		}
@@ -61,7 +60,6 @@ function write_stxt_type(out/*:string*/, opts/*:WriteOpts*/)/*:any*/ {
 		case "string": return out; /* override in sheet_to_txt */
 		case "file": return write_dl(opts.file, out, 'binary');
 		case "buffer": {
-			// $FlowIgnore
 			if(has_buf) return Buffer_from(out, 'binary');
 			else return out.split("").map(function(c) { return c.charCodeAt(0); });
 		}
@@ -86,8 +84,10 @@ function write_binary_type(out, opts/*:WriteOpts*/)/*:any*/ {
 }
 
 function writeSync(wb/*:Workbook*/, opts/*:?WriteOpts*/) {
+	reset_cp();
 	check_wb(wb);
 	var o = opts||{};
+	if(o.cellStyles) { o.cellNF = true; }
 	if(o.type == "array") { o.type = "binary"; var out/*:string*/ = (writeSync(wb, o)/*:any*/); o.type = "array"; return s2ab(out); }
 	switch(o.bookType || 'xlsb') {
 		case 'xml':

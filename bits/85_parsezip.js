@@ -31,8 +31,20 @@ function safe_parse_sheet(zip, path/*:string*/, relsPath/*:string*/, sheet, idx/
 				break;
 			case 'macro':  _ws = parse_ms(data, path, idx, opts, sheetRels[sheet], wb, themes, styles); break;
 			case 'dialog': _ws = parse_ds(data, path, idx, opts, sheetRels[sheet], wb, themes, styles); break;
+			default: throw new Error("Unrecognized sheet type " + stype);
 		}
 		sheets[sheet] = _ws;
+
+		/* scan rels for comments */
+		var comments = [];
+		if(sheetRels && sheetRels[sheet]) keys(sheetRels[sheet]).forEach(function(n) {
+			if(sheetRels[sheet][n].Type == RELS.CMNT) {
+				var dfile = resolve_path(sheetRels[sheet][n].Target, path);
+				comments = parse_cmnt(getzipdata(zip, dfile, true), dfile, opts);
+				if(!comments || !comments.length) return;
+				sheet_insert_comments(_ws, comments);
+			}
+		});
 	} catch(e) { if(opts.WTF) throw e; }
 }
 
@@ -78,7 +90,10 @@ function parse_zip(zip/*:ZIP*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
 	}
 
 	/*var externbooks = */dir.links.map(function(link) {
-		return parse_xlink(getzipdata(zip, strip_front_slash(link)), link, opts);
+		try {
+			var rels = parse_rels(getzipstr(zip, get_rels_path(strip_front_slash(link))), link);
+			return parse_xlink(getzipdata(zip, strip_front_slash(link)), rels, link, opts);
+		} catch(e) {}
 	});
 
 	var wb = parse_wb(getzipdata(zip, strip_front_slash(dir.workbooks[0])), dir.workbooks[0], opts);
@@ -151,8 +166,6 @@ function parse_zip(zip/*:ZIP*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
 		relsPath = path.replace(/^(.*)(\/)([^\/]*)$/, "$1/_rels/$3.rels");
 		safe_parse_sheet(zip, path, relsPath, props.SheetNames[i], i, sheetRels, sheets, stype, opts, wb, themes, styles);
 	}
-
-	if(dir.comments) parse_comments(zip, dir.comments, sheets, sheetRels, opts);
 
 	out = ({
 		Directory: dir,

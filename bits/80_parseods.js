@@ -225,7 +225,7 @@ var parse_content_xml = (function() {
 				if(Rn[1]==='/'){
 					if((tmp=state.pop())[0]!==Rn[3]) throw "Bad state: "+tmp;
 					comment.t = textp;
-					if(textR.length) comment.R = textR;
+					if(textR.length) /*::(*/comment/*:: :any)*/.R = textR;
 					comment.a = creator;
 					comments.push(comment);
 				}
@@ -544,7 +544,7 @@ var parse_content_xml = (function() {
 			SheetNames: SheetNames,
 			Workbook: WB
 		}/*:any*/);
-		if(opts.bookSheets) delete out.Sheets;
+		if(opts.bookSheets) delete /*::(*/out/*:: :any)*/.Sheets;
 		return out;
 	};
 })();

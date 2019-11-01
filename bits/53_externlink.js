@@ -1,11 +1,11 @@
 /* 18.14 Supplementary Workbook Data */
-function parse_xlink_xml(/*::data, name:string, _opts*/) {
+function parse_xlink_xml(/*::data, rel, name:string, _opts*/) {
 	//var opts = _opts || {};
 	//if(opts.WTF) throw "XLSX External Link";
 }
 
 /* [MS-XLSB] 2.1.7.25 External Link */
-function parse_xlink_bin(data, name/*:string*/, _opts) {
+function parse_xlink_bin(data, rel, name/*:string*/, _opts) {
 	if(!data) return data;
 	var opts = _opts || {};
 

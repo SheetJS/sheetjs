@@ -51,6 +51,19 @@ function parse_FormulaValue(blob/*::, length*/) {
 	}
 	return [];
 }
+function write_FormulaValue(value) {
+	if(value == null) {
+		// Blank String Value
+		var o = new_buf(8);
+		o.write_shift(1, 0x03);
+		o.write_shift(1, 0);
+		o.write_shift(2, 0);
+		o.write_shift(2, 0);
+		o.write_shift(2, 0xFFFF);
+		return o;
+	} else if(typeof value == "number") return write_Xnum(value);
+	return write_Xnum(0);
+}
 
 /* [MS-XLS] 2.4.127 TODO */
 function parse_Formula(blob, length, opts) {
@@ -68,6 +81,27 @@ function parse_Formula(blob, length, opts) {
 	var cbf = parse_XLSCellParsedFormula(blob, end - blob.l, opts);
 	return {cell:cell, val:val[0], formula:cbf, shared: (flags >> 3) & 1, tt:val[1]};
 }
+function write_Formula(cell/*:Cell*/, R/*:number*/, C/*:number*/, opts, os/*:number*/) {
+	// Cell
+	var o1 = write_XLSCell(R, C, os);
+
+	// FormulaValue
+	var o2 = write_FormulaValue(cell.v);
+
+	// flags + cache
+	var o3 = new_buf(6);
+	var flags = 0x01 | 0x20;
+	o3.write_shift(2, flags);
+	o3.write_shift(4, 0);
+
+	// CellParsedFormula
+	var bf = new_buf(cell.bf.length);
+	for(var i = 0; i < cell.bf.length; ++i) bf[i] = cell.bf[i];
+
+	var out = bconcat([o1, o2, o3, bf]);
+	return out;
+}
+
 
 /* XLSB Parsed Formula records have the same shape */
 function parse_XLSBParsedFormula(data, length, opts) {
@@ -82,6 +116,10 @@ function parse_XLSBParsedFormula(data, length, opts) {
 var parse_XLSBArrayParsedFormula = parse_XLSBParsedFormula;
 /* [MS-XLSB] 2.5.97.4 CellParsedFormula */
 var parse_XLSBCellParsedFormula = parse_XLSBParsedFormula;
+/* [MS-XLSB] 2.5.97.8 DVParsedFormula */
+//var parse_XLSBDVParsedFormula = parse_XLSBParsedFormula;
+/* [MS-XLSB] 2.5.97.9 FRTParsedFormula */
+//var parse_XLSBFRTParsedFormula = parse_XLSBParsedFormula2;
 /* [MS-XLSB] 2.5.97.12 NameParsedFormula */
 var parse_XLSBNameParsedFormula = parse_XLSBParsedFormula;
 /* [MS-XLSB] 2.5.97.98 SharedParsedFormula */

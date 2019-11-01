@@ -185,11 +185,11 @@ var XLSFillPattern = [
 	'gray0625'
 ];
 
-function rgbify(arr) { return arr.map(function(x) { return [(x>>16)&255,(x>>8)&255,x&255]; }); }
+function rgbify(arr/*:Array<number>*/)/*:Array<[number, number, number]>*/ { return arr.map(function(x) { return [(x>>16)&255,(x>>8)&255,x&255]; }); }
 
 /* [MS-XLS] 2.5.161 */
 /* [MS-XLSB] 2.5.75 Icv */
-var XLSIcv = rgbify([
+var _XLSIcv = rgbify([
 	/* Color Constants */
 	0x000000,
 	0xFFFFFF,
@@ -281,4 +281,4 @@ var XLSIcv = rgbify([
 	0x000000, /* 0x50 icvInfoBk ?? */
 	0x000000 /* 0x51 icvInfoText ?? */
 ]);
-
+var XLSIcv = dup(_XLSIcv);

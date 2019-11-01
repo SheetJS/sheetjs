@@ -108,7 +108,7 @@ function parse_xlml_data(xml, ss, data, cell/*:any*/, base, styles, csty, row, a
 			break;
 		case 'String':
 			cell.t = 's'; cell.r = xlml_fixstr(unescapexml(xml));
-			cell.v = xml.indexOf("<") > -1 ? unescapexml(ss) : cell.r;
+			cell.v = xml.indexOf("<") > -1 ? unescapexml(ss||xml) : cell.r;
 			break;
 		case 'DateTime':
 			if(xml.slice(-1) != "Z") xml += "Z";
@@ -356,9 +356,10 @@ function parse_xlml_xml(d, _opts)/*:Workbook*/ {
 		case 'Sub': break;
 		case 'Sup': break;
 		case 'Span': break;
-		case 'Border': break;
-		case 'Alignment': break;
+		case 'Alignment':
+			break;
 		case 'Borders': break;
+		case 'Border': break;
 		case 'Font':
 			if(Rn[0].slice(-2) === "/>") break;
 			else if(Rn[1]==="/") ss += str.slice(fidx, Rn.index);
@@ -425,6 +426,14 @@ function parse_xlml_xml(d, _opts)/*:Workbook*/ {
 
 		case 'Name': break;
 
+		case 'DataValidation':
+			if(Rn[1]==='/'){
+				if((tmp=state.pop())[0]!==Rn[3]) throw new Error("Bad state: "+tmp.join("|"));
+			} else {
+				if(Rn[0].charAt(Rn[0].length-2) !== '/') state.push([Rn[3], true]);
+			}
+			break;
+
 		case 'ComponentOptions':
 		case 'DocumentProperties':
 		case 'CustomDocumentProperties':
@@ -435,7 +444,6 @@ function parse_xlml_xml(d, _opts)/*:Workbook*/ {
 		case 'MapInfo':
 		case 'PageBreaks':
 		case 'QueryTable':
-		case 'DataValidation':
 		case 'Sorting':
 		case 'Schema':
 		case 'data':
@@ -498,6 +506,7 @@ function parse_xlml_xml(d, _opts)/*:Workbook*/ {
 					case 'WindowTopY': break;
 					case 'TabRatio': break;
 					case 'ProtectStructure': break;
+					case 'ProtectWindow': break;
 					case 'ProtectWindows': break;
 					case 'ActiveSheet': break;
 					case 'DisplayInkNotes': break;
@@ -579,6 +588,19 @@ function parse_xlml_xml(d, _opts)/*:Workbook*/ {
 						Workbook.Views[0].RTL = true;
 						break;
 
+					case 'FreezePanes': break;
+					case 'FrozenNoSplit': break;
+
+					case 'SplitHorizontal':
+					case 'SplitVertical':
+						break;
+
+					case 'DoNotDisplayGridlines':
+						break;
+
+					case 'TopRowBottomPane': break;
+					case 'LeftColumnRightPane': break;
+
 					case 'Unsynced': break;
 					case 'Print': break;
 					case 'Panes': break;
@@ -599,20 +621,13 @@ function parse_xlml_xml(d, _opts)/*:Workbook*/ {
 					case 'ActiveCol': break;
 					case 'ActivePane': break;
 					case 'TopRowVisible': break;
-					case 'TopRowBottomPane': break;
 					case 'LeftColumnVisible': break;
-					case 'LeftColumnRightPane': break;
 					case 'FitToPage': break;
 					case 'RangeSelection': break;
 					case 'PaperSizeIndex': break;
 					case 'PageLayoutZoom': break;
 					case 'PageBreakZoom': break;
 					case 'FilterOn': break;
-					case 'DoNotDisplayGridlines': break;
-					case 'SplitHorizontal': break;
-					case 'SplitVertical': break;
-					case 'FreezePanes': break;
-					case 'FrozenNoSplit': break;
 					case 'FitWidth': break;
 					case 'FitHeight': break;
 					case 'CommentsLayout': break;
@@ -755,9 +770,38 @@ function parse_xlml_xml(d, _opts)/*:Workbook*/ {
 					default: seen = false;
 				} break;
 
+				case 'DataValidation':
+				switch(Rn[3]) {
+					case 'Range': break;
+
+					case 'Type': break;
+					case 'Min': break;
+					case 'Max': break;
+					case 'Sort': break;
+					case 'Descending': break;
+					case 'Order': break;
+					case 'CaseSensitive': break;
+					case 'Value': break;
+					case 'ErrorStyle': break;
+					case 'ErrorMessage': break;
+					case 'ErrorTitle': break;
+					case 'InputMessage': break;
+					case 'InputTitle': break;
+					case 'ComboHide': break;
+					case 'InputHide': break;
+					case 'Condition': break;
+					case 'Qualifier': break;
+					case 'UseBlank': break;
+					case 'Value1': break;
+					case 'Value2': break;
+					case 'Format': break;
+
+					case 'CellRangeList': break;
+					default: seen = false;
+				} break;
+
 				case 'Sorting':
 				case 'ConditionalFormatting':
-				case 'DataValidation':
 				switch(Rn[3]) {
 					case 'Range': break;
 					case 'Type': break;
@@ -817,6 +861,7 @@ function parse_xlml_xml(d, _opts)/*:Workbook*/ {
 			}
 			if(seen) break;
 			/* CustomDocumentProperties */
+			if(Rn[3].match(/!\[CDATA/)) break;
 			if(!state[state.length-1][1]) throw 'Unrecognized tag: ' + Rn[3] + "|" + state.join("|");
 			if(state[state.length-1][0]==='CustomDocumentProperties') {
 				if(Rn[0].slice(-2) === "/>") break;
@@ -1045,7 +1090,7 @@ function write_ws_xlml_cell(cell, ref/*:string*/, ws, opts, idx/*:number*/, wb, 
 
 	var t = "", p = "";
 	switch(cell.t) {
-		case 'z': return "";
+		case 'z': if(!opts.sheetStubs) return ""; break;
 		case 'n': t = 'Number'; p = String(cell.v); break;
 		case 'b': t = 'Boolean'; p = (cell.v ? "1" : "0"); break;
 		case 'e': t = 'Error'; p = BErr[cell.v]; break;
@@ -1057,7 +1102,7 @@ function write_ws_xlml_cell(cell, ref/*:string*/, ws, opts, idx/*:number*/, wb, 
 	attr["ss:StyleID"] = "s" + (21+os);
 	attr["ss:Index"] = addr.c + 1;
 	var _v = (cell.v != null ? p : "");
-	var m = '<Data ss:Type="' + t + '">' + _v + '</Data>';
+	var m = cell.t == 'z' ? "" : ('<Data ss:Type="' + t + '">' + _v + '</Data>');
 
 	if((cell.c||[]).length > 0) m += write_ws_xlml_comment(cell.c);
 

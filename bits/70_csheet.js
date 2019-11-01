@@ -10,7 +10,7 @@ function parse_cs_xml(data/*:?string*/, opts, idx/*:number*/, rels, wb/*::, them
 	if(!data) return data;
 	/* 18.3.1.12 chartsheet CT_ChartSheet */
 	if(!rels) rels = {'!id':{}};
-	var s = {'!type':"chart", '!chart':null, '!rel':""};
+	var s = ({'!type':"chart", '!chart':null, '!rel':""}/*:any*/);
 	var m;
 
 	/* 18.3.1.83 sheetPr CT_ChartsheetPr */

@@ -44,12 +44,14 @@ function load_props_pairs(HP/*:string|Array<Array<any>>*/, TOP, props, opts) {
 			case "Folhas de cálculo":
 			case "Planilhas":
 			case "Regneark":
+			case "Hojas de cálculo":
 			case "Werkbladen":
 				props.Worksheets = len;
 				props.SheetNames = parts.slice(idx, idx + len);
 				break;
 
 			case "Named Ranges":
+			case "Rangos con nombre":
 			case "名前付き一覧":
 			case "Benannte Bereiche":
 			case "Navngivne områder":
