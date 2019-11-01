@@ -21,6 +21,8 @@
 		"xlsx": "./bin/xlsx.njs"
 	},
 	"main": "./xlsx",
+	"unpkg": "dist/xlsx.min.js",
+	"jsdelivr": "dist/xlsx.min.js",
 	"types": "types",
 	"browser": {
 		"buffer": false,
