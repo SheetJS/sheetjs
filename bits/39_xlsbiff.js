@@ -364,6 +364,10 @@ function write_Window2(view) {
 	return o;
 }
 
+/* [MS-XLS] 2.4.189 TODO */
+function parse_Pane(/*blob, length, opts*/) {
+}
+
 /* [MS-XLS] 2.4.122 TODO */
 function parse_Font(blob, length, opts) {
 	var o/*:any*/ = {

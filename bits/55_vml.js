@@ -14,24 +14,33 @@ function write_comments_vml(rId/*:number*/, comments) {
 	];
 	while(_shapeid < rId * 1000) _shapeid += 1000;
 
-	comments.forEach(function(x) { var c = decode_cell(x[0]);
+	comments.forEach(function(x) {
+	var c = decode_cell(x[0]);
+	var fillopts = /*::(*/{'color2':"#BEFF82", 'type':"gradient"}/*:: :any)*/;
+	if(fillopts.type == "gradient") fillopts.angle = "-180";
+	var fillparm = fillopts.type == "gradient" ? writextag("o:fill", null, {type:"gradientUnscaled", 'v:ext':"view"}) : null;
+	var fillxml = writextag('v:fill', fillparm, fillopts);
+
+	var shadata = ({on:"t", 'obscured':"t"}/*:any*/);
+	++_shapeid;
+
 	o = o.concat([
 	'<v:shape' + wxt_helper({
-		id:'_x0000_s' + (++_shapeid),
+		id:'_x0000_s' + _shapeid,
 		type:"#_x0000_t202",
 		style:"position:absolute; margin-left:80pt;margin-top:5pt;width:104pt;height:64pt;z-index:10" + (x[1].hidden ? ";visibility:hidden" : "") ,
 		fillcolor:"#ECFAD4",
 		strokecolor:"#edeaa1"
 	}) + '>',
-		writextag('v:fill', writextag("o:fill", null, {type:"gradientUnscaled", 'v:ext':"view"}), {'color2':"#BEFF82", 'angle':"-180", 'type':"gradient"}),
-		writextag("v:shadow", null, {on:"t", 'obscured':"t"}),
+		fillxml,
+		writextag("v:shadow", null, shadata),
 		writextag("v:path", null, {'o:connecttype':"none"}),
 		'<v:textbox><div style="text-align:left"></div></v:textbox>',
 		'<x:ClientData ObjectType="Note">',
 			'<x:MoveWithCells/>',
 			'<x:SizeWithCells/>',
 			/* Part 4 19.4.2.3 Anchor (Anchor) */
-			writetag('x:Anchor', [c.c, 0, c.r, 0, c.c+3, 100, c.r+5, 100].join(",")),
+			writetag('x:Anchor', [c.c+1, 0, c.r+1, 0, c.c+3, 20, c.r+5, 20].join(",")),
 			writetag('x:AutoFill', "False"),
 			writetag('x:Row', String(c.r)),
 			writetag('x:Column', String(c.c)),
@@ -42,4 +51,3 @@ function write_comments_vml(rId/*:number*/, comments) {
 	o.push('</xml>');
 	return o.join("");
 }
-

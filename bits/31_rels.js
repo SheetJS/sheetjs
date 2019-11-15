@@ -17,11 +17,11 @@ function get_rels_path(file/*:string*/)/*:string*/ {
 }
 
 function parse_rels(data/*:?string*/, currentFilePath/*:string*/) {
-	if (!data) return data;
+	var rels = {"!id":{}};
+	if (!data) return rels;
 	if (currentFilePath.charAt(0) !== '/') {
 		currentFilePath = '/'+currentFilePath;
 	}
-	var rels = {};
 	var hash = {};
 
 	(data.match(tagregex)||[]).forEach(function(x) {

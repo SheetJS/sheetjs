@@ -19,8 +19,8 @@ finishes the work.
 
 ## This demonstration
 
-Note: the obvious extremes of pure-client code and pure-server code are covered
-in other demos.
+Note: this demo intentionally mixes logic between client and server code.
+Pure-client and pure-server examples are covered in other demos.
 
 ### Reading Data
 

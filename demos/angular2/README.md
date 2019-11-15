@@ -139,7 +139,7 @@ script performs the necessary installation steps.
 
 `@ionic-native/file` reads and writes files on devices. `readAsBinaryString`
 returns strings that can be parsed with the `binary` type, and `array` type can
-easily be converted to blobs that can be exported with `writeFile`:
+be converted to blobs that can be exported with `writeFile`:
 
 ```typescript
 /* read a workbook */

@@ -48,8 +48,7 @@ variable automatically updates the view:
 grid.data = XLSX.utils.sheet_to_json(ws, {header:1});
 ```
 
-This demo previews the first worksheet, but it is easy to add buttons and other
-features to support multiple worksheets.
+This demo previews the first worksheet.
 
 ## Editing
 

@@ -176,11 +176,19 @@ function WriteShift(t/*:number*/, val/*:string|number*/, f/*:?string*/)/*:any*/ 
 		for(i = 0; i != val.length; ++i) __writeUInt16LE(this, val.charCodeAt(i), this.l + 2 * i);
 		size = 2 * val.length;
 	} else if(f === 'sbcs') {
-		/* TODO: codepage */
-		/*:: if(typeof val !== 'string') throw new Error("unreachable"); */
-		val = val.replace(/[^\x00-\x7F]/g, "_");
-		/*:: if(typeof val !== 'string') throw new Error("unreachable"); */
-		for(i = 0; i != val.length; ++i) this[this.l + i] = (val.charCodeAt(i) & 0xFF);
+		if(typeof cptable !== 'undefined' && current_ansi == 874) {
+			/* TODO: use tables directly, don't encode */
+			/*:: if(typeof val !== "string") throw new Error("unreachable"); */
+			for(i = 0; i != val.length; ++i) {
+				var cppayload = cptable.utils.encode(current_ansi, val.charAt(i));
+				this[this.l + i] = cppayload[0];
+			}
+		} else {
+			/*:: if(typeof val !== 'string') throw new Error("unreachable"); */
+			val = val.replace(/[^\x00-\x7F]/g, "_");
+			/*:: if(typeof val !== 'string') throw new Error("unreachable"); */
+			for(i = 0; i != val.length; ++i) this[this.l + i] = (val.charCodeAt(i) & 0xFF);
+		}
 		size = val.length;
 	} else if(f === 'hex') {
 		for(; i < t; ++i) {

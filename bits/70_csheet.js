@@ -10,7 +10,7 @@ function parse_cs_xml(data/*:?string*/, opts, idx/*:number*/, rels, wb/*::, them
 	if(!data) return data;
 	/* 18.3.1.12 chartsheet CT_ChartSheet */
 	if(!rels) rels = {'!id':{}};
-	var s = ({'!type':"chart", '!chart':null, '!rel':""}/*:any*/);
+	var s = ({'!type':"chart", '!drawel':null, '!rel':""}/*:any*/);
 	var m;
 
 	/* 18.3.1.83 sheetPr CT_ChartsheetPr */
@@ -20,7 +20,7 @@ function parse_cs_xml(data/*:?string*/, opts, idx/*:number*/, rels, wb/*::, them
 	/* 18.3.1.36 drawing CT_Drawing */
 	if((m = data.match(/drawing r:id="(.*?)"/))) s['!rel'] = m[1];
 
-	if(rels['!id'][s['!rel']]) s['!chart'] = rels['!id'][s['!rel']];
+	if(rels['!id'][s['!rel']]) s['!drawel'] = rels['!id'][s['!rel']];
 	return s;
 }
 function write_cs_xml(idx/*:number*/, opts, wb/*:Workbook*/, rels)/*:string*/ {
@@ -42,7 +42,7 @@ function parse_BrtCsProp(data, length/*:number*/) {
 function parse_cs_bin(data, opts, idx/*:number*/, rels, wb/*::, themes, styles*/)/*:Worksheet*/ {
 	if(!data) return data;
 	if(!rels) rels = {'!id':{}};
-	var s = {'!type':"chart", '!chart':null, '!rel':""};
+	var s = {'!type':"chart", '!drawel':null, '!rel':""};
 	var state/*:Array<string>*/ = [];
 	var pass = false;
 	recordhopper(data, function cs_parse(val, R_n, RT) {
@@ -82,7 +82,7 @@ function parse_cs_bin(data, opts, idx/*:number*/, rels, wb/*::, themes, styles*/
 		}
 	}, opts);
 
-	if(rels['!id'][s['!rel']]) s['!chart'] = rels['!id'][s['!rel']];
+	if(rels['!id'][s['!rel']]) s['!drawel'] = rels['!id'][s['!rel']];
 	return s;
 }
 function write_cs_bin(/*::idx:number, opts, wb:Workbook, rels*/) {

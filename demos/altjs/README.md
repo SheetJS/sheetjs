@@ -15,7 +15,7 @@ var global = (function(){ return this; }).call(null);
 
 ## Swift + JavaScriptCore
 
-iOS and OSX ship with the JavaScriptCore framework, enabling easy JS access from
+iOS and OSX ship with the JavaScriptCore framework for running JS scripts from
 Swift and Objective-C.  Hybrid function invocation is tricky, but explicit data
 passing is straightforward.  The demo shows a standalone example for OSX.  For
 playgrounds, the library should be copied to shared playground data directory

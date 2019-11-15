@@ -35,3 +35,5 @@ The [`demos` directory](demos/) includes sample projects for:
 - [`"serverless" functions`](demos/function/)
 - [`internet explorer`](demos/oldie/)
 
+Other examples are included in the [showcase](demos/showcase/).
+

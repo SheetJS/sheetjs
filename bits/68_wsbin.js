@@ -277,6 +277,10 @@ function write_BrtHLink(l, rId) {
 	return o.slice(0, o.l);
 }
 
+/* [MS-XLSB] 2.4.692 BrtPane */
+function parse_BrtPane(/*data, length, opts*/) {
+}
+
 /* [MS-XLSB] 2.4.6 BrtArrFmla */
 function parse_BrtArrFmla(data, length, opts) {
 	var end = data.l + length;
@@ -397,6 +401,10 @@ function write_BrtSheetProtection(sp, o) {
 	return o;
 }
 
+function parse_BrtDVal(/*data, length, opts*/) {
+}
+function parse_BrtDVal14(/*data, length, opts*/) {
+}
 /* [MS-XLSB] 2.1.7.61 Worksheet */
 function parse_ws_bin(data, _opts, idx, rels, wb/*:WBWBProps*/, themes, styles)/*:Worksheet*/ {
 	if(!data) return data;

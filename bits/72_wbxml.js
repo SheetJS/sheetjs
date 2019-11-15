@@ -2,7 +2,7 @@
 var wbnsregex = /<\w+:workbook/;
 function parse_wb_xml(data, opts)/*:WorkbookFile*/ {
 	if(!data) throw new Error("Could not find file");
-	var wb = { AppVersion:{}, WBProps:{}, WBView:[], Sheets:[], CalcPr:{}, Names:[], xmlns: "" };
+	var wb = /*::(*/{ AppVersion:{}, WBProps:{}, WBView:[], Sheets:[], CalcPr:{}, Names:[], xmlns: "" }/*::)*/;
 	var pass = false, xmlns = "xmlns";
 	var dname = {}, dnstart = 0;
 	data.replace(tagregex, function xml_wb(x, idx) {

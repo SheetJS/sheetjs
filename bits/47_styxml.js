@@ -1,7 +1,7 @@
 /* 18.8.5 borders CT_Borders */
 function parse_borders(t, styles, themes, opts) {
 	styles.Borders = [];
-	var border = {}/*, sub_border = {}*/;
+	var border = {};
 	var pass = false;
 	(t[0].match(tagregex)||[]).forEach(function(x) {
 		var y = parsexmltag(x);
@@ -10,7 +10,7 @@ function parse_borders(t, styles, themes, opts) {
 
 			/* 18.8.4 border CT_Border */
 			case '<border': case '<border>': case '<border/>':
-				border = {};
+				border = /*::(*/{}/*:: :any)*/;
 				if(y.diagonalUp) border.diagonalUp = parsexmlbool(y.diagonalUp);
 				if(y.diagonalDown) border.diagonalDown = parsexmlbool(y.diagonalDown);
 				styles.Borders.push(border);

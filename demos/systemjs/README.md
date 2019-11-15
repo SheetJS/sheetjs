@@ -7,7 +7,7 @@ configuration magic SystemJS can load the library.
 ## Browser
 
 SystemJS fails by default because the library does not export anything in the
-web browser.  This is easily addressed in the config:
+web browser.  The `meta` configuration option can be used to expose `XLSX`:
 
 ```js
 SystemJS.config({
@@ -26,7 +26,7 @@ SystemJS.config({
 SystemJS.import('main.js')
 ```
 
-In your main JS script, just use require:
+With the new configuration, `require('xlsx')` will load the library:
 
 ```js
 var XLSX = require('xlsx');

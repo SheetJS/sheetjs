@@ -59,12 +59,7 @@ function write_zip(wb/*:Workbook*/, opts/*:WriteOpts*/)/*:ZIP*/ {
 		var ws = wb.Sheets[wb.SheetNames[rId-1]];
 		var _type = (ws || {})["!type"] || "sheet";
 		switch(_type) {
-		case "chart": /*
-			f = "xl/chartsheets/sheet" + rId + "." + wbext;
-			zip_add_file(zip, f, write_cs(rId-1, f, opts, wb, wsrels));
-			ct.charts.push(f);
-			add_rels(wsrels, -1, "chartsheets/sheet" + rId + "." + wbext, RELS.CS);
-			break; */
+		case "chart":
 			/* falls through */
 		default:
 			f = "xl/worksheets/sheet" + rId + "." + wbext;

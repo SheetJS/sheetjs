@@ -210,6 +210,8 @@ The [`demos` directory](demos/) includes sample projects for:
 - [`"serverless" functions`](demos/function/)
 - [`internet explorer`](demos/oldie/)
 
+Other examples are included in the [showcase](demos/showcase/).
+
 ### Optional Modules
 
 
@@ -1820,7 +1822,7 @@ default column order is determined by the first appearance of the field using
 |`skipHeader` |  false   | If true, do not include header row in output        |
 
 
-The original sheet cannot be reproduced in the obvious way since JS object keys
+The original sheet cannot be reproduced using plain objects since JS object keys
 must be unique. After replacing the second `e` and `S` with `e_1` and `S_1`:
 
 ```js

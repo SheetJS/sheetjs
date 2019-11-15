@@ -20,12 +20,12 @@ function parse_BrtFont(data, length/*:number*/, opts) {
 	out.sz = data.read_shift(2) / 20;
 
 	var grbit = parse_FontFlags(data, 2, opts);
+	if(grbit.fItalic) out.italic = 1;
 	if(grbit.fCondense) out.condense = 1;
 	if(grbit.fExtend) out.extend = 1;
 	if(grbit.fShadow) out.shadow = 1;
 	if(grbit.fOutline) out.outline = 1;
 	if(grbit.fStrikeout) out.strike = 1;
-	if(grbit.fItalic) out.italic = 1;
 
 	var bls = data.read_shift(2);
 	if(bls === 0x02BC) out.bold = 1;

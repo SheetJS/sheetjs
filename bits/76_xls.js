@@ -461,6 +461,7 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 				} break;
 				case 'LabelSst':
 					temp_val=make_cell(sst[val.isst].t, val.ixfe, 's');
+					if(sst[val.isst].h) temp_val.h = sst[val.isst].h;
 					temp_val.XF = XFs[temp_val.ixfe];
 					if(BIFF2Fmt > 0) temp_val.z = BIFF2FmtTable[(temp_val.ixfe>>8) & 0x1F];
 					safe_format_xf(temp_val, options, wb.opts.Date1904);

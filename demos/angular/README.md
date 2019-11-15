@@ -137,7 +137,7 @@ File input controls using `readAsBinaryString`, converting to a suitable
 representation and updating the scope.
 
 `SheetJSExportService` exposes export functions for `XLSB` and `XLSX`.  Other
-formats are easily supported by changing the `bookType` variable.  It grabs
+file formats can be exported by changing the `bookType` variable.  It grabs
 values from the grid, builds an array of arrays, generates a workbook and forces
 a download.  By setting the `filename` and `sheetname` options in the `ui-grid`
 options, the output can be controlled.

@@ -23,8 +23,8 @@ function shift_range_xls(cell, range, opts) {
 }
 
 function encode_cell_xls(c/*:CellAddress*/, biff/*:number*/)/*:string*/ {
-	if(c.cRel && c.c < 0) { c = dup(c); c.c += (biff > 8) ? 0x4000 : 0x100; }
-	if(c.rRel && c.r < 0) { c = dup(c); c.r += (biff > 8) ? 0x100000 : ((biff > 5) ? 0x10000 : 0x4000); }
+	if(c.cRel && c.c < 0) { c = dup(c); while(c.c < 0) c.c += (biff > 8) ? 0x4000 : 0x100; }
+	if(c.rRel && c.r < 0) { c = dup(c); while(c.r < 0) c.r += (biff > 8) ? 0x100000 : ((biff > 5) ? 0x10000 : 0x4000); }
 	var s = encode_cell(c);
 	if(!c.cRel && c.cRel != null) s = fix_col(s);
 	if(!c.rRel && c.rRel != null) s = fix_row(s);

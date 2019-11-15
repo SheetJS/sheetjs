@@ -114,7 +114,7 @@ default column order is determined by the first appearance of the field using
 <details>
   <summary><b>Examples</b> (click to show)</summary>
 
-The original sheet cannot be reproduced in the obvious way since JS object keys
+The original sheet cannot be reproduced using plain objects since JS object keys
 must be unique. After replacing the second `e` and `S` with `e_1` and `S_1`:
 
 ```js

@@ -81,7 +81,8 @@ function update_xfext(xf, xfext) {
 			case 0x09: break; /* left cell border color */
 			case 0x0a: break; /* right cell border color */
 			case 0x0b: break; /* diagonal cell border color */
-			case 0x0d: break; /* text color */
+			case 0x0d: /* text color */
+				break;
 			case 0x0e: break; /* font scheme */
 			case 0x0f: break; /* indentation level */
 		}

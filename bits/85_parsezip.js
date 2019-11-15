@@ -21,8 +21,8 @@ function safe_parse_sheet(zip, path/*:string*/, relsPath/*:string*/, sheet, idx/
 		switch(stype) {
 			case 'sheet':  _ws = parse_ws(data, path, idx, opts, sheetRels[sheet], wb, themes, styles); break;
 			case 'chart':  _ws = parse_cs(data, path, idx, opts, sheetRels[sheet], wb, themes, styles);
-				if(!_ws || !_ws['!chart']) break;
-				var dfile = resolve_path(_ws['!chart'].Target, path);
+				if(!_ws || !_ws['!drawel']) break;
+				var dfile = resolve_path(_ws['!drawel'].Target, path);
 				var drelsp = get_rels_path(dfile);
 				var draw = parse_drawing(getzipstr(zip, dfile, true), parse_rels(getzipstr(zip, drelsp, true), dfile));
 				var chartp = resolve_path(draw, dfile);
