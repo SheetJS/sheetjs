@@ -20861,7 +20861,8 @@ function make_json_row(sheet, r, R, cols, header, hdr, dense, o) {
 	if(!dense || sheet[R]) for (var C = r.s.c; C <= r.e.c; ++C) {
 		var val = dense ? sheet[R][C] : sheet[cols[C] + rr];
 		if(val === undefined || val.t === undefined) {
-			if(defval === undefined) continue;
+			//insert emptry string instead of skipping property
+			if(defval === undefined) defval= "";
 			if(hdr[C] != null) { row[hdr[C]] = defval; }
 			continue;
 		}
