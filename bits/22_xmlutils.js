@@ -227,8 +227,8 @@ function write_w3cdtf(d/*:Date*/, t/*:?boolean*/)/*:string*/ { try { return d.to
 
 function write_vt(s)/*:string*/ {
 	switch(typeof s) {
-		case 'string': return writextag('vt:lpwstr', s);
-		case 'number': return writextag((s|0)==s?'vt:i4':'vt:r8', String(s));
+		case 'string': return writextag('vt:lpwstr', escapexml(s));
+		case 'number': return writextag((s|0)==s?'vt:i4':'vt:r8', escapexml(String(s)));
 		case 'boolean': return writextag('vt:bool',s?'true':'false');
 	}
 	if(s instanceof Date) return writextag('vt:filetime', write_w3cdtf(s));

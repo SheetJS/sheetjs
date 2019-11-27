@@ -10,23 +10,24 @@ node_js:
   - "6"
 matrix:
   include:
-    - node_js: "6"
-      env: TZ="America/New_York" FMTS=misc
-    - node_js: "8"
-      env: TZ="America/Los_Angeles"
-    - node_js: "8"
-      env: TZ="Europe/London" FMTS=misc
-    - node_js: "6"
-      env: TZ="Europe/Berlin"
-    - node_js: "6"
-      env: TZ="Asia/Kolkata" FMTS=misc
+    - node_js: "12"
+      env: TZ="America/New_York"
+    - node_js: "12"
+      env: TZ="Europe/London"
+    - node_js: "12"
+      env: TZ="Asia/Seoul"
+    - node_js: "11"
+      env: TZ="America/Los_Angeles" FMTS=misc
+    - node_js: "10"
+      env: TZ="Europe/Berlin" FMTS=misc
     - node_js: "9"
-      env: TZ="Asia/Shanghai"
+      env: TZ="Asia/Kolkata" FMTS=misc
     - node_js: "8"
-      env: TZ="Asia/Seoul" FMTS=misc
+      env: TZ="Asia/Shanghai" FMTS=misc
     - node_js: "7"
       env: TZ="America/Cancun" FMTS=misc
-
+    - node_js: "6"
+      env: TZ="Asia/Seoul" FMTS=misc
     - node_js: "5"
       env: TZ="America/Anchorage" FMTS=misc
     - node_js: "4"
