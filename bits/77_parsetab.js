@@ -863,6 +863,7 @@ var XLSRecordEnum = {
 	/*::[*/0x001d/*::]*/: { n:"Selection" },
 	/*::[*/0x0022/*::]*/: { n:"Date1904", f:parsebool },
 	/*::[*/0x0023/*::]*/: { n:"ExternName", f:parse_ExternName },
+	/*::[*/0x0024/*::]*/: { n:"COLWIDTH" },
 	/*::[*/0x0026/*::]*/: { n:"LeftMargin", f:parse_Xnum },
 	/*::[*/0x0027/*::]*/: { n:"RightMargin", f:parse_Xnum },
 	/*::[*/0x0028/*::]*/: { n:"TopMargin", f:parse_Xnum },

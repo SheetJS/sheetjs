@@ -9160,7 +9160,7 @@ module.exports = ZStream;
 /*global global, exports, module, require:false, process:false, Buffer:false, ArrayBuffer:false */
 var XLSX = {};
 function make_xlsx_lib(XLSX){
-XLSX.version = '0.15.3';
+XLSX.version = '0.15.4';
 var current_codepage = 1200, current_ansi = 1252;
 /*global cptable:true, window */
 if(typeof module !== "undefined" && typeof require !== 'undefined') {
@@ -12819,9 +12819,11 @@ function sheet_add_aoa(_ws, data, opts) {
 			}
 			if(dense) {
 				if(!ws[__R]) ws[__R] = [];
+				if(ws[__R][__C] && ws[__R][__C].z) cell.z = ws[__R][__C].z;
 				ws[__R][__C] = cell;
 			} else {
 				var cell_ref = encode_cell(({c:__C,r:__R}));
+				if(ws[cell_ref] && ws[cell_ref].z) cell.z = ws[cell_ref].z;
 				ws[cell_ref] = cell;
 			}
 		}
@@ -22097,11 +22099,11 @@ function get_cell_style(styles, cell, opts) {
 }
 
 function safe_format(p, fmtid, fillid, opts, themes, styles) {
-	if(p.t === 'z') return;
-	if(p.t === 'd' && typeof p.v === 'string') p.v = parseDate(p.v);
 	try {
 		if(opts.cellNF) p.z = SSF._table[fmtid];
 	} catch(e) { if(opts.WTF) throw e; }
+	if(p.t === 'z') return;
+	if(p.t === 'd' && typeof p.v === 'string') p.v = parseDate(p.v);
 	if(!opts || opts.cellText !== false) try {
 		if(SSF._table[fmtid] == null) SSF.load(SSFImplicit[fmtid] || "General", fmtid);
 		if(p.t === 'e') p.w = p.w || BErr[p.v];
@@ -27584,6 +27586,7 @@ var XLSRecordEnum = {
 0x001d: { n:"Selection" },
 0x0022: { n:"Date1904", f:parsebool },
 0x0023: { n:"ExternName", f:parse_ExternName },
+0x0024: { n:"COLWIDTH" },
 0x0026: { n:"LeftMargin", f:parse_Xnum },
 0x0027: { n:"RightMargin", f:parse_Xnum },
 0x0028: { n:"TopMargin", f:parse_Xnum },
