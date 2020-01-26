@@ -4,7 +4,7 @@ function fmt_is_date(fmt/*:string*/)/*:boolean*/ {
 	while(i < fmt.length) {
 		switch((c = fmt.charAt(i))) {
 			case 'G': if(isgeneral(fmt, i)) i+= 6; i++; break;
-			case '"': for(;(/*cc=*/fmt.charCodeAt(++i)) !== 34 && i < fmt.length;) ++i; ++i; break;
+			case '"': for(;(/*cc=*/fmt.charCodeAt(++i)) !== 34 && i < fmt.length;){/*empty*/} ++i; break;
 			case '\\': i+=2; break;
 			case '_': i+=2; break;
 			case '@': ++i; break;

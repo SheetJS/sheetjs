@@ -18,7 +18,7 @@
 	["\"True\";\"True\";\"False\";@", false],
 	["\"Years: \"0", false],
 	["\"Yes\";\"Yes\";\"No\";@", false],
-	["\"kl \"hh:mm:ss;@", false],
+	["\"kl \"hh:mm:ss;@", true],
 	["\"£\"#,##0.00", false],
 	["\"£\"#,##0;[Red]\\-\"£\"#,##0", false],
 	["\"€\"#,##0.00", false],

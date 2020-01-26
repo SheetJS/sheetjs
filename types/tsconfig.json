@@ -9,6 +9,7 @@
         "paths": { "ssf": ["."] },
         "types": [],
         "noEmit": true,
+        "strictFunctionTypes": true,
         "forceConsistentCasingInFileNames": true
     }
 }
