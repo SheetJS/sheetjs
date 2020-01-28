@@ -1682,6 +1682,7 @@ The exported `read` and `readFile` functions accept an options argument:
 |`bookVBA`    | false   | If true, copy VBA blob to `vbaraw` field **          |
 |`password`   | ""      | If defined and file is encrypted, use password **    |
 |`WTF`        | false   | If true, throw errors on unexpected file features ** |
+|`sheets`     |         | If specified, only parse specified sheets **         |
 
 - Even if `cellNF` is false, formatted text will be generated and saved to `.w`
 - In some cases, sheets may be parsed even if `bookSheets` is false.
@@ -1695,6 +1696,10 @@ The exported `read` and `readFile` functions accept an options argument:
     * `cfb` object for formats using CFB containers
 - `sheetRows-1` rows will be generated when looking at the JSON object output
   (since the header row is counted as a row when parsing the data)
+- By default all worksheets are parsed.  `sheets` restricts based on input type:
+    * number: zero-based index of worksheet to parse (`0` is first worksheet)
+    * string: name of worksheet to parse (case insensitive)
+    * array of numbers and strings to select multiple worksheets.
 - `bookVBA` merely exposes the raw VBA CFB object.  It does not parse the data.
   XLSM and XLSB store the VBA CFB object in `xl/vbaProject.bin`. BIFF8 XLS mixes
   the VBA entries alongside the core Workbook entry, so the library generates a

@@ -29,6 +29,12 @@ export const stream: StreamUtils;
 /** Number Format (either a string or an index to the format table) */
 export type NumberFormat = string | number;
 
+/** Worksheet specifier (string, number, worksheet) */
+export type WSSpec = string | number | WorkSheet;
+
+/** Range specifier (string or range or cell), single-cell lifted to range */
+export type RangeSpec = string | Range | CellAddress;
+
 /** Basic File Properties */
 export interface Properties {
     /** Summary tab "Title" */
@@ -95,11 +101,23 @@ export interface CommonOptions {
     cellDates?: boolean;
 
     /**
+     * Create cell objects for stub cells
+     * @default false
+     */
+    sheetStubs?: boolean;
+
+    /**
      * When reading a file, save style/theme info to the .s field
      * When writing a file, export style/theme info
      * @default false
      */
     cellStyles?: boolean;
+
+    /**
+     * If defined and file is encrypted, use password
+     * @default ''
+     */
+    password?: string;
 }
 
 export interface DateNFOption {
@@ -143,12 +161,6 @@ export interface ParsingOptions extends CommonOptions {
     dateNF?: string;
 
     /**
-     * Create cell objects for stub cells
-     * @default false
-     */
-    sheetStubs?: boolean;
-
-    /**
      * If >0, read the first sheetRows rows
      * @default 0
      */
@@ -178,11 +190,8 @@ export interface ParsingOptions extends CommonOptions {
      */
     bookSheets?: boolean;
 
-    /**
-     * If defined and file is encrypted, use password
-     * @default ''
-     */
-    password?: string;
+    /** If specified, only parse the specified sheets or sheet names */
+    sheets?: number | string | Array<number | string>;
 
     /* If true, plaintext parsing will not parse values */
     raw?: boolean;
@@ -474,6 +483,7 @@ export interface AutoFilterInfo {
     /** Range of the AutoFilter table */
     ref: string;
 }
+
 export type WSKeys = SheetKeys | ColInfo[] | RowInfo[] | Range[] | ProtectInfo | AutoFilterInfo;
 
 /** Worksheet Object */
@@ -501,6 +511,13 @@ export interface WorkSheet extends Sheet {
 }
 
 /**
+ * Worksheet Object with CellObject type
+ *
+ * The normal Worksheet type uses indexer of type `any` -- this enforces CellObject
+ */
+export interface StrictWS { [addr: string]: CellObject; }
+
+/**
  * The Excel data type for a cell.
  * b Boolean, n Number, e error, s String, d Date, z Stub
  */
@@ -519,6 +536,12 @@ export interface Comment {
 
     /** Plaintext of the comment */
     t: string;
+}
+
+/** Cell comments */
+export interface Comments extends Array<Comment> {
+    /** Hide comment by default */
+    hidden?: boolean;
 }
 
 /** Link object */
@@ -557,7 +580,7 @@ export interface CellObject {
     h?: string;
 
     /** Comments associated with the cell */
-    c?: Comment[];
+    c?: Comments;
 
     /** Number format string associated with the cell (if requested) */
     z?: NumberFormat;
@@ -577,9 +600,7 @@ export interface CellAddress {
     r: number;
 }
 
-/**
- * Range object (representing ranges like "A1:B2")
- */
+/** Range object (representing ranges like "A1:B2") */
 export interface Range {
     /** Starting cell */
     s: CellAddress;
