@@ -199,7 +199,7 @@ export interface ParsingOptions extends CommonOptions {
     dense?: boolean;
 
     /* Field Separator */
-    FS: string;
+    FS?: string;
 }
 
 /** Options for write and writeFile */
