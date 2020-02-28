@@ -99,7 +99,7 @@ if(has_buf && typeof require != 'undefined') (function() {
 		}
 		R = r.s.r + offset;
 		stream._read = function() {
-			if(R > r.e.r) return stream.push(null);
+// 			if(R > r.e.r) return stream.push(null);
 			while(R <= r.e.r) {
 				//if ((rowinfo[R-1]||{}).hidden) continue;
 				var row = make_json_row(sheet, r, R, cols, header, hdr, dense, o);
@@ -107,7 +107,7 @@ if(has_buf && typeof require != 'undefined') (function() {
 				if((row.isempty === false) || (header === 1 ? o.blankrows !== false : !!o.blankrows)) {
 					stream.push(row.row);
 					break;
-				}
+				} else if(R > r.e.r) return stream.push(null);
 			}
 		};
 		return stream;
