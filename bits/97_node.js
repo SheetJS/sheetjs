@@ -107,7 +107,7 @@ if(has_buf && typeof require != 'undefined') (function() {
 				if((row.isempty === false) || (header === 1 ? o.blankrows !== false : !!o.blankrows)) {
 					stream.push(row.row);
 					break;
-				}
+				} else if(R > r.e.r) return stream.push(null);
 			}
 		};
 		return stream;
