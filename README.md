@@ -3,6 +3,8 @@
 ssf (SpreadSheet Format) is a pure JS library to format data using ECMA-376
 spreadsheet format codes (used in popular spreadsheet software packages).
 
+This is the community version.  We also offer a pro version with additional
+features like international support as well as dedicated support.
 
 ## Installation
 
@@ -108,7 +110,5 @@ granted by the Apache 2.0 license are reserved by the Original Author.
 [![NPM Downloads](https://img.shields.io/npm/dt/ssf.svg)](https://npmjs.org/package/ssf)
 
 [![Dependencies Status](https://david-dm.org/sheetjs/ssf/status.svg)](https://david-dm.org/sheetjs/ssf)
-
-[![ghit.me](https://ghit.me/badge.svg?repo=sheetjs/js-xlsx)](https://ghit.me/repo/sheetjs/js-xlsx)
 
 [![Analytics](https://ga-beacon.appspot.com/UA-36810333-1/SheetJS/ssf?pixel)](https://github.com/SheetJS/ssf)

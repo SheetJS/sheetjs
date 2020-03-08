@@ -1,9 +1,13 @@
 {
 	"name": "ssf",
-	"version": "0.10.2",
+	"version": "0.10.3",
 	"author": "sheetjs",
 	"description": "Format data using ECMA-376 spreadsheet Format Codes",
-	"keywords": [ "format", "sprintf", "spreadsheet" ],
+	"keywords": [
+		"format",
+		"sprintf",
+		"spreadsheet"
+	],
 	"bin": {
 		"ssf": "./bin/ssf.njs"
 	},
@@ -13,14 +17,17 @@
 		"frac":"~1.1.2"
 	},
 	"devDependencies": {
-		"mocha": "~2.5.3",
-		"blanket": "~1.2.3",
 		"@sheetjs/uglify-js":"~2.7.3",
 		"@types/node":"^8.0.7",
+		"blanket": "~1.2.3",
 		"dtslint": "^0.1.2",
+		"mocha": "~2.5.3",
 		"typescript": "2.2.0"
 	},
-	"repository": { "type":"git", "url":"git://github.com/SheetJS/ssf.git" },
+	"repository": {
+		"type": "git",
+		"url": "git://github.com/SheetJS/ssf.git"
+	},
 	"scripts": {
 		"test": "make test",
 		"build": "make",
@@ -32,8 +39,22 @@
 			"pattern": "ssf.js"
 		}
 	},
-	"homepage": "http://sheetjs.com/opensource",
-	"bugs": { "url": "https://github.com/SheetJS/ssf/issues" },
+	"alex": {
+		"allow": [
+			"special",
+			"simple",
+			"just",
+			"crash",
+			"wtf",
+			"holes"
+		]
+	},
+	"homepage": "http://sheetjs.com/",
+	"bugs": {
+		"url": "https://github.com/SheetJS/ssf/issues"
+	},
 	"license": "Apache-2.0",
-	"engines": { "node": ">=0.8" }
+	"engines": {
+		"node": ">=0.8"
+	}
 }
