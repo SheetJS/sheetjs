@@ -16,6 +16,12 @@ function write_XLWideString(data/*:string*/, o) {
 	return _null ? o.slice(0, o.l) : o;
 }
 
+/* [MS-XLSB] 2.5.91 */
+//function parse_LPWideString(data/*::, length*/)/*:string*/ {
+//	var cchCharacters = data.read_shift(2);
+//	return cchCharacters === 0 ? "" : data.read_shift(cchCharacters, "utf16le");
+//}
+
 /* [MS-XLSB] 2.5.143 */
 function parse_StrRun(data) {
 	return { ich: data.read_shift(2), ifnt: data.read_shift(2) };
@@ -149,6 +155,25 @@ function write_RfX(r/*:Range*/, o) {
 var parse_UncheckedRfX = parse_RfX;
 var write_UncheckedRfX = write_RfX;
 
+/* [MS-XLSB] 2.5.155 UncheckedSqRfX */
+//function parse_UncheckedSqRfX(data) {
+//	var cnt = data.read_shift(4);
+//	var out = [];
+//	for(var i = 0; i < cnt; ++i) {
+//		var rng = parse_UncheckedRfX(data);
+//		out.push(encode_range(rng));
+//	}
+//	return out.join(",");
+//}
+//function write_UncheckedSqRfX(sqrfx/*:string*/) {
+//	var parts = sqrfx.split(/\s*,\s*/);
+//	var o = new_buf(4); o.write_shift(4, parts.length);
+//	var out = [o];
+//	parts.forEach(function(rng) {
+//		out.push(write_UncheckedRfX(safe_decode_range(rng)));
+//	});
+//	return bconcat(out);
+//}
 
 /* [MS-XLS] 2.5.342 ; [MS-XLSB] 2.5.171 */
 /* TODO: error checking, NaN and Infinity values are not valid Xnum */

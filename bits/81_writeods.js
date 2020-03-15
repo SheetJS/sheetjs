@@ -112,6 +112,11 @@ var write_content_ods/*:{(wb:any, opts:any):string}*/ = (function() {
 		o.push('   <number:text>/</number:text>\n');
 		o.push('   <number:year/>\n');
 		o.push('  </number:date-style>\n');
+
+		o.push('  <style:style style:name="ta1" style:family="table">\n'); // style:master-page-name="mp1">\n');
+		o.push('   <style:table-properties table:display="true" style:writing-mode="lr-tb"/>\n');
+		o.push('  </style:style>\n');
+
 		o.push('  <style:style style:name="ce1" style:family="table-cell" style:parent-style-name="Default" style:data-style-name="N37"/>\n');
 		o.push(' </office:automatic-styles>\n');
 	};

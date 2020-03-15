@@ -157,7 +157,7 @@ function parse_fonts(t, styles, themes, opts) {
 				break;
 
 			/* 18.8.29 name CT_FontName */
-			case '<name': if(y.val) font.name = y.val; break;
+			case '<name': if(y.val) font.name = utf8read(y.val); break;
 			case '<name/>': case '</name>': break;
 
 			/* 18.8.2  b CT_BooleanProperty */
@@ -396,11 +396,11 @@ return function parse_sty_xml(data, themes, opts) {
 	if((t=data.match(bordersRegex))) parse_borders(t, styles, themes, opts);
 
 	/* 18.8.9  cellStyleXfs CT_CellStyleXfs ? */
+	/* 18.8.8  cellStyles CT_CellStyles ? */
 
 	/* 18.8.10 cellXfs CT_CellXfs ? */
 	if((t=data.match(cellXfRegex))) parse_cellXfs(t, styles, opts);
 
-	/* 18.8.8  cellStyles CT_CellStyles ? */
 	/* 18.8.15 dxfs CT_Dxfs ? */
 	/* 18.8.42 tableStyles CT_TableStyles ? */
 	/* 18.8.11 colors CT_Colors ? */

@@ -9,7 +9,7 @@ function blobify(data) {
 }
 /* write or download file */
 function write_dl(fname/*:string*/, payload/*:any*/, enc/*:?string*/) {
-	/*global IE_SaveFile, Blob, navigator, saveAs, URL, document, File, chrome */
+	/*global IE_SaveFile, Blob, navigator, saveAs, document, File, chrome */
 	if(typeof _fs !== 'undefined' && _fs.writeFileSync) return enc ? _fs.writeFileSync(fname, payload, enc) : _fs.writeFileSync(fname, payload);
 	var data = (enc == "utf8") ? utf8write(payload) : payload;
 	/*:: declare var IE_SaveFile: any; */

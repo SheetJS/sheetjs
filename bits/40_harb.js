@@ -790,13 +790,13 @@ var PRN = (function() {
 		}
 
 		cc = [];
-		for(end in cnt) if ( cnt.hasOwnProperty(end) ) {
+		for(end in cnt) if ( Object.prototype.hasOwnProperty.call(cnt, end) ) {
 			cc.push([ cnt[end], end ]);
 		}
 
 		if ( !cc.length ) {
 			cnt = guess_sep_weights;
-			for(end in cnt) if ( cnt.hasOwnProperty(end) ) {
+			for(end in cnt) if ( Object.prototype.hasOwnProperty.call(cnt, end) ) {
 				cc.push([ cnt[end], end ]);
 			}
 		}

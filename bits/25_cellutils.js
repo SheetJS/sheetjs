@@ -38,7 +38,7 @@ function encode_range_xls(r, opts)/*:string*/ {
 		}
 	}
 	if(r.s.c == 0 && !r.s.cRel) {
-		if(r.e.c == (opts.biff >= 12 ? 0xFFFF : 0xFF) && !r.e.cRel) {
+		if(r.e.c == (opts.biff >= 12 ? 0x3FFF : 0xFF) && !r.e.cRel) {
 			return (r.s.rRel ? "" : "$") + encode_row(r.s.r) + ":" + (r.e.rRel ? "" : "$") + encode_row(r.e.r);
 		}
 	}

@@ -48,7 +48,7 @@ var rencoding = evert(encodings);
 // TODO: CP remap (need to read file version to determine OS)
 var unescapexml/*:StringConv*/ = (function() {
 	/* 22.4.2.4 bstr (Basic String) */
-	var encregex = /&(?:quot|apos|gt|lt|amp|#x?([\da-fA-F]+));/g, coderegex = /_x([\da-fA-F]{4})_/g;
+	var encregex = /&(?:quot|apos|gt|lt|amp|#x?([\da-fA-F]+));/ig, coderegex = /_x([\da-fA-F]{4})_/ig;
 	return function unescapexml(text/*:string*/)/*:string*/ {
 		var s = text + '', i = s.indexOf("<![CDATA[");
 		if(i == -1) return s.replace(encregex, function($$, $1) { return encodings[$$]||String.fromCharCode(parseInt($1,$$.indexOf("x")>-1?16:10))||$$; }).replace(coderegex,function(m,c) {return String.fromCharCode(parseInt(c,16));});
@@ -175,7 +175,7 @@ var htmldecode/*:{(s:string):string}*/ = (function() {
 	var entities/*:Array<[RegExp, string]>*/ = [
 		['nbsp', ' '], ['middot', '·'],
 		['quot', '"'], ['apos', "'"], ['gt',   '>'], ['lt',   '<'], ['amp',  '&']
-	].map(function(x/*:[string, string]*/) { return [new RegExp('&' + x[0] + ';', "g"), x[1]]; });
+	].map(function(x/*:[string, string]*/) { return [new RegExp('&' + x[0] + ';', "ig"), x[1]]; });
 	return function htmldecode(str/*:string*/)/*:string*/ {
 		var o = str
 				// Remove new lines and spaces from start of content

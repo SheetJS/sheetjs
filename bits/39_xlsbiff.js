@@ -349,7 +349,7 @@ function write_Window1(/*::opts*/) {
 }
 /* [MS-XLS] 2.4.346 TODO */
 function parse_Window2(blob, length, opts) {
-	if(opts && opts.biff >= 2 && opts.biff < 8) return {};
+	if(opts && opts.biff >= 2 && opts.biff < 5) return {};
 	var f = blob.read_shift(2);
 	return { RTL: f & 0x40 };
 }

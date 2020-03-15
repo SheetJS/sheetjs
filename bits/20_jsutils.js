@@ -1,6 +1,6 @@
 function keys(o/*:any*/)/*:Array<any>*/ {
 	var ks = Object.keys(o), o2 = [];
-	for(var i = 0; i < ks.length; ++i) if(o.hasOwnProperty(ks[i])) o2.push(ks[i]);
+	for(var i = 0; i < ks.length; ++i) if(Object.prototype.hasOwnProperty.call(o, ks[i])) o2.push(ks[i]);
 	return o2;
 }
 
@@ -106,7 +106,7 @@ function dup(o/*:any*/)/*:any*/ {
 	if(typeof o != 'object' || o == null) return o;
 	if(o instanceof Date) return new Date(o.getTime());
 	var out = {};
-	for(var k in o) if(o.hasOwnProperty(k)) out[k] = dup(o[k]);
+	for(var k in o) if(Object.prototype.hasOwnProperty.call(o, k)) out[k] = dup(o[k]);
 	return out;
 }
 

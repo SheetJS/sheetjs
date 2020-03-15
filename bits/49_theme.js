@@ -1,5 +1,12 @@
 RELS.THEME = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/theme";
 
+/* Even though theme layout is dk1 lt1 dk2 lt2, true order is lt1 dk1 lt2 dk2 */
+var XLSXThemeClrScheme = [
+	'</a:lt1>', '</a:dk1>', '</a:lt2>', '</a:dk2>',
+	'</a:accent1>', '</a:accent2>', '</a:accent3>',
+	'</a:accent4>', '</a:accent5>', '</a:accent6>',
+	'</a:hlink>', '</a:folHlink>'
+];
 /* 20.1.6.2 clrScheme CT_ColorScheme */
 function parse_clrScheme(t, themes, opts) {
 	themes.themeElements.clrScheme = [];
@@ -43,7 +50,7 @@ function parse_clrScheme(t, themes, opts) {
 			case '<a:hlink>': case '</a:hlink>':
 			case '<a:folHlink>': case '</a:folHlink>':
 				if (y[0].charAt(1) === '/') {
-					themes.themeElements.clrScheme.push(color);
+					themes.themeElements.clrScheme[XLSXThemeClrScheme.indexOf(y[0])] = color;
 					color = {};
 				} else {
 					color.name = y[0].slice(3, y[0].length - 1);

@@ -4,6 +4,39 @@ This log is intended to keep track of backwards-incompatible changes, including
 but not limited to API changes and file location changes.  Minor behavioral
 changes may not be included if they are not expected to break existing code.
 
+## v0.15.6
+
+* CFB prevent infinite loop
+* ODS empty cells marked as stub (type "z")
+* `cellStyles` option implies `sheetStubs`
+
+## v0.15.5
+
+* `sheets` parse option to specify which sheets to parse
+
+## v0.15.4
+
+* AOA utilities properly preserve number formats
+* Number formats captured in stub cells
+
+## v0.15.3
+
+* Properties and Custom Properties properly XML-encoded
+
+## v0.15.2
+
+- `sheet_get_cell` utility function
+- `sheet_to_json` explicitly support `null` as alias for default behavior
+- `encode_col` throw on negative column index
+- HTML properly handle whitespace around tags in a run
+- HTML use `id` option on write
+- Files starting with `0x09` followed by a display character are now TSV files
+- XLS parse references col/row indices mod by the correct number for BIFF ver
+- XLSX comments moved to avoid overlapping cell
+- XLSB outline level
+- AutoFilter update `_FilterDatabase` defined name on write
+- XLML skip CDATA blocks
+
 ## v0.15.1 (2019-08-14)
 
 * XLSX ignore XML artifacts
