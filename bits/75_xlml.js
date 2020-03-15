@@ -122,7 +122,10 @@ function parse_xlml_data(xml, ss, data, cell/*:any*/, base, styles, csty, row, a
 			if(!cell.t) cell.t = 'n';
 			break;
 		case 'Error': cell.t = 'e'; cell.v = RBErr[xml]; if(o.cellText !== false) cell.w = xml; break;
-		default: cell.t = 's'; cell.v = xlml_fixstr(ss||xml); break;
+		default:
+			if(xml == "" && ss == "") { cell.t = 'z'; }
+			else { cell.t = 's'; cell.v = xlml_fixstr(ss||xml); }
+			break;
 	}
 	safe_format_xlml(cell, nf, o);
 	if(o.cellFormula !== false) {
@@ -913,7 +916,9 @@ function write_sty_xlml(wb, opts)/*:string*/ {
 	opts.cellXfs.forEach(function(xf, id) {
 		var payload/*:Array<string>*/ = [];
 		payload.push(writextag('NumberFormat', null, {"ss:Format": escapexml(SSF._table[xf.numFmtId])}));
-		styles.push(writextag('Style', payload.join(""), {"ss:ID": "s" + (21+id)}));
+
+		var o = /*::(*/{"ss:ID": "s" + (21+id)}/*:: :any)*/;
+		styles.push(writextag('Style', payload.join(""), o));
 	});
 	return writextag("Styles", styles.join(""));
 }

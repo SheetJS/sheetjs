@@ -8,6 +8,29 @@ function write_biff_rec(ba/*:BufArray*/, type/*:number|string*/, payload, length
 	if(/*:: len != null &&*/len > 0 && is_buf(payload)) ba.push(payload);
 }
 
+//function write_biff_continue(ba/*:BufArray*/, type/*:number|string*/, payload, length/*:?number*/)/*:void*/ {
+//	var len = length || (payload||[]).length || 0;
+//	if(len <= 8224) return write_biff_rec(ba, type, payload, len);
+//	var t/*:number*/ = +type || +XLSRE[/*::String(*/type/*::)*/];
+//	if(isNaN(t)) return;
+//	var parts = payload.parts || [], sidx = 0;
+//	var i = 0, w = 0;
+//	while(w + (parts[sidx] || 8224) <= 8224) { w+= (parts[sidx] || 8224); sidx++; }
+//	var o = ba.next(4);
+//	o.write_shift(2, t);
+//	o.write_shift(2, w);
+//	ba.push(payload.slice(i, i + w));
+//	i += w;
+//	while(i < len) {
+//		o = ba.next(4);
+//		o.write_shift(2, 0x3c); // TODO: figure out correct continue type
+//		w = 0;
+//		while(w + (parts[sidx] || 8224) <= 8224) { w+= (parts[sidx] || 8224); sidx++; }
+//		o.write_shift(2, w);
+//		ba.push(payload.slice(i, i+w)); i+= w;
+//	}
+//}
+
 function write_BIFF2Cell(out, r/*:number*/, c/*:number*/) {
 	if(!out) out = new_buf(7);
 	out.write_shift(2, r);
