@@ -12982,9 +12982,9 @@ function safe_format(p, fmtid, fillid, opts, themes, styles) {
 	try {
 		if(opts.cellNF) p.z = SSF._table[fmtid];
 	} catch(e) { if(opts.WTF) throw e; }
-	if(p.t === 'z') return;
+	if(p.t === 'z' && !opts.cellStyles) return;
 	if(p.t === 'd' && typeof p.v === 'string') p.v = parseDate(p.v);
-	if(!opts || opts.cellText !== false) try {
+	if((!opts || opts.cellText !== false) && p.t !== 'z') try {
 		if(SSF._table[fmtid] == null) SSF.load(SSFImplicit[fmtid] || "General", fmtid);
 		if(p.t === 'e') p.w = p.w || BErr[p.v];
 		else if(fmtid === 0) {
