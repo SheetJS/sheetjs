@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<!-- xlsx.js (C) 2013-present  SheetJS http://sheetjs.com -->
+<!-- vim: set ts=2: -->
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>SheetJS + x-spreadsheet Live Demo</title>
+<style>
+#drop{
+	border:2px dashed #bbb;
+	-moz-border-radius:5px;
+	-webkit-border-radius:5px;
+	border-radius:5px;
+	padding:25px;
+	text-align:center;
+	font:20pt bold,"Vollkorn";color:#bbb
+}
+#b64data{
+	width:100%;
+}
+a { text-decoration: none }
+</style>
+<!-- x-spreadsheet stylesheet -->
+<link rel="stylesheet" href="https://unpkg.com/x-data-spreadsheet/dist/xspreadsheet.css"/>
+</head>
+<body>
+<pre>
+<b><a href="http://sheetjs.com">SheetJS Data Preview Live Demo</a></b>
+
+<a href="https://github.com/myliang/x-spreadsheet">x-spreadsheet component library</a>
+
+<a href="https://github.com/SheetJS/sheetjs">Source Code Repo</a>
+<a href="https://github.com/SheetJS/sheetjs/issues">Issues?  Something look weird?  Click here and report an issue</a>
+
+<div id="drop">Drop a spreadsheet file here to see sheet data</div>
+<input type="file" name="xlfile" id="xlf" /> ... or click here to select a file
+<textarea id="b64data">... or paste a base64-encoding here</textarea>
+<b>Advanced Demo Options:</b>
+Use readAsBinaryString: (when available) <input type="checkbox" name="userabs" checked>
+</pre>
+<p><input type="submit" value="Export to XLSX!" id="xport" onclick="export_xlsx();" disabled="true"></p>
+<div id="htmlout"></div>
+<br />
+<script src="https://unpkg.com/x-data-spreadsheet/dist/xspreadsheet.js"></script>
+<script src="shim.js"></script>
+<script src="xlsx.full.min.js"></script>
+<script>
+/*jshint browser:true */
+/* eslint-env browser */
+/* eslint no-use-before-define:0 */
+/*global Uint8Array, Uint16Array, ArrayBuffer */
+/*global XLSX */
+
+var HTMLOUT = document.getElementById('htmlout');
+var xspr = x.spreadsheet(HTMLOUT);
+HTMLOUT.style.height = (window.innerHeight - 400) + "px";
+HTMLOUT.style.width = (window.innerWidth - 50) + "px";
+
+function stox(wb) {
+	var out = [];
+	wb.SheetNames.forEach(function(name) {
+		var o = {name:name, rows:{}};
+		var ws = wb.Sheets[name];
+		var aoa = XLSX.utils.sheet_to_json(ws, {raw: false, header:1});
+		aoa.forEach(function(r, i) {
+			var cells = {};
+			r.forEach(function(c, j) { cells[j] = ({ text: c }); });
+			o.rows[i] = { cells: cells };
+		})
+		out.push(o);
+	});
+	return out;
+}
+
+function xtos(sdata) {
+	var out = XLSX.utils.book_new();
+	sdata.forEach(function(xws) {
+		var aoa = [[]];
+		var rowobj = xws.rows;
+		for(var ri = 0; ri < rowobj.len; ++ri) {
+			var row = rowobj[ri];
+			if(!row) continue;
+			aoa[ri] = [];
+			Object.keys(row.cells).forEach(function(k) {
+				var idx = +k;
+				if(isNaN(idx)) return;
+				aoa[ri][idx] = row.cells[k].text;
+			});
+		}
+		var ws = XLSX.utils.aoa_to_sheet(aoa);
+		XLSX.utils.book_append_sheet(out, ws, xws.name);
+	});
+	return out;
+}
+
+var process_wb = (function() {
+	var XPORT = document.getElementById('xport');
+
+	return function process_wb(wb) {
+		/* convert to x-spreadsheet form */
+		var data = stox(wb);
+
+		/* update x-spreadsheet */
+		xspr.loadData(data);
+		XPORT.disabled = false;
+
+		if(typeof console !== 'undefined') console.log("output", new Date());
+	};
+})();
+
+var do_file = (function() {
+	var rABS = typeof FileReader !== "undefined" && (FileReader.prototype||{}).readAsBinaryString;
+	var domrabs = document.getElementsByName("userabs")[0];
+	if(!rABS) domrabs.disabled = !(domrabs.checked = false);
+
+	return function do_file(files) {
+		rABS = domrabs.checked;
+		var f = files[0];
+		var reader = new FileReader();
+		reader.onload = function(e) {
+			if(typeof console !== 'undefined') console.log("onload", new Date(), rABS);
+			var data = e.target.result;
+			if(!rABS) data = new Uint8Array(data);
+			process_wb(XLSX.read(data, {type: rABS ? 'binary' : 'array'}));
+		};
+		if(rABS) reader.readAsBinaryString(f);
+		else reader.readAsArrayBuffer(f);
+	};
+})();
+
+(function() {
+	var drop = document.getElementById('drop');
+	if(!drop.addEventListener) return;
+
+	function handleDrop(e) {
+		e.stopPropagation();
+		e.preventDefault();
+		do_file(e.dataTransfer.files);
+	}
+
+	function handleDragover(e) {
+		e.stopPropagation();
+		e.preventDefault();
+		e.dataTransfer.dropEffect = 'copy';
+	}
+
+	drop.addEventListener('dragenter', handleDragover, false);
+	drop.addEventListener('dragover', handleDragover, false);
+	drop.addEventListener('drop', handleDrop, false);
+})();
+
+(function() {
+	var xlf = document.getElementById('xlf');
+	if(!xlf.addEventListener) return;
+	function handleFile(e) { do_file(e.target.files); }
+	xlf.addEventListener('change', handleFile, false);
+})();
+
+function export_xlsx() {
+	var new_wb = xtos(xspr.getData());
+
+	/* write file and trigger a download */
+	XLSX.writeFile(new_wb, 'sheetjs.xlsx', {});
+}
+</script>
+<script type="text/javascript">
+/* eslint no-use-before-define:0 */
+	var _gaq = _gaq || [];
+	_gaq.push(['_setAccount', 'UA-36810333-1']);
+	_gaq.push(['_trackPageview']);
+
+	(function() {
+		var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+		ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+		var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+	})();
+</script>
+</body>
+</html>

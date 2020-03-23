@@ -46,6 +46,7 @@ can be installed with Bash on Windows or with `cygwin`.
 - [`Adobe ExtendScript`](extendscript/)
 - [`Headless Browsers`](headless/)
 - [`canvas-datagrid`](datagrid/)
+- [`x-spreadsheet`](xspreadsheet/)
 - [`Swift JSC and other engines`](altjs/)
 - [`"serverless" functions`](function/)
 - [`internet explorer`](oldie/)

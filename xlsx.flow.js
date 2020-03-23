@@ -16337,7 +16337,7 @@ function parse_xlml_xml(d, _opts)/*:Workbook*/ {
 
 				case 'datavalidation' /*case 'DataValidation'*/:
 				switch(Rn[3]) {
-					case 'range' /*case 'Range'*/: dval.ref = Rn; break;
+					case 'range' /*case 'Range'*/: break;
 
 					case 'type' /*case 'Type'*/: break;
 					case 'min' /*case 'Min'*/: break;

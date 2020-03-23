@@ -215,6 +215,7 @@ The [`demos` directory](demos/) includes sample projects for:
 - [`Adobe ExtendScript`](demos/extendscript/)
 - [`Headless Browsers`](demos/headless/)
 - [`canvas-datagrid`](demos/datagrid/)
+- [`x-spreadsheet`](demos/xspreadsheet/)
 - [`Swift JSC and other engines`](demos/altjs/)
 - [`"serverless" functions`](demos/function/)
 - [`internet explorer`](demos/oldie/)
