@@ -761,6 +761,13 @@ describe('API', function() {
 		X.utils.sheet_add_aoa(ws, [[4,5,6,7,8,9,0]], {origin: -1});
 		assert.equal(X.utils.sheet_to_csv(ws).trim(), "S,h,e,e,t,J,S\n1,2,,,5,6,7\n2,3,,,6,7,8\n3,4,,,7,8,9\n4,5,6,7,8,9,0");
 	});
+	it('sheet_add_aoa support object cell', function() {
+		var data = X.utils.aoa_to_sheet([
+			['url', 'name', 'id'],
+			[ { l: { Target: 'https://123.com' }, v: 'url', t: 's' }, 'tom', 'xxx' ]
+		]);
+		if(assert.deepEqual) assert.deepEqual(data.A2, { l: { Target: 'https://123.com' }, v: 'url', t: 's' });
+	});
 });
 
 function coreprop(props) {
@@ -1275,14 +1282,14 @@ describe('parse features', function() {
 			  fgColor: { theme: 9, raw_rgb: 'F79646' },
 			  bgColor: { theme: 5, raw_rgb: 'C0504D' } },
 			{ patternType: 'darkUp',
-			  fgColor: { theme: 3, raw_rgb: 'EEECE1' },
+			  fgColor: { theme: 3, raw_rgb: '1F497D' },
 			  bgColor: { theme: 7, raw_rgb: '8064A2' } },
 			{ patternType: 'darkGray',
-			  fgColor: { theme: 3, raw_rgb: 'EEECE1' },
-			  bgColor: { theme: 1, raw_rgb: 'FFFFFF' } },
+			  fgColor: { theme: 3, raw_rgb: '1F497D' },
+			  bgColor: { theme: 1, raw_rgb: '000000' } },
 			{ patternType: 'lightGray',
 			  fgColor: { theme: 6, raw_rgb: '9BBB59' },
-			  bgColor: { theme: 2, raw_rgb: '1F497D' } },
+			  bgColor: { theme: 2, raw_rgb: 'EEECE1' } },
 			{ patternType: 'lightDown',
 			  fgColor: { theme: 4, raw_rgb: '4F81BD' },
 			  bgColor: { theme: 7, raw_rgb: '8064A2' } },
@@ -1291,9 +1298,9 @@ describe('parse features', function() {
 			  bgColor: { theme: 9, raw_rgb: 'F79646' } },
 			{ patternType: 'lightGrid',
 			  fgColor: { theme: 4, raw_rgb: '4F81BD' },
-			  bgColor: { theme: 2, raw_rgb: '1F497D' } },
+			  bgColor: { theme: 2, raw_rgb: 'EEECE1' } },
 			{ patternType: 'lightVertical',
-			  fgColor: { theme: 3, raw_rgb: 'EEECE1' },
+			  fgColor: { theme: 3, raw_rgb: '1F497D' },
 			  bgColor: { theme: 7, raw_rgb: '8064A2' } }
 		];
 		/*eslint-enable */
@@ -2373,4 +2380,3 @@ mft.forEach(function(x) {
 		case "yes-formula": formulae = true; break;
 	}});
 }); });
-

@@ -16,3 +16,4 @@ update:
 	git show master:tests/write.js > tests/write.js
 	git show master:tests/write.html > tests/write.html
 	git show master:demos/datagrid/index.html > datagrid.html
+	git show master:demos/xspreadsheet/index.html > x-spreadsheet.html
