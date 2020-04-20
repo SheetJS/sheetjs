@@ -1429,6 +1429,7 @@ function datenum(v/*:Date*/, date1904/*:?boolean*/)/*:number*/ {
 	return (epoch - dnthresh) / (24 * 60 * 60 * 1000);
 }
 var good_pd_date = new Date('2017-02-19T19:06:09.000Z');
+if(isNaN(good_pd_date.getFullYear())) good_pd_date = new Date('2017-02-19T19:06:09');
 if(isNaN(good_pd_date.getFullYear())) good_pd_date = new Date('2/19/17');
 var good_pd = good_pd_date.getFullYear() == 2017;
 function parseDate(str/*:string|Date*/)/*:Date*/ {
