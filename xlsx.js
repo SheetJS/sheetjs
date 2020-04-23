@@ -20052,7 +20052,7 @@ var write_content_ods = (function() {
 		return escapexml(text)
 			.replace(/  +/g, function($$){return '<text:s text:c="'+$$.length+'"/>';})
 			.replace(/\t/g, "<text:tab/>")
-			.replace(/\n/g, "<text:line-break/>")
+			.replace(/\n/g, "</text:p><text:p>")
 			.replace(/^ /, "<text:s/>").replace(/ $/, "<text:s/>");
 	};
 
