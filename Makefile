@@ -34,6 +34,10 @@ bits/01_version.js: package.json
 clean: ## Remove targets and build artifacts
 	rm -f $(TARGET) $(FLOWTARGET)
 
+.PHONY: git
+git: ## show version string
+	@echo "$$(node -pe 'require("./package.json").version') (ssf)"
+
 
 ## Testing
 
@@ -43,7 +47,7 @@ test mocha: ## Run test suite
 
 .PHONY: test_misc
 test_misc:
-	MINTEST=1 npm test
+	MINTEST=1 mocha -R spec -t 30000
 
 .PHONY: travis
 travis: ## Run test suite with minimal output
@@ -51,7 +55,7 @@ travis: ## Run test suite with minimal output
 
 .PHONY: ctest
 ctest: ## Build browser test fixtures
-	browserify -t brfs test/{dateNF,dates,exp,fraction,general,implied,oddities,utilities,comma,valid}.js > ctest/test.js
+	browserify -t brfs test/{comma,dateNF,dates,exp,fraction,general,implied,oddities,utilities,valid}.js > ctest/test.js
 
 .PHONY: ctestserv
 ctestserv: ## Start a test server on port 8000
