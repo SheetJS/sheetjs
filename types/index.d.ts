@@ -20,6 +20,8 @@ export function read(data: any, opts?: ParsingOptions): WorkBook;
 export function writeFile(data: WorkBook, filename: string, opts?: WritingOptions): any;
 /** Attempts to write the workbook data */
 export function write(data: WorkBook, opts?: WritingOptions): any;
+/** Attempts to write the workbook data to file asynchronous */
+export function writeFileAsync(filename: string, data: WorkBook, opts?: WritingOptions | Function, cb?: Function): any;
 
 /** Utility Functions */
 export const utils: XLSX$Utils;
