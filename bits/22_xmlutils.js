@@ -225,9 +225,12 @@ function writextag(f/*:string*/,g/*:?string*/,h) { return '<' + f + ((h != null)
 
 function write_w3cdtf(d/*:Date*/, t/*:?boolean*/)/*:string*/ { try { return d.toISOString().replace(/\.\d*/,""); } catch(e) { if(t) throw e; } return ""; }
 
-function write_vt(s)/*:string*/ {
+function write_vt(s, xlsx/*:?boolean*/)/*:string*/ {
 	switch(typeof s) {
-		case 'string': return writextag('vt:lpwstr', escapexml(s));
+		case 'string':
+			var o = writextag('vt:lpwstr', escapexml(s));
+			if(xlsx) o = o.replace(/&quot;/g, "_x0022_");
+			return o;
 		case 'number': return writextag((s|0)==s?'vt:i4':'vt:r8', escapexml(String(s)));
 		case 'boolean': return writextag('vt:bool',s?'true':'false');
 	}

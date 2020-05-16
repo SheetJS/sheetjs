@@ -17,7 +17,7 @@ var make_offcrypto = function(O, _crypto) {
 			t = S[i]; S[i] = S[j]; S[j] = t;
 		}
 		// $FlowIgnore
-		i = j = 0; var out = Buffer(data.length);
+		i = j = 0; var out = new_raw_buf(data.length);
 		for(c = 0; c != data.length; ++c) {
 			i = (i + 1)&255;
 			j = (j + S[i])%256;
