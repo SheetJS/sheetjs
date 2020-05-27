@@ -4,6 +4,9 @@ test.js     text eol=lf
 xlsx*.js    text eol=lf
 *.flow.js   text eol=lf
 
+dist/*.map -diff
+dist/*.js -diff
+
 docbits/*      linguist-documentation
 dist/*         linguist-generated=true
 xlsx.js        linguist-generated=true
