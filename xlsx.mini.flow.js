@@ -4,7 +4,7 @@
 /*global global, exports, module, require:false, process:false, Buffer:false, ArrayBuffer:false */
 var XLSX = {};
 function make_xlsx_lib(XLSX){
-XLSX.version = '0.16.0';
+XLSX.version = '0.16.1';
 var current_codepage = 1200, current_ansi = 1252;
 
 var VALID_ANSI = [ 874, 932, 936, 949, 950 ];
@@ -7531,8 +7531,8 @@ function parse_dom_table(table/*:HTMLElement*/, _opts/*:?any*/)/*:Worksheet*/ {
 		for(_C = C = 0; _C < elts.length; ++_C) {
 			var elt/*:HTMLTableCellElement*/ = elts[_C];
 			if (opts.display && is_dom_element_hidden(elt)) continue;
-			var v/*:string*/ = elt.hasAttribute('v') ? elt.getAttribute('v') : htmldecode(elt.innerHTML);
-			var z/*:string*/ = elt.getAttribute('z');
+			var v/*:?string*/ = elt.hasAttribute('v') ? elt.getAttribute('v') : htmldecode(elt.innerHTML);
+			var z/*:?string*/ = elt.getAttribute('z');
 			for(midx = 0; midx < merges.length; ++midx) {
 				var m/*:Range*/ = merges[midx];
 				if(m.s.c == C && m.s.r <= R && R <= m.e.r) { C = m.e.c+1; midx = -1; }
