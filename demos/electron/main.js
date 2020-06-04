@@ -10,7 +10,6 @@ function createWindow() {
 	if (win) return;
 	win = new electron.BrowserWindow({
 		width: 800, height: 600,
-		//The lines below solved the issue
 		webPreferences: {
 			nodeIntegration: true
 		}
