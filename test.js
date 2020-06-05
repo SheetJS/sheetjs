@@ -716,7 +716,7 @@ describe('output formats', function() {
 			X.utils.book_append_sheet(wb, X.utils.aoa_to_sheet([['R',"\u2603"],["\u0BEE",2]]), "Sheet1");
 			if(T == 'string' && !fmt[2]) return assert.throws(function() {X.write(wb, {type: T, bookType:fmt[0], WTF:1});});
 			var out = X.write(wb, {type: T, bookType:fmt[0], WTF:1});
-			var nwb = X.read(out, {type: T, WTF:1});
+			var nwb = X.read(out, {type: T, PRN: fmt[0] == 'prn', WTF:1});
 			var nws = nwb.Sheets[nwb.SheetNames[0]];
 			assert.equal(get_cell(nws, "B2").v, 2);
 			assert.equal(get_cell(nws, "A1").v, "R");

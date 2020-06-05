@@ -1684,6 +1684,7 @@ The exported `read` and `readFile` functions accept an options argument:
 |`password`   | ""      | If defined and file is encrypted, use password **    |
 |`WTF`        | false   | If true, throw errors on unexpected file features ** |
 |`sheets`     |         | If specified, only parse specified sheets **         |
+|`PRN`        | false   | If true, allow parsing of PRN files **               |
 
 - Even if `cellNF` is false, formatted text will be generated and saved to `.w`
 - In some cases, sheets may be parsed even if `bookSheets` is false.
@@ -1707,6 +1708,7 @@ The exported `read` and `readFile` functions accept an options argument:
   new XLSB-compatible blob from the XLS CFB container.
 - `codepage` is applied to BIFF2 - BIFF5 files without `CodePage` records and to
   CSV files without BOM in `type:"binary"`.  BIFF8 XLS always defaults to 1200.
+- `PRN` affects parsing of text files without a common delimiter character.
 - Currently only XOR encryption is supported.  Unsupported error will be thrown
   for files employing other encryption methods.
 - WTF is mainly for development.  By default, the parser will suppress read

@@ -4,7 +4,7 @@
 /*global global, exports, module, require:false, process:false, Buffer:false, ArrayBuffer:false */
 var XLSX = {};
 function make_xlsx_lib(XLSX){
-XLSX.version = '0.16.1';
+XLSX.version = '0.16.2';
 var current_codepage = 1200, current_ansi = 1252;
 /*global cptable:true, window */
 if(typeof module !== "undefined" && typeof require !== 'undefined') {

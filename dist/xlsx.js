@@ -4,7 +4,7 @@
 /*global global, exports, module, require:false, process:false, Buffer:false, ArrayBuffer:false */
 var XLSX = {};
 function make_xlsx_lib(XLSX){
-XLSX.version = '0.16.1';
+XLSX.version = '0.16.2';
 var current_codepage = 1200, current_ansi = 1252;
 /*global cptable:true, window */
 if(typeof module !== "undefined" && typeof require !== 'undefined') {
@@ -7626,6 +7626,7 @@ var PRN = (function() {
 	}
 
 	function prn_to_sheet_str(str, opts) {
+		if(!(opts && opts.PRN)) return dsv_to_sheet_str(str, opts);
 		if(str.slice(0,4) == "sep=") return dsv_to_sheet_str(str, opts);
 		if(str.indexOf("\t") >= 0 || str.indexOf(",") >= 0 || str.indexOf(";") >= 0) return dsv_to_sheet_str(str, opts);
 		return aoa_to_sheet(prn_to_aoa_str(str, opts), opts);

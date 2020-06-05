@@ -4,7 +4,21 @@ This log is intended to keep track of backwards-incompatible changes, including
 but not limited to API changes and file location changes.  Minor behavioral
 changes may not be included if they are not expected to break existing code.
 
+## v0.16.2
+
+* Disabled `PRN` parsing by default (better support for CSV without delimeters)
+
+## v0.16.1
+
+* skip empty custom property tags if data is absent (fixes DocSecurity issue)
+* HTML output add raw value, type, number format
+* DOM parse look for `v` / `t` / `z` attributes when determining value
+* double quotes in properties escaped using `_x0022_`
+* changed AMD structure for NetSuite and other RequireJS implementations
+- `encode_cell` and `decode_cell` do not rely on `encode_col` / `decode_col`
+
 ## v0.16.0
+
 * Date handling changed
 * XLML certain tag tests are now case insensitive
 * Fixed potentially vulnerable regular expressions

@@ -716,7 +716,7 @@ describe('output formats', function() {
 			X.utils.book_append_sheet(wb, X.utils.aoa_to_sheet([['R',"\u2603"],["\u0BEE",2]]), "Sheet1");
 			if(T == 'string' && !fmt[2]) return assert.throws(function() {X.write(wb, {type: T, bookType:fmt[0], WTF:1});});
 			var out = X.write(wb, {type: T, bookType:fmt[0], WTF:1});
-			var nwb = X.read(out, {type: T, WTF:1});
+			var nwb = X.read(out, {type: T, PRN: fmt[0] == 'prn', WTF:1});
 			var nws = nwb.Sheets[nwb.SheetNames[0]];
 			assert.equal(get_cell(nws, "B2").v, 2);
 			assert.equal(get_cell(nws, "A1").v, "R");
@@ -2053,9 +2053,7 @@ describe('sylk', function() {
 			assert.equal(get_cell(X.read(str, {type:"string"}).Sheets.Sheet1, "A1").v, A1);
 			assert.equal(get_cell(X.read(str.replace(/–/, "\x96"), {type:"binary", codepage:1252}).Sheets.Sheet1, "A1").v, A1);
 			if(typeof Buffer !== 'undefined' && !browser) {
-				// $FlowIgnore
 				assert.equal(get_cell(X.read(Buffer_from(str), {type:"buffer", codepage:65001}).Sheets.Sheet1, "A1").v, A1);
-				// $FlowIgnore
 				assert.equal(get_cell(X.read(Buffer_from(str.replace(/–/, "\x96"), "binary"), {type:"buffer", codepage:1252}).Sheets.Sheet1, "A1").v, A1);
 			}
 		} : null);
