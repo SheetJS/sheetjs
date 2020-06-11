@@ -1,7 +1,7 @@
 #!/bin/bash
 # xlsx.js (C) 2013-present  SheetJS -- http://sheetjs.com */
 if [ ! -e SheetJS ]; then
-	react-native init --version="0.53.3" SheetJS
+	react-native init --version="0.62.2" SheetJS
 	cd SheetJS
 	npm i -S xlsx react-native-table-component react-native-fs
 	cd -
