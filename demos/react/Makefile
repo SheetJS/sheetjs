@@ -1,5 +1,5 @@
 .PHONY: react
-react: ## Simple server for react and clones
+react: init ## Simple server for react and clones
 	python -mSimpleHTTPServer
 
 .PHONY: next
