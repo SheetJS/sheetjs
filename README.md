@@ -2326,6 +2326,7 @@ Despite the library name `xlsx`, it supports numerous spreadsheet file formats:
 | HTML Tables                                                  |   ✅  |   ✅  |
 | Rich Text Format tables (RTF)                                |       |   ✅  |
 | Ethercalc Record Format (ETH)                                |   ✅  |   ✅  |
+
 Features not supported by a given file format will not be written.  Formats with
 range limits will be silently truncated:
 
