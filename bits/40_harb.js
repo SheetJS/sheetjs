@@ -55,6 +55,7 @@ var dbf_reverse_map = evert({
 	/*::[*/0xCA/*::]*/:  1254,           /*::[*/0xCB/*::]*/:  1253,
 	/*::[*/0x00/*::]*/: 20127
 });
+var DBF_SUPPORTED_VERSIONS = [0x02, 0x03, 0x09, 0x30, 0x31, 0x83, 0x8B, 0x8C, 0xF5];
 /* TODO: find an actual specification */
 function dbf_to_aoa(buf, opts)/*:AOA*/ {
 	var out/*:AOA*/ = [];
@@ -308,6 +309,7 @@ function sheet_to_dbf(ws/*:Worksheet*/, opts/*:WriteOpts*/) {
 	return ba.end();
 }
 	return {
+		versions: DBF_SUPPORTED_VERSIONS,
 		to_workbook: dbf_to_workbook,
 		to_sheet: dbf_to_sheet,
 		from_sheet: sheet_to_dbf
