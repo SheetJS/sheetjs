@@ -64,4 +64,7 @@ function carry(val/*:number*/, d/*:number*/)/*:number*/ {
 	}
 	return 0;
 }
-function flr(val/*:number*/)/*:string*/ { if(val < 2147483647 && val > -2147483648) return ""+(val >= 0 ? (val|0) : (val-1|0)); return ""+Math.floor(val); }
+function flr(val/*:number*/)/*:string*/ {
+	if(val < 2147483647 && val > -2147483648) return ""+(val >= 0 ? (val|0) : (val-1|0));
+	return ""+Math.floor(val);
+}

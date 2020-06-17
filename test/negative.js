@@ -1,6 +1,6 @@
 /* vim: set ts=2: */
 /*jshint loopfunc:true, mocha:true, node:true */
-/*eslint-env mocha */
+/*eslint-env mocha, node */
 var SSF = require('../');
 var assert = require('assert');
 
