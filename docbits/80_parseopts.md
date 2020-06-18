@@ -53,7 +53,7 @@ The exported `read` and `readFile` functions accept an options argument:
   for files employing other encryption methods.
 - WTF is mainly for development.  By default, the parser will suppress read
   errors on single worksheets, allowing you to read from the worksheets that do
-  parse properly. Setting `WTF:1` forces those errors to be thrown.
+  parse properly. Setting `WTF:true` forces those errors to be thrown.
 
 ### Input Type
 
