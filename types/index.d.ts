@@ -623,6 +623,9 @@ export interface Sheet2CSVOpts extends DateNFOption {
 
     /** Skip hidden rows and columns in the CSV output */
     skipHidden?: boolean;
+
+    /** Force quotes around fields */
+    forceQuotes?: boolean;
 }
 
 export interface OriginOption {
