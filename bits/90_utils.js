@@ -33,7 +33,7 @@ function make_json_row(sheet/*:Worksheet*/, r/*:Range*/, R/*:number*/, cols/*:Ar
 				else if(raw && v === null) row[hdr[C]] = null;
 				else continue;
 			} else {
-				row[hdr[C]] = raw ? v : format_cell(val,v,o);
+				row[hdr[C]] = raw || (o.rawNumbers && val.t == "n") ? v : format_cell(val,v,o);
 			}
 			if(v != null) isempty = false;
 		}
@@ -98,7 +98,7 @@ function make_csv_row(sheet/*:Worksheet*/, r/*:Range*/, R/*:number*/, cols/*:Arr
 		if(val == null) txt = "";
 		else if(val.v != null) {
 			isempty = false;
-			txt = ''+format_cell(val, null, o);
+			txt = ''+(o.rawNumbers && val.t == "n" ? val.v : format_cell(val, null, o));
 			for(var i = 0, cc = 0; i !== txt.length; ++i) if((cc = txt.charCodeAt(i)) === fs || cc === rs || cc === 34 || o.forceQuotes) {txt = "\"" + txt.replace(qreg, '""') + "\""; break; }
 			if(txt == "ID") txt = '"ID"';
 		} else if(val.f != null && !val.F) {

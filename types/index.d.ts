@@ -626,6 +626,9 @@ export interface Sheet2CSVOpts extends DateNFOption {
 
     /** Force quotes around fields */
     forceQuotes?: boolean;
+
+    /** if true, return raw numbers; if false, return formatted numbers */
+    rawNumbers?: boolean;
 }
 
 export interface OriginOption {
@@ -662,6 +665,9 @@ export interface Sheet2JSONOpts extends DateNFOption {
 
     /** if true, return raw data; if false, return formatted text */
     raw?: boolean;
+
+    /** if true, return raw numbers; if false, return formatted numbers */
+    rawNumbers?: boolean;
 }
 
 export interface AOA2SheetOpts extends CommonOptions, DateNFOption {
