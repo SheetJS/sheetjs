@@ -17,6 +17,7 @@ Note: since JSZip 3 removed critical functionality, this version assigns to the
 	else if("function"==typeof define&&define.amd&&"undefined"==typeof DO_NOT_EXPORT_JSZIP){JSZipSync=e();define([],e);}
 	else{
 		var f;
+		"undefined"!=typeof globalThis?f=globalThis:
 		"undefined"!=typeof window?f=window:
 		"undefined"!=typeof global?f=global:
 		"undefined"!=typeof $ && $.global?f=$.global:
