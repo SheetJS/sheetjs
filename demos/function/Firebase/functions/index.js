@@ -32,9 +32,8 @@ exports.main = functions.https.onRequest((req, res) => {
   bb.on('finish', () => {
     let f = files[Object.keys(files)[0]];
     const wb = XLSX.read(f[0], { type: "buffer" });
-    // Conver to CSV
-    XLSX.write(wb, {type: "string", bookType: "csv"});
-    res.send(wb);
+    // Convert to CSV
+    res.send(XLSX.utils.sheet_to_csv(wb.Sheets[wb.SheetNames[0]]));
   });
   bb.end(req.body)
 });
