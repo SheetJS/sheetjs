@@ -1,0 +1,14 @@
+{
+  "name": "ssf-cli",
+  "version": "1.0.0",
+  "description": "Command-line interface for ssf",
+  "bin": {
+    "ssf-cli": "./bin/ssf.njs"
+  },
+  "main": "index.js",
+  "author": "Garrett Luu",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "ssf": "^0.11.1"
+  }
+}
