@@ -9,8 +9,12 @@ aws: lambda-proxy
 lambda-proxy:
 	cd LambdaProxy; mkdir -p node_modules; npm install xlsx busboy; sam local start-api; cd -
 
+.PHONY: init-azure
+init-azure:
+	cd AzureHTTPTrigger; mkdir -p node_modules; npm install xlsx formidable fs
+
 .PHONY: azure
-azure:
+azure: init-azure
 	func start
 
 .PHONY: azure-server
