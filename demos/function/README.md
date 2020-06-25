@@ -129,5 +129,6 @@ In the `Firebase` directory, the example function reads files sent through
 HTTP and converts it to a CSV and sends the response in the form of a string.
 
 To run this demo locally, run `npm i -g firebase-tools` to install the
-Firebase CLI and `npm i` to install the dependencies, then run `firebase
-emulators:start` to start the local server.
+Firebase CLI and `npm i` to install the dependencies, then `firebase use --add`
+to connect to an existing Firebase project. Run `firebase emulators:start` to
+start the local server.
