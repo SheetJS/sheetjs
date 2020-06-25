@@ -121,3 +121,14 @@ HTTP trigger that converts the submitted file to CSV.
 
 When deploying on Azure, be sure to install the module from the remote console,
 as described in the "Azure Functions JavaScript developer guide".
+
+#### Firebase Functions
+
+Firebase functions can be triggered via HTTP requests, similar to a REST API.
+In the `Firebase` directory, the example function reads files sent through
+HTTP and converts it to a CSV and sends the response in the form of a string.
+
+To run this demo locally, run `npm i -g firebase-tools` to install the
+Firebase CLI and `npm i` to install the dependencies, then `firebase use --add`
+to connect to an existing Firebase project. Run `firebase emulators:start` to
+start the local server.

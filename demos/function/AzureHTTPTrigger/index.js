@@ -26,9 +26,8 @@ module.exports = (context, req) => {
 		if(!f) {
 			context.res = { status: 400, body: "Must submit a file for processing!" };
 		} else {
-			/* since the file is Base64-encoded, read the file and parse as "base64" */
-			const b64 = fs.readFileSync(f.path).toString();
-			const wb = XLSX.read(b64, {type:"base64"});
+			/* file is stored in a temp directory, so we can point to that and read it */
+			const wb = XLSX.read(f.path, {type:"file"});
 
 			/* convert to specified output type -- default CSV */
 			const ext = (fields.bookType || "csv").toLowerCase();
