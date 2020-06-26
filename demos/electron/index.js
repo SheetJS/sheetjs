@@ -1,5 +1,5 @@
 /* xlsx.js (C) 2013-present SheetJS -- http://sheetjs.com */
-/*global Uint8Array, console */
+/* global Uint8Array, console */
 /* exported export_xlsx */
 /* eslint no-use-before-define:0 */
 var XLSX = require('xlsx');
