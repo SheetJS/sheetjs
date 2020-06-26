@@ -261,6 +261,9 @@ export interface WorkBook {
 }
 
 export interface SheetProps {
+    /** Name of Sheet */
+    name: string;
+
     /** Sheet Visibility (0=Visible 1=Hidden 2=VeryHidden) */
     Hidden?: 0 | 1 | 2;
 
