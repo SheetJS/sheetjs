@@ -3,7 +3,7 @@
 /* exported export_xlsx */
 /* eslint no-use-before-define:0 */
 var XLSX = require('xlsx');
-var electron = require('electron').remote;
+var electron = require('electron');
 
 var process_wb = (function() {
 	var HTMLOUT = document.getElementById('htmlout');
