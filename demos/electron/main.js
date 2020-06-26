@@ -11,7 +11,8 @@ function createWindow() {
 	win = new electron.BrowserWindow({
 		width: 800, height: 600,
 		webPreferences: {
-			nodeIntegration: true
+			nodeIntegration: true,
+			enableRemoteModule: true
 		}
 	});
 	win.loadURL("file://" + __dirname + "/index.html");
