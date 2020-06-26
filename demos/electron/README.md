@@ -1,7 +1,7 @@
 # Electron
 
 This library is compatible with Electron and should just work out of the box.
-The demonstration uses Electron 1.7.5.  The library is added via `require` from
+The demonstration uses Electron 9.0.5.  The library is added via `require` from
 the render process.  It can also be required from the main process, as shown in
 this demo to render a version string in the About dialog on OSX.
 
