@@ -87,18 +87,18 @@ var do_file = (function() {
 var export_xlsx = (function() {
 	var HTMLOUT = document.getElementById('htmlout');
 	var XTENSION = "xls|xlsx|xlsm|xlsb|xml|csv|txt|dif|sylk|slk|prn|ods|fods|htm|html".split("|")
-	return function() {
+	return async function() {
 		var wb = XLSX.utils.table_to_book(HTMLOUT);
-		var o = electron.dialog.showSaveDialog({
+		var o = await electron.dialog.showSaveDialog({
 			title: 'Save file as',
 			filters: [{
 				name: "Spreadsheets",
 				extensions: XTENSION
 			}]
 		});
-		console.log(o);
-		XLSX.writeFile(wb, o);
-		electron.dialog.showMessageBox({ message: "Exported data to " + o, buttons: ["OK"] });
+		console.log(o.filePath);
+		XLSX.writeFile(wb, o.filePath);
+		electron.dialog.showMessageBox({ message: "Exported data to " + o.filePath, buttons: ["OK"] });
 	};
 })();
 void export_xlsx;
