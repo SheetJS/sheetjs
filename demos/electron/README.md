@@ -3,7 +3,7 @@
 This library is compatible with Electron and should just work out of the box.
 The demonstration uses Electron 9.0.5.  The library is added via `require` from
 the renderer process. Note that Electron now requires `nodeIntegration: true`
-in order to `require('XLSX')` in the renderer process.It can also be required
+in order to `require('XLSX')` in the renderer process. It can also be required
 from the main process, as shown in this demo to render a version string in the
 About dialog on OSX.
 
