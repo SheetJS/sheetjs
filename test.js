@@ -768,6 +768,19 @@ describe('API', function() {
 		]);
 		if(assert.deepEqual) assert.deepEqual(data.A2, { l: { Target: 'https://123.com' }, v: 'url', t: 's' });
 	});
+	it('decode_range', function() {
+		var _c = "ABC", _r = "123", _C = "DEF", _R = "456";
+
+		var r = X.utils.decode_range(_c + _r + ":" + _C + _R);
+		assert(r.s != r.e);
+		assert.equal(r.s.c, X.utils.decode_col(_c)); assert.equal(r.s.r, X.utils.decode_row(_r));
+		assert.equal(r.e.c, X.utils.decode_col(_C)); assert.equal(r.e.r, X.utils.decode_row(_R));
+
+		r = X.utils.decode_range(_c + _r);
+		assert(r.s != r.e);
+		assert.equal(r.s.c, X.utils.decode_col(_c)); assert.equal(r.s.r, X.utils.decode_row(_r));
+		assert.equal(r.e.c, X.utils.decode_col(_c)); assert.equal(r.e.r, X.utils.decode_row(_r));
+	});
 });
 
 function coreprop(props) {

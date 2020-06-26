@@ -26,7 +26,7 @@ function encode_cell(cell/*:CellAddress*/)/*:string*/ {
 	for(; col; col=((col-1)/26)|0) s = String.fromCharCode(((col-1)%26) + 65) + s;
 	return s + (cell.r + 1);
 }
-function decode_range(range/*:string*/)/*:Range*/ { var x =range.split(":").map(decode_cell); return {s:x[0],e:x[x.length-1]}; }
+function decode_range(range/*:string*/)/*:Range*/ { var x =range.split(":"); return {s:decode_cell(x[0]),e:decode_cell(x[x.length-1])}; }
 /*# if only one arg, it is assumed to be a Range.  If 2 args, both are cell addresses */
 function encode_range(cs/*:CellAddrSpec|Range*/,ce/*:?CellAddrSpec*/)/*:string*/ {
 	if(typeof ce === 'undefined' || typeof ce === 'number') {
