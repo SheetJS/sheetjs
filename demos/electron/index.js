@@ -64,8 +64,8 @@ var do_file = (function() {
 
 (function() {
 	var readf = document.getElementById('readf');
-	function handleF(/*e*/) {
-		var o = electron.dialog.showOpenDialog({
+	async function handleF(/*e*/) {
+		var o = await electron.dialog.showOpenDialog({
 			title: 'Select a file',
 			filters: [{
 				name: "Spreadsheets",
@@ -73,7 +73,7 @@ var do_file = (function() {
 			}],
 			properties: ['openFile']
 		});
-		if(o.length > 0) process_wb(XLSX.readFile(o[0]));
+		if(o.filePaths.length > 0) process_wb(XLSX.readFile(o.filePaths[0]));
 	}
 	readf.addEventListener('click', handleF, false);
 })();
