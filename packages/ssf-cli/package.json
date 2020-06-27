@@ -1,14 +1,30 @@
 {
-  "name": "ssf-cli",
-  "version": "1.0.0",
-  "description": "Command-line interface for ssf",
-  "bin": {
-    "ssf-cli": "./bin/ssf.njs"
-  },
-  "main": "index.js",
-  "author": "Garrett Luu",
-  "license": "Apache-2.0",
-  "dependencies": {
-    "ssf": "^0.11.1"
-  }
+	"name": "ssf-cli",
+	"version": "1.1.0",
+	"author": "Garrett Luu",
+	"description": "Command-line interface for ssf",
+	"keywords": [
+		"format",
+		"sprintf",
+		"spreadsheet"
+	],
+	"main": "./index.js",
+	"bin": {
+		"ssf-cli": "./bin/ssf.njs"
+	},
+	"dependencies": {
+		"ssf": "^0.11.2"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git://github.com/SheetJS/ssf.git"
+	},
+	"homepage": "http://sheetjs.com/",
+	"bugs": {
+		"url": "https://github.com/SheetJS/ssf/issues"
+	},
+	"license": "Apache-2.0",
+	"engines": {
+		"node": ">=0.8"
+	}
 }
