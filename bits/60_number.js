@@ -53,10 +53,9 @@ function hashq(str/*:string*/)/*:string*/ {
 }
 function rnd(val/*:number*/, d/*:number*/)/*:string*/ { var dd = Math.pow(10,d); return ""+(Math.round(val * dd)/dd); }
 function dec(val/*:number*/, d/*:number*/)/*:number*/ {
-	if (d < ('' + Math.round((val-Math.floor(val))*Math.pow(10,d))).length) {
-		return 0;
-	}
-	return Math.round((val-Math.floor(val))*Math.pow(10,d));
+	var _frac = val - Math.floor(val), dd = Math.pow(10,d);
+	if (d < ('' + Math.round(_frac * dd)).length) return 0;
+	return Math.round(_frac * dd);
 }
 function carry(val/*:number*/, d/*:number*/)/*:number*/ {
 	if (d < ('' + Math.round((val-Math.floor(val))*Math.pow(10,d))).length) {

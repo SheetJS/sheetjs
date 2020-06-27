@@ -3,7 +3,7 @@
 /*jshint -W041 */
 var SSF = ({});
 var make_ssf = function make_ssf(SSF){
-SSF.version = '0.11.1';
+SSF.version = '0.11.2';
 function _strrev(x) { var o = "", i = x.length-1; while(i>=0) o += x.charAt(i--); return o; }
 function fill(c,l) { var o = ""; while(o.length < l) o+=c; return o; }
 function pad0(v,d){var t=""+v; return t.length>=d?t:fill('0',d-t.length)+t;}
@@ -186,37 +186,64 @@ function datenum_local(v, date1904) {
 	else if(v >= base1904) epoch += 24*60*60*1000;
 	return (epoch - (dnthresh + (v.getTimezoneOffset() - basedate.getTimezoneOffset()) * 60000)) / (24 * 60 * 60 * 1000);
 }
+/* The longest 32-bit integer text is "-4294967296", exactly 11 chars */
 function general_fmt_int(v) { return v.toString(10); }
 SSF._general_int = general_fmt_int;
+
+/* ECMA-376 18.8.30 numFmt*/
+/* Note: `toPrecision` uses standard form when prec > E and E >= -6 */
 var general_fmt_num = (function make_general_fmt_num() {
-var gnr1 = /\.(\d*[1-9])0+$/, gnr2 = /\.0*$/, gnr4 = /\.(\d*[1-9])0+/, gnr5 = /\.0*[Ee]/, gnr6 = /(E[+-])(\d)$/;
-function gfn2(v) {
-	var w = (v<0?12:11);
-	var o = gfn5(v.toFixed(12)); if(o.length <= w) return o;
-	o = v.toPrecision(10); if(o.length <= w) return o;
-	return v.toExponential(5);
-}
-function gfn3(v) {
-	var o = v.toFixed(11).replace(gnr1,".$1");
-	if(o.length > (v<0?12:11)) o = v.toPrecision(6);
-	return o;
-}
-function gfn4(o) {
-	for(var i = 0; i != o.length; ++i) if((o.charCodeAt(i) | 0x20) === 101) return o.replace(gnr4,".$1").replace(gnr5,"E").replace("e","E").replace(gnr6,"$10$2");
-	return o;
-}
-function gfn5(o) {
-	return o.indexOf(".") > -1 ? o.replace(gnr2,"").replace(gnr1,".$1") : o;
-}
-return function general_fmt_num(v) {
-	var V = Math.floor(Math.log(Math.abs(v))*Math.LOG10E), o;
-	if(V >= -4 && V <= -1) o = v.toPrecision(10+V);
-	else if(Math.abs(V) <= 9) o = gfn2(v);
-	else if(V === 10) o = v.toFixed(10).substr(0,12);
-	else o = gfn3(v);
-	return gfn5(gfn4(o));
-};})();
+	var trailing_zeroes_and_decimal = /(?:\.0*|(\.\d*[1-9])0+)$/;
+	function strip_decimal(o) {
+		return (o.indexOf(".") == -1) ? o : o.replace(trailing_zeroes_and_decimal, "$1");
+	}
+
+	/* General Exponential always shows 2 digits exp and trims the mantissa */
+	var mantissa_zeroes_and_decimal = /(?:\.0*|(\.\d*[1-9])0+)[Ee]/;
+	var exp_with_single_digit = /(E[+-])(\d)$/;
+	function normalize_exp(o) {
+		if(o.indexOf("E") == -1) return o;
+		return o.replace(mantissa_zeroes_and_decimal,"$1E").replace(exp_with_single_digit,"$10$2");
+	}
+
+	/* exponent >= -9 and <= 9 */
+	function small_exp(v) {
+		var w = (v<0?12:11);
+		var o = strip_decimal(v.toFixed(12)); if(o.length <= w) return o;
+		o = v.toPrecision(10); if(o.length <= w) return o;
+		return v.toExponential(5);
+	}
+
+	/* exponent >= 11 or <= -10 likely exponential */
+	function large_exp(v) {
+		var o = strip_decimal(v.toFixed(11));
+		return (o.length > (v<0?12:11) || o === "0" || o === "-0") ? v.toPrecision(6) : o;
+	}
+
+	function general_fmt_num_base(v) {
+		var V = Math.floor(Math.log(Math.abs(v))*Math.LOG10E), o;
+
+		if(V >= -4 && V <= -1) o = v.toPrecision(10+V);
+		else if(Math.abs(V) <= 9) o = small_exp(v);
+		else if(V === 10) o = v.toFixed(10).substr(0,12);
+		else o = large_exp(v);
+
+		return strip_decimal(normalize_exp(o.toUpperCase()));
+	}
+
+	return general_fmt_num_base;
+})();
 SSF._general_num = general_fmt_num;
+
+/*
+	"General" rules:
+	- text is passed through ("@")
+	- booleans are rendered as TRUE/FALSE
+	- "up to 11 characters" displayed for numbers
+	- Default date format (code 14) used for Dates
+
+	TODO: technically the display depends on the width of the cell
+*/
 function general_fmt(v, opts) {
 	switch(typeof v) {
 		case 'string': return v;
@@ -297,9 +324,10 @@ if(ss0 >= 2) tt = ss0 === 3 ? 1000 : 100;
 			default: throw 'bad abstime format: ' + fmt;
 		} outl = fmt.length === 3 ? 1 : 2; break;
 		case 101: /* 'e' era */
-			out = y; outl = 1;
+			out = y; outl = 1; break;
 	}
-	if(outl > 0) return pad0(out, outl); else return "";
+	var outstr = outl > 0 ? pad0(out, outl) : "";
+	return outstr;
 }
 /*jshint +W086 */
 function commaify(s) {
@@ -370,10 +398,9 @@ function hashq(str) {
 }
 function rnd(val, d) { var dd = Math.pow(10,d); return ""+(Math.round(val * dd)/dd); }
 function dec(val, d) {
-	if (d < ('' + Math.round((val-Math.floor(val))*Math.pow(10,d))).length) {
-		return 0;
-	}
-	return Math.round((val-Math.floor(val))*Math.pow(10,d));
+	var _frac = val - Math.floor(val), dd = Math.pow(10,d);
+	if (d < ('' + Math.round(_frac * dd)).length) return 0;
+	return Math.round(_frac * dd);
 }
 function carry(val, d) {
 	if (d < ('' + Math.round((val-Math.floor(val))*Math.pow(10,d))).length) {

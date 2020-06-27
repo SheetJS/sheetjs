@@ -2,11 +2,13 @@ test/
 ctest/
 index.html
 misc/
+packages/
 node_modules
 *.tgz
 _book
 book.json
 tmp
+mocha.js
 *.[tT][xX][tT]
 *.[cC][sS][vV]
 *.[dD][iIbB][fF]

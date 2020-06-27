@@ -88,6 +88,11 @@ type SSFDate = {
 - [Basic Demo](http://oss.sheetjs.com/ssf/)
 - [Custom Formats Builder](https://customformats.com)
 
+## Related Packages
+
+[`ssf-cli`](https://www.npmjs.com/package/ssf-cli) is a simple NodeJS command
+line tool for formatting numbers.
+
 ## License
 
 Please consult the attached LICENSE file for details.  All rights not explicitly
