@@ -291,3 +291,5 @@ function run() {
     console.log(X.utils.sheet_to_csv(X.utils.aoa_to_sheet(propaoa)));
   }
 }
+
+module.exports = run;
