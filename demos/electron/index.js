@@ -1,5 +1,5 @@
-/* xlsx.js (C) 2013-present SheetJS -- http://sheetjs.com */
-/*global Uint8Array, console */
+/* xlsx.js (C) 2013-present SheetJS -- https://sheetjs.com */
+/* global Uint8Array, console */
 /* exported export_xlsx */
 /* eslint no-use-before-define:0 */
 var XLSX = require('xlsx');
@@ -17,16 +17,6 @@ var process_wb = (function() {
 			HTMLOUT.innerHTML += htmlstr;
 		});
 	};
-})();
-
-var _gaq = _gaq || [];
-_gaq.push(['_setAccount', 'UA-36810333-1']);
-_gaq.push(['_trackPageview']);
-
-(function() {
-	var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-	ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-	var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
 })();
 
 var do_file = (function() {
@@ -64,8 +54,8 @@ var do_file = (function() {
 
 (function() {
 	var readf = document.getElementById('readf');
-	function handleF(/*e*/) {
-		var o = electron.dialog.showOpenDialog({
+	async function handleF(/*e*/) {
+		var o = await electron.dialog.showOpenDialog({
 			title: 'Select a file',
 			filters: [{
 				name: "Spreadsheets",
@@ -73,7 +63,7 @@ var do_file = (function() {
 			}],
 			properties: ['openFile']
 		});
-		if(o.length > 0) process_wb(XLSX.readFile(o[0]));
+		if(o.filePaths.length > 0) process_wb(XLSX.readFile(o.filePaths[0]));
 	}
 	readf.addEventListener('click', handleF, false);
 })();
@@ -87,18 +77,18 @@ var do_file = (function() {
 var export_xlsx = (function() {
 	var HTMLOUT = document.getElementById('htmlout');
 	var XTENSION = "xls|xlsx|xlsm|xlsb|xml|csv|txt|dif|sylk|slk|prn|ods|fods|htm|html".split("|")
-	return function() {
+	return async function() {
 		var wb = XLSX.utils.table_to_book(HTMLOUT);
-		var o = electron.dialog.showSaveDialog({
+		var o = await electron.dialog.showSaveDialog({
 			title: 'Save file as',
 			filters: [{
 				name: "Spreadsheets",
 				extensions: XTENSION
 			}]
 		});
-		console.log(o);
-		XLSX.writeFile(wb, o);
-		electron.dialog.showMessageBox({ message: "Exported data to " + o, buttons: ["OK"] });
+		console.log(o.filePath);
+		XLSX.writeFile(wb, o.filePath);
+		electron.dialog.showMessageBox({ message: "Exported data to " + o.filePath, buttons: ["OK"] });
 	};
 })();
 void export_xlsx;
