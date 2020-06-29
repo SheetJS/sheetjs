@@ -266,17 +266,20 @@ For the example sheet:
 As an alternative to the `writeFile` CSV type, `XLSX.utils.sheet_to_csv` also
 produces CSV output.  The function takes an options argument:
 
-| Option Name |  Default | Description                                         |
-| :---------- | :------: | :-------------------------------------------------- |
-|`FS`         |  `","`   | "Field Separator"  delimiter between fields         |
-|`RS`         |  `"\n"`  | "Record Separator" delimiter between rows           |
-|`dateNF`     |  FMT 14  | Use specified date format in string output          |
-|`strip`      |  false   | Remove trailing field separators in each record **  |
-|`blankrows`  |  true    | Include blank lines in the CSV output               |
-|`skipHidden` |  false   | Skips hidden rows/columns in the CSV output         |
+| Option Name  |  Default | Description                                        |
+| :----------- | :------: | :------------------------------------------------- |
+|`FS`          |  `","`   | "Field Separator"  delimiter between fields        |
+|`RS`          |  `"\n"`  | "Record Separator" delimiter between rows          |
+|`dateNF`      |  FMT 14  | Use specified date format in string output         |
+|`strip`       |  false   | Remove trailing field separators in each record ** |
+|`blankrows`   |  true    | Include blank lines in the CSV output              |
+|`skipHidden`  |  false   | Skips hidden rows/columns in the CSV output        |
+|`forceQuotes` |  false   | Force quotes around fields                         |
 
 - `strip` will remove trailing commas from each line under default `FS/RS`
 - `blankrows` must be set to `false` to skip blank lines.
+- Fields containing the record or field separator will automatically be wrapped
+  in double quotes; `forceQuotes` forces all cells to be wrapped in quotes.
 
 <details>
   <summary><b>Examples</b> (click to show)</summary>

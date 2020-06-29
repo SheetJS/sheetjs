@@ -47,7 +47,7 @@ before_install:
   - "npm install -g npm@4.3.0"
   - "npm install -g mocha@2.x voc"
   - "npm install blanket"
-  - "npm install xlsjs"
+  - "npm install word"
   - "npm install coveralls mocha-lcov-reporter"
 # note: jsdom 11.x expects node >= 6 but is missing engines.node
   - "npm install jsdom@11.x"

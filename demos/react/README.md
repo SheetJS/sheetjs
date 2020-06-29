@@ -135,4 +135,4 @@ deployments that use script tags to include the library.
 
 ## Additional Notes
 
-Some additional notes can be found in [NOTES.md](NOTES.md).
+Some additional notes can be found in [`NOTES.md`](NOTES.md).
