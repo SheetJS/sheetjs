@@ -2333,7 +2333,8 @@ describe('encryption', function() {
 if(!browser || typeof cptable !== 'undefined')
 describe('multiformat tests', function() {
 var mfopts = opts;
-var mft = fs.readFileSync('multiformat.lst','utf-8').split("\n").map(function(x) { return x.trim(); });
+var mft = fs.readFileSync('multiformat.lst','utf-8').replace(/\r/g,"").split("\n").map(function(x) { return x.trim(); });
+console.log(mft);
 var csv = true, formulae = false;
 mft.forEach(function(x) {
 	if(x.charAt(0)!="#") describe('MFT ' + x, function() {
