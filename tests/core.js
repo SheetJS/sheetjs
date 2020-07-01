@@ -768,6 +768,20 @@ describe('API', function() {
 		]);
 		if(assert.deepEqual) assert.deepEqual(data.A2, { l: { Target: 'https://123.com' }, v: 'url', t: 's' });
 	});
+
+	it('decode_range', function() {
+		var _c = "ABC", _r = "123", _C = "DEF", _R = "456";
+
+		var r = X.utils.decode_range(_c + _r + ":" + _C + _R);
+		assert(r.s != r.e);
+		assert.equal(r.s.c, X.utils.decode_col(_c)); assert.equal(r.s.r, X.utils.decode_row(_r));
+		assert.equal(r.e.c, X.utils.decode_col(_C)); assert.equal(r.e.r, X.utils.decode_row(_R));
+
+		r = X.utils.decode_range(_c + _r);
+		assert(r.s != r.e);
+		assert.equal(r.s.c, X.utils.decode_col(_c)); assert.equal(r.s.r, X.utils.decode_row(_r));
+		assert.equal(r.e.c, X.utils.decode_col(_c)); assert.equal(r.e.r, X.utils.decode_row(_r));
+	});
 });
 
 function coreprop(props) {
@@ -1957,6 +1971,10 @@ describe('CSV', function() {
 			assert.equal(get_cell(sheet, "B1").f, '1+1');
 			assert.equal(get_cell(sheet, "C1").t, 's');
 			assert.equal(get_cell(sheet, "C1").v, '100');
+		});
+		it('should interpret CRLF newlines', function() {
+			var wb = X.read(new Buffer("sep=&\r\n1&2&3\r\n4&5&6"), {type: "buffer"});
+			assert.equal(wb.Sheets.Sheet1["!ref"], "A1:C2");
 		});
 		if(!browser || typeof cptable !== 'undefined') it('should honor codepage for binary strings', function() {
 			var data = "abc,def\nghi,j\xD3l";
