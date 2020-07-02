@@ -1973,7 +1973,7 @@ describe('CSV', function() {
 			assert.equal(get_cell(sheet, "C1").v, '100');
 		});
 		it('should interpret CRLF newlines', function() {
-			var wb = X.read(new Buffer("sep=&\r\n1&2&3\r\n4&5&6"), {type: "buffer"});
+			var wb = X.read("sep=&\r\n1&2&3\r\n4&5&6", {type: "string"});
 			assert.equal(wb.Sheets.Sheet1["!ref"], "A1:C2");
 		});
 		if(!browser || typeof cptable !== 'undefined') it('should honor codepage for binary strings', function() {
