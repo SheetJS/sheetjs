@@ -44,7 +44,7 @@ matrix:
 
 before_install:
   - "npm config set strict-ssl false"
- # - "npm install -g npm@4.3.0"
+  - "./misc/node_version.sh"
   - "npm install -g mocha@2.x voc"
   - "npm install blanket"
   - "npm install word"
