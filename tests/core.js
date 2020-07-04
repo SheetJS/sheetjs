@@ -2320,6 +2320,20 @@ describe('corner cases', function() {
 		X.read(fs.readFileSync(dir + 'wtf_path.xlsx'), {WTF:1, type:TYPE});
 		X.read(fs.readFileSync(dir + 'wtf_path.xlsb'), {WTF:1, type:TYPE});
 	});
+	it("should quote unicode sheet names in formulae", function() {
+		var wb = X.read(fs.readFileSync(dir + "cross-sheet_formula_names.xlsb"), {WTF:1, type:TYPE});
+		assert.equal(wb.Sheets["Sheet1"]["A1"].f, "'a-b'!A1");
+		assert.equal(wb.Sheets["Sheet1"]["A2"].f, "'a#b'!A1");
+		assert.equal(wb.Sheets["Sheet1"]["A3"].f, "'a^b'!A1");
+		assert.equal(wb.Sheets["Sheet1"]["A4"].f, "'a%b'!A1");
+		assert.equal(wb.Sheets["Sheet1"]["A5"].f, "'a\u066ab'!A1");
+		assert.equal(wb.Sheets["Sheet1"]["A6"].f, "'☃️'!A1");
+		assert.equal(wb.Sheets["Sheet1"]["A7"].f, "'\ud83c\udf63'!A1");
+		assert.equal(wb.Sheets["Sheet1"]["A8"].f, "'a!!b'!A1");
+		assert.equal(wb.Sheets["Sheet1"]["A9"].f, "'a$b'!A1");
+		assert.equal(wb.Sheets["Sheet1"]["A10"].f, "'a!b'!A1");
+		assert.equal(wb.Sheets["Sheet1"]["A11"].f, "'a b'!A1");
+	});
 });
 
 describe('encryption', function() {
