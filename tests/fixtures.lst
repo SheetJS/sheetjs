@@ -56,6 +56,7 @@
 ./test_files/column_width.xlsx
 ./test_files/column_width.xlsb
 ./test_files/column_width.slk
+./test_files/cross-sheet_formula_names.xlsb
 ./test_files/defined_names_simple.xls
 ./test_files/defined_names_simple.xml
 ./test_files/defined_names_simple.xlsx
