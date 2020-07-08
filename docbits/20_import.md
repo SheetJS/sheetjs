@@ -109,7 +109,7 @@ function handleDrop(e) {
   var files = e.dataTransfer.files, f = files[0];
   var reader = new FileReader();
   reader.onload = function(e) {
-    var data = new Uint8Array(e.target.result);
+    var data = new Uint8Array(reader.result);
     var workbook = XLSX.read(data, {type: 'array'});
 
     /* DO SOMETHING WITH workbook HERE */
@@ -132,7 +132,7 @@ function handleFile(e) {
   var files = e.target.files, f = files[0];
   var reader = new FileReader();
   reader.onload = function(e) {
-    var data = new Uint8Array(e.target.result);
+    var data = new Uint8Array(reader.result);
     var workbook = XLSX.read(data, {type: 'array'});
 
     /* DO SOMETHING WITH workbook HERE */
