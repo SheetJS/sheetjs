@@ -768,7 +768,6 @@ describe('API', function() {
 		]);
 		if(assert.deepEqual) assert.deepEqual(data.A2, { l: { Target: 'https://123.com' }, v: 'url', t: 's' });
 	});
-
 	it('decode_range', function() {
 		var _c = "ABC", _r = "123", _C = "DEF", _R = "456";
 
