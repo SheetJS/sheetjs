@@ -1,5 +1,5 @@
 function write_UInt32LE(x/*:number*/, o) {
-	if(!o) o = new_buf(4);
+	if (!o) o = new_buf(4);
 	o.write_shift(4, x);
 	return o;
 }
@@ -10,9 +10,9 @@ function parse_XLWideString(data/*::, length*/)/*:string*/ {
 	return cchCharacters === 0 ? "" : data.read_shift(cchCharacters, 'dbcs');
 }
 function write_XLWideString(data/*:string*/, o) {
-	var _null = false; if(o == null) { _null = true; o = new_buf(4+2*data.length); }
+	var _null = false; if (o == null) { _null = true; o = new_buf(4 + 2 * data.length); }
 	o.write_shift(4, data.length);
-	if(data.length > 0) o.write_shift(0, data, 'dbcs');
+	if (data.length > 0) o.write_shift(0, data, 'dbcs');
 	return _null ? o.slice(0, o.l) : o;
 }
 
@@ -27,7 +27,7 @@ function parse_StrRun(data) {
 	return { ich: data.read_shift(2), ifnt: data.read_shift(2) };
 }
 function write_StrRun(run, o) {
-	if(!o) o = new_buf(4);
+	if (!o) o = new_buf(4);
 	o.write_shift(2, run.ich || 0);
 	o.write_shift(2, run.ifnt || 0);
 	return o;
@@ -40,13 +40,13 @@ function parse_RichStr(data, length/*:number*/)/*:XLString*/ {
 	var str = parse_XLWideString(data);
 	var rgsStrRun = [];
 	var z = ({ t: str, h: str }/*:any*/);
-	if((flags & 1) !== 0) { /* fRichStr */
+	if ((flags & 1) !== 0) { /* fRichStr */
 		/* TODO: formatted string */
 		var dwSizeStrRun = data.read_shift(4);
-		for(var i = 0; i != dwSizeStrRun; ++i) rgsStrRun.push(parse_StrRun(data));
+		for (var i = 0; i != dwSizeStrRun; ++i) rgsStrRun.push(parse_StrRun(data));
 		z.r = rgsStrRun;
 	}
-	else z.r = [{ich:0, ifnt:0}];
+	else z.r = [{ ich: 0, ifnt: 0 }];
 	//if((flags & 2) !== 0) { /* fExtStr */
 	//	/* TODO: phonetic string */
 	//}
@@ -55,8 +55,8 @@ function parse_RichStr(data, length/*:number*/)/*:XLString*/ {
 }
 function write_RichStr(str/*:XLString*/, o/*:?Block*/)/*:Block*/ {
 	/* TODO: formatted string */
-	var _null = false; if(o == null) { _null = true; o = new_buf(15+4*str.t.length); }
-	o.write_shift(1,0);
+	var _null = false; if (o == null) { _null = true; o = new_buf(15 + 4 * str.t.length); }
+	o.write_shift(1, 0);
 	write_XLWideString(str.t, o);
 	return _null ? o.slice(0, o.l) : o;
 }
@@ -64,11 +64,11 @@ function write_RichStr(str/*:XLString*/, o/*:?Block*/)/*:Block*/ {
 var parse_BrtCommentText = parse_RichStr;
 function write_BrtCommentText(str/*:XLString*/, o/*:?Block*/)/*:Block*/ {
 	/* TODO: formatted string */
-	var _null = false; if(o == null) { _null = true; o = new_buf(23+4*str.t.length); }
-	o.write_shift(1,1);
+	var _null = false; if (o == null) { _null = true; o = new_buf(23 + 4 * str.t.length); }
+	o.write_shift(1, 1);
 	write_XLWideString(str.t, o);
-	o.write_shift(4,1);
-	write_StrRun({ich:0,ifnt:0}, o);
+	o.write_shift(4, 1);
+	write_StrRun({ ich: 0, ifnt: 0 }, o);
 	return _null ? o.slice(0, o.l) : o;
 }
 
@@ -76,12 +76,12 @@ function write_BrtCommentText(str/*:XLString*/, o/*:?Block*/)/*:Block*/ {
 function parse_XLSBCell(data)/*:any*/ {
 	var col = data.read_shift(4);
 	var iStyleRef = data.read_shift(2);
-	iStyleRef += data.read_shift(1) <<16;
+	iStyleRef += data.read_shift(1) << 16;
 	data.l++; //var fPhShow = data.read_shift(1);
-	return { c:col, iStyleRef: iStyleRef };
+	return { c: col, iStyleRef: iStyleRef };
 }
 function write_XLSBCell(cell/*:any*/, o/*:?Block*/) {
-	if(o == null) o = new_buf(8);
+	if (o == null) o = new_buf(8);
 	o.write_shift(-4, cell.c);
 	o.write_shift(3, cell.iStyleRef || cell.s);
 	o.write_shift(1, 0); /* fPhShow */
@@ -99,9 +99,9 @@ function parse_XLNullableWideString(data/*::, length*/)/*:string*/ {
 	return cchCharacters === 0 || cchCharacters === 0xFFFFFFFF ? "" : data.read_shift(cchCharacters, 'dbcs');
 }
 function write_XLNullableWideString(data/*:string*/, o) {
-	var _null = false; if(o == null) { _null = true; o = new_buf(127); }
+	var _null = false; if (o == null) { _null = true; o = new_buf(127); }
 	o.write_shift(4, data.length > 0 ? data.length : 0xFFFFFFFF);
-	if(data.length > 0) o.write_shift(0, data, 'dbcs');
+	if (data.length > 0) o.write_shift(0, data, 'dbcs');
 	return _null ? o.slice(0, o.l) : o;
 }
 
@@ -116,26 +116,26 @@ var write_RelID = write_XLNullableWideString;
 
 /* [MS-XLS] 2.5.217 ; [MS-XLSB] 2.5.122 */
 function parse_RkNumber(data)/*:number*/ {
-	var b = data.slice(data.l, data.l+4);
+	var b = data.slice(data.l, data.l + 4);
 	var fX100 = (b[0] & 1), fInt = (b[0] & 2);
-	data.l+=4;
+	data.l += 4;
 	b[0] &= 0xFC; // b[0] &= ~3;
-	var RK = fInt === 0 ? __double([0,0,0,0,b[0],b[1],b[2],b[3]],0) : __readInt32LE(b,0)>>2;
-	return fX100 ? (RK/100) : RK;
+	var RK = fInt === 0 ? __double([0, 0, 0, 0, b[0], b[1], b[2], b[3]], 0) : __readInt32LE(b, 0) >> 2;
+	return fX100 ? (RK / 100) : RK;
 }
 function write_RkNumber(data/*:number*/, o) {
-	if(o == null) o = new_buf(4);
+	if (o == null) o = new_buf(4);
 	var fX100 = 0, fInt = 0, d100 = data * 100;
-	if((data == (data | 0)) && (data >= -(1<<29)) && (data < (1 << 29))) { fInt = 1; }
-	else if((d100 == (d100 | 0)) && (d100 >= -(1<<29)) && (d100 < (1 << 29))) { fInt = 1; fX100 = 1; }
-	if(fInt) o.write_shift(-4, ((fX100 ? d100 : data) << 2) + (fX100 + 2));
+	if ((data == (data | 0)) && (data >= -(1 << 29)) && (data < (1 << 29))) { fInt = 1; }
+	else if ((d100 == (d100 | 0)) && (d100 >= -(1 << 29)) && (d100 < (1 << 29))) { fInt = 1; fX100 = 1; }
+	if (fInt) o.write_shift(-4, ((fX100 ? d100 : data) << 2) + (fX100 + 2));
 	else throw new Error("unsupported RkNumber " + data); // TODO
 }
 
 
 /* [MS-XLSB] 2.5.117 RfX */
 function parse_RfX(data /*::, length*/)/*:Range*/ {
-	var cell/*:Range*/ = ({s: {}, e: {}}/*:any*/);
+	var cell/*:Range*/ = ({ s: {}, e: {} }/*:any*/);
 	cell.s.r = data.read_shift(4);
 	cell.e.r = data.read_shift(4);
 	cell.s.c = data.read_shift(4);
@@ -143,7 +143,7 @@ function parse_RfX(data /*::, length*/)/*:Range*/ {
 	return cell;
 }
 function write_RfX(r/*:Range*/, o) {
-	if(!o) o = new_buf(16);
+	if (!o) o = new_buf(16);
 	o.write_shift(4, r.s.r);
 	o.write_shift(4, r.e.r);
 	o.write_shift(4, r.s.c);
@@ -180,20 +180,6 @@ var write_UncheckedRfX = write_RfX;
 function parse_Xnum(data/*::, length*/) { return data.read_shift(8, 'f'); }
 function write_Xnum(data, o) { return (o || new_buf(8)).write_shift(8, data, 'f'); }
 
-/* [MS-XLSB] 2.5.97.2 */
-var BErr = {
-	/*::[*/0x00/*::]*/: "#NULL!",
-	/*::[*/0x07/*::]*/: "#DIV/0!",
-	/*::[*/0x0F/*::]*/: "#VALUE!",
-	/*::[*/0x17/*::]*/: "#REF!",
-	/*::[*/0x1D/*::]*/: "#NAME?",
-	/*::[*/0x24/*::]*/: "#NUM!",
-	/*::[*/0x2A/*::]*/: "#N/A",
-	/*::[*/0x2B/*::]*/: "#GETTING_DATA",
-	/*::[*/0xFF/*::]*/: "#WTF?"
-};
-var RBErr = evert_num(BErr);
-
 /* [MS-XLSB] 2.4.324 BrtColor */
 function parse_BrtColor(data/*::, length*/) {
 	var out = {};
@@ -209,13 +195,13 @@ function parse_BrtColor(data/*::, length*/) {
 	var bB = data.read_shift(1);
 	data.l++; //var bAlpha = data.read_shift(1);
 
-	switch(xColorType) {
+	switch (xColorType) {
 		case 0: out.auto = 1; break;
 		case 1:
 			out.index = index;
 			var icv = XLSIcv[index];
 			/* automatic pseudo index 81 */
-			if(icv) out.rgb = rgb2Hex(icv);
+			if (icv) out.rgb = rgb2Hex(icv);
 			break;
 		case 2:
 			/* if(!fValidRGB) throw new Error("invalid"); */
@@ -223,17 +209,17 @@ function parse_BrtColor(data/*::, length*/) {
 			break;
 		case 3: out.theme = index; break;
 	}
-	if(nTS != 0) out.tint = nTS > 0 ? nTS / 32767 : nTS / 32768;
+	if (nTS != 0) out.tint = nTS > 0 ? nTS / 32767 : nTS / 32768;
 
 	return out;
 }
 function write_BrtColor(color, o) {
-	if(!o) o = new_buf(8);
-	if(!color||color.auto) { o.write_shift(4, 0); o.write_shift(4, 0); return o; }
-	if(color.index != null) {
+	if (!o) o = new_buf(8);
+	if (!color || color.auto) { o.write_shift(4, 0); o.write_shift(4, 0); return o; }
+	if (color.index != null) {
 		o.write_shift(1, 0x02);
 		o.write_shift(1, color.index);
-	} else if(color.theme != null) {
+	} else if (color.theme != null) {
 		o.write_shift(1, 0x06);
 		o.write_shift(1, color.theme);
 	} else {
@@ -241,19 +227,19 @@ function write_BrtColor(color, o) {
 		o.write_shift(1, 0);
 	}
 	var nTS = color.tint || 0;
-	if(nTS > 0) nTS *= 32767;
-	else if(nTS < 0) nTS *= 32768;
+	if (nTS > 0) nTS *= 32767;
+	else if (nTS < 0) nTS *= 32768;
 	o.write_shift(2, nTS);
-	if(!color.rgb || color.theme != null) {
+	if (!color.rgb || color.theme != null) {
 		o.write_shift(2, 0);
 		o.write_shift(1, 0);
 		o.write_shift(1, 0);
 	} else {
 		var rgb = (color.rgb || 'FFFFFF');
-		if(typeof rgb == 'number') rgb = ("000000" + rgb.toString(16)).slice(-6);
-		o.write_shift(1, parseInt(rgb.slice(0,2),16));
-		o.write_shift(1, parseInt(rgb.slice(2,4),16));
-		o.write_shift(1, parseInt(rgb.slice(4,6),16));
+		if (typeof rgb == 'number') rgb = ("000000" + rgb.toString(16)).slice(-6);
+		o.write_shift(1, parseInt(rgb.slice(0, 2), 16));
+		o.write_shift(1, parseInt(rgb.slice(2, 4), 16));
+		o.write_shift(1, parseInt(rgb.slice(4, 6), 16));
 		o.write_shift(1, 0xFF);
 	}
 	return o;
@@ -276,14 +262,14 @@ function parse_FontFlags(data/*::, length, opts*/) {
 	return out;
 }
 function write_FontFlags(font, o) {
-	if(!o) o = new_buf(2);
+	if (!o) o = new_buf(2);
 	var grbit =
-		(font.italic   ? 0x02 : 0) |
-		(font.strike   ? 0x08 : 0) |
-		(font.outline  ? 0x10 : 0) |
-		(font.shadow   ? 0x20 : 0) |
+		(font.italic ? 0x02 : 0) |
+		(font.strike ? 0x08 : 0) |
+		(font.outline ? 0x10 : 0) |
+		(font.shadow ? 0x20 : 0) |
 		(font.condense ? 0x40 : 0) |
-		(font.extend   ? 0x80 : 0);
+		(font.extend ? 0x80 : 0);
 	o.write_shift(1, grbit);
 	o.write_shift(1, 0);
 	return o;
@@ -292,13 +278,13 @@ function write_FontFlags(font, o) {
 /* [MS-OLEDS] 2.3.1 and 2.3.2 */
 function parse_ClipboardFormatOrString(o, w/*:number*/)/*:string*/ {
 	// $FlowIgnore
-	var ClipFmt = {2:"BITMAP",3:"METAFILEPICT",8:"DIB",14:"ENHMETAFILE"};
+	var ClipFmt = { 2: "BITMAP", 3: "METAFILEPICT", 8: "DIB", 14: "ENHMETAFILE" };
 	var m/*:number*/ = o.read_shift(4);
-	switch(m) {
+	switch (m) {
 		case 0x00000000: return "";
-		case 0xffffffff: case 0xfffffffe: return ClipFmt[o.read_shift(4)]||"";
+		case 0xffffffff: case 0xfffffffe: return ClipFmt[o.read_shift(4)] || "";
 	}
-	if(m > 0x190) throw new Error("Unsupported Clipboard: " + m.toString(16));
+	if (m > 0x190) throw new Error("Unsupported Clipboard: " + m.toString(16));
 	o.l -= 4;
 	return o.read_shift(0, w == 1 ? "lpstr" : "lpwstr");
 }
