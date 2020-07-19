@@ -716,7 +716,7 @@ describe('output formats', function() {
 			X.utils.book_append_sheet(wb, X.utils.aoa_to_sheet([['R',"\u2603"],["\u0BEE",2]]), "Sheet1");
 			if(T == 'string' && !fmt[2]) return assert.throws(function() {X.write(wb, {type: T, bookType:fmt[0], WTF:1});});
 			var out = X.write(wb, {type: T, bookType:fmt[0], WTF:1});
-			var nwb = X.read(out, {type: T, WTF:1});
+			var nwb = X.read(out, {type: T, PRN: fmt[0] == 'prn', WTF:1});
 			var nws = nwb.Sheets[nwb.SheetNames[0]];
 			assert.equal(get_cell(nws, "B2").v, 2);
 			assert.equal(get_cell(nws, "A1").v, "R");
@@ -767,6 +767,19 @@ describe('API', function() {
 			[ { l: { Target: 'https://123.com' }, v: 'url', t: 's' }, 'tom', 'xxx' ]
 		]);
 		if(assert.deepEqual) assert.deepEqual(data.A2, { l: { Target: 'https://123.com' }, v: 'url', t: 's' });
+	});
+	it('decode_range', function() {
+		var _c = "ABC", _r = "123", _C = "DEF", _R = "456";
+
+		var r = X.utils.decode_range(_c + _r + ":" + _C + _R);
+		assert(r.s != r.e);
+		assert.equal(r.s.c, X.utils.decode_col(_c)); assert.equal(r.s.r, X.utils.decode_row(_r));
+		assert.equal(r.e.c, X.utils.decode_col(_C)); assert.equal(r.e.r, X.utils.decode_row(_R));
+
+		r = X.utils.decode_range(_c + _r);
+		assert(r.s != r.e);
+		assert.equal(r.s.c, X.utils.decode_col(_c)); assert.equal(r.s.r, X.utils.decode_row(_r));
+		assert.equal(r.e.c, X.utils.decode_col(_c)); assert.equal(r.e.r, X.utils.decode_row(_r));
 	});
 });
 
@@ -1422,13 +1435,14 @@ function seq(end/*:number*/, start/*:?number*/)/*:Array<number>*/ {
 }
 
 var basedate = new Date(1899, 11, 30, 0, 0, 0); // 2209161600000
-var dnthresh = basedate.getTime() + (new Date().getTimezoneOffset() - basedate.getTimezoneOffset()) * 60000;
 function datenum(v/*:Date*/, date1904/*:?boolean*/)/*:number*/ {
 	var epoch = v.getTime();
-	if(date1904) epoch += 1462*24*60*60*1000;
+	if(date1904) epoch -= 1462*24*60*60*1000;
+	var dnthresh = basedate.getTime() + (v.getTimezoneOffset() - basedate.getTimezoneOffset()) * 60000;
 	return (epoch - dnthresh) / (24 * 60 * 60 * 1000);
 }
 var good_pd_date = new Date('2017-02-19T19:06:09.000Z');
+if(isNaN(good_pd_date.getFullYear())) good_pd_date = new Date('2017-02-19T19:06:09');
 if(isNaN(good_pd_date.getFullYear())) good_pd_date = new Date('2/19/17');
 var good_pd = good_pd_date.getFullYear() == 2017;
 function parseDate(str/*:string|Date*/)/*:Date*/ {
@@ -1957,6 +1971,10 @@ describe('CSV', function() {
 			assert.equal(get_cell(sheet, "C1").t, 's');
 			assert.equal(get_cell(sheet, "C1").v, '100');
 		});
+		it('should interpret CRLF newlines', function() {
+			var wb = X.read("sep=&\r\n1&2&3\r\n4&5&6", {type: "string"});
+			assert.equal(wb.Sheets.Sheet1["!ref"], "A1:C2");
+		});
 		if(!browser || typeof cptable !== 'undefined') it('should honor codepage for binary strings', function() {
 			var data = "abc,def\nghi,j\xD3l";
 			[[1251, 'У'],[1252, 'Ó'], [1253, 'Σ'], [1254, 'Ó'], [1255, '׃'], [1256, 'س'], [10000, '”']].forEach(function(m) {
@@ -2052,9 +2070,7 @@ describe('sylk', function() {
 			assert.equal(get_cell(X.read(str, {type:"string"}).Sheets.Sheet1, "A1").v, A1);
 			assert.equal(get_cell(X.read(str.replace(/–/, "\x96"), {type:"binary", codepage:1252}).Sheets.Sheet1, "A1").v, A1);
 			if(typeof Buffer !== 'undefined' && !browser) {
-				// $FlowIgnore
 				assert.equal(get_cell(X.read(Buffer_from(str), {type:"buffer", codepage:65001}).Sheets.Sheet1, "A1").v, A1);
-				// $FlowIgnore
 				assert.equal(get_cell(X.read(Buffer_from(str.replace(/–/, "\x96"), "binary"), {type:"buffer", codepage:1252}).Sheets.Sheet1, "A1").v, A1);
 			}
 		} : null);
@@ -2303,6 +2319,20 @@ describe('corner cases', function() {
 		X.read(fs.readFileSync(dir + 'wtf_path.xlsx'), {WTF:1, type:TYPE});
 		X.read(fs.readFileSync(dir + 'wtf_path.xlsb'), {WTF:1, type:TYPE});
 	});
+	it("should quote unicode sheet names in formulae", function() {
+		var wb = X.read(fs.readFileSync(dir + "cross-sheet_formula_names.xlsb"), {WTF:1, type:TYPE});
+		assert.equal(wb.Sheets["Sheet1"]["A1"].f, "'a-b'!A1");
+		assert.equal(wb.Sheets["Sheet1"]["A2"].f, "'a#b'!A1");
+		assert.equal(wb.Sheets["Sheet1"]["A3"].f, "'a^b'!A1");
+		assert.equal(wb.Sheets["Sheet1"]["A4"].f, "'a%b'!A1");
+		assert.equal(wb.Sheets["Sheet1"]["A5"].f, "'a\u066ab'!A1");
+		assert.equal(wb.Sheets["Sheet1"]["A6"].f, "'☃️'!A1");
+		assert.equal(wb.Sheets["Sheet1"]["A7"].f, "'\ud83c\udf63'!A1");
+		assert.equal(wb.Sheets["Sheet1"]["A8"].f, "'a!!b'!A1");
+		assert.equal(wb.Sheets["Sheet1"]["A9"].f, "'a$b'!A1");
+		assert.equal(wb.Sheets["Sheet1"]["A10"].f, "'a!b'!A1");
+		assert.equal(wb.Sheets["Sheet1"]["A11"].f, "'a b'!A1");
+	});
 });
 
 describe('encryption', function() {
@@ -2334,7 +2364,7 @@ describe('encryption', function() {
 if(!browser || typeof cptable !== 'undefined')
 describe('multiformat tests', function() {
 var mfopts = opts;
-var mft = fs.readFileSync('multiformat.lst','utf-8').split("\n").map(function(x) { return x.trim(); });
+var mft = fs.readFileSync('multiformat.lst','utf-8').replace(/\r/g,"").split("\n").map(function(x) { return x.trim(); });
 var csv = true, formulae = false;
 mft.forEach(function(x) {
 	if(x.charAt(0)!="#") describe('MFT ' + x, function() {
