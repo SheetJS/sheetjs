@@ -98,6 +98,8 @@ var paths = {
 	afxlsx:  dir + 'AutoFilter.xlsx',
 	afxlsb:  dir + 'AutoFilter.xlsb',
 
+	dtfxlsx: dir + 'DataTypesFormats.xlsx',
+
 	asxls:   dir + 'author_snowman.xls',
 	asxls5:  dir + 'author_snowman.xls5',
 	asxml:   dir + 'author_snowman.xml',
@@ -1226,6 +1228,20 @@ describe('parse features', function() {
 			assert(wb.Sheets[wb.SheetNames[i]]['!autofilter']);
 			assert.equal(wb.Sheets[wb.SheetNames[i]]['!autofilter'].ref,"A1:E22");
 		}
+	}); }); });
+
+  describe('data types formats', function() {[
+		['xlsx', paths.dtfxlsx],
+	].forEach(function(m) { it(m[0], function() {
+    var wb = X.read(fs.readFileSync(m[1]), {type: 'array', cellDates: true});
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const data = X.utils.sheet_to_json(ws, { header: 1, raw: true, rawNumbers: false });
+    assert(data[0][1] instanceof Date);
+    assert(data[1][1] instanceof Date);
+    assert.equal(data[2][1], '$123.00');
+    assert.equal(data[3][1], '98.76%');
+    assert.equal(data[4][1], '456.00');
+    assert.equal(data[5][1], '7,890');
 	}); }); });
 
 	describe('HTML', function() {
