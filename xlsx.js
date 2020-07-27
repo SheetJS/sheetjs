@@ -15037,7 +15037,7 @@ function parse_wb_xml(data, opts) {
 						default: wb.WBProps[w[0]] = y[w[0]];
 					}
 				});
-				if(y.codeName) wb.WBProps.CodeName = y.codeName;
+				if(y.codeName) wb.WBProps.CodeName = utf8read(y.codeName);
 				break;
 			case '</workbookPr>': break;
 
