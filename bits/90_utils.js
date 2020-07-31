@@ -179,6 +179,7 @@ function sheet_to_formulae(sheet/*:Worksheet*/)/*:Array<string>*/ {
 }
 
 function sheet_add_json(_ws/*:?Worksheet*/, js/*:Array<any>*/, opts)/*:Worksheet*/ {
+	if(!js.length) return _ws;
 	var o = opts || {};
 	var offset = +!o.skipHeader;
 	var ws/*:Worksheet*/ = _ws || ({}/*:any*/);
@@ -197,6 +198,8 @@ function sheet_add_json(_ws/*:?Worksheet*/, js/*:Array<any>*/, opts)/*:Worksheet
 		range.e.c = Math.max(range.e.c, _range.e.c);
 		range.e.r = Math.max(range.e.r, _range.e.r);
 		if(_R == -1) { _R = _range.e.r + 1; range.e.r = _R + js.length - 1 + offset; }
+	} else {
+		if(_R == -1) { _R = 0; range.e.r = js.length - 1 + offset; }
 	}
 	var hdr/*:Array<string>*/ = o.header || [], C = 0;
 
@@ -254,6 +257,7 @@ var utils/*:any*/ = {
 	make_formulae: sheet_to_formulae,
 	sheet_add_aoa: sheet_add_aoa,
 	sheet_add_json: sheet_add_json,
+	sheet_add_dom: sheet_add_dom,
 	aoa_to_sheet: aoa_to_sheet,
 	json_to_sheet: json_to_sheet,
 	table_to_sheet: parse_dom_table,

@@ -2182,7 +2182,7 @@ describe('HTML', function() {
 		var html = "<table><tr style='display: none;'><td>1</td><td>2</td><td>3</td></tr><tr><td class='hidden'>Foo</td><td>Bar</td><td style='display: none;'>Baz</td></tr></table><style>.hidden {display: none}</style>";
 		var ws = X.utils.table_to_sheet(get_dom_element(html), {display: true});
 		assert.equal(ws['!ref'], "A1");
-		assert.equal(ws.hasOwnProperty('!rows'), false);
+		assert(ws.hasOwnProperty('!rows') == false || !ws["!rows"][0] || !ws["!rows"][0].hidden);
 		assert.equal(get_cell(ws, "A1").v, "Bar");
 	});
 	describe('type override', function() {
@@ -2321,17 +2321,17 @@ describe('corner cases', function() {
 	});
 	it("should quote unicode sheet names in formulae", function() {
 		var wb = X.read(fs.readFileSync(dir + "cross-sheet_formula_names.xlsb"), {WTF:1, type:TYPE});
-		assert.equal(wb.Sheets["Sheet1"]["A1"].f, "'a-b'!A1");
-		assert.equal(wb.Sheets["Sheet1"]["A2"].f, "'a#b'!A1");
-		assert.equal(wb.Sheets["Sheet1"]["A3"].f, "'a^b'!A1");
-		assert.equal(wb.Sheets["Sheet1"]["A4"].f, "'a%b'!A1");
-		assert.equal(wb.Sheets["Sheet1"]["A5"].f, "'a\u066ab'!A1");
-		assert.equal(wb.Sheets["Sheet1"]["A6"].f, "'☃️'!A1");
-		assert.equal(wb.Sheets["Sheet1"]["A7"].f, "'\ud83c\udf63'!A1");
-		assert.equal(wb.Sheets["Sheet1"]["A8"].f, "'a!!b'!A1");
-		assert.equal(wb.Sheets["Sheet1"]["A9"].f, "'a$b'!A1");
-		assert.equal(wb.Sheets["Sheet1"]["A10"].f, "'a!b'!A1");
-		assert.equal(wb.Sheets["Sheet1"]["A11"].f, "'a b'!A1");
+		assert.equal(wb.Sheets.Sheet1.A1.f, "'a-b'!A1");
+		assert.equal(wb.Sheets.Sheet1.A2.f, "'a#b'!A1");
+		assert.equal(wb.Sheets.Sheet1.A3.f, "'a^b'!A1");
+		assert.equal(wb.Sheets.Sheet1.A4.f, "'a%b'!A1");
+		assert.equal(wb.Sheets.Sheet1.A5.f, "'a\u066ab'!A1");
+		assert.equal(wb.Sheets.Sheet1.A6.f, "'☃️'!A1");
+		assert.equal(wb.Sheets.Sheet1.A7.f, "'\ud83c\udf63'!A1");
+		assert.equal(wb.Sheets.Sheet1.A8.f, "'a!!b'!A1");
+		assert.equal(wb.Sheets.Sheet1.A9.f, "'a$b'!A1");
+		assert.equal(wb.Sheets.Sheet1.A10.f, "'a!b'!A1");
+		assert.equal(wb.Sheets.Sheet1.A11.f, "'a b'!A1");
 	});
 });
 

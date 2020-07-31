@@ -242,6 +242,56 @@ var wb = XLSX.utils.table_to_book(tbl);
 
 Note: `XLSX.read` can handle HTML represented as strings.
 
+
+`XLSX.utils.sheet_add_dom` takes a table DOM element and updates an existing
+worksheet object.  It follows the same process as `table_to_sheet` and accepts
+an options argument:
+
+| Option Name |  Default | Description                                         |
+| :---------- | :------: | :-------------------------------------------------- |
+|`raw`        |          | If true, every cell will hold raw strings           |
+|`dateNF`     |  FMT 14  | Use specified date format in string output          |
+|`cellDates`  |  false   | Store dates as type `d` (default is `n`)            |
+|`sheetRows`  |    0     | If >0, read the first `sheetRows` rows of the table |
+|`display`    |  false   | If true, hidden rows and cells will not be parsed   |
+
+`origin` is expected to be one of:
+
+| `origin`         | Description                                               |
+| :--------------- | :-------------------------------------------------------- |
+| (cell object)    | Use specified cell (cell object)                          |
+| (string)         | Use specified cell (A1-style cell)                        |
+| (number >= 0)    | Start from the first column at specified row (0-indexed)  |
+| -1               | Append to bottom of worksheet starting on first column    |
+| (default)        | Start from cell A1                                        |
+
+
+<details>
+  <summary><b>Examples</b> (click to show)</summary>
+
+A small helper function can create gap rows between tables:
+
+```js
+function create_gap_rows(ws, nrows) {
+  var ref = XLSX.utils.decode_range(ws["!ref"]);       // get original range
+  ref.e.r += nrows;                                    // add to ending row
+  ws["!ref"] = XLSX.utils.encode_range(ref);           // reassign row
+}
+
+/* first table */
+var ws = XLSX.utils.table_to_sheet(document.getElementById('table1'));
+create_gap_rows(ws, 1); // one row gap after first table
+
+/* second table */
+XLSX.utils.sheet_add_dom(ws, document.getElementById('table2'), {origin: -1});
+create_gap_rows(ws, 3); // three rows gap after second table
+
+/* third table */
+XLSX.utils.sheet_add_dom(ws, document.getElementById('table3'), {origin: -1});
+```
+
+</details>
+
 ### Formulae Output
 
 `XLSX.utils.sheet_to_formulae` generates an array of commands that represent
