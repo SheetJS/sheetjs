@@ -3077,7 +3077,7 @@ function resolve_path(path/*:string*/, base/*:string*/)/*:string*/ {
 }
 var XML_HEADER = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\r\n';
 var attregexg=/([^"\s?>\/]+)\s*=\s*((?:")([^"]*)(?:")|(?:')([^']*)(?:')|([^'">\s]+))/g;
-var tagregex=/<[\/\?]?[a-zA-Z0-9:_-]+(?:\s+[^"\s?>\/]+\s*=\s*(?:"[^"]*"|'[^']*'|[^'">\s=]+))*\s?[\/\?]?>/g;
+var tagregex=/<[\/\?]?[a-zA-Z0-9:_-]+(?:\s+[^"\s?>\/]+\s*=\s*(?:"[^"]*"|'[^']*'|[^'">\s=]+))*\s?[\/\?]?>/mg;
 
 if(!(XML_HEADER.match(tagregex))) tagregex = /<[^>]*>/g;
 var nsregex=/<\w*:/, nsregex2 = /<(\/?)\w+:/;
@@ -21593,8 +21593,8 @@ utils.book_new = function()/*:Workbook*/ {
 
 /* add a worksheet to the end of a given workbook */
 utils.book_append_sheet = function(wb/*:Workbook*/, ws/*:Worksheet*/, name/*:?string*/) {
-	if(!name) for(var i = 1; i <= 0xFFFF; ++i) if(wb.SheetNames.indexOf(name = "Sheet" + i) == -1) break;
-	if(!name) throw new Error("Too many worksheets");
+	if(!name) for(var i = 1; i <= 0xFFFF; ++i, name = undefined) if(wb.SheetNames.indexOf(name = "Sheet" + i) == -1) break;
+	if(!name || wb.SheetNames.length >= 0xFFFF) throw new Error("Too many worksheets");
 	check_ws_name(name);
 	if(wb.SheetNames.indexOf(name) >= 0) throw new Error("Worksheet with name |" + name + "| already exists!");
 
