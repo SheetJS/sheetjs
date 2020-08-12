@@ -517,6 +517,17 @@ describe('parse options', function() {
 				assert(found);
 			});
 		});
+		it('should preserve `_xlfn.` only when requested', function() {
+			var wb = { SheetNames: ["Sheet1"], Sheets: { Sheet1: {
+				"!ref": "A1:A1",
+				"A1": { t:"n", v:2, f:"_xlfn.IFS(2>3,1,3>2,2)"}
+			} } };
+			var str = X.write(wb, {bookType: "xlsx", type: "binary"});
+			var wb2 = X.read(str, {type: "binary"});
+			assert.equal(wb2.Sheets.Sheet1["A1"].f, "IFS(2>3,1,3>2,2)");
+			var wb3 = X.read(str, {type: "binary", xlfn: true});
+			assert.equal(wb3.Sheets.Sheet1["A1"].f, "_xlfn.IFS(2>3,1,3>2,2)");
+		});
 	});
 	describe('sheet', function() {
 		it('should not generate sheet stubs by default', function() {
