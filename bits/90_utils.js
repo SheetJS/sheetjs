@@ -179,7 +179,6 @@ function sheet_to_formulae(sheet/*:Worksheet*/)/*:Array<string>*/ {
 }
 
 function sheet_add_json(_ws/*:?Worksheet*/, js/*:Array<any>*/, opts)/*:Worksheet*/ {
-	if(!js.length) return _ws;
 	var o = opts || {};
 	var offset = +!o.skipHeader;
 	var ws/*:Worksheet*/ = _ws || ({}/*:any*/);
