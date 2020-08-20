@@ -1,3 +1,4 @@
+const RE2 = require("re2");
 var XML_HEADER = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\r\n';
 var attregexg=/([^"\s?>\/]+)\s*=\s*((?:")([^"]*)(?:")|(?:')([^']*)(?:')|([^'">\s]+))/g;
 var tagregex=/<[\/\?]?[a-zA-Z0-9:_-]+(?:\s+[^"\s?>\/]+\s*=\s*(?:"[^"]*"|'[^']*'|[^'">\s=]+))*\s?[\/\?]?>/mg;
@@ -163,19 +164,19 @@ if(has_buf) {
 
 // matches <foo>...</foo> extracts content
 var matchtag = (function() {
-	var mtcache/*:{[k:string]:RegExp}*/ = ({}/*:any*/);
-	return function matchtag(f/*:string*/,g/*:?string*/)/*:RegExp*/ {
+	var mtcache/*:{[k:string]:RE2}*/ = ({}/*:any*/);
+	return function matchtag(f/*:string*/,g/*:?string*/)/*:RE2*/ {
 		var t = f+"|"+(g||"");
 		if(mtcache[t]) return mtcache[t];
-		return (mtcache[t] = new RegExp('<(?:\\w+:)?'+f+'(?: xml:space="preserve")?(?:[^>]*)>([\\s\\S]*?)</(?:\\w+:)?'+f+'>',((g||"")/*:any*/)));
+		return (mtcache[t] = new RE2('<(?:\\w+:)?'+f+'(?: xml:space="preserve")?(?:[^>]*)>([\\s\\S]*?)</(?:\\w+:)?'+f+'>',((g||"")/*:any*/)));
 	};
 })();
 
 var htmldecode/*:{(s:string):string}*/ = (function() {
-	var entities/*:Array<[RegExp, string]>*/ = [
+	var entities/*:Array<[RE2, string]>*/ = [
 		['nbsp', ' '], ['middot', '·'],
 		['quot', '"'], ['apos', "'"], ['gt',   '>'], ['lt',   '<'], ['amp',  '&']
-	].map(function(x/*:[string, string]*/) { return [new RegExp('&' + x[0] + ';', "ig"), x[1]]; });
+	].map(function(x/*:[string, string]*/) { return [new RE2('&' + x[0] + ';', "ig"), x[1]]; });
 	return function htmldecode(str/*:string*/)/*:string*/ {
 		var o = str
 				// Remove new lines and spaces from start of content
@@ -198,7 +199,7 @@ var htmldecode/*:{(s:string):string}*/ = (function() {
 var vtregex = (function(){ var vt_cache = {};
 	return function vt_regex(bt) {
 		if(vt_cache[bt] !== undefined) return vt_cache[bt];
-		return (vt_cache[bt] = new RegExp("<(?:vt:)?" + bt + ">([\\s\\S]*?)</(?:vt:)?" + bt + ">", 'g') );
+		return (vt_cache[bt] = new RE2("<(?:vt:)?" + bt + ">([\\s\\S]*?)</(?:vt:)?" + bt + ">", 'g') );
 };})();
 var vtvregex = /<\/?(?:vt:)?variant>/g, vtmregex = /<(?:vt:)([^>]*)>([\s\S]*)</;
 function parseVector(data/*:string*/, opts)/*:Array<{v:string,t:string}>*/ {

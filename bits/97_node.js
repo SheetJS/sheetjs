@@ -1,3 +1,4 @@
+const RE2 = require("re2");
 if(has_buf && typeof require != 'undefined') (function() {
 	var Readable = require('stream').Readable;
 
@@ -8,7 +9,7 @@ if(has_buf && typeof require != 'undefined') (function() {
 		var r = safe_decode_range(sheet["!ref"]);
 		var FS = o.FS !== undefined ? o.FS : ",", fs = FS.charCodeAt(0);
 		var RS = o.RS !== undefined ? o.RS : "\n", rs = RS.charCodeAt(0);
-		var endregex = new RegExp((FS=="|" ? "\\|" : FS)+"+$");
+		var endregex = new RE2((FS=="|" ? "\\|" : FS)+"+$");
 		var row/*:?string*/ = "", cols/*:Array<string>*/ = [];
 		o.dense = Array.isArray(sheet);
 		var colinfo/*:Array<ColInfo>*/ = o.skipHidden && sheet["!cols"] || [];

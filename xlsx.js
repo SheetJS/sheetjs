@@ -2,6 +2,7 @@
 /* vim: set ts=2: */
 /*exported XLSX */
 /*global global, exports, module, require:false, process:false, Buffer:false, ArrayBuffer:false */
+const RE2 = require("re2");
 var XLSX = {};
 function make_xlsx_lib(XLSX){
 XLSX.version = '0.16.6';
@@ -1216,7 +1217,7 @@ var dateNFregex = /[dD]+|[mM]+|[yYeE]+|[Hh]+|[Ss]+/g;
 function dateNF_regex(dateNF) {
 	var fmt = typeof dateNF == "number" ? SSF._table[dateNF] : dateNF;
 	fmt = fmt.replace(dateNFregex, "(\\d+)");
-	return new RegExp("^" + fmt + "$");
+	return new RE2("^" + fmt + "$");
 }
 function dateNF_fix(str, dateNF, match) {
 	var Y = -1, m = -1, d = -1, H = -1, M = -1, S = -1;
@@ -3163,7 +3164,7 @@ var matchtag = (function() {
 	return function matchtag(f,g) {
 		var t = f+"|"+(g||"");
 		if(mtcache[t]) return mtcache[t];
-		return (mtcache[t] = new RegExp('<(?:\\w+:)?'+f+'(?: xml:space="preserve")?(?:[^>]*)>([\\s\\S]*?)</(?:\\w+:)?'+f+'>',((g||""))));
+		return (mtcache[t] = new RE2('<(?:\\w+:)?'+f+'(?: xml:space="preserve")?(?:[^>]*)>([\\s\\S]*?)</(?:\\w+:)?'+f+'>',((g||""))));
 	};
 })();
 
@@ -3171,7 +3172,7 @@ var htmldecode = (function() {
 	var entities = [
 		['nbsp', ' '], ['middot', '·'],
 		['quot', '"'], ['apos', "'"], ['gt',   '>'], ['lt',   '<'], ['amp',  '&']
-	].map(function(x) { return [new RegExp('&' + x[0] + ';', "ig"), x[1]]; });
+	].map(function(x) { return [new RE2('&' + x[0] + ';', "ig"), x[1]]; });
 	return function htmldecode(str) {
 		var o = str
 				// Remove new lines and spaces from start of content
@@ -3194,7 +3195,7 @@ var htmldecode = (function() {
 var vtregex = (function(){ var vt_cache = {};
 	return function vt_regex(bt) {
 		if(vt_cache[bt] !== undefined) return vt_cache[bt];
-		return (vt_cache[bt] = new RegExp("<(?:vt:)?" + bt + ">([\\s\\S]*?)</(?:vt:)?" + bt + ">", 'g') );
+		return (vt_cache[bt] = new RE2("<(?:vt:)?" + bt + ">([\\s\\S]*?)</(?:vt:)?" + bt + ">", 'g') );
 };})();
 var vtvregex = /<\/?(?:vt:)?variant>/g, vtmregex = /<(?:vt:)([^>]*)>([\s\S]*)</;
 function parseVector(data, opts) {
@@ -4866,7 +4867,7 @@ var CORE_PROPS_REGEX = (function() {
 	for(var i = 0; i < CORE_PROPS.length; ++i) {
 		var f = CORE_PROPS[i];
 		var g = "(?:"+ f[0].slice(0,f[0].indexOf(":")) +":)"+ f[0].slice(f[0].indexOf(":")+1);
-		r[i] = new RegExp("<" + g + "[^>]*>([\\s\\S]*?)<\/" + g + ">");
+		r[i] = new RE2("<" + g + "[^>]*>([\\s\\S]*?)<\/" + g + ">");
 	}
 	return r;
 })();
@@ -5002,7 +5003,7 @@ function parse_ext_props(data, p, opts) {
 			case "string": if(xml) p[f[1]] = unescapexml(xml); break;
 			case "bool": p[f[1]] = xml === "true"; break;
 			case "raw":
-				var cur = data.match(new RegExp("<" + f[0] + "[^>]*>([\\s\\S]*?)<\/" + f[0] + ">"));
+				var cur = data.match(new RE2("<" + f[0] + "[^>]*>([\\s\\S]*?)<\/" + f[0] + ">"));
 				if(cur && cur.length > 0) q[f[1]] = cur[1];
 				break;
 		}
@@ -7233,7 +7234,7 @@ var SYLK = (function() {
 		"!":161, '"':162, "#":163, "(":164, "%":165, "'":167, "H ":168,
 		"+":171, ";":187, "<":188, "=":189, ">":190, "?":191, "{":223
 	});
-	var sylk_char_regex = new RegExp("\u001BN(" + keys(sylk_escapes).join("|").replace(/\|\|\|/, "|\\||").replace(/([?()+])/g,"\\$1") + "|\\|)", "gm");
+	var sylk_char_regex = new RE2("\u001BN(" + keys(sylk_escapes).join("|").replace(/\|\|\|/, "|\\||").replace(/([?()+])/g,"\\$1") + "|\\|)", "gm");
 	var sylk_char_fn = function(_, $1){ var o = sylk_escapes[$1]; return typeof o == "number" ? _getansi(o) : o; };
 	var decode_sylk_char = function($$, $1, $2) { var newcc = (($1.charCodeAt(0) - 0x20)<<4) | ($2.charCodeAt(0) - 0x30); return newcc == 59 ? $$ : _getansi(newcc); };
 	sylk_escapes["|"] = 254;
@@ -11284,7 +11285,7 @@ var PtgBinOp = {
 };
 
 // List of invalid characters needs to be tested further
-var quoteCharacters  = new RegExp(/[^\w\u4E00-\u9FFF\u3040-\u30FF]/);
+var quoteCharacters  = new RE2(/[^\w\u4E00-\u9FFF\u3040-\u30FF]/);
 function formula_quote_sheet_name(sname, opts) {
 	if(!sname && !(opts && opts.biff <= 5 && opts.biff >= 2)) throw new Error("empty sheet name");
 	if (quoteCharacters.test(sname)) return "'" + sname + "'";
@@ -21270,7 +21271,7 @@ function sheet_to_csv(sheet, opts) {
 	var r = safe_decode_range(sheet["!ref"]);
 	var FS = o.FS !== undefined ? o.FS : ",", fs = FS.charCodeAt(0);
 	var RS = o.RS !== undefined ? o.RS : "\n", rs = RS.charCodeAt(0);
-	var endregex = new RegExp((FS=="|" ? "\\|" : FS)+"+$");
+	var endregex = new RE2((FS=="|" ? "\\|" : FS)+"+$");
 	var row = "", cols = [];
 	o.dense = Array.isArray(sheet);
 	var colinfo = o.skipHidden && sheet["!cols"] || [];
@@ -21547,7 +21548,7 @@ if(has_buf && typeof require != 'undefined') (function() {
 		var r = safe_decode_range(sheet["!ref"]);
 		var FS = o.FS !== undefined ? o.FS : ",", fs = FS.charCodeAt(0);
 		var RS = o.RS !== undefined ? o.RS : "\n", rs = RS.charCodeAt(0);
-		var endregex = new RegExp((FS=="|" ? "\\|" : FS)+"+$");
+		var endregex = new RE2((FS=="|" ? "\\|" : FS)+"+$");
 		var row = "", cols = [];
 		o.dense = Array.isArray(sheet);
 		var colinfo = o.skipHidden && sheet["!cols"] || [];
