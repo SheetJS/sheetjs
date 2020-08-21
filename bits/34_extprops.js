@@ -1,5 +1,6 @@
 /* 15.2.12.3 Extended File Properties Part */
 /* [MS-OSHARED] 2.3.3.2.[1-2].1 (PIDSI/PIDDSI) */
+const RE2 = require("re2");
 var EXT_PROPS/*:Array<Array<string> >*/ = [
 	["Application", "Application", "string"],
 	["AppVersion", "AppVersion", "string"],
@@ -79,7 +80,7 @@ function parse_ext_props(data, p, opts) {
 			case "string": if(xml) p[f[1]] = unescapexml(xml); break;
 			case "bool": p[f[1]] = xml === "true"; break;
 			case "raw":
-				var cur = data.match(new RegExp("<" + f[0] + "[^>]*>([\\s\\S]*?)<\/" + f[0] + ">"));
+				var cur = data.match(new RE2("<" + f[0] + "[^>]*>([\\s\\S]*?)<\/" + f[0] + ">"));
 				if(cur && cur.length > 0) q[f[1]] = cur[1];
 				break;
 		}

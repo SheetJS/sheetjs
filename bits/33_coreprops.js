@@ -1,5 +1,6 @@
 /* ECMA-376 Part II 11.1 Core Properties Part */
 /* [MS-OSHARED] 2.3.3.2.[1-2].1 (PIDSI/PIDDSI) */
+const RE2 = require("re2");
 var CORE_PROPS/*:Array<Array<string> >*/ = [
 	["cp:category", "Category"],
 	["cp:contentStatus", "ContentStatus"],
@@ -21,12 +22,12 @@ var CORE_PROPS/*:Array<Array<string> >*/ = [
 XMLNS.CORE_PROPS = "http://schemas.openxmlformats.org/package/2006/metadata/core-properties";
 RELS.CORE_PROPS  = 'http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties';
 
-var CORE_PROPS_REGEX/*:Array<RegExp>*/ = (function() {
+var CORE_PROPS_REGEX/*:Array<RE2>*/ = (function() {
 	var r = new Array(CORE_PROPS.length);
 	for(var i = 0; i < CORE_PROPS.length; ++i) {
 		var f = CORE_PROPS[i];
 		var g = "(?:"+ f[0].slice(0,f[0].indexOf(":")) +":)"+ f[0].slice(f[0].indexOf(":")+1);
-		r[i] = new RegExp("<" + g + "[^>]*>([\\s\\S]*?)<\/" + g + ">");
+		r[i] = new RE2("<" + g + "[^>]*>([\\s\\S]*?)<\/" + g + ">");
 	}
 	return r;
 })();

@@ -1,4 +1,5 @@
 /* map from xlml named formats to SSF TODO: localize */
+const RE2 = require("re2");
 var XLMLFormatMap/*{[string]:string}*/ = ({
 	"General Number": "General",
 	"General Date": SSF._table[22],
@@ -60,10 +61,10 @@ var SSFImplicit/*{[number]:string}*/ = ({
 
 /* dateNF parse TODO: move to SSF */
 var dateNFregex = /[dD]+|[mM]+|[yYeE]+|[Hh]+|[Ss]+/g;
-function dateNF_regex(dateNF/*:string|number*/)/*:RegExp*/ {
+function dateNF_regex(dateNF/*:string|number*/)/*:RE2*/ {
 	var fmt = typeof dateNF == "number" ? SSF._table[dateNF] : dateNF;
 	fmt = fmt.replace(dateNFregex, "(\\d+)");
-	return new RegExp("^" + fmt + "$");
+	return new RE2("^" + fmt + "$");
 }
 function dateNF_fix(str/*:string*/, dateNF/*:string*/, match/*:Array<string>*/)/*:string*/ {
 	var Y = -1, m = -1, d = -1, H = -1, M = -1, S = -1;

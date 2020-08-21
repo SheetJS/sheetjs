@@ -1,4 +1,5 @@
 /* from js-harb (C) 2014-present  SheetJS */
+const RE2 = require("re2");
 var DBF = (function() {
 var dbf_codepage_map = {
 	/* Code Pages Supported by Visual FoxPro */
@@ -338,7 +339,7 @@ var SYLK = (function() {
 		"!":161, '"':162, "#":163, "(":164, "%":165, "'":167, "H ":168,
 		"+":171, ";":187, "<":188, "=":189, ">":190, "?":191, "{":223
 	}/*:any*/);
-	var sylk_char_regex = new RegExp("\u001BN(" + keys(sylk_escapes).join("|").replace(/\|\|\|/, "|\\||").replace(/([?()+])/g,"\\$1") + "|\\|)", "gm");
+	var sylk_char_regex = new RE2("\u001BN(" + keys(sylk_escapes).join("|").replace(/\|\|\|/, "|\\||").replace(/([?()+])/g,"\\$1") + "|\\|)", "gm");
 	var sylk_char_fn = function(_, $1){ var o = sylk_escapes[$1]; return typeof o == "number" ? _getansi(o) : o; };
 	var decode_sylk_char = function($$, $1, $2) { var newcc = (($1.charCodeAt(0) - 0x20)<<4) | ($2.charCodeAt(0) - 0x30); return newcc == 59 ? $$ : _getansi(newcc); };
 	sylk_escapes["|"] = 254;
@@ -830,7 +831,7 @@ var PRN = (function() {
 		var R = 0, C = 0, v = 0;
 		var start = 0, end = 0, sepcc = sep.charCodeAt(0), instr = false, cc=0;
 		str = str.replace(/\r\n/mg, "\n");
-		var _re/*:?RegExp*/ = o.dateNF != null ? dateNF_regex(o.dateNF) : null;
+		var _re/*:?RE2*/ = o.dateNF != null ? dateNF_regex(o.dateNF) : null;
 		function finish_cell() {
 			var s = str.slice(start, end);
 			var cell = ({}/*:any*/);

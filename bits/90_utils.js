@@ -1,3 +1,5 @@
+const RE2 = require("re2");
+
 /*::
 type MJRObject = {
 	row: any;
@@ -119,7 +121,7 @@ function sheet_to_csv(sheet/*:Worksheet*/, opts/*:?Sheet2CSVOpts*/)/*:string*/ {
 	var r = safe_decode_range(sheet["!ref"]);
 	var FS = o.FS !== undefined ? o.FS : ",", fs = FS.charCodeAt(0);
 	var RS = o.RS !== undefined ? o.RS : "\n", rs = RS.charCodeAt(0);
-	var endregex = new RegExp((FS=="|" ? "\\|" : FS)+"+$");
+	var endregex = new RE2((FS=="|" ? "\\|" : FS)+"+$");
 	var row = "", cols/*:Array<string>*/ = [];
 	o.dense = Array.isArray(sheet);
 	var colinfo/*:Array<ColInfo>*/ = o.skipHidden && sheet["!cols"] || [];

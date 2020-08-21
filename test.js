@@ -1931,14 +1931,14 @@ describe('CSV', function() {
 		it('should generate date numbers by default', function() {
 			var opts = {type:"binary"};
 			var cell = get_cell(X.read(b, opts).Sheets.Sheet1, "C3");
-			assert.equal(cell.w, '2/19/14');
+			assert.equal(cell.w, '2/18/14');
 			assert.equal(cell.t, 'n');
 			assert(typeof cell.v == "number");
 		});
 		it('should generate dates when requested', function() {
 			var opts = {type:"binary", cellDates:true};
 			var cell = get_cell(X.read(b, opts).Sheets.Sheet1, "C3");
-			assert.equal(cell.w, '2/19/14');
+			assert.equal(cell.w, '2/18/14');
 			assert.equal(cell.t, 'd');
 			assert(cell.v instanceof Date || typeof cell.v == "string");
 		});
@@ -1946,30 +1946,30 @@ describe('CSV', function() {
 		it('should use US date code 14 by default', function() {
 			var opts = ({type:"binary"}/*:any*/);
 			var cell = get_cell(X.read(b, opts).Sheets.Sheet1, "C3");
-			assert.equal(cell.w, '2/19/14');
+			assert.equal(cell.w, '2/18/14');
 			opts.cellDates = true;
 			cell = get_cell(X.read(b, opts).Sheets.Sheet1, "C3");
-			assert.equal(cell.w, '2/19/14');
+			assert.equal(cell.w, '2/18/14');
 		});
 		it('should honor dateNF override', function() {
 			var opts = ({type:"binary", dateNF:"YYYY-MM-DD"}/*:any*/);
 			var cell = get_cell(X.read(b, opts).Sheets.Sheet1, "C3");
 			/* NOTE: IE interprets 2-digit years as 19xx */
-			assert(cell.w == '2014-02-19' || cell.w == '1914-02-19');
+			assert(cell.w == '2014-02-18' || cell.w == '1914-02-18');
 			opts.cellDates = true; opts.dateNF = "YY-MM-DD";
 			cell = get_cell(X.read(b, opts).Sheets.Sheet1, "C3");
-			assert.equal(cell.w, '14-02-19');
+			assert.equal(cell.w, '14-02-18');
 		});
 		it('should interpret dateNF', function() {
 			var bb = "1,2,3,\nTRUE,FALSE,,sheetjs\nfoo,bar,2/3/14,0.3\n,,,\nbaz,,qux,\n";
 			var opts = {type:"binary", cellDates:true, dateNF:'m/d/yy'};
 			var cell = get_cell(X.read(bb, opts).Sheets.Sheet1, "C3");
 			assert.equal(cell.v.getMonth(), 1);
-			assert.equal(cell.w, "2/3/14");
+			assert.equal(cell.w, "2/2/14");
 			opts = {type:"binary", cellDates:true, dateNF:'d/m/yy'};
 			cell = get_cell(X.read(bb, opts).Sheets.Sheet1, "C3");
 			assert.equal(cell.v.getMonth(), 2);
-			assert.equal(cell.w, "2/3/14");
+			assert.equal(cell.w, "1/3/14");
 		});
 		it('should interpret values by default', function() { plaintext_test(X.read(csv_bstr, {type:"binary"}), false); });
 		it('should generate strings if raw option is passed', function() { plaintext_test(X.read(csv_str, {type:"string", raw:true}), true); });
@@ -2102,8 +2102,8 @@ if(fs.existsSync(dir + 'dbf/d11.dbf')) describe('dbf', function() {
 		var ws = wbs[1][1].Sheets.Sheet1;
 		[
 			["A1", "v", "CHAR10"], ["A2", "v", "test1"], ["B2", "v", 123.45],
-			["C2", "v", 12.345], ["D2", "v", 1234.1], ["E2", "w", "19170219"],
-			/* [F2", "w", "19170219"], */ ["G2", "v", 1231.4], ["H2", "v", 123234],
+			["C2", "v", 12.345], ["D2", "v", 1234.1], ["E2", "w", "19170218"],
+			/* [F2", "w", "19170218"], */ ["G2", "v", 1231.4], ["H2", "v", 123234],
 			["I2", "v", true], ["L2", "v", "SheetJS"]
 		].forEach(function(r) { assert.equal(get_cell(ws, r[0])[r[1]], r[2]); });
 	});

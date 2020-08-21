@@ -12,6 +12,8 @@ https://github.com/nodeca/pako/blob/master/LICENSE
 Note: since JSZip 3 removed critical functionality, this version assigns to the
 `JSZipSync` variable.  Another JSZip version can be loaded in parallel.
 */
+const RE2 = require("re2");
+
 (function(e){
 	if("object"==typeof exports&&"undefined"!=typeof module&&"undefined"==typeof DO_NOT_EXPORT_JSZIP)module.exports=e();
 	else if("function"==typeof define&&define.amd&&"undefined"==typeof DO_NOT_EXPORT_JSZIP){JSZipSync=e();define([],e);}
@@ -1185,7 +1187,7 @@ var out = {
 
     /**
      * Add a file to the zip file, or search a file.
-     * @param   {string|RegExp} name The name of the file to add (if data is defined),
+     * @param   {string|RE2} name The name of the file to add (if data is defined),
      * the name of the file to find (if no data) or a regex to match files.
      * @param   {String|ArrayBuffer|Uint8Array|Buffer} data  The file data, either raw or base64 encoded
      * @param   {Object} o     File options
@@ -1215,7 +1217,7 @@ var out = {
 
     /**
      * Add a directory to the zip file, or search.
-     * @param   {String|RegExp} arg The name of the directory to add, or a regex to search folders.
+     * @param   {String|RE2} arg The name of the directory to add, or a regex to search folders.
      * @return  {JSZip} an object with the new directory as the root, or an array containing matching folders.
      */
     folder: function(arg) {
@@ -2140,7 +2142,7 @@ exports.findCompression = function(compressionMethod) {
 * false otherwise
 */
 exports.isRegExp = function (object) {
-    return Object.prototype.toString.call(object) === "[object RegExp]";
+    return Object.prototype.toString.call(object) === "[object RE2]";
 };
 
 

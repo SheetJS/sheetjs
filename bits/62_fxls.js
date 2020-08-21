@@ -1,3 +1,4 @@
+const RE2 = require("re2");
 function parseread1(blob) { blob.l+=1; return; }
 
 /* [MS-XLS] 2.5.51 */
@@ -690,7 +691,7 @@ var PtgBinOp = {
 };
 
 // List of invalid characters needs to be tested further
-var quoteCharacters /*:RegExp */ = new RegExp(/[^\w\u4E00-\u9FFF\u3040-\u30FF]/);
+var quoteCharacters /*:RE2 */ = new RE2(/[^\w\u4E00-\u9FFF\u3040-\u30FF]/);
 function formula_quote_sheet_name(sname/*:string*/, opts)/*:string*/ {
 	if(!sname && !(opts && opts.biff <= 5 && opts.biff >= 2)) throw new Error("empty sheet name");
 	if (quoteCharacters.test(sname)) return "'" + sname + "'";
