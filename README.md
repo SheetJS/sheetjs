@@ -562,7 +562,7 @@ top-level attributes: `fill`, `font`, `numFmt`, `alignment`, and `border`.
 |                 |                |  `"0.00%;\\(0.00%\\);\\-;@"` // string specifying a custom format, escaping special characters
 |                 |                |  `"m/dd/yy"` // string a date format using Excel's format notation
 | alignment       | vertical       | `"bottom"` or `"center"` or `"top"`
-|                 | horizontal     | `"bottom"` or `"center"` or `"top"`
+|                 | horizontal     | `"left"` or `"center"` or `"right"`
 |                 | wrapText       |  `true ` or ` false`
 |                 | readingOrder   |  `2` // for right-to-left
 |                 | textRotation   | Number from `0` to `180` or `255` (default is `0`)
