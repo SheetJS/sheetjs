@@ -611,6 +611,8 @@ function parse_xlml_xml(d, _opts)/*:Workbook*/ {
 					case 'donotdisplaygridlines' /*case 'DoNotDisplayGridlines'*/:
 						break;
 
+					case 'activerow' /*case 'ActiveRow'*/: break;
+					case 'activecol' /*case 'ActiveCol'*/: break;
 					case 'toprowbottompane' /*case 'TopRowBottomPane'*/: break;
 					case 'leftcolumnrightpane' /*case 'LeftColumnRightPane'*/: break;
 
@@ -630,8 +632,6 @@ function parse_xlml_xml(d, _opts)/*:Workbook*/ {
 					case 'horizontalresolution' /*case 'HorizontalResolution'*/: break;
 					case 'verticalresolution' /*case 'VerticalResolution'*/: break;
 					case 'numberofcopies' /*case 'NumberofCopies'*/: break;
-					case 'activerow' /*case 'ActiveRow'*/: break;
-					case 'activecol' /*case 'ActiveCol'*/: break;
 					case 'activepane' /*case 'ActivePane'*/: break;
 					case 'toprowvisible' /*case 'TopRowVisible'*/: break;
 					case 'leftcolumnvisible' /*case 'LeftColumnVisible'*/: break;
