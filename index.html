@@ -33,6 +33,7 @@ Output Format: <select name="format" onchange="setfmt()">
 <option value="json"> JSON</option>
 <option value="form"> FORMULAE</option>
 <option value="html"> HTML</option>
+<option value="xlsx"> XLSX</option>
 </select><br />
 <div id="drop">Drop a spreadsheet file here to see sheet data</div>
 <input type="file" name="xlfile" id="xlf" /> ... or click here to select a file
@@ -119,6 +120,12 @@ var process_wb = (function() {
 		return "";
 	};
 
+	var to_xlsx = function to_xlsx(workbook) {
+		HTMLOUT.innerHTML = "";
+		XLSX.writeFile(workbook, "SheetJSTest.xlsx");
+		return "";
+	};
+
 	return function process_wb(wb) {
 		global_wb = wb;
 		var output = "";
@@ -126,6 +133,7 @@ var process_wb = (function() {
 			case "form": output = to_fmla(wb); break;
 			case "html": output = to_html(wb); break;
 			case "json": output = to_json(wb); break;
+			case "xlsx": output = to_xlsx(wb); break;
 			default: output = to_csv(wb);
 		}
 		if(OUT.innerText === undefined) OUT.textContent = output;
