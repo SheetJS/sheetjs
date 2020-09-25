@@ -215,6 +215,7 @@ The [`demos` directory](demos/) includes sample projects for:
 - [`Adobe ExtendScript`](demos/extendscript/)
 - [`Headless Browsers`](demos/headless/)
 - [`canvas-datagrid`](demos/datagrid/)
+- [`x-spreadsheet`](demos/xspreadsheet/)
 - [`Swift JSC and other engines`](demos/altjs/)
 - [`"serverless" functions`](demos/function/)
 - [`internet explorer`](demos/oldie/)
@@ -285,8 +286,8 @@ Excel 2007, nothing outside of SheetJS or Excel supported the format.
 To promote a format-agnostic view, js-xlsx starts from a pure-JS representation
 that we call the ["Common Spreadsheet Format"](#common-spreadsheet-format).
 Emphasizing a uniform object representation enables new features like format
-conversion (reading an XLSX template and saving as XLS) and circumvents the
-"class trap".  By abstracting the complexities of the various formats, tools
+conversion (reading an XLSX template and saving as XLS) and circumvents the mess
+of classes.  By abstracting the complexities of the various formats, tools
 need not worry about the specific file type!
 
 A simple object representation combined with careful coding practices enables
@@ -1683,6 +1684,8 @@ The exported `read` and `readFile` functions accept an options argument:
 |`password`   | ""      | If defined and file is encrypted, use password **    |
 |`WTF`        | false   | If true, throw errors on unexpected file features ** |
 |`sheets`     |         | If specified, only parse specified sheets **         |
+|`PRN`        | false   | If true, allow parsing of PRN files **               |
+|`xlfn`       | false   | If true, preserve `_xlfn.` prefixes in formulae **   |
 
 - Even if `cellNF` is false, formatted text will be generated and saved to `.w`
 - In some cases, sheets may be parsed even if `bookSheets` is false.
@@ -1706,11 +1709,14 @@ The exported `read` and `readFile` functions accept an options argument:
   new XLSB-compatible blob from the XLS CFB container.
 - `codepage` is applied to BIFF2 - BIFF5 files without `CodePage` records and to
   CSV files without BOM in `type:"binary"`.  BIFF8 XLS always defaults to 1200.
+- `PRN` affects parsing of text files without a common delimiter character.
 - Currently only XOR encryption is supported.  Unsupported error will be thrown
   for files employing other encryption methods.
+- Newer Excel functions are serialized with the `_xlfn.` prefix, hidden from the
+  user. SheetJS will strip `_xlfn.` normally. The `xlfn` option preserves them.
 - WTF is mainly for development.  By default, the parser will suppress read
   errors on single worksheets, allowing you to read from the worksheets that do
-  parse properly. Setting `WTF:1` forces those errors to be thrown.
+  parse properly. Setting `WTF:true` forces those errors to be thrown.
 
 ### Input Type
 
@@ -2113,6 +2119,56 @@ var wb = XLSX.utils.table_to_book(tbl);
 
 Note: `XLSX.read` can handle HTML represented as strings.
 
+
+`XLSX.utils.sheet_add_dom` takes a table DOM element and updates an existing
+worksheet object.  It follows the same process as `table_to_sheet` and accepts
+an options argument:
+
+| Option Name |  Default | Description                                         |
+| :---------- | :------: | :-------------------------------------------------- |
+|`raw`        |          | If true, every cell will hold raw strings           |
+|`dateNF`     |  FMT 14  | Use specified date format in string output          |
+|`cellDates`  |  false   | Store dates as type `d` (default is `n`)            |
+|`sheetRows`  |    0     | If >0, read the first `sheetRows` rows of the table |
+|`display`    |  false   | If true, hidden rows and cells will not be parsed   |
+
+`origin` is expected to be one of:
+
+| `origin`         | Description                                               |
+| :--------------- | :-------------------------------------------------------- |
+| (cell object)    | Use specified cell (cell object)                          |
+| (string)         | Use specified cell (A1-style cell)                        |
+| (number >= 0)    | Start from the first column at specified row (0-indexed)  |
+| -1               | Append to bottom of worksheet starting on first column    |
+| (default)        | Start from cell A1                                        |
+
+
+<details>
+  <summary><b>Examples</b> (click to show)</summary>
+
+A small helper function can create gap rows between tables:
+
+```js
+function create_gap_rows(ws, nrows) {
+  var ref = XLSX.utils.decode_range(ws["!ref"]);       // get original range
+  ref.e.r += nrows;                                    // add to ending row
+  ws["!ref"] = XLSX.utils.encode_range(ref);           // reassign row
+}
+
+/* first table */
+var ws = XLSX.utils.table_to_sheet(document.getElementById('table1'));
+create_gap_rows(ws, 1); // one row gap after first table
+
+/* second table */
+XLSX.utils.sheet_add_dom(ws, document.getElementById('table2'), {origin: -1});
+create_gap_rows(ws, 3); // three rows gap after second table
+
+/* third table */
+XLSX.utils.sheet_add_dom(ws, document.getElementById('table3'), {origin: -1});
+```
+
+</details>
+
 ### Formulae Output
 
 `XLSX.utils.sheet_to_formulae` generates an array of commands that represent
@@ -2137,17 +2193,20 @@ For the example sheet:
 As an alternative to the `writeFile` CSV type, `XLSX.utils.sheet_to_csv` also
 produces CSV output.  The function takes an options argument:
 
-| Option Name |  Default | Description                                         |
-| :---------- | :------: | :-------------------------------------------------- |
-|`FS`         |  `","`   | "Field Separator"  delimiter between fields         |
-|`RS`         |  `"\n"`  | "Record Separator" delimiter between rows           |
-|`dateNF`     |  FMT 14  | Use specified date format in string output          |
-|`strip`      |  false   | Remove trailing field separators in each record **  |
-|`blankrows`  |  true    | Include blank lines in the CSV output               |
-|`skipHidden` |  false   | Skips hidden rows/columns in the CSV output         |
+| Option Name  |  Default | Description                                        |
+| :----------- | :------: | :------------------------------------------------- |
+|`FS`          |  `","`   | "Field Separator"  delimiter between fields        |
+|`RS`          |  `"\n"`  | "Record Separator" delimiter between rows          |
+|`dateNF`      |  FMT 14  | Use specified date format in string output         |
+|`strip`       |  false   | Remove trailing field separators in each record ** |
+|`blankrows`   |  true    | Include blank lines in the CSV output              |
+|`skipHidden`  |  false   | Skips hidden rows/columns in the CSV output        |
+|`forceQuotes` |  false   | Force quotes around fields                         |
 
 - `strip` will remove trailing commas from each line under default `FS/RS`
 - `blankrows` must be set to `false` to skip blank lines.
+- Fields containing the record or field separator will automatically be wrapped
+  in double quotes; `forceQuotes` forces all cells to be wrapped in quotes.
 
 <details>
   <summary><b>Examples</b> (click to show)</summary>

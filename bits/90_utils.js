@@ -6,7 +6,7 @@ type MJRObject = {
 */
 function make_json_row(sheet/*:Worksheet*/, r/*:Range*/, R/*:number*/, cols/*:Array<string>*/, header/*:number*/, hdr/*:Array<any>*/, dense/*:boolean*/, o/*:Sheet2JSONOpts*/)/*:MJRObject*/ {
 	var rr = encode_row(R);
-	var defval = o.defval, raw = o.raw || !o.hasOwnProperty("raw");
+	var defval = o.defval, raw = o.raw || !Object.prototype.hasOwnProperty.call(o, "raw");
 	var isempty = true;
 	var row/*:any*/ = (header === 1) ? [] : {};
 	if(header !== 1) {
@@ -33,7 +33,7 @@ function make_json_row(sheet/*:Worksheet*/, r/*:Range*/, R/*:number*/, cols/*:Ar
 				else if(raw && v === null) row[hdr[C]] = null;
 				else continue;
 			} else {
-				row[hdr[C]] = raw ? v : format_cell(val,v,o);
+				row[hdr[C]] = raw || (o.rawNumbers && val.t == "n") ? v : format_cell(val,v,o);
 			}
 			if(v != null) isempty = false;
 		}
@@ -98,8 +98,8 @@ function make_csv_row(sheet/*:Worksheet*/, r/*:Range*/, R/*:number*/, cols/*:Arr
 		if(val == null) txt = "";
 		else if(val.v != null) {
 			isempty = false;
-			txt = ''+format_cell(val, null, o);
-			for(var i = 0, cc = 0; i !== txt.length; ++i) if((cc = txt.charCodeAt(i)) === fs || cc === rs || cc === 34) {txt = "\"" + txt.replace(qreg, '""') + "\""; break; }
+			txt = ''+(o.rawNumbers && val.t == "n" ? val.v : format_cell(val, null, o));
+			for(var i = 0, cc = 0; i !== txt.length; ++i) if((cc = txt.charCodeAt(i)) === fs || cc === rs || cc === 34 || o.forceQuotes) {txt = "\"" + txt.replace(qreg, '""') + "\""; break; }
 			if(txt == "ID") txt = '"ID"';
 		} else if(val.f != null && !val.F) {
 			isempty = false;
@@ -196,7 +196,9 @@ function sheet_add_json(_ws/*:?Worksheet*/, js/*:Array<any>*/, opts)/*:Worksheet
 		var _range = safe_decode_range(ws['!ref']);
 		range.e.c = Math.max(range.e.c, _range.e.c);
 		range.e.r = Math.max(range.e.r, _range.e.r);
-		if(_R == -1) { _R = range.e.r + 1; range.e.r = _R + js.length - 1 + offset; }
+		if(_R == -1) { _R = _range.e.r + 1; range.e.r = _R + js.length - 1 + offset; }
+	} else {
+		if(_R == -1) { _R = 0; range.e.r = js.length - 1 + offset; }
 	}
 	var hdr/*:Array<string>*/ = o.header || [], C = 0;
 
@@ -254,6 +256,7 @@ var utils/*:any*/ = {
 	make_formulae: sheet_to_formulae,
 	sheet_add_aoa: sheet_add_aoa,
 	sheet_add_json: sheet_add_json,
+	sheet_add_dom: sheet_add_dom,
 	aoa_to_sheet: aoa_to_sheet,
 	json_to_sheet: json_to_sheet,
 	table_to_sheet: parse_dom_table,

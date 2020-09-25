@@ -22,6 +22,10 @@ Other scripts in this demo show:
 - `preact` using the react compatibility library
 - `react-native` deployment for iOS and android
 
+Run `make react` to run the browser demo for React, or run `make next` to run
+the server-rendered demo using `next.js`.
+
+
 ## Internal State
 
 The simplest state representation is an array of arrays.  To avoid having the
@@ -109,6 +113,9 @@ writeFile(file, wbout, 'ascii').then((r)=>{/* :) */}).catch((e)=>{/* :( */});
 Note: for real app deployments, the `UIFileSharingEnabled` flag must be manually
 set in the iOS project `Info.plist` file.
 
+To run the React Native demo, run either `make ios` or `make android` while
+connected to a device or emulator.
+
 ## Other Demos
 
 #### Preact
@@ -125,3 +132,7 @@ step adds a small header that imports the library.  The import is not needed in
 deployments that use script tags to include the library.
 
 [![Analytics](https://ga-beacon.appspot.com/UA-36810333-1/SheetJS/js-xlsx?pixel)](https://github.com/SheetJS/js-xlsx)
+
+## Additional Notes
+
+Some additional notes can be found in [`NOTES.md`](NOTES.md).

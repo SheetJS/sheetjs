@@ -1,6 +1,6 @@
 function keys(o/*:any*/)/*:Array<any>*/ {
 	var ks = Object.keys(o), o2 = [];
-	for(var i = 0; i < ks.length; ++i) if(o.hasOwnProperty(ks[i])) o2.push(ks[i]);
+	for(var i = 0; i < ks.length; ++i) if(Object.prototype.hasOwnProperty.call(o, ks[i])) o2.push(ks[i]);
 	return o2;
 }
 
@@ -32,15 +32,21 @@ function evert_arr(obj/*:any*/)/*:EvertArrType*/ {
 }
 
 var basedate = new Date(1899, 11, 30, 0, 0, 0); // 2209161600000
-var dnthresh = basedate.getTime() + (new Date().getTimezoneOffset() - basedate.getTimezoneOffset()) * 60000;
 function datenum(v/*:Date*/, date1904/*:?boolean*/)/*:number*/ {
 	var epoch = v.getTime();
 	if(date1904) epoch -= 1462*24*60*60*1000;
+	var dnthresh = basedate.getTime() + (v.getTimezoneOffset() - basedate.getTimezoneOffset()) * 60000;
 	return (epoch - dnthresh) / (24 * 60 * 60 * 1000);
 }
+var refdate = new Date();
+var dnthresh = basedate.getTime() + (refdate.getTimezoneOffset() - basedate.getTimezoneOffset()) * 60000;
+var refoffset = refdate.getTimezoneOffset();
 function numdate(v/*:number*/)/*:Date*/ {
 	var out = new Date();
 	out.setTime(v * 24 * 60 * 60 * 1000 + dnthresh);
+	if (out.getTimezoneOffset() !== refoffset) {
+		out.setTime(out.getTime() + (out.getTimezoneOffset() - refoffset) * 60000);
+	}
 	return out;
 }
 
@@ -106,7 +112,7 @@ function dup(o/*:any*/)/*:any*/ {
 	if(typeof o != 'object' || o == null) return o;
 	if(o instanceof Date) return new Date(o.getTime());
 	var out = {};
-	for(var k in o) if(o.hasOwnProperty(k)) out[k] = dup(o[k]);
+	for(var k in o) if(Object.prototype.hasOwnProperty.call(o, k)) out[k] = dup(o[k]);
 	return out;
 }
 
@@ -116,6 +122,7 @@ function fill(c/*:string*/,l/*:number*/)/*:string*/ { var o = ""; while(o.length
 function fuzzynum(s/*:string*/)/*:number*/ {
 	var v/*:number*/ = Number(s);
 	if(!isNaN(v)) return v;
+	if(!/\d/.test(s)) return v;
 	var wt = 1;
 	var ss = s.replace(/([\d]),([\d])/g,"$1$2").replace(/[$]/g,"").replace(/[%]/g, function() { wt *= 100; return "";});
 	if(!isNaN(v = Number(ss))) return v / wt;

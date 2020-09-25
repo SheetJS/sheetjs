@@ -7,6 +7,8 @@ var RELS = ({
 	XPATH: "http://schemas.openxmlformats.org/officeDocument/2006/relationships/externalLinkPath",
 	XMISS: "http://schemas.microsoft.com/office/2006/relationships/xlExternalLinkPath/xlPathMissing",
 	XLINK: "http://schemas.openxmlformats.org/officeDocument/2006/relationships/externalLink",
+	CXML: "http://schemas.openxmlformats.org/officeDocument/2006/relationships/customXml",
+	CXMLP: "http://schemas.openxmlformats.org/officeDocument/2006/relationships/customXmlProps",
 	VBA: "http://schemas.microsoft.com/office/2006/relationships/vbaProject"
 }/*:any*/);
 

@@ -186,6 +186,7 @@ var parse_content_xml = (function() {
 					if(atag.Target) q.l = atag;
 					if(comments.length > 0) { q.c = comments; comments = []; }
 					if(textp && opts.cellText !== false) q.w = textp;
+					if(isstub) { q.t = "z"; delete q.v; }
 					if(!isstub || opts.sheetStubs) {
 						if(!(opts.sheetRows && opts.sheetRows <= R)) {
 							for(var rpt = 0; rpt < rowpeat; ++rpt) {

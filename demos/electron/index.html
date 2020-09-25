@@ -4,6 +4,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta http-equiv="Content-Security-Policy" content="script-src 'self' https:">
 <title>SheetJS Electron Demo</title>
 <style>
 #drop{
@@ -25,12 +26,12 @@ a { text-decoration: none }
 <a href="https://github.com/SheetJS/js-xlsx">Source Code Repo</a>
 <a href="https://github.com/SheetJS/js-xlsx/issues">Issues?  Something look weird?  Click here and report an issue</a>
 <br />
-<button id="readf">Click here to select a file from your computer</button><br />
+<button id="readBtn">Click here to select a file from your computer</button><br />
 <div id="drop">Drop a spreadsheet file here to see sheet data</div>
-<input type="file" name="xlfile" id="xlf" /> ... or click here to select a file
+<input type="file" name="xlfile" id="readIn" /> ... or click here to select a file
 
 </pre>
-<p><input type="submit" value="Export Data!" id="xport" onclick="export_xlsx();" disabled="true"></p>
+<p><input type="submit" value="Export Data!" id="exportBtn" disabled="true"></p>
 <div id="htmlout"></div>
 <br />
 <script src="index.js"></script>

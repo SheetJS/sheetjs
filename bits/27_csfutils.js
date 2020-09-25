@@ -9,9 +9,28 @@ function fix_col(cstr/*:string*/)/*:string*/ { return cstr.replace(/^([A-Z])/,"$
 function unfix_col(cstr/*:string*/)/*:string*/ { return cstr.replace(/^\$([A-Z])/,"$1"); }
 
 function split_cell(cstr/*:string*/)/*:Array<string>*/ { return cstr.replace(/(\$?[A-Z]*)(\$?\d*)/,"$1,$2").split(","); }
-function decode_cell(cstr/*:string*/)/*:CellAddress*/ { var splt = split_cell(cstr); return { c:decode_col(splt[0]), r:decode_row(splt[1]) }; }
-function encode_cell(cell/*:CellAddress*/)/*:string*/ { return encode_col(cell.c) + encode_row(cell.r); }
-function decode_range(range/*:string*/)/*:Range*/ { var x =range.split(":").map(decode_cell); return {s:x[0],e:x[x.length-1]}; }
+//function decode_cell(cstr/*:string*/)/*:CellAddress*/ { var splt = split_cell(cstr); return { c:decode_col(splt[0]), r:decode_row(splt[1]) }; }
+function decode_cell(cstr/*:string*/)/*:CellAddress*/ {
+	var R = 0, C = 0;
+	for(var i = 0; i < cstr.length; ++i) {
+		var cc = cstr.charCodeAt(i);
+		if(cc >= 48 && cc <= 57) R = 10 * R + (cc - 48);
+		else if(cc >= 65 && cc <= 90) C = 26 * C + (cc - 64);
+	}
+	return { c: C - 1, r:R - 1 };
+}
+//function encode_cell(cell/*:CellAddress*/)/*:string*/ { return encode_col(cell.c) + encode_row(cell.r); }
+function encode_cell(cell/*:CellAddress*/)/*:string*/ {
+	var col = cell.c + 1;
+	var s="";
+	for(; col; col=((col-1)/26)|0) s = String.fromCharCode(((col-1)%26) + 65) + s;
+	return s + (cell.r + 1);
+}
+function decode_range(range/*:string*/)/*:Range*/ {
+	var idx = range.indexOf(":");
+	if(idx == -1) return { s: decode_cell(range), e: decode_cell(range) };
+	return { s: decode_cell(range.slice(0, idx)), e: decode_cell(range.slice(idx + 1)) };
+}
 /*# if only one arg, it is assumed to be a Range.  If 2 args, both are cell addresses */
 function encode_range(cs/*:CellAddrSpec|Range*/,ce/*:?CellAddrSpec*/)/*:string*/ {
 	if(typeof ce === 'undefined' || typeof ce === 'number') {
@@ -90,6 +109,7 @@ function sheet_add_aoa(_ws/*:?Worksheet*/, data/*:AOA*/, opts/*:?any*/)/*:Worksh
 			var _origin/*:CellAddress*/ = typeof o.origin == "string" ? decode_cell(o.origin) : o.origin;
 			_R = _origin.r; _C = _origin.c;
 		}
+		if(!ws["!ref"]) ws["!ref"] = "A1:A1";
 	}
 	var range/*:Range*/ = ({s: {c:10000000, r:10000000}, e: {c:0, r:0}}/*:any*/);
 	if(ws['!ref']) {

@@ -1,104 +1,79 @@
-/* xlsx.js (C) 2013-present SheetJS -- http://sheetjs.com */
-/*global Uint8Array, console */
-/* exported export_xlsx */
-/* eslint no-use-before-define:0 */
-var XLSX = require('xlsx');
-var electron = require('electron').remote;
+/* xlsx.js (C) 2013-present SheetJS -- https://sheetjs.com */
+const XLSX = require('xlsx');
+const electron = require('electron').remote;
 
-var process_wb = (function() {
-	var HTMLOUT = document.getElementById('htmlout');
-	var XPORT = document.getElementById('xport');
+const EXTENSIONS = "xls|xlsx|xlsm|xlsb|xml|csv|txt|dif|sylk|slk|prn|ods|fods|htm|html".split("|");
 
-	return function process_wb(wb) {
-		XPORT.disabled = false;
-		HTMLOUT.innerHTML = "";
-		wb.SheetNames.forEach(function(sheetName) {
-			var htmlstr = XLSX.utils.sheet_to_html(wb.Sheets[sheetName],{editable:true});
-			HTMLOUT.innerHTML += htmlstr;
-		});
+const processWb = function(wb) {
+	const HTMLOUT = document.getElementById('htmlout');
+	const XPORT = document.getElementById('exportBtn');
+	XPORT.disabled = false;
+	HTMLOUT.innerHTML = "";
+	wb.SheetNames.forEach(function(sheetName) {
+		const htmlstr = XLSX.utils.sheet_to_html(wb.Sheets[sheetName],{editable:true});
+		HTMLOUT.innerHTML += htmlstr;
+	});
+};
+
+const readFile = function(files) {
+	const f = files[0];
+	const reader = new FileReader();
+	reader.onload = function(e) {
+		let data = e.target.result;
+		data = new Uint8Array(data);
+		processWb(XLSX.read(data, {type: 'array'}));
 	};
-})();
+	reader.readAsArrayBuffer(f);
+};
 
-var _gaq = _gaq || [];
-_gaq.push(['_setAccount', 'UA-36810333-1']);
-_gaq.push(['_trackPageview']);
+const handleReadBtn = async function() {
+	const o = await electron.dialog.showOpenDialog({
+		title: 'Select a file',
+		filters: [{
+			name: "Spreadsheets",
+			extensions: EXTENSIONS
+		}],
+		properties: ['openFile']
+	});
+	if(o.filePaths.length > 0) processWb(XLSX.readFile(o.filePaths[0]));
+};
 
-(function() {
-	var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-	ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-	var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-})();
+const exportXlsx = async function() {
+	const HTMLOUT = document.getElementById('htmlout');
+	const wb = XLSX.utils.table_to_book(HTMLOUT);
+	const o = await electron.dialog.showSaveDialog({
+		title: 'Save file as',
+		filters: [{
+			name: "Spreadsheets",
+			extensions: EXTENSIONS
+		}]
+	});
+	console.log(o.filePath);
+	XLSX.writeFile(wb, o.filePath);
+	electron.dialog.showMessageBox({ message: "Exported data to " + o.filePath, buttons: ["OK"] });
+};
 
-var do_file = (function() {
-	return function do_file(files) {
-		var f = files[0];
-		var reader = new FileReader();
-		reader.onload = function(e) {
-			var data = e.target.result;
-			data = new Uint8Array(data);
-			process_wb(XLSX.read(data, {type: 'array'}));
-		};
-		reader.readAsArrayBuffer(f);
-	};
-})();
+// add event listeners
+const readBtn = document.getElementById('readBtn');
+const readIn = document.getElementById('readIn');
+const exportBtn = document.getElementById('exportBtn');
+const drop = document.getElementById('drop');
 
-(function() {
-	var drop = document.getElementById('drop');
-
-	function handleDrop(e) {
-		e.stopPropagation();
-		e.preventDefault();
-		do_file(e.dataTransfer.files);
-	}
-
-	function handleDragover(e) {
-		e.stopPropagation();
-		e.preventDefault();
-		e.dataTransfer.dropEffect = 'copy';
-	}
-
-	drop.addEventListener('dragenter', handleDragover, false);
-	drop.addEventListener('dragover', handleDragover, false);
-	drop.addEventListener('drop', handleDrop, false);
-})();
-
-(function() {
-	var readf = document.getElementById('readf');
-	function handleF(/*e*/) {
-		var o = electron.dialog.showOpenDialog({
-			title: 'Select a file',
-			filters: [{
-				name: "Spreadsheets",
-				extensions: "xls|xlsx|xlsm|xlsb|xml|xlw|xlc|csv|txt|dif|sylk|slk|prn|ods|fods|uos|dbf|wks|123|wq1|qpw|htm|html".split("|")
-			}],
-			properties: ['openFile']
-		});
-		if(o.length > 0) process_wb(XLSX.readFile(o[0]));
-	}
-	readf.addEventListener('click', handleF, false);
-})();
-
-(function() {
-	var xlf = document.getElementById('xlf');
-	function handleFile(e) { do_file(e.target.files); }
-	xlf.addEventListener('change', handleFile, false);
-})();
-
-var export_xlsx = (function() {
-	var HTMLOUT = document.getElementById('htmlout');
-	var XTENSION = "xls|xlsx|xlsm|xlsb|xml|csv|txt|dif|sylk|slk|prn|ods|fods|htm|html".split("|")
-	return function() {
-		var wb = XLSX.utils.table_to_book(HTMLOUT);
-		var o = electron.dialog.showSaveDialog({
-			title: 'Save file as',
-			filters: [{
-				name: "Spreadsheets",
-				extensions: XTENSION
-			}]
-		});
-		console.log(o);
-		XLSX.writeFile(wb, o);
-		electron.dialog.showMessageBox({ message: "Exported data to " + o, buttons: ["OK"] });
-	};
-})();
-void export_xlsx;
+readBtn.addEventListener('click', handleReadBtn, false);
+readIn.addEventListener('change', (e) => { readFile(e.target.files); }, false);
+exportBtn.addEventListener('click', exportXlsx, false);
+drop.addEventListener('dragenter', (e) => {
+	e.stopPropagation();
+	e.preventDefault();
+	e.dataTransfer.dropEffect = 'copy';
+}, false);
+drop.addEventListener('dragover', (e) => {
+	e.stopPropagation();
+	e.preventDefault();
+	e.dataTransfer.dropEffect = 'copy';
+}, false);
+drop.addEventListener('drop', (e) => {
+	e.stopPropagation();
+	e.preventDefault();
+	readFile(e.dataTransfer.files);
+}, false);

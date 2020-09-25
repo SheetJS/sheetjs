@@ -55,6 +55,7 @@ var dbf_reverse_map = evert({
 	/*::[*/0xCA/*::]*/:  1254,           /*::[*/0xCB/*::]*/:  1253,
 	/*::[*/0x00/*::]*/: 20127
 });
+var DBF_SUPPORTED_VERSIONS = [0x02, 0x03, 0x30, 0x31, 0x83, 0x8B, 0x8C, 0xF5];
 /* TODO: find an actual specification */
 function dbf_to_aoa(buf, opts)/*:AOA*/ {
 	var out/*:AOA*/ = [];
@@ -308,6 +309,7 @@ function sheet_to_dbf(ws/*:Worksheet*/, opts/*:WriteOpts*/) {
 	return ba.end();
 }
 	return {
+		versions: DBF_SUPPORTED_VERSIONS,
 		to_workbook: dbf_to_workbook,
 		to_sheet: dbf_to_sheet,
 		from_sheet: sheet_to_dbf
@@ -790,13 +792,13 @@ var PRN = (function() {
 		}
 
 		cc = [];
-		for(end in cnt) if ( cnt.hasOwnProperty(end) ) {
+		for(end in cnt) if ( Object.prototype.hasOwnProperty.call(cnt, end) ) {
 			cc.push([ cnt[end], end ]);
 		}
 
 		if ( !cc.length ) {
 			cnt = guess_sep_weights;
-			for(end in cnt) if ( cnt.hasOwnProperty(end) ) {
+			for(end in cnt) if ( Object.prototype.hasOwnProperty.call(cnt, end) ) {
 				cc.push([ cnt[end], end ]);
 			}
 		}
@@ -813,8 +815,19 @@ var PRN = (function() {
 		var ws/*:Worksheet*/ = o.dense ? ([]/*:any*/) : ({}/*:any*/);
 		var range/*:Range*/ = ({s: {c:0, r:0}, e: {c:0, r:0}}/*:any*/);
 
-		if(str.slice(0,4) == "sep=" && str.charCodeAt(5) == 10) { sep = str.charAt(4); str = str.slice(6); }
-		else if(o.FS) sep = o.FS;
+		if(str.slice(0,4) == "sep=") {
+			// If the line ends in \r\n
+			if(str.charCodeAt(5) == 13 && str.charCodeAt(6) == 10 ) {
+				sep = str.charAt(4); str = str.slice(7);
+			}
+			// If line ends in \r OR \n
+			else if(str.charCodeAt(5) == 13 || str.charCodeAt(5) == 10 ) {
+				//
+				sep = str.charAt(4); str = str.slice(6);
+			}
+      else if(o.FS) sep = o.FS;
+		}
+
 		else sep = guess_sep(str.slice(0,1024));
 		var R = 0, C = 0, v = 0;
 		var start = 0, end = 0, sepcc = sep.charCodeAt(0), instr = false, cc=0;
@@ -866,7 +879,8 @@ var PRN = (function() {
 	}
 
 	function prn_to_sheet_str(str/*:string*/, opts)/*:Worksheet*/ {
-		if(opts.FS !== ",") return dsv_to_sheet_str(str, opts);
+		if(!(opts && opts.PRN)) return dsv_to_sheet_str(str, opts);
+    if(opts.FS !== ",") return dsv_to_sheet_str(str, opts);
 		if(str.slice(0,4) == "sep=") return dsv_to_sheet_str(str, opts);
 		if(str.indexOf("\t") >= 0 || str.indexOf(",") >= 0 || str.indexOf(";") >= 0) return dsv_to_sheet_str(str, opts);
 		return aoa_to_sheet(prn_to_aoa_str(str, opts), opts);

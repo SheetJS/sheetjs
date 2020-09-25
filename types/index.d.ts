@@ -193,7 +193,7 @@ export interface ParsingOptions extends CommonOptions {
     /** If specified, only parse the specified sheets or sheet names */
     sheets?: number | string | Array<number | string>;
 
-    /* If true, plaintext parsing will not parse values */
+    /** If true, plaintext parsing will not parse values */
     raw?: boolean;
 
     dense?: boolean;
@@ -264,6 +264,9 @@ export interface WorkBook {
 }
 
 export interface SheetProps {
+    /** Name of Sheet */
+    name?: string;
+
     /** Sheet Visibility (0=Visible 1=Hidden 2=VeryHidden) */
     Hidden?: 0 | 1 | 2;
 
@@ -626,6 +629,12 @@ export interface Sheet2CSVOpts extends DateNFOption {
 
     /** Skip hidden rows and columns in the CSV output */
     skipHidden?: boolean;
+
+    /** Force quotes around fields */
+    forceQuotes?: boolean;
+
+    /** if true, return raw numbers; if false, return formatted numbers */
+    rawNumbers?: boolean;
 }
 
 export interface OriginOption {
@@ -662,6 +671,9 @@ export interface Sheet2JSONOpts extends DateNFOption {
 
     /** if true, return raw data; if false, return formatted text */
     raw?: boolean;
+
+    /** if true, return raw numbers; if false, return formatted numbers */
+    rawNumbers?: boolean;
 }
 
 export interface AOA2SheetOpts extends CommonOptions, DateNFOption {
@@ -685,7 +697,7 @@ export interface JSON2SheetOpts extends CommonOptions, DateNFOption {
 export interface SheetJSONOpts extends JSON2SheetOpts, OriginOption {}
 
 export interface Table2SheetOpts extends CommonOptions, DateNFOption {
-    /* If true, plaintext parsing will not parse values */
+    /** If true, plaintext parsing will not parse values */
     raw?: boolean;
 
     /**
@@ -713,6 +725,7 @@ export interface XLSX$Utils {
     /** BROWSER ONLY! Converts a TABLE DOM element to a worksheet. */
     table_to_sheet(data: any,  opts?: Table2SheetOpts): WorkSheet;
     table_to_book(data: any,  opts?: Table2SheetOpts): WorkBook;
+    sheet_add_dom(ws: WorkSheet, data: any, opts?: Table2SheetOpts): WorkSheet;
 
     /* --- Export Functions --- */
 

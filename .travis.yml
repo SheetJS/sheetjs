@@ -1,18 +1,18 @@
 language: node_js
 dist: xenial
 node_js:
+  - "14"
+  - "13"
   - "12"
   - "11"
   - "10"
   - "9"
   - "8"
-  - "7"
-  - "6"
 matrix:
   include:
-    - node_js: "12"
+    - node_js: "14"
       env: TZ="America/New_York"
-    - node_js: "12"
+    - node_js: "13"
       env: TZ="Europe/London"
     - node_js: "12"
       env: TZ="Asia/Seoul"
@@ -44,10 +44,10 @@ matrix:
 
 before_install:
   - "npm config set strict-ssl false"
-  - "npm install -g npm@4.3.0"
+  - "./misc/node_version.sh"
   - "npm install -g mocha@2.x voc"
   - "npm install blanket"
-  - "npm install xlsjs"
+  - "npm install word"
   - "npm install coveralls mocha-lcov-reporter"
 # note: jsdom 11.x expects node >= 6 but is missing engines.node
   - "npm install jsdom@11.x"

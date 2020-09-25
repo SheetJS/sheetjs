@@ -53,7 +53,7 @@ clean-data:
 init: ## Initial setup for development
 	git submodule init
 	git submodule update
-	git submodule foreach git pull origin master
+	#git submodule foreach git pull origin master
 	git submodule foreach make
 	mkdir -p tmp
 

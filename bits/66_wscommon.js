@@ -12,7 +12,7 @@ var browser_has_Map = typeof Map !== 'undefined';
 function get_sst_id(sst/*:SST*/, str/*:string*/, rev)/*:number*/ {
 	var i = 0, len = sst.length;
 	if(rev) {
-		if(browser_has_Map ? rev.has(str) : rev.hasOwnProperty(str)) {
+		if(browser_has_Map ? rev.has(str) : Object.prototype.hasOwnProperty.call(rev, str)) {
 			var revarr = browser_has_Map ? rev.get(str) : rev[str];
 			for(; i < revarr.length; ++i) {
 				if(sst[revarr[i]].t === str) { sst.Count ++; return revarr[i]; }
@@ -27,7 +27,7 @@ function get_sst_id(sst/*:SST*/, str/*:string*/, rev)/*:number*/ {
 			if(!rev.has(str)) rev.set(str, []);
 			rev.get(str).push(len);
 		} else {
-			if(!rev.hasOwnProperty(str)) rev[str] = [];
+			if(!Object.prototype.hasOwnProperty.call(rev, str)) rev[str] = [];
 			rev[str].push(len);
 		}
 	}

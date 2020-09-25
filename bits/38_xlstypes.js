@@ -446,6 +446,21 @@ function parse_XLUnicodeRichExtendedString(blob) {
 	current_codepage = cp;
 	return z;
 }
+function write_XLUnicodeRichExtendedString(xlstr/*:: :XLString, opts*/) {
+	var str = (xlstr.t||""), nfmts = 1;
+
+	var hdr = new_buf(3 + (nfmts > 1 ? 2 : 0));
+	hdr.write_shift(2, str.length);
+	hdr.write_shift(1, (nfmts > 1 ? 0x08 : 0x00) | 0x01);
+	if(nfmts > 1) hdr.write_shift(2, nfmts);
+
+	var otext = new_buf(2 * str.length);
+	otext.write_shift(2 * str.length, str, 'utf16le');
+
+	var out = [hdr, otext];
+
+	return bconcat(out);
+}
 
 /* 2.5.296 XLUnicodeStringNoCch */
 function parse_XLUnicodeStringNoCch(blob, cch, opts) {

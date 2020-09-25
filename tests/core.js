@@ -517,6 +517,17 @@ describe('parse options', function() {
 				assert(found);
 			});
 		});
+		it('should preserve `_xlfn.` only when requested', function() {
+			var wb = { SheetNames: ["Sheet1"], Sheets: { Sheet1: {
+				"!ref": "A1:A1",
+				"A1": { t:"n", v:2, f:"_xlfn.IFS(2>3,1,3>2,2)"}
+			} } };
+			var str = X.write(wb, {bookType: "xlsx", type: "binary"});
+			var wb2 = X.read(str, {type: "binary"});
+			assert.equal(wb2.Sheets.Sheet1["A1"].f, "IFS(2>3,1,3>2,2)");
+			var wb3 = X.read(str, {type: "binary", xlfn: true});
+			assert.equal(wb3.Sheets.Sheet1["A1"].f, "_xlfn.IFS(2>3,1,3>2,2)");
+		});
 	});
 	describe('sheet', function() {
 		it('should not generate sheet stubs by default', function() {
@@ -716,7 +727,7 @@ describe('output formats', function() {
 			X.utils.book_append_sheet(wb, X.utils.aoa_to_sheet([['R',"\u2603"],["\u0BEE",2]]), "Sheet1");
 			if(T == 'string' && !fmt[2]) return assert.throws(function() {X.write(wb, {type: T, bookType:fmt[0], WTF:1});});
 			var out = X.write(wb, {type: T, bookType:fmt[0], WTF:1});
-			var nwb = X.read(out, {type: T, WTF:1});
+			var nwb = X.read(out, {type: T, PRN: fmt[0] == 'prn', WTF:1});
 			var nws = nwb.Sheets[nwb.SheetNames[0]];
 			assert.equal(get_cell(nws, "B2").v, 2);
 			assert.equal(get_cell(nws, "A1").v, "R");
@@ -760,6 +771,26 @@ describe('API', function() {
 		X.utils.sheet_add_aoa(ws, [[5,6,7], [6,7,8], [7,8,9]], {origin:{r:1, c:4}});
 		X.utils.sheet_add_aoa(ws, [[4,5,6,7,8,9,0]], {origin: -1});
 		assert.equal(X.utils.sheet_to_csv(ws).trim(), "S,h,e,e,t,J,S\n1,2,,,5,6,7\n2,3,,,6,7,8\n3,4,,,7,8,9\n4,5,6,7,8,9,0");
+	});
+	it('sheet_add_aoa support object cell', function() {
+		var data = X.utils.aoa_to_sheet([
+			['url', 'name', 'id'],
+			[ { l: { Target: 'https://123.com' }, v: 'url', t: 's' }, 'tom', 'xxx' ]
+		]);
+		if(assert.deepEqual) assert.deepEqual(data.A2, { l: { Target: 'https://123.com' }, v: 'url', t: 's' });
+	});
+	it('decode_range', function() {
+		var _c = "ABC", _r = "123", _C = "DEF", _R = "456";
+
+		var r = X.utils.decode_range(_c + _r + ":" + _C + _R);
+		assert(r.s != r.e);
+		assert.equal(r.s.c, X.utils.decode_col(_c)); assert.equal(r.s.r, X.utils.decode_row(_r));
+		assert.equal(r.e.c, X.utils.decode_col(_C)); assert.equal(r.e.r, X.utils.decode_row(_R));
+
+		r = X.utils.decode_range(_c + _r);
+		assert(r.s != r.e);
+		assert.equal(r.s.c, X.utils.decode_col(_c)); assert.equal(r.s.r, X.utils.decode_row(_r));
+		assert.equal(r.e.c, X.utils.decode_col(_c)); assert.equal(r.e.r, X.utils.decode_row(_r));
 	});
 });
 
@@ -1193,6 +1224,23 @@ describe('parse features', function() {
 		});
 	}); }); });
 
+	describe('workbook codename unicode', function() {
+		var ws, wb;
+		var bef = (function() {
+			wb = X.utils.book_new();
+			ws = X.utils.aoa_to_sheet([[1]]);
+			X.utils.book_append_sheet(wb, ws, "Sheet1");
+			wb.Workbook = { WBProps: { CodeName: "本工作簿" } };
+		});
+		if(typeof before != 'undefined') before(bef);
+		else it('before', bef);
+		['xlsx', 'xlsb'].forEach(function(m) { it(m, function() {
+			var bstr = X.write(wb, {type: "binary", bookType: m});
+			var nwb = X.read(bstr, {type: "binary"});
+			assert.equal(nwb.Workbook.WBProps.CodeName, wb.Workbook.WBProps.CodeName);
+		}); });
+	});
+
 	describe('auto filter', function() {[
 		['xlsx', paths.afxlsx],
 		['xlsb', paths.afxlsb],
@@ -1224,7 +1272,8 @@ describe('parse features', function() {
 			assert.equal(get_cell(wb2.Sheets.Sheet1, "A2").h, "&amp;");
 			assert.equal(get_cell(wb2.Sheets.Sheet1, "B2").h, "&lt;");
 			assert.equal(get_cell(wb2.Sheets.Sheet1, "C2").h, "&gt;");
-			assert.equal(get_cell(wb2.Sheets.Sheet1, "D2").h, "<br/>");
+			var h = get_cell(wb2.Sheets.Sheet1, "D2").h;
+			assert(h == "&#x000a;" || h == "<br/>");
 		}); });
 	});
 
@@ -1275,14 +1324,14 @@ describe('parse features', function() {
 			  fgColor: { theme: 9, raw_rgb: 'F79646' },
 			  bgColor: { theme: 5, raw_rgb: 'C0504D' } },
 			{ patternType: 'darkUp',
-			  fgColor: { theme: 3, raw_rgb: 'EEECE1' },
+			  fgColor: { theme: 3, raw_rgb: '1F497D' },
 			  bgColor: { theme: 7, raw_rgb: '8064A2' } },
 			{ patternType: 'darkGray',
-			  fgColor: { theme: 3, raw_rgb: 'EEECE1' },
-			  bgColor: { theme: 1, raw_rgb: 'FFFFFF' } },
+			  fgColor: { theme: 3, raw_rgb: '1F497D' },
+			  bgColor: { theme: 1, raw_rgb: '000000' } },
 			{ patternType: 'lightGray',
 			  fgColor: { theme: 6, raw_rgb: '9BBB59' },
-			  bgColor: { theme: 2, raw_rgb: '1F497D' } },
+			  bgColor: { theme: 2, raw_rgb: 'EEECE1' } },
 			{ patternType: 'lightDown',
 			  fgColor: { theme: 4, raw_rgb: '4F81BD' },
 			  bgColor: { theme: 7, raw_rgb: '8064A2' } },
@@ -1291,9 +1340,9 @@ describe('parse features', function() {
 			  bgColor: { theme: 9, raw_rgb: 'F79646' } },
 			{ patternType: 'lightGrid',
 			  fgColor: { theme: 4, raw_rgb: '4F81BD' },
-			  bgColor: { theme: 2, raw_rgb: '1F497D' } },
+			  bgColor: { theme: 2, raw_rgb: 'EEECE1' } },
 			{ patternType: 'lightVertical',
-			  fgColor: { theme: 3, raw_rgb: 'EEECE1' },
+			  fgColor: { theme: 3, raw_rgb: '1F497D' },
 			  bgColor: { theme: 7, raw_rgb: '8064A2' } }
 		];
 		/*eslint-enable */
@@ -1415,13 +1464,14 @@ function seq(end/*:number*/, start/*:?number*/)/*:Array<number>*/ {
 }
 
 var basedate = new Date(1899, 11, 30, 0, 0, 0); // 2209161600000
-var dnthresh = basedate.getTime() + (new Date().getTimezoneOffset() - basedate.getTimezoneOffset()) * 60000;
 function datenum(v/*:Date*/, date1904/*:?boolean*/)/*:number*/ {
 	var epoch = v.getTime();
-	if(date1904) epoch += 1462*24*60*60*1000;
+	if(date1904) epoch -= 1462*24*60*60*1000;
+	var dnthresh = basedate.getTime() + (v.getTimezoneOffset() - basedate.getTimezoneOffset()) * 60000;
 	return (epoch - dnthresh) / (24 * 60 * 60 * 1000);
 }
 var good_pd_date = new Date('2017-02-19T19:06:09.000Z');
+if(isNaN(good_pd_date.getFullYear())) good_pd_date = new Date('2017-02-19T19:06:09');
 if(isNaN(good_pd_date.getFullYear())) good_pd_date = new Date('2/19/17');
 var good_pd = good_pd_date.getFullYear() == 2017;
 function parseDate(str/*:string|Date*/)/*:Date*/ {
@@ -1950,6 +2000,10 @@ describe('CSV', function() {
 			assert.equal(get_cell(sheet, "C1").t, 's');
 			assert.equal(get_cell(sheet, "C1").v, '100');
 		});
+		it('should interpret CRLF newlines', function() {
+			var wb = X.read("sep=&\r\n1&2&3\r\n4&5&6", {type: "string"});
+			assert.equal(wb.Sheets.Sheet1["!ref"], "A1:C2");
+		});
 		if(!browser || typeof cptable !== 'undefined') it('should honor codepage for binary strings', function() {
 			var data = "abc,def\nghi,j\xD3l";
 			[[1251, 'У'],[1252, 'Ó'], [1253, 'Σ'], [1254, 'Ó'], [1255, '׃'], [1256, 'س'], [10000, '”']].forEach(function(m) {
@@ -2045,9 +2099,7 @@ describe('sylk', function() {
 			assert.equal(get_cell(X.read(str, {type:"string"}).Sheets.Sheet1, "A1").v, A1);
 			assert.equal(get_cell(X.read(str.replace(/–/, "\x96"), {type:"binary", codepage:1252}).Sheets.Sheet1, "A1").v, A1);
 			if(typeof Buffer !== 'undefined' && !browser) {
-				// $FlowIgnore
 				assert.equal(get_cell(X.read(Buffer_from(str), {type:"buffer", codepage:65001}).Sheets.Sheet1, "A1").v, A1);
-				// $FlowIgnore
 				assert.equal(get_cell(X.read(Buffer_from(str.replace(/–/, "\x96"), "binary"), {type:"buffer", codepage:1252}).Sheets.Sheet1, "A1").v, A1);
 			}
 		} : null);
@@ -2150,7 +2202,12 @@ describe('HTML', function() {
 		var expected_rows = [];
 		expected_rows[0] = expected_rows[2] = {hidden: true};
 		assert.equal(ws['!ref'], "A1:A3");
-		assert.deepEqual(ws['!rows'], expected_rows);
+		try {
+			assert.deepEqual(ws['!rows'], expected_rows);
+		} catch(e) {
+			expected_rows[1] = {};
+			assert.deepEqual(ws['!rows'], expected_rows);
+		}
 		assert.equal(get_cell(ws, "A1").v, "Foo");
 		assert.equal(get_cell(ws, "A2").v, "Bar");
 		assert.equal(get_cell(ws, "A3").v, "Baz");
@@ -2159,7 +2216,7 @@ describe('HTML', function() {
 		var html = "<table><tr style='display: none;'><td>1</td><td>2</td><td>3</td></tr><tr><td class='hidden'>Foo</td><td>Bar</td><td style='display: none;'>Baz</td></tr></table><style>.hidden {display: none}</style>";
 		var ws = X.utils.table_to_sheet(get_dom_element(html), {display: true});
 		assert.equal(ws['!ref'], "A1");
-		assert.equal(ws.hasOwnProperty('!rows'), false);
+		assert(ws.hasOwnProperty('!rows') == false || !ws["!rows"][0] || !ws["!rows"][0].hidden);
 		assert.equal(get_cell(ws, "A1").v, "Bar");
 	});
 	describe('type override', function() {
@@ -2296,6 +2353,20 @@ describe('corner cases', function() {
 		X.read(fs.readFileSync(dir + 'wtf_path.xlsx'), {WTF:1, type:TYPE});
 		X.read(fs.readFileSync(dir + 'wtf_path.xlsb'), {WTF:1, type:TYPE});
 	});
+	it("should quote unicode sheet names in formulae", function() {
+		var wb = X.read(fs.readFileSync(dir + "cross-sheet_formula_names.xlsb"), {WTF:1, type:TYPE});
+		assert.equal(wb.Sheets.Sheet1.A1.f, "'a-b'!A1");
+		assert.equal(wb.Sheets.Sheet1.A2.f, "'a#b'!A1");
+		assert.equal(wb.Sheets.Sheet1.A3.f, "'a^b'!A1");
+		assert.equal(wb.Sheets.Sheet1.A4.f, "'a%b'!A1");
+		assert.equal(wb.Sheets.Sheet1.A5.f, "'a\u066ab'!A1");
+		assert.equal(wb.Sheets.Sheet1.A6.f, "'☃️'!A1");
+		assert.equal(wb.Sheets.Sheet1.A7.f, "'\ud83c\udf63'!A1");
+		assert.equal(wb.Sheets.Sheet1.A8.f, "'a!!b'!A1");
+		assert.equal(wb.Sheets.Sheet1.A9.f, "'a$b'!A1");
+		assert.equal(wb.Sheets.Sheet1.A10.f, "'a!b'!A1");
+		assert.equal(wb.Sheets.Sheet1.A11.f, "'a b'!A1");
+	});
 });
 
 describe('encryption', function() {
@@ -2327,7 +2398,7 @@ describe('encryption', function() {
 if(!browser || typeof cptable !== 'undefined')
 describe('multiformat tests', function() {
 var mfopts = opts;
-var mft = fs.readFileSync('multiformat.lst','utf-8').split("\n").map(function(x) { return x.trim(); });
+var mft = fs.readFileSync('multiformat.lst','utf-8').replace(/\r/g,"").split("\n").map(function(x) { return x.trim(); });
 var csv = true, formulae = false;
 mft.forEach(function(x) {
 	if(x.charAt(0)!="#") describe('MFT ' + x, function() {
@@ -2373,4 +2444,3 @@ mft.forEach(function(x) {
 		case "yes-formula": formulae = true; break;
 	}});
 }); });
-

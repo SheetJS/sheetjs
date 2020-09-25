@@ -37,7 +37,7 @@ function parse_wb_xml(data, opts)/*:WorkbookFile*/ {
 						default: wb.WBProps[w[0]] = y[w[0]];
 					}
 				});
-				if(y.codeName) wb.WBProps.CodeName = y.codeName;
+				if(y.codeName) wb.WBProps.CodeName = utf8read(y.codeName);
 				break;
 			case '</workbookPr>': break;
 
@@ -192,7 +192,17 @@ function write_wb_xml(wb/*:Workbook*//*::, opts:?WriteOpts*/)/*:string*/ {
 	var sheets = wb.Workbook && wb.Workbook.Sheets || [];
 	var i = 0;
 
-	/* bookViews */
+	/* bookViews only written if first worksheet is hidden */
+	if(sheets && sheets[0] && !!sheets[0].Hidden) {
+		o[o.length] = "<bookViews>";
+		for(i = 0; i != wb.SheetNames.length; ++i) {
+			if(!sheets[i]) break;
+			if(!sheets[i].Hidden) break;
+		}
+		if(i == wb.SheetNames.length) i = 0;
+		o[o.length] = '<workbookView firstSheet="' + i + '" activeTab="' + i + '"/>';
+		o[o.length] = "</bookViews>";
+	}
 
 	o[o.length] = "<sheets>";
 	for(i = 0; i != wb.SheetNames.length; ++i) {
@@ -218,7 +228,7 @@ function write_wb_xml(wb/*:Workbook*//*::, opts:?WriteOpts*/)/*:string*/ {
 			if(n.Sheet != null) d.localSheetId = ""+n.Sheet;
 			if(n.Hidden) d.hidden = "1";
 			if(!n.Ref) return;
-			o[o.length] = writextag('definedName', String(n.Ref).replace(/</g, "&lt;").replace(/>/g, "&gt;"), d);
+			o[o.length] = writextag('definedName', escapexml(n.Ref), d);
 		});
 		o[o.length] = "</definedNames>";
 	}

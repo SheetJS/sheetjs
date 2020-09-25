@@ -4,7 +4,10 @@
 	"version": "0.0.0",
 	"main": "main.js",
 	"dependencies": {
-		"electron": "~1.7.x",
-		"xlsx": "*"
+		"xlsx": "*",
+		"electron": "^9.0.5"
+	},
+	"scripts": {
+		"start": "electron ."
 	}
 }

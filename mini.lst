@@ -22,6 +22,7 @@ bits/31_rels.js
 bits/33_coreprops.js
 bits/34_extprops.js
 bits/35_custprops.js
+bits/40_harb.js
 bits/42_sstxml.js
 bits/46_stycommon.js
 bits/47_styxml.js

@@ -33,7 +33,7 @@ var write_content_ods/*:{(wb:any, opts:any):string}*/ = (function() {
 	var write_ws = function(ws, wb/*:Workbook*/, i/*:number*//*::, opts*/)/*:string*/ {
 		/* Section 9 Tables */
 		var o/*:Array<string>*/ = [];
-		o.push('      <table:table table:name="' + escapexml(wb.SheetNames[i]) + '">\n');
+		o.push('      <table:table table:name="' + escapexml(wb.SheetNames[i]) + '" table:style-name="ta1">\n');
 		var R=0,C=0, range = decode_range(ws['!ref']);
 		var marr/*:Array<Range>*/ = ws['!merges'] || [], mi = 0;
 		var dense = Array.isArray(ws);
@@ -78,7 +78,7 @@ var write_content_ods/*:{(wb:any, opts:any):string}*/ = (function() {
 						ct['office:value'] = (cell.v||0);
 						break;
 					case 's': case 'str':
-						textp = cell.v;
+						textp = cell.v == null ? "" : cell.v;
 						ct['office:value-type'] = "string";
 						break;
 					case 'd':
@@ -105,6 +105,7 @@ var write_content_ods/*:{(wb:any, opts:any):string}*/ = (function() {
 
 	var write_automatic_styles_ods = function(o/*:Array<string>*/) {
 		o.push(' <office:automatic-styles>\n');
+
 		o.push('  <number:date-style style:name="N37" number:automatic-order="true">\n');
 		o.push('   <number:month number:style="long"/>\n');
 		o.push('   <number:text>/</number:text>\n');
@@ -112,7 +113,17 @@ var write_content_ods/*:{(wb:any, opts:any):string}*/ = (function() {
 		o.push('   <number:text>/</number:text>\n');
 		o.push('   <number:year/>\n');
 		o.push('  </number:date-style>\n');
+
+		/* table */
+		o.push('  <style:style style:name="ta1" style:family="table">\n'); // style:master-page-name="mp1">\n');
+		o.push('   <style:table-properties table:display="true" style:writing-mode="lr-tb"/>\n');
+		o.push('  </style:style>\n');
+
+		/* table cells, text */
 		o.push('  <style:style style:name="ce1" style:family="table-cell" style:parent-style-name="Default" style:data-style-name="N37"/>\n');
+
+		/* page-layout */
+
 		o.push(' </office:automatic-styles>\n');
 	};
 

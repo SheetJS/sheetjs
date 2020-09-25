@@ -28,6 +28,13 @@ shared or included in a test suite (although I will ask :)
 If sending email to a gmail account is problematic, the <dev@sheetjs.com> email
 inbox is self-hosted.
 
+# Opening Pull Requests
+
+Before opening a pull request, [squash all commits into 
+one](https://git-scm.com/book/en/v2/Git-Tools-Rewriting-History). If the pull 
+request addresses documentation or demos, add `[ci skip]` in the body or title 
+of your commit message to skip Travis checks.
+
 # Pre-Contribution Checklist
 
 Before thinking about contributing, make sure that:
