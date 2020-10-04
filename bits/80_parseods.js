@@ -64,6 +64,7 @@ var parse_content_xml = (function() {
 			case 'table': case '工作表': // 9.1.2 <table:table>
 				if(Rn[1]==='/') {
 					if(range.e.c >= range.s.c && range.e.r >= range.s.r) ws['!ref'] = encode_range(range);
+					else ws['!ref'] = "A1:A1";
 					if(opts.sheetRows > 0 && opts.sheetRows <= range.e.r) {
 						ws['!fullref'] = ws['!ref'];
 						range.e.r = opts.sheetRows - 1;
