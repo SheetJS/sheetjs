@@ -53,8 +53,8 @@ rhino.jar:
 	if [ ! -e rhino ]; then git clone --depth=1 https://github.com/mozilla/rhino; fi
 	#if [ ! -e rhino/build/rhino*/js.jar ]; then cd rhino; ant jar; fi
 	#cp rhino/build/rhino*/js.jar rhino.jar
-	if [ ! -e rhino/buildGradle/libs/rhino*.jar ]; then cd rhino; ./gradlew jar; fi
-	cp rhino/buildGradle/libs/rhino*.jar rhino.jar
+	if [ ! -e rhino/buildGradle/libs/rhino-[0-1]*.jar ]; then cd rhino; ./gradlew jar; fi
+	cp rhino/buildGradle/libs/rhino-[0-9]*.jar rhino.jar
 
 .PHONY: clean
 clean:
