@@ -245,7 +245,7 @@ function write_ws_biff8(idx/*:number*/, opts, wb/*:Workbook*/) {
 	}
 	var cname/*:string*/ = _sheet.CodeName || _sheet.name || s;
 	/* ... */
-	if(b8 && _WB.Views) write_biff_rec(ba, "Window2", write_Window2(_WB.Views[0]));
+	if(b8) write_biff_rec(ba, "Window2", write_Window2((_WB.Views||[])[0]));
 	/* ... */
 	if(b8 && (ws['!merges']||[]).length) write_biff_rec(ba, "MergeCells", write_MergeCells(ws['!merges']));
 	/* [LRng] *QUERYTABLE [PHONETICINFO] CONDFMTS */
