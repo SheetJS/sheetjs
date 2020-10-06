@@ -127,7 +127,7 @@ var sheetprot_deftrue = [
 	"sort", "autoFilter", "pivotTables"
 ];
 function write_ws_xml_protection(sp)/*:string*/ {
-	// algorithmName, hashValue, saltValue, spinCountpassword
+	// algorithmName, hashValue, saltValue, spinCount
 	var o = ({sheet:1}/*:any*/);
 	sheetprot_deffalse.forEach(function(n) { if(sp[n] != null && sp[n]) o[n] = "1"; });
 	sheetprot_deftrue.forEach(function(n) { if(sp[n] != null && !sp[n]) o[n] = "0"; });
@@ -303,6 +303,7 @@ return function parse_ws_xml_data(sdata/*:string*/, s, opts, guess/*:Range*/, th
 	var sharedf = [];
 	var dense = Array.isArray(s);
 	var rows/*:Array<RowInfo>*/ = [], rowobj = {}, rowrite = false;
+	var sheetStubs = !!opts.sheetStubs;
 	for(var marr = sdata.split(rowregex), mt = 0, marrlen = marr.length; mt != marrlen; ++mt) {
 		x = marr[mt].trim();
 		var xlen = x.length;
@@ -352,7 +353,7 @@ return function parse_ws_xml_data(sdata/*:string*/, s, opts, guess/*:Range*/, th
 			if(opts.cellFormula) {
 				if((cref=d.match(match_f))!= null && /*::cref != null && */cref[1] !== '') {
 					/* TODO: match against XLSXFutureFunctions */
-					p.f=unescapexml(utf8read(cref[1]));
+					p.f=unescapexml(utf8read(cref[1])).replace(/\r\n/g, "\n");
 					if(!opts.xlfn) p.f = _xlfn(p.f);
 					if(/*::cref != null && cref[0] != null && */cref[0].indexOf('t="array"') > -1) {
 						p.F = (d.match(refregex)||[])[1];
@@ -379,7 +380,7 @@ return function parse_ws_xml_data(sdata/*:string*/, s, opts, guess/*:Range*/, th
 			if(tag.t == null && p.v === undefined) {
 				if(p.f || p.F) {
 					p.v = 0; p.t = "n";
-				} else if(!opts.sheetStubs) continue;
+				} else if(!sheetStubs) continue;
 				else p.t = "z";
 			}
 			else p.t = tag.t || "n";
@@ -389,13 +390,13 @@ return function parse_ws_xml_data(sdata/*:string*/, s, opts, guess/*:Range*/, th
 			switch(p.t) {
 				case 'n':
 					if(p.v == "" || p.v == null) {
-						if(!opts.sheetStubs) continue;
+						if(!sheetStubs) continue;
 						p.t = 'z';
 					} else p.v = parseFloat(p.v);
 					break;
 				case 's':
 					if(typeof p.v == 'undefined') {
-						if(!opts.sheetStubs) continue;
+						if(!sheetStubs) continue;
 						p.t = 'z';
 					} else {
 						sstr = strs[parseInt(p.v, 10)];
