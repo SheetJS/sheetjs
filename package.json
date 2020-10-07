@@ -39,7 +39,7 @@
 		"crc-32": "~1.2.0",
 		"exit-on-epipe": "~1.0.1",
 		"ssf": "~0.11.2",
-		"word": "~0.3.0",
+		"word": "^0.4.0",
 		"wmf": "~1.0.1"
 	},
 	"devDependencies": {
