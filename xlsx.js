@@ -21374,7 +21374,7 @@ function sheet_add_json(_ws, js, opts) {
 	} else {
 		if(_R == -1) { _R = 0; range.e.r = js.length - 1 + offset; }
 	}
-	var hdr = o.header || [], C = 0;
+	var hdr = [].concat(Array.isArray(o.header) ? o.header : []), C = 0;
 
 	js.forEach(function (JS, R) {
 		keys(JS).forEach(function(k) {
