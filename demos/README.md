@@ -43,6 +43,7 @@ can be installed with Bash on Windows or with `cygwin`.
 - [`electron application`](electron/)
 - [`nw.js application`](nwjs/)
 - [`Chrome / Chromium extensions`](chrome/)
+- [`Download a Google Sheet locally`](google-sheet/)
 - [`Adobe ExtendScript`](extendscript/)
 - [`Headless Browsers`](headless/)
 - [`canvas-datagrid`](datagrid/)
