@@ -1,4 +1,4 @@
-# [SheetJS js-xlsx](http://sheetjs.com)
+# [SheetJS js-xlsx](https://sheetjs.com)
 
 Parser and writer for various spreadsheet formats.  Pure-JS cleanroom
 implementation from official specifications, related documents, and test files.
@@ -9,15 +9,15 @@ This is the community version.  We also offer a pro version with performance
 enhancements, additional features like styling, and dedicated support.
 
 
-[**Pro Version**](http://sheetjs.com/pro)
+[**Pro Version**](https://sheetjs.com/pro)
 
-[**Commercial Support**](http://sheetjs.com/support)
+[**Commercial Support**](https://sheetjs.com/support)
 
-[**Rendered Documentation**](http://docs.sheetjs.com/)
+[**Rendered Documentation**](https://docs.sheetjs.com/)
 
-[**In-Browser Demos**](http://sheetjs.com/demos)
+[**In-Browser Demos**](https://sheetjs.com/demos)
 
-[**Source Code**](http://git.io/xlsx)
+[**Source Code**](https://git.io/xlsx)
 
 [**Issues and Bug Reports**](https://github.com/sheetjs/sheetjs/issues)
 
@@ -32,13 +32,13 @@ enhancements, additional features like styling, and dedicated support.
 
 </details>
 
-[**Browser Test**](http://oss.sheetjs.com/sheetjs/tests/)
+[**Browser Test**](https://oss.sheetjs.com/sheetjs/tests/)
 
 [![Build Status](https://saucelabs.com/browser-matrix/sheetjs.svg)](https://saucelabs.com/u/sheetjs)
 
 [![Build Status](https://travis-ci.org/SheetJS/sheetjs.svg?branch=master)](https://travis-ci.org/SheetJS/sheetjs)
 [![Build Status](https://semaphoreci.com/api/v1/sheetjs/sheetjs/branches/master/shields_badge.svg)](https://semaphoreci.com/sheetjs/sheetjs)
-[![Coverage Status](http://img.shields.io/coveralls/SheetJS/sheetjs/master.svg)](https://coveralls.io/r/SheetJS/sheetjs?branch=master)
+[![Coverage Status](https://img.shields.io/coveralls/SheetJS/sheetjs/master.svg)](https://coveralls.io/r/SheetJS/sheetjs?branch=master)
 [![Dependencies Status](https://david-dm.org/sheetjs/sheetjs/status.svg)](https://david-dm.org/sheetjs/sheetjs)
 [![npm Downloads](https://img.shields.io/npm/dt/xlsx.svg)](https://npmjs.org/package/xlsx)
 [![Analytics](https://ga-beacon.appspot.com/UA-36810333-1/SheetJS/sheetjs?pixel)](https://github.com/SheetJS/sheetjs)
@@ -158,7 +158,7 @@ In the browser, just add a script tag:
 |-----------:|:-------------------------------------------|
 |    `unpkg` | <https://unpkg.com/xlsx/>                  |
 | `jsDelivr` | <https://jsdelivr.com/package/npm/xlsx>    |
-|    `CDNjs` | <http://cdnjs.com/libraries/xlsx>          |
+|    `CDNjs` | <https://cdnjs.com/libraries/xlsx>          |
 |    `packd` | <https://bundle.run/xlsx@latest?name=XLSX> |
 
 `unpkg` makes the latest version available at:
@@ -176,7 +176,7 @@ With [npm](https://www.npmjs.org/package/xlsx):
 $ npm install xlsx
 ```
 
-With [bower](http://bower.io/search/?q=js-xlsx):
+With [bower](https://bower.io/search/?q=js-xlsx):
 
 ```bash
 $ bower install js-xlsx
@@ -258,7 +258,7 @@ be configured to remove support with `resolve.alias`:
 ### ECMAScript 5 Compatibility
 
 Since the library uses functions like `Array#forEach`, older browsers require
-[shims to provide missing functions](http://oss.sheetjs.com/js-xlsx/shim.js).
+[shims to provide missing functions](https://oss.sheetjs.com/js-xlsx/shim.js).
 
 To use the shim, add the shim before the script tag that loads `xlsx.js`:
 
@@ -389,11 +389,11 @@ var workbook = XLSX.read(htmlstr, {type:'string'});
   <summary><b>Browser download file (ajax)</b> (click to show)</summary>
 
 Note: for a more complete example that works in older browsers, check the demo
-at <http://oss.sheetjs.com/js-xlsx/ajax.html>.  The [`xhr` demo](demos/xhr/)
+at <https://oss.sheetjs.com/js-xlsx/ajax.html>.  The [`xhr` demo](demos/xhr/)
 includes more examples with `XMLHttpRequest` and `fetch`.
 
 ```js
-var url = "http://oss.sheetjs.com/test_files/formula_stress_test.xlsx";
+var url = "https://oss.sheetjs.com/test_files/formula_stress_test.xlsx";
 
 /* set up async GET request */
 var req = new XMLHttpRequest();
@@ -465,7 +465,7 @@ More specialized cases, including mobile app file processing, are covered in the
 
 ### Parsing Examples
 
-- <http://oss.sheetjs.com/js-xlsx/> HTML5 File API / Base64 Text / Web Workers
+- <https://oss.sheetjs.com/js-xlsx/> HTML5 File API / Base64 Text / Web Workers
 
 Note that older versions of IE do not support HTML5 File API, so the Base64 mode
 is used for testing.
@@ -489,7 +489,7 @@ On Windows XP and up you can get the Base64 encoding using `certutil`:
 
 </details>
 
-- <http://oss.sheetjs.com/js-xlsx/ajax.html> XMLHttpRequest
+- <https://oss.sheetjs.com/js-xlsx/ajax.html> XMLHttpRequest
 
 ### Streaming Read
 
@@ -625,7 +625,7 @@ error if the workbook is empty.
 
 ### Parsing and Writing Examples
 
-- <http://sheetjs.com/demos/modify.html> read + modify + write files
+- <https://sheetjs.com/demos/modify.html> read + modify + write files
 
 - <https://github.com/SheetJS/js-xlsx/blob/master/bin/xlsx.njs> node
 
@@ -777,8 +777,8 @@ The [included demos](demos/) cover mobile apps and other special deployments.
 
 ### Writing Examples
 
-- <http://sheetjs.com/demos/table.html> exporting an HTML table
-- <http://sheetjs.com/demos/writexlsx.html> generates a simple file
+- <https://sheetjs.com/demos/table.html> exporting an HTML table
+- <https://sheetjs.com/demos/writexlsx.html> generates a simple file
 
 ### Streaming Write
 
@@ -825,7 +825,7 @@ stream.pipe(conv); conv.pipe(process.stdout);
 
 `XLSX.version` is the version of the library (added by the build script).
 
-`XLSX.SSF` is an embedded version of the [format library](http://git.io/ssf).
+`XLSX.SSF` is an embedded version of the [format library](https://git.io/ssf).
 
 ### Parsing functions
 
@@ -1017,7 +1017,7 @@ Following Excel, this library treats all dates as relative to local time zone.
   <summary><b>Epochs: 1900 and 1904</b> (click to show)</summary>
 
 Excel supports two epochs (January 1 1900 and January 1 1904), see
-["1900 vs. 1904 Date System" article](http://support2.microsoft.com/kb/180162).
+["1900 vs. 1904 Date System" article](https://support2.microsoft.com/kb/180162).
 The workbook's epoch can be determined by examining the workbook's
 `wb.Workbook.WBProps.date1904` property:
 
@@ -1535,10 +1535,10 @@ are stored in the `Tooltip` field and are displayed when you move your mouse
 over the text.
 
 For example, the following snippet creates a link from cell `A3` to
-<http://sheetjs.com> with the tip `"Find us @ SheetJS.com!"`:
+<https://sheetjs.com> with the tip `"Find us @ SheetJS.com!"`:
 
 ```js
-ws['A3'].l = { Target:"http://sheetjs.com", Tooltip:"Find us @ SheetJS.com!" };
+ws['A3'].l = { Target:"https://sheetjs.com", Tooltip:"Find us @ SheetJS.com!" };
 ```
 
 Note that Excel does not automatically style hyperlinks -- they will generally
@@ -2705,7 +2705,7 @@ the `xlsx.js` file (then open a browser window and go to `stress.html`):
 $ cp xlsx.js ../SheetJS.github.io
 $ cd ../SheetJS.github.io
 $ simplehttpserver # or "python -mSimpleHTTPServer" or "serve"
-$ open -a Chromium.app http://localhost:8000/stress.html
+$ open -a Chromium.app https://localhost:8000/stress.html
 ```
 </details>
 
@@ -2749,7 +2749,7 @@ files snapshot from [the repo](https://github.com/SheetJS/test_files/releases)
   <summary><b>Latest Snapshot</b> (click to show)</summary>
 
 Latest test files snapshot:
-<http://github.com/SheetJS/test_files/releases/download/20170409/test_files.zip>
+<https://github.com/SheetJS/test_files/releases/download/20170409/test_files.zip>
 
 (download and unzip to the `test_files` subdirectory)
 
