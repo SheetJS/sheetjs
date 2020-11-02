@@ -114,6 +114,13 @@ function write_ws_xml_sheetpr(ws, wb, idx, opts, o) {
 		props.codeName = escapexml(cname);
 	}
 
+	if(ws && ws["!outline"]) {
+		var outlineprops = {summaryBelow:1, summaryRight:1};
+		if(ws["!outline"].above) outlineprops.summaryBelow = 0;
+		if(ws["!outline"].left) outlineprops.summaryRight = 0;
+		payload = (payload||"") + writextag('outlinePr', null, outlineprops);
+	}
+
 	if(!needed && !payload) return;
 	o[o.length] = (writextag('sheetPr', payload, props));
 }
