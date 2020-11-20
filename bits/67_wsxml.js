@@ -102,7 +102,7 @@ function write_ws_xml_merges(merges/*:Array<Range>*/)/*:string*/ {
 function parse_ws_xml_sheetpr(sheetPr/*:string*/, s, wb/*:WBWBProps*/, idx/*:number*/) {
 	var data = parsexmltag(sheetPr);
 	if(!wb.Sheets[idx]) wb.Sheets[idx] = {};
-	if(data.codeName) wb.Sheets[idx].CodeName = data.codeName;
+	if(data.codeName) wb.Sheets[idx].CodeName = unescapexml(utf8read(data.codeName));
 }
 function write_ws_xml_sheetpr(ws, wb, idx, opts, o) {
 	var needed = false;
@@ -111,7 +111,7 @@ function write_ws_xml_sheetpr(ws, wb, idx, opts, o) {
 		var cname = wb.SheetNames[idx];
 		try { if(wb.Workbook) cname = wb.Workbook.Sheets[idx].CodeName || cname; } catch(e) {}
 		needed = true;
-		props.codeName = escapexml(cname);
+		props.codeName = utf8write(escapexml(cname));
 	}
 
 	if(ws && ws["!outline"]) {

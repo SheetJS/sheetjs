@@ -4,7 +4,7 @@
 /*global global, exports, module, require:false, process:false, Buffer:false, ArrayBuffer:false */
 var XLSX = {};
 function make_xlsx_lib(XLSX){
-XLSX.version = '0.16.8';
+XLSX.version = '0.16.9';
 var current_codepage = 1200, current_ansi = 1252;
 
 var VALID_ANSI = [ 874, 932, 936, 949, 950 ];
@@ -7237,7 +7237,7 @@ function write_ws_xml_merges(merges) {
 function parse_ws_xml_sheetpr(sheetPr, s, wb, idx) {
 	var data = parsexmltag(sheetPr);
 	if(!wb.Sheets[idx]) wb.Sheets[idx] = {};
-	if(data.codeName) wb.Sheets[idx].CodeName = data.codeName;
+	if(data.codeName) wb.Sheets[idx].CodeName = unescapexml(utf8read(data.codeName));
 }
 function write_ws_xml_sheetpr(ws, wb, idx, opts, o) {
 	var needed = false;
@@ -7246,7 +7246,14 @@ function write_ws_xml_sheetpr(ws, wb, idx, opts, o) {
 		var cname = wb.SheetNames[idx];
 		try { if(wb.Workbook) cname = wb.Workbook.Sheets[idx].CodeName || cname; } catch(e) {}
 		needed = true;
-		props.codeName = escapexml(cname);
+		props.codeName = utf8write(escapexml(cname));
+	}
+
+	if(ws && ws["!outline"]) {
+		var outlineprops = {summaryBelow:1, summaryRight:1};
+		if(ws["!outline"].above) outlineprops.summaryBelow = 0;
+		if(ws["!outline"].left) outlineprops.summaryRight = 0;
+		payload = (payload||"") + writextag('outlinePr', null, outlineprops);
 	}
 
 	if(!needed && !payload) return;
@@ -7423,7 +7430,7 @@ function write_ws_xml_cell(cell, ref, ws, opts) {
 }
 
 var parse_ws_xml_data = (function() {
-	var cellregex = /<(?:\w+:)?c[ >]/, rowregex = /<\/(?:\w+:)?row>/;
+	var cellregex = /<(?:\w+:)?c[ \/>]/, rowregex = /<\/(?:\w+:)?row>/;
 	var rregex = /r=["']([^"']*)["']/, isregex = /<(?:\w+:)?is>([\S\s]*?)<\/(?:\w+:)?is>/;
 	var refregex = /ref=["']([^"']*)["']/;
 	var match_v = matchtag("v"), match_f = matchtag("f");

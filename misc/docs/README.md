@@ -1000,6 +1000,14 @@ In addition to the base sheet keys, worksheets also add:
   will write all cells in the merge range if they exist, so be sure that only
   the first cell (upper-left) in the range is set.
 
+- `ws['!outline']`: configure how outlines should behave.  Options default to
+  the default settings in Excel 2019:
+
+| key       | Excel feature                                 | default |
+|:----------|:----------------------------------------------|:--------|
+| `above`   | Uncheck "Summary rows below detail"           | `false` |
+| `left`    | Uncheck "Summary rows to the right of detail" | `false` |
+
 - `ws['!protect']`: object of write sheet protection properties.  The `password`
   key specifies the password for formats that support password-protected sheets
   (XLSX/XLSB/XLS).  The writer uses the XOR obfuscation method.  The following
