@@ -1989,12 +1989,17 @@ with automatically-generated "headers" based on the keys of the objects.  The
 default column order is determined by the first appearance of the field using
 `Object.keys`, but can be overridden using the options argument:
 
+
 | Option Name |  Default | Description                                         |
 | :---------- | :------: | :-------------------------------------------------- |
-|`header`     |          | Use specified column order (default `Object.keys`)  |
+|`header`     |          | Use specified column order (default `Object.keys`)**|
 |`dateNF`     |  FMT 14  | Use specified date format in string output          |
 |`cellDates`  |  false   | Store dates as type `d` (default is `n`)            |
 |`skipHeader` |  false   | If true, do not include header row in output        |
+
+- `header` array passed as option, will be mutated if `Object.keys` has
+fields that are not present in `header` array. This will only append the missing 
+fields in the order that they are inserted in the sheet object.
 
 <details>
   <summary><b>Examples</b> (click to show)</summary>
