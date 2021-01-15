@@ -1,4 +1,10 @@
 /*! xlsx.js (C) 2013-present SheetJS -- http://sheetjs.com */
+/**
+ * This project is a fork of [SheetJS/sheetjs](https://github.com/sheetjs/sheetjs) combined with code from (C) SheetJS
+ * [sheetjs-style](https://www.npmjs.com/package/sheetjs-style) (C) [ShanaMaid](https://github.com/ShanaMaid/))
+ * [sheetjs-style-v2](https://www.npmjs.com/package/sheetjs-style-v2) (C) [Raul Gonzalez](https://www.npmjs.com/~armandourbina))
+ * All projects are under the Apache 2.0 License
+ */
 /* vim: set ts=2: */
 /*exported XLSX */
 /*global global, exports, module, require:false, process:false, Buffer:false, ArrayBuffer:false */
