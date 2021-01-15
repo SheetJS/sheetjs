@@ -31,3 +31,4 @@ tmp
 *.sheetjs
 *.exe
 *.img
+.DS_Store
