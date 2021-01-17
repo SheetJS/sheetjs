@@ -1,4 +1,4 @@
-# sheetjs-styles
+# xlsx-js-style
 
 ## ℹ️ About
 
