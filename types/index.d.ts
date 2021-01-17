@@ -556,6 +556,66 @@ export interface Hyperlink {
     Tooltip?: string;
 }
 
+/** Style-Color object [xlsx-js-style] */
+interface CellStyleColor {
+	/**
+     * ARGB color value
+     * 'FF' + RGB Hex Code
+     * @example 'FFFFAA00'
+     */
+	rgb: string;
+}
+
+/** Style-border object [xlsx-js-style] */
+type BORDER_STYLE = "thin" | "medium" | "thick" | "dotted" | "hair" | "dashed" | "mediumDashed" | "dashDot" | "mediumDashDot" | "dashDotDot" | "mediumDashDotDot" | "slantDashDot";
+
+/** Style object [xlsx-js-style] */
+interface CellStyle {
+	alignment?: {
+		horizontal?: "left" | "center" | "right";
+		vertical?: "top" | "center" | "bottom";
+		wrapText?: boolean;
+	};
+	border?: {
+		top?: { style: BORDER_STYLE, color: CellStyleColor }
+		bottom?: { style: BORDER_STYLE, color: CellStyleColor }
+		left?: { style: BORDER_STYLE, color: CellStyleColor }
+		right?: { style: BORDER_STYLE, color: CellStyleColor }
+		diagonal?: { style: BORDER_STYLE, color: CellStyleColor }
+		diagonalUp?: boolean
+		diagonalDown?: boolean
+	}
+	fill?: {
+		fgColor?: CellStyleColor;
+		bgColor?: CellStyleColor;
+		/**
+		 * @default 'none'
+		 */
+		patternType?: 'solid' | 'none';
+	};
+	font?: {
+		/**
+		 * @default 'Calibri'
+		 */
+		name?: string;
+		/**
+		 * @default 11
+		 */
+		sz?: number;
+		color?: CellStyleColor;
+		bold?: boolean;
+		italic?: boolean;
+		outline?: boolean;
+		shadow?: boolean;
+		strike?: boolean;
+		underline?: boolean;
+	};
+	/**
+	 * @default '0'
+	 */
+	numFmt?: string
+}
+
 /** Worksheet Cell Object */
 export interface CellObject {
     /** The raw value of the cell.  Can be omitted if a formula is specified */
@@ -592,7 +652,7 @@ export interface CellObject {
     l?: Hyperlink;
 
     /** The style/theme of the cell (if applicable) */
-    s?: any;
+    s?: CellStyle;
 }
 
 /** Simple Cell Address */
