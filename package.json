@@ -1,21 +1,20 @@
 {
-	"name": "sheetje-styles",
+	"name": "xlsx-js-style",
 	"version": "0.16.9",
-	"author": "sheetjs",
-	"description": "SheetJS Spreadsheet Community Edition plus Basic Styles",
+	"author": "gitbrent",
+	"description": "SheetJS Spreadsheet Community Edition plus Basic Cell Styles",
 	"keywords": [
 		"excel",
 		"xls",
 		"xlsx",
 		"xlsb",
 		"xlsm",
-		"ods",
-		"csv",
-		"dbf",
-		"dif",
-		"sylk",
 		"office",
-		"spreadsheet"
+		"spreadsheet",
+		"js-xlsx",
+		"xlsx-js",
+		"sheetjs-style",
+		"sheetjs-style-v2"
 	],
 	"bin": {
 		"xlsx": "./bin/xlsx.njs"
@@ -54,7 +53,7 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "git://github.com/SheetJS/sheetjs.git"
+		"url": "git://github.com/gitbrent/xlsx-js-style.git"
 	},
 	"scripts": {
 		"pretest": "git submodule init && git submodule update",
@@ -78,9 +77,9 @@
 			"holes"
 		]
 	},
-	"homepage": "https://github.com/gitbrent/sheetjs-styles/",
+	"homepage": "https://github.com/gitbrent/xlsx-js-style/",
 	"bugs": {
-		"url": "https://github.com/gitbrent/sheetjs-styles/issues"
+		"url": "https://github.com/gitbrent/xlsx-js-style/issues"
 	},
 	"license": "Apache-2.0",
 	"engines": {
