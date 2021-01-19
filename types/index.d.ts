@@ -556,8 +556,13 @@ export interface Hyperlink {
     Tooltip?: string;
 }
 
+export interface SheetMerge {
+	s: { r: number; c: number; }
+	e: { r: number; c: number; }
+}
+
 /** Style-Color object [xlsx-js-style] */
-interface CellStyleColor {
+export interface CellStyleColor {
 	/**
      * ARGB color value
      * 'FF' + RGB Hex Code
@@ -567,31 +572,34 @@ interface CellStyleColor {
 }
 
 /** Style-border object [xlsx-js-style] */
-type BORDER_STYLE = "thin" | "medium" | "thick" | "dotted" | "hair" | "dashed" | "mediumDashed" | "dashDot" | "mediumDashDot" | "dashDotDot" | "mediumDashDotDot" | "slantDashDot";
+export type BORDER_STYLE = "thin" | "medium" | "thick" | "dotted" | "hair" | "dashed" | "mediumDashed" | "dashDot" | "mediumDashDot" | "dashDotDot" | "mediumDashDotDot" | "slantDashDot";
+
+export type AlignH = "left" | "center" | "right";
+export type AlignV = "top" | "center" | "bottom";
 
 /** Style object [xlsx-js-style] */
-interface CellStyle {
+export interface CellStyle {
 	alignment?: {
-		horizontal?: "left" | "center" | "right";
-		vertical?: "top" | "center" | "bottom";
+		horizontal?: AlignH;
+		vertical?: AlignV;
 		wrapText?: boolean;
 	};
 	border?: {
-		top?: { style: BORDER_STYLE, color: CellStyleColor }
-		bottom?: { style: BORDER_STYLE, color: CellStyleColor }
-		left?: { style: BORDER_STYLE, color: CellStyleColor }
-		right?: { style: BORDER_STYLE, color: CellStyleColor }
-		diagonal?: { style: BORDER_STYLE, color: CellStyleColor }
-		diagonalUp?: boolean
-		diagonalDown?: boolean
-	}
+		top?: { style: BORDER_STYLE; color: CellStyleColor };
+		bottom?: { style: BORDER_STYLE; color: CellStyleColor };
+		left?: { style: BORDER_STYLE; color: CellStyleColor };
+		right?: { style: BORDER_STYLE; color: CellStyleColor };
+		diagonal?: { style: BORDER_STYLE; color: CellStyleColor };
+		diagonalUp?: boolean;
+		diagonalDown?: boolean;
+	};
 	fill?: {
 		fgColor?: CellStyleColor;
 		bgColor?: CellStyleColor;
 		/**
 		 * @default 'none'
 		 */
-		patternType?: 'solid' | 'none';
+		patternType?: "solid" | "none";
 	};
 	font?: {
 		/**
@@ -613,7 +621,7 @@ interface CellStyle {
 	/**
 	 * @default '0'
 	 */
-	numFmt?: string
+	numFmt?: string;
 }
 
 /** Worksheet Cell Object */
