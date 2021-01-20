@@ -10,7 +10,7 @@
 /*global global, exports, module, require:false, process:false, Buffer:false, ArrayBuffer:false */
 var XLSX = {};
 function make_xlsx_lib(XLSX){
-XLSX.version = '0.16.9';
+XLSX.version = '0.16.9'; // 20210119
 var current_codepage = 1200, current_ansi = 1252;
 /*global cptable:true, window */
 if(typeof module !== "undefined" && typeof require !== 'undefined') {
@@ -9371,8 +9371,12 @@ var STYLES_XML_ROOT = writextag('styleSheet', null, {
 });
 
 RELS.STY = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles";
-
+var style_builder;
 function write_sty_xml(wb, opts) {
+	if (typeof style_builder != 'undefined' && typeof 'require' != 'undefined') {
+		return style_builder.toXml();
+		}
+
 	var o = [XML_HEADER, STYLES_XML_ROOT], w;
 	if(wb.SSF && (w = write_numFmts(wb.SSF)) != null) o[o.length] = w;
 	o[o.length] = ('<fonts count="1"><font><sz val="12"/><color theme="1"/><name val="Calibri"/><family val="2"/><scheme val="minor"/></font></fonts>');
@@ -13139,6 +13143,13 @@ function default_margins(margins, mode) {
 }
 
 function get_cell_style(styles, cell, opts) {
+	if (typeof style_builder != 'undefined') {
+		if (/^\d+$/.exec(cell.s)) { return cell.s}  // if its already an integer index, let it be
+		if (cell.s && (cell.s == +cell.s)) { return cell.s}  // if its already an integer index, let it be
+		var s = cell.s || {};
+		if (cell.z) s.numFmt = cell.z;
+		return style_builder.addStyle(s);
+	  } else {
 	var z = opts.revssf[cell.z != null ? cell.z : "General"];
 	var i = 0x3c, len = styles.length;
 	if(z == null && opts.ssf) {
@@ -13160,6 +13171,7 @@ function get_cell_style(styles, cell, opts) {
 		applyNumberFormat:1
 	};
 	return len;
+	}
 }
 
 function safe_format(p, fmtid, fillid, opts, themes, styles) {
@@ -21787,7 +21799,8 @@ var XmlNode = (function () {
   })();
 
   /////////////////////////////////////////////////////////////////////////////////////////////////////
-  var StyleBuilder = function (options) {
+
+  var StyleBuilder = function(options) {
 
 	  var customNumFmtId = 164;
 
