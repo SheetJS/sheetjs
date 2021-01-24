@@ -20,7 +20,7 @@
 	"bin": {
 		"xlsx": "./bin/xlsx.njs"
 	},
-	"main": "dist/xlsx.js",
+	"main": "dist/xlsx.min.js",
 	"unpkg": "dist/xlsx.min.js",
 	"jsdelivr": "dist/xlsx.min.js",
 	"types": "types",
@@ -49,6 +49,11 @@
 		"blanket": "~1.2.3",
 		"dtslint": "^0.1.2",
 		"gulp": "^4.0.2",
+		"gulp-concat": "^2.6.1",
+		"gulp-ignore": "^3.0.0",
+		"gulp-insert": "^0.5.0",
+		"gulp-sourcemaps": "^3.0.0",
+		"gulp-uglify": "^3.0.2",
 		"jsdom": "~11.1.0",
 		"mocha": "~2.5.3",
 		"typescript": "2.2.0"
