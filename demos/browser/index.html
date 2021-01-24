@@ -27,6 +27,37 @@
 		<script src="../../dist/xlsx.min.js"></script>
 	-->
 	<script>
+		// ==================================================================================================================
+
+		function popDemoCode() {
+			$('#codeDemo').text('// STEP 1: Create a new Workbook\n'
+				+ 'const wb = XLSX.utils.book_new();\n'
+				+ '\n'
+				+ '// STEP 2: Create data rows\n'
+				+ 'let row1 = ["a", "b", "c"];\n'
+				+ 'let row2 = [1, 2, 3];\n'
+				+ 'let row3 = [\n'
+				+ "    { v: 'Courier 24', t: 's', s: { font: { name: 'Courier', sz: 24 } } },\n"
+				+ "    { v: 'bold', t: 's', s: { font: { bold: true, color: { rgb: 'FFFF0000' } } } },\n"
+				+ "    { v: 'filled', t: 's', s: { fill: { fgColor: { rgb: 'FFE9E9E9' } } } },\n"
+				+ ']\n'
+				+ '\n'
+				+ '// STEP 3: Create Worksheet, add data, set cols widths\n'
+				+ "const ws = XLSX.utils.aoa_to_sheet([row1, row2, row3]);\n"
+				+ "ws['!cols'] = [{ width: 30 }, { width: 20 }, { width: 20 }]\n"
+				+ "XLSX.utils.book_append_sheet(wb, ws, 'browser-demo');\n"
+				+ '\n'
+				+ '// STEP 4: Write Excel file to browser\n'
+				+ 'XLSX.writeFile(wb, "xlsx-js-style-demo.xlsx");\n'
+			);
+
+			$('code.language-javascript').each((idx, ele) => {
+				Prism.highlightElement($(ele)[0]);
+			});
+		}
+
+		// ==================================================================================================================
+
 		function doDemo() {
 			const wb = XLSX.utils.book_new();
 			let row1 = ["a", "b", "c"];
@@ -38,9 +69,12 @@
 			]
 			const ws = XLSX.utils.aoa_to_sheet([row1, row2, row3]);
 			ws['!cols'] = [{ width: 30 }, { width: 20 }, { width: 20 }]
-			XLSX.utils.book_append_sheet(wb, ws, "browser-demo");
+			XLSX.utils.book_append_sheet(wb, ws, 'browser-demo');
 			XLSX.writeFile(wb, "xlsx-js-style-demo.xlsx");
 		}
+
+		// ==================================================================================================================
+		$(document).ready(function() { popDemoCode() });
 	</script>
 </head>
 <body class="bg-light">
@@ -85,6 +119,11 @@
 	</header>
 
 	<main class="container">
+		<div class="row mb-3">
+			<div class="col">
+				<pre class="border bg-dark"><code id="codeDemo" class="language-javascript"></code></pre>
+			</div>
+		</div>
 		<div class="row">
 			<div class="col-auto">
 				<button class="btn btn-success px-5" onclick="doDemo()">Generate Demo Workbook</button>
