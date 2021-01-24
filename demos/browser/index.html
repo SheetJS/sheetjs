@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<meta name="author" content="https://github.com/gitbrent">
+	<meta name="website" content="https://github.com/gitbrent/xlsx-js-style/">
+	<meta name="version" content="1.0.0-beta1">
+	<meta name="updated" content="2021-01-24">
+	<title>xlsx-js-style browser demo</title>
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootswatch/4.4.0/yeti/bootstrap.min.css">
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootswatch/4.4.0/cyborg/bootstrap.min.css" media="(prefers-color-scheme: dark)">
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootswatch/4.4.0/yeti/bootstrap.min.css"
+		media="(prefers-color-scheme: no-preference), (prefers-color-scheme: light)">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.15.0/themes/prism-okaidia.min.css">
+
+	<script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n"
+		crossorigin="anonymous"></script>
+	<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+		crossorigin="anonymous"></script>
+	<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6"
+		crossorigin="anonymous"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.15.0/prism.min.js"></script>
+	<script src="../../dist/xlsx.bundle.js"></script>
+	<!--
+		<script src="../../libs/jszip.js"></script>
+		<script src="../../dist/xlsx.min.js"></script>
+	-->
+	<script>
+		function doDemo() {
+			const wb = XLSX.utils.book_new();
+			let row1 = ["a", "b", "c"];
+			let row2 = [1, 2, 3];
+			let row3 = [
+				{ v: 'Courier 24', t: 's', s: { font: { name: 'Courier', sz: 24 } } },
+				{ v: 'bold', t: 's', s: { font: { bold: true, color: { rgb: 'FFFF0000' } } } },
+				{ v: 'filled', t: 's', s: { fill: { fgColor: { rgb: 'FFE9E9E9' } } } },
+			]
+			const ws = XLSX.utils.aoa_to_sheet([row1, row2, row3]);
+			ws['!cols'] = [{ width: 30 }, { width: 20 }, { width: 20 }]
+			XLSX.utils.book_append_sheet(wb, ws, "browser-demo");
+			XLSX.writeFile(wb, "xlsx-js-style-demo.xlsx");
+		}
+	</script>
+</head>
+<body class="bg-light">
+	<nav class="navbar navbar-expand-lg bg-dark">
+		<a class="navbar-brand" href="https://gitbrent.github.io/xlsx-js-style/">
+			<img src="images/favicon.png" width="30" height="30" class="d-inline-block align-top mr-2" alt="" />
+			xlsx-js-style
+		</a>
+		<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarColor01" aria-controls="navbarColor01" aria-expanded="false"
+			aria-label="Toggle navigation">
+			<span class="navbar-toggler-icon"></span>
+		</button>
+
+		<div class="collapse navbar-collapse" id="navbarColor01">
+			<ul class="navbar-nav mr-auto">
+				<li class="nav-item active">
+					<a class="nav-link" href="https://gitbrent.github.io/xlsx-js-style/demo/index.html">
+						Demo Home <span class="sr-only">(current)</span>
+					</a>
+				</li>
+			</ul>
+			<form class="form-inline my-2 my-lg-0">
+				<button type="button" class="btn btn-outline-secondary mx-2 my-2 my-sm-0" onClick="window.open('https://github.com/gitbrent/xlsx-js-style/releases')">
+					Download
+				</button>
+				<button type="button" class="btn btn-outline-secondary mx-2 my-2 my-sm-0" onClick="window.open('https://github.com/gitbrent/xlsx-js-style')">
+					GitHub Project
+				</button>
+				<button type="button" class="btn btn-outline-secondary mx-2 my-2 my-sm-0" onClick="window.open('https://gitbrent.github.io/xlsx-js-style/docs/installation.html')">
+					API Documentation
+				</button>
+			</form>
+		</div>
+	</nav>
+
+	<header class="container my-4">
+		<div class="row">
+			<div class="col">
+				<h2 class="mb-0">Browser Demo</h2>
+			</div>
+		</div>
+	</header>
+
+	<main class="container">
+		<div class="row">
+			<div class="col-auto">
+				<button class="btn btn-success px-5" onclick="doDemo()">Generate Demo Workbook</button>
+			</div>
+		</div>
+	</main>
+</body>
+</html>
