@@ -23,6 +23,11 @@
 	"main": "dist/xlsx.min.js",
 	"unpkg": "dist/xlsx.min.js",
 	"jsdelivr": "dist/xlsx.min.js",
+	"files": [
+		"dist",
+		"libs",
+		"types"
+	],
 	"types": "types",
 	"browser": {
 		"buffer": false,
