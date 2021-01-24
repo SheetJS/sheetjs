@@ -27,7 +27,7 @@ tmp
 *.[eE][tT][hH]
 *.123
 *.htm
-*.html
+demos-sheetjs
 *.sheetjs
 *.exe
 *.img
