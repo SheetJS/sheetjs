@@ -1,8 +1,9 @@
 {
 	"name": "xlsx-js-style",
-	"version": "0.16.9",
+	"version": "1.0.0-beta1",
 	"author": "gitbrent",
 	"description": "SheetJS Spreadsheet Community Edition plus Basic Cell Styles",
+	"homepage": "https://github.com/gitbrent/xlsx-js-style/",
 	"keywords": [
 		"excel",
 		"xls",
@@ -19,7 +20,7 @@
 	"bin": {
 		"xlsx": "./bin/xlsx.njs"
 	},
-	"main": "./xlsx",
+	"main": "dist/xlsx.js",
 	"unpkg": "dist/xlsx.min.js",
 	"jsdelivr": "dist/xlsx.min.js",
 	"types": "types",
@@ -47,6 +48,7 @@
 		"@types/node": "^8.5.9",
 		"blanket": "~1.2.3",
 		"dtslint": "^0.1.2",
+		"gulp": "^4.0.2",
 		"jsdom": "~11.1.0",
 		"mocha": "~2.5.3",
 		"typescript": "2.2.0"
@@ -56,11 +58,7 @@
 		"url": "git://github.com/gitbrent/xlsx-js-style.git"
 	},
 	"scripts": {
-		"pretest": "git submodule init && git submodule update",
-		"test": "make travis",
-		"build": "make",
-		"lint": "make fullint",
-		"dtslint": "dtslint types"
+		"ship": "gulp ship"
 	},
 	"config": {
 		"blanket": {
@@ -77,7 +75,6 @@
 			"holes"
 		]
 	},
-	"homepage": "https://github.com/gitbrent/xlsx-js-style/",
 	"bugs": {
 		"url": "https://github.com/gitbrent/xlsx-js-style/issues"
 	},

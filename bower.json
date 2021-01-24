@@ -1,7 +1,7 @@
 {
-  "name": "js-xlsx",
-  "homepage": "https://github.com/SheetJS/js-xlsx",
-  "main": "dist/xlsx.full.min.js",
+  "name": "xlsx-js-style",
+  "homepage": "https://github.com/gitbrent/xlsx-js-style",
+  "main": "dist/xlsx.min.js",
   "ignore": [
     "bin",
     "bits",
@@ -17,6 +17,7 @@
     "xlsb",
     "ods",
     "js-xls",
-    "js-xlsx"
+    "js-xlsx",
+    "xlsx-js-style"
   ]
 }
