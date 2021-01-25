@@ -10,13 +10,13 @@
 /*global global, exports, module, require:false, process:false, Buffer:false, ArrayBuffer:false */
 var XLSX = {};
 function make_xlsx_lib(XLSX){
-XLSX.version = '0.16.9'; // 20210119
+XLSX.version = '0.16.9'; // 20210125
 var current_codepage = 1200, current_ansi = 1252;
 /*global cptable:true, window */
 if(typeof module !== "undefined" && typeof require !== 'undefined') {
 	if(typeof cptable === 'undefined') {
-		if(typeof global !== 'undefined') global.cptable = require('./libs/cpexcel.js');
-		else if(typeof window !== 'undefined') window.cptable = require('./libs/cpexcel.js');
+		if(typeof global !== 'undefined') global.cptable = require('../libs/cpexcel.js');
+		else if(typeof window !== 'undefined') window.cptable = require('../libs/cpexcel.js');
 	}
 }
 
@@ -2963,7 +2963,7 @@ var jszip;
 if(typeof JSZipSync !== 'undefined') jszip = JSZipSync;
 if(typeof exports !== 'undefined') {
 	if(typeof module !== 'undefined' && module.exports) {
-		if(typeof jszip === 'undefined') jszip = require('./libs/jszip.js');
+		if(typeof jszip === 'undefined') jszip = require('../libs/jszip.js');
 	}
 }
 
