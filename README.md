@@ -2,15 +2,31 @@
 
 ## ℹ️ About
 
+SheetJS with Style! Create Excel spreadsheets with basic styling options.
+
 This project is a fork of [SheetJS/sheetjs](https://github.com/sheetjs/sheetjs) combined with code from
 [sheetjs-style](https://www.npmjs.com/package/sheetjs-style) (by [ShanaMaid](https://github.com/ShanaMaid/))
-and [sheetjs-style-v2](https://www.npmjs.com/package/sheetjs-style-v2) (by [Raul Gonzalez](https://www.npmjs.com/~armandourbina))
+and [sheetjs-style-v2](https://www.npmjs.com/package/sheetjs-style-v2) (by [Raul Gonzalez](https://www.npmjs.com/~armandourbina)).
 
 All projects are under the Apache 2.0 License
 
+## 🔌 Installation
+
+Install [npm](https://www.npmjs.org/package/xlsx-js-style):
+
+```sh
+npm install xlsx-js-style --save
+```
+
+Install browser:
+
+```html
+<script lang="javascript" src="dist/xlsx.bundle.js"></script>
+```
+
 ## 🗒 Core API
 
-Please refer to the [https://sheetjs.com/](https://sheetjs.com/) documentation for core API reference.
+Please refer to the [SheetJS](https://sheetjs.com/) documentation for core API reference.
 
 ## 🗒 Style API
 
