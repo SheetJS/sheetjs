@@ -9371,12 +9371,13 @@ var STYLES_XML_ROOT = writextag('styleSheet', null, {
 });
 
 RELS.STY = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles";
-var style_builder;
-function write_sty_xml(wb, opts) {
+var style_builder; /* xlsx-js-style */
+	function write_sty_xml(wb, opts) {
+	/* xlsx-js-style vvv */
 	if (typeof style_builder != 'undefined' && typeof 'require' != 'undefined') {
 		return style_builder.toXml();
-		}
-
+	}
+	/* xlsx-js-style ^^^ */
 	var o = [XML_HEADER, STYLES_XML_ROOT], w;
 	if(wb.SSF && (w = write_numFmts(wb.SSF)) != null) o[o.length] = w;
 	o[o.length] = ('<fonts count="1"><font><sz val="12"/><color theme="1"/><name val="Calibri"/><family val="2"/><scheme val="minor"/></font></fonts>');
@@ -13143,13 +13144,15 @@ function default_margins(margins, mode) {
 }
 
 function get_cell_style(styles, cell, opts) {
+	/* xlsx-js-style vvv */
 	if (typeof style_builder != 'undefined') {
 		if (/^\d+$/.exec(cell.s)) { return cell.s}  // if its already an integer index, let it be
 		if (cell.s && (cell.s == +cell.s)) { return cell.s}  // if its already an integer index, let it be
 		var s = cell.s || {};
 		if (cell.z) s.numFmt = cell.z;
 		return style_builder.addStyle(s);
-	  } else {
+	} else {
+	/* xlsx-js-style ^^^ */
 	var z = opts.revssf[cell.z != null ? cell.z : "General"];
 	var i = 0x3c, len = styles.length;
 	if(z == null && opts.ssf) {
@@ -21066,7 +21069,7 @@ function write_cfb_ctr(cfb, o) {
 
 function write_zip_type(wb, opts) {
 	var o = opts||{};
-	style_builder  = new StyleBuilder(opts);
+	style_builder  = new StyleBuilder(opts); /* xlsx-js-style */
 	var z = write_zip(wb, o);
 	var oopts = {};
 	if(o.compression) oopts.compression = 'DEFLATE';
@@ -21708,7 +21711,7 @@ if(has_buf && typeof require != 'undefined') (function() {
 	};
 })();
 
-	/////////////////////////////////////////////////////////////////////////////////////////////////////
+/* xlsx-js-style vvv */
 var XmlNode = (function () {
 	function XmlNode(tagName, attributes, children) {
 
@@ -22174,7 +22177,7 @@ var XmlNode = (function () {
 		  }
 	  }.initialize(options||{});
   }
-  /////////////////////////////////////////////////////////////////////////////////////////////////////
+/* xlsx-js-style ^^^ */
 
 if(typeof parse_xlscfb !== "undefined") XLSX.parse_xlscfb = parse_xlscfb;
 XLSX.parse_zip = parse_zip;
