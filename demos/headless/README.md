@@ -33,7 +33,7 @@ the webpage.  The `dist` versions are suitable for web pages.
 This was tested in wkhtmltopdf 0.12.4, installed using the official binaries:
 
 ```bash
-$ wkhtmltopdf --javascript-delay 20000 http://oss.sheetjs.com/js-xlsx/tests/ test.pdf
+$ wkhtmltopdf --javascript-delay 20000 http://oss.sheetjs.com/sheetjs/tests/ test.pdf
 ```
 
 ## SlimerJS

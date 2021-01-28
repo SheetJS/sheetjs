@@ -246,7 +246,7 @@ be configured to remove support with `resolve.alias`:
 ### ECMAScript 5 Compatibility
 
 Since the library uses functions like `Array#forEach`, older browsers require
-[shims to provide missing functions](http://oss.sheetjs.com/js-xlsx/shim.js).
+[shims to provide missing functions](http://oss.sheetjs.com/sheetjs/shim.js).
 
 To use the shim, add the shim before the script tag that loads `xlsx.js`:
 
@@ -363,7 +363,7 @@ var workbook = XLSX.read(htmlstr, {type:'string'});
 
 
 Note: for a more complete example that works in older browsers, check the demo
-at <http://oss.sheetjs.com/js-xlsx/ajax.html>.  The [`xhr` demo](demos/xhr/)
+at <http://oss.sheetjs.com/sheetjs/ajax.html>.  The [`xhr` demo](demos/xhr/)
 includes more examples with `XMLHttpRequest` and `fetch`.
 
 ```js
@@ -432,7 +432,7 @@ More specialized cases, including mobile app file processing, are covered in the
 
 ### Parsing Examples
 
-- <http://oss.sheetjs.com/js-xlsx/> HTML5 File API / Base64 Text / Web Workers
+- <http://oss.sheetjs.com/sheetjs/> HTML5 File API / Base64 Text / Web Workers
 
 Note that older versions of IE do not support HTML5 File API, so the Base64 mode
 is used for testing.
@@ -453,7 +453,7 @@ On Windows XP and up you can get the Base64 encoding using `certutil`:
 (note: You have to open the file and remove the header and footer lines)
 
 
-- <http://oss.sheetjs.com/js-xlsx/ajax.html> XMLHttpRequest
+- <http://oss.sheetjs.com/sheetjs/ajax.html> XMLHttpRequest
 
 ### Streaming Read
 

@@ -9,7 +9,7 @@ About dialog on OSX.
 
 The standard HTML5 `FileReader` techniques from the browser apply to Electron.
 This demo includes a drag-and-drop box as well as a file input box, mirroring
-the [SheetJS Data Preview Live Demo](http://oss.sheetjs.com/js-xlsx/)
+the [SheetJS Data Preview Live Demo](http://oss.sheetjs.com/sheetjs/)
 
 The core data in this demo is an editable HTML table.  The readers build up the
 table using `sheet_to_html` (with `editable:true` option) and the writers scrape

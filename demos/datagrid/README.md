@@ -5,7 +5,7 @@ with other JS libraries such as data grids for previewing data.  After extensive
 testing, [`canvas-datagrid`](https://tonygermaneri.github.io/canvas-datagrid/)
 stood out as a very high-performance grid with an incredibly simple API.
 
-This demo is available at <http://oss.sheetjs.com/js-xlsx/datagrid.html>
+This demo is available at <http://oss.sheetjs.com/sheetjs/datagrid.html>
 
 ## Obtaining the Library
 
