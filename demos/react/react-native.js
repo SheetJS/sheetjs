@@ -1,8 +1,17 @@
 /* xlsx.js (C) 2013-present  SheetJS -- http://sheetjs.com */
 import XLSX from 'xlsx';
-
 import React, { Component } from 'react';
-import { AppRegistry, StyleSheet, Text, View, Button, Alert, Image, ScrollView, TouchableWithoutFeedback } from 'react-native';
+import { 
+	AppRegistry, 
+	StyleSheet, 
+	Text, 
+	View, 
+	Button, 
+	Alert, 
+	Image, 
+	ScrollView, 
+	TouchableWithoutFeedback 
+} from 'react-native';
 import { Table, Row, Rows, TableWrapper } from 'react-native-table-component';
 
 // react-native-fs
@@ -68,34 +77,36 @@ export default class SheetJS extends Component {
 				Alert.alert("exportFile success", "Exported to " + file);
 		}).catch((err) => { Alert.alert("exportFile Error", "Error " + err.message); });
 	};
-	render() { return (
-<ScrollView contentContainerStyle={styles.container} vertical={true}>
-	<Text style={styles.welcome}> </Text>
-	<Image style={{width: 128, height: 128}} source={require('./logo.png')} />
-	<Text style={styles.welcome}>SheetJS React Native Demo</Text>
-	<Text style={styles.instructions}>Import Data</Text>
-	<Button onPress={this.importFile} title="Import data from a spreadsheet" color="#841584" />
-	<Text style={styles.instructions}>Export Data</Text>
-	<Button disabled={!this.state.data.length} onPress={this.exportFile} title="Export data to XLSX" color="#841584" />
 
-	<Text style={styles.instructions}>Current Data</Text>
+	render() { 
+		return (
+			<ScrollView contentContainerStyle={styles.container} vertical={true}>
+				<Text style={styles.welcome}> </Text>
+				<Text style={styles.welcome}>SheetJS React Native Demo</Text>
+				<Text style={styles.instructions}>Import Data</Text>
+				<Button onPress={this.importFile} title="Import data from a spreadsheet" color="#841584" />
+				<Text style={styles.instructions}>Export Data</Text>
+				<Button disabled={!this.state.data.length} onPress={this.exportFile} title="Export data to XLSX" color="#841584" />
 
-	<ScrollView style={styles.table} horizontal={true} >
-		<Table style={styles.table}>
-			<TableWrapper>
-				<Row data={this.state.cols} style={styles.thead} textStyle={styles.text} widthArr={this.state.widthArr}/>
-			</TableWrapper>
-			<TouchableWithoutFeedback>
-				<ScrollView vertical={true}>
-					<TableWrapper>
-						<Rows data={this.state.data} style={styles.tr} textStyle={styles.text} widthArr={this.state.widthArr}/>
-					</TableWrapper>
+				<Text style={styles.instructions}>Current Data</Text>
+
+				<ScrollView style={styles.table} horizontal={true} >
+					<Table style={styles.table}>
+						<TableWrapper>
+							<Row data={this.state.cols} style={styles.thead} textStyle={styles.text} widthArr={this.state.widthArr}/>
+						</TableWrapper>
+						<TouchableWithoutFeedback>
+							<ScrollView vertical={true}>
+								<TableWrapper>
+									<Rows data={this.state.data} style={styles.tr} textStyle={styles.text} widthArr={this.state.widthArr}/>
+								</TableWrapper>
+							</ScrollView>
+						</TouchableWithoutFeedback>
+					</Table>
 				</ScrollView>
-			</TouchableWithoutFeedback>
-		</Table>
-	</ScrollView>
-</ScrollView>
-	); };
+			</ScrollView>
+		); 
+	};
 };
 
 const styles = StyleSheet.create({

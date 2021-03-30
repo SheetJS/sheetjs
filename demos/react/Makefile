@@ -5,7 +5,7 @@ react: init ## Simple server for react and clones
 .PHONY: next
 next: init ## next.js demo
 	mkdir -p pages static
-	cat nexthdr.js sheetjs.jsx > pages/sheetjs.js
+	cat nexthdr.js sheetjs.js > pages/sheetjs.js
 	cp ../../shim.js static/shim.js
 	next
 
@@ -15,7 +15,7 @@ native: ## Build react-native project
 
 .PHONY: ios
 ios: native ## react-native ios sim
-	cd SheetJS; react-native run-ios --simulator="iPhone X"; cd -
+	cd SheetJS; cd ios; pod install; cd -; react-native run-ios --simulator="iPhone X"; cd -
 
 .PHONY: android
 android: native ## react-native android sim
