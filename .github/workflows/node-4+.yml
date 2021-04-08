@@ -1,0 +1,89 @@
+name: 'Tests: node.js'
+
+on: [pull_request, push]
+
+jobs:
+  matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      latest: ${{ steps.set-matrix.outputs.requireds }}
+    steps:
+      - uses: ljharb/actions/node/matrix@main
+        id: set-matrix
+        with:
+          versionsAsRoot: true
+          type: 'majors'
+          preset: '>=4'
+
+  latest:
+    needs: [matrix]
+    name: 'latest majors'
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: ${{ fromJson(needs.matrix.outputs.latest) }}
+        include:
+          - node-version: '14.'
+            env:
+              TZ: America/New_York
+          - node-version: '13.'
+            env:
+              TZ: Europe/London
+          - node-version: '12.'
+            env:
+              TZ: Asia/Seoul
+          - node-version: '11.'
+            env:
+              TZ: America/Los_Angeles
+              FMTS: misc
+          - node-version: '10.'
+            env:
+              TZ: Europe/Berlin
+              FMTS: misc
+          - node-version: '9.'
+            env:
+              TZ: Asia/Kolkata
+              FMTS: misc
+          - node-version: '8.'
+            env:
+              TZ: Asia/Shanghai
+              FMTS: misc
+          - node-version: '7.'
+            env:
+              TZ: America/Cancun
+              FMTS: misc
+          - node-version: '6.'
+            env:
+              TZ: Asia/Seoul
+              FMTS: misc
+          - node-version: '5.'
+            env:
+              TZ: America/Anchorage
+              FMTS: misc
+          - node-version: '4.'
+            env:
+              TZ: America/Barbados
+              FMTS: misc
+          - node-version: '4.4.7' # see GH issue #1150
+            env:
+              TZ: Asia/Tokyo
+              FMTS: misc
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ljharb/actions/node/install@main
+        name: 'nvm install ${{ matrix.node-version }} && npm install'
+        with:
+          node-version: ${{ matrix.node-version }}
+      - run: make init
+      - run: 'cd test_files; make all; cd -'
+      - run: npm run tests-only
+
+  node:
+    name: 'node 4+'
+    needs: [latest]
+    runs-on: ubuntu-latest
+    steps:
+      - run: 'echo tests completed'

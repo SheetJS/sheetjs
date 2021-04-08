@@ -19,7 +19,7 @@ FLOWAUX=$(patsubst %.js,%.flow.js,$(AUXTARGETS))
 AUXSCPTS=xlsxworker.js
 FLOWTGTS=$(TARGET) $(AUXTARGETS) $(AUXSCPTS) $(MINITGT)
 UGLIFYOPTS=--support-ie8 -m
-CLOSURE=/usr/local/lib/node_modules/google-closure-compiler/compiler.jar
+# CLOSURE=/usr/local/lib/node_modules/google-closure-compiler/compiler.jar
 
 ## Main Targets
 
@@ -177,31 +177,31 @@ demo-systemjs: ## Run systemjs demo build
 ## Code Checking
 
 .PHONY: fullint
-fullint: lint old-lint tslint flow mdlint ## Run all checks
+fullint: lint mdlint ## Run all checks (removed: old-lint, tslint, flow)
 
 .PHONY: lint
 lint: $(TARGET) $(AUXTARGETS) ## Run eslint checks
-	@eslint --ext .js,.njs,.json,.html,.htm $(TARGET) $(AUXTARGETS) $(CMDS) $(HTMLLINT) package.json bower.json
-	if [ -e $(CLOSURE) ]; then java -jar $(CLOSURE) $(REQS) $(FLOWTARGET) --jscomp_warning=reportUnknownTypes >/dev/null; fi
+	@./node_modules/.bin/eslint --ext .js,.njs,.json,.html,.htm $(TARGET) $(AUXTARGETS) $(CMDS) $(HTMLLINT) package.json bower.json
+	if [ -n "$(CLOSURE-)" ] && [ -e "${CLOSURE}" ]; then java -jar $(CLOSURE) $(REQS) $(FLOWTARGET) --jscomp_warning=reportUnknownTypes >/dev/null; fi
 
 .PHONY: old-lint
 old-lint: $(TARGET) $(AUXTARGETS) ## Run jshint and jscs checks
-	@jshint --show-non-errors $(TARGET) $(AUXTARGETS)
-	@jshint --show-non-errors $(CMDS)
-	@jshint --show-non-errors package.json bower.json test.js
-	@jshint --show-non-errors --extract=always $(HTMLLINT)
-	@jscs $(TARGET) $(AUXTARGETS) test.js
+	@./node_modules/.bin/jshint --show-non-errors $(TARGET) $(AUXTARGETS)
+	@./node_modules/.bin/jshint --show-non-errors $(CMDS)
+	@./node_modules/.bin/jshint --show-non-errors package.json bower.json test.js
+	@./node_modules/.bin/jshint --show-non-errors --extract=always $(HTMLLINT)
+	@./node_modules/.bin/jscs $(TARGET) $(AUXTARGETS) test.js
 	if [ -e $(CLOSURE) ]; then java -jar $(CLOSURE) $(REQS) $(FLOWTARGET) --jscomp_warning=reportUnknownTypes >/dev/null; fi
 
 .PHONY: tslint
 tslint: $(TARGET) ## Run typescript checks
 	#@npm install dtslint typescript
 	#@npm run-script dtslint
-	dtslint types
+	./node_modules/.bin/dtslint types
 
 .PHONY: flow
 flow: lint ## Run flow checker
-	@flow check --all --show-all-errors --include-warnings
+	@./node_modules/.bin/flow check --all --show-all-errors --include-warnings
 
 .PHONY: cov
 cov: misc/coverage.html ## Run coverage test
@@ -237,8 +237,8 @@ DEMOMDS=$(sort $(wildcard demos/*/README.md))
 MDLINT=$(DEMOMDS) $(READEPS) demos/README.md
 .PHONY: mdlint
 mdlint: $(MDLINT) ## Check markdown documents
-	alex $^
-	mdspell -a -n -x -r --en-us $^
+	./node_modules/.bin/alex $^
+	./node_modules/.bin/mdspell -a -n -x -r --en-us $^
 
 .PHONY: help
 help:
