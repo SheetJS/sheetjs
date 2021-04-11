@@ -214,7 +214,7 @@ apachepoi_ElapsedFormatTests.xlsx
 apachepoi_ExcelTables.xlsx
 apachepoi_ForShifting.xlsx
 apachepoi_FormatChoiceTests.xlsx
-apachepoi_FormatConditionTests.xlsx
+# apachepoi_FormatConditionTests.xlsx # Upstream changed file
 apachepoi_FormatKM.xlsx
 apachepoi_Formatting.xlsx
 apachepoi_FormulaEvalTestData_Copy.xlsx
@@ -783,7 +783,7 @@ apachepoi_46515.xls
 apachepoi_46670_http.xls
 apachepoi_46670_local.xls
 apachepoi_46670_ref_airline.xls
-apachepoi_46904.xls
+# apachepoi_46904.xls # 0.12 timeout
 apachepoi_47034.xls
 apachepoi_47154.xls
 apachepoi_47245_test.xls
@@ -833,7 +833,7 @@ apachepoi_52575_source.xls
 apachepoi_53109.xls
 apachepoi_53404.xls
 apachepoi_53433.xls
-apachepoi_53446.xls
+# apachepoi_53446.xls # Node 6-7 OOM
 apachepoi_53588.xls
 apachepoi_53691.xls
 apachepoi_53798_shiftNegative_TMPL.xls
@@ -911,7 +911,7 @@ apachepoi_IntersectionPtg.xls
 apachepoi_IrrNpvTestCaseData.xls
 # apachepoi_LookupFunctionsTestCaseData.xls # xlml
 apachepoi_MRExtraLines.xls
-apachepoi_MatchFunctionTestCaseData.xls
+# apachepoi_MatchFunctionTestCaseData.xls # Upstream changed file
 apachepoi_MatrixFormulaEvalTestData.xls
 apachepoi_MissingBits.xls
 apachepoi_NewStyleConditionalFormattings.xls
@@ -1255,7 +1255,7 @@ pyExcelerator_oo14.xls
 rich_text_stress.xls
 roo_1900_base.xls
 roo_1904_base.xls
-roo_Bibelbund.xls
+# roo_Bibelbund.xls # 0.10 timeout
 roo_bad_excel_date.xls
 roo_bbu.xls
 roo_boolean.xls
