@@ -214,7 +214,7 @@ apachepoi_ElapsedFormatTests.xlsx
 apachepoi_ExcelTables.xlsx
 apachepoi_ForShifting.xlsx
 apachepoi_FormatChoiceTests.xlsx
-apachepoi_FormatConditionTests.xlsx
+# apachepoi_FormatConditionTests.xlsx # Upstream changed file
 apachepoi_FormatKM.xlsx
 apachepoi_Formatting.xlsx
 apachepoi_FormulaEvalTestData_Copy.xlsx
@@ -911,7 +911,7 @@ apachepoi_IntersectionPtg.xls
 apachepoi_IrrNpvTestCaseData.xls
 # apachepoi_LookupFunctionsTestCaseData.xls # xlml
 apachepoi_MRExtraLines.xls
-apachepoi_MatchFunctionTestCaseData.xls
+# apachepoi_MatchFunctionTestCaseData.xls # Upstream changed file
 apachepoi_MatrixFormulaEvalTestData.xls
 apachepoi_MissingBits.xls
 apachepoi_NewStyleConditionalFormattings.xls
