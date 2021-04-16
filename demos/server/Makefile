@@ -1,6 +1,5 @@
 .PHONY: init
 init:
-	if [ ! -e sheetjs.xlsx ]; then ln -s ../../sheetjs.xlsx; fi
 	mkdir -p node_modules
 	cd node_modules; if [ ! -e xlsx ]; then ln -s ../../../ xlsx; fi; cd -
 
@@ -11,10 +10,6 @@ request: init ## request demo
 .PHONY: express
 express: init ## express demo
 	node express.js
-
-.PHONY: micro
-micro: init ## micro demo
-	micro -p 7262 micro.js
 
 .PHONY: koa
 koa: init ## koa demo

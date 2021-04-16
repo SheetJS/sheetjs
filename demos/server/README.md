@@ -8,6 +8,38 @@ demo shows a few different strategies applied to different server frameworks.
 NOTE: these examples merely demonstrate the core concepts and do not include
 appropriate error checking or other production-level features.
 
+
+### Express Setup
+
+The following commands are required in order to test the [Express](https://github.com/expressjs/express) demo:
+
+```bash
+npm install express printj xlsx express-formidable
+node express.js
+```
+
+### Koa Setup
+
+The following commands are required in order to test the [Koa](https://github.com/koajs/koa) demo:
+
+```bash
+npm install koa printj formidable xlsx
+node koa.js
+``` 
+
+### Hapi Setup
+
+**Note: Hapi demo as written only works with Hapi version 16 and below.**
+
+The following commands are required in order to test the [Hapi](https://github.com/hapijs/hapi) demo:
+
+```bash
+npm install hapi@16.x printj tiny-worker xlsx
+node hapi.js
+``` 
+
+
+
 ### Node Buffer
 
 The `read` and `write` functions can handle `Buffer` data with `type:"buffer"`.
@@ -64,12 +96,12 @@ expected to handle:
 Testing with cURL is straightforward:
 
 ```bash
-# upload test.xls and update data
-curl -X POST -F "data=@test.xls" http://localhost:7262/
+# upload sheetjs.csv and update data
+curl -X POST -F "data=@sheetjs.csv" http://localhost:7262/
 # download data in SYLK format
 curl -X GET http://localhost:7262/?t=slk
-# read sheetjs.xlsx from the server directory
-curl -X POST http://localhost:7262/?f=sheetjs.xlsx
+# read sheetjs.csv from the server directory
+curl -X POST http://localhost:7262/?f=sheetjs.csv
 # write sheetjs.xlsb in the XLSB format
 curl -X GET http://localhost:7262/?f=sheetjs.xlsb
 ```
@@ -108,17 +140,6 @@ The main server script is `koa.js` and the worker script is `koasub.js`.  State
 is maintained in the worker script.
 
 
-## command-line utility with micro
-
-The npm module ships with the `xlsx` command line tool. For global installs, the
-script `bin/xlsx.njs` is added to a directory in `PATH`. For local installs, the
-appropriate script or symbolic link is set up in `node_modules/.bin/`.
-
-The `--arrays` option directs `xlsx` to generate an array of arrays that can be
-parsed by the server.  To generate files, the `json2csv` module exports the JS
-array of arrays to a CSV, the server writes the file, and the `xlsx` command is
-used to generate files of different formats.
-
 
 ## tiny-worker with hapi
 
@@ -132,12 +153,12 @@ Note: due to an issue with hapi payload parsing, the route `POST /file` is used
 to handle the case of reading from file, so the cURL test is:
 
 ```bash
-# upload test.xls and update data
-curl -X POST -F "data=@test.xls" http://localhost:7262/
+# upload sheetjs.csv and update data
+curl -X POST -F "data=@sheetjs.csv" http://localhost:7262/
 # download data in SYLK format
 curl -X GET http://localhost:7262/?t=slk
-# read sheetjs.xlsx from the server directory
-curl -X POST http://localhost:7262/file?f=sheetjs.xlsx
+# read sheetjs.csv from the server directory
+curl -X POST http://localhost:7262/file?f=sheetjs.csv
 # write sheetjs.xlsb in the XLSB format
 curl -X GET http://localhost:7262/?f=sheetjs.xlsb
 ```
