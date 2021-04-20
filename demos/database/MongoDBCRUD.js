@@ -12,7 +12,7 @@ let P = Promise.resolve("sheetjs");
 
 /* Connect to mongodb server */
 P = P.then(async () => {
-	const client = await MongoClient.connect(url);
+	const client = await MongoClient.connect(url,{ useUnifiedTopology: true });
 	return [client];
 });
 
@@ -49,13 +49,14 @@ P = P.then(async ([client, pres, fmts]) => {
 });
 
 /* Read the new file and dump all of the data */
-P = P.then(() => {
+P = P.then(([client]) => {
 	const wb = XLSX.readFile('mongocrud.xlsx');
 	wb.SheetNames.forEach((n,i) => {
 		console.log(`Sheet #${i+1}: ${n}`);
 		const ws = wb.Sheets[n];
 		console.log(XLSX.utils.sheet_to_csv(ws));
 	});
+    return [client];
 });
 
 /* Close connection */

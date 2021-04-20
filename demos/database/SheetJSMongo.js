@@ -3,8 +3,7 @@
 var XLSX = require("xlsx");
 
 async function book_append_mongo(wb, coll, name) {
-	const aoo = await coll.find({}).toArray();
-	aoo.forEach((x) => delete x._id);
+	const aoo = await coll.find({}, {projection:{_id:0}}).toArray();
 	const ws = XLSX.utils.json_to_sheet(aoo);
 	XLSX.utils.book_append_sheet(wb, ws, name);
 	return ws;

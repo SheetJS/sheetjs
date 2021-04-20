@@ -15,7 +15,7 @@ let P = Promise.resolve("sheetjs");
 
 /* Connect to mongodb server and initialize collection */
 P = P.then(async () => {
-	const client = await MongoClient.connect(url);
+	const client = await MongoClient.connect(url,{ useUnifiedTopology: true });
 	const db = client.db(db_name);
 	try { await db.collection('wb').drop(); } catch(e) {}
 	const coll = db.collection('wb');
