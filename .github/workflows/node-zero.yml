@@ -1,0 +1,82 @@
+name: 'Tests: node.js (0.x)'
+
+on: [pull_request, push]
+
+jobs:
+  matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      stable: ${{ steps.set-matrix.outputs.requireds }}
+      unstable: ${{ steps.set-matrix.outputs.optionals }}
+    steps:
+      - uses: ljharb/actions/node/matrix@main
+        id: set-matrix
+        with:
+          versionsAsRoot: true
+          preset: '0.x'
+
+  stable:
+    needs: [matrix]
+    name: 'stable minors'
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: ${{ fromJson(needs.matrix.outputs.stable) }}
+        include:
+          - node-version: '0.12.'
+            env:
+              TZ: America/Cayman
+              FMTS: misc
+          - node-version: '0.10.'
+            env:
+              TZ: Pacific/Honolulu
+              FMTS: misc
+          - node-version: '0.8.'
+            env:
+              TZ: America/Mexico_City
+              FMTS: misc
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ljharb/actions/node/install@main
+        name: 'nvm install ${{ matrix.node-version }} && npm install'
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache-node-modules-key: node_modules-${{ github.workflow }}-${{ github.action }}-${{ github.run_id }}
+          skip-ls-check: true
+      - run: make init
+      - run: 'cd test_files; make all; cd -'
+      - run: npm run tests-only
+
+  unstable:
+    needs: [matrix, stable]
+    name: 'unstable minors'
+    continue-on-error: true
+    if: ${{ !github.head_ref || !startsWith(github.head_ref, 'renovate') }}
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: ${{ fromJson(needs.matrix.outputs.unstable) }}
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ljharb/actions/node/install@main
+        name: 'nvm install ${{ matrix.node-version }} && npm install'
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache-node-modules-key: node_modules-${{ github.workflow }}-${{ github.action }}-${{ github.run_id }}
+          skip-ls-check: true
+      - run: make init
+      - run: 'cd test_files; make all; cd -'
+      - run: npm run tests-only
+
+  node:
+    name: 'node 0.x'
+    needs: [stable, unstable]
+    runs-on: ubuntu-latest
+    steps:
+      - run: 'echo tests completed'

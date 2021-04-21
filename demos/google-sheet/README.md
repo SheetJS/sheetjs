@@ -41,6 +41,7 @@ This imports both `xlsx` and `drive-db` libraries. While these are written in co
 })();
 ```
 
+<!-- alex ignore retext-profanities -->
 This is what is called an [Immediately Invoked Function Expression](https://flaviocopes.com/javascript-iife/). These are normally used to either create a new execution context, or in this case to allow to run async code easier.
 
 ```js

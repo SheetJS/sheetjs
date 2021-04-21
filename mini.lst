@@ -43,6 +43,8 @@ bits/71_wbcommon.js
 bits/72_wbxml.js
 bits/74_xmlbin.js
 bits/79_html.js
+bits/80_parseods.js
+bits/81_writeods.js
 bits/82_sheeter.js
 bits/84_defaults.js
 bits/85_parsezip.js

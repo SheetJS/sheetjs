@@ -16,7 +16,7 @@ The visibility setting is stored in the `Hidden` property of sheet props array.
 |   1   | Hidden      |
 |   2   | Very Hidden |
 
-With <https://rawgit.com/SheetJS/test_files/master/sheet_visibility.xlsx>:
+With <https://rawgit.com/SheetJS/test_files/HEAD/sheet_visibility.xlsx>:
 
 ```js
 > wb.Workbook.Sheets.map(function(x) { return [x.name, x.Hidden] })

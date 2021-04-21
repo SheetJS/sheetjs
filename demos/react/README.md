@@ -13,18 +13,18 @@ The library can also be imported directly from JSX code with:
 import XLSX from 'xlsx';
 ```
 
-This demo shows a simple JSX component transpiled in the browser using the babel
+This demo shows a simple React component transpiled in the browser using the babel
 standalone library.  Since there is no standard React table model, this demo
 settles on the array of arrays approach.
 
 Other scripts in this demo show:
 - server-rendered React component (with `next.js`)
-- `preact` using the react compatibility library
 - `react-native` deployment for iOS and android
+
+## How to run
 
 Run `make react` to run the browser demo for React, or run `make next` to run
 the server-rendered demo using `next.js`.
-
 
 ## Internal State
 
@@ -115,15 +115,6 @@ set in the iOS project `Info.plist` file.
 
 To run the React Native demo, run either `make ios` or `make android` while
 connected to a device or emulator.
-
-## Other Demos
-
-#### Preact
-
-`preact-compat` is an easy-to-use compatibility layer that provides equivalents
-for `React` and `ReactDOM`.  The `preact` demo uses the same JSX component code!
-[The docs](https://npm.im/preact-compat#use-without-webpackbrowserify) explain
-how to convert the in-browser React demo to Preact.
 
 #### Server-Rendered React Components with Next.js
 
