@@ -630,6 +630,9 @@ export interface Sheet2CSVOpts extends DateNFOption {
     /** Force quotes around fields */
     forceQuotes?: boolean;
 
+    /** Force quotes around string fields */
+    forceQuotesAroundString?: boolean;
+
     /** if true, return raw numbers; if false, return formatted numbers */
     rawNumbers?: boolean;
 }
