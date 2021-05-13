@@ -38,10 +38,12 @@ function slurp(R, blob, length/*:number*/, opts)/*:any*/ {
 	var l = length;
 	var bufs = [];
 	var d = blob.slice(blob.l,blob.l+l);
-	if(opts && opts.enc && opts.enc.insitu) switch(R.n) {
-	case 'BOF': case 'FilePass': case 'FileLock': case 'InterfaceHdr': case 'RRDInfo': case 'RRDHead': case 'UsrExcl': break;
+	if(opts && opts.enc && opts.enc.insitu && d.length > 0) switch(R.n) {
+	case 'BOF': case 'FilePass': case 'FileLock': case 'InterfaceHdr': case 'RRDInfo': case 'RRDHead': case 'UsrExcl': case 'EOF':
+		break;
+	case 'BoundSheet8':
+		break;
 	default:
-		if(d.length === 0) break;
 		opts.enc.insitu(d);
 	}
 	bufs.push(d);
@@ -52,8 +54,11 @@ function slurp(R, blob, length/*:number*/, opts)/*:any*/ {
 		l = __readUInt16LE(blob,blob.l+2);
 		start = blob.l + 4;
 		if(next.n == 'ContinueFrt') start += 4;
-		else if(next.n.slice(0,11) == 'ContinueFrt') start += 12;
-		bufs.push(blob.slice(start,blob.l+4+l));
+		else if(next.n.slice(0,11) == 'ContinueFrt') {
+			start += 12;
+		}
+		d = blob.slice(start,blob.l+4+l);
+		bufs.push(d);
 		blob.l += 4+l;
 		next = (XLSRecordEnum[__readUInt16LE(blob, blob.l)]);
 	}
@@ -61,6 +66,7 @@ function slurp(R, blob, length/*:number*/, opts)/*:any*/ {
 	prep_blob(b, 0);
 	var ll = 0; b.lens = [];
 	for(var j = 0; j < bufs.length; ++j) { b.lens.push(ll); ll += bufs[j].length; }
+	if(b.length < length) throw "XLS Record " + (R && R.n || "??") + " Truncated: " + b.length + " < " + length;
 	return R.f(b, b.length, opts);
 }
 

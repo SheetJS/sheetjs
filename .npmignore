@@ -39,6 +39,7 @@ tmp
 .gitattributes
 .fossaignore
 .spelling
+.eslintignore
 .eslintrc
 .jshintrc
 CONTRIBUTING.md

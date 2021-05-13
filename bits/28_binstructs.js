@@ -177,7 +177,10 @@ var write_UncheckedRfX = write_RfX;
 
 /* [MS-XLS] 2.5.342 ; [MS-XLSB] 2.5.171 */
 /* TODO: error checking, NaN and Infinity values are not valid Xnum */
-function parse_Xnum(data/*::, length*/) { return data.read_shift(8, 'f'); }
+function parse_Xnum(data/*::, length*/) {
+	if(data.length - data.l < 8) throw "XLS Xnum Buffer underflow";
+	return data.read_shift(8, 'f');
+}
 function write_Xnum(data, o) { return (o || new_buf(8)).write_shift(8, data, 'f'); }
 
 /* [MS-XLSB] 2.4.324 BrtColor */

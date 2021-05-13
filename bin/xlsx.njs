@@ -4,6 +4,7 @@
 /* vim: set ts=2 ft=javascript: */
 var n = "xlsx";
 var X = require('../');
+try { X = require('../xlsx.flow'); } catch(e) {}
 require('exit-on-epipe');
 var fs = require('fs'), program = require('commander');
 program

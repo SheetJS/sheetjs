@@ -238,6 +238,8 @@ function parse_ws_xml_sheetviews(data, wb/*:WBWBProps*/) {
 		// $FlowIgnore
 		if(!wb.Views[i]) wb.Views[i] = {};
 		// $FlowIgnore
+		if(+tag.zoomScale) wb.Views[i].zoom = +tag.zoomScale;
+		// $FlowIgnore
 		if(parsexmlbool(tag.rightToLeft)) wb.Views[i].RTL = true;
 	});
 }

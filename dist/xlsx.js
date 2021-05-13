@@ -4,7 +4,7 @@
 /*global global, exports, module, require:false, process:false, Buffer:false, ArrayBuffer:false */
 var XLSX = {};
 function make_xlsx_lib(XLSX){
-XLSX.version = '0.16.9';
+XLSX.version = '0.17.0';
 var current_codepage = 1200, current_ansi = 1252;
 /*global cptable:true, window */
 if(typeof module !== "undefined" && typeof require !== 'undefined') {
@@ -2997,7 +2997,7 @@ function resolve_path(path, base) {
 }
 var XML_HEADER = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\r\n';
 var attregexg=/([^"\s?>\/]+)\s*=\s*((?:")([^"]*)(?:")|(?:')([^']*)(?:')|([^'">\s]+))/g;
-var tagregex=/<[\/\?]?[a-zA-Z0-9:_-]+(?:\s+[^"\s?>\/]+\s*=\s*(?:"[^"]*"|'[^']*'|[^'">\s=]+))*\s?[\/\?]?>/mg;
+var tagregex=/<[\/\?]?[a-zA-Z0-9:_-]+(?:\s+[^"\s?>\/]+\s*=\s*(?:"[^"]*"|'[^']*'|[^'">\s=]+))*\s*[\/\?]?>/mg;
 
 if(!(XML_HEADER.match(tagregex))) tagregex = /<[^>]*>/g;
 var nsregex=/<\w*:/, nsregex2 = /<(\/?)\w+:/;
@@ -3989,7 +3989,10 @@ var write_UncheckedRfX = write_RfX;
 
 /* [MS-XLS] 2.5.342 ; [MS-XLSB] 2.5.171 */
 /* TODO: error checking, NaN and Infinity values are not valid Xnum */
-function parse_Xnum(data) { return data.read_shift(8, 'f'); }
+function parse_Xnum(data) {
+	if(data.length - data.l < 8) throw "XLS Xnum Buffer underflow";
+	return data.read_shift(8, 'f');
+}
 function write_Xnum(data, o) { return (o || new_buf(8)).write_shift(8, data, 'f'); }
 
 /* [MS-XLSB] 2.4.324 BrtColor */
@@ -6519,7 +6522,7 @@ function parse_Lbl(blob, length, opts) {
 	var name = parse_XLUnicodeStringNoCch(blob, cch, opts);
 	if(flags & 0x20) name = XLSLblBuiltIn[name.charCodeAt(0)];
 	var npflen = target - blob.l; if(opts && opts.biff == 2) --npflen;
-	var rgce = target == blob.l || cce === 0 ? [] : parse_NameParsedFormula(blob, npflen, opts, cce);
+	var rgce = (target == blob.l || cce === 0 || !(npflen > 0)) ? [] : parse_NameParsedFormula(blob, npflen, opts, cce);
 	return {
 		chKey: chKey,
 		Name: name,
@@ -6985,7 +6988,7 @@ function dbf_to_aoa(buf, opts) {
 	var /*filedate = new Date(),*/ nrow = 0, fpos = 0;
 	if(ft == 0x02) nrow = d.read_shift(2);
 	/*filedate = new Date(d.read_shift(1) + 1900, d.read_shift(1) - 1, d.read_shift(1));*/d.l += 3;
-	if(ft != 0x02) nrow = d.read_shift(4);
+	if(ft != 0x02) nrow = d.read_shift(4); if(nrow > 1048576) nrow = 1e6;
 	if(ft != 0x02) fpos = d.read_shift(2);
 	var rlen = d.read_shift(2);
 
@@ -7721,7 +7724,6 @@ var PRN = (function() {
 			}
 			// If line ends in \r OR \n
 			else if(str.charCodeAt(5) == 13 || str.charCodeAt(5) == 10 ) {
-				//
 				sep = str.charAt(4); str = str.slice(6);
 			}
 		}
@@ -13441,6 +13443,8 @@ function parse_ws_xml_sheetviews(data, wb) {
 		// $FlowIgnore
 		if(!wb.Views[i]) wb.Views[i] = {};
 		// $FlowIgnore
+		if(+tag.zoomScale) wb.Views[i].zoom = +tag.zoomScale;
+		// $FlowIgnore
 		if(parsexmlbool(tag.rightToLeft)) wb.Views[i].RTL = true;
 	});
 }
@@ -16888,10 +16892,12 @@ function slurp(R, blob, length, opts) {
 	var l = length;
 	var bufs = [];
 	var d = blob.slice(blob.l,blob.l+l);
-	if(opts && opts.enc && opts.enc.insitu) switch(R.n) {
-	case 'BOF': case 'FilePass': case 'FileLock': case 'InterfaceHdr': case 'RRDInfo': case 'RRDHead': case 'UsrExcl': break;
+	if(opts && opts.enc && opts.enc.insitu && d.length > 0) switch(R.n) {
+	case 'BOF': case 'FilePass': case 'FileLock': case 'InterfaceHdr': case 'RRDInfo': case 'RRDHead': case 'UsrExcl': case 'EOF':
+		break;
+	case 'BoundSheet8':
+		break;
 	default:
-		if(d.length === 0) break;
 		opts.enc.insitu(d);
 	}
 	bufs.push(d);
@@ -16902,8 +16908,11 @@ function slurp(R, blob, length, opts) {
 		l = __readUInt16LE(blob,blob.l+2);
 		start = blob.l + 4;
 		if(next.n == 'ContinueFrt') start += 4;
-		else if(next.n.slice(0,11) == 'ContinueFrt') start += 12;
-		bufs.push(blob.slice(start,blob.l+4+l));
+		else if(next.n.slice(0,11) == 'ContinueFrt') {
+			start += 12;
+		}
+		d = blob.slice(start,blob.l+4+l);
+		bufs.push(d);
 		blob.l += 4+l;
 		next = (XLSRecordEnum[__readUInt16LE(blob, blob.l)]);
 	}
@@ -16911,6 +16920,7 @@ function slurp(R, blob, length, opts) {
 	prep_blob(b, 0);
 	var ll = 0; b.lens = [];
 	for(var j = 0; j < bufs.length; ++j) { b.lens.push(ll); ll += bufs[j].length; }
+	if(b.length < length) throw "XLS Record " + (R && R.n || "??") + " Truncated: " + b.length + " < " + length;
 	return R.f(b, b.length, opts);
 }
 

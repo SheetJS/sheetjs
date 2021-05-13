@@ -85,7 +85,7 @@ function dbf_to_aoa(buf, opts)/*:AOA*/ {
 	var /*filedate = new Date(),*/ nrow = 0, fpos = 0;
 	if(ft == 0x02) nrow = d.read_shift(2);
 	/*filedate = new Date(d.read_shift(1) + 1900, d.read_shift(1) - 1, d.read_shift(1));*/d.l += 3;
-	if(ft != 0x02) nrow = d.read_shift(4);
+	if(ft != 0x02) nrow = d.read_shift(4); if(nrow > 1048576) nrow = 1e6;
 	if(ft != 0x02) fpos = d.read_shift(2);
 	var rlen = d.read_shift(2);
 
@@ -822,7 +822,6 @@ var PRN = (function() {
 			}
 			// If line ends in \r OR \n
 			else if(str.charCodeAt(5) == 13 || str.charCodeAt(5) == 10 ) {
-				//
 				sep = str.charAt(4); str = str.slice(6);
 			}
 		}

@@ -697,7 +697,7 @@ function parse_Lbl(blob, length, opts) {
 	var name = parse_XLUnicodeStringNoCch(blob, cch, opts);
 	if(flags & 0x20) name = XLSLblBuiltIn[name.charCodeAt(0)];
 	var npflen = target - blob.l; if(opts && opts.biff == 2) --npflen;
-	var rgce = target == blob.l || cce === 0 ? [] : parse_NameParsedFormula(blob, npflen, opts, cce);
+	var rgce = (target == blob.l || cce === 0 || !(npflen > 0)) ? [] : parse_NameParsedFormula(blob, npflen, opts, cce);
 	return {
 		chKey: chKey,
 		Name: name,
