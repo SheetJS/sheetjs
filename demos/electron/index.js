@@ -15,15 +15,10 @@ const processWb = function(wb) {
 	});
 };
 
-const readFile = function(files) {
+async function readFile(files) {
 	const f = files[0];
-	const reader = new FileReader();
-	reader.onload = function(e) {
-		let data = e.target.result;
-		data = new Uint8Array(data);
-		processWb(XLSX.read(data, {type: 'array'}));
-	};
-	reader.readAsArrayBuffer(f);
+	const data = await f.arrayBuffer();
+	processWb(XLSX.read(data));
 };
 
 const handleReadBtn = async function() {

@@ -81,19 +81,10 @@ app.directive("importSheetJs", [SheetJSImportDirective]);
 function SheetJSImportDirective() {
   return {
     scope: { opts: '=' },
-    link: function ($scope, $elm) {
-      $elm.on('change', function (changeEvent) {
-        var reader = new FileReader();
-
-        reader.onload = function (e) {
-          /* read workbook */
-          var bstr = e.target.result;
-          var workbook = XLSX.read(bstr, {type:'binary'});
-
-          /* DO SOMETHING WITH workbook HERE */
-        };
-
-        reader.readAsBinaryString(changeEvent.target.files[0]);
+    link ($scope, $elm) {
+      $elm.on('change', async evt => {
+        const file = evt.target.files[0];
+        const workbook = XLSX.read(await file.arrayBuffer());
       });
     }
   };

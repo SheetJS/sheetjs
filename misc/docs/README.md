@@ -386,40 +386,32 @@ req.send();
 
 
 
-Drag-and-drop uses the HTML5 `FileReader` API.
+Drag-and-drop
 
 ```js
 function handleDrop(e) {
   e.stopPropagation(); e.preventDefault();
-  var files = e.dataTransfer.files, f = files[0];
-  var reader = new FileReader();
-  reader.onload = function(e) {
-    var data = new Uint8Array(e.target.result);
-    var workbook = XLSX.read(data, {type: 'array'});
-
+  var file = e.dataTransfer.files[0];
+  if (file) {
+    var workbook = XLSX.read(await file.arrayBuffer());
     /* DO SOMETHING WITH workbook HERE */
-  };
-  reader.readAsArrayBuffer(f);
+  }
 }
 drop_dom_element.addEventListener('drop', handleDrop, false);
 ```
 
 
 
-Data from file input elements can be processed using the same `FileReader` API
+Data from file input elements can be processed using `blob.arrayBuffer()`
 as in the drag-and-drop example:
 
 ```js
-function handleFile(e) {
-  var files = e.target.files, f = files[0];
-  var reader = new FileReader();
-  reader.onload = function(e) {
-    var data = new Uint8Array(e.target.result);
-    var workbook = XLSX.read(data, {type: 'array'});
-
+async function handleFile(e) {
+  var file = e.target.files[0];
+  if (file) {
+    var workbook = XLSX.read(await file.arrayBuffer());
     /* DO SOMETHING WITH workbook HERE */
-  };
-  reader.readAsArrayBuffer(f);
+  }
 }
 input_dom_element.addEventListener('change', handleFile, false);
 ```

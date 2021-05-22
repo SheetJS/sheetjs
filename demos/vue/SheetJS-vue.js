@@ -16,43 +16,28 @@ var SJSTemplate = [
 Vue.component('html-preview', {
 	template: SJSTemplate,
 	methods: {
-		onchange: function(evt) {
-			var file;
-			var files = evt.target.files;
+		async onchange (evt) {
+			var file = evt.target.files[0];
 
-			if (!files || files.length == 0) return;
+			if (!file) return;
 
-			file = files[0];
+			var buffer = await file.arrayBuffer();
+			/* read workbook */
+			var wb = XLSX.read(buffer);
 
-			var reader = new FileReader();
-			reader.onload = function (e) {
-				// pre-process data
-				var binary = "";
-				var bytes = new Uint8Array(e.target.result);
-				var length = bytes.byteLength;
-				for (var i = 0; i < length; i++) {
-					binary += String.fromCharCode(bytes[i]);
-				}
+			/* grab first sheet */
+			var wsname = wb.SheetNames[0];
+			var ws = wb.Sheets[wsname];
 
-				/* read workbook */
-				var wb = XLSX.read(binary, {type: 'binary'});
+			/* generate HTML */
+			var HTML = XLSX.utils.sheet_to_html(ws);
 
-				/* grab first sheet */
-				var wsname = wb.SheetNames[0];
-				var ws = wb.Sheets[wsname];
-
-				/* generate HTML */
-				var HTML = XLSX.utils.sheet_to_html(ws);
-
-				/* update table */
-				document.getElementById('out-table').innerHTML = HTML;
-				/* show export button */
-				document.getElementById('export-table').style.visibility = "visible";
-			};
-
-			reader.readAsArrayBuffer(file);
+			/* update table */
+			document.getElementById('out-table').innerHTML = HTML;
+			/* show export button */
+			document.getElementById('export-table').style.visibility = "visible";
 		},
-		onexport: function(evt) {
+		onexport (evt) {
 			/* generate workbook object from table */
 			var wb = XLSX.utils.table_to_book(document.getElementById('out-table'));
 			/* generate file and force a download*/

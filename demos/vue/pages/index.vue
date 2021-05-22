@@ -54,12 +54,10 @@ export default {
 		_suppress(evt) { evt.stopPropagation(); evt.preventDefault(); },
 		_drop(evt) {
 			evt.stopPropagation(); evt.preventDefault();
-			const files = evt.dataTransfer.files;
-			if(files && files[0]) this._file(files[0]);
+			this._file(evt.target.files[0]);
 		},
 		_change(evt) {
-			const files = evt.target.files;
-			if(files && files[0]) this._file(files[0]);
+			this._file(evt.target.files[0]);
 		},
 		_export(evt) {
 			/* convert state to workbook */
@@ -69,23 +67,18 @@ export default {
 			/* generate file and send to client */
 			XLSX.writeFile(wb, "sheetjs.xlsx");
 		},
-		_file(file) {
-			/* Boilerplate to set up FileReader */
-			const reader = new FileReader();
-			reader.onload = (e) => {
-				/* Parse data */
-				const bstr = e.target.result;
-				const wb = XLSX.read(bstr, {type:'binary'});
-				/* Get first worksheet */
-				const wsname = wb.SheetNames[0];
-				const ws = wb.Sheets[wsname];
-				/* Convert array of arrays */
-				const data = XLSX.utils.sheet_to_json(ws, {header:1});
-				/* Update state */
-				this.data = data;
-				this.cols = make_cols(ws['!ref']);
-			};
-			reader.readAsBinaryString(file);
+		async _file(file) {
+			if (!file) return;
+			const buffer = await file.arrayBuffer();
+			const wb = XLSX.read(buffer);
+			/* Get first worksheet */
+			const wsname = wb.SheetNames[0];
+			const ws = wb.Sheets[wsname];
+			/* Convert array of arrays */
+			const data = XLSX.utils.sheet_to_json(ws, {header:1});
+			/* Update state */
+			this.data = data;
+			this.cols = make_cols(ws['!ref']);
 		}
 	}
 };

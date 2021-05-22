@@ -9,23 +9,18 @@ function SheetJSApp() {
 	const [data, setData] = React.useState([]);
 	const [cols, setCols] = React.useState([]);
 
-	const handleFile = (file) => {
-		const reader = new FileReader();
-		const rABS = !!reader.readAsBinaryString;
-		reader.onload = (e) => {
-			/* Parse data */
-			const bstr = e.target.result;
-			const wb = XLSX.read(bstr, {type:rABS ? 'binary' : 'array'});
-			/* Get first worksheet */
-			const wsname = wb.SheetNames[0];
-			const ws = wb.Sheets[wsname];
-			/* Convert array of arrays */
-			const data = XLSX.utils.sheet_to_json(ws, {header:1});
-			/* Update state */
-			setData(data);
-			setCols(make_cols(ws['!ref']))
-		};
-		if(rABS) reader.readAsBinaryString(file); else reader.readAsArrayBuffer(file);
+	const handleFile = async (file) => {
+		const buffer = await file.arrayBuffer();
+		/* Parse data */
+		const wb = XLSX.read(buffer);
+		/* Get first worksheet */
+		const wsname = wb.SheetNames[0];
+		const ws = wb.Sheets[wsname];
+		/* Convert array of arrays */
+		const data = XLSX.utils.sheet_to_json(ws, {header:1});
+		/* Update state */
+		setData(data);
+		setCols(make_cols(ws['!ref']));
 	}
 
 	const exportFile = () => {
@@ -70,9 +65,9 @@ function DragDropFile({ handleFile, children }) {
 	};
 
 	return (
-		<div 
-			onDrop={handleDrop} 
-			onDragEnter={suppress} 
+		<div
+			onDrop={handleDrop}
+			onDragEnter={suppress}
 			onDragOver={suppress}
 		>
 		{children}
@@ -97,12 +92,12 @@ function DataInput({ handleFile }) {
 			<div className="form-group">
 				<label htmlFor="file">Drag or choose a spreadsheet file</label>
 				<br />
-				<input 
-					type="file" 
-					className="form-control" 
-					id="file" 
-					accept={SheetJSFT} 
-					onChange={handleChange} 
+				<input
+					type="file"
+					className="form-control"
+					id="file"
+					accept={SheetJSFT}
+					onChange={handleChange}
 				/>
 			</div>
 		</form>

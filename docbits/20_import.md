@@ -101,20 +101,15 @@ req.send();
 <details>
   <summary><b>Browser drag-and-drop</b> (click to show)</summary>
 
-Drag-and-drop uses the HTML5 `FileReader` API.
+Drag-and-drop uses the HTML5 `blob.arrayBuffer()`.
 
 ```js
-function handleDrop(e) {
-  e.stopPropagation(); e.preventDefault();
-  var files = e.dataTransfer.files, f = files[0];
-  var reader = new FileReader();
-  reader.onload = function(e) {
-    var data = new Uint8Array(e.target.result);
-    var workbook = XLSX.read(data, {type: 'array'});
-
-    /* DO SOMETHING WITH workbook HERE */
-  };
-  reader.readAsArrayBuffer(f);
+async function handleDrop(evt) {
+  evt.stopPropagation(); evt.preventDefault();
+  var file = evt.dataTransfer.files[0];
+  if (!file) return
+  var workbook = XLSX.read(await file.arrayBuffer());
+  /* DO SOMETHING WITH workbook HERE */
 }
 drop_dom_element.addEventListener('drop', handleDrop, false);
 ```
@@ -124,20 +119,15 @@ drop_dom_element.addEventListener('drop', handleDrop, false);
 <details>
   <summary><b>Browser file upload form element</b> (click to show)</summary>
 
-Data from file input elements can be processed using the same `FileReader` API
+Data from file input elements can be processed using the same `blob.arrayBuffer()`
 as in the drag-and-drop example:
 
 ```js
-function handleFile(e) {
-  var files = e.target.files, f = files[0];
-  var reader = new FileReader();
-  reader.onload = function(e) {
-    var data = new Uint8Array(e.target.result);
-    var workbook = XLSX.read(data, {type: 'array'});
-
-    /* DO SOMETHING WITH workbook HERE */
-  };
-  reader.readAsArrayBuffer(f);
+function handleFile(evt) {
+  var file = evt.dataTransfer.files[0];
+  if (!file) return
+  var workbook = XLSX.read(await file.arrayBuffer());
+  /* DO SOMETHING WITH workbook HERE */
 }
 input_dom_element.addEventListener('change', handleFile, false);
 ```
@@ -176,4 +166,3 @@ On Windows XP and up you can get the Base64 encoding using `certutil`:
 </details>
 
 - <http://oss.sheetjs.com/js-xlsx/ajax.html> XMLHttpRequest
-

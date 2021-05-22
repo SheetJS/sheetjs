@@ -35,9 +35,9 @@ export class HomePage {
   data: any[][] = [[1,2,3],[4,5,6]];
   constructor(public file: File) {};
 
-  read(bstr: string) {
+  read(buffer: ArrayBuffer) {
     /* read workbook */
-    const wb: XLSX.WorkBook = XLSX.read(bstr, {type: 'binary'});
+    const wb: XLSX.WorkBook = XLSX.read(buffer);
 
     /* grab first sheet */
     const wsname: string = wb.SheetNames[0];
@@ -59,16 +59,12 @@ export class HomePage {
   };
 
   /* File Input element for browser */
-  onFileChange(evt: any) {
+  async onFileChange(evt: any) {
     /* wire up file reader */
     const target: DataTransfer = <DataTransfer>(evt.target);
     if (target.files.length !== 1) throw new Error('Cannot use multiple files');
-    const reader: FileReader = new FileReader();
-    reader.onload = (e: any) => {
-      const bstr: string = e.target.result;
-      this.read(bstr);
-    };
-    reader.readAsBinaryString(target.files[0]);
+    const buffer: ArrayBuffer = await target.files[0].arrayBuffer()
+    this.read(buffer);
   };
 
   /* Import button for mobile */
@@ -78,8 +74,8 @@ export class HomePage {
       const dentry = await this.file.resolveDirectoryUrl(target);
       const url: string = dentry.nativeURL || '';
       alert(`Attempting to read SheetJSIonic.xlsx from ${url}`)
-      const bstr: string = await this.file.readAsBinaryString(url, "SheetJSIonic.xlsx");
-      this.read(bstr);
+      const buffer: ArrayBuffer = await this.file.readAsArrayBuffer(url, "SheetJSIonic.xlsx");
+      this.read(buffer);
     } catch(e) {
       const m: string = e.message;
       alert(m.match(/It was determined/) ? "Use File Input control" : `Error: ${m}`);
@@ -112,4 +108,3 @@ export class HomePage {
     }
   };
 }
-

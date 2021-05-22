@@ -35,9 +35,9 @@ The logic from within the `FileReader` is split as follows:
 
 ```js
 // CLIENT SIDE
-const bstr = e.target.result;
+const buffer = await file.arrayBuffer();
 // SERVER SIDE
-const wb = XLSX.read(bstr, { type: 'binary' });
+const wb = XLSX.read(buffer);
 // CLIENT SIDE
 const ws = wb.Sheets[wb.SheetNames[0]];
 const html = XLSX.utils.sheet_to_html(ws, { editable: true });

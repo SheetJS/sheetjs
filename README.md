@@ -415,20 +415,13 @@ req.send();
 <details>
   <summary><b>Browser drag-and-drop</b> (click to show)</summary>
 
-Drag-and-drop uses the HTML5 `FileReader` API.
+Drag-and-drop to read blobs.
 
 ```js
-function handleDrop(e) {
-  e.stopPropagation(); e.preventDefault();
-  var files = e.dataTransfer.files, f = files[0];
-  var reader = new FileReader();
-  reader.onload = function(e) {
-    var data = new Uint8Array(e.target.result);
-    var workbook = XLSX.read(data, {type: 'array'});
-
-    /* DO SOMETHING WITH workbook HERE */
-  };
-  reader.readAsArrayBuffer(f);
+async function handleDrop(evt) {
+  evt.stopPropagation(); evt.preventDefault();
+  const file = evt.dataTransfer.files[0];
+  const workbook = XLSX.read(await file.arrayBuffer());
 }
 drop_dom_element.addEventListener('drop', handleDrop, false);
 ```
@@ -438,20 +431,13 @@ drop_dom_element.addEventListener('drop', handleDrop, false);
 <details>
   <summary><b>Browser file upload form element</b> (click to show)</summary>
 
-Data from file input elements can be processed using the same `FileReader` API
+Data from file input elements can be processed the same way
 as in the drag-and-drop example:
 
 ```js
-function handleFile(e) {
-  var files = e.target.files, f = files[0];
-  var reader = new FileReader();
-  reader.onload = function(e) {
-    var data = new Uint8Array(e.target.result);
-    var workbook = XLSX.read(data, {type: 'array'});
-
-    /* DO SOMETHING WITH workbook HERE */
-  };
-  reader.readAsArrayBuffer(f);
+async function handleFile(evt) {
+  const file = evt.target.files[0];
+  const workbook = XLSX.read(await file.arrayBuffer());
 }
 input_dom_element.addEventListener('change', handleFile, false);
 ```

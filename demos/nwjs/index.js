@@ -24,18 +24,10 @@ _gaq.push(['_trackPageview']);
 	var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
 })();
 
-var do_file = (function() {
-	return function do_file(files) {
-		var f = files[0];
-		var reader = new FileReader();
-		reader.onload = function(e) {
-			var data = e.target.result;
-			data = new Uint8Array(data);
-			process_wb(XLSX.read(data, {type: 'array'}));
-		};
-		reader.readAsArrayBuffer(f);
-	};
-})();
+async function do_file(files) {
+	var buffer = await files[0].arrayBuffer();
+	process_wb(XLSX.read(buffer));
+}
 
 (function() {
 	var drop = document.getElementById('drop');
