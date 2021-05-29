@@ -29,7 +29,7 @@ function safegetzipfile(zip, file/*:string*/) {
 	var k = zip.FullPaths || keys(zip.files);
 	var f = file.toLowerCase(), g = f.replace(/\//g,'\\');
 	for(var i=0; i<k.length; ++i) {
-		var n = k[i].toLowerCase();
+		var n = (zip.FullPaths ? k[i].replace(/^Root Entry[\/]/,"") : k[i]).toLowerCase();
 		if(f == n || g == n) return zip.files[k[i]];
 	}
 	return null;
