@@ -241,7 +241,7 @@ An appropriate version for each dependency is included in the dist/ directory.
 
 The complete single-file version is generated at `dist/xlsx.full.min.js`
 
-A slimmer build with XLSX / HTML support is generated at `dist/xlsx.mini.min.js`
+A slimmer build with XLSX / HTML support is generated at `dist/xlsx.mini.min.js`. Compared to full build the codepage library is skipped (no support for XLS encodings), XLSX compression option is not available (full uses a forked jszip; mini uses the cfb library for zip support), no support for XLSB / XLS / Lotus 1-2-3 / ODS / SpreadsheetML 2003, and node stream utils are removed.
 
 Webpack and Browserify builds include optional modules by default.  Webpack can
 be configured to remove support with `resolve.alias`:
