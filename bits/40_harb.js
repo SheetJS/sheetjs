@@ -89,7 +89,7 @@ function dbf_to_aoa(buf, opts)/*:AOA*/ {
 	if(ft != 0x02) fpos = d.read_shift(2);
 	var rlen = d.read_shift(2);
 
-	var /*flags = 0,*/ current_cp = 1252;
+	var /*flags = 0,*/ current_cp = opts.codepage || 1252;
 	if(ft != 0x02) {
 	d.l+=16;
 	/*flags = */d.read_shift(1);
