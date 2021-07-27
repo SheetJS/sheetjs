@@ -7735,7 +7735,7 @@ var PRN = (function() {
 		function finish_cell() {
 			var s = str.slice(start, end);
 			var cell = ({});
-			if(s.charAt(0) == '"' && s.charAt(s.length - 1) == '"') s = s.slice(1,-1).replace(/""/g,'"');
+			if (s.charAt(0) == '"' && s.charAt(s.length - 1) == '"') s = s.slice(1,-1).replace(/""/g,'"');
 			if(s.length === 0) cell.t = 'z';
 			else if(o.raw) { cell.t = 's'; cell.v = s; }
 			else if(s.trim().length === 0) { cell.t = 's'; cell.v = s; }
@@ -7767,7 +7767,7 @@ var PRN = (function() {
 			if(cc == sepcc) ++C; else { C = 0; ++R; if(o.sheetRows && o.sheetRows <= R) return true; }
 		}
 		outer: for(;end < str.length;++end) switch((cc=str.charCodeAt(end))) {
-			case 0x22: instr = !instr; break;
+			case 0x22: if (str.charCodeAt(start) === 0x22) instr = !instr; break;
 			case sepcc: case 0x0a: case 0x0d: if(!instr && finish_cell()) break outer; break;
 			default: break;
 		}
