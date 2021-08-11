@@ -4809,7 +4809,9 @@ var dbf_codepage_map = {
 	/*::[*/0x4D/*::]*/:   936,           /*::[*/0x4E/*::]*/:   949,
 	/*::[*/0x4F/*::]*/:   950,           /*::[*/0x50/*::]*/:   874,
 	/*::[*/0x57/*::]*/:  1252,           /*::[*/0x58/*::]*/:  1252,
-	/*::[*/0x59/*::]*/:  1252,
+	/*::[*/0x59/*::]*/:  1252,           /*::[*/0x6C/*::]*/:   863,
+	/*::[*/0x86/*::]*/:   737,           /*::[*/0x87/*::]*/:   852,
+	/*::[*/0x88/*::]*/:   857,           /*::[*/0xCC/*::]*/:  1257,
 
 	/*::[*/0xFF/*::]*/: 16969
 };
@@ -4833,7 +4835,6 @@ var DBF_SUPPORTED_VERSIONS = [0x02, 0x03, 0x30, 0x31, 0x83, 0x8B, 0x8C, 0xF5];
 /* TODO: find an actual specification */
 function dbf_to_aoa(buf, opts)/*:AOA*/ {
 	var out/*:AOA*/ = [];
-	/* TODO: browser based */
 	var d/*:Block*/ = (new_raw_buf(1)/*:any*/);
 	switch(opts.type) {
 		case 'base64': d = s2a(Base64.decode(buf)); break;
@@ -4842,44 +4843,55 @@ function dbf_to_aoa(buf, opts)/*:AOA*/ {
 		case 'array': d = buf; break;
 	}
 	prep_blob(d, 0);
+
 	/* header */
 	var ft = d.read_shift(1);
-	var memo = false;
+	var memo = !!(ft & 0x88);
 	var vfp = false, l7 = false;
 	switch(ft) {
-		case 0x02: case 0x03: break;
-		case 0x30: vfp = true; memo = true; break;
-		case 0x31: vfp = true; break;
-		case 0x83: memo = true; break;
-		case 0x8B: memo = true; break;
-		case 0x8C: memo = true; l7 = true; break;
-		case 0xF5: memo = true; break;
+		case 0x02: break; // dBASE II
+		case 0x03: break; // dBASE III
+		case 0x30: vfp = true; memo = true; break; // VFP
+		case 0x31: vfp = true; memo = true; break; // VFP with autoincrement
+		// 0x43 dBASE IV SQL table files
+		// 0x63 dBASE IV SQL system files
+		case 0x83: break; // dBASE III with memo
+		case 0x8B: break; // dBASE IV with memo
+		case 0x8C: l7 = true; break; // dBASE Level 7 with memo
+		// case 0xCB dBASE IV SQL table files with memo
+		case 0xF5: break; // FoxPro 2.x with memo
+		// case 0xFB FoxBASE
 		default: throw new Error("DBF Unsupported Version: " + ft.toString(16));
 	}
-	var /*filedate = new Date(),*/ nrow = 0, fpos = 0;
+
+	var nrow = 0, fpos = 0x0209;
 	if(ft == 0x02) nrow = d.read_shift(2);
-	/*filedate = new Date(d.read_shift(1) + 1900, d.read_shift(1) - 1, d.read_shift(1));*/d.l += 3;
-	if(ft != 0x02) nrow = d.read_shift(4); if(nrow > 1048576) nrow = 1e6;
-	if(ft != 0x02) fpos = d.read_shift(2);
-	var rlen = d.read_shift(2);
+	d.l += 3; // dBASE II stores DDMMYY date, others use YYMMDD
+	if(ft != 0x02) nrow = d.read_shift(4);
+	if(nrow > 1048576) nrow = 1e6;
 
-	var /*flags = 0,*/ current_cp = 1252;
-	if(ft != 0x02) {
-	d.l+=16;
-	/*flags = */d.read_shift(1);
-	//if(memo && ((flags & 0x02) === 0)) throw new Error("DBF Flags " + flags.toString(16) + " ft " + ft.toString(16));
+	if(ft != 0x02) fpos = d.read_shift(2); // header length
+	var rlen = d.read_shift(2); // record length
 
-	/* codepage present in FoxPro */
-	if(d[d.l] !== 0) current_cp = dbf_codepage_map[d[d.l]];
-	d.l+=1;
+	var /*flags = 0,*/ current_cp = opts.codepage || 1252;
+	if(ft != 0x02) { // 20 reserved bytes
+		d.l+=16;
+		/*flags = */d.read_shift(1);
+		//if(memo && ((flags & 0x02) === 0)) throw new Error("DBF Flags " + flags.toString(16) + " ft " + ft.toString(16));
 
-	d.l+=2;
+		/* codepage present in FoxPro and dBASE Level 7 */
+		if(d[d.l] !== 0) current_cp = dbf_codepage_map[d[d.l]];
+		d.l+=1;
+
+		d.l+=2;
 	}
-	if(l7) d.l += 36;
+	if(l7) d.l += 36; // Level 7: 32 byte "Language driver name", 4 byte reserved
+
 /*:: type DBFField = { name:string; len:number; type:string; } */
 	var fields/*:Array<DBFField>*/ = [], field/*:DBFField*/ = ({}/*:any*/);
-	var hend = fpos - 10 - (vfp ? 264 : 0), ww = l7 ? 32 : 11;
-	while(ft == 0x02 ? d.l < d.length && d[d.l] != 0x0d: d.l < hend) {
+	var hend = Math.min(d.length, (ft == 0x02 ? 0x209 : (fpos - 10 - (vfp ? 264 : 0))));
+	var ww = l7 ? 32 : 11;
+	while(d.l < hend && d[d.l] != 0x0d) {
 		field = ({}/*:any*/);
 		field.name = cptable.utils.decode(current_cp, d.slice(d.l, d.l+ww)).replace(/[\u0000\r\n].*$/g,"");
 		d.l += ww;
@@ -4891,42 +4903,45 @@ function dbf_to_aoa(buf, opts)/*:AOA*/ {
 		if(field.name.length) fields.push(field);
 		if(ft != 0x02) d.l += l7 ? 13 : 14;
 		switch(field.type) {
-			case 'B': // VFP Double
+			case 'B': // Double (VFP) / Binary (dBASE L7)
 				if((!vfp || field.len != 8) && opts.WTF) console.log('Skipping ' + field.name + ':' + field.type);
 				break;
-			case 'G': // General
-			case 'P': // Picture
+			case 'G': // General (FoxPro and dBASE L7)
+			case 'P': // Picture (FoxPro and dBASE L7)
 				if(opts.WTF) console.log('Skipping ' + field.name + ':' + field.type);
 				break;
-			case 'C': // character
-			case 'D': // date
-			case 'F': // floating point
-			case 'I': // long
-			case 'L': // boolean
-			case 'M': // memo
-			case 'N': // number
-			case 'O': // double
-			case 'T': // datetime
-			case 'Y': // currency
-			case '0': // VFP _NullFlags
-			case '@': // timestamp
-			case '+': // autoincrement
+			case '+': // Autoincrement (dBASE L7 only)
+			case '0': // _NullFlags (VFP only)
+			case '@': // Timestamp (dBASE L7 only)
+			case 'C': // Character (dBASE II)
+			case 'D': // Date (dBASE III)
+			case 'F': // Float (dBASE IV)
+			case 'I': // Long (VFP and dBASE L7)
+			case 'L': // Logical (dBASE II)
+			case 'M': // Memo (dBASE III)
+			case 'N': // Number (dBASE II)
+			case 'O': // Double (dBASE L7 only)
+			case 'T': // Datetime (VFP only)
+			case 'Y': // Currency (VFP only)
 				break;
 			default: throw new Error('Unknown Field Type: ' + field.type);
 		}
 	}
+
 	if(d[d.l] !== 0x0D) d.l = fpos-1;
-	else if(ft == 0x02) d.l = 0x209;
-	if(ft != 0x02) {
-		if(d.read_shift(1) !== 0x0D) throw new Error("DBF Terminator not found " + d.l + " " + d[d.l]);
-		d.l = fpos;
-	}
+	if(d.read_shift(1) !== 0x0D) throw new Error("DBF Terminator not found " + d.l + " " + d[d.l]);
+	d.l = fpos;
+
 	/* data */
 	var R = 0, C = 0;
 	out[0] = [];
 	for(C = 0; C != fields.length; ++C) out[0][C] = fields[C].name;
 	while(nrow-- > 0) {
-		if(d[d.l] === 0x2A) { d.l+=rlen; continue; }
+		if(d[d.l] === 0x2A) {
+			// TODO: record marked as deleted -- create a hidden row?
+			d.l+=rlen;
+			continue;
+		}
 		++d.l;
 		out[++R] = []; C = 0;
 		for(C = 0; C != fields.length; ++C) {
@@ -4935,8 +4950,8 @@ function dbf_to_aoa(buf, opts)/*:AOA*/ {
 			var s = cptable.utils.decode(current_cp, dd);
 			switch(fields[C].type) {
 				case 'C':
-					out[R][C] = cptable.utils.decode(current_cp, dd);
-					out[R][C] = out[R][C].trim();
+					// NOTE: it is conventional to write '  /  /  ' for empty dates
+					if(s.trim().length) out[R][C] = s.replace(/\s+$/,"");
 					break;
 				case 'D':
 					if(s.length === 8) out[R][C] = new Date(+s.slice(0,4), +s.slice(4,6)-1, +s.slice(6,8));
@@ -4944,18 +4959,24 @@ function dbf_to_aoa(buf, opts)/*:AOA*/ {
 					break;
 				case 'F': out[R][C] = parseFloat(s.trim()); break;
 				case '+': case 'I': out[R][C] = l7 ? dd.read_shift(-4, 'i') ^ 0x80000000 : dd.read_shift(4, 'i'); break;
-				case 'L': switch(s.toUpperCase()) {
+				case 'L': switch(s.trim().toUpperCase()) {
 					case 'Y': case 'T': out[R][C] = true; break;
 					case 'N': case 'F': out[R][C] = false; break;
-					case ' ': case '?': out[R][C] = false; break; /* NOTE: technically uninitialized */
+					case '': case '?': break;
 					default: throw new Error("DBF Unrecognized L:|" + s + "|");
 					} break;
 				case 'M': /* TODO: handle memo files */
 					if(!memo) throw new Error("DBF Unexpected MEMO for type " + ft.toString(16));
 					out[R][C] = "##MEMO##" + (l7 ? parseInt(s.trim(), 10): dd.read_shift(4));
 					break;
-				case 'N': out[R][C] = +s.replace(/\u0000/g,"").trim(); break;
-				case '@': out[R][C] = new Date(dd.read_shift(-8, 'f') - 0x388317533400); break;
+				case 'N':
+					s = s.replace(/\u0000/g,"").trim();
+					// NOTE: dBASE II interprets "  .  " as 0
+					if(s && s != ".") out[R][C] = +s || 0; break;
+				case '@':
+					// NOTE: dBASE specs appear to be incorrect
+					out[R][C] = new Date(dd.read_shift(-8, 'f') - 0x388317533400);
+					break;
 				case 'T': out[R][C] = new Date((dd.read_shift(4) - 0x253D8C) * 0x5265C00 + dd.read_shift(4)); break;
 				case 'Y': out[R][C] = dd.read_shift(4,'i')/1e4; break;
 				case 'O': out[R][C] = -dd.read_shift(-8, 'f'); break;
@@ -5148,7 +5169,7 @@ var SYLK = (function() {
 					formats.push(rstr.slice(3).replace(/;;/g, ";"));
 				break;
 			case 'C':
-			var C_seen_K = false, C_seen_X = false;
+			var C_seen_K = false, C_seen_X = false, C_seen_S = false, C_seen_E = false, _R = -1, _C = -1;
 			for(rj=1; rj<record.length; ++rj) switch(record[rj].charAt(0)) {
 				case 'X': C = parseInt(record[rj].slice(1))-1; C_seen_X = true; break;
 				case 'Y':
@@ -5170,12 +5191,30 @@ var SYLK = (function() {
 					C_seen_K = true;
 					break;
 				case 'E':
+					C_seen_E = true;
 					var formula = rc_to_a1(record[rj].slice(1), {r:R,c:C});
 					arr[R][C] = [arr[R][C], formula];
 					break;
+				case 'S':
+					C_seen_S = true;
+					arr[R][C] = [arr[R][C], "S5S"];
+					break;
+				case 'G': break; // unknown
+				case 'R': _R = parseInt(record[rj].slice(1))-1; break;
+				case 'C': _C = parseInt(record[rj].slice(1))-1; break;
 				default: if(opts && opts.WTF) throw new Error("SYLK bad record " + rstr);
 			}
-			if(C_seen_K) { arr[R][C] = val; next_cell_format = null; }
+			if(C_seen_K) {
+				if(arr[R][C] && arr[R][C].length == 2) arr[R][C][0] = val;
+				else arr[R][C] = val;
+				next_cell_format = null;
+			}
+			if(C_seen_S) {
+				if(C_seen_E) throw new Error("SYLK shared formula cannot have own formula");
+				var shrbase = _R > -1 && arr[_R][_C];
+				if(!shrbase || !shrbase[1]) throw new Error("SYLK shared formula cannot find base");
+				arr[R][C][1] = shift_formula_str(shrbase[1], {r: R - _R, c: C - _C});
+			}
 			break;
 			case 'F':
 			var F_seen = 0;
@@ -5510,9 +5549,9 @@ var ETH = (function() {
 var PRN = (function() {
 	function set_text_arr(data/*:string*/, arr/*:AOA*/, R/*:number*/, C/*:number*/, o/*:any*/) {
 		if(o.raw) arr[R][C] = data;
+		else if(data === ""){/* empty */}
 		else if(data === 'TRUE') arr[R][C] = true;
 		else if(data === 'FALSE') arr[R][C] = false;
-		else if(data === ""){/* empty */}
 		else if(!isNaN(fuzzynum(data))) arr[R][C] = fuzzynum(data);
 		else if(!isNaN(fuzzydate(data).getDate())) arr[R][C] = parseDate(data);
 		else arr[R][C] = data;
@@ -5671,7 +5710,7 @@ var PRN = (function() {
 			default: throw new Error("Unrecognized type " + opts.type);
 		}
 		if(bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF) str = utf8read(str.slice(3));
-		else if((opts.type == 'binary') && typeof cptable !== 'undefined' && opts.codepage)  str = cptable.utils.decode(opts.codepage, cptable.utils.encode(1252,str));
+		else if((opts.type == 'binary') && typeof cptable !== 'undefined' && opts.codepage)  str = cptable.utils.decode(opts.codepage, cptable.utils.encode(28591,str));
 		if(str.slice(0,19) == "socialcalc:version:") return ETH.to_sheet(opts.type == 'string' ? str : utf8read(str), opts);
 		return prn_to_sheet_str(str, opts);
 	}
@@ -10040,7 +10079,10 @@ function readSync(data/*:RawData*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
 		case 0xD0: if(n[1] === 0xCF && n[2] === 0x11 && n[3] === 0xE0 && n[4] === 0xA1 && n[5] === 0xB1 && n[6] === 0x1A && n[7] === 0xE1) return read_cfb(CFB.read(d, o), o); break;
 		case 0x09: if(n[1] <= 0x04) return parse_xlscfb(d, o); break;
 		case 0x3C: return parse_xlml(d, o);
-		case 0x49: if(n[1] === 0x44) return read_wb_ID(d, o); break;
+		case 0x49:
+			if(n[1] === 0x49 && n[2] === 0x2a && n[3] === 0x00) throw new Error("TIFF Image File is not a spreadsheet");
+			if(n[1] === 0x44) return read_wb_ID(d, o);
+			break;
 		case 0x54: if(n[1] === 0x41 && n[2] === 0x42 && n[3] === 0x4C) return DIF.to_workbook(d, o); break;
 		case 0x50: return (n[1] === 0x4B && n[2] < 0x09 && n[3] < 0x09) ? read_zip(d, o) : read_prn(data, d, o, str);
 		case 0xEF: return n[3] === 0x3C ? parse_xlml(d, o) : read_prn(data, d, o, str);

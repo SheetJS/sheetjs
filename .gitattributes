@@ -1,3 +1,6 @@
+*.*s        linguist-documentation
+*.html      linguist-documentation
+
 *.md        text eol=lf
 bits/*.js   text eol=lf
 test.js     text eol=lf

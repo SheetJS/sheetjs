@@ -1,6 +1,6 @@
 ## Common Spreadsheet Format
 
-js-xlsx conforms to the Common Spreadsheet Format (CSF):
+SheetJS conforms to the Common Spreadsheet Format (CSF):
 
 ### General Structures
 

@@ -34,7 +34,7 @@ be configured to remove support with `resolve.alias`:
 ### ECMAScript 5 Compatibility
 
 Since the library uses functions like `Array#forEach`, older browsers require
-[shims to provide missing functions](http://oss.sheetjs.com/js-xlsx/shim.js).
+[shims to provide missing functions](http://oss.sheetjs.com/sheetjs/shim.js).
 
 To use the shim, add the shim before the script tag that loads `xlsx.js`:
 

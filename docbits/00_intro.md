@@ -1,4 +1,4 @@
-# [SheetJS js-xlsx](http://sheetjs.com)
+# [SheetJS](http://sheetjs.com)
 
 Parser and writer for various spreadsheet formats.  Pure-JS cleanroom
 implementation from official specifications, related documents, and test files.
@@ -36,7 +36,6 @@ enhancements, additional features like styling, and dedicated support.
 
 [![Build Status](https://saucelabs.com/browser-matrix/sheetjs.svg)](https://saucelabs.com/u/sheetjs)
 
-[![Build Status](https://travis-ci.org/SheetJS/sheetjs.svg?branch=master)](https://travis-ci.org/SheetJS/sheetjs)
 [![Build Status](https://semaphoreci.com/api/v1/sheetjs/sheetjs/branches/master/shields_badge.svg)](https://semaphoreci.com/sheetjs/sheetjs)
 [![Coverage Status](http://img.shields.io/coveralls/SheetJS/sheetjs/master.svg)](https://coveralls.io/r/SheetJS/sheetjs?branch=master)
 [![Dependencies Status](https://david-dm.org/sheetjs/sheetjs/status.svg)](https://david-dm.org/sheetjs/sheetjs)

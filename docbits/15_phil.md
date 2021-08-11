@@ -8,7 +8,7 @@ Third-party libraries either supported one format, or they involved a separate
 set of classes for each supported file type.  Even though XLSB was introduced in
 Excel 2007, nothing outside of SheetJS or Excel supported the format.
 
-To promote a format-agnostic view, js-xlsx starts from a pure-JS representation
+To promote a format-agnostic view, SheetJS starts from a pure-JS representation
 that we call the ["Common Spreadsheet Format"](#common-spreadsheet-format).
 Emphasizing a uniform object representation enables new features like format
 conversion (reading an XLSX template and saving as XLS) and circumvents the mess

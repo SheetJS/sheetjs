@@ -67,7 +67,7 @@ error if the workbook is empty.
 
 - <http://sheetjs.com/demos/modify.html> read + modify + write files
 
-- <https://github.com/SheetJS/js-xlsx/blob/HEAD/bin/xlsx.njs> node
+- <https://github.com/SheetJS/sheetjs/blob/HEAD/bin/xlsx.njs> node
 
 The node version installs a command line tool `xlsx` which can read spreadsheet
 files and output the contents in various formats.  The source is available at

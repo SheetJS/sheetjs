@@ -1,4 +1,4 @@
-# [SheetJS js-xlsx](http://sheetjs.com)
+# [SheetJS](http://sheetjs.com)
 
 Parser and writer for various spreadsheet formats.  Pure-JS cleanroom
 implementation from official specifications, related documents, and test files.
@@ -36,7 +36,6 @@ enhancements, additional features like styling, and dedicated support.
 
 [![Build Status](https://saucelabs.com/browser-matrix/sheetjs.svg)](https://saucelabs.com/u/sheetjs)
 
-[![Build Status](https://travis-ci.org/SheetJS/sheetjs.svg?branch=master)](https://travis-ci.org/SheetJS/sheetjs)
 [![Build Status](https://semaphoreci.com/api/v1/sheetjs/sheetjs/branches/master/shields_badge.svg)](https://semaphoreci.com/sheetjs/sheetjs)
 [![Coverage Status](http://img.shields.io/coveralls/SheetJS/sheetjs/master.svg)](https://coveralls.io/r/SheetJS/sheetjs?branch=master)
 [![Dependencies Status](https://david-dm.org/sheetjs/sheetjs/status.svg)](https://david-dm.org/sheetjs/sheetjs)
@@ -258,7 +257,7 @@ be configured to remove support with `resolve.alias`:
 ### ECMAScript 5 Compatibility
 
 Since the library uses functions like `Array#forEach`, older browsers require
-[shims to provide missing functions](http://oss.sheetjs.com/js-xlsx/shim.js).
+[shims to provide missing functions](http://oss.sheetjs.com/sheetjs/shim.js).
 
 To use the shim, add the shim before the script tag that loads `xlsx.js`:
 
@@ -283,7 +282,7 @@ Third-party libraries either supported one format, or they involved a separate
 set of classes for each supported file type.  Even though XLSB was introduced in
 Excel 2007, nothing outside of SheetJS or Excel supported the format.
 
-To promote a format-agnostic view, js-xlsx starts from a pure-JS representation
+To promote a format-agnostic view, SheetJS starts from a pure-JS representation
 that we call the ["Common Spreadsheet Format"](#common-spreadsheet-format).
 Emphasizing a uniform object representation enables new features like format
 conversion (reading an XLSX template and saving as XLS) and circumvents the mess
@@ -389,7 +388,7 @@ var workbook = XLSX.read(htmlstr, {type:'string'});
   <summary><b>Browser download file (ajax)</b> (click to show)</summary>
 
 Note: for a more complete example that works in older browsers, check the demo
-at <http://oss.sheetjs.com/js-xlsx/ajax.html>.  The [`xhr` demo](demos/xhr/)
+at <http://oss.sheetjs.com/sheetjs/ajax.html>.  The [`xhr` demo](demos/xhr/)
 includes more examples with `XMLHttpRequest` and `fetch`.
 
 ```js
@@ -465,7 +464,7 @@ More specialized cases, including mobile app file processing, are covered in the
 
 ### Parsing Examples
 
-- <http://oss.sheetjs.com/js-xlsx/> HTML5 File API / Base64 Text / Web Workers
+- <http://oss.sheetjs.com/sheetjs/> HTML5 File API / Base64 Text / Web Workers
 
 Note that older versions of IE do not support HTML5 File API, so the Base64 mode
 is used for testing.
@@ -489,7 +488,7 @@ On Windows XP and up you can get the Base64 encoding using `certutil`:
 
 </details>
 
-- <http://oss.sheetjs.com/js-xlsx/ajax.html> XMLHttpRequest
+- <http://oss.sheetjs.com/sheetjs/ajax.html> XMLHttpRequest
 
 ### Streaming Read
 
@@ -627,7 +626,7 @@ error if the workbook is empty.
 
 - <http://sheetjs.com/demos/modify.html> read + modify + write files
 
-- <https://github.com/SheetJS/js-xlsx/blob/master/bin/xlsx.njs> node
+- <https://github.com/SheetJS/sheetjs/blob/HEAD/bin/xlsx.njs> node
 
 The node version installs a command line tool `xlsx` which can read spreadsheet
 files and output the contents in various formats.  The source is available at
@@ -882,7 +881,7 @@ Utilities are available in the `XLSX.utils` object and are described in the
 
 ## Common Spreadsheet Format
 
-js-xlsx conforms to the Common Spreadsheet Format (CSF):
+SheetJS conforms to the Common Spreadsheet Format (CSF):
 
 ### General Structures
 
@@ -1605,7 +1604,7 @@ The visibility setting is stored in the `Hidden` property of sheet props array.
 |   1   | Hidden      |
 |   2   | Very Hidden |
 
-With <https://rawgit.com/SheetJS/test_files/master/sheet_visibility.xlsx>:
+With <https://rawgit.com/SheetJS/test_files/HEAD/sheet_visibility.xlsx>:
 
 ```js
 > wb.Workbook.Sheets.map(function(x) { return [x.name, x.Hidden] })
@@ -2728,14 +2727,11 @@ $ open -a Chromium.app http://localhost:8000/stress.html
  - Safari 6+ (iOS and Desktop)
  - Edge 13+, FF 18+, and Opera 12+
 
-Tests utilize the mocha testing framework.  Travis-CI and Sauce Labs links:
+Tests utilize the mocha testing framework.
 
- - <https://travis-ci.org/SheetJS/js-xlsx> for XLSX module in nodejs
- - <https://semaphoreci.com/sheetjs/js-xlsx> for XLSX module in nodejs
- - <https://travis-ci.org/SheetJS/SheetJS.github.io> for XLS\* modules
  - <https://saucelabs.com/u/sheetjs> for XLS\* modules using Sauce Labs
 
-The Travis-CI test suite also includes tests for various time zones.  To change
+The test suite also includes tests for various time zones.  To change
 the timezone locally, set the TZ environment variable:
 
 ```bash

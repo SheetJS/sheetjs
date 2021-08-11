@@ -71,14 +71,11 @@ $ open -a Chromium.app http://localhost:8000/stress.html
  - Safari 6+ (iOS and Desktop)
  - Edge 13+, FF 18+, and Opera 12+
 
-Tests utilize the mocha testing framework.  Travis-CI and Sauce Labs links:
+Tests utilize the mocha testing framework.
 
- - <https://travis-ci.org/SheetJS/js-xlsx> for XLSX module in nodejs
- - <https://semaphoreci.com/sheetjs/js-xlsx> for XLSX module in nodejs
- - <https://travis-ci.org/SheetJS/SheetJS.github.io> for XLS\* modules
  - <https://saucelabs.com/u/sheetjs> for XLS\* modules using Sauce Labs
 
-The Travis-CI test suite also includes tests for various time zones.  To change
+The test suite also includes tests for various time zones.  To change
 the timezone locally, set the TZ environment variable:
 
 ```bash

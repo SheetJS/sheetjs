@@ -116,8 +116,8 @@ in the ZIP file.
 
 When reading form data, be sure to include the necessary binary types on the AWS API Gateway console.
 To do this, navigate to the "Binary Media Types" section in the settings tab of the console.
-For reading a file, you may need to add "multipart/form-data".
-For downloading a file, you may need to add "application/vnd.ms-excel".
+For reading a file, you may need to add `"multipart/form-data"`.
+For downloading a file, you may need to add `"application/vnd.ms-excel"`.
 
 #### Azure Functions
 
