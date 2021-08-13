@@ -883,7 +883,7 @@ var PRN = (function() {
 			else if(s == "TRUE") { cell.t = 'b'; cell.v = true; }
 			else if(s == "FALSE") { cell.t = 'b'; cell.v = false; }
 			else if(!isNaN(v = fuzzynum(s))) { cell.t = 'n'; if(o.cellText !== false) cell.w = s; cell.v = v; }
-			else if(!isNaN(fuzzydate(s).getDate()) || _re && s.match(_re)) {
+			else if(!isNaN(fuzzydate(s, o.strictDate).getDate()) || _re && s.match(_re)) {
 				cell.z = o.dateNF || SSF._table[14];
 				var k = 0;
 				if(_re && s.match(_re)){ s=dateNF_fix(s, o.dateNF, (s.match(_re)||[])); k=1; }

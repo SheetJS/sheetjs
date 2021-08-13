@@ -130,8 +130,33 @@ function fuzzynum(s/*:string*/)/*:number*/ {
 	if(!isNaN(v = Number(ss))) return v / wt;
 	return v;
 }
-function fuzzydate(s/*:string*/)/*:Date*/ {
+
+// date regex reference - https://www.oreilly.com/library/view/regular-expressions-cookbook/9781449327453/ch04s04.html
+// matches mm/dd/yy, mm/dd/yyyy, dd/mm/yy, dd/mm/yyyy
+const STRICT_DATE_REGEX = [
+	"^(?:(1[0-2]|0[1-9])\\.(3[01]|[12][0-9]|0[1-9])|(3[01]|[12][0-9]|0[1-9])\\.(1[0-2]|0[1-9]))\\.([0-2][0-9]{3}|[0-9]{2})$", 
+	"^(?:(1[0-2]|0[1-9])\/(3[01]|[12][0-9]|0[1-9])|(3[01]|[12][0-9]|0[1-9])\/(1[0-2]|0[1-9]))\/([0-2][0-9]{3}|[0-9]{2})$",
+	"^(?:(1[0-2]|0[1-9])-(3[01]|[12][0-9]|0[1-9])|(3[01]|[12][0-9]|0[1-9])-(1[0-2]|0[1-9]))-([0-2][0-9]{3}|[0-9]{2})$",
+	"^(?:(1[0-2]|0[1-9])\\.(3[01]|[12][0-9]|0[1-9])|(3[01]|[12][0-9]|0[1-9])\\.(1[0-2]|0[1-9]))\\.([0-2][0-9]{3}|[0-9]{2})$",
+	"^(?:(1[0-2]|0[1-9])\/(3[01]|[12][0-9]|0[1-9])|(3[01]|[12][0-9]|0[1-9])\/(1[0-2]|0[1-9]))\/([0-2][0-9]{3}|[0-9]{2})$",
+	"^(?:(1[0-2]|0[1-9])-(3[01]|[12][0-9]|0[1-9])|(3[01]|[12][0-9]|0[1-9])-(1[0-2]|0[1-9]))-([0-2][0-9]{3}|[0-9]{2})$"
+	];
+
+function fuzzydate(s/*:string*/, strictDate = false/*boolean*/)/*:Date*/ {
 	var o = new Date(s), n = new Date(NaN);
+
+	if(strictDate) {
+		STRICT_DATE_REGEX.map(regex => {
+			const matchStr = s.match(regex)
+
+			if(matchStr){
+				return o;
+			};
+	  	});
+
+		return n;
+	}
+
 	var y = o.getYear(), m = o.getMonth(), d = o.getDate();
 	if(isNaN(d)) return n;
 	if(y < 0 || y > 8099) return n;
