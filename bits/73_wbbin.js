@@ -97,6 +97,8 @@ function parse_wb_bin(data, opts)/*:WorkbookFile*/ {
 	supbooks.SheetNames = [];
 	supbooks.XTI = [];
 
+	XLSBRecordEnum[0x0010] = { n:"BrtFRTArchID$", f:parse_BrtFRTArchID$ };
+
 	recordhopper(data, function hopper_wb(val, R_n, RT) {
 		switch(RT) {
 			case 0x009C: /* 'BrtBundleSh' */
@@ -131,13 +133,18 @@ function parse_wb_bin(data, opts)/*:WorkbookFile*/ {
 			case 0x0169: /* 'BrtPlaceholderName' */
 				break;
 
+			case 0x0817: /* 'BrtAbsPath15' */
+			case 0x009E: /* 'BrtBookView' */
+			case 0x008F: /* 'BrtBeginBundleShs' */
+			case 0x0298: /* 'BrtBeginFnGroup' */
+			case 0x0161: /* 'BrtBeginExternals' */
+				break;
+
 			/* case 'BrtModelTimeGroupingCalcCol' */
 			case 0x0C00: /* 'BrtUid' */
 			case 0x0C01: /* 'BrtRevisionPtr' */
-			case 0x0817: /* 'BrtAbsPath15' */
 			case 0x0216: /* 'BrtBookProtection' */
 			case 0x02A5: /* 'BrtBookProtectionIso' */
-			case 0x009E: /* 'BrtBookView' */
 			case 0x009D: /* 'BrtCalcProp' */
 			case 0x0262: /* 'BrtCrashRecErr' */
 			case 0x0802: /* 'BrtDecoupledPivotCacheID' */

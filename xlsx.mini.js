@@ -4,7 +4,7 @@
 /*global global, exports, module, require:false, process:false, Buffer:false, ArrayBuffer:false */
 var XLSX = {};
 function make_xlsx_lib(XLSX){
-XLSX.version = '0.17.0';
+XLSX.version = '0.17.1';
 var current_codepage = 1200, current_ansi = 1252;
 
 var VALID_ANSI = [ 874, 932, 936, 949, 950 ];
@@ -5080,6 +5080,7 @@ var SYLK = (function() {
 			case 'C':
 			var C_seen_K = false, C_seen_X = false, C_seen_S = false, C_seen_E = false, _R = -1, _C = -1;
 			for(rj=1; rj<record.length; ++rj) switch(record[rj].charAt(0)) {
+				case 'A': break; // TODO: comment
 				case 'X': C = parseInt(record[rj].slice(1))-1; C_seen_X = true; break;
 				case 'Y':
 					R = parseInt(record[rj].slice(1))-1; if(!C_seen_X) C = 0;
@@ -5546,6 +5547,7 @@ var PRN = (function() {
 			else if(str.charCodeAt(5) == 13 || str.charCodeAt(5) == 10 ) {
 				sep = str.charAt(4); str = str.slice(6);
 			}
+			else sep = guess_sep(str.slice(0,1024));
 		}
 		else sep = guess_sep(str.slice(0,1024));
 		var R = 0, C = 0, v = 0;

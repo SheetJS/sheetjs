@@ -4,6 +4,10 @@ This log is intended to keep track of backwards-incompatible changes, including
 but not limited to API changes and file location changes.  Minor behavioral
 changes may not be included if they are not expected to break existing code.
 
+## v0.17.1
+
+* `XLSB` writer uses short cell form when viable
+
 ## v0.16.2
 
 * Disabled `PRN` parsing by default (better support for CSV without delimeters)

@@ -12,7 +12,13 @@ var XLSBRecordEnum = {
 	/*::[*/0x0009/*::]*/: { n:"BrtFmlaNum", f:parse_BrtFmlaNum },
 	/*::[*/0x000A/*::]*/: { n:"BrtFmlaBool", f:parse_BrtFmlaBool },
 	/*::[*/0x000B/*::]*/: { n:"BrtFmlaError", f:parse_BrtFmlaError },
-	/*::[*/0x0010/*::]*/: { n:"BrtFRTArchID$", f:parse_BrtFRTArchID$ },
+	/*::[*/0x000C/*::]*/: { n:"BrtShortBlank", f:parse_BrtShortBlank },
+	/*::[*/0x000D/*::]*/: { n:"BrtShortRk", f:parse_BrtShortRk },
+	/*::[*/0x000E/*::]*/: { n:"BrtShortError", f:parse_BrtShortError },
+	/*::[*/0x000F/*::]*/: { n:"BrtShortBool", f:parse_BrtShortBool },
+	/*::[*/0x0010/*::]*/: { n:"BrtShortReal", f:parse_BrtShortReal },
+	/*::[*/0x0011/*::]*/: { n:"BrtShortSt", f:parse_BrtShortSt },
+	/*::[*/0x0012/*::]*/: { n:"BrtShortIsst", f:parse_BrtShortIsst },
 	/*::[*/0x0013/*::]*/: { n:"BrtSSTItem", f:parse_RichStr },
 	/*::[*/0x0014/*::]*/: { n:"BrtPCDIMissing" },
 	/*::[*/0x0015/*::]*/: { n:"BrtPCDINumber" },
@@ -836,6 +842,7 @@ var XLSBRecordEnum = {
 };
 
 var XLSBRE = evert_key(XLSBRecordEnum, 'n');
+XLSBRE["BrtFRTArchID$"] = 0x0010;
 
 /* [MS-XLS] 2.3 Record Enumeration */
 var XLSRecordEnum = {
