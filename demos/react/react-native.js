@@ -1,16 +1,16 @@
 /* xlsx.js (C) 2013-present  SheetJS -- http://sheetjs.com */
 import XLSX from 'xlsx';
 import React, { Component } from 'react';
-import { 
-	AppRegistry, 
-	StyleSheet, 
-	Text, 
-	View, 
-	Button, 
-	Alert, 
-	Image, 
-	ScrollView, 
-	TouchableWithoutFeedback 
+import {
+	AppRegistry,
+	StyleSheet,
+	Text,
+	View,
+	Button,
+	Alert,
+	Image,
+	ScrollView,
+	TouchableWithoutFeedback
 } from 'react-native';
 import { Table, Row, Rows, TableWrapper } from 'react-native-table-component';
 
@@ -78,7 +78,7 @@ export default class SheetJS extends Component {
 		}).catch((err) => { Alert.alert("exportFile Error", "Error " + err.message); });
 	};
 
-	render() { 
+	render() {
 		return (
 			<ScrollView contentContainerStyle={styles.container} vertical={true}>
 				<Text style={styles.welcome}> </Text>
@@ -105,7 +105,7 @@ export default class SheetJS extends Component {
 					</Table>
 				</ScrollView>
 			</ScrollView>
-		); 
+		);
 	};
 };
 

@@ -4,9 +4,9 @@ react: init ## Simple server for react and clones
 
 .PHONY: next
 next: init ## next.js demo
-	mkdir -p pages static
+	mkdir -p pages public
 	cat nexthdr.js sheetjs.js > pages/sheetjs.js
-	cp ../../shim.js static/shim.js
+	cp ../../shim.js public/shim.js
 	next
 
 .PHONY: native
