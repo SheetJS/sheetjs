@@ -1,4 +1,3 @@
-*.*s        linguist-documentation
 *.html      linguist-documentation
 
 *.md        text eol=lf

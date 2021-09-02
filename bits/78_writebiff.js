@@ -164,6 +164,16 @@ function write_ws_biff8_hlinks(ba/*:BufArray*/, ws) {
 	delete ws['!links'];
 }
 
+function write_ws_cols_biff8(ba, cols, ws) {
+	if(!cols) return;
+	var cnt = 0;
+	cols.forEach(function(col, idx) {
+		if(++cnt <= 256 && col) {
+			write_biff_rec(ba, "ColInfo", write_ColInfo(col_obj_w(idx, col), idx));
+		}
+	});
+}
+
 function write_ws_biff8_cell(ba/*:BufArray*/, cell/*:Cell*/, R/*:number*/, C/*:number*/, opts) {
 	var os = 16 + get_cell_style(opts.cellXfs, cell, opts);
 	if(cell.v == null && !cell.bf) {
@@ -226,6 +236,8 @@ function write_ws_biff8(idx/*:number*/, opts, wb/*:Workbook*/) {
 	/* Footer (string) */
 	write_biff_rec(ba, "HCenter", writebool(false));
 	write_biff_rec(ba, "VCenter", writebool(false));
+	/* ... */
+	if(b8) write_ws_cols_biff8(ba, ws["!cols"], ws);
 	/* ... */
 	write_biff_rec(ba, 0x200, write_Dimensions(range, opts));
 	/* ... */
