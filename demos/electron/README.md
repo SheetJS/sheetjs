@@ -1,15 +1,19 @@
 # Electron
 
 This library is compatible with Electron and should just work out of the box.
-The demonstration uses Electron 9.0.5.  The library is added via `require` from
-the renderer process. Note that Electron now requires `nodeIntegration: true`
-in order to `require('XLSX')` in the renderer process. It can also be required
-from the main process, as shown in this demo to render a version string in the
-About dialog on OSX.
+The demonstration uses Electron 14.0.0.  The library is added via `require` from
+the renderer process.
+
+Electron 9.0.0 and later require the preference `nodeIntegration: true` in order
+to `require('XLSX')` in the renderer process.  Electron 12.0.0 and later also
+require `worldSafeExecuteJavascript: true` and `contextIsolation: true`
+
+The library can also be required from the main process, as shown in this demo
+to render a version string in the About dialog on OSX.
 
 The standard HTML5 `FileReader` techniques from the browser apply to Electron.
 This demo includes a drag-and-drop box as well as a file input box, mirroring
-the [SheetJS Data Preview Live Demo](http://oss.sheetjs.com/js-xlsx/)
+the [SheetJS Data Preview Live Demo](http://oss.sheetjs.com/sheetjs/)
 
 The core data in this demo is an editable HTML table.  The readers build up the
 table using `sheet_to_html` (with `editable:true` option) and the writers scrape

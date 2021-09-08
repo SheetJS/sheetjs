@@ -11,6 +11,8 @@ function createWindow() {
 	win = new electron.BrowserWindow({
 		width: 800, height: 600,
 		webPreferences: {
+			worldSafeExecuteJavaScript: true, // required for Electron 12+
+			contextIsolation: false, // required for Electron 12+
 			nodeIntegration: true,
 			enableRemoteModule: true
 		}
