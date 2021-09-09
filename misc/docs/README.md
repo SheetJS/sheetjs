@@ -1,4 +1,4 @@
-# [SheetJS](http://sheetjs.com)
+# [SheetJS](https://sheetjs.com)
 
 Parser and writer for various spreadsheet formats.  Pure-JS cleanroom
 implementation from official specifications, related documents, and test files.
@@ -9,15 +9,15 @@ This is the community version.  We also offer a pro version with performance
 enhancements, additional features like styling, and dedicated support.
 
 
-[**Pro Version**](http://sheetjs.com/pro)
+[**Pro Version**](https://sheetjs.com/pro)
 
-[**Commercial Support**](http://sheetjs.com/support)
+[**Commercial Support**](https://sheetjs.com/support)
 
-[**Rendered Documentation**](http://docs.sheetjs.com/)
+[**Rendered Documentation**](https://docs.sheetjs.com/)
 
-[**In-Browser Demos**](http://sheetjs.com/demos)
+[**In-Browser Demos**](https://sheetjs.com/demos)
 
-[**Source Code**](http://git.io/xlsx)
+[**Source Code**](https://git.io/xlsx)
 
 [**Issues and Bug Reports**](https://github.com/sheetjs/sheetjs/issues)
 
@@ -29,12 +29,12 @@ enhancements, additional features like styling, and dedicated support.
 ![graph legend](legend.png)
 
 
-[**Browser Test**](http://oss.sheetjs.com/sheetjs/tests/)
+[**Browser Test**](https://oss.sheetjs.com/sheetjs/tests/)
 
 [![Build Status](https://saucelabs.com/browser-matrix/sheetjs.svg)](https://saucelabs.com/u/sheetjs)
 
 [![Build Status](https://semaphoreci.com/api/v1/sheetjs/sheetjs/branches/master/shields_badge.svg)](https://semaphoreci.com/sheetjs/sheetjs)
-[![Coverage Status](http://img.shields.io/coveralls/SheetJS/sheetjs/master.svg)](https://coveralls.io/r/SheetJS/sheetjs?branch=master)
+[![Coverage Status](https://img.shields.io/coveralls/SheetJS/sheetjs/master.svg)](https://coveralls.io/r/SheetJS/sheetjs?branch=master)
 [![Dependencies Status](https://david-dm.org/sheetjs/sheetjs/status.svg)](https://david-dm.org/sheetjs/sheetjs)
 [![npm Downloads](https://img.shields.io/npm/dt/xlsx.svg)](https://npmjs.org/package/xlsx)
 [![Analytics](https://ga-beacon.appspot.com/UA-36810333-1/SheetJS/sheetjs?pixel)](https://github.com/SheetJS/sheetjs)
@@ -149,7 +149,7 @@ In the browser, just add a script tag:
 |-----------:|:-------------------------------------------|
 |    `unpkg` | <https://unpkg.com/xlsx/>                  |
 | `jsDelivr` | <https://jsdelivr.com/package/npm/xlsx>    |
-|    `CDNjs` | <http://cdnjs.com/libraries/xlsx>          |
+|    `CDNjs` | <https://cdnjs.com/libraries/xlsx>          |
 |    `packd` | <https://bundle.run/xlsx@latest?name=XLSX> |
 
 `unpkg` makes the latest version available at:
@@ -166,7 +166,7 @@ With [npm](https://www.npmjs.org/package/xlsx):
 $ npm install xlsx
 ```
 
-With [bower](http://bower.io/search/?q=js-xlsx):
+With [bower](https://bower.io/search/?q=js-xlsx):
 
 ```bash
 $ bower install js-xlsx
@@ -245,7 +245,7 @@ be configured to remove support with `resolve.alias`:
 ### ECMAScript 5 Compatibility
 
 Since the library uses functions like `Array#forEach`, older browsers require
-[shims to provide missing functions](http://oss.sheetjs.com/sheetjs/shim.js).
+[shims to provide missing functions](https://oss.sheetjs.com/sheetjs/shim.js).
 
 To use the shim, add the shim before the script tag that loads `xlsx.js`:
 
@@ -431,7 +431,7 @@ More specialized cases, including mobile app file processing, are covered in the
 
 ### Parsing Examples
 
-- <http://oss.sheetjs.com/sheetjs/> HTML5 File API / Base64 Text / Web Workers
+- <https://oss.sheetjs.com/sheetjs/> HTML5 File API / Base64 Text / Web Workers
 
 Note that older versions of IE do not support HTML5 File API, so the Base64 mode
 is used for testing.
@@ -570,7 +570,7 @@ error if the workbook is empty.
 
 ### Parsing and Writing Examples
 
-- <http://sheetjs.com/demos/modify.html> read + modify + write files
+- <https://sheetjs.com/demos/modify.html> read + modify + write files
 
 - <https://github.com/SheetJS/sheetjs/blob/HEAD/bin/xlsx.njs> node
 
@@ -746,7 +746,7 @@ stream.pipe(conv); conv.pipe(process.stdout);
 
 `XLSX.version` is the version of the library (added by the build script).
 
-`XLSX.SSF` is an embedded version of the [format library](http://git.io/ssf).
+`XLSX.SSF` is an embedded version of the [format library](https://git.io/ssf).
 
 ### Parsing functions
 
@@ -926,8 +926,7 @@ Following Excel, this library treats all dates as relative to local time zone.
 
 
 
-Excel supports two epochs (January 1 1900 and January 1 1904), see
-["1900 vs. 1904 Date System" article](http://support2.microsoft.com/kb/180162).
+Excel supports two epochs (January 1 1900 and January 1 1904).
 The workbook's epoch can be determined by examining the workbook's
 `wb.Workbook.WBProps.date1904` property:
 
@@ -1410,10 +1409,10 @@ are stored in the `Tooltip` field and are displayed when you move your mouse
 over the text.
 
 For example, the following snippet creates a link from cell `A3` to
-<http://sheetjs.com> with the tip `"Find us @ SheetJS.com!"`:
+<https://sheetjs.com> with the tip `"Find us @ SheetJS.com!"`:
 
 ```js
-ws['A3'].l = { Target:"http://sheetjs.com", Tooltip:"Find us @ SheetJS.com!" };
+ws['A3'].l = { Target:"https://sheetjs.com", Tooltip:"Find us @ SheetJS.com!" };
 ```
 
 Note that Excel does not automatically style hyperlinks -- they will generally

@@ -65,7 +65,7 @@ error if the workbook is empty.
 
 ### Parsing and Writing Examples
 
-- <http://sheetjs.com/demos/modify.html> read + modify + write files
+- <https://sheetjs.com/demos/modify.html> read + modify + write files
 
 - <https://github.com/SheetJS/sheetjs/blob/HEAD/bin/xlsx.njs> node
 

@@ -6,10 +6,10 @@ are stored in the `Tooltip` field and are displayed when you move your mouse
 over the text.
 
 For example, the following snippet creates a link from cell `A3` to
-<http://sheetjs.com> with the tip `"Find us @ SheetJS.com!"`:
+<https://sheetjs.com> with the tip `"Find us @ SheetJS.com!"`:
 
 ```js
-ws['A3'].l = { Target:"http://sheetjs.com", Tooltip:"Find us @ SheetJS.com!" };
+ws['A3'].l = { Target:"https://sheetjs.com", Tooltip:"Find us @ SheetJS.com!" };
 ```
 
 Note that Excel does not automatically style hyperlinks -- they will generally

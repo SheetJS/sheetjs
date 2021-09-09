@@ -83,8 +83,7 @@ Following Excel, this library treats all dates as relative to local time zone.
 <details>
   <summary><b>Epochs: 1900 and 1904</b> (click to show)</summary>
 
-Excel supports two epochs (January 1 1900 and January 1 1904), see
-["1900 vs. 1904 Date System" article](http://support2.microsoft.com/kb/180162).
+Excel supports two epochs (January 1 1900 and January 1 1904).
 The workbook's epoch can be determined by examining the workbook's
 `wb.Workbook.WBProps.date1904` property:
 

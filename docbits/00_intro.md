@@ -1,4 +1,4 @@
-# [SheetJS](http://sheetjs.com)
+# [SheetJS](https://sheetjs.com)
 
 Parser and writer for various spreadsheet formats.  Pure-JS cleanroom
 implementation from official specifications, related documents, and test files.
@@ -9,15 +9,15 @@ This is the community version.  We also offer a pro version with performance
 enhancements, additional features like styling, and dedicated support.
 
 
-[**Pro Version**](http://sheetjs.com/pro)
+[**Pro Version**](https://sheetjs.com/pro)
 
-[**Commercial Support**](http://sheetjs.com/support)
+[**Commercial Support**](https://sheetjs.com/support)
 
-[**Rendered Documentation**](http://docs.sheetjs.com/)
+[**Rendered Documentation**](https://docs.sheetjs.com/)
 
-[**In-Browser Demos**](http://sheetjs.com/demos)
+[**In-Browser Demos**](https://sheetjs.com/demos)
 
-[**Source Code**](http://git.io/xlsx)
+[**Source Code**](https://git.io/xlsx)
 
 [**Issues and Bug Reports**](https://github.com/sheetjs/sheetjs/issues)
 
@@ -32,12 +32,12 @@ enhancements, additional features like styling, and dedicated support.
 
 </details>
 
-[**Browser Test**](http://oss.sheetjs.com/sheetjs/tests/)
+[**Browser Test**](https://oss.sheetjs.com/sheetjs/tests/)
 
 [![Build Status](https://saucelabs.com/browser-matrix/sheetjs.svg)](https://saucelabs.com/u/sheetjs)
 
 [![Build Status](https://semaphoreci.com/api/v1/sheetjs/sheetjs/branches/master/shields_badge.svg)](https://semaphoreci.com/sheetjs/sheetjs)
-[![Coverage Status](http://img.shields.io/coveralls/SheetJS/sheetjs/master.svg)](https://coveralls.io/r/SheetJS/sheetjs?branch=master)
+[![Coverage Status](https://img.shields.io/coveralls/SheetJS/sheetjs/master.svg)](https://coveralls.io/r/SheetJS/sheetjs?branch=master)
 [![Dependencies Status](https://david-dm.org/sheetjs/sheetjs/status.svg)](https://david-dm.org/sheetjs/sheetjs)
 [![npm Downloads](https://img.shields.io/npm/dt/xlsx.svg)](https://npmjs.org/package/xlsx)
 [![Analytics](https://ga-beacon.appspot.com/UA-36810333-1/SheetJS/sheetjs?pixel)](https://github.com/SheetJS/sheetjs)

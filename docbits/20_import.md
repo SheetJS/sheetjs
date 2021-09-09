@@ -151,7 +151,7 @@ More specialized cases, including mobile app file processing, are covered in the
 
 ### Parsing Examples
 
-- <http://oss.sheetjs.com/sheetjs/> HTML5 File API / Base64 Text / Web Workers
+- <https://oss.sheetjs.com/sheetjs/> HTML5 File API / Base64 Text / Web Workers
 
 Note that older versions of IE do not support HTML5 File API, so the Base64 mode
 is used for testing.
