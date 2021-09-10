@@ -9,6 +9,11 @@ This is the community version.  We also offer a pro version with performance
 enhancements, additional features like styling, and dedicated support.
 
 
+Community Translations of this README:
+
+- [Simplified Chinese](https://github.com/rockboom/SheetJS-docs-zh-CN)
+
+
 [**Pro Version**](https://sheetjs.com/pro)
 
 [**Commercial Support**](https://sheetjs.com/support)
