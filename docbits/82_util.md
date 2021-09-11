@@ -102,7 +102,7 @@ XLSX.utils.sheet_add_aoa(ws, [[4,5,6,7,8,9,0]], {origin: -1});
 `XLSX.utils.json_to_sheet` takes an array of objects and returns a worksheet
 with automatically-generated "headers" based on the keys of the objects.  The
 default column order is determined by the first appearance of the field using
-`Object.keys`, but can be overridden using the options argument:
+`Object.keys`.  The function accepts an options argument:
 
 | Option Name | Default | Description                                          |
 | :---------- | :-----: | :--------------------------------------------------- |
@@ -111,8 +111,10 @@ default column order is determined by the first appearance of the field using
 |`cellDates`  |  false  | Store dates as type `d` (default is `n`)             |
 |`skipHeader` |  false  | If true, do not include header row in output         |
 
-All fields from each row will be written.  If `header` is supplied and the array
-does not contain a particular field, the key will be appended to the array.
+- All fields from each row will be written.  If `header` is an array and it does
+  not contain a particular field, the key will be appended to the array.
+- Cell types are deduced from the type of each value.  For example, a `Date`
+  object will generate a Date cell, while a string will generate a Text cell.
 
 <details>
   <summary><b>Examples</b> (click to show)</summary>
