@@ -20,7 +20,7 @@
 	"bin": {
 		"xlsx": "./bin/xlsx.njs"
 	},
-	"main": "./xlsx",
+	"main": "xlsx.js",
 	"unpkg": "dist/xlsx.min.js",
 	"jsdelivr": "dist/xlsx.min.js",
 	"types": "types",
