@@ -104,12 +104,15 @@ with automatically-generated "headers" based on the keys of the objects.  The
 default column order is determined by the first appearance of the field using
 `Object.keys`, but can be overridden using the options argument:
 
-| Option Name |  Default | Description                                         |
-| :---------- | :------: | :-------------------------------------------------- |
-|`header`     |          | Use specified column order (default `Object.keys`)  |
-|`dateNF`     |  FMT 14  | Use specified date format in string output          |
-|`cellDates`  |  false   | Store dates as type `d` (default is `n`)            |
-|`skipHeader` |  false   | If true, do not include header row in output        |
+| Option Name | Default | Description                                          |
+| :---------- | :-----: | :--------------------------------------------------- |
+|`header`     |         | Use specified field order (default `Object.keys`) ** |
+|`dateNF`     |  FMT 14 | Use specified date format in string output           |
+|`cellDates`  |  false  | Store dates as type `d` (default is `n`)             |
+|`skipHeader` |  false  | If true, do not include header row in output         |
+
+All fields from each row will be written.  If `header` is supplied and the array
+does not contain a particular field, the key will be appended to the array.
 
 <details>
   <summary><b>Examples</b> (click to show)</summary>
