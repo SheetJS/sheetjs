@@ -23,7 +23,7 @@
 	"main": "xlsx.js",
 	"unpkg": "dist/xlsx.min.js",
 	"jsdelivr": "dist/xlsx.min.js",
-	"types": "types",
+	"types": "types/index.d.ts",
 	"browser": {
 		"buffer": false,
 		"crypto": false,
