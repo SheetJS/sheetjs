@@ -35,8 +35,6 @@ a { text-decoration: none }
 <div id="drop">Drop a spreadsheet file here to see sheet data</div>
 <input type="file" name="xlfile" id="xlf" /> ... or click here to select a file
 <textarea id="b64data">... or paste a base64-encoding here</textarea>
-<b>Advanced Demo Options:</b>
-Use readAsBinaryString: (when available) <input type="checkbox" name="userabs" checked>
 </pre>
 <p><input type="submit" value="Export to XLSX!" id="xport" onclick="export_xlsx();" disabled="true"></p>
 <div id="htmlout"></div>
@@ -52,7 +50,7 @@ Use readAsBinaryString: (when available) <input type="checkbox" name="userabs" c
 /*global XLSX */
 
 var HTMLOUT = document.getElementById('htmlout');
-var xspr = x.spreadsheet(HTMLOUT);
+var xspr = x_spreadsheet(HTMLOUT);
 HTMLOUT.style.height = (window.innerHeight - 400) + "px";
 HTMLOUT.style.width = (window.innerWidth - 50) + "px";
 
@@ -109,22 +107,16 @@ var process_wb = (function() {
 })();
 
 var do_file = (function() {
-	var rABS = typeof FileReader !== "undefined" && (FileReader.prototype||{}).readAsBinaryString;
-	var domrabs = document.getElementsByName("userabs")[0];
-	if(!rABS) domrabs.disabled = !(domrabs.checked = false);
-
 	return function do_file(files) {
-		rABS = domrabs.checked;
 		var f = files[0];
 		var reader = new FileReader();
 		reader.onload = function(e) {
-			if(typeof console !== 'undefined') console.log("onload", new Date(), rABS);
+			if(typeof console !== 'undefined') console.log("onload", new Date());
 			var data = e.target.result;
-			if(!rABS) data = new Uint8Array(data);
-			process_wb(XLSX.read(data, {type: rABS ? 'binary' : 'array'}));
+			data = new Uint8Array(data);
+			process_wb(XLSX.read(data, {type: 'array'}));
 		};
-		if(rABS) reader.readAsBinaryString(f);
-		else reader.readAsArrayBuffer(f);
+		reader.readAsArrayBuffer(f);
 	};
 })();
 

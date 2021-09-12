@@ -29,7 +29,7 @@ Grid initialization is a one-liner:
 
 ```js
 /* note that the browser build exposes the variable `x` */
-var grid = x.spreadsheet(document.getElementById("gridctr"));
+var grid = x_spreadsheet(document.getElementById("gridctr"));
 ```
 
 The following function converts data from SheetJS to x-spreadsheet:
