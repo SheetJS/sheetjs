@@ -58,17 +58,16 @@ model.aoa.push([7,8,9]);
 /* set up file input handler */
 (function() {
   var input_dom_element = document.getElementById('xlf');
-  var rABS = true; // true: readAsBinaryString ; false: readAsArrayBuffer
   function handleFile(e) {
     var files = e.target.files, f = files[0];
     var reader = new FileReader();
     reader.onload = function(e) {
       var data = e.target.result;
-      if(!rABS) data = new Uint8Array(data);
-      var workbook = XLSX.read(data, {type: rABS ? 'binary' : 'array'});
+      data = new Uint8Array(data);
+      var workbook = XLSX.read(data, {type: 'array'});
       process_wb(workbook);
     };
-    if(rABS) reader.readAsBinaryString(f); else reader.readAsArrayBuffer(f);
+    reader.readAsArrayBuffer(f);
   }
   input_dom_element.addEventListener('change', handleFile, false);
 })();
