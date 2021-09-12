@@ -51,6 +51,7 @@ VueJS
 WebSQL
 iOS
 nodejs
+node.js
 npm
 unpkg
 webpack
@@ -73,12 +74,14 @@ XMLHttpRequest
 bundler
 bundlers
 cleanroom
+codepage
 config
 customizable
 datagrid
 deduplication
 destructuring
 embeddable
+encodings
 filesystem
 globals
 javascript
@@ -93,7 +96,7 @@ runtime
 serverless
 submodule
 transpiled
-node.js
+utils
 commonjs
 async
 uncheck

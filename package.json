@@ -21,6 +21,7 @@
 		"xlsx": "./bin/xlsx.njs"
 	},
 	"main": "xlsx.js",
+	"module": "xlsx.mjs",
 	"unpkg": "dist/xlsx.min.js",
 	"jsdelivr": "dist/xlsx.min.js",
 	"types": "types/index.d.ts",
@@ -78,6 +79,7 @@
 	},
 	"alex": {
 		"allow": [
+			"chinese",
 			"special",
 			"simple",
 			"just",

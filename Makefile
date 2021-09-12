@@ -11,6 +11,12 @@ MINITGT=xlsx.mini.js
 MINIFLOW=xlsx.mini.flow.js
 MINIDEPS=$(shell cat mini.lst)
 
+NODESMTGT=xlsx.esm.mjs
+NODESMDEPS=$(shell cat misc/esm.lst)
+ESMJSTGT=xlsx.mjs
+ESMJSDEPS=$(shell cat misc/mjs.lst)
+
+
 ULIB=$(shell echo $(LIB) | tr a-z A-Z)
 DEPS=$(sort $(wildcard bits/*.js))
 TARGET=$(LIB).js
@@ -24,7 +30,7 @@ UGLIFYOPTS=--support-ie8 -m
 ## Main Targets
 
 .PHONY: all
-all: $(TARGET) $(AUXTARGETS) $(AUXSCPTS) $(MINITGT) ## Build library and auxiliary scripts
+all: $(TARGET) $(AUXTARGETS) $(AUXSCPTS) $(MINITGT) $(NODESMTGT) $(ESMJSTGT) ## Build library and auxiliary scripts
 
 $(FLOWTGTS): %.js : %.flow.js
 	node -e 'process.stdout.write(require("fs").readFileSync("$<","utf8").replace(/^[ \t]*\/\*[:#][^*]*\*\/\s*(\n)?/gm,"").replace(/\/\*[:#][^*]*\*\//gm,""))' > $@
@@ -33,6 +39,12 @@ $(FLOWTARGET): $(DEPS)
 	cat $^ | tr -d '\15\32' > $@
 
 $(MINIFLOW): $(MINIDEPS)
+	cat $^ | tr -d '\15\32' > $@
+
+$(NODESMTGT): $(NODESMDEPS)
+	cat $^ | tr -d '\15\32' > $@
+
+$(ESMJSTGT): $(ESMJSDEPS)
 	cat $^ | tr -d '\15\32' > $@
 
 bits/01_version.js: package.json

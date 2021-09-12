@@ -14,7 +14,7 @@ if "%1" == "help" (
 	npm install -g eslint eslint-plugin-html eslint-plugin-json
 	npm install -g mocha markdown-toc
 ) else if "%1" == "lint" (
-	eslint --ext .js,.njs,.json,.html,.htm xlsx.js xlsx.flow.js bin/xlsx.njs package.json bower.json
+	eslint --ext .js,.njs,.json,.html,.htm xlsx.js xlsx.flow.js bin\xlsx.njs package.json bower.json
 ) else if "%1" == "test" (
 	SET FMTS=
 	mocha -R spec -t 30000
