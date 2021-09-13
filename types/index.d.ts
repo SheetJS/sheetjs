@@ -253,7 +253,7 @@ export interface WorkBook {
     Props?: FullProperties;
 
     /** Custom workbook Properties */
-    Custprops?: object;
+    Custprops?: any;
 
     Workbook?: WBProps;
 
