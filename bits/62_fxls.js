@@ -891,7 +891,7 @@ function stringify_formula(formula/*Array<any>*/, range, cell/*:any*/, supbooks,
 					if(supbooks[bookidx] && supbooks[bookidx][nameidx]) o += supbooks[bookidx][nameidx].Name;
 					else if(supbooks[0] && supbooks[0][nameidx]) o += supbooks[0][nameidx].Name;
 					else {
-						var ixtidata = get_ixti_raw(supbooks, bookidx, opts).split(";;");
+						var ixtidata = (get_ixti_raw(supbooks, bookidx, opts)||"").split(";;");
 						if(ixtidata[nameidx - 1]) o = ixtidata[nameidx - 1]; // TODO: confirm this is correct
 						else o += "SH33TJSERRX";
 					}
