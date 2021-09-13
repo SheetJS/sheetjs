@@ -82,10 +82,10 @@ prefixed with an apostrophe `'`, consistent with Excel's formula bar display.
 
 | Storage Representation | Formats                  | Read  | Write |
 |:-----------------------|:-------------------------|:-----:|:-----:|
-| A1-style strings       | XLSX                     |  :o:  |  :o:  |
-| RC-style strings       | XLML and plain text      |  :o:  |  :o:  |
-| BIFF Parsed formulae   | XLSB and all XLS formats |  :o:  |       |
-| OpenFormula formulae   | ODS/FODS/UOS             |  :o:  |  :o:  |
+| A1-style strings       | XLSX                     |   ✔   |   ✔   |
+| RC-style strings       | XLML and plain text      |   ✔   |   ✔   |
+| BIFF Parsed formulae   | XLSB and all XLS formats |   ✔   |       |
+| OpenFormula formulae   | ODS/FODS/UOS             |   ✔   |   ✔   |
 
 Since Excel prohibits named cells from colliding with names of A1 or RC style
 cell references, a (not-so-simple) regex conversion is possible.  BIFF Parsed
