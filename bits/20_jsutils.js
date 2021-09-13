@@ -121,7 +121,8 @@ function fill(c/*:string*/,l/*:number*/)/*:string*/ { var o = ""; while(o.length
 /* TODO: stress test */
 function fuzzynum(s/*:string*/)/*:number*/ {
 	var v/*:number*/ = Number(s);
-	if(!isNaN(v)) return v;
+	if(isFinite(v)) return v;
+	if(!isNaN(v)) return NaN;
 	if(!/\d/.test(s)) return v;
 	var wt = 1;
 	var ss = s.replace(/([\d]),([\d])/g,"$1$2").replace(/[$]/g,"").replace(/[%]/g, function() { wt *= 100; return "";});
