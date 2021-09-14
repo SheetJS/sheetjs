@@ -868,7 +868,7 @@ var PRN = (function() {
 		}
 		else sep = guess_sep(str.slice(0,1024));
 		var R = 0, C = 0, v = 0;
-		var start = 0, end = 0, sepcc = sep.charCodeAt(0), instr = false, cc=0;
+		var start = 0, end = 0, sepcc = sep.charCodeAt(0), instr = false, cc=0, startcc=str.charCodeAt(0);
 		str = str.replace(/\r\n/mg, "\n");
 		var _re/*:?RegExp*/ = o.dateNF != null ? dateNF_regex(o.dateNF) : null;
 		function finish_cell() {
@@ -900,13 +900,13 @@ var PRN = (function() {
 			if(cell.t == 'z'){}
 			else if(o.dense) { if(!ws[R]) ws[R] = []; ws[R][C] = cell; }
 			else ws[encode_cell({c:C,r:R})] = cell;
-			start = end+1;
+			start = end+1; startcc = str.charCodeAt(start);
 			if(range.e.c < C) range.e.c = C;
 			if(range.e.r < R) range.e.r = R;
 			if(cc == sepcc) ++C; else { C = 0; ++R; if(o.sheetRows && o.sheetRows <= R) return true; }
 		}
 		outer: for(;end < str.length;++end) switch((cc=str.charCodeAt(end))) {
-			case 0x22: instr = !instr; break;
+			case 0x22: if(startcc === 0x22) instr = !instr; break;
 			case sepcc: case 0x0a: case 0x0d: if(!instr && finish_cell()) break outer; break;
 			default: break;
 		}
