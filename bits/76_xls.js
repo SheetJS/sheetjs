@@ -593,6 +593,8 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 					out['!margins'][Rn.slice(0,-6).toLowerCase()] = val;
 					break;
 
+				case 'Selection': break;
+
 				case 'Setup': // TODO
 					if(!out['!margins']) default_margins(out['!margins'] = {});
 					out['!margins'].header = val.header;
@@ -625,7 +627,6 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 				case 'SXLI': break; // TODO
 				case 'SXEx': break; // TODO
 				case 'QsiSXTag': break; // TODO
-				case 'Selection': break;
 				case 'Feat': break;
 				case 'FeatHdr': case 'FeatHdr11': break;
 				case 'Feature11': case 'Feature12': case 'List12': break;
@@ -848,8 +849,11 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 	}
 	wb.SheetNames=keys(Directory).sort(function(a,b) { return Number(a) - Number(b); }).map(function(x){return Directory[x].name;});
 	if(!options.bookSheets) wb.Sheets=Sheets;
+	if(!wb.SheetNames.length && Preamble["!ref"]) {
+		wb.SheetNames.push("Sheet1");
+		if(wb.Sheets) wb.Sheets["Sheet1"] = Preamble;
+	} else wb.Preamble=Preamble;
 	if(wb.Sheets) FilterDatabases.forEach(function(r,i) { wb.Sheets[wb.SheetNames[i]]['!autofilter'] = r; });
-	wb.Preamble=Preamble;
 	wb.Strings = sst;
 	wb.SSF = SSF.get_table();
 	if(opts.enc) wb.Encryption = opts.enc;
