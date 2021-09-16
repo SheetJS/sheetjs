@@ -83,7 +83,7 @@ function readSync(data/*:RawData*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
 	}
 	switch((n = firstbyte(d, o))[0]) {
 		case 0xD0: if(n[1] === 0xCF && n[2] === 0x11 && n[3] === 0xE0 && n[4] === 0xA1 && n[5] === 0xB1 && n[6] === 0x1A && n[7] === 0xE1) return read_cfb(CFB.read(d, o), o); break;
-		case 0x09: if(n[1] <= 0x04) return parse_xlscfb(d, o); break;
+		case 0x09: if(n[1] <= 0x08) return parse_xlscfb(d, o); break;
 		case 0x3C: return parse_xlml(d, o);
 		case 0x49:
 			if(n[1] === 0x49 && n[2] === 0x2a && n[3] === 0x00) throw new Error("TIFF Image File is not a spreadsheet");
