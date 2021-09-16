@@ -8,6 +8,7 @@ xlsx*.js    text eol=lf
 
 docbits/*         linguist-documentation
 dist/*            linguist-generated=true binary
+*.mjs             linguist-generated=true binary
 xlsx.js           linguist-generated=true binary
 xlsxworker.js     linguist-generated=true binary
 tests/core.js     linguist-generated=true binary

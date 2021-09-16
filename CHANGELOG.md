@@ -4,9 +4,20 @@ This log is intended to keep track of backwards-incompatible changes, including
 but not limited to API changes and file location changes.  Minor behavioral
 changes may not be included if they are not expected to break existing code.
 
+## v0.17.2
+
+* Browser and Node optional ESM support
+* DSV correct handling of bare quotes (h/t @bgamrat)
+
 ## v0.17.1
 
 * `XLSB` writer uses short cell form when viable
+
+## 0.17.0:
+
+* mini build includes ODS parse/write support
+* DBF explicitly cap worksheet to 1<<20 rows
+* XLS throw errors on truncated records
 
 ## v0.16.2
 
