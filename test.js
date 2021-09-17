@@ -2367,6 +2367,18 @@ describe('corner cases', function() {
 		assert.equal(wb.Sheets.Sheet1.A10.f, "'a!b'!A1");
 		assert.equal(wb.Sheets.Sheet1.A11.f, "'a b'!A1");
 	});
+	it('should parse CSV date values with preceding space', function() {
+		var wb = X.read(
+			'7,  2018-03-24',
+			{cellDates: false, dateNF: 'yyyy-mm-dd', type:'string'}
+		);
+		var ws = wb.Sheets.Sheet1;
+		var d = X.SSF.parse_date_code(ws.B1.v);
+		assert.equal(d.d, 24);
+		assert.equal(d.m, 3);
+		assert.equal(d.y, 2018);
+		assert.equal(ws.B1.w, '2018-03-24');
+	});
 });
 
 describe('encryption', function() {
