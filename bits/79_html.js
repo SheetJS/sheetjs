@@ -32,7 +32,7 @@ var HTML_ = (function() {
 				var tag = parsexmltag(cell.slice(0, cell.indexOf(">")));
 				CS = tag.colspan ? +tag.colspan : 1;
 				if((RS = +tag.rowspan)>1 || CS>1) merges.push({s:{r:R,c:C},e:{r:R + (RS||1) - 1, c:C + CS - 1}});
-				var _t/*:string*/ = tag.t || "";
+				var _t/*:string*/ = tag.t || tag["data-t"] || "";
 				/* TODO: generate stub cells */
 				if(!m.length) { C += CS; continue; }
 				m = htmldecode(m);
@@ -80,10 +80,14 @@ var HTML_ = (function() {
 			var sp = ({}/*:any*/);
 			if(RS > 1) sp.rowspan = RS;
 			if(CS > 1) sp.colspan = CS;
-			sp.t = cell && cell.t || 'z';
 			if(o.editable) w = '<span contenteditable="true">' + w + '</span>';
+			else if(cell) {
+				sp["data-t"] = cell && cell.t || 'z';
+				if(cell.v != null) sp["data-v"] = cell.v;
+				if(cell.z != null) sp["data-z"] = cell.z;
+				if(cell.l && (cell.l.Target || "#").charAt(0) != "#") w = '<a href="' + cell.l.Target +'">' + w + '</a>';
+			}
 			sp.id = (o.id || "sjs") + "-" + coord;
-			if(sp.t != "z") { sp.v = cell.v; if(cell.z != null) sp.z = cell.z; }
 			oo.push(writextag('td', w, sp));
 		}
 		var preamble = "<tr>";
@@ -155,8 +159,8 @@ function sheet_add_dom(ws/*:Worksheet*/, table/*:HTMLElement*/, _opts/*:?any*/)/
 		for(_C = C = 0; _C < elts.length; ++_C) {
 			var elt/*:HTMLTableCellElement*/ = elts[_C];
 			if (opts.display && is_dom_element_hidden(elt)) continue;
-			var v/*:?string*/ = elt.hasAttribute('v') ? elt.getAttribute('v') : htmldecode(elt.innerHTML);
-			var z/*:?string*/ = elt.getAttribute('z');
+			var v/*:?string*/ = elt.hasAttribute('data-v') ? elt.getAttribute('data-v') : elt.hasAttribute('v') ? elt.getAttribute('v') : htmldecode(elt.innerHTML);
+			var z/*:?string*/ = elt.getAttribute('data-z') || elt.getAttribute('z');
 			for(midx = 0; midx < merges.length; ++midx) {
 				var m/*:Range*/ = merges[midx];
 				if(m.s.c == C + or_C && m.s.r < R + or_R && R + or_R <= m.e.r) { C = m.e.c+1 - or_C; midx = -1; }
@@ -165,7 +169,7 @@ function sheet_add_dom(ws/*:Worksheet*/, table/*:HTMLElement*/, _opts/*:?any*/)/
 			CS = +elt.getAttribute("colspan") || 1;
 			if( ((RS = (+elt.getAttribute("rowspan") || 1)))>1 || CS>1) merges.push({s:{r:R + or_R,c:C + or_C},e:{r:R + or_R + (RS||1) - 1, c:C + or_C + (CS||1) - 1}});
 			var o/*:Cell*/ = {t:'s', v:v};
-			var _t/*:string*/ = elt.getAttribute("t") || "";
+			var _t/*:string*/ = elt.getAttribute("data-t") || elt.getAttribute("t") || "";
 			if(v != null) {
 				if(v.length == 0) o.t = _t || 'z';
 				else if(opts.raw || v.trim().length == 0 || _t == "s"){}
@@ -179,6 +183,13 @@ function sheet_add_dom(ws/*:Worksheet*/, table/*:HTMLElement*/, _opts/*:?any*/)/
 				}
 			}
 			if(o.z === undefined && z != null) o.z = z;
+			/* The first link is used.  Links are assumed to be fully specified.
+			 * TODO: The right way to process relative links is to make a new <a> */
+			var l = "", Aelts = elt.getElementsByTagName("A");
+			if(Aelts && Aelts.length) for(var Aelti = 0; Aelti < Aelts.length; ++Aelti)	if(Aelts[Aelti].hasAttribute("href")) {
+				l = Aelts[Aelti].getAttribute("href"); if(l.charAt(0) != "#") break;
+			}
+			if(l && l.charAt(0) != "#") o.l = ({ Target: l });
 			if(opts.dense) { if(!ws[R + or_R]) ws[R + or_R] = []; ws[R + or_R][C + or_C] = o; }
 			else ws[encode_cell({c:C + or_C, r:R + or_R})] = o;
 			if(range.e.c < C + or_C) range.e.c = C + or_C;

@@ -231,7 +231,7 @@ function parse_fonts(t, styles, themes, opts) {
 					font.color.index = parseInt(y.indexed, 10);
 					var icv = XLSIcv[font.color.index];
 					if(font.color.index == 81) icv = XLSIcv[1];
-					if(!icv) throw new Error(x);
+					if(!icv) icv = XLSIcv[1]; //throw new Error(x); // note: 206 is valid
 					font.color.rgb = icv[0].toString(16) + icv[1].toString(16) + icv[2].toString(16);
 				} else if(y.theme) {
 					font.color.theme = parseInt(y.theme, 10);
