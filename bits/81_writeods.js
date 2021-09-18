@@ -34,7 +34,7 @@ var write_content_ods/*:{(wb:any, opts:any):string}*/ = (function() {
 		/* Section 9 Tables */
 		var o/*:Array<string>*/ = [];
 		o.push('      <table:table table:name="' + escapexml(wb.SheetNames[i]) + '" table:style-name="ta1">\n');
-		var R=0,C=0, range = decode_range(ws['!ref']);
+		var R=0,C=0, range = decode_range(ws['!ref']||"A1");
 		var marr/*:Array<Range>*/ = ws['!merges'] || [], mi = 0;
 		var dense = Array.isArray(ws);
 		for(R = 0; R < range.s.r; ++R) o.push('        <table:table-row></table:table-row>\n');
