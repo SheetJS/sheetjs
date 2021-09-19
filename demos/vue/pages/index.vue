@@ -74,8 +74,8 @@ export default {
 			const reader = new FileReader();
 			reader.onload = (e) => {
 				/* Parse data */
-				const bstr = e.target.result;
-				const wb = XLSX.read(bstr, {type:'binary'});
+				const ab = e.target.result;
+				const wb = XLSX.read(new Uint8Array(ab), {type:'array'});
 				/* Get first worksheet */
 				const wsname = wb.SheetNames[0];
 				const ws = wb.Sheets[wsname];
@@ -85,7 +85,7 @@ export default {
 				this.data = data;
 				this.cols = make_cols(ws['!ref']);
 			};
-			reader.readAsBinaryString(file);
+			reader.readAsArrayBuffer(file);
 		}
 	}
 };

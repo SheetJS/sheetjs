@@ -6,7 +6,8 @@ vue: ## Simple server for vue
 nuxt: ## nuxt.js demo
 	mkdir -p node_modules
 	cd node_modules; if [ ! -e xlsx ]; then ln -s ../../../ xlsx; fi; cd ..
-	nuxt
+	npm i nuxt vue
+	npx nuxt
 
 .PHONY: weex
 weex: ## Build weex project
