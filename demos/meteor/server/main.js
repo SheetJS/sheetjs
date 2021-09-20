@@ -5,11 +5,6 @@ import XLSX from 'xlsx';
 
 Meteor.methods({
   /* read the data and return the workbook object to the frontend */
-  uploadS: (bstr, name) => {
-    check(bstr, String);
-    check(name, String);
-    return XLSX.read(bstr, { type: 'binary' });
-  },
   uploadU: (ab, name) => {
     check(ab, Uint8Array);
     check(name, String);

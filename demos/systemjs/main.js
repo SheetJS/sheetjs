@@ -88,22 +88,16 @@ var b64it = window.b64it = (function() {
 })();
 
 var do_file = (function() {
-	var rABS = typeof FileReader !== "undefined" && (FileReader.prototype||{}).readAsBinaryString;
-	var domrabs = document.getElementsByName("userabs")[0];
-	if(!rABS) domrabs.disabled = !(domrabs.checked = false);
-
 	return function do_file(files) {
-		rABS = domrabs.checked;
 		var f = files[0];
 		var reader = new FileReader();
 		reader.onload = function(e) {
-			if(typeof console !== 'undefined') console.log("onload", new Date(), rABS);
+			if(typeof console !== 'undefined') console.log("onload", new Date());
 			var data = e.target.result;
-			if(!rABS) data = new Uint8Array(data);
-			process_wb(X.read(data, {type: rABS ? 'binary' : 'array'}));
+			data = new Uint8Array(data);
+			process_wb(X.read(data, {type: 'array'}));
 		};
-		if(rABS) reader.readAsBinaryString(f);
-		else reader.readAsArrayBuffer(f);
+		reader.readAsArrayBuffer(f);
 	};
 })();
 
