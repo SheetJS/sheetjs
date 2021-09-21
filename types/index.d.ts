@@ -18,6 +18,9 @@ export function readFile(filename: string, opts?: ParsingOptions): WorkBook;
 export function read(data: any, opts?: ParsingOptions): WorkBook;
 /** Attempts to write or download workbook data to file */
 export function writeFile(data: WorkBook, filename: string, opts?: WritingOptions): any;
+/** Attempts to write or download workbook data to file asynchronously */
+type CBFunc = () => void;
+export function writeFileAsync(filename: string, data: WorkBook, opts: WritingOptions | CBFunc, cb?: CBFunc): any;
 /** Attempts to write the workbook data */
 export function write(data: WorkBook, opts?: WritingOptions): any;
 
