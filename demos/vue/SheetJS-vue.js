@@ -12,8 +12,7 @@ var SJSTemplate = [
 		'<div id="out-table"></div>',
 	'</div>'
 ].join("");
-
-Vue.component('html-preview', {
+var component_struct = {
 	template: SJSTemplate,
 	methods: {
 		onchange: function(evt) {
@@ -59,4 +58,11 @@ Vue.component('html-preview', {
 			XLSX.writeFile(wb, "sheetjs.xlsx");
 		}
 	}
-});
+};
+var app;
+if(Vue.component) {
+	Vue.component('html-preview', component_struct);
+} else {
+	app = Vue.createApp({});
+	app.component('html-preview', component_struct);
+}
