@@ -169,7 +169,9 @@ var parse_content_xml = (function() {
 						case 'date': q.t = 'd'; q.v = parseDate(ctag['date-value']);
 							if(!opts.cellDates) { q.t = 'n'; q.v = datenum(q.v); }
 							q.z = 'm/d/yy'; break;
-						case 'time': q.t = 'n'; q.v = parse_isodur(ctag['time-value'])/86400; break;
+						case 'time': q.t = 'n'; q.v = parse_isodur(ctag['time-value'])/86400;
+							if(opts.cellDates) { q.t = 'd'; q.v = numdate(q.v); }
+							q.z = 'HH:MM:SS'; break;
 						case 'number': q.t = 'n'; q.v = parseFloat(ctag['数据数值']); break;
 						default:
 							if(q.t === 'string' || q.t === 'text' || !q.t) {
