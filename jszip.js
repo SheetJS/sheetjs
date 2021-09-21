@@ -14,7 +14,7 @@ Note: since JSZip 3 removed critical functionality, this version assigns to the
 */
 (function(e){
 	if("object"==typeof exports&&"undefined"!=typeof module&&"undefined"==typeof DO_NOT_EXPORT_JSZIP)module.exports=e();
-	else if("function"==typeof define&&define.amd&&"undefined"==typeof DO_NOT_EXPORT_JSZIP){JSZipSync=e();define([],e);}
+	else if("function"==typeof define&&define.amd&&"undefined"==typeof DO_NOT_EXPORT_JSZIP){JSZipSync=e();define('j',[],e);}
 	else{
 		var f;
 		"undefined"!=typeof globalThis?f=globalThis:

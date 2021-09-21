@@ -87,10 +87,6 @@ var b64it = window.b64it = (function() {
 })();
 
 var do_file = (function() {
-	var rABS = typeof FileReader !== "undefined" && (FileReader.prototype||{}).readAsBinaryString;
-	var domrabs = document.getElementsByName("userabs")[0];
-	if(!rABS) domrabs.disabled = !(domrabs.checked = false);
-
 	var use_worker = false && typeof Worker !== 'undefined';
 	var domwork = document.getElementsByName("useworker")[0];
 	if(!use_worker) domwork.disabled = !(domwork.checked = false);
@@ -104,23 +100,21 @@ var do_file = (function() {
 				case XW.msg: cb(JSON.parse(e.data.d)); break;
 			}
 		};
-		worker.postMessage({d:data,b:rABS?'binary':'array'});
+		worker.postMessage({d:data,b:'array'});
 	};
 
 	return function do_file(files) {
-		rABS = domrabs.checked;
 		use_worker = domwork.checked;
 		var f = files[0];
 		var reader = new FileReader();
 		reader.onload = function(e) {
-			if(typeof console !== 'undefined') console.log("onload", new Date(), rABS, use_worker);
+			if(typeof console !== 'undefined') console.log("onload", new Date(), use_worker);
 			var data = e.target.result;
-			if(!rABS) data = new Uint8Array(data);
+			data = new Uint8Array(data);
 			if(use_worker) xw(data, process_wb);
-			else process_wb(X.read(data, {type: rABS ? 'binary' : 'array'}));
+			else process_wb(X.read(data, {type: 'array'}));
 		};
-		if(rABS) reader.readAsBinaryString(f);
-		else reader.readAsArrayBuffer(f);
+		reader.readAsArrayBuffer(f);
 	};
 })();
 
