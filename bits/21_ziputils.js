@@ -27,10 +27,10 @@ function getdata(data) { return (data && data.name.slice(-4) === ".bin") ? getda
 /* OASIS does not comment on filename case sensitivity */
 function safegetzipfile(zip, file/*:string*/) {
 	var k = zip.FullPaths || keys(zip.files);
-	var f = file.toLowerCase(), g = f.replace(/\//g,'\\');
+	var f = file.toLowerCase().replace(/[\/]/g, '\\'), g = f.replace(/\\/g,'\/');
 	for(var i=0; i<k.length; ++i) {
-		var n = k[i].toLowerCase();
-		if(f == n || g == n) return zip.files[k[i]];
+		var n = k[i].replace(/^Root Entry[\/]/,"").toLowerCase();
+		if(f == n || g == n) return zip.FileIndex[i];
 	}
 	return null;
 }
