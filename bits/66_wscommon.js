@@ -45,6 +45,7 @@ function col_obj_w(C/*:number*/, col) {
 	if(wch > -1) { p.width = char2width(wch); p.customWidth = 1; }
 	else if(col.width != null) p.width = col.width;
 	if(col.hidden) p.hidden = true;
+	if(col.level != null) { p.outlineLevel = p.level = col.level; }
 	return p;
 }
 

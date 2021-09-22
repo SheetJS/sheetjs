@@ -618,6 +618,7 @@ function parse_xlml_xml(d, _opts)/*:Workbook*/ {
 
 					case 'unsynced' /*case 'Unsynced'*/: break;
 					case 'print' /*case 'Print'*/: break;
+					case 'printerrors' /*case 'PrintErrors'*/: break;
 					case 'panes' /*case 'Panes'*/: break;
 					case 'scale' /*case 'Scale'*/: break;
 					case 'pane' /*case 'Pane'*/: break;
@@ -657,11 +658,17 @@ function parse_xlml_xml(d, _opts)/*:Workbook*/ {
 					case 'allowformatcells' /*case 'AllowFormatCells'*/: break;
 					case 'allowsizecols' /*case 'AllowSizeCols'*/: break;
 					case 'allowsizerows' /*case 'AllowSizeRows'*/: break;
-					case 'nosummaryrowsbelowdetail' /*case 'NoSummaryRowsBelowDetail'*/: break;
+					case 'nosummaryrowsbelowdetail' /*case 'NoSummaryRowsBelowDetail'*/:
+						if(!cursheet["!outline"]) cursheet["!outline"] = {};
+						cursheet["!outline"].above = true;
+						break;
 					case 'tabcolorindex' /*case 'TabColorIndex'*/: break;
 					case 'donotdisplayheadings' /*case 'DoNotDisplayHeadings'*/: break;
 					case 'showpagelayoutzoom' /*case 'ShowPageLayoutZoom'*/: break;
-					case 'nosummarycolumnsrightdetail' /*case 'NoSummaryColumnsRightDetail'*/: break;
+					case 'nosummarycolumnsrightdetail' /*case 'NoSummaryColumnsRightDetail'*/:
+						if(!cursheet["!outline"]) cursheet["!outline"] = {};
+						cursheet["!outline"].left = true;
+						break;
 					case 'blackandwhite' /*case 'BlackAndWhite'*/: break;
 					case 'donotdisplayzeros' /*case 'DoNotDisplayZeros'*/: break;
 					case 'displaypagebreak' /*case 'DisplayPageBreak'*/: break;

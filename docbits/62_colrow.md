@@ -14,6 +14,7 @@ type ColInfo = {
   wch?:    number;  // width in characters
 
   /* other fields for preserving features from files */
+  level?:  number;  // 0-indexed outline / group level
   MDW?:    number;  // Excel's "Max Digit Width" unit, always integral
 };
 ```

@@ -223,7 +223,7 @@ function write_WriteAccess(s/*:string*/, opts) {
 /* [MS-XLS] 2.4.351 */
 function parse_WsBool(blob, length, opts) {
 	var flags = opts && opts.biff == 8 || length == 2 ? blob.read_shift(2) : (blob.l += length, 0);
-	return { fDialog: flags & 0x10 };
+	return { fDialog: flags & 0x10, fBelow: flags & 0x40, fRight: flags & 0x80 };
 }
 
 /* [MS-XLS] 2.4.28 */

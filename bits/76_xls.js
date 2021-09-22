@@ -272,6 +272,8 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 				case 'ForceFullCalculation': wb.opts.FullCalc = val; break;
 				case 'WsBool':
 					if(val.fDialog) out["!type"] = "dialog";
+					if(!val.fBelow) (out["!outline"] || (out["!outline"] = {})).above = true;
+					if(!val.fRight) (out["!outline"] || (out["!outline"] = {})).left = true;
 					break; // TODO
 				case 'XF':
 					XFs.push(val); break;

@@ -13,7 +13,7 @@ In the browser, just add a script tag:
 |-----------:|:-------------------------------------------|
 |    `unpkg` | <https://unpkg.com/xlsx/>                  |
 | `jsDelivr` | <https://jsdelivr.com/package/npm/xlsx>    |
-|    `CDNjs` | <https://cdnjs.com/libraries/xlsx>          |
+|    `CDNjs` | <https://cdnjs.com/libraries/xlsx>         |
 |    `packd` | <https://bundle.run/xlsx@latest?name=XLSX> |
 
 `unpkg` makes the latest version available at:

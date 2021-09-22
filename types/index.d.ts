@@ -340,6 +340,9 @@ export interface ColInfo {
     /** width in "characters" */
     wch?: number;
 
+    /** outline / group level */
+    level?: number;
+
     /** Excel's "Max Digit Width" unit, always integral */
     MDW?: number;
 }

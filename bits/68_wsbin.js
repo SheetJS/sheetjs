@@ -79,14 +79,23 @@ function parse_BrtWsFmtInfo(/*::data, length*/) {
 /* [MS-XLSB] 2.4.823 BrtWsProp */
 function parse_BrtWsProp(data, length) {
 	var z = {};
+	var f = data[data.l]; ++data.l;
+	z.above = !(f & 0x40);
+	z.left  = !(f & 0x80);
 	/* TODO: pull flags */
-	data.l += 19;
+	data.l += 18;
 	z.name = parse_XLSBCodeName(data, length - 19);
 	return z;
 }
-function write_BrtWsProp(str, o) {
+function write_BrtWsProp(str, outl, o) {
 	if(o == null) o = new_buf(84+4*str.length);
-	for(var i = 0; i < 3; ++i) o.write_shift(1,0);
+	var f = 0xC0;
+	if(outl) {
+		if(outl.above) f &= ~0x40;
+		if(outl.left)  f &= ~0x80;
+	}
+	o.write_shift(1, f);
+	for(var i = 1; i < 3; ++i) o.write_shift(1,0);
 	write_BrtColor({auto:1}, o);
 	o.write_shift(-4,-1);
 	o.write_shift(-4,-1);
@@ -660,6 +669,7 @@ function parse_ws_bin(data, _opts, idx, rels, wb/*:WBWBProps*/, themes, styles)/
 			case 0x0093: /* 'BrtWsProp' */
 				if(!wb.Sheets[idx]) wb.Sheets[idx] = {};
 				if(val.name) wb.Sheets[idx].CodeName = val.name;
+				if(val.above || val.left) s['!outline'] = { above: val.above, left: val.left };
 				break;
 
 			case 0x0089: /* 'BrtBeginWsView' */
@@ -956,7 +966,7 @@ function write_ws_bin(idx/*:number*/, opts, wb/*:Workbook*/, rels) {
 	/* passed back to write_zip and removed there */
 	ws['!comments'] = [];
 	write_record(ba, "BrtBeginSheet");
-	if(wb.vbaraw) write_record(ba, "BrtWsProp", write_BrtWsProp(c));
+	if(wb.vbaraw || ws['!outline']) write_record(ba, "BrtWsProp", write_BrtWsProp(c, ws['!outline']));
 	write_record(ba, "BrtWsDim", write_BrtWsDim(r));
 	write_WSVIEWS2(ba, ws, wb.Workbook);
 	write_WSFMTINFO(ba, ws);
