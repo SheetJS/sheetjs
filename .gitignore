@@ -4,6 +4,7 @@ package-lock.json
 _book/
 misc/coverage.html
 misc/prof.js
+misc/*.[sS][vV][gG]
 v8.log
 tmp
 *.[tT][xX][tT]

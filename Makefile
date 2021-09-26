@@ -102,10 +102,13 @@ bytes: ## Display minified and gzipped file sizes
 
 .PHONY: graph
 graph: formats.png legend.png ## Rebuild format conversion graph
-formats.png: formats.dot
-	circo -Tpng -o$@ $<
-legend.png: misc/legend.dot
-	dot -Tpng -o$@ $<
+misc/formats.svg: misc/formats.dot
+	circo -Tsvg -o$@ $<
+misc/legend.svg: misc/legend.dot
+	dot -Tsvg -o$@ $<
+formats.png legend.png: %.png: misc/%.svg
+	node misc/coarsify.js misc/$*.svg misc/$*.svg.svg
+	npx svgexport misc/$*.svg.svg $@ 0.5x
 
 
 .PHONY: nexe

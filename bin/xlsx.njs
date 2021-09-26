@@ -24,8 +24,8 @@ program
 	.option('-Y, --ods',  'emit ODS  to <sheetname> or <file>.ods')
 	.option('-8, --xls',  'emit XLS  to <sheetname> or <file>.xls (BIFF8)')
 	.option('-5, --biff5','emit XLS  to <sheetname> or <file>.xls (BIFF5)')
-	//.option('-4, --biff4','emit XLS  to <sheetname> or <file>.xls (BIFF4)')
-	//.option('-3, --biff3','emit XLS  to <sheetname> or <file>.xls (BIFF3)')
+	.option('-4, --biff4','emit XLS  to <sheetname> or <file>.xls (BIFF4)')
+	.option('-3, --biff3','emit XLS  to <sheetname> or <file>.xls (BIFF3)')
 	.option('-2, --biff2','emit XLS  to <sheetname> or <file>.xls (BIFF2)')
 	.option('-i, --xla',  'emit XLA to <sheetname> or <file>.xla')
 	.option('-6, --xlml', 'emit SSML to <sheetname> or <file>.xls (2003 XML)')
@@ -256,7 +256,7 @@ switch(true) {
 
 	default:
 		if(!program.book) {
-			var stream = X.stream.to_csv(ws, {FS:program.fieldSep, RS:program.rowSep});
+			var stream = X.stream.to_csv(ws, {FS:program.fieldSep||",", RS:program.rowSep||"\n"});
 			if(program.output) stream.pipe(fs.createWriteStream(program.output));
 			else stream.pipe(process.stdout);
 		} else doit(function(ws) { return X.utils.sheet_to_csv(ws,{FS:program.fieldSep, RS:program.rowSep}); });

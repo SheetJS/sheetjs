@@ -1222,6 +1222,7 @@ var XLSRecordEnum = {
 	/*::[*/0x0034/*::]*/: { n:"DDEObjName" },
 	/*::[*/0x003e/*::]*/: { n:"BIFF2WINDOW2" },
 	/*::[*/0x0043/*::]*/: { n:"BIFF2XF" },
+	/*::[*/0x0044/*::]*/: { n:"BIFF2XFINDEX", f:parseuint16 },
 	/*::[*/0x0045/*::]*/: { n:"BIFF2FONTCLR" },
 	/*::[*/0x0056/*::]*/: { n:"BIFF4FMTCNT" }, /* 16-bit cnt, similar to BIFF2 */
 	/*::[*/0x007e/*::]*/: { n:"RK" }, /* Not necessarily same as 0x027e */

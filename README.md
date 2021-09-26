@@ -26,26 +26,25 @@ Community Translations of this README:
 
 [**Issues and Bug Reports**](https://github.com/sheetjs/sheetjs/issues)
 
-[**File format support for known spreadsheet data formats:**](#file-formats)
+![License](https://img.shields.io/github/license/SheetJS/sheetjs)
+[![Snyk Vulnerabilities](https://img.shields.io/snyk/vulnerabilities/github/SheetJS/sheetjs)](https://snyk.io/test/github/SheetJS/sheetjs)
+[![npm Downloads](https://img.shields.io/npm/dm/xlsx.svg)](https://npmjs.org/package/xlsx)
+[![jsDelivr Downloads](https://data.jsdelivr.com/v1/package/npm/xlsx/badge)](https://www.jsdelivr.com/package/npm/xlsx)
+[![Analytics](https://ga-beacon.appspot.com/UA-36810333-1/SheetJS/sheetjs?pixel)](https://github.com/SheetJS/sheetjs)
 
-<details>
-  <summary><b>Graph of supported formats</b> (click to show)</summary>
+[**Browser Test and Support Matrix**](https://oss.sheetjs.com/sheetjs/tests/)
+
+[![Build Status](https://saucelabs.com/browser-matrix/sheetjs.svg)](https://saucelabs.com/u/sheetjs)
+
+**Supported File Formats**
 
 ![circo graph of format support](formats.png)
+
+<details><summary><b>Diagram Legend</b> (click to show)</summary>
 
 ![graph legend](legend.png)
 
 </details>
-
-[**Browser Test**](https://oss.sheetjs.com/sheetjs/tests/)
-
-[![Build Status](https://saucelabs.com/browser-matrix/sheetjs.svg)](https://saucelabs.com/u/sheetjs)
-
-[![Build Status](https://semaphoreci.com/api/v1/sheetjs/sheetjs/branches/master/shields_badge.svg)](https://semaphoreci.com/sheetjs/sheetjs)
-[![Coverage Status](https://img.shields.io/coveralls/SheetJS/sheetjs/master.svg)](https://coveralls.io/r/SheetJS/sheetjs?branch=master)
-[![Dependencies Status](https://david-dm.org/sheetjs/sheetjs/status.svg)](https://david-dm.org/sheetjs/sheetjs)
-[![npm Downloads](https://img.shields.io/npm/dt/xlsx.svg)](https://npmjs.org/package/xlsx)
-[![Analytics](https://ga-beacon.appspot.com/UA-36810333-1/SheetJS/sheetjs?pixel)](https://github.com/SheetJS/sheetjs)
 
 ## Table of Contents
 
@@ -162,7 +161,7 @@ In the browser, just add a script tag:
 |-----------:|:-------------------------------------------|
 |    `unpkg` | <https://unpkg.com/xlsx/>                  |
 | `jsDelivr` | <https://jsdelivr.com/package/npm/xlsx>    |
-|    `CDNjs` | <https://cdnjs.com/libraries/xlsx>          |
+|    `CDNjs` | <https://cdnjs.com/libraries/xlsx>         |
 |    `packd` | <https://bundle.run/xlsx@latest?name=XLSX> |
 
 `unpkg` makes the latest version available at:
@@ -245,7 +244,11 @@ An appropriate version for each dependency is included in the dist/ directory.
 
 The complete single-file version is generated at `dist/xlsx.full.min.js`
 
-A slimmer build with XLSX / HTML support is generated at `dist/xlsx.mini.min.js`
+A slimmer build is generated at `dist/xlsx.mini.min.js`. Compared to full build:
+- codepage library skipped (no support for XLS encodings)
+- XLSX compression option not currently available
+- no support for XLSB / XLS / Lotus 1-2-3 / SpreadsheetML 2003
+- node stream utils removed
 
 Webpack and Browserify builds include optional modules by default.  Webpack can
 be configured to remove support with `resolve.alias`:
@@ -846,7 +849,7 @@ Parse options are described in the [Parsing Options](#parsing-options) section.
 `XLSX.writeFile(wb, filename, write_opts)` attempts to write `wb` to `filename`.
 In browser-based environments, it will attempt to force a client-side download.
 
-`XLSX.writeFileAsync(filename, wb, o, cb)` attempts to write `wb` to `filename`.
+`XLSX.writeFileAsync(wb, filename, o, cb)` attempts to write `wb` to `filename`.
 If `o` is omitted, the writer will use the third argument as the callback.
 
 `XLSX.stream` contains a set of streaming write functions.
@@ -1347,10 +1350,10 @@ prefixed with an apostrophe `'`, consistent with Excel's formula bar display.
 
 | Storage Representation | Formats                  | Read  | Write |
 |:-----------------------|:-------------------------|:-----:|:-----:|
-| A1-style strings       | XLSX                     |  :o:  |  :o:  |
-| RC-style strings       | XLML and plain text      |  :o:  |  :o:  |
-| BIFF Parsed formulae   | XLSB and all XLS formats |  :o:  |       |
-| OpenFormula formulae   | ODS/FODS/UOS             |  :o:  |  :o:  |
+| A1-style strings       | XLSX                     |   ✔   |   ✔   |
+| RC-style strings       | XLML and plain text      |   ✔   |   ✔   |
+| BIFF Parsed formulae   | XLSB and all XLS formats |   ✔   |       |
+| OpenFormula formulae   | ODS/FODS/UOS             |   ✔   |   ✔   |
 
 Since Excel prohibits named cells from colliding with names of A1 or RC style
 cell references, a (not-so-simple) regex conversion is possible.  BIFF Parsed
@@ -1374,6 +1377,7 @@ type ColInfo = {
   wch?:    number;  // width in characters
 
   /* other fields for preserving features from files */
+  level?:  number;  // 0-indexed outline / group level
   MDW?:    number;  // Excel's "Max Digit Width" unit, always integral
 };
 ```
@@ -1852,6 +1856,8 @@ output formats.  The specific file type is controlled with `bookType` option:
 | `xlsb`     | `.xlsb`  |    ZIP    | multi  | Excel 2007+ Binary Format       |
 | `biff8`    | `.xls`   |    CFB    | multi  | Excel 97-2004 Workbook Format   |
 | `biff5`    | `.xls`   |    CFB    | multi  | Excel 5.0/95 Workbook Format    |
+| `biff4`    | `.xls`   |   none    | single | Excel 4.0 Worksheet Format      |
+| `biff3`    | `.xls`   |   none    | single | Excel 3.0 Worksheet Format      |
 | `biff2`    | `.xls`   |   none    | single | Excel 2.0 Worksheet Format      |
 | `xlml`     | `.xls`   |   none    | multi  | Excel 2003-2004 (SpreadsheetML) |
 | `ods`      | `.ods`   |    ZIP    | multi  | OpenDocument Spreadsheet        |
@@ -1990,14 +1996,19 @@ XLSX.utils.sheet_add_aoa(ws, [[4,5,6,7,8,9,0]], {origin: -1});
 `XLSX.utils.json_to_sheet` takes an array of objects and returns a worksheet
 with automatically-generated "headers" based on the keys of the objects.  The
 default column order is determined by the first appearance of the field using
-`Object.keys`, but can be overridden using the options argument:
+`Object.keys`.  The function accepts an options argument:
 
-| Option Name |  Default | Description                                         |
-| :---------- | :------: | :-------------------------------------------------- |
-|`header`     |          | Use specified column order (default `Object.keys`)  |
-|`dateNF`     |  FMT 14  | Use specified date format in string output          |
-|`cellDates`  |  false   | Store dates as type `d` (default is `n`)            |
-|`skipHeader` |  false   | If true, do not include header row in output        |
+| Option Name | Default | Description                                          |
+| :---------- | :-----: | :--------------------------------------------------- |
+|`header`     |         | Use specified field order (default `Object.keys`) ** |
+|`dateNF`     |  FMT 14 | Use specified date format in string output           |
+|`cellDates`  |  false  | Store dates as type `d` (default is `n`)             |
+|`skipHeader` |  false  | If true, do not include header row in output         |
+
+- All fields from each row will be written.  If `header` is an array and it does
+  not contain a particular field, the key will be appended to the array.
+- Cell types are deduced from the type of each value.  For example, a `Date`
+  object will generate a Date cell, while a string will generate a Text cell.
 
 <details>
   <summary><b>Examples</b> (click to show)</summary>
@@ -2368,31 +2379,31 @@ Despite the library name `xlsx`, it supports numerous spreadsheet file formats:
 | Format                                                       | Read  | Write |
 |:-------------------------------------------------------------|:-----:|:-----:|
 | **Excel Worksheet/Workbook Formats**                         |:-----:|:-----:|
-| Excel 2007+ XML Formats (XLSX/XLSM)                          |  :o:  |  :o:  |
-| Excel 2007+ Binary Format (XLSB BIFF12)                      |  :o:  |  :o:  |
-| Excel 2003-2004 XML Format (XML "SpreadsheetML")             |  :o:  |  :o:  |
-| Excel 97-2004 (XLS BIFF8)                                    |  :o:  |  :o:  |
-| Excel 5.0/95 (XLS BIFF5)                                     |  :o:  |  :o:  |
-| Excel 4.0 (XLS/XLW BIFF4)                                    |  :o:  |       |
-| Excel 3.0 (XLS BIFF3)                                        |  :o:  |       |
-| Excel 2.0/2.1 (XLS BIFF2)                                    |  :o:  |  :o:  |
+| Excel 2007+ XML Formats (XLSX/XLSM)                          |   ✔   |   ✔   |
+| Excel 2007+ Binary Format (XLSB BIFF12)                      |   ✔   |   ✔   |
+| Excel 2003-2004 XML Format (XML "SpreadsheetML")             |   ✔   |   ✔   |
+| Excel 97-2004 (XLS BIFF8)                                    |   ✔   |   ✔   |
+| Excel 5.0/95 (XLS BIFF5)                                     |   ✔   |   ✔   |
+| Excel 4.0 (XLS/XLW BIFF4)                                    |   ✔   |   ✔   |
+| Excel 3.0 (XLS BIFF3)                                        |   ✔   |   ✔   |
+| Excel 2.0/2.1 (XLS BIFF2)                                    |   ✔   |   ✔   |
 | **Excel Supported Text Formats**                             |:-----:|:-----:|
-| Delimiter-Separated Values (CSV/TXT)                         |  :o:  |  :o:  |
-| Data Interchange Format (DIF)                                |  :o:  |  :o:  |
-| Symbolic Link (SYLK/SLK)                                     |  :o:  |  :o:  |
-| Lotus Formatted Text (PRN)                                   |  :o:  |  :o:  |
-| UTF-16 Unicode Text (TXT)                                    |  :o:  |  :o:  |
+| Delimiter-Separated Values (CSV/TXT)                         |   ✔   |   ✔   |
+| Data Interchange Format (DIF)                                |   ✔   |   ✔   |
+| Symbolic Link (SYLK/SLK)                                     |   ✔   |   ✔   |
+| Lotus Formatted Text (PRN)                                   |   ✔   |   ✔   |
+| UTF-16 Unicode Text (TXT)                                    |   ✔   |   ✔   |
 | **Other Workbook/Worksheet Formats**                         |:-----:|:-----:|
-| OpenDocument Spreadsheet (ODS)                               |  :o:  |  :o:  |
-| Flat XML ODF Spreadsheet (FODS)                              |  :o:  |  :o:  |
-| Uniform Office Format Spreadsheet (标文通 UOS1/UOS2)         |  :o:  |       |
-| dBASE II/III/IV / Visual FoxPro (DBF)                        |  :o:  |  :o:  |
-| Lotus 1-2-3 (WKS/WK1/WK2/WK3/WK4/123)                        |  :o:  |       |
-| Quattro Pro Spreadsheet (WQ1/WQ2/WB1/WB2/WB3/QPW)            |  :o:  |       |
+| OpenDocument Spreadsheet (ODS)                               |   ✔   |   ✔   |
+| Flat XML ODF Spreadsheet (FODS)                              |   ✔   |   ✔   |
+| Uniform Office Format Spreadsheet (标文通 UOS1/UOS2)         |   ✔   |       |
+| dBASE II/III/IV / Visual FoxPro (DBF)                        |   ✔   |   ✔   |
+| Lotus 1-2-3 (WKS/WK1/WK2/WK3/WK4/123)                        |   ✔   |       |
+| Quattro Pro Spreadsheet (WQ1/WQ2/WB1/WB2/WB3/QPW)            |   ✔   |       |
 | **Other Common Spreadsheet Output Formats**                  |:-----:|:-----:|
-| HTML Tables                                                  |  :o:  |  :o:  |
-| Rich Text Format tables (RTF)                                |       |  :o:  |
-| Ethercalc Record Format (ETH)                                |  :o:  |  :o:  |
+| HTML Tables                                                  |   ✔   |   ✔   |
+| Rich Text Format tables (RTF)                                |       |   ✔   |
+| Ethercalc Record Format (ETH)                                |   ✔   |   ✔   |
 
 Features not supported by a given file format will not be written.  Formats with
 range limits will be silently truncated:
@@ -2403,6 +2414,8 @@ range limits will be silently truncated:
 | Excel 2007+ Binary Format (XLSB BIFF12)   | XFD1048576 |    16384 |  1048576 |
 | Excel 97-2004 (XLS BIFF8)                 | IV65536    |      256 |    65536 |
 | Excel 5.0/95 (XLS BIFF5)                  | IV16384    |      256 |    16384 |
+| Excel 4.0 (XLS BIFF4)                     | IV16384    |      256 |    16384 |
+| Excel 3.0 (XLS BIFF3)                     | IV16384    |      256 |    16384 |
 | Excel 2.0/2.1 (XLS BIFF2)                 | IV16384    |      256 |    16384 |
 
 Excel 2003 SpreadsheetML range limits are governed by the version of Excel and

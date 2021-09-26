@@ -1,8 +1,9 @@
 digraph G {
 	graph [mindist=0.1];
+	node [fontname="Indie Flower"];
 	csf [shape=doublecircle,label="Common\nSpreadsheet\nFormat\n(JS Object)"];
 	subgraph XL {
-		node  [style=filled,color=green];
+		node  [style=filled,color="#00FF00"];
 		xlsx  [label="XLSX\nXLSM"];
 		xlsb  [label="XLSB\nBIFF12"];
 		xlml  [label="SSML\n(2003/4)"];
@@ -58,7 +59,9 @@ digraph G {
 		xls2 -> csf
 		csf -> xls2
 		xls3 -> csf
+		csf -> xls3
 		xls4 -> csf
+		csf -> xls4
 		csf -> slk
 		slk -> csf
 		csf -> dif

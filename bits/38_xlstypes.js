@@ -403,7 +403,7 @@ function parse_Bes(blob/*::, length*/) {
 }
 function write_Bes(v, t/*:string*/, o) {
 	if(!o) o = new_buf(2);
-	o.write_shift(1, +v);
+	o.write_shift(1, ((t == 'e') ? +v : +!!v));
 	o.write_shift(1, ((t == 'e') ? 1 : 0));
 	return o;
 }

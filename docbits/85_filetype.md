@@ -10,8 +10,8 @@ Despite the library name `xlsx`, it supports numerous spreadsheet file formats:
 | Excel 2003-2004 XML Format (XML "SpreadsheetML")             |   ✔   |   ✔   |
 | Excel 97-2004 (XLS BIFF8)                                    |   ✔   |   ✔   |
 | Excel 5.0/95 (XLS BIFF5)                                     |   ✔   |   ✔   |
-| Excel 4.0 (XLS/XLW BIFF4)                                    |   ✔   |       |
-| Excel 3.0 (XLS BIFF3)                                        |   ✔   |       |
+| Excel 4.0 (XLS/XLW BIFF4)                                    |   ✔   |   ✔   |
+| Excel 3.0 (XLS BIFF3)                                        |   ✔   |   ✔   |
 | Excel 2.0/2.1 (XLS BIFF2)                                    |   ✔   |   ✔   |
 | **Excel Supported Text Formats**                             |:-----:|:-----:|
 | Delimiter-Separated Values (CSV/TXT)                         |   ✔   |   ✔   |
@@ -40,6 +40,8 @@ range limits will be silently truncated:
 | Excel 2007+ Binary Format (XLSB BIFF12)   | XFD1048576 |    16384 |  1048576 |
 | Excel 97-2004 (XLS BIFF8)                 | IV65536    |      256 |    65536 |
 | Excel 5.0/95 (XLS BIFF5)                  | IV16384    |      256 |    16384 |
+| Excel 4.0 (XLS BIFF4)                     | IV16384    |      256 |    16384 |
+| Excel 3.0 (XLS BIFF3)                     | IV16384    |      256 |    16384 |
 | Excel 2.0/2.1 (XLS BIFF2)                 | IV16384    |      256 |    16384 |
 
 Excel 2003 SpreadsheetML range limits are governed by the version of Excel and

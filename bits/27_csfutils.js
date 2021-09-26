@@ -87,6 +87,7 @@ function format_cell(cell/*:Cell*/, v/*:any*/, o/*:any*/) {
 	if(cell == null || cell.t == null || cell.t == 'z') return "";
 	if(cell.w !== undefined) return cell.w;
 	if(cell.t == 'd' && !cell.z && o && o.dateNF) cell.z = o.dateNF;
+	if(cell.t == "e") return BErr[cell.v] || cell.v;
 	if(v == undefined) return safe_format_cell(cell, cell.v);
 	return safe_format_cell(cell, v);
 }

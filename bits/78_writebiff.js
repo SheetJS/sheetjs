@@ -43,8 +43,7 @@ function write_BIFF2Cell(out, r/*:number*/, c/*:number*/) {
 function write_BIFF2BERR(r/*:number*/, c/*:number*/, val, t/*:?string*/) {
 	var out = new_buf(9);
 	write_BIFF2Cell(out, r, c);
-	if(t == 'e') { out.write_shift(1, val); out.write_shift(1, 1); }
-	else { out.write_shift(1, val?1:0); out.write_shift(1, 0); }
+	write_Bes(val, t || 'b', out);
 	return out;
 }
 
@@ -105,7 +104,7 @@ function write_biff2_buf(wb/*:Workbook*/, opts/*:WriteOpts*/) {
 	var idx = 0;
 	for(var i=0;i<wb.SheetNames.length;++i) if(wb.SheetNames[i] == o.sheet) idx=i;
 	if(idx == 0 && !!o.sheet && wb.SheetNames[0] != o.sheet) throw new Error("Sheet not found: " + o.sheet);
-	write_biff_rec(ba, 0x0009, write_BOF(wb, 0x10, o));
+	write_biff_rec(ba, (o.biff == 4 ? 0x0409 : (o.biff == 3 ? 0x0209 : 0x0009)), write_BOF(wb, 0x10, o));
 	/* ... */
 	write_ws_biff2(ba, wb.Sheets[wb.SheetNames[idx]], idx, o, wb);
 	/* ... */
@@ -195,7 +194,7 @@ function write_ws_biff8_cell(ba/*:BufArray*/, cell/*:Cell*/, R/*:number*/, C/*:n
 			if(opts.bookSST) {
 				var isst = get_sst_id(opts.Strings, cell.v, opts.revStrings);
 				write_biff_rec(ba, "LabelSst", write_LabelSst(R, C, isst, os, opts));
-			} else write_biff_rec(ba, "Label", write_Label(R, C, cell.v, os, opts));
+			} else write_biff_rec(ba, "Label", write_Label(R, C, (cell.v||"").slice(0,255), os, opts));
 			break;
 		default:
 			write_biff_rec(ba, "Blank", write_XLSCell(R, C, os));

@@ -41,6 +41,8 @@ output formats.  The specific file type is controlled with `bookType` option:
 | `xlsb`     | `.xlsb`  |    ZIP    | multi  | Excel 2007+ Binary Format       |
 | `biff8`    | `.xls`   |    CFB    | multi  | Excel 97-2004 Workbook Format   |
 | `biff5`    | `.xls`   |    CFB    | multi  | Excel 5.0/95 Workbook Format    |
+| `biff4`    | `.xls`   |   none    | single | Excel 4.0 Worksheet Format      |
+| `biff3`    | `.xls`   |   none    | single | Excel 3.0 Worksheet Format      |
 | `biff2`    | `.xls`   |   none    | single | Excel 2.0 Worksheet Format      |
 | `xlml`     | `.xls`   |   none    | multi  | Excel 2003-2004 (SpreadsheetML) |
 | `ods`      | `.ods`   |    ZIP    | multi  | OpenDocument Spreadsheet        |

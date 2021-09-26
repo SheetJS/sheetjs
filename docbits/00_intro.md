@@ -26,24 +26,23 @@ Community Translations of this README:
 
 [**Issues and Bug Reports**](https://github.com/sheetjs/sheetjs/issues)
 
-[**File format support for known spreadsheet data formats:**](#file-formats)
+![License](https://img.shields.io/github/license/SheetJS/sheetjs)
+[![Snyk Vulnerabilities](https://img.shields.io/snyk/vulnerabilities/github/SheetJS/sheetjs)](https://snyk.io/test/github/SheetJS/sheetjs)
+[![npm Downloads](https://img.shields.io/npm/dm/xlsx.svg)](https://npmjs.org/package/xlsx)
+[![jsDelivr Downloads](https://data.jsdelivr.com/v1/package/npm/xlsx/badge)](https://www.jsdelivr.com/package/npm/xlsx)
+[![Analytics](https://ga-beacon.appspot.com/UA-36810333-1/SheetJS/sheetjs?pixel)](https://github.com/SheetJS/sheetjs)
 
-<details>
-  <summary><b>Graph of supported formats</b> (click to show)</summary>
+[**Browser Test and Support Matrix**](https://oss.sheetjs.com/sheetjs/tests/)
+
+[![Build Status](https://saucelabs.com/browser-matrix/sheetjs.svg)](https://saucelabs.com/u/sheetjs)
+
+**Supported File Formats**
 
 ![circo graph of format support](formats.png)
+
+<details><summary><b>Diagram Legend</b> (click to show)</summary>
 
 ![graph legend](legend.png)
 
 </details>
-
-[**Browser Test**](https://oss.sheetjs.com/sheetjs/tests/)
-
-[![Build Status](https://saucelabs.com/browser-matrix/sheetjs.svg)](https://saucelabs.com/u/sheetjs)
-
-[![Build Status](https://semaphoreci.com/api/v1/sheetjs/sheetjs/branches/master/shields_badge.svg)](https://semaphoreci.com/sheetjs/sheetjs)
-[![Coverage Status](https://img.shields.io/coveralls/SheetJS/sheetjs/master.svg)](https://coveralls.io/r/SheetJS/sheetjs?branch=master)
-[![Dependencies Status](https://david-dm.org/sheetjs/sheetjs/status.svg)](https://david-dm.org/sheetjs/sheetjs)
-[![npm Downloads](https://img.shields.io/npm/dt/xlsx.svg)](https://npmjs.org/package/xlsx)
-[![Analytics](https://ga-beacon.appspot.com/UA-36810333-1/SheetJS/sheetjs?pixel)](https://github.com/SheetJS/sheetjs)
 

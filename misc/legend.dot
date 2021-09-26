@@ -1,38 +1,45 @@
 digraph G {
 	graph [mindist=0];
+	node [fontname="Indie Flower"];
 	labelloc=t;
-	label="Legend"
+	//label="Legend"
+	fontname="Indie Flower"
+	style=filled
+	fillcolor="transparent"
 
 	subgraph cluster_0 {
 		label="Supported Format Types"
-		color="white"
-		XL[label="Excel",style=filled,color=green];
+		color="transparent"
+		fontname="Indie Flower"
+		XL[label="Excel",style=filled,color="#00FF00"];
 		CSF[label="JS",shape=doublecircle];
 		OLD[label="Other",style=filled,color=cyan];
 		{ edge[style=invis] XL -> CSF -> OLD[constraint=false]}
 	}
 
 	subgraph cluster_1 {
-		label="Workbook Format Conversions (blue arrow)"
-		color="white"
+		label="Workbook Format Conversions\n(blue arrow)"
+		color="transparent"
+		fontname="Indie Flower"
 		x1i[label="XLSX"]
 		c1[shape=doublecircle,label="JS"];
 		x1o[label="XLSB"]
 		{ edge[color=blue]
-			x1i->c1[constraint=false,label="read"]
-			c1->x1o[constraint=false,label="write"];
+			x1i->c1[constraint=false,label="read",fontname="Indie Flower"]
+			c1->x1o[constraint=false,label="write",fontname="Indie Flower"];
 		}
 	}
 
 	subgraph cluster_2 {
-		label="Single-Worksheet Format Conversions (green arrow)"
-		color="white"
+		label="Single-Worksheet Format Conversions\n(green arrow)"
+		color="transparent"
+		fontname="Indie Flower"
 		x2i[label="SYLK"]
 		c2[shape=doublecircle,label="JS"];
 		x2o[label="CSV"]
 		{ edge[color=aquamarine4]
-			x2i->c2[constraint=false,label="read"]
-			c2->x2o[constraint=false,label="write"];
+			x2i->c2[constraint=false,label="read",fontname="Indie Flower"]
+			c2->x2o[constraint=false,label="write",fontname="Indie Flower"];
 		}
 	}
 

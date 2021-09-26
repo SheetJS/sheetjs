@@ -935,8 +935,7 @@ function stringify_formula(formula/*Array<any>*/, range, cell/*:any*/, supbooks,
 				if(supbooks.sharedf[encode_cell(c)]) {
 					var parsedf = (supbooks.sharedf[encode_cell(c)]);
 					stack.push(stringify_formula(parsedf, _range, q, supbooks, opts));
-				}
-				else {
+				} else {
 					var fnd = false;
 					for(e1=0;e1!=supbooks.arrayf.length; ++e1) {
 						/* TODO: should be something like range_has */

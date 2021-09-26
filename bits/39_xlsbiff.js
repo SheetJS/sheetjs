@@ -422,6 +422,7 @@ function write_LabelSst(R/*:number*/, C/*:number*/, v/*:number*/, os/*:number*/ 
 
 /* [MS-XLS] 2.4.148 */
 function parse_Label(blob, length, opts) {
+	if(opts.biffguess && opts.biff == 2) opts.biff = 5;
 	var target = blob.l + length;
 	var cell = parse_XLSCell(blob, 6);
 	if(opts.biff == 2) blob.l++;
@@ -573,7 +574,9 @@ function write_XF(data, ixfeP, opts, o) {
 		o.write_shift(2, (data.numFmtId||0));
 		o.write_shift(2, (ixfeP<<4));
 	}
-	o.write_shift(4, 0);
+	var f = 0;
+	if(data.numFmtId > 0 && b5) f |= 0x0400;
+	o.write_shift(4, f);
 	o.write_shift(4, 0);
 	if(!b5) o.write_shift(4, 0);
 	o.write_shift(2, 0);
@@ -600,7 +603,7 @@ function write_Guts(guts/*:Array<number>*/) {
 /* [MS-XLS] 2.4.24 */
 function parse_BoolErr(blob, length, opts) {
 	var cell = parse_XLSCell(blob, 6);
-	if(opts.biff == 2) ++blob.l;
+	if(opts.biff == 2 || length == 9) ++blob.l;
 	var val = parse_Bes(blob, 2);
 	cell.val = val;
 	cell.t = (val === true || val === false) ? 'b' : 'e';
@@ -614,7 +617,8 @@ function write_BoolErr(R/*:number*/, C/*:number*/, v, os/*:number*/, opts, t/*:s
 }
 
 /* [MS-XLS] 2.4.180 Number */
-function parse_Number(blob) {
+function parse_Number(blob, length, opts) {
+	if(opts.biffguess && opts.biff == 2) opts.biff = 5;
 	var cell = parse_XLSCell(blob, 6);
 	var xnum = parse_Xnum(blob, 8);
 	cell.val = xnum;
@@ -1025,6 +1029,7 @@ function parse_ImData(blob) {
 
 /* BIFF2_??? where ??? is the name from [XLS] */
 function parse_BIFF2STR(blob, length, opts) {
+	if(opts.biffguess && opts.biff == 5) opts.biff = 2;
 	var cell = parse_XLSCell(blob, 6);
 	++blob.l;
 	var str = parse_XLUnicodeString2(blob, length-7, opts);
