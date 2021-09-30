@@ -814,14 +814,16 @@ var PRN = (function() {
 	var guess_seps = {
 		/*::[*/0x2C/*::]*/: ',',
 		/*::[*/0x09/*::]*/: "\t",
-		/*::[*/0x3B/*::]*/: ';'
+		/*::[*/0x3B/*::]*/: ';',
+		/*::[*/0x7C/*::]*/: '|'
 	};
 
 	// CSV separator weights to be used in case of equal numbers
 	var guess_sep_weights = {
 		/*::[*/0x2C/*::]*/: 3,
 		/*::[*/0x09/*::]*/: 2,
-		/*::[*/0x3B/*::]*/: 1
+		/*::[*/0x3B/*::]*/: 1,
+		/*::[*/0x7C/*::]*/: 0
 	};
 
 	function guess_sep(str) {

@@ -107,14 +107,16 @@ Plain text format guessing follows the priority order:
 |:-------|:--------------------------------------------------------------------|
 | XML    | `<?xml` appears in the first 1024 characters                        |
 | HTML   | starts with `<` and HTML tags appear in the first 1024 characters * |
-| XML    | starts with `<`                                                     |
+| XML    | starts with `<` and the first tag is valid                          |
 | RTF    | starts with `{\rt`                                                  |
 | DSV    | starts with `/sep=.$/`, separator is the specified character        |
-| DSV    | more unquoted `";"` chars than `"\t"` or `","` in the first 1024    |
-| TSV    | more unquoted `"\t"` chars than `","` chars in the first 1024       |
+| DSV    | more unquoted `|` chars than `;` `\t`  `,` in the first 1024        |
+| DSV    | more unquoted `;` chars than `\t` or `,` in the first 1024          |
+| TSV    | more unquoted `\t` chars than `,` chars in the first 1024           |
 | CSV    | one of the first 1024 characters is a comma `","`                   |
 | ETH    | starts with `socialcalc:version:`                                   |
-| PRN    | (default)                                                           |
+| PRN    | `PRN` option is set to true                                         |
+| CSV    | (fallback)                                                          |
 
 - HTML tags include: `html`, `table`, `head`, `meta`, `script`, `style`, `div`
 
