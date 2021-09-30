@@ -523,16 +523,17 @@ function parse_URLMoniker(blob/*::, length, opts*/) {
 
 /* [MS-OSHARED] 2.3.7.8 FileMoniker TODO: all fields */
 function parse_FileMoniker(blob/*::, length*/) {
-	blob.l += 2; //var cAnti = blob.read_shift(2);
+	var cAnti = blob.read_shift(2);
+	var preamble = ""; while(cAnti-- > 0) preamble += "../";
 	var ansiPath = blob.read_shift(0, 'lpstr-ansi');
 	blob.l += 2; //var endServer = blob.read_shift(2);
 	if(blob.read_shift(2) != 0xDEAD) throw new Error("Bad FileMoniker");
 	var sz = blob.read_shift(4);
-	if(sz === 0) return ansiPath.replace(/\\/g,"/");
+	if(sz === 0) return preamble + ansiPath.replace(/\\/g,"/");
 	var bytes = blob.read_shift(4);
 	if(blob.read_shift(2) != 3) throw new Error("Bad FileMoniker");
 	var unicodePath = blob.read_shift(bytes>>1, 'utf16le').replace(chr0,"");
-	return unicodePath;
+	return preamble + unicodePath;
 }
 
 /* [MS-OSHARED] 2.3.7.2 HyperlinkMoniker TODO: all the monikers */
@@ -549,6 +550,13 @@ function parse_HyperlinkMoniker(blob, length) {
 function parse_HyperlinkString(blob/*::, length*/) {
 	var len = blob.read_shift(4);
 	var o = len > 0 ? blob.read_shift(len, 'utf16le').replace(chr0, "") : "";
+	return o;
+}
+function write_HyperlinkString(str/*:string*/, o) {
+	if(!o) o = new_buf(6 + str.length * 2);
+	o.write_shift(4, 1 + str.length);
+	for(var i = 0; i < str.length; ++i) o.write_shift(2, str.charCodeAt(i));
+	o.write_shift(2, 0);
 	return o;
 }
 
@@ -571,6 +579,7 @@ function parse_Hyperlink(blob, length)/*:Hyperlink*/ {
 	var target = targetFrameName||moniker||oleMoniker||"";
 	if(target && Loc) target+="#"+Loc;
 	if(!target) target = "#" + Loc;
+	if((flags & 0x0002) && target.charAt(0) == "/" && target.charAt(1) != "/") target = "file://" + target;
 	var out = ({Target:target}/*:any*/);
 	if(guid) out.guid = guid;
 	if(fileTime) out.time = fileTime;
@@ -580,29 +589,31 @@ function parse_Hyperlink(blob, length)/*:Hyperlink*/ {
 function write_Hyperlink(hl) {
 	var out = new_buf(512), i = 0;
 	var Target = hl.Target;
-	var F = Target.indexOf("#") > -1 ? 0x1f : 0x17;
+	if(Target.slice(0,7) == "file://") Target = Target.slice(7);
+	var hashidx = Target.indexOf("#");
+	var F = hashidx > -1 ? 0x1f : 0x17;
 	switch(Target.charAt(0)) { case "#": F=0x1c; break; case ".": F&=~2; break; }
 	out.write_shift(4,2); out.write_shift(4, F);
 	var data = [8,6815827,6619237,4849780,83]; for(i = 0; i < data.length; ++i) out.write_shift(4, data[i]);
 	if(F == 0x1C) {
 		Target = Target.slice(1);
-		out.write_shift(4, Target.length + 1);
-		for(i = 0; i < Target.length; ++i) out.write_shift(2, Target.charCodeAt(i));
-		out.write_shift(2, 0);
+		write_HyperlinkString(Target, out);
 	} else if(F & 0x02) {
 		data = "e0 c9 ea 79 f9 ba ce 11 8c 82 00 aa 00 4b a9 0b".split(" ");
 		for(i = 0; i < data.length; ++i) out.write_shift(1, parseInt(data[i], 16));
-		out.write_shift(4, 2*(Target.length + 1));
-		for(i = 0; i < Target.length; ++i) out.write_shift(2, Target.charCodeAt(i));
+		var Pretarget = hashidx > -1 ? Target.slice(0, hashidx) : Target;
+		out.write_shift(4, 2*(Pretarget.length + 1));
+		for(i = 0; i < Pretarget.length; ++i) out.write_shift(2, Pretarget.charCodeAt(i));
 		out.write_shift(2, 0);
+		if(F & 0x08) write_HyperlinkString(hashidx > -1 ? Target.slice(hashidx+1): "", out);
 	} else {
 		data = "03 03 00 00 00 00 00 00 c0 00 00 00 00 00 00 46".split(" ");
 		for(i = 0; i < data.length; ++i) out.write_shift(1, parseInt(data[i], 16));
 		var P = 0;
 		while(Target.slice(P*3,P*3+3)=="../"||Target.slice(P*3,P*3+3)=="..\\") ++P;
 		out.write_shift(2, P);
-		out.write_shift(4, Target.length + 1);
-		for(i = 0; i < Target.length; ++i) out.write_shift(1, Target.charCodeAt(i) & 0xFF);
+		out.write_shift(4, Target.length - 3 * P + 1);
+		for(i = 0; i < Target.length - 3 * P; ++i) out.write_shift(1, Target.charCodeAt(i + 3 * P) & 0xFF);
 		out.write_shift(1, 0);
 		out.write_shift(2, 0xFFFF);
 		out.write_shift(2, 0xDEAD);

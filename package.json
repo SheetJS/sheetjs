@@ -41,7 +41,7 @@
 		"fflate": "^0.3.8",
 		"ssf": "~0.11.2",
 		"wmf": "~1.0.1",
-		"word": "~0.4.0"
+		"word": "~0.3.0"
 	},
 	"devDependencies": {
 		"@sheetjs/uglify-js": "~2.7.3",

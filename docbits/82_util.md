@@ -22,11 +22,12 @@ as the corresponding styles.  Dates are stored as date or numbers.  Array holes
 and explicit `undefined` values are skipped.  `null` values may be stubbed. All
 other values are stored as strings.  The function takes an options argument:
 
-| Option Name |  Default | Description                                         |
-| :---------- | :------: | :-------------------------------------------------- |
-|`dateNF`     |  FMT 14  | Use specified date format in string output          |
-|`cellDates`  |  false   | Store dates as type `d` (default is `n`)            |
-|`sheetStubs` |  false   | Create cell objects of type `z` for `null` values   |
+| Option Name | Default | Description                                          |
+| :---------- | :-----: | :--------------------------------------------------- |
+|`dateNF`     |  FMT 14 | Use specified date format in string output           |
+|`cellDates`  |  false  | Store dates as type `d` (default is `n`)             |
+|`sheetStubs` |  false  | Create cell objects of type `z` for `null` values    |
+|`nullError`  |  false  | If true, emit `#NULL!` error cells for `null` values |
 
 <details>
   <summary><b>Examples</b> (click to show)</summary>
@@ -46,12 +47,13 @@ var ws = XLSX.utils.aoa_to_sheet([
 existing worksheet object.  It follows the same process as `aoa_to_sheet` and
 accepts an options argument:
 
-| Option Name |  Default | Description                                         |
-| :---------- | :------: | :-------------------------------------------------- |
-|`dateNF`     |  FMT 14  | Use specified date format in string output          |
-|`cellDates`  |  false   | Store dates as type `d` (default is `n`)            |
-|`sheetStubs` |  false   | Create cell objects of type `z` for `null` values   |
-|`origin`     |          | Use specified cell as starting point (see below)    |
+| Option Name | Default | Description                                          |
+| :---------- | :-----: | :--------------------------------------------------- |
+|`dateNF`     |  FMT 14 | Use specified date format in string output           |
+|`cellDates`  |  false  | Store dates as type `d` (default is `n`)             |
+|`sheetStubs` |  false  | Create cell objects of type `z` for `null` values    |
+|`nullError`  |  false  | If true, emit `#NULL!` error cells for `null` values |
+|`origin`     |         | Use specified cell as starting point (see below)     |
 
 `origin` is expected to be one of:
 
@@ -110,11 +112,14 @@ default column order is determined by the first appearance of the field using
 |`dateNF`     |  FMT 14 | Use specified date format in string output           |
 |`cellDates`  |  false  | Store dates as type `d` (default is `n`)             |
 |`skipHeader` |  false  | If true, do not include header row in output         |
+|`nullError`  |  false  | If true, emit `#NULL!` error cells for `null` values |
 
 - All fields from each row will be written.  If `header` is an array and it does
   not contain a particular field, the key will be appended to the array.
 - Cell types are deduced from the type of each value.  For example, a `Date`
   object will generate a Date cell, while a string will generate a Text cell.
+- Null values will be skipped by default.  If `nullError` is true, an error cell
+  corresponding to `#NULL!` will be written to the worksheet.
 
 <details>
   <summary><b>Examples</b> (click to show)</summary>
@@ -145,13 +150,14 @@ var ws = XLSX.utils.json_to_sheet([
 worksheet object.  It follows the same process as `json_to_sheet` and accepts
 an options argument:
 
-| Option Name |  Default | Description                                         |
-| :---------- | :------: | :-------------------------------------------------- |
-|`header`     |          | Use specified column order (default `Object.keys`)  |
-|`dateNF`     |  FMT 14  | Use specified date format in string output          |
-|`cellDates`  |  false   | Store dates as type `d` (default is `n`)            |
-|`skipHeader` |  false   | If true, do not include header row in output        |
-|`origin`     |          | Use specified cell as starting point (see below)    |
+| Option Name | Default | Description                                          |
+| :---------- | :-----: | :--------------------------------------------------- |
+|`header`     |         | Use specified column order (default `Object.keys`)   |
+|`dateNF`     |  FMT 14 | Use specified date format in string output           |
+|`cellDates`  |  false  | Store dates as type `d` (default is `n`)             |
+|`skipHeader` |  false  | If true, do not include header row in output         |
+|`nullError`  |  false  | If true, emit `#NULL!` error cells for `null` values |
+|`origin`     |         | Use specified cell as starting point (see below)     |
 
 `origin` is expected to be one of:
 
