@@ -1,5 +1,5 @@
 TOOL=webpack
-WPOPTS=--display-modules --display-reasons --profile
+WPOPTS=--display-modules --display-reasons --profile --mode=development 
 .PHONY: all
 all: main.min.js core.out.js full.out.js app.out.js
 

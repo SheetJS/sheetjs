@@ -2,6 +2,7 @@
 module.exports = {
 	/* ensure that the XLSX variable is exported */
 	output: {
+		path: __dirname,
 		libraryTarget: 'var',
 		library: 'XLSX'
 	},
@@ -23,4 +24,4 @@ module.exports = {
 		process: false,
 		Buffer: false
 	}
-}
+};
