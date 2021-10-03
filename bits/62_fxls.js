@@ -731,7 +731,8 @@ function get_ixti_raw(supbooks, ixti/*:number*/, opts)/*:string*/ {
 	}
 }
 function get_ixti(supbooks, ixti/*:number*/, opts)/*:string*/ {
-	return formula_quote_sheet_name(get_ixti_raw(supbooks, ixti, opts), opts);
+	var ixtiraw = get_ixti_raw(supbooks, ixti, opts);
+	return ixtiraw == "#REF" ? ixtiraw : formula_quote_sheet_name(ixtiraw, opts);
 }
 function stringify_formula(formula/*Array<any>*/, range, cell/*:any*/, supbooks, opts)/*:string*/ {
 	var biff = (opts && opts.biff) || 8;
