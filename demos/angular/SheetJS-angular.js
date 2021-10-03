@@ -60,8 +60,8 @@ function SheetJSImportDirective() {
 
         reader.onload = function(e) {
           /* read workbook */
-          var bstr = e.target.result;
-          var wb = XLSX.read(bstr, {type:'binary'});
+          var ab = e.target.result;
+          var wb = XLSX.read(ab);
 
           /* grab first sheet */
           var wsname = wb.SheetNames[0];
@@ -78,7 +78,7 @@ function SheetJSImportDirective() {
             data[r-1] = {};
             for(i = 0; i < aoa[r].length; ++i) {
               if(aoa[r][i] == null) continue;
-              data[r-1][aoa[0][i]] = aoa[r][i]
+              data[r-1][aoa[0][i]] = aoa[r][i];
             }
           }
 
@@ -89,7 +89,7 @@ function SheetJSImportDirective() {
           });
         };
 
-        reader.readAsBinaryString(changeEvent.target.files[0]);
+        reader.readAsArrayBuffer(changeEvent.target.files[0]);
       });
     }
   };

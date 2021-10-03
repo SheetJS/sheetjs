@@ -2,7 +2,6 @@
 /*jshint browser:true */
 /*global XLSX */
 var XLSX = require('xlsx');
-var X = XLSX;
 
 var global_wb;
 
@@ -20,7 +19,7 @@ var process_wb = (function() {
 	var to_json = function to_json(workbook) {
 		var result = {};
 		workbook.SheetNames.forEach(function(sheetName) {
-			var roa = X.utils.sheet_to_json(workbook.Sheets[sheetName]);
+			var roa = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
 			if(roa.length) result[sheetName] = roa;
 		});
 		return JSON.stringify(result, 2, 2);
@@ -29,7 +28,7 @@ var process_wb = (function() {
 	var to_csv = function to_csv(workbook) {
 		var result = [];
 		workbook.SheetNames.forEach(function(sheetName) {
-			var csv = X.utils.sheet_to_csv(workbook.Sheets[sheetName]);
+			var csv = XLSX.utils.sheet_to_csv(workbook.Sheets[sheetName]);
 			if(csv.length){
 				result.push("SHEET: " + sheetName);
 				result.push("");
@@ -42,7 +41,7 @@ var process_wb = (function() {
 	var to_fmla = function to_fmla(workbook) {
 		var result = [];
 		workbook.SheetNames.forEach(function(sheetName) {
-			var formulae = X.utils.get_formulae(workbook.Sheets[sheetName]);
+			var formulae = XLSX.utils.get_formulae(workbook.Sheets[sheetName]);
 			if(formulae.length){
 				result.push("SHEET: " + sheetName);
 				result.push("");
@@ -55,7 +54,7 @@ var process_wb = (function() {
 	var to_html = function to_html(workbook) {
 		HTMLOUT.innerHTML = "";
 		workbook.SheetNames.forEach(function(sheetName) {
-			var htmlstr = X.write(workbook, {sheet:sheetName, type:'string', bookType:'html'});
+			var htmlstr = XLSX.write(workbook, {sheet:sheetName, type:'string', bookType:'html'});
 			HTMLOUT.innerHTML += htmlstr;
 		});
 		return "";
@@ -82,7 +81,7 @@ var b64it = window.b64it = (function() {
 	var tarea = document.getElementById('b64data');
 	return function b64it() {
 		if(typeof console !== 'undefined') console.log("onload", new Date());
-		var wb = X.read(tarea.value, {type:'base64', WTF:false});
+		var wb = XLSX.read(tarea.value, {type:'base64', WTF:false});
 		process_wb(wb);
 	};
 })();
@@ -95,7 +94,7 @@ var do_file = (function() {
 			if(typeof console !== 'undefined') console.log("onload", new Date());
 			var data = e.target.result;
 			data = new Uint8Array(data);
-			process_wb(X.read(data, {type: 'array'}));
+			process_wb(XLSX.read(data, {type: 'array'}));
 		};
 		reader.readAsArrayBuffer(f);
 	};

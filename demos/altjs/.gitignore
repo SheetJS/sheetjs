@@ -7,3 +7,4 @@ rhino
 shim.min.js
 xlsx.*.js
 payload.js
+goja

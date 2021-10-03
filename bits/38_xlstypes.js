@@ -41,6 +41,18 @@ function parse_VtStringBase(blob, stringType, pad) {
 function parse_VtString(blob, t/*:number*/, pad/*:?boolean*/) { return parse_VtStringBase(blob, t, pad === false ? 0: 4); }
 function parse_VtUnalignedString(blob, t/*:number*/) { if(!t) throw new Error("VtUnalignedString must have positive length"); return parse_VtStringBase(blob, t, 0); }
 
+/* [MS-OSHARED] 2.3.3.1.7 VtVecLpwstrValue */
+function parse_VtVecLpwstrValue(blob)/*:Array<string>*/ {
+	var length = blob.read_shift(4);
+	var ret/*:Array<string>*/ = [];
+	for(var i = 0; i != length; ++i) {
+		var start = blob.l;
+		ret[i] = blob.read_shift(0, 'lpwstr').replace(chr0,'');
+		if((blob.l - start) & 0x02) blob.l += 2;
+	}
+	return ret;
+}
+
 /* [MS-OSHARED] 2.3.3.1.9 VtVecUnalignedLpstrValue */
 function parse_VtVecUnalignedLpstrValue(blob)/*:Array<string>*/ {
 	var length = blob.read_shift(4);
@@ -49,14 +61,12 @@ function parse_VtVecUnalignedLpstrValue(blob)/*:Array<string>*/ {
 	return ret;
 }
 
-/* [MS-OSHARED] 2.3.3.1.10 VtVecUnalignedLpstr */
-function parse_VtVecUnalignedLpstr(blob)/*:Array<string>*/ {
-	return parse_VtVecUnalignedLpstrValue(blob);
-}
 
 /* [MS-OSHARED] 2.3.3.1.13 VtHeadingPair */
 function parse_VtHeadingPair(blob) {
+	var start = blob.l;
 	var headingString = parse_TypedPropertyValue(blob, VT_USTR);
+	if(blob[blob.l] == 0x00 && blob[blob.l+1] == 0x00 && ((blob.l - start) & 0x02)) blob.l += 2;
 	var headerParts = parse_TypedPropertyValue(blob, VT_I4);
 	return [headingString, headerParts];
 }
@@ -65,14 +75,8 @@ function parse_VtHeadingPair(blob) {
 function parse_VtVecHeadingPairValue(blob) {
 	var cElements = blob.read_shift(4);
 	var out = [];
-	for(var i = 0; i != cElements / 2; ++i) out.push(parse_VtHeadingPair(blob));
+	for(var i = 0; i < cElements / 2; ++i) out.push(parse_VtHeadingPair(blob));
 	return out;
-}
-
-/* [MS-OSHARED] 2.3.3.1.15 VtVecHeadingPair */
-function parse_VtVecHeadingPair(blob) {
-	// NOTE: When invoked, wType & padding were already consumed
-	return parse_VtVecHeadingPairValue(blob);
 }
 
 /* [MS-OLEPS] 2.18.1 Dictionary (uses 2.17, 2.16) */
@@ -113,7 +117,7 @@ function parse_TypedPropertyValue(blob, type/*:number*/, _opts)/*:any*/ {
 	var t = blob.read_shift(2), ret, opts = _opts||{};
 	blob.l += 2;
 	if(type !== VT_VARIANT)
-	if(t !== type && VT_CUSTOM.indexOf(type)===-1) throw new Error('Expected type ' + type + ' saw ' + t);
+	if(t !== type && VT_CUSTOM.indexOf(type)===-1 && !((type & 0xFFFE) == 0x101E && (t & 0xFFFE) == 0x101E)) throw new Error('Expected type ' + type + ' saw ' + t);
 	switch(type === VT_VARIANT ? t : type) {
 		case 0x02 /*VT_I2*/: ret = blob.read_shift(2, 'i'); if(!opts.raw) blob.l += 2; return ret;
 		case 0x03 /*VT_I4*/: ret = blob.read_shift(4, 'i'); return ret;
@@ -126,8 +130,10 @@ function parse_TypedPropertyValue(blob, type/*:number*/, _opts)/*:any*/ {
 		case 0x47 /*VT_CF*/: return parse_ClipboardData(blob);
 		case 0x50 /*VT_STRING*/: return parse_VtString(blob, t, !opts.raw).replace(chr0,'');
 		case 0x51 /*VT_USTR*/: return parse_VtUnalignedString(blob, t/*, 4*/).replace(chr0,'');
-		case 0x100C /*VT_VECTOR|VT_VARIANT*/: return parse_VtVecHeadingPair(blob);
-		case 0x101E /*VT_LPSTR*/: return parse_VtVecUnalignedLpstr(blob);
+		case 0x100C /*VT_VECTOR|VT_VARIANT*/: return parse_VtVecHeadingPairValue(blob);
+		case 0x101E /*VT_VECTOR|VT_LPSTR*/:
+		case 0x101F /*VT_VECTOR|VT_LPWSTR*/:
+			return t == 0x101F ? parse_VtVecLpwstrValue(blob) : parse_VtVecUnalignedLpstrValue(blob);
 		default: throw new Error("TypedPropertyValue unrecognized type " + type + " " + t);
 	}
 }

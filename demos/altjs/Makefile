@@ -27,7 +27,6 @@ swift: base ## swift demo
 
 .PHONY: goja
 goja: base ## goja demo
-	if [ ! -e xlsx.core.min.js ]; then cp ../../dist/xlsx.core.min.js .; fi
 	go build goja.go
 	for ext in xlsx xlsb biff8.xls xml.xls; do ./goja sheetjs.$$ext; done
 

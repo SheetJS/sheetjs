@@ -2,3 +2,6 @@ dist
 hooks
 SheetJSIonic
 SheetJSNS
+angular.json
+tsconfig.app.json
+src/polyfills.ts

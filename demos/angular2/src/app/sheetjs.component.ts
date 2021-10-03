@@ -9,6 +9,7 @@ type AOA = any[][];
 @Component({
 	selector: 'sheetjs',
 	template: `
+	<pre><b>Version: {{ver}}</b></pre>
 	<input type="file" (change)="onFileChange($event)" multiple="false" />
 	<table class="sjs-table">
 		<tr *ngFor="let row of data">
@@ -25,6 +26,7 @@ export class SheetJSComponent {
 	data: AOA = [ [1, 2], [3, 4] ];
 	wopts: XLSX.WritingOptions = { bookType: 'xlsx', type: 'array' };
 	fileName: string = 'SheetJS.xlsx';
+	ver: string = XLSX.version;
 
 	onFileChange(evt: any) {
 		/* wire up file reader */
@@ -33,8 +35,8 @@ export class SheetJSComponent {
 		const reader: FileReader = new FileReader();
 		reader.onload = (e: any) => {
 			/* read workbook */
-			const bstr: string = e.target.result;
-			const wb: XLSX.WorkBook = XLSX.read(bstr, {type: 'binary'});
+			const ab: ArrayBuffer = e.target.result;
+			const wb: XLSX.WorkBook = XLSX.read(ab);
 
 			/* grab first sheet */
 			const wsname: string = wb.SheetNames[0];
@@ -43,7 +45,7 @@ export class SheetJSComponent {
 			/* save data */
 			this.data = <AOA>(XLSX.utils.sheet_to_json(ws, {header: 1}));
 		};
-		reader.readAsBinaryString(target.files[0]);
+		reader.readAsArrayBuffer(target.files[0]);
 	}
 
 	export(): void {

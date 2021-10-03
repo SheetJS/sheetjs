@@ -19,7 +19,7 @@ can be installed with Bash on Windows or with `cygwin`.
 
 **Frameworks and APIs**
 - [`angularjs`](angular/)
-- [`angular 2 / 4 / 5 / 6 and ionic`](angular2/)
+- [`angular and ionic`](angular2/)
 - [`knockout`](knockout/)
 - [`meteor`](meteor/)
 - [`react and react-native`](react/)

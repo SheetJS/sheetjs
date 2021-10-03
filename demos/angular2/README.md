@@ -54,8 +54,8 @@ XLSX.writeFile(wb, 'SheetJS.xlsx');
     const reader: FileReader = new FileReader();
     reader.onload = (e: any) => {
       /* read workbook */
-      const bstr: string = e.target.result;
-      const wb: XLSX.WorkBook = XLSX.read(bstr, {type: 'binary'});
+      const ab: ArrayBuffer = e.target.result;
+      const wb: XLSX.WorkBook = XLSX.read(ab);
 
       /* grab first sheet */
       const wsname: string = wb.SheetNames[0];
@@ -64,7 +64,7 @@ XLSX.writeFile(wb, 'SheetJS.xlsx');
       /* save data */
       this.data = <AOA>(XLSX.utils.sheet_to_json(ws, {header: 1}));
     };
-    reader.readAsBinaryString(target.files[0]);
+    reader.readAsArrayBuffer(target.files[0]);
   }
 ```
 
@@ -73,16 +73,19 @@ XLSX.writeFile(wb, 'SheetJS.xlsx');
 Modules that work with Angular 2 largely work as-is with Angular 4+.  Switching
 between versions is mostly a matter of installing the correct version of the
 core and associated modules.  This demo includes `package.json-angular#` files
-for Angular 2, Angular 4, and Angular 5
+for every major version of Angular up to 12.
 
 To test a particular Angular version, overwrite `package.json`:
 
 ```bash
 # switch to Angular 2
-$ cp package.json-angular2 package.json
+$ cp package.json-ng2 package.json
 $ npm install
 $ ng serve
 ```
+
+Note: when running the demos, Angular 2 requires Node <= 14.  This is due to a
+tooling issue with `ng` and does not affect browser use.
 
 ## XLSX Symbolic Link
 
@@ -137,14 +140,14 @@ script performs the necessary installation steps.
 ```
 
 
-`@ionic-native/file` reads and writes files on devices. `readAsBinaryString`
-returns strings that can be parsed with the `binary` type, and `array` type can
+`@ionic-native/file` reads and writes files on devices. `readAsArrayBuffer`
+returns `ArrayBuffer` objects suitable for `array` type, and `array` type can
 be converted to blobs that can be exported with `writeFile`:
 
 ```typescript
 /* read a workbook */
-const bstr: string = await this.file.readAsBinaryString(url, filename);
-const wb: XLSX.WorkBook = XLSX.read(bstr, {type: 'binary'});
+const ab: ArrayBuffer = await this.file.readAsArrayBuffer(url, filename);
+const wb: XLSX.WorkBook = XLSX.read(bstr, {type: 'array'});
 
 /* write a workbook */
 const wbout: ArrayBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
@@ -164,16 +167,19 @@ const XLSX = require("./xlsx.full.min.js");
 ```
 
 The `ISO_8859_1` encoding from the text module specifies `"binary"` strings.
-`fs.File#readText` and `fs.File#writeText` reads and writes files:
+`File#readText` and `File#writeText` reads and writes files:
 
 ```typescript
 /* read a workbook */
-const bstr: string = await file.readText(textModule.encoding.ISO_8859_1);
+const bstr: string = await file.readText(encoding.ISO_8859_1);
 const wb = XLSX.read(bstr, { type: "binary" });
 
 /* write a workbook */
 const wbout: string = XLSX.write(wb, { bookType: 'xlsx', type: 'binary' });
-await file.writeText(wbout, textModule.encoding.ISO_8859_1);
+await file.writeText(wbout, encoding.ISO_8859_1);
 ```
+
+Note: some versions of NativeScript do not properly support typed arrays or
+binary strings.  See <https://github.com/NativeScript/NativeScript/issues/9586>
 
 [![Analytics](https://ga-beacon.appspot.com/UA-36810333-1/SheetJS/js-xlsx?pixel)](https://github.com/SheetJS/js-xlsx)

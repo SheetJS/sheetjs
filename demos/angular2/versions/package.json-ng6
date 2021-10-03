@@ -1,0 +1,39 @@
+{
+  "name": "angular6",
+  "version": "0.0.0",
+  "license": "MIT",
+  "scripts": {
+    "ng": "ng",
+    "start": "ng serve",
+    "build": "ng build"
+  },
+  "private": true,
+  "dependencies": {
+    "@angular/animations": "^6.1.0",
+    "@angular/common": "^6.1.0",
+    "@angular/compiler": "^6.1.0",
+
+    "@angular/core": "^6.1.0",
+    "@angular/forms": "^6.1.0",
+    "@angular/http": "^6.1.0",
+    "@angular/platform-browser": "^6.1.0",
+    "@angular/platform-browser-dynamic": "^6.1.0",
+
+    "@angular/router": "^6.1.0",
+    "core-js": "^2.5.4",
+
+    "rxjs": "~6.2.0",
+
+    "zone.js": "~0.8.26"
+  },
+  "devDependencies": {
+    "@angular-devkit/build-angular": "~0.8.0",
+    "@angular/cli": "~6.2.9",
+    "@angular/compiler-cli": "^6.1.0",
+    "@angular/language-service": "^6.1.0",
+    "@types/node": "~8.9.4",
+    "ts-node": "~7.0.0",
+    "tslint": "~5.11.0",
+    "typescript": "~2.9.2"
+  }
+}

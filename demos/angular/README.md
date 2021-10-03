@@ -10,6 +10,8 @@ into web pages with script tags:
 Strictly speaking, there should be no need for an Angular demo!  You can proceed
 as you would with any other browser-friendly library.
 
+This demo uses AngularJS 1.5.0.
+
 
 ## Array of Objects
 
@@ -87,13 +89,13 @@ function SheetJSImportDirective() {
 
         reader.onload = function (e) {
           /* read workbook */
-          var bstr = e.target.result;
-          var workbook = XLSX.read(bstr, {type:'binary'});
+          var ab = e.target.result;
+          var workbook = XLSX.read(ab);
 
           /* DO SOMETHING WITH workbook HERE */
         };
 
-        reader.readAsBinaryString(changeEvent.target.files[0]);
+        reader.readAsArrayBuffer(changeEvent.target.files[0]);
       });
     }
   };
@@ -133,7 +135,7 @@ directive for a HTML File Input control.  It also includes a sample service for
 export which adds an item to the export menu.
 
 The demo `SheetJSImportDirective` follows the prescription from the README for
-File input controls using `readAsBinaryString`, converting to a suitable
+File input controls using `readAsArrayBuffer`, converting to a suitable
 representation and updating the scope.
 
 `SheetJSExportService` exposes export functions for `XLSB` and `XLSX`.  Other

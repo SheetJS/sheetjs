@@ -1,5 +1,5 @@
 #!/bin/bash
-DUKTAPE_VER=2.2.0
+DUKTAPE_VER=2.6.0
 if [ ! -e duktape-$DUKTAPE_VER ]; then
 	if [ ! -e duktape-$DUKTAPE_VER.tar ]; then
 		if [ ! -e duktape-$DUKTAPE_VER.tar.xz ]; then

@@ -4,14 +4,14 @@ digraph G {
 	csf [shape=doublecircle,label="Common\nSpreadsheet\nFormat\n(JS Object)"];
 	subgraph XL {
 		node  [style=filled,color="#00FF00"];
-		xlsx  [label="XLSX\nXLSM"];
-		xlsb  [label="XLSB\nBIFF12"];
-		xlml  [label="SSML\n(2003/4)"];
 		xls2  [label="XLS\nBIFF2"];
 		xls3  [label="XLS\nBIFF3"];
 		xls4  [label="XLS\nBIFF4"];
 		xls5  [label="XLS\nBIFF5"];
 		xls8  [label="XLS\nBIFF8"];
+		xlml  [label="SSML\n(2003/4)"];
+		xlsx  [label="XLSX\nXLSM"];
+		xlsb  [label="XLSB\nBIFF12"];
 	}
 
 	subgraph OLD {

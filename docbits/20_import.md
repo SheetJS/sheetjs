@@ -87,8 +87,7 @@ req.open("GET", url, true);
 req.responseType = "arraybuffer";
 
 req.onload = function(e) {
-  var data = new Uint8Array(req.response);
-  var workbook = XLSX.read(data, {type:"array"});
+  var workbook = XLSX.read(req.response);
 
   /* DO SOMETHING WITH workbook HERE */
 }
@@ -101,16 +100,29 @@ req.send();
 <details>
   <summary><b>Browser drag-and-drop</b> (click to show)</summary>
 
-Drag-and-drop uses the HTML5 `FileReader` API.
+For modern browsers, `Blob#arrayBuffer` can read data from files:
+
+```js
+async function handleDropAsync(e) {
+  e.stopPropagation(); e.preventDefault();
+  const f = evt.dataTransfer.files[0];
+  const data = await f.arrayBuffer();
+  const workbook = XLSX.read(data);
+
+  /* DO SOMETHING WITH workbook HERE */
+}
+drop_dom_element.addEventListener('drop', handleDropAsync, false);
+```
+
+For maximal compatibility, the `FileReader` API should be used:
 
 ```js
 function handleDrop(e) {
   e.stopPropagation(); e.preventDefault();
-  var files = e.dataTransfer.files, f = files[0];
+  var f = e.dataTransfer.files[0];
   var reader = new FileReader();
   reader.onload = function(e) {
-    var data = new Uint8Array(e.target.result);
-    var workbook = XLSX.read(data, {type: 'array'});
+    var workbook = XLSX.read(e.target.result);
 
     /* DO SOMETHING WITH workbook HERE */
   };
@@ -124,16 +136,30 @@ drop_dom_element.addEventListener('drop', handleDrop, false);
 <details>
   <summary><b>Browser file upload form element</b> (click to show)</summary>
 
-Data from file input elements can be processed using the same `FileReader` API
-as in the drag-and-drop example:
+Data from file input elements can be processed using the same APIs as in the
+drag-and-drop example.
+
+Using `Blob#arrayBuffer`:
+
+```js
+async function handleFileAsync(e) {
+  const file = evt.target.files[0];
+  const data = await file.arrayBuffer();
+  const workbook = XLSX.read(data);
+
+  /* DO SOMETHING WITH workbook HERE */
+}
+input_dom_element.addEventListener('change', handleFileAsync, false);
+```
+
+Using `FileReader`:
 
 ```js
 function handleFile(e) {
   var files = e.target.files, f = files[0];
   var reader = new FileReader();
   reader.onload = function(e) {
-    var data = new Uint8Array(e.target.result);
-    var workbook = XLSX.read(data, {type: 'array'});
+    var workbook = XLSX.read(e.target.result);
 
     /* DO SOMETHING WITH workbook HERE */
   };

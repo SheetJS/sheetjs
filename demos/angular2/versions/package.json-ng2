@@ -9,7 +9,6 @@
   },
   "private": true,
   "dependencies": {
-    "@angular/animations": "^4.0.0",
     "@angular/common": "~2.4.1",
     "@angular/compiler": "~2.4.1",
     "@angular/compiler-cli": "^2.4.1",
@@ -28,8 +27,8 @@
   },
   "devDependencies": {
     "@angular/cli": "1.1.2",
-    "@angular/compiler-cli": "^4.0.0",
-    "@angular/language-service": "^4.0.0",
+    "@angular/compiler-cli": "^2.0.0",
+    "@angular/language-service": "^2.0.0",
     "@types/node": "~6.0.60",
     "ts-node": "~3.0.4",
     "tslint": "~5.3.2",

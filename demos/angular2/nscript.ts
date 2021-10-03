@@ -1,21 +1,19 @@
 /* xlsx.js (C) 2013-present SheetJS -- http://sheetjs.com */
 /* vim: set ts=2: */
 
-import { Component } from "@angular/core";
-import * as dockModule from "tns-core-modules/ui/layouts/dock-layout";
-import * as buttonModule from "tns-core-modules/ui/button";
-import * as textModule from "tns-core-modules/text";
-import * as dialogs from "ui/dialogs";
-import * as fs from "tns-core-modules/file-system";
+import { Component } from '@angular/core';
+import { encoding } from '@nativescript/core/text';
+import { File, Folder, knownFolders, path } from '@nativescript/core/file-system';
+import { Dialogs } from '@nativescript/core';
+import { Page, GridLayout, WebView, DockLayout, Button } from '@nativescript/core';
 
-/* NativeScript does not support import syntax for npm modules */
-const XLSX = require("./xlsx.full.min.js");
+import * as XLSX from './xlsx.full.min';
 
 @Component({
-  selector: "my-app",
+  selector: 'ns-app',
   template: `
+  <Page>
     <GridLayout rows="auto, *, auto">
-      <ActionBar row="0" title="SheetJS NativeScript Demo" class="action-bar"></ActionBar>
 
       <!-- data converted to HTML and rendered in web view -->
       <WebView row="1" src="{{html}}"></WebView>
@@ -25,6 +23,7 @@ const XLSX = require("./xlsx.full.min.js");
         <Button text="Export File" (tap)="export()" style="padding: 10px"></Button>
       </DockLayout>
     </GridLayout>
+  </Page>
   `
 })
 
@@ -37,16 +36,16 @@ export class AppComponent {
 
   /* Import button */
   async import() {
-    const filename: string = "SheetJSNS.xlsx";
+    const filename: string = "SheetJSNS.csv";
 
     /* find appropriate path */
-    const target: fs.Folder = fs.knownFolders.documents() || fs.knownFolders.ios.sharedPublic();
-    const url: string = fs.path.normalize(target.path + "///" + filename);
-    const file: fs.File = fs.File.fromPath(url);
+    const target: Folder = knownFolders.documents() || knownFolders.ios.sharedPublic();
+    const url: string = path.normalize(target.path + "///" + filename);
+    const file: File = File.fromPath(url);
 
     try {
       /* get binary string */
-      const bstr: string = await file.readText(textModule.encoding.ISO_8859_1);
+      const bstr: string = await file.readText(encoding.ISO_8859_1);
 
       /* read workbook */
       const wb = XLSX.read(bstr, { type: "binary" });
@@ -57,27 +56,27 @@ export class AppComponent {
 
       /* update table */
       this.html = XLSX.utils.sheet_to_html(ws);
-      dialogs.alert(`Attempting to read to SheetJSNS.xlsx in ${url}`);
+      Dialogs.alert(`Attempting to read to ${filename} in ${url}`);
     } catch(e) {
-      dialogs.alert(e.message);
+      Dialogs.alert(e.message);
     }
   };
 
   /* Export button */
   async export() {
     const wb = XLSX.read(this.html, { type: "string" });
-    const filename: string = "SheetJSNS.xlsx";
+    const filename: string = "SheetJSNS.csv";
 
     /* generate binary string */
-    const wbout: string = XLSX.write(wb, { bookType: 'xlsx', type: 'binary' });
+    const wbout: string = XLSX.write(wb, { bookType: 'csv', type: 'binary' });
 
     /* find appropriate path */
-    const target: fs.Folder = fs.knownFolders.documents() || fs.knownFolders.ios.sharedPublic();
-    const url: string = fs.path.normalize(target.path + "///" + filename);
-    const file: fs.File = fs.File.fromPath(url);
+    const target: Folder = knownFolders.documents() || knownFolders.ios.sharedPublic();
+    const url: string = path.normalize(target.path + "///" + filename);
+    const file: File = File.fromPath(url);
 
     /* attempt to save binary string to file */
-    await file.writeText(wbout, textModule.encoding.ISO_8859_1);
-    dialogs.alert(`Wrote to SheetJSNS.xlsx in ${url}`);
+    await file.writeText(wbout, encoding.ISO_8859_1);
+    Dialogs.alert(`Wrote to ${filename} in ${url}`);
   };
 }

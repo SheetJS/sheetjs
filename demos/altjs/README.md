@@ -51,7 +51,7 @@ Binary strings can be passed back and forth using `String.Encoding.isoLatin1`:
 /* parse sheetjs.xls */
 let file_path = shared_dir.appendingPathComponent("sheetjs.xls");
 let data: String! = try String(contentsOf: file_path, encoding: String.Encoding.isoLatin1);
-context.setObject(data, forKeyedSubscript: "payload" as (NSCopying & NSObjectProtocol)!);
+context.setObject(data, forKeyedSubscript: "payload" as (NSCopying & NSObjectProtocol));
 src = "var wb = XLSX.read(payload, {type:'binary'});";
 context.evaluateScript(src);
 
@@ -108,14 +108,15 @@ target builds a very simple payload with the data.
 ## Duktape
 
 [Duktape](http://duktape.org/) is an embeddable JS engine written in C.  The
-amalgamation makes integration extremely simple!  It supports `Buffer` natively:
+amalgamation makes integration extremely simple!  It supports `Buffer` natively
+but should be sliced before processing:
 
 ```C
 /* parse a C char array as a workbook object */
 duk_push_external_buffer(ctx);
 duk_config_buffer(ctx, -1, buf, len);
 duk_put_global_string(ctx, "buf");
-duk_eval_string_noresult("workbook = XLSX.read(buf, {type:'buffer'});");
+duk_eval_string_noresult("workbook = XLSX.read(buf.slice(0, buf.length), {type:'buffer'});");
 
 /* write a workbook object to a C char array */
 duk_eval_string(ctx, "XLSX.write(workbook, {type:'array', bookType:'xlsx'})");
@@ -157,9 +158,8 @@ wh.write(out, 0, ab.byteLength); wh.close();
 
 ## Goja
 
-Goja is a pure Go implementation of ECMAScript 5.  As of this writing, there are
-some issues with processing Unicode data, but the `xlsx.core.min.js` script can
-be processed.  `[]byte` should be transformed to a binary string in the engine:
+Goja is a pure Go implementation of ECMAScript 5.  `[]byte` should be converted
+to a binary string in the engine:
 
 ```go
 /* read file */

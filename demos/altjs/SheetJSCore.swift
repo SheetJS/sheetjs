@@ -9,7 +9,7 @@ enum SJSError: Error {
 
 class SJSWorksheet {
   var context: JSContext!;
-  var wb: JSValue!; var ws: JSValue!;
+  var wb: JSValue; var ws: JSValue;
   var idx: Int32;
 
   func toCSV() throws -> String {
@@ -26,7 +26,7 @@ class SJSWorksheet {
 
 class SJSWorkbook {
   var context: JSContext!;
-  var wb: JSValue!; var SheetNames: JSValue!; var Sheets: JSValue!;
+  var wb: JSValue; var SheetNames: JSValue; var Sheets: JSValue;
 
   func getSheetAtIndex(idx: Int32) throws -> SJSWorksheet {
     let SheetName: String = SheetNames.atIndex(Int(idx)).toString();
@@ -37,8 +37,8 @@ class SJSWorkbook {
   func writeBStr(bookType: String = "xlsx") throws -> String {
     let XLSX: JSValue! = context.objectForKeyedSubscript("XLSX");
     context.evaluateScript(String(format: "var writeopts = {type:'binary', bookType:'%@'}", bookType));
-    let writeopts: JSValue! = context.objectForKeyedSubscript("writeopts");
-    let writefunc: JSValue! = XLSX.objectForKeyedSubscript("write");
+    let writeopts: JSValue = context.objectForKeyedSubscript("writeopts");
+    let writefunc: JSValue = XLSX.objectForKeyedSubscript("write");
     return writefunc.call(withArguments: [wb, writeopts]).toString();
   }
 
@@ -58,7 +58,7 @@ class SheetJSCore {
     var context: JSContext!
     do {
       context = JSContext();
-      context.exceptionHandler = { ctx, X in if let e = X { print(e.toString()); }; };
+      context.exceptionHandler = { _, X in if let e = X { print(e.toString()!); }; };
       context.evaluateScript("var global = (function(){ return this; }).call(null);");
       context.evaluateScript("if(typeof wbs == 'undefined') wbs = [];");
       let src = try String(contentsOfFile: "xlsx.full.min.js");
@@ -79,7 +79,7 @@ class SheetJSCore {
   }
 
   func readBStr(data: String) throws -> SJSWorkbook {
-    context.setObject(data, forKeyedSubscript: "payload" as (NSCopying & NSObjectProtocol)!);
+    context.setObject(data, forKeyedSubscript: "payload" as (NSCopying & NSObjectProtocol));
     context.evaluateScript("var wb = XLSX.read(payload, {type:'binary'});");
     let wb: JSValue! = context.objectForKeyedSubscript("wb");
     if wb == nil { throw SJSError.badJSWorkbook; }

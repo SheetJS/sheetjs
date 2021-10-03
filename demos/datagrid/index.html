@@ -47,7 +47,6 @@ a { text-decoration: none }
 /* eslint no-use-before-define:0 */
 /*global Uint8Array, Uint16Array, ArrayBuffer */
 /*global XLSX */
-var X = XLSX;
 
 var cDg;
 
@@ -86,7 +85,7 @@ var do_file = (function() {
 			if(typeof console !== 'undefined') console.log("onload", new Date());
 			var data = e.target.result;
 			data = new Uint8Array(data);
-			process_wb(X.read(data, {type: 'array'}));
+			process_wb(XLSX.read(data, {type: 'array'}));
 		};
 		reader.readAsArrayBuffer(f);
 	};

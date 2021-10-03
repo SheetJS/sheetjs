@@ -16,14 +16,12 @@ IE10 and IE11 support the standard HTML5 FileReader API:
 function handle_fr(e) {
 	var files = e.target.files, f = files[0];
 	var reader = new FileReader();
-	var rABS = !!reader.readAsBinaryString;
 	reader.onload = function(e) {
-		var data = e.target.result;
-		if(!rABS) data = new Uint8Array(data);
-		var wb = XLSX.read(data, {type: rABS ? 'binary' : 'array'});
+		var data = new Uint8Array(e.target.result);
+		var wb = XLSX.read(data, {type: 'array'});
 		process_wb(wb);
 	};
-	if(rABS) reader.readAsBinaryString(f); else reader.readAsArrayBuffer(f);
+	reader.readAsArrayBuffer(f);
 }
 input_dom_element.addEventListener('change', handle_fr, false);
 ```
@@ -42,7 +40,7 @@ function handle_ie() {
 	var path = input_dom_element.value;
 	var bstr = IE_LoadFile(path);
 	/* read workbook */
-	var wb = XLSX.read(bstr, {type:'binary'});
+	var wb = XLSX.read(bstr, {type: 'binary'});
 	/* DO SOMETHING WITH workbook HERE */
 }
 input_dom_element.attachEvent('onchange', handle_ie);

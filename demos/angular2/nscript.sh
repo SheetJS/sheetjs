@@ -1,15 +1,10 @@
 #!/bin/bash
 if [ ! -e SheetJSNS ]; then
-	tns create SheetJSNS --template nativescript-template-ng-tutorial
+	ns create SheetJSNS --ng
 	cd SheetJSNS
-	tns plugin add nativescript-nodeify
 	npm install xlsx
-	cd app
-	npm install xlsx
-	cd ../..
+	cd ..
 fi
 
-cp ../../dist/xlsx.full.min.js SheetJSNS/
-cp ../../dist/xlsx.full.min.js SheetJSNS/app/
-cp nsmain.ts  SheetJSNS/app/main.ts
-cp nscript.ts SheetJSNS/app/app.component.ts
+<../../dist/xlsx.full.min.js sed 's/require("fs")/null/g' > SheetJSNS/src/app/xlsx.full.min.js
+cp nscript.ts SheetJSNS/src/app/app.component.ts

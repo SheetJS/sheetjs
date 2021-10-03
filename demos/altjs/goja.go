@@ -39,7 +39,7 @@ func main() {
 
 	/* load library */
 	safe_run_file(vm, "shim.min.js")
-	safe_run_file(vm, "xlsx.core.min.js")
+	safe_run_file(vm, "xlsx.full.min.js")
 
 	/* get version string */
 	v := eval_string(vm, "XLSX.version")

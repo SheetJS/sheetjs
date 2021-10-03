@@ -1,19 +1,30 @@
 /* xlsx.js (C) 2013-present SheetJS -- http://sheetjs.com */
 /* vim: set ts=2: */
 import { Component } from '@angular/core';
-
+import { File } from '@ionic-native/file/ngx';
 import * as XLSX from 'xlsx';
 
-import { File } from '@ionic-native/file';
 
 type AOA = any[][];
 
 @Component({
-  selector: 'page-home',
+  selector: 'app-home',
+  //templateUrl: 'home.page.html',
+  styleUrls: ['home.page.scss'],
   template: `
-<ion-header><ion-navbar><ion-title>SheetJS Ionic Demo</ion-title></ion-navbar></ion-header>
+<ion-header>
+  <ion-toolbar>
+    <ion-title>SheetJS Ionic Demo</ion-title>
+  </ion-toolbar>
+</ion-header>
 
-<ion-content padding>
+<ion-content [fullscreen]="true">
+  <ion-header collapse="condense">
+    <ion-toolbar>
+      <ion-title>SheetJS Demo</ion-title>
+    </ion-toolbar>
+  </ion-header>
+
   <ion-grid>
     <ion-row *ngFor="let row of data">
       <ion-col *ngFor="let val of row">
@@ -23,7 +34,7 @@ type AOA = any[][];
   </ion-grid>
 </ion-content>
 
-<ion-footer>
+<ion-footer padding>
   <input type="file" (change)="onFileChange($event)" multiple="false" />
   <button ion-button color="secondary" (click)="import()">Import Data</button>
   <button ion-button color="secondary" (click)="export()">Export Data</button>
@@ -33,18 +44,18 @@ type AOA = any[][];
 
 export class HomePage {
   data: any[][] = [[1,2,3],[4,5,6]];
-  constructor(public file: File) {};
+  constructor(public file: File) {}
 
-  read(bstr: string) {
+  read(ab: ArrayBuffer) {
     /* read workbook */
-    const wb: XLSX.WorkBook = XLSX.read(bstr, {type: 'binary'});
+    const wb: XLSX.WorkBook = XLSX.read(new Uint8Array(ab), {type: 'array'});
 
     /* grab first sheet */
     const wsname: string = wb.SheetNames[0];
     const ws: XLSX.WorkSheet = wb.Sheets[wsname];
 
     /* save data */
-    this.data = <AOA>(XLSX.utils.sheet_to_json(ws, {header: 1}));
+    this.data = (XLSX.utils.sheet_to_json(ws, {header: 1}) as AOA);
   };
 
   write(): XLSX.WorkBook {
@@ -61,14 +72,14 @@ export class HomePage {
   /* File Input element for browser */
   onFileChange(evt: any) {
     /* wire up file reader */
-    const target: DataTransfer = <DataTransfer>(evt.target);
-    if (target.files.length !== 1) throw new Error('Cannot use multiple files');
+    const target: DataTransfer = (evt.target as DataTransfer);
+    if (target.files.length !== 1) { throw new Error('Cannot use multiple files'); }
     const reader: FileReader = new FileReader();
     reader.onload = (e: any) => {
-      const bstr: string = e.target.result;
-      this.read(bstr);
+      const ab: ArrayBuffer = e.target.result;
+      this.read(ab);
     };
-    reader.readAsBinaryString(target.files[0]);
+    reader.readAsArrayBuffer(target.files[0]);
   };
 
   /* Import button for mobile */
@@ -77,23 +88,22 @@ export class HomePage {
       const target: string = this.file.documentsDirectory || this.file.externalDataDirectory || this.file.dataDirectory || '';
       const dentry = await this.file.resolveDirectoryUrl(target);
       const url: string = dentry.nativeURL || '';
-      alert(`Attempting to read SheetJSIonic.xlsx from ${url}`)
-      const bstr: string = await this.file.readAsBinaryString(url, "SheetJSIonic.xlsx");
-      this.read(bstr);
+      alert(`Attempting to read SheetJSIonic.xlsx from ${url}`);
+      const ab: ArrayBuffer = await this.file.readAsArrayBuffer(url, 'SheetJSIonic.xlsx');
+      this.read(ab);
     } catch(e) {
       const m: string = e.message;
-      alert(m.match(/It was determined/) ? "Use File Input control" : `Error: ${m}`);
+      alert(m.match(/It was determined/) ? 'Use File Input control' : `Error: ${m}`);
     }
   };
 
   /* Export button */
   async export() {
     const wb: XLSX.WorkBook = this.write();
-    const filename: string = "SheetJSIonic.xlsx";
+    const filename = 'SheetJSIonic.xlsx';
     try {
       /* generate Blob */
       const wbout: ArrayBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-      const blob: Blob = new Blob([wbout], {type: 'application/octet-stream'});
 
       /* find appropriate path for mobile */
       const target: string = this.file.documentsDirectory || this.file.externalDataDirectory || this.file.dataDirectory || '';
@@ -101,14 +111,15 @@ export class HomePage {
       const url: string = dentry.nativeURL || '';
 
       /* attempt to save blob to file */
-      await this.file.writeFile(url, filename, blob, {replace: true});
+      await this.file.writeFile(url, filename, wbout, {replace: true});
       alert(`Wrote to SheetJSIonic.xlsx in ${url}`);
     } catch(e) {
       if(e.message.match(/It was determined/)) {
         /* in the browser, use writeFile */
         XLSX.writeFile(wb, filename);
+      } else {
+        alert(`Error: ${e.message}`);
       }
-      else alert(`Error: ${e.message}`);
     }
   };
 }

@@ -3,13 +3,6 @@ var XLSX = require('../../'); // test against development version
 //var XLSX = require('xlsx'); // use in production
 /*jshint browser:true */
 /*global require */
-var X = XLSX;
-var XW = {
-	/* worker message */
-	msg: 'xlsx',
-	/* worker scripts */
-	worker: './worker.min.js'
-};
 
 var global_wb;
 
@@ -27,7 +20,7 @@ var process_wb = (function() {
 	var to_json = function to_json(workbook) {
 		var result = {};
 		workbook.SheetNames.forEach(function(sheetName) {
-			var roa = X.utils.sheet_to_json(workbook.Sheets[sheetName]);
+			var roa = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
 			if(roa.length) result[sheetName] = roa;
 		});
 		return JSON.stringify(result, 2, 2);
@@ -36,7 +29,7 @@ var process_wb = (function() {
 	var to_csv = function to_csv(workbook) {
 		var result = [];
 		workbook.SheetNames.forEach(function(sheetName) {
-			var csv = X.utils.sheet_to_csv(workbook.Sheets[sheetName]);
+			var csv = XLSX.utils.sheet_to_csv(workbook.Sheets[sheetName]);
 			if(csv.length){
 				result.push("SHEET: " + sheetName);
 				result.push("");
@@ -49,7 +42,7 @@ var process_wb = (function() {
 	var to_fmla = function to_fmla(workbook) {
 		var result = [];
 		workbook.SheetNames.forEach(function(sheetName) {
-			var formulae = X.utils.get_formulae(workbook.Sheets[sheetName]);
+			var formulae = XLSX.utils.get_formulae(workbook.Sheets[sheetName]);
 			if(formulae.length){
 				result.push("SHEET: " + sheetName);
 				result.push("");
@@ -62,7 +55,7 @@ var process_wb = (function() {
 	var to_html = function to_html(workbook) {
 		HTMLOUT.innerHTML = "";
 		workbook.SheetNames.forEach(function(sheetName) {
-			var htmlstr = X.write(workbook, {sheet:sheetName, type:'string', bookType:'html'});
+			var htmlstr = XLSX.write(workbook, {sheet:sheetName, type:'string', bookType:'html'});
 			HTMLOUT.innerHTML += htmlstr;
 		});
 		return "";
@@ -89,7 +82,7 @@ var b64it = window.b64it = (function() {
 	var tarea = document.getElementById('b64data');
 	return function b64it() {
 		if(typeof console !== 'undefined') console.log("onload", new Date());
-		var wb = X.read(tarea.value, {type:'base64', WTF:false});
+		var wb = XLSX.read(tarea.value, {type:'base64', WTF:false});
 		process_wb(wb);
 	};
 })();
@@ -100,12 +93,12 @@ var do_file = (function() {
 	if(!use_worker) domwork.disabled = !(domwork.checked = false);
 
 	var xw = function xw(data, cb) {
-		var worker = new Worker(XW.worker);
+		var worker = new Worker('./worker.min.js');
 		worker.onmessage = function(e) {
 			switch(e.data.t) {
 				case 'ready': break;
 				case 'e': console.error(e.data.d); break;
-				case XW.msg: cb(JSON.parse(e.data.d)); break;
+				case 'xlsx': cb(JSON.parse(e.data.d)); break;
 			}
 		};
 		worker.postMessage({d:data,b:'array'});
@@ -120,7 +113,7 @@ var do_file = (function() {
 			var data = e.target.result;
 			data = new Uint8Array(data);
 			if(use_worker) xw(data, process_wb);
-			else process_wb(X.read(data, {type: 'array'}));
+			else process_wb(XLSX.read(data, {type: 'array'}));
 		};
 		reader.readAsArrayBuffer(f);
 	};
