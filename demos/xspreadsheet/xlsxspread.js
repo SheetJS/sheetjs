@@ -164,6 +164,6 @@ function xtos(sdata, keepMerges, keepFormulas) {
 
         XLSX.utils.book_append_sheet(out, ws, xws.name);
     });
+
     return out;
 }
-
