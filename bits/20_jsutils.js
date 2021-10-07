@@ -133,7 +133,7 @@ function fuzzynum(s/*:string*/)/*:number*/ {
 
 // date regex reference - https://www.oreilly.com/library/view/regular-expressions-cookbook/9781449327453/ch04s04.html
 // matches mm/dd/yy, mm/dd/yyyy, dd/mm/yy, dd/mm/yyyy
-const STRICT_DATE_REGEX = [
+var STRICT_DATE_REGEX = [
 	"^(?:(1[0-2]|0[1-9])\\.(3[01]|[12][0-9]|0[1-9])|(3[01]|[12][0-9]|0[1-9])\\.(1[0-2]|0[1-9]))\\.([0-2][0-9]{3}|[0-9]{2})$", 
 	"^(?:(1[0-2]|0[1-9])\/(3[01]|[12][0-9]|0[1-9])|(3[01]|[12][0-9]|0[1-9])\/(1[0-2]|0[1-9]))\/([0-2][0-9]{3}|[0-9]{2})$",
 	"^(?:(1[0-2]|0[1-9])-(3[01]|[12][0-9]|0[1-9])|(3[01]|[12][0-9]|0[1-9])-(1[0-2]|0[1-9]))-([0-2][0-9]{3}|[0-9]{2})$",
@@ -142,17 +142,37 @@ const STRICT_DATE_REGEX = [
 	"^(?:(1[0-2]|0[1-9])-(3[01]|[12][0-9]|0[1-9])|(3[01]|[12][0-9]|0[1-9])-(1[0-2]|0[1-9]))-([0-2][0-9]{3}|[0-9]{2})$"
 	];
 
-function fuzzydate(s/*:string*/, strictDate = false/*boolean*/)/*:Date*/ {
+function fuzzydate(s/*:string*/, strictDate/*string*/)/*:Date*/ {
 	var o = new Date(s), n = new Date(NaN);
 
 	if(strictDate) {
-		STRICT_DATE_REGEX.map(regex => {
-			const matchStr = s.match(regex)
+		var dateFormat = strictDate.toLowerCase().replace(/[.]|[-]/g, '/')
+
+		STRICT_DATE_REGEX
+		.map(function (regex) {
+			var regexTestString = 
+			var matchStr = regexTestString.test(s)
 
 			if(matchStr){
+				s.replace(/[.]|[-]/g, '/')
+
+				if (dateFormat === "dd/mm") {
+					var splitDate = s.split('/')
+					var newDate = [s[1], s[0], s[2]]
+
+					s = newDate.join('/')
+
+					o = new Date(s)
+					return o
+				}
+				
+				o = new Date(s)
 				return o;
 			};
-	  	});
+	  	})
+		.filter(function (result) {
+			return ((result !== undefined) && (result !== null))
+		});
 
 		return n;
 	}
