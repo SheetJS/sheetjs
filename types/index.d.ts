@@ -163,6 +163,9 @@ export interface ParsingOptions extends CommonOptions {
     /** Override default date format (code 14) */
     dateNF?: string;
 
+    /** Field Separator ("Delimiter" override) */
+    FS?: string;
+
     /**
      * If >0, read the first sheetRows rows
      * @default 0
