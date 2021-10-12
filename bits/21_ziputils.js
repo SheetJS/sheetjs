@@ -30,7 +30,7 @@ function safegetzipfile(zip, file/*:string*/) {
 	var f = file.toLowerCase().replace(/[\/]/g, '\\'), g = f.replace(/\\/g,'\/');
 	for(var i=0; i<k.length; ++i) {
 		var n = k[i].replace(/^Root Entry[\/]/,"").toLowerCase();
-		if(f == n || g == n) return zip.FileIndex[i];
+		if(f == n || g == n) return zip.files ? zip.files[k[i]] : zip.FileIndex[i];
 	}
 	return null;
 }
