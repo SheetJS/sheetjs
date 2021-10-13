@@ -39,7 +39,7 @@ The following function converts data from SheetJS to x-spreadsheet:
 grid.loadData(stox(workbook_object));
 ```
 
-`stox` is defined in [xlsxspread.js](./xlsxspread.js)
+`stox` is defined in [`xlsxspread.js`](./xlsxspread.js)
 
 ## Editing
 
@@ -57,7 +57,7 @@ var new_wb = xtos(xspr.getData());
 XLSX.writeFile(new_wb, "SheetJS.xlsx");
 ```
 
-`stox` is defined in [xlsxspread.js](./xlsxspread.js)
+`stox` is defined in [`xlsxspread.js`](./xlsxspread.js)
 
 ## Additional Features
 

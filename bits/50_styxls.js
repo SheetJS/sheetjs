@@ -3,10 +3,10 @@ function parse_Theme(blob, length, opts) {
 	var end = blob.l + length;
 	var dwThemeVersion = blob.read_shift(4);
 	if(dwThemeVersion === 124226) return;
-	if(!opts.cellStyles || !jszip) { blob.l = end; return; }
+	if(!opts.cellStyles) { blob.l = end; return; }
 	var data = blob.slice(blob.l);
 	blob.l = end;
-	var zip; try { zip = new jszip(data); } catch(e) { return; }
+	var zip; try { zip = zip_read(data, {type: "array"}); } catch(e) { return; }
 	var themeXML = getzipstr(zip, "theme/theme/theme1.xml", true);
 	if(!themeXML) return;
 	return parse_theme_xml(themeXML, opts);

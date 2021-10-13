@@ -11,7 +11,7 @@ function write_cfb_ctr(cfb/*:CFBContainer*/, o/*:WriteOpts*/)/*:any*/ {
 
 /*:: declare var encrypt_agile:any; */
 function write_zip_type(wb/*:Workbook*/, opts/*:?WriteOpts*/)/*:any*/ {
-	var o = opts||{};
+	var o = dup(opts||{});
 	var z = write_zip(wb, o);
 	var oopts = {};
 	if(o.compression) oopts.compression = 'DEFLATE';
@@ -87,7 +87,7 @@ function write_binary_type(out, opts/*:WriteOpts*/)/*:any*/ {
 function writeSync(wb/*:Workbook*/, opts/*:?WriteOpts*/) {
 	reset_cp();
 	check_wb(wb);
-	var o = opts||{};
+	var o = dup(opts||{});
 	if(o.cellStyles) { o.cellNF = true; o.sheetStubs = true; }
 	if(o.type == "array") { o.type = "binary"; var out/*:string*/ = (writeSync(wb, o)/*:any*/); o.type = "array"; return s2ab(out); }
 	switch(o.bookType || 'xlsb') {

@@ -27,6 +27,7 @@ Community Translations of this README:
 [**Issues and Bug Reports**](https://github.com/sheetjs/sheetjs/issues)
 
 ![License](https://img.shields.io/github/license/SheetJS/sheetjs)
+[![Build Status](https://img.shields.io/github/workflow/status/sheetjs/sheetjs/Tests:%20node.js)](https://github.com/SheetJS/sheetjs/actions)
 [![Snyk Vulnerabilities](https://img.shields.io/snyk/vulnerabilities/github/SheetJS/sheetjs)](https://snyk.io/test/github/SheetJS/sheetjs)
 [![npm Downloads](https://img.shields.io/npm/dm/xlsx.svg)](https://npmjs.org/package/xlsx)
 [![jsDelivr Downloads](https://data.jsdelivr.com/v1/package/npm/xlsx/badge)](https://www.jsdelivr.com/package/npm/xlsx)

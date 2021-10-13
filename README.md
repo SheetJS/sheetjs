@@ -27,6 +27,7 @@ Community Translations of this README:
 [**Issues and Bug Reports**](https://github.com/sheetjs/sheetjs/issues)
 
 ![License](https://img.shields.io/github/license/SheetJS/sheetjs)
+[![Build Status](https://img.shields.io/github/workflow/status/sheetjs/sheetjs/Tests:%20node.js)](https://github.com/SheetJS/sheetjs/actions)
 [![Snyk Vulnerabilities](https://img.shields.io/snyk/vulnerabilities/github/SheetJS/sheetjs)](https://snyk.io/test/github/SheetJS/sheetjs)
 [![npm Downloads](https://img.shields.io/npm/dm/xlsx.svg)](https://npmjs.org/package/xlsx)
 [![jsDelivr Downloads](https://data.jsdelivr.com/v1/package/npm/xlsx/badge)](https://www.jsdelivr.com/package/npm/xlsx)
@@ -191,7 +192,7 @@ The [`demos` directory](demos/) includes sample projects for:
 
 **Frameworks and APIs**
 - [`angularjs`](demos/angular/)
-- [`angular 2 / 4 / 5 / 6 and ionic`](demos/angular2/)
+- [`angular and ionic`](demos/angular2/)
 - [`knockout`](demos/knockout/)
 - [`meteor`](demos/meteor/)
 - [`react and react-native`](demos/react/)
@@ -408,8 +409,7 @@ req.open("GET", url, true);
 req.responseType = "arraybuffer";
 
 req.onload = function(e) {
-  var data = new Uint8Array(req.response);
-  var workbook = XLSX.read(data, {type:"array"});
+  var workbook = XLSX.read(req.response);
 
   /* DO SOMETHING WITH workbook HERE */
 }
@@ -422,16 +422,29 @@ req.send();
 <details>
   <summary><b>Browser drag-and-drop</b> (click to show)</summary>
 
-Drag-and-drop uses the HTML5 `FileReader` API.
+For modern browsers, `Blob#arrayBuffer` can read data from files:
+
+```js
+async function handleDropAsync(e) {
+  e.stopPropagation(); e.preventDefault();
+  const f = evt.dataTransfer.files[0];
+  const data = await f.arrayBuffer();
+  const workbook = XLSX.read(data);
+
+  /* DO SOMETHING WITH workbook HERE */
+}
+drop_dom_element.addEventListener('drop', handleDropAsync, false);
+```
+
+For maximal compatibility, the `FileReader` API should be used:
 
 ```js
 function handleDrop(e) {
   e.stopPropagation(); e.preventDefault();
-  var files = e.dataTransfer.files, f = files[0];
+  var f = e.dataTransfer.files[0];
   var reader = new FileReader();
   reader.onload = function(e) {
-    var data = new Uint8Array(e.target.result);
-    var workbook = XLSX.read(data, {type: 'array'});
+    var workbook = XLSX.read(e.target.result);
 
     /* DO SOMETHING WITH workbook HERE */
   };
@@ -445,16 +458,30 @@ drop_dom_element.addEventListener('drop', handleDrop, false);
 <details>
   <summary><b>Browser file upload form element</b> (click to show)</summary>
 
-Data from file input elements can be processed using the same `FileReader` API
-as in the drag-and-drop example:
+Data from file input elements can be processed using the same APIs as in the
+drag-and-drop example.
+
+Using `Blob#arrayBuffer`:
+
+```js
+async function handleFileAsync(e) {
+  const file = evt.target.files[0];
+  const data = await file.arrayBuffer();
+  const workbook = XLSX.read(data);
+
+  /* DO SOMETHING WITH workbook HERE */
+}
+input_dom_element.addEventListener('change', handleFileAsync, false);
+```
+
+Using `FileReader`:
 
 ```js
 function handleFile(e) {
   var files = e.target.files, f = files[0];
   var reader = new FileReader();
   reader.onload = function(e) {
-    var data = new Uint8Array(e.target.result);
-    var workbook = XLSX.read(data, {type: 'array'});
+    var workbook = XLSX.read(e.target.result);
 
     /* DO SOMETHING WITH workbook HERE */
   };
@@ -1544,6 +1571,15 @@ specific format string.
 
 #### Hyperlinks
 
+<details>
+  <summary><b>Format Support</b> (click to show)</summary>
+
+**Cell Hyperlinks**: XLSX/M, XLSB, BIFF8 XLS, XLML, ODS
+
+**Tooltips**: XLSX/M, XLSB, BIFF8 XLS, XLML
+
+</details>
+
 Hyperlinks are stored in the `l` key of cell objects.  The `Target` field of the
 hyperlink object is the target of the link, including the URI fragment. Tooltips
 are stored in the `Tooltip` field and are displayed when you move your mouse
@@ -1553,17 +1589,56 @@ For example, the following snippet creates a link from cell `A3` to
 <https://sheetjs.com> with the tip `"Find us @ SheetJS.com!"`:
 
 ```js
-ws['A3'].l = { Target:"https://sheetjs.com", Tooltip:"Find us @ SheetJS.com!" };
+ws['A1'].l = { Target:"https://sheetjs.com", Tooltip:"Find us @ SheetJS.com!" };
 ```
 
 Note that Excel does not automatically style hyperlinks -- they will generally
 be displayed as normal text.
 
+_Remote Links_
+
+HTTP / HTTPS links can be used directly:
+
+```js
+ws['A2'].l = { Target:"https://docs.sheetjs.com/#hyperlinks" };
+ws['A3'].l = { Target:"http://localhost:7262/yes_localhost_works" };
+```
+
+Excel also supports `mailto` email links with subject line:
+
+```js
+ws['A4'].l = { Target:"mailto:ignored@dev.null" };
+ws['A5'].l = { Target:"mailto:ignored@dev.null?subject=Test Subject" };
+```
+
+_Local Links_
+
+Links to absolute paths should use the `file://` URI scheme:
+
+```js
+ws['B1'].l = { Target:"file:///SheetJS/t.xlsx" }; /* Link to /SheetJS/t.xlsx */
+ws['B2'].l = { Target:"file:///c:/SheetJS.xlsx" }; /* Link to c:\SheetJS.xlsx */
+```
+
+Links to relative paths can be specified without a scheme:
+
+```js
+ws['B3'].l = { Target:"SheetJS.xlsb" }; /* Link to SheetJS.xlsb */
+ws['B4'].l = { Target:"../SheetJS.xlsm" }; /* Link to ../SheetJS.xlsm */
+```
+
+Relative Paths have undefined behavior in the SpreadsheetML 2003 format.  Excel
+2019 will treat a `..\` parent mark as two levels up.
+
+_Internal Links_
+
 Links where the target is a cell or range or defined name in the same workbook
 ("Internal Links") are marked with a leading hash character:
 
 ```js
-ws['A2'].l = { Target:"#E2" }; /* link to cell E2 */
+ws['C1'].l = { Target:"#E2" }; /* Link to cell E2 */
+ws['C2'].l = { Target:"#Sheet2!E2" }; /* Link to cell E2 in sheet Sheet2 */
+ws['C3'].l = { Target:"#SomeDefinedName" }; /* Link to Defined Name */
 ```
 
 #### Cell Comments
@@ -1782,14 +1857,16 @@ Plain text format guessing follows the priority order:
 |:-------|:--------------------------------------------------------------------|
 | XML    | `<?xml` appears in the first 1024 characters                        |
 | HTML   | starts with `<` and HTML tags appear in the first 1024 characters * |
-| XML    | starts with `<`                                                     |
+| XML    | starts with `<` and the first tag is valid                          |
 | RTF    | starts with `{\rt`                                                  |
 | DSV    | starts with `/sep=.$/`, separator is the specified character        |
-| DSV    | more unquoted `";"` chars than `"\t"` or `","` in the first 1024    |
-| TSV    | more unquoted `"\t"` chars than `","` chars in the first 1024       |
+| DSV    | more unquoted `|` chars than `;` `\t`  `,` in the first 1024        |
+| DSV    | more unquoted `;` chars than `\t` or `,` in the first 1024          |
+| TSV    | more unquoted `\t` chars than `,` chars in the first 1024           |
 | CSV    | one of the first 1024 characters is a comma `","`                   |
 | ETH    | starts with `socialcalc:version:`                                   |
-| PRN    | (default)                                                           |
+| PRN    | `PRN` option is set to true                                         |
+| CSV    | (fallback)                                                          |
 
 - HTML tags include: `html`, `table`, `head`, `meta`, `script`, `style`, `div`
 
@@ -1916,11 +1993,12 @@ as the corresponding styles.  Dates are stored as date or numbers.  Array holes
 and explicit `undefined` values are skipped.  `null` values may be stubbed. All
 other values are stored as strings.  The function takes an options argument:
 
-| Option Name |  Default | Description                                         |
-| :---------- | :------: | :-------------------------------------------------- |
-|`dateNF`     |  FMT 14  | Use specified date format in string output          |
-|`cellDates`  |  false   | Store dates as type `d` (default is `n`)            |
-|`sheetStubs` |  false   | Create cell objects of type `z` for `null` values   |
+| Option Name | Default | Description                                          |
+| :---------- | :-----: | :--------------------------------------------------- |
+|`dateNF`     |  FMT 14 | Use specified date format in string output           |
+|`cellDates`  |  false  | Store dates as type `d` (default is `n`)             |
+|`sheetStubs` |  false  | Create cell objects of type `z` for `null` values    |
+|`nullError`  |  false  | If true, emit `#NULL!` error cells for `null` values |
 
 <details>
   <summary><b>Examples</b> (click to show)</summary>
@@ -1940,12 +2018,13 @@ var ws = XLSX.utils.aoa_to_sheet([
 existing worksheet object.  It follows the same process as `aoa_to_sheet` and
 accepts an options argument:
 
-| Option Name |  Default | Description                                         |
-| :---------- | :------: | :-------------------------------------------------- |
-|`dateNF`     |  FMT 14  | Use specified date format in string output          |
-|`cellDates`  |  false   | Store dates as type `d` (default is `n`)            |
-|`sheetStubs` |  false   | Create cell objects of type `z` for `null` values   |
-|`origin`     |          | Use specified cell as starting point (see below)    |
+| Option Name | Default | Description                                          |
+| :---------- | :-----: | :--------------------------------------------------- |
+|`dateNF`     |  FMT 14 | Use specified date format in string output           |
+|`cellDates`  |  false  | Store dates as type `d` (default is `n`)             |
+|`sheetStubs` |  false  | Create cell objects of type `z` for `null` values    |
+|`nullError`  |  false  | If true, emit `#NULL!` error cells for `null` values |
+|`origin`     |         | Use specified cell as starting point (see below)     |
 
 `origin` is expected to be one of:
 
@@ -2004,11 +2083,14 @@ default column order is determined by the first appearance of the field using
 |`dateNF`     |  FMT 14 | Use specified date format in string output           |
 |`cellDates`  |  false  | Store dates as type `d` (default is `n`)             |
 |`skipHeader` |  false  | If true, do not include header row in output         |
+|`nullError`  |  false  | If true, emit `#NULL!` error cells for `null` values |
 
 - All fields from each row will be written.  If `header` is an array and it does
   not contain a particular field, the key will be appended to the array.
 - Cell types are deduced from the type of each value.  For example, a `Date`
   object will generate a Date cell, while a string will generate a Text cell.
+- Null values will be skipped by default.  If `nullError` is true, an error cell
+  corresponding to `#NULL!` will be written to the worksheet.
 
 <details>
   <summary><b>Examples</b> (click to show)</summary>
@@ -2039,13 +2121,14 @@ var ws = XLSX.utils.json_to_sheet([
 worksheet object.  It follows the same process as `json_to_sheet` and accepts
 an options argument:
 
-| Option Name |  Default | Description                                         |
-| :---------- | :------: | :-------------------------------------------------- |
-|`header`     |          | Use specified column order (default `Object.keys`)  |
-|`dateNF`     |  FMT 14  | Use specified date format in string output          |
-|`cellDates`  |  false   | Store dates as type `d` (default is `n`)            |
-|`skipHeader` |  false   | If true, do not include header row in output        |
-|`origin`     |          | Use specified cell as starting point (see below)    |
+| Option Name | Default | Description                                          |
+| :---------- | :-----: | :--------------------------------------------------- |
+|`header`     |         | Use specified column order (default `Object.keys`)   |
+|`dateNF`     |  FMT 14 | Use specified date format in string output           |
+|`cellDates`  |  false  | Store dates as type `d` (default is `n`)             |
+|`skipHeader` |  false  | If true, do not include header row in output         |
+|`nullError`  |  false  | If true, emit `#NULL!` error cells for `null` values |
+|`origin`     |         | Use specified cell as starting point (see below)     |
 
 `origin` is expected to be one of:
 

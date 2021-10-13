@@ -1,7 +1,7 @@
 /* xlsx.js (C) 2013-present SheetJS -- http://sheetjs.com */
 /*:: declare var XLSX: XLSXModule; */
 /*:: declare var self: DedicatedWorkerGlobalScope; */
-importScripts('dist/shim.js');
+importScripts('dist/shim.min.js');
 /* uncomment the next line for encoding support */
 importScripts('dist/cpexcel.js');
 importScripts('jszip.js');

@@ -1,1 +1,1 @@
-XLSX.version = '0.17.2';
+XLSX.version = '0.17.3';

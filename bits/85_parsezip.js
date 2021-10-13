@@ -193,8 +193,18 @@ function parse_zip(zip/*:ZIP*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
 		SSF: SSF.get_table()
 	}/*:any*/);
 	if(opts && opts.bookFiles) {
-		out.keys = entries;
-		out.files = zip.files;
+		if(zip.files) {
+			out.keys = entries;
+			out.files = zip.files;
+		} else {
+			out.keys = [];
+			out.files = {};
+			zip.FullPaths.forEach(function(p, idx) {
+				p = p.replace(/^Root Entry[\/]/, "");
+				out.keys.push(p);
+				out.files[p] = zip.FileIndex[idx];
+			});
+		}
 	}
 	if(opts && opts.bookVBA) {
 		if(dir.vba.length > 0) out.vbaraw = getzipdata(zip,strip_front_slash(dir.vba[0]),true);

@@ -368,7 +368,7 @@ var SYLK = (function() {
 		switch(opts.type) {
 			case 'base64': return sylk_to_aoa_str(Base64.decode(d), opts);
 			case 'binary': return sylk_to_aoa_str(d, opts);
-			case 'buffer': return sylk_to_aoa_str(d.toString('binary'), opts);
+			case 'buffer': return sylk_to_aoa_str(has_buf && Buffer.isBuffer(d) ? d.toString('binary') : a2s(d), opts);
 			case 'array': return sylk_to_aoa_str(cc2str(d), opts);
 		}
 		throw new Error("Unrecognized type " + opts.type);
@@ -390,6 +390,7 @@ var SYLK = (function() {
 			case 'E': break; /* EOF */
 			case 'B': break; /* dimensions */
 			case 'O': break; /* options? */
+			case 'W': break; /* window? */
 			case 'P':
 				if(record[1].charAt(0) == 'P')
 					formats.push(rstr.slice(3).replace(/;;/g, ";"));
@@ -517,8 +518,8 @@ var SYLK = (function() {
 			var rec = "F;W" + (i+1) + " " + (i+1) + " ";
 			if(col.hidden) rec += "0";
 			else {
-				if(typeof col.width == 'number') col.wpx = width2px(col.width);
-				if(typeof col.wpx == 'number') col.wch = px2char(col.wpx);
+				if(typeof col.width == 'number' && !col.wpx) col.wpx = width2px(col.width);
+				if(typeof col.wpx == 'number' && !col.wch) col.wch = px2char(col.wpx);
 				if(typeof col.wch == 'number') rec += Math.round(col.wch);
 			}
 			if(rec.charAt(rec.length - 1) != " ") out.push(rec);
@@ -570,7 +571,7 @@ var DIF = (function() {
 		switch(opts.type) {
 			case 'base64': return dif_to_aoa_str(Base64.decode(d), opts);
 			case 'binary': return dif_to_aoa_str(d, opts);
-			case 'buffer': return dif_to_aoa_str(d.toString('binary'), opts);
+			case 'buffer': return dif_to_aoa_str(has_buf && Buffer.isBuffer(d) ? d.toString('binary') : a2s(d), opts);
 			case 'array': return dif_to_aoa_str(cc2str(d), opts);
 		}
 		throw new Error("Unrecognized type " + opts.type);
@@ -583,7 +584,9 @@ var DIF = (function() {
 			var metadata = records[ri].trim().split(",");
 			var type = metadata[0], value = metadata[1];
 			++ri;
-			var data = records[ri].trim();
+			var data = records[ri] || "";
+			while(((data.match(/["]/g)||[]).length & 1) && ri < records.length - 1) data += "\n" + records[++ri];
+			data = data.trim();
 			switch (+type) {
 				case -1:
 					if (data === 'BOT') { arr[++R] = []; C = 0; continue; }
@@ -598,6 +601,8 @@ var DIF = (function() {
 					++C; break;
 				case 1:
 					data = data.slice(1,data.length-1);
+					data = data.replace(/""/g, '"');
+					if(DIF_XL && data && data.match(/^=".*"$/)) data = data.slice(2, -1);
 					arr[R][C++] = data !== '' ? data : null;
 					break;
 			}
@@ -847,7 +852,7 @@ var PRN = (function() {
 
 		cc.sort(function(a, b) { return a[0] - b[0] || guess_sep_weights[a[1]] - guess_sep_weights[b[1]]; });
 
-		return guess_seps[cc.pop()[1]];
+		return guess_seps[cc.pop()[1]] || 0x2C;
 	}
 
 	function dsv_to_sheet_str(str/*:string*/, opts)/*:Worksheet*/ {
@@ -931,9 +936,9 @@ var PRN = (function() {
 			case 'base64': str = Base64.decode(d); break;
 			case 'binary': str = d; break;
 			case 'buffer':
-				if(opts.codepage == 65001) str = d.toString('utf8');
+				if(opts.codepage == 65001) str = d.toString('utf8'); // TODO: test if buf
 				else if(opts.codepage && typeof cptable !== 'undefined') str = cptable.utils.decode(opts.codepage, d);
-				else str = d.toString('binary');
+				else str = has_buf && Buffer.isBuffer(d) ? d.toString('binary') : a2s(d);
 				break;
 			case 'array': str = cc2str(d); break;
 			case 'string': str = d; break;
