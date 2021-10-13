@@ -5,5 +5,7 @@ if(typeof exports !== 'undefined') make_xlsx_lib(exports);
 else if(typeof module !== 'undefined' && module.exports) make_xlsx_lib(module.exports);
 else if(typeof define === 'function' && define.amd) define('xlsx-dist', function() { if(!XLSX.version) make_xlsx_lib(XLSX); return XLSX; });
 else make_xlsx_lib(XLSX);
+/* NOTE: the following extra line is needed for "Lightning Locker Service" */
+if(typeof window !== 'undefined' && !window.XLSX) window.XLSX = XLSX;
 /*exported XLS, ODS */
 var XLS = XLSX, ODS = XLSX;

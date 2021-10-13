@@ -18,7 +18,6 @@ function write_zip(wb/*:Workbook*/, opts/*:WriteOpts*/)/*:ZIP*/ {
 	var vbafmt = VBAFMTS.indexOf(opts.bookType) > -1;
 	var ct = new_ct();
 	fix_write_opts(opts = opts || {});
-	/*:: if(!jszip) throw new Error("JSZip is not available"); */
 	var zip = zip_new();
 	var f = "", rId = 0;
 

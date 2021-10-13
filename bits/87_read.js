@@ -16,7 +16,6 @@ function read_cfb(cfb/*:CFBContainer*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
 }
 
 function read_zip(data/*:RawData*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
-	/*:: if(!jszip) throw new Error("JSZip is not available"); */
 	var zip, d = data;
 	var o = opts||{};
 	if(!o.type) o.type = (has_buf && Buffer.isBuffer(data)) ? "buffer" : "base64";

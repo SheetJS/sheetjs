@@ -242,7 +242,6 @@ var write_content_ods/*:{(wb:any, opts:any):string}*/ = (function() {
 function write_ods(wb/*:any*/, opts/*:any*/) {
 	if(opts.bookType == "fods") return write_content_ods(wb, opts);
 
-	/*:: if(!jszip) throw new Error("JSZip is not available"); */
 	var zip = zip_new();
 	var f = "";
 
