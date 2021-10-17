@@ -1715,7 +1715,7 @@ function sleuth_fat(idx/*:number*/, cnt/*:number*/, sectors/*:Array<RawBytes>*/,
 			if((q = __readInt32LE(sector,i*4)) === ENDOFCHAIN) break;
 			fat_addrs.push(q);
 		}
-		sleuth_fat(__readInt32LE(sector,ssz-4),cnt - 1, sectors, ssz, fat_addrs);
+		if(cnt >= 1) sleuth_fat(__readInt32LE(sector,ssz-4),cnt - 1, sectors, ssz, fat_addrs);
 	}
 }
 
@@ -22116,6 +22116,7 @@ if(has_buf && typeof require != 'undefined') (function() {
 		for(var C = r.s.c; C <= r.e.c; ++C) if (!((colinfo[C]||{}).hidden)) cols[C] = encode_col(C);
 		var R = r.s.r;
 		var BOM = false;
+		var wrote_first_line = false;
 		stream._read = function() {
 			if(!BOM) { BOM = true; return stream.push("\uFEFF"); }
 			while(R <= r.e.r) {
@@ -22124,7 +22125,8 @@ if(has_buf && typeof require != 'undefined') (function() {
 				row = make_csv_row(sheet, r, R-1, cols, fs, rs, FS, o);
 				if(row != null) {
 					if(o.strip) row = row.replace(endregex,"");
-					stream.push(row + RS);
+					stream.push(wrote_first_line ? RS + row : row);
+					wrote_first_line = true;
 					break;
 				}
 			}
