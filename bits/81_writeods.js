@@ -1,5 +1,14 @@
 /* OpenDocument */
 var write_styles_ods/*:{(wb:any, opts:any):string}*/ = (function() {
+	var master_styles = '<office:master-styles>'
+	+ '<style:master-page style:name="mp1" style:page-layout-name="mp1">'
+	+ '<style:header/>'
+	+ '<style:header-left style:display="false"/>'
+	+ '<style:footer/>'
+	+ '<style:footer-left style:display="false"/>'
+	+ '</style:master-page>'
+	+ '</office:master-styles>';
+
 	var payload = '<office:document-styles ' + wxt_helper({
 		'xmlns:office':   "urn:oasis:names:tc:opendocument:xmlns:office:1.0",
 		'xmlns:table':    "urn:oasis:names:tc:opendocument:xmlns:table:1.0",
@@ -13,7 +22,8 @@ var write_styles_ods/*:{(wb:any, opts:any):string}*/ = (function() {
 		'xmlns:svg':      "urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0",
 		'xmlns:of':       "urn:oasis:names:tc:opendocument:xmlns:of:1.2",
 		'office:version': "1.2"
-	}) + '></office:document-styles>';
+	}) + '>' + master_styles + '</office:document-styles>';
+
 	return function wso(/*::wb, opts*/) {
 		return XML_HEADER + payload;
 	};
@@ -161,7 +171,7 @@ var write_content_ods/*:{(wb:any, opts:any):string}*/ = (function() {
 		});
 
 		/* table */
-		o.push('  <style:style style:name="ta1" style:family="table">\n'); // style:master-page-name="mp1">\n');
+		o.push('  <style:style style:name="ta1" style:family="table" style:master-page-name="mp1">\n');
 		o.push('   <style:table-properties table:display="true" style:writing-mode="lr-tb"/>\n');
 		o.push('  </style:style>\n');
 
