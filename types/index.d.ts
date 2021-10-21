@@ -699,7 +699,7 @@ export interface JSON2SheetOpts extends CommonOptions, DateNFOption {
 
 export interface SheetJSONOpts extends JSON2SheetOpts, OriginOption {}
 
-export interface Table2SheetOpts extends CommonOptions, DateNFOption {
+export interface Table2SheetOpts extends CommonOptions, DateNFOption, OriginOption {
     /** If true, plaintext parsing will not parse values */
     raw?: boolean;
 
