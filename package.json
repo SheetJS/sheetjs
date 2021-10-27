@@ -46,10 +46,11 @@
 	"devDependencies": {
 		"@sheetjs/uglify-js": "~2.7.3",
 		"@types/node": "^8.5.9",
+		"acorn": "7.4.1",
 		"alex": "^9.1.0",
 		"blanket": "~1.2.3",
 		"dtslint": "^0.1.2",
-		"eslint": "^7.23.0",
+		"eslint": "7.23.0",
 		"eslint-plugin-html": "^6.1.2",
 		"eslint-plugin-json": "^2.1.2",
 		"jsdom": "~11.1.0",

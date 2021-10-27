@@ -227,7 +227,7 @@ apachepoi_MatrixFormulaEvalTestData.xlsx
 apachepoi_NewStyleConditionalFormattings.xlsx
 apachepoi_NewlineInFormulas.xlsx
 # apachepoi_NumberFormatApproxTests.xlsx # xlml
-apachepoi_NumberFormatTests.xlsx
+apachepoi_NumberFormatTests.xlsx # upstream changed file
 apachepoi_RepeatingRowsCols.xlsx
 apachepoi_SampleSS.strict.xlsx
 apachepoi_SampleSS.xlsx
