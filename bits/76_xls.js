@@ -115,7 +115,6 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 	var arrayf/*:Array<[Range, string]>*/ = [];
 	var temp_val/*:Cell*/;
 	var country;
-	var cell_valid = true;
 	var XFs = []; /* XF records */
 	var palette/*:Array<[number, number, number]>*/ = [];
 	var Workbook/*:WBWBProps*/ = ({ Sheets:[], WBProps:{date1904:false}, Views:[{}] }/*:any*/), wsprops = {};
@@ -135,8 +134,7 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 	};
 	var addcell = function addcell(cell/*:any*/, line/*:any*/, options/*:any*/) {
 		if(file_depth > 1) return;
-		if(options.sheetRows && cell.r >= options.sheetRows) cell_valid = false;
-		if(!cell_valid) return;
+		if(options.sheetRows && cell.r >= options.sheetRows) return;
 		if(options.cellStyles && line.XF && line.XF.data) process_cell_style(cell, line, options);
 		delete line.ixfe; delete line.XF;
 		lastcell = cell;
@@ -365,7 +363,6 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 					if(val.BIFFVer == 0 && val.dt == 0x1000) { opts.biff = 5; seen_codepage = true; set_cp(opts.codepage = 28591); }
 					if(opts.biff == 8 && val.BIFFVer == 0 && val.dt == 16) opts.biff = 2;
 					if(file_depth++) break;
-					cell_valid = true;
 					out = ((options.dense ? [] : {})/*:any*/);
 
 					if(opts.biff < 8 && !seen_codepage) { seen_codepage = true; set_cp(opts.codepage = options.codepage || 1252); }
@@ -462,7 +459,6 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 					}
 				} break;
 				case 'ShrFmla': {
-					if(!cell_valid) break;
 					if(!options.cellFormula) break;
 					if(last_cell) {
 						/* TODO: capture range */
