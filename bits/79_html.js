@@ -59,7 +59,12 @@ var HTML_ = (function() {
 		return ws;
 	}
 	function html_to_book(str/*:string*/, opts)/*:Workbook*/ {
-		return sheet_to_workbook(html_to_sheet(str, opts), opts);
+		var mtch = str.match(/<table.*?>[\s\S]*?<\/table>/gi);
+		if(!mtch || mtch.length == 0) throw new Error("Invalid HTML: could not find <table>");
+		if(mtch.length == 1) return sheet_to_workbook(html_to_sheet(mtch[0], opts), opts);
+		var wb = utils.book_new();
+		mtch.forEach(function(s, idx) { utils.book_append_sheet(wb, html_to_sheet(s, opts), "Sheet" + (idx+1)); });
+		return wb;
 	}
 	function make_html_row(ws/*:Worksheet*/, r/*:Range*/, R/*:number*/, o/*:Sheet2HTMLOpts*/)/*:string*/ {
 		var M/*:Array<Range>*/ = (ws['!merges'] ||[]);

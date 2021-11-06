@@ -2160,6 +2160,18 @@ describe('HTML', function() {
 			var wb = X.read(table, {type:"string"});
 			assert.equal(get_cell(wb.Sheets.Sheet1, "A1").v, "foo\nbar");
 		});
+		it.skip('should generate multi-sheet workbooks', function() {
+			var table = "";
+			for(var i = 0; i < 4; ++i) table += "<table><tr><td>" + X.utils.encode_col(i) + "</td><td>" + i + "</td></tr></table>";
+			table += table; table += table;
+			var wb = X.read(table, {type: "string"});
+			assert.equal(wb.SheetNames.length, 4);
+			assert.equal(wb.SheetNames[1], "Sheet2");
+			for(var j = 0; j < 4; ++j) {
+				assert.equal(get_cell(wb.Sheets.Sheet + (j+1), "A1"), X.utils.encode_col(j));
+				assert.equal(get_cell(wb.Sheets.Sheet + (j+1), "B1"), j);
+			}
+		});
 	});
 	(domtest ? describe : describe.skip)('input DOM', function() {
 		it('should interpret values by default', function() { plaintext_test(X.utils.table_to_book(get_dom_element(html_str)), false); });
