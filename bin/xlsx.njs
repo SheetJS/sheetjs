@@ -6,7 +6,20 @@ var n = "xlsx";
 var X = require('../');
 try { X = require('../xlsx.flow'); } catch(e) {}
 require('exit-on-epipe');
-var fs = require('fs'), program = require('commander');
+var fs = require('fs'), program;
+try { program = require('commander'); } catch(e) {
+	[
+		"The `xlsx` command line tool is deprecated in favor of `xlsx-cli`.",
+		"",
+		"For new versions of node, we recommend using `npx`:",
+		"    $ npx xlsx-cli --help",
+		"",
+		"For older versions of node, explicitly install `xlsx-cli` globally:",
+		"    $ npm i -g xlsx-cli",
+		"    $ xlsx-cli --help"
+	].forEach(function(m) { console.error(m); });
+	process.exit(1);
+}
 program
 	.version(X.version)
 	.usage('[options] <file> [sheetname]')

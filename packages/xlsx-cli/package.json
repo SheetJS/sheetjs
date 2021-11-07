@@ -1,0 +1,43 @@
+{
+	"name": "xlsx-cli",
+	"version": "1.1.1",
+	"author": "sheetjs",
+	"description": "Command-line interface for SheetJS",
+	"keywords": [
+		"excel",
+		"xls",
+		"xlsx",
+		"xlsb",
+		"xlsm",
+		"ods",
+		"csv",
+		"dbf",
+		"dif",
+		"sylk",
+		"office",
+		"spreadsheet"
+	],
+	"bin": {
+		"xlsx-cli": "./bin/xlsx.njs"
+	},
+	"main": "index.js",
+	"dependencies": {
+		"commander": "~2.17.1",
+		"exit-on-epipe": "~1.0.1",
+		"xlsx": "latest"
+	},
+	"devDependencies": {
+	},
+	"repository": {
+		"type": "git",
+		"url": "git://github.com/SheetJS/sheetjs.git"
+	},
+	"homepage": "https://sheetjs.com/",
+	"bugs": {
+		"url": "https://github.com/SheetJS/sheetjs/issues"
+	},
+	"license": "Apache-2.0",
+	"engines": {
+		"node": ">=0.8"
+	}
+}
