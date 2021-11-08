@@ -472,6 +472,8 @@ function parse_xlml_xml(d, _opts)/*:Workbook*/ {
 			else if(Rn[0].charAt(Rn[0].length-2) !== '/') state.push([Rn[3], true]);
 			break;
 
+		case 'null' /*case 'Null'*/: break;
+
 		default:
 			/* FODS file root is <office:document> */
 			if(state.length == 0 && Rn[3] == "document") return parse_fods(str, opts);

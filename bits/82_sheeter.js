@@ -21,4 +21,5 @@ var write_rtf_str = write_obj_str(typeof RTF !== "undefined" ? RTF : {});
 var write_txt_str = write_obj_str({from_sheet:sheet_to_txt});
 var write_dbf_buf = write_obj_str(typeof DBF !== "undefined" ? DBF : {});
 var write_eth_str = write_obj_str(typeof ETH !== "undefined" ? ETH : {});
+var write_wk1_buf = write_obj_str(typeof WK_ !== "undefined" ? {from_sheet:WK_.sheet_to_wk1} : {});
 

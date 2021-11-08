@@ -53,6 +53,7 @@ output formats.  The specific file type is controlled with `bookType` option:
 | `html`     | `.html`  |   none    | single | HTML Document                   |
 | `dif`      | `.dif`   |   none    | single | Data Interchange Format (DIF)   |
 | `dbf`      | `.dbf`   |   none    | single | dBASE II + VFP Extensions (DBF) |
+| `wk1`      | `.wk1`   |   none    | single | Lotus Worksheet (WK1)           |
 | `rtf`      | `.rtf`   |   none    | single | Rich Text Format (RTF)          |
 | `prn`      | `.prn`   |   none    | single | Lotus Formatted Text            |
 | `eth`      | `.eth`   |   none    | single | Ethercalc Record Format (ETH)   |

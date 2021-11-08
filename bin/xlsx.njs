@@ -56,6 +56,7 @@ program
 	.option('-E, --eth',  'emit ETH  to <sheetname> or <file>.eth (Ethercalc)')
 	.option('-t, --txt',  'emit TXT  to <sheetname> or <file>.txt (UTF-8 TSV)')
 	.option('-r, --rtf',  'emit RTF  to <sheetname> or <file>.txt (Table RTF)')
+	.option('--wk1',      'emit WK1  to <sheetname> or <file>.txt (Lotus WK1)')
 	.option('-z, --dump', 'dump internal representation as JSON')
 	.option('--props',    'dump workbook properties as CSV')
 
@@ -229,6 +230,7 @@ if(!program.quiet && !program.book) console.error(target_sheet);
 	['rtf', '.rtf'],
 	['txt', '.txt'],
 	['dbf', '.dbf'],
+	['wk1', '.wk1'],
 	['dif', '.dif']
 ].forEach(function(m) { if(program[m[0]] || isfmt(m[1])) {
 	wopts.bookType = m[0];

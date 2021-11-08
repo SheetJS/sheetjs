@@ -24,7 +24,8 @@ Despite the library name `xlsx`, it supports numerous spreadsheet file formats:
 | Flat XML ODF Spreadsheet (FODS)                              |   ✔   |   ✔   |
 | Uniform Office Format Spreadsheet (标文通 UOS1/UOS2)         |   ✔   |       |
 | dBASE II/III/IV / Visual FoxPro (DBF)                        |   ✔   |   ✔   |
-| Lotus 1-2-3 (WKS/WK1/WK2/WK3/WK4/123)                        |   ✔   |       |
+| Lotus 1-2-3 (WK1)                                            |   ✔   |   ✔   |
+| Lotus 1-2-3 (WKS/WK2/WK3/WK4/123)                            |   ✔   |       |
 | Quattro Pro Spreadsheet (WQ1/WQ2/WB1/WB2/WB3/QPW)            |   ✔   |       |
 | **Other Common Spreadsheet Output Formats**                  |:-----:|:-----:|
 | HTML Tables                                                  |   ✔   |   ✔   |
@@ -161,6 +162,8 @@ The main focus is data extraction.
 The Lotus formats consist of binary records similar to the BIFF structure. Lotus
 did release a specification decades ago covering the original WK1 format.  Other
 features were deduced by producing files and comparing to Excel support.
+
+Generated WK1 files are compatible with Lotus 1-2-3 v2 and Excel 5.0.
 
 </details>
 

@@ -66,6 +66,7 @@ digraph G {
 		slk -> csf
 		csf -> dif
 		wk1 -> csf
+		csf -> wk1
 		wqb -> csf
 		dif -> csf
 		csf -> rtf

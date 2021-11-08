@@ -1,5 +1,5 @@
 function write_biff_rec(ba/*:BufArray*/, type/*:number|string*/, payload, length/*:?number*/)/*:void*/ {
-	var t/*:number*/ = +type || +XLSRE[/*::String(*/type/*::)*/];
+	var t/*:number*/ = typeof type == "number" ? type : (+type || +XLSRE[/*::String(*/type/*::)*/]);
 	if(isNaN(t)) return;
 	var len = length || (payload||[]).length || 0;
 	var o = ba.next(4);

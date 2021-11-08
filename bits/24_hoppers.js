@@ -12,7 +12,7 @@ function recordhopper(data, cb/*:RecordHopperCB*/, opts/*:?any*/) {
 		length = tmpbyte & 0x7F;
 		for(cntbyte = 1; cntbyte <4 && (tmpbyte & 0x80); ++cntbyte) length += ((tmpbyte = data.read_shift(1)) & 0x7F)<<(7*cntbyte);
 		tgt = data.l + length;
-		var d = (R.f||parsenoop)(data, length, opts);
+		var d = R.f && R.f(data, length, opts);
 		data.l = tgt;
 		if(cb(d, R.n, RT)) return;
 	}
