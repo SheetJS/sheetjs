@@ -26,6 +26,7 @@ The exported `read` and `readFile` functions accept an options argument:
 |`sheets`     |         | If specified, only parse specified sheets **         |
 |`PRN`        | false   | If true, allow parsing of PRN files **               |
 |`xlfn`       | false   | If true, preserve `_xlfn.` prefixes in formulae **   |
+|`FS`         |         | DSV Field Separator override                         |
 
 - Even if `cellNF` is false, formatted text will be generated and saved to `.w`
 - In some cases, sheets may be parsed even if `bookSheets` is false.
