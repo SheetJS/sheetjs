@@ -1381,11 +1381,12 @@ prefixed with an apostrophe `'`, consistent with Excel's formula bar display.
 | RC-style strings       | XLML and plain text      |   ✔   |   ✔   |
 | BIFF Parsed formulae   | XLSB and all XLS formats |   ✔   |       |
 | OpenFormula formulae   | ODS/FODS/UOS             |   ✔   |   ✔   |
+| Lotus Parsed formulae  | All Lotus WK_ formats    |   ✔   |       |
 
 Since Excel prohibits named cells from colliding with names of A1 or RC style
 cell references, a (not-so-simple) regex conversion is possible.  BIFF Parsed
-formulae have to be explicitly unwound.  OpenFormula formulae can be converted
-with regular expressions.
+formulae and Lotus Parsed formulae have to be explicitly unwound.  OpenFormula
+formulae can be converted with regular expressions.
 </details>
 
 #### Column Properties
@@ -1776,6 +1777,7 @@ The exported `read` and `readFile` functions accept an options argument:
 |`sheets`     |         | If specified, only parse specified sheets **         |
 |`PRN`        | false   | If true, allow parsing of PRN files **               |
 |`xlfn`       | false   | If true, preserve `_xlfn.` prefixes in formulae **   |
+|`FS`         |         | DSV Field Separator override                         |
 
 - Even if `cellNF` is false, formatted text will be generated and saved to `.w`
 - In some cases, sheets may be parsed even if `bookSheets` is false.
@@ -1939,12 +1941,14 @@ output formats.  The specific file type is controlled with `bookType` option:
 | `xlml`     | `.xls`   |   none    | multi  | Excel 2003-2004 (SpreadsheetML) |
 | `ods`      | `.ods`   |    ZIP    | multi  | OpenDocument Spreadsheet        |
 | `fods`     | `.fods`  |   none    | multi  | Flat OpenDocument Spreadsheet   |
+| `wk3`      | `.wk3`   |   none    | single | Lotus Workbook (WK3)            |
 | `csv`      | `.csv`   |   none    | single | Comma Separated Values          |
 | `txt`      | `.txt`   |   none    | single | UTF-16 Unicode Text (TXT)       |
 | `sylk`     | `.sylk`  |   none    | single | Symbolic Link (SYLK)            |
 | `html`     | `.html`  |   none    | single | HTML Document                   |
 | `dif`      | `.dif`   |   none    | single | Data Interchange Format (DIF)   |
 | `dbf`      | `.dbf`   |   none    | single | dBASE II + VFP Extensions (DBF) |
+| `wk1`      | `.wk1`   |   none    | single | Lotus Worksheet (WK1)           |
 | `rtf`      | `.rtf`   |   none    | single | Rich Text Format (RTF)          |
 | `prn`      | `.prn`   |   none    | single | Lotus Formatted Text            |
 | `eth`      | `.eth`   |   none    | single | Ethercalc Record Format (ETH)   |
@@ -2481,7 +2485,8 @@ Despite the library name `xlsx`, it supports numerous spreadsheet file formats:
 | Flat XML ODF Spreadsheet (FODS)                              |   ✔   |   ✔   |
 | Uniform Office Format Spreadsheet (标文通 UOS1/UOS2)         |   ✔   |       |
 | dBASE II/III/IV / Visual FoxPro (DBF)                        |   ✔   |   ✔   |
-| Lotus 1-2-3 (WKS/WK1/WK2/WK3/WK4/123)                        |   ✔   |       |
+| Lotus 1-2-3 (WK1/WK3)                                        |   ✔   |   ✔   |
+| Lotus 1-2-3 (WKS/WK2/WK4/123)                                |   ✔   |       |
 | Quattro Pro Spreadsheet (WQ1/WQ2/WB1/WB2/WB3/QPW)            |   ✔   |       |
 | **Other Common Spreadsheet Output Formats**                  |:-----:|:-----:|
 | HTML Tables                                                  |   ✔   |   ✔   |
@@ -2618,6 +2623,10 @@ The main focus is data extraction.
 The Lotus formats consist of binary records similar to the BIFF structure. Lotus
 did release a specification decades ago covering the original WK1 format.  Other
 features were deduced by producing files and comparing to Excel support.
+
+Generated WK1 worksheets are compatible with Lotus 1-2-3 R2 and Excel 5.0.
+
+Generated WK3 workbooks are compatible with Lotus 1-2-3 R9 and Excel 5.0.
 
 </details>
 

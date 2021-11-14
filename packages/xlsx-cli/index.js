@@ -31,6 +31,7 @@ function run() {
     .option('-i, --xla', 'emit XLA to <sheetname> or <file>.xla')
     .option('-6, --xlml', 'emit SSML to <sheetname> or <file>.xls (2003 XML)')
     .option('-T, --fods', 'emit FODS to <sheetname> or <file>.fods (Flat ODS)')
+    .option('--wk3', 'emit WK3  to <sheetname> or <file>.txt (Lotus WK3)')
 
     .option('-S, --formulae', 'emit list of values and formulae')
     .option('-j, --json', 'emit formatted JSON (all fields text)')
@@ -44,7 +45,7 @@ function run() {
     .option('-E, --eth', 'emit ETH  to <sheetname> or <file>.eth (Ethercalc)')
     .option('-t, --txt', 'emit TXT  to <sheetname> or <file>.txt (UTF-8 TSV)')
     .option('-r, --rtf', 'emit RTF  to <sheetname> or <file>.txt (Table RTF)')
-    .option('--wk1',      'emit WK1  to <sheetname> or <file>.txt (Lotus WK1)')
+    .option('--wk1', 'emit WK1  to <sheetname> or <file>.txt (Lotus WK1)')
     .option('-z, --dump', 'dump internal representation as JSON')
     .option('--props', 'dump workbook properties as CSV')
 
@@ -63,9 +64,6 @@ function run() {
     .option('-q, --quiet', 'quiet mode');
 
   program.on('--help', function () {
-    console.log('  Default output format is CSV');
-    console.log('  Support email: dev@sheetjs.com');
-    console.log('  Web Demo: http://oss.sheetjs.com/js-' + n + '/');
   });
 
   /* flag, bookType, default ext */
@@ -78,7 +76,8 @@ function run() {
     ['xla', 'xla', 'xla'],
     ['biff5', 'biff5', 'xls'],
     ['ods', 'ods', 'ods'],
-    ['fods', 'fods', 'fods']
+    ['fods', 'fods', 'fods'],
+    ['wk3', 'wk3', 'wk3']
   ];
   var wb_formats_2 = [
     ['xlml', 'xlml', 'xls']

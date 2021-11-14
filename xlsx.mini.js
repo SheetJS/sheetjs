@@ -4,7 +4,7 @@
 /*global global, exports, module, require:false, process:false, Buffer:false, ArrayBuffer:false */
 var XLSX = {};
 function make_xlsx_lib(XLSX){
-XLSX.version = '0.17.3';
+XLSX.version = '0.17.4';
 var current_codepage = 1200, current_ansi = 1252;
 
 var VALID_ANSI = [ 874, 932, 936, 949, 950 ];
@@ -1627,7 +1627,7 @@ function sleuth_fat(idx, cnt, sectors, ssz, fat_addrs) {
 			if((q = __readInt32LE(sector,i*4)) === ENDOFCHAIN) break;
 			fat_addrs.push(q);
 		}
-		sleuth_fat(__readInt32LE(sector,ssz-4),cnt - 1, sectors, ssz, fat_addrs);
+		if(cnt >= 1) sleuth_fat(__readInt32LE(sector,ssz-4),cnt - 1, sectors, ssz, fat_addrs);
 	}
 }
 
@@ -3478,7 +3478,7 @@ function recordhopper(data, cb, opts) {
 		length = tmpbyte & 0x7F;
 		for(cntbyte = 1; cntbyte <4 && (tmpbyte & 0x80); ++cntbyte) length += ((tmpbyte = data.read_shift(1)) & 0x7F)<<(7*cntbyte);
 		tgt = data.l + length;
-		var d = (R.f||parsenoop)(data, length, opts);
+		var d = R.f && R.f(data, length, opts);
 		data.l = tgt;
 		if(cb(d, R.n, RT)) return;
 	}
@@ -3813,7 +3813,11 @@ var DocSummaryPIDDSI = {
 0x1B: { n: 'ContentStatus', t: VT_STRING },
 0x1C: { n: 'Language', t: VT_STRING },
 0x1D: { n: 'Version', t: VT_STRING },
-0xFF: {}
+0xFF: {},
+	/* [MS-OLEPS] 2.18 */
+0x80000000: { n: 'Locale', t: VT_UI4 },
+0x80000003: { n: 'Behavior', t: VT_UI4 },
+0x72627262: {}
 };
 
 /* [MS-OSHARED] 2.3.3.2.1.1 Summary Information Property Set PIDSI */
@@ -3837,20 +3841,12 @@ var SummaryPIDSI = {
 0x11: { n: 'Thumbnail', t: VT_CF },
 0x12: { n: 'Application', t: VT_STRING },
 0x13: { n: 'DocSecurity', t: VT_I4 },
-0xFF: {}
-};
-
-/* [MS-OLEPS] 2.18 */
-var SpecialProperties = {
+0xFF: {},
+	/* [MS-OLEPS] 2.18 */
 0x80000000: { n: 'Locale', t: VT_UI4 },
 0x80000003: { n: 'Behavior', t: VT_UI4 },
 0x72627262: {}
 };
-
-(function() {
-	for(var y in SpecialProperties) if(Object.prototype.hasOwnProperty.call(SpecialProperties, y))
-	DocSummaryPIDDSI[y] = SummaryPIDSI[y] = SpecialProperties[y];
-})();
 
 var DocSummaryRE = evert_key(DocSummaryPIDDSI, "n");
 var SummaryRE = evert_key(SummaryPIDSI, "n");
@@ -5564,6 +5560,7 @@ var PRN = (function() {
 			}
 			else sep = guess_sep(str.slice(0,1024));
 		}
+		else if(o && o.FS) sep = o.FS;
 		else sep = guess_sep(str.slice(0,1024));
 		var R = 0, C = 0, v = 0;
 		var start = 0, end = 0, sepcc = sep.charCodeAt(0), instr = false, cc=0, startcc=str.charCodeAt(0);
@@ -5616,6 +5613,7 @@ var PRN = (function() {
 
 	function prn_to_sheet_str(str, opts) {
 		if(!(opts && opts.PRN)) return dsv_to_sheet_str(str, opts);
+		if(opts.FS) return dsv_to_sheet_str(str, opts);
 		if(str.slice(0,4) == "sep=") return dsv_to_sheet_str(str, opts);
 		if(str.indexOf("\t") >= 0 || str.indexOf(",") >= 0 || str.indexOf(";") >= 0) return dsv_to_sheet_str(str, opts);
 		return aoa_to_sheet(prn_to_aoa_str(str, opts), opts);
@@ -7769,7 +7767,7 @@ function write_ws_xml(idx, opts, wb, rels) {
 
 	/* sheetCalcPr */
 
-	if(ws['!protect'] != null) o[o.length] = write_ws_xml_protection(ws['!protect']);
+	if(ws['!protect']) o[o.length] = write_ws_xml_protection(ws['!protect']);
 
 	/* protectedRanges */
 	/* scenarios */
@@ -8531,7 +8529,12 @@ var HTML_ = (function() {
 		return ws;
 	}
 	function html_to_book(str, opts) {
-		return sheet_to_workbook(html_to_sheet(str, opts), opts);
+		var mtch = str.match(/<table.*?>[\s\S]*?<\/table>/gi);
+		if(!mtch || mtch.length == 0) throw new Error("Invalid HTML: could not find <table>");
+		if(mtch.length == 1) return sheet_to_workbook(html_to_sheet(mtch[0], opts), opts);
+		var wb = utils.book_new();
+		mtch.forEach(function(s, idx) { utils.book_append_sheet(wb, html_to_sheet(s, opts), "Sheet" + (idx+1)); });
+		return wb;
 	}
 	function make_html_row(ws, r, R, o) {
 		var M = (ws['!merges'] ||[]);
@@ -8830,6 +8833,7 @@ var parse_content_xml = (function() {
 					C+= colpeat-1;
 				} else if(Rn[1]!=='/') {
 					++C;
+					textp = ""; textpidx = 0; textR = [];
 					colpeat = 1;
 					var rptR = rowpeat ? R + rowpeat - 1 : R;
 					if(C > range.e.c) range.e.c = C;
@@ -9260,11 +9264,10 @@ var parse_content_xml = (function() {
 
 function parse_ods(zip, opts) {
 	opts = opts || ({});
-	var ods = !!safegetzipfile(zip, 'objectdata');
-	if(ods) parse_manifest(getzipdata(zip, 'META-INF/manifest.xml'), opts);
+	if(safegetzipfile(zip, 'META-INF/manifest.xml')) parse_manifest(getzipdata(zip, 'META-INF/manifest.xml'), opts);
 	var content = getzipstr(zip, 'content.xml');
-	if(!content) throw new Error("Missing content.xml in " + (ods ? "ODS" : "UOF")+ " file");
-	var wb = parse_content_xml(ods ? content : utf8read(content), opts);
+	if(!content) throw new Error("Missing content.xml in ODS / UOF file");
+	var wb = parse_content_xml(utf8read(content), opts);
 	if(safegetzipfile(zip, 'meta.xml')) wb.Props = parse_core_props(getzipdata(zip, 'meta.xml'));
 	return wb;
 }
@@ -9274,6 +9277,15 @@ function parse_fods(data, opts) {
 
 /* OpenDocument */
 var write_styles_ods = (function() {
+	var master_styles = '<office:master-styles>'
+	+ '<style:master-page style:name="mp1" style:page-layout-name="mp1">'
+	+ '<style:header/>'
+	+ '<style:header-left style:display="false"/>'
+	+ '<style:footer/>'
+	+ '<style:footer-left style:display="false"/>'
+	+ '</style:master-page>'
+	+ '</office:master-styles>';
+
 	var payload = '<office:document-styles ' + wxt_helper({
 		'xmlns:office':   "urn:oasis:names:tc:opendocument:xmlns:office:1.0",
 		'xmlns:table':    "urn:oasis:names:tc:opendocument:xmlns:table:1.0",
@@ -9287,7 +9299,8 @@ var write_styles_ods = (function() {
 		'xmlns:svg':      "urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0",
 		'xmlns:of':       "urn:oasis:names:tc:opendocument:xmlns:of:1.2",
 		'office:version': "1.2"
-	}) + '></office:document-styles>';
+	}) + '>' + master_styles + '</office:document-styles>';
+
 	return function wso() {
 		return XML_HEADER + payload;
 	};
@@ -9435,7 +9448,7 @@ var write_content_ods = (function() {
 		});
 
 		/* table */
-		o.push('  <style:style style:name="ta1" style:family="table">\n'); // style:master-page-name="mp1">\n');
+		o.push('  <style:style style:name="ta1" style:family="table" style:master-page-name="mp1">\n');
 		o.push('   <style:table-properties table:display="true" style:writing-mode="lr-tb"/>\n');
 		o.push('  </style:style>\n');
 
@@ -9579,6 +9592,7 @@ var write_rtf_str = write_obj_str(typeof RTF !== "undefined" ? RTF : {});
 var write_txt_str = write_obj_str({from_sheet:sheet_to_txt});
 var write_dbf_buf = write_obj_str(typeof DBF !== "undefined" ? DBF : {});
 var write_eth_str = write_obj_str(typeof ETH !== "undefined" ? ETH : {});
+var write_wk1_buf = write_obj_str(typeof WK_ !== "undefined" ? {from_sheet:WK_.sheet_to_wk1} : {});
 
 function fix_opts_func(defaults) {
 	return function fix_opts(opts) {
@@ -10109,6 +10123,7 @@ function readSync(data, opts) {
 		case 0x03: case 0x83: case 0x8B: case 0x8C: return DBF.to_workbook(d, o);
 		case 0x7B: if(n[1] === 0x5C && n[2] === 0x72 && n[3] === 0x74) return RTF.to_workbook(d, o); break;
 		case 0x0A: case 0x0D: case 0x20: return read_plaintext_raw(d, o);
+		case 0x89: if(n[1] === 0x50 && n[2] === 0x4E && n[3] === 0x47) throw new Error("PNG Image File is not a spreadsheet"); break; 
 	}
 	if(DBF.versions.indexOf(n[0]) > -1 && n[2] <= 12 && n[3] <= 31) return DBF.to_workbook(d, o);
 	return read_prn(data, d, o, str);
@@ -10224,6 +10239,8 @@ function writeSync(wb, opts) {
 		case 'rtf': return write_string_type(write_rtf_str(wb, o), o);
 		case 'eth': return write_string_type(write_eth_str(wb, o), o);
 		case 'fods': return write_string_type(write_ods(wb, o), o);
+		case 'wk1': return write_binary_type(write_wk1_buf(wb, o), o);
+		case 'wk3': return write_binary_type(WK_.book_to_wk3(wb, o), o);
 		case 'biff2': if(!o.biff) o.biff = 2; /* falls through */
 		case 'biff3': if(!o.biff) o.biff = 3; /* falls through */
 		case 'biff4': if(!o.biff) o.biff = 4; return write_binary_type(write_biff_buf(wb, o), o);
@@ -10668,7 +10685,7 @@ if(typeof CFB !== "undefined") XLSX.CFB = CFB;
 /*global define */
 if(typeof exports !== 'undefined') make_xlsx_lib(exports);
 else if(typeof module !== 'undefined' && module.exports) make_xlsx_lib(module.exports);
-else if(typeof define === 'function' && define.amd) define('xlsx-dist', function() { if(!XLSX.version) make_xlsx_lib(XLSX); return XLSX; });
+else if(typeof define === 'function' && define.amd) define('xlsx', function() { if(!XLSX.version) make_xlsx_lib(XLSX); return XLSX; });
 else make_xlsx_lib(XLSX);
 /* NOTE: the following extra line is needed for "Lightning Locker Service" */
 if(typeof window !== 'undefined' && !window.XLSX) window.XLSX = XLSX;

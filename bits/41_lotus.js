@@ -29,7 +29,7 @@ var WK_ = /*#__PURE__*/ (function() {
 		var o = opts || {};
 		if(DENSE != null && o.dense == null) o.dense = DENSE;
 		var s/*:Worksheet*/ = ((o.dense ? [] : {})/*:any*/), n = "Sheet1", sidx = 0;
-		var sheets = {}, snames = [n];
+		var sheets = {}, snames = [n], realnames = [];
 
 		var refguess = {s: {r:0, c:0}, e: {r:0, c:0} };
 		var sheetRows = o.sheetRows || 0;
@@ -37,28 +37,36 @@ var WK_ = /*#__PURE__*/ (function() {
 		if(d[2] == 0x02) {
 			o.Enum = WK1Enum;
 			lotushopper(d, function(val, R, RT) { switch(RT) {
-				case 0x00:
+				case 0x00: /* BOF */
 					o.vers = val;
 					if(val >= 0x1000) o.qpro = true;
 					break;
 				case 0x06: refguess = val; break; /* RANGE */
 				case 0x0F: /* LABEL */
+				case 0x33: /* STRING */
 					if(!o.qpro) val[1].v = val[1].v.slice(1);
 					/* falls through */
 				case 0x0D: /* INTEGER */
 				case 0x0E: /* NUMBER */
 				case 0x10: /* FORMULA */
-				case 0x33: /* STRING */
 					/* TODO: actual translation of the format code */
 					if(RT == 0x0E && (val[2] & 0x70) == 0x70 && (val[2] & 0x0F) > 1 && (val[2] & 0x0F) < 15) {
 						val[1].z = o.dateNF || SSF._table[14];
 						if(o.cellDates) { val[1].t = 'd'; val[1].v = numdate(val[1].v); }
+					}
+					var tmpcell = o.dense ? (s[val[0].r]||[])[val[0].c] : s[encode_cell(val[0])];
+					if(tmpcell) {
+						tmpcell.t = val[1].t; tmpcell.v = val[1].v;
+						if(val[1].z != null) tmpcell.z = val[1].z;
+						if(val[1].f != null) tmpcell.f = val[1].f;
+						break;
 					}
 					if(o.dense) {
 						if(!s[val[0].r]) s[val[0].r] = [];
 						s[val[0].r][val[0].c] = val[1];
 					} else s[encode_cell(val[0])] = val[1];
 					break;
+				default:
 			}}, o);
 		} else if(d[2] == 0x1A || d[2] == 0x0E) {
 			o.Enum = WK3Enum;
@@ -89,19 +97,28 @@ var WK_ = /*#__PURE__*/ (function() {
 					if(refguess.e.c < val[0].c) refguess.e.c = val[0].c;
 					if(refguess.e.r < val[0].r) refguess.e.r = val[0].r;
 					break;
+				case 0x1B: /* XFORMAT */
+					if(val[0x36b0]) realnames[val[0x36b0][0]] = val[0x36b0][1];
+					break;
 				default: break;
 			}}, o);
 		} else throw new Error("Unrecognized LOTUS BOF " + d[2]);
 
 		s["!ref"] = encode_range(refguess);
 		sheets[n] = s;
-		return { SheetNames: snames, Sheets:sheets };
+		if(!realnames.length) return { SheetNames: snames, Sheets: sheets };
+		var osheets = {}, rnames = [];
+		for(var i = 0; i < realnames.length; ++i) if(sheets[snames[i]]) {
+			rnames.push(realnames[i]);
+			osheets[realnames[i]] = sheets[snames[i]];
+		}
+		return { SheetNames: rnames, Sheets: osheets };
 	}
 
 	function sheet_to_wk1(ws/*:Worksheet*/, opts/*:WriteOpts*/) {
 		var o = opts || {};
 		if(+o.codepage >= 0) set_cp(+o.codepage);
-		if(o.type == "string") throw new Error("Cannot write DBF to JS string");
+		if(o.type == "string") throw new Error("Cannot write WK1 to JS string");
 		var ba = buf_array();
 		var range = safe_decode_range(ws["!ref"]);
 		var dense = Array.isArray(ws);
@@ -116,7 +133,7 @@ var WK_ = /*#__PURE__*/ (function() {
 				var ref = cols[C] + rr;
 				var cell = dense ? (ws[R]||[])[C] : ws[ref];
 				if(!cell || cell.t == "z") continue;
-				/* write cell */
+				/* TODO: formula records */
 				if(cell.t == "n") {
 					if((cell.v|0)==cell.v && cell.v >= -32768 && cell.v <= 32767) write_biff_rec(ba, 0x0d, write_INTEGER(R, C, cell.v));
 					else write_biff_rec(ba, 0x0e, write_NUMBER(R, C, cell.v));
@@ -131,9 +148,78 @@ var WK_ = /*#__PURE__*/ (function() {
 		return ba.end();
 	}
 
+	function book_to_wk3(wb/*:Workbook*/, opts/*:WriteOpts*/) {
+		var o = opts || {};
+		if(+o.codepage >= 0) set_cp(+o.codepage);
+		if(o.type == "string") throw new Error("Cannot write WK3 to JS string");
+		var ba = buf_array();
+
+		write_biff_rec(ba, 0x00, write_BOF_WK3(wb));
+
+		for(var i = 0, cnt = 0; i < wb.SheetNames.length; ++i) if((wb.Sheets[wb.SheetNames[i]] || {})["!ref"]) write_biff_rec(ba, 0x1b, write_XFORMAT_SHEETNAME(wb.SheetNames[i], cnt++));
+
+		var wsidx = 0;
+		for(i = 0; i < wb.SheetNames.length; ++i) {
+			var ws = wb.Sheets[wb.SheetNames[i]];
+			if(!ws || !ws["!ref"]) continue;
+			var range = safe_decode_range(ws["!ref"]);
+			var dense = Array.isArray(ws);
+			var cols = [];
+			for(var R = range.s.r; R <= range.e.r; ++R) {
+				var rr = encode_row(R);
+				for(var C = range.s.c; C <= range.e.c; ++C) {
+					if(R === range.s.r) cols[C] = encode_col(C);
+					var ref = cols[C] + rr;
+					var cell = dense ? (ws[R]||[])[C] : ws[ref];
+					if(!cell || cell.t == "z") continue;
+					/* TODO: FORMULA19 NUMBER18 records */
+					if(cell.t == "n") {
+						write_biff_rec(ba, 0x17, write_NUMBER_17(R, C, wsidx, cell.v));
+					} else {
+						var str = format_cell(cell);
+						/* TODO: max len? */
+						write_biff_rec(ba, 0x16, write_LABEL_16(R, C, wsidx, str.slice(0, 239)));
+					}
+				}
+			}
+			++wsidx;
+		}
+
+		write_biff_rec(ba, 0x01);
+		return ba.end();
+	}
+
+
 	function write_BOF_WK1(v/*:number*/) {
 		var out = new_buf(2);
 		out.write_shift(2, v);
+		return out;
+	}
+
+	function write_BOF_WK3(wb/*:Workbook*/) {
+		var out = new_buf(26);
+		out.write_shift(2, 0x1000);
+		out.write_shift(2, 0x0004);
+		out.write_shift(4, 0x0000);
+		var rows = 0, cols = 0, wscnt = 0;
+		for(var i = 0; i < wb.SheetNames.length; ++i) {
+			var name = wb.SheetNames[i];
+			var ws = wb.Sheets[name];
+			if(!ws || !ws["!ref"]) continue;
+			++wscnt;
+			var range = decode_range(ws["!ref"]);
+			if(rows < range.e.r) rows = range.e.r;
+			if(cols < range.e.c) cols = range.e.c;
+		}
+		out.write_shift(2, rows);
+		out.write_shift(1, wscnt);
+		out.write_shift(1, cols);
+		out.write_shift(2, 0x00);
+		out.write_shift(2, 0x00);
+		out.write_shift(1, 0x01);
+		out.write_shift(1, 0x02);
+		out.write_shift(4, 0);
+		out.write_shift(4, 0);
 		return out;
 	}
 
@@ -234,10 +320,104 @@ var WK_ = /*#__PURE__*/ (function() {
 		if(opts.qpro) blob.l = tgt;
 		else {
 			var flen = blob.read_shift(2);
+			wk1_fmla_to_csf(blob.slice(blob.l, blob.l + flen), o);
 			blob.l += flen;
 		}
 		return o;
 	}
+
+	function wk1_parse_rc(B, V, col) {
+		var rel = V & 0x8000;
+		V &= ~0x8000;
+		V = (rel ? B : 0) + ((V >= 0x2000) ? V - 0x4000 : V);
+		return (rel ? "" : "$") + (col ? encode_col(V) : encode_row(V));
+	}
+	var oprec = [
+		8, 8, 8, 8, 8, 8, 8, 8, 6, 4, 4, 5, 5, 7, 3, 3,
+		3, 3, 3, 3, 1, 1, 2, 6, 8, 8, 8, 8, 8, 8, 8, 8
+	];
+	/* TODO: flesh out */
+	var FuncTab = {
+		0x33: ["FALSE", 0],
+		0x34: ["TRUE", 0],
+		0x46: ["LEN", 1],
+		0x50: ["SUM", 69],
+		0x51: ["AVERAGEA", 69],
+		0x52: ["COUNTA", 69],
+		0x53: ["MINA", 69],
+		0x54: ["MAXA", 69],
+		0x6F: ["T", 1]
+	};
+	var BinOpTab = [
+		  "",   "",   "",   "",   "",   "",   "",   "",
+		  "",  "+",  "-",  "*",  "/",  "^",  "=", "<>",
+		"<=", ">=",  "<",  ">",   "",   "",   "",   "",
+		 "&",   "",   "",   "",   "",   "",   "",   ""
+	];
+
+	function wk1_fmla_to_csf(blob, o) {
+		prep_blob(blob, 0);
+		var out = [], argc = 0, R = "", C = "";
+		while(blob.l < blob.length) {
+			var cc = blob[blob.l++];
+			switch(cc) {
+				case 0x00: out.push(blob.read_shift(8, 'f')); break;
+				case 0x01: {
+					C = wk1_parse_rc(o[0].c, blob.read_shift(2), true);
+					R = wk1_parse_rc(o[0].r, blob.read_shift(2), false);
+					out.push(C + R);
+				} break;
+				case 0x02: {
+					var c = wk1_parse_rc(o[0].c, blob.read_shift(2), true);
+					var r = wk1_parse_rc(o[0].r, blob.read_shift(2), false);
+					C = wk1_parse_rc(o[0].c, blob.read_shift(2), true);
+					R = wk1_parse_rc(o[0].r, blob.read_shift(2), false);
+					out.push(c + r + ":" + C + R);
+				} break;
+				case 0x03:
+					if(blob.l < blob.length) { console.error("WK1 premature formula end"); return; }
+					break;
+				case 0x04: out.push("(" + out.pop() + ")"); break;
+				case 0x05: out.push(blob.read_shift(2)); break;
+				case 0x06: {
+					/* TODO: text encoding */
+					var Z = ""; while((cc = blob[blob.l++])) Z += String.fromCharCode(cc);
+					out.push('"' + Z.replace(/"/g, '""') + '"'); break;
+				} break;
+
+				case 0x08: out.push("-" + out.pop()); break;
+				case 0x17: out.push("+" + out.pop()); break;
+				case 0x16: out.push("NOT(" + out.pop() + ")"); break;
+
+				case 0x14: case 0x15: {
+					var argR = out.pop(), argL = out.pop();
+					out.push(["AND", "OR"][cc - 0x14] + "(" + argL + "," + argR + ")");
+				} break;
+
+				default:
+					if(cc < 0x20 && BinOpTab[cc]) {
+						argR = out.pop(); argL = out.pop();
+						out.push(argL + BinOpTab[cc] + argR);
+					} else if(FuncTab[cc]) {
+						argc = FuncTab[cc][1];
+						if(argc == 69) argc = blob[blob.l++];
+						if(argc > out.length) { console.error("WK1 bad formula parse 0x" + cc.toString(16) + ":|" + out.join("|") + "|"); return; }
+						var args = out.slice(-argc);
+						out.length -= argc;
+						out.push(FuncTab[cc][0] + "(" + args.join(",") + ")");
+					}
+					else if(cc <= 0x07) return console.error("WK1 invalid opcode " + cc.toString(16));
+					else if(cc <= 0x18) return console.error("WK1 unsupported op " + cc.toString(16));
+					else if(cc <= 0x1E) return console.error("WK1 invalid opcode " + cc.toString(16));
+					else if(cc <= 0x73) return console.error("WK1 unsupported function opcode " + cc.toString(16));
+					// possible future functions ??
+					else return console.error("WK1 unrecognized opcode " + cc.toString(16));
+			}
+		}
+		if(out.length == 1) o[1].f = "" + out[0];
+		else console.error("WK1 bad formula parse |" + out.join("|") + "|");
+	}
+
 
 	function parse_cell_3(blob/*::, length*/) {
 		var o = [{c:0,r:0}, {t:'n',v:0}, 0];
@@ -249,6 +429,20 @@ var WK_ = /*#__PURE__*/ (function() {
 		var o = parse_cell_3(blob, length);
 		o[1].t = 's';
 		o[1].v = blob.read_shift(length - 4, 'cstr');
+		return o;
+	}
+	function write_LABEL_16(R, C, wsidx, s) {
+		/* TODO: encoding */
+		var o = new_buf(6 + s.length);
+		o.write_shift(2, R);
+		o.write_shift(1, wsidx);
+		o.write_shift(1, C);
+		o.write_shift(1, 0x27);
+		for(var i = 0; i < s.length; ++i) {
+			var cc = s.charCodeAt(i);
+			o.write_shift(1, cc >= 0x80 ? 0x5F : cc);
+		}
+		o.write_shift(1, 0);
 		return o;
 	}
 
@@ -284,13 +478,41 @@ var WK_ = /*#__PURE__*/ (function() {
 			return o;
 		}
 		var s = e & 0x8000; e = (e&0x7FFF) - 16446;
-		o[1].v = (1 - s*2) * ( /*(e > 0 ? (v2 << e) : (v2 >>> -e))*/ v2 * Math.pow(2, e+32) + v1 * Math.pow(2, e));
+		o[1].v = (1 - s*2) * (v2 * Math.pow(2, e+32) + v1 * Math.pow(2, e));
+		return o;
+	}
+	function write_NUMBER_17(R, C, wsidx, v) {
+		var o = new_buf(14);
+		o.write_shift(2, R);
+		o.write_shift(1, wsidx);
+		o.write_shift(1, C);
+		if(v == 0) {
+			o.write_shift(4, 0);
+			o.write_shift(4, 0);
+			o.write_shift(2, 0xFFFF);
+			return o;
+		}
+		var s = 0, e = 0, v1 = 0, v2 = 0;
+		if(v < 0) { s = 1; v = -v; }
+		e = Math.log2(v) | 0;
+		v /= Math.pow(2, e-31);
+		v2 = (v)>>>0;
+		if((v2&0x80000000) == 0) { v/=2; ++e; v2 = v >>> 0; }
+		v -= v2;
+		v2 |= 0x80000000;
+		v2 >>>= 0;
+		v *= Math.pow(2, 32);
+		v1 = v>>>0;
+		o.write_shift(4, v1);
+		o.write_shift(4, v2);
+		e += 0x3FFF + (s ? 0x8000 : 0);
+		o.write_shift(2, e);
 		return o;
 	}
 
 	function parse_FORMULA_19(blob, length) {
 		var o = parse_NUMBER_17(blob, 14);
-		blob.l += length - 14; /* TODO: formula */
+		blob.l += length - 14; /* TODO: WK3 formula */
 		return o;
 	}
 
@@ -312,6 +534,31 @@ var WK_ = /*#__PURE__*/ (function() {
 		var o = parse_NUMBER_27(blob, 14);
 		blob.l += length - 10; /* TODO: formula */
 		return o;
+	}
+
+	function parse_XFORMAT(blob, length) {
+		var o = {}, tgt = blob.l + length;
+		while(blob.l < tgt) {
+			var dt = blob.read_shift(2);
+			if(dt == 0x36b0) {
+				o[dt] = [0, ""];
+				o[dt][0] = blob.read_shift(2);
+				while(blob[blob.l]) { o[dt][1] += String.fromCharCode(blob[blob.l]); blob.l++; } blob.l++;
+			}
+			// TODO: 0x3a99 ??
+		}
+		return o;
+	}
+	function write_XFORMAT_SHEETNAME(name, wsidx) {
+		var out = new_buf(5 + name.length);
+		out.write_shift(2, 0x36b0);
+		out.write_shift(2, wsidx);
+		for(var i = 0; i < name.length; ++i) {
+			var cc = name.charCodeAt(i);
+			out[out.l++] = cc > 0x7F ? 0x5F : cc;
+		}
+		out[out.l++] = 0;
+		return out;
 	}
 
 	var WK1Enum = {
@@ -407,7 +654,7 @@ var WK_ = /*#__PURE__*/ (function() {
 		/*::[*/0x0018/*::]*/: { n:"NUMBER18", f:parse_NUMBER_18 },
 		/*::[*/0x0019/*::]*/: { n:"FORMULA19", f:parse_FORMULA_19},
 		/*::[*/0x001A/*::]*/: { n:"FORMULA1A" },
-		/*::[*/0x001B/*::]*/: { n:"XFORMAT" },
+		/*::[*/0x001B/*::]*/: { n:"XFORMAT", f:parse_XFORMAT },
 		/*::[*/0x001C/*::]*/: { n:"DTLABELMISC" },
 		/*::[*/0x001D/*::]*/: { n:"DTLABELCELL" },
 		/*::[*/0x001E/*::]*/: { n:"GRAPHWINDOW" },
@@ -504,6 +751,7 @@ var WK_ = /*#__PURE__*/ (function() {
 	};
 	return {
 		sheet_to_wk1: sheet_to_wk1,
+		book_to_wk3: book_to_wk3,
 		to_workbook: lotus_to_workbook
 	};
 })();

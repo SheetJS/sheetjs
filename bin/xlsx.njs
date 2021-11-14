@@ -43,6 +43,7 @@ program
 	.option('-i, --xla',  'emit XLA to <sheetname> or <file>.xla')
 	.option('-6, --xlml', 'emit SSML to <sheetname> or <file>.xls (2003 XML)')
 	.option('-T, --fods', 'emit FODS to <sheetname> or <file>.fods (Flat ODS)')
+	.option('--wk3',      'emit WK3  to <sheetname> or <file>.txt (Lotus WK3)')
 
 	.option('-S, --formulae', 'emit list of values and formulae')
 	.option('-j, --json',     'emit formatted JSON (all fields text)')
@@ -90,7 +91,8 @@ var workbook_formats = [
 	['xla',     'xla',  'xla'],
 	['biff5', 'biff5',  'xls'],
 	['ods',     'ods',  'ods'],
-	['fods',   'fods', 'fods']
+	['fods',   'fods', 'fods'],
+	['wk3',     'wk3',  'wk3']
 ];
 var wb_formats_2 = [
 	['xlml',   'xlml', 'xls']

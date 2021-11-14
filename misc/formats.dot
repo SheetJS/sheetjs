@@ -52,6 +52,7 @@ digraph G {
 		csf -> fods
 		uos -> csf
 		wk3 -> csf
+		csf -> wk3
 		qpw -> csf
 	}
 	subgraph WORKSHEET {

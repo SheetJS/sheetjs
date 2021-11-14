@@ -86,10 +86,11 @@ prefixed with an apostrophe `'`, consistent with Excel's formula bar display.
 | RC-style strings       | XLML and plain text      |   ✔   |   ✔   |
 | BIFF Parsed formulae   | XLSB and all XLS formats |   ✔   |       |
 | OpenFormula formulae   | ODS/FODS/UOS             |   ✔   |   ✔   |
+| Lotus Parsed formulae  | All Lotus WK_ formats    |   ✔   |       |
 
 Since Excel prohibits named cells from colliding with names of A1 or RC style
 cell references, a (not-so-simple) regex conversion is possible.  BIFF Parsed
-formulae have to be explicitly unwound.  OpenFormula formulae can be converted
-with regular expressions.
+formulae and Lotus Parsed formulae have to be explicitly unwound.  OpenFormula
+formulae can be converted with regular expressions.
 </details>
 

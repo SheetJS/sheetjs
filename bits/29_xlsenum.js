@@ -66,7 +66,11 @@ var DocSummaryPIDDSI = {
 	/*::[*/0x1B/*::]*/: { n: 'ContentStatus', t: VT_STRING },
 	/*::[*/0x1C/*::]*/: { n: 'Language', t: VT_STRING },
 	/*::[*/0x1D/*::]*/: { n: 'Version', t: VT_STRING },
-	/*::[*/0xFF/*::]*/: {}
+	/*::[*/0xFF/*::]*/: {},
+	/* [MS-OLEPS] 2.18 */
+	/*::[*/0x80000000/*::]*/: { n: 'Locale', t: VT_UI4 },
+	/*::[*/0x80000003/*::]*/: { n: 'Behavior', t: VT_UI4 },
+	/*::[*/0x72627262/*::]*/: {}
 };
 
 /* [MS-OSHARED] 2.3.3.2.1.1 Summary Information Property Set PIDSI */
@@ -90,20 +94,12 @@ var SummaryPIDSI = {
 	/*::[*/0x11/*::]*/: { n: 'Thumbnail', t: VT_CF },
 	/*::[*/0x12/*::]*/: { n: 'Application', t: VT_STRING },
 	/*::[*/0x13/*::]*/: { n: 'DocSecurity', t: VT_I4 },
-	/*::[*/0xFF/*::]*/: {}
-};
-
-/* [MS-OLEPS] 2.18 */
-var SpecialProperties = {
+	/*::[*/0xFF/*::]*/: {},
+	/* [MS-OLEPS] 2.18 */
 	/*::[*/0x80000000/*::]*/: { n: 'Locale', t: VT_UI4 },
 	/*::[*/0x80000003/*::]*/: { n: 'Behavior', t: VT_UI4 },
 	/*::[*/0x72627262/*::]*/: {}
 };
-
-(function() {
-	for(var y in SpecialProperties) if(Object.prototype.hasOwnProperty.call(SpecialProperties, y))
-	DocSummaryPIDDSI[y] = SummaryPIDSI[y] = SpecialProperties[y];
-})();
 
 var DocSummaryRE/*:{[key:string]:string}*/ = evert_key(DocSummaryPIDDSI, "n");
 var SummaryRE/*:{[key:string]:string}*/ = evert_key(SummaryPIDSI, "n");

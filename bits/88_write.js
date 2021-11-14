@@ -106,6 +106,7 @@ function writeSync(wb/*:Workbook*/, opts/*:?WriteOpts*/) {
 		case 'eth': return write_string_type(write_eth_str(wb, o), o);
 		case 'fods': return write_string_type(write_ods(wb, o), o);
 		case 'wk1': return write_binary_type(write_wk1_buf(wb, o), o);
+		case 'wk3': return write_binary_type(WK_.book_to_wk3(wb, o), o);
 		case 'biff2': if(!o.biff) o.biff = 2; /* falls through */
 		case 'biff3': if(!o.biff) o.biff = 3; /* falls through */
 		case 'biff4': if(!o.biff) o.biff = 4; return write_binary_type(write_biff_buf(wb, o), o);
