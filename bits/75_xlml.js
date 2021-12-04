@@ -183,6 +183,7 @@ function parse_xlml_xml(d, _opts)/*:Workbook*/ {
 		else str = utf8read(str);
 	}
 	var opening = str.slice(0, 1024).toLowerCase(), ishtml = false;
+	opening = opening.replace(/".*?"/g, "");
 	if((opening.indexOf(">") & 1023) > Math.min((opening.indexOf(",") & 1023), (opening.indexOf(";")&1023))) { var _o = dup(opts); _o.type = "string"; return PRN.to_workbook(str, _o); }
 	if(opening.indexOf("<?xml") == -1) ["html", "table", "head", "meta", "script", "style", "div"].forEach(function(tag) { if(opening.indexOf("<" + tag) >= 0) ishtml = true; });
 	if(ishtml) return HTML_.to_workbook(str, opts);
