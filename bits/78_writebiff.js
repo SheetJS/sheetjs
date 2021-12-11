@@ -382,6 +382,15 @@ function write_biff8_buf(wb/*:Workbook*/, opts/*:WriteOpts*/) {
 }
 
 function write_biff_buf(wb/*:Workbook*/, opts/*:WriteOpts*/) {
+	for(var i = 0; i <= wb.SheetNames.length; ++i) {
+		var ws = wb.Sheets[wb.SheetNames[i]];
+		if(!ws || !ws["!ref"]) continue;
+		var range = decode_range(ws["!ref"]);
+		if(range.e.c > 255) { // note: 255 is IV
+		  console.error("Worksheet '" + wb.SheetNames[i] + "' extends beyond column IV (255).  Data may be lost.");
+		}
+	}
+
 	var o = opts || {};
 	switch(o.biff || 2) {
 		case 8: case 5: return write_biff8_buf(wb, opts);
