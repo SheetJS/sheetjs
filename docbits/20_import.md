@@ -143,7 +143,7 @@ Using `Blob#arrayBuffer`:
 
 ```js
 async function handleFileAsync(e) {
-  const file = evt.target.files[0];
+  const file = e.target.files[0];
   const data = await file.arrayBuffer();
   const workbook = XLSX.read(data);
 
