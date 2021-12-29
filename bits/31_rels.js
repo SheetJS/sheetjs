@@ -30,7 +30,7 @@ function parse_rels(data/*:?string*/, currentFilePath/*:string*/) {
 		var y = parsexmltag(x);
 		/* 9.3.2.2 OPC_Relationships */
 		if (y[0] === '<Relationship') {
-			var rel = {}; rel.Type = y.Type; rel.Target = y.Target; rel.Id = y.Id; rel.TargetMode = y.TargetMode;
+			var rel = {}; rel.Type = y.Type; rel.Target = y.Target; rel.Id = y.Id; if(y.TargetMode) rel.TargetMode = y.TargetMode;
 			var canonictarget = y.TargetMode === 'External' ? y.Target : resolve_path(y.Target, currentFilePath);
 			rels[canonictarget] = rel;
 			hash[y.Id] = rel;

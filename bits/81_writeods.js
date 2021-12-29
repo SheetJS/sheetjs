@@ -1,13 +1,15 @@
 /* OpenDocument */
 var write_styles_ods/*:{(wb:any, opts:any):string}*/ = (function() {
-	var master_styles = '<office:master-styles>'
-	+ '<style:master-page style:name="mp1" style:page-layout-name="mp1">'
-	+ '<style:header/>'
-	+ '<style:header-left style:display="false"/>'
-	+ '<style:footer/>'
-	+ '<style:footer-left style:display="false"/>'
-	+ '</style:master-page>'
-	+ '</office:master-styles>';
+	var master_styles = [
+		'<office:master-styles>',
+			'<style:master-page style:name="mp1" style:page-layout-name="mp1">',
+				'<style:header/>',
+				'<style:header-left style:display="false"/>',
+				'<style:footer/>',
+				'<style:footer-left style:display="false"/>',
+			'</style:master-page>',
+		'</office:master-styles>'
+	].join("");
 
 	var payload = '<office:document-styles ' + wxt_helper({
 		'xmlns:office':   "urn:oasis:names:tc:opendocument:xmlns:office:1.0",

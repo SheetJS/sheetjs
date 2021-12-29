@@ -524,9 +524,11 @@ describe('parse options', function() {
 			} } };
 			var str = X.write(wb, {bookType: "xlsx", type: "binary"});
 			var wb2 = X.read(str, {type: "binary"});
+			/*jshint -W069 */
 			assert.equal(wb2.Sheets.Sheet1["A1"].f, "IFS(2>3,1,3>2,2)");
 			var wb3 = X.read(str, {type: "binary", xlfn: true});
 			assert.equal(wb3.Sheets.Sheet1["A1"].f, "_xlfn.IFS(2>3,1,3>2,2)");
+			/*jshint +W069 */
 		});
 	});
 	describe('sheet', function() {

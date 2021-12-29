@@ -855,7 +855,9 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 	if(!options.bookSheets) wb.Sheets=Sheets;
 	if(!wb.SheetNames.length && Preamble["!ref"]) {
 		wb.SheetNames.push("Sheet1");
+		/*jshint -W069 */
 		if(wb.Sheets) wb.Sheets["Sheet1"] = Preamble;
+		/*jshint +W069 */
 	} else wb.Preamble=Preamble;
 	if(wb.Sheets) FilterDatabases.forEach(function(r,i) { wb.Sheets[wb.SheetNames[i]]['!autofilter'] = r; });
 	wb.Strings = sst;
@@ -950,6 +952,8 @@ else/*:: if(cfb instanceof CFBContainer) */ {
 	else if((_data=CFB.find(cfb, 'PerfectOffice_MAIN')) && _data.content) WorkbookP = WK_.to_workbook(_data.content, (options.type = T, options));
 	/* Quattro Pro 9 */
 	else if((_data=CFB.find(cfb, 'NativeContent_MAIN')) && _data.content) WorkbookP = WK_.to_workbook(_data.content, (options.type = T, options));
+	/* Works 4 for Mac */
+	else if((_data=CFB.find(cfb, 'MN0')) && _data.content) throw new Error("Unsupported Works 4 for Mac file");
 	else throw new Error("Cannot find Workbook stream");
 	if(options.bookVBA && cfb.FullPaths && CFB.find(cfb, '/_VBA_PROJECT_CUR/VBA/dir')) WorkbookP.vbaraw = make_vba_xls(cfb);
 }

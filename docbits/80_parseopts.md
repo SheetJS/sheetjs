@@ -85,7 +85,7 @@ file but Excel will know how to handle it.  This library applies similar logic:
 
 | Byte 0 | Raw File Type | Spreadsheet Types                                   |
 |:-------|:--------------|:----------------------------------------------------|
-| `0xD0` | CFB Container | BIFF 5/8 or password-protected XLSX/XLSB or WQ3/QPW |
+| `0xD0` | CFB Container | BIFF 5/8 or protected XLSX/XLSB or WQ3/QPW or XLR   |
 | `0x09` | BIFF Stream   | BIFF 2/3/4/5                                        |
 | `0x3C` | XML/HTML      | SpreadsheetML / Flat ODS / UOS1 / HTML / plain text |
 | `0x50` | ZIP Archive   | XLSB or XLSX/M or ODS or UOS2 or plain text         |
@@ -101,6 +101,8 @@ file but Excel will know how to handle it.  This library applies similar logic:
 
 DBF files are detected based on the first byte as well as the third and fourth
 bytes (corresponding to month and day of the file date)
+
+Works for Windows files are detected based on the BOF record with type `0xFF`
 
 Plain text format guessing follows the priority order:
 

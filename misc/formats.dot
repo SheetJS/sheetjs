@@ -27,9 +27,15 @@ digraph G {
 		slk   [label="SYLK"];
 		prn   [label="PRN"];
 		rtf   [label="RTF"];
-		wk1   [label="WK1/2\n123"];
-		wk3   [label="WK3/4"];
-		wqb   [label="WQ*\nWB*"];
+		wk1   [label="WK1"];
+		wksl  [label="WKS\nLotus"];
+		wk3   [label="WK3"];
+		wk4   [label="WK4"]
+		123   [label="123"];
+		wksm  [label="WKS\nWorks"];
+		xlr   [label="XLR"];
+		wq1   [label="WQ1"];
+		wq2   [label="WQ2\nWB*"];
 		qpw   [label="QPW"];
 		eth   [label="ETH"];
 	}
@@ -46,6 +52,7 @@ digraph G {
 		xls5 -> csf
 		csf -> xls8
 		xls8 -> csf
+		wq2 -> csf
 		ods -> csf
 		csf -> ods
 		fods -> csf
@@ -53,6 +60,8 @@ digraph G {
 		uos -> csf
 		wk3 -> csf
 		csf -> wk3
+		wk4 -> csf
+		123 -> csf
 		qpw -> csf
 	}
 	subgraph WORKSHEET {
@@ -68,7 +77,10 @@ digraph G {
 		csf -> dif
 		wk1 -> csf
 		csf -> wk1
-		wqb -> csf
+		xlr -> csf
+		wq1 -> csf
+		wksl -> csf
+		wksm -> csf
 		dif -> csf
 		csf -> rtf
 		prn -> csf

@@ -842,7 +842,9 @@ var XLSBRecordEnum = {
 };
 
 var XLSBRE = evert_key(XLSBRecordEnum, 'n');
+/*jshint -W069 */
 XLSBRE["BrtFRTArchID$"] = 0x0010;
+/*jshint +W069 */
 
 /* [MS-XLS] 2.3 Record Enumeration (and other sources) */
 var XLSRecordEnum = {

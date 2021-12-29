@@ -27,6 +27,8 @@ Despite the library name `xlsx`, it supports numerous spreadsheet file formats:
 | Lotus 1-2-3 (WK1/WK3)                                        |   ✔   |   ✔   |
 | Lotus 1-2-3 (WKS/WK2/WK4/123)                                |   ✔   |       |
 | Quattro Pro Spreadsheet (WQ1/WQ2/WB1/WB2/WB3/QPW)            |   ✔   |       |
+| Works 1.x-3.x DOS / 2.x-5.x Windows Spreadsheet (WKS)        |   ✔   |       |
+| Works 6.x-9.x Spreadsheet (XLR)                              |   ✔   |       |
 | **Other Common Spreadsheet Output Formats**                  |:-----:|:-----:|
 | HTML Tables                                                  |   ✔   |   ✔   |
 | Rich Text Format tables (RTF)                                |       |   ✔   |
@@ -44,6 +46,8 @@ range limits will be silently truncated:
 | Excel 4.0 (XLS BIFF4)                     | IV16384    |      256 |    16384 |
 | Excel 3.0 (XLS BIFF3)                     | IV16384    |      256 |    16384 |
 | Excel 2.0/2.1 (XLS BIFF2)                 | IV16384    |      256 |    16384 |
+| Lotus 1-2-3 R2 - R5 (WK1/WK3/WK4)         | IV8192     |      256 |     8192 |
+| Lotus 1-2-3 R1 (WKS)                      | IV2048     |      256 |     2048 |
 
 Excel 2003 SpreadsheetML range limits are governed by the version of Excel and
 are not enforced by the writer.
@@ -177,6 +181,27 @@ Generated WK3 workbooks are compatible with Lotus 1-2-3 R9 and Excel 5.0.
 The Quattro Pro formats use binary records in the same way as BIFF and Lotus.
 Some of the newer formats (namely WB3 and QPW) use a CFB enclosure just like
 BIFF8 XLS.
+
+</details>
+
+#### Works for DOS / Windows Spreadsheet (WKS/XLR)
+
+<details>
+  <summary>(click to show)</summary>
+
+All versions of Works were limited to a single worksheet.
+
+Works for DOS 1.x - 3.x and Works for Windows 2.x extends the Lotus WKS format
+with additional record types.
+
+Works for Windows 3.x - 5.x uses the same format and WKS extension.  The BOF
+record has type `FF`
+
+Works for Windows 6.x - 9.x use the XLR format.  XLR is nearly identical to
+BIFF8 XLS: it uses the CFB container with a Workbook stream.  Works 9 saves the
+exact Workbook stream for the XLR and the 97-2003 XLS export.  Works 6 XLS
+includes two empty worksheets but the main worksheet has an identical encoding.
+XLR also includes a `WksSSWorkBook` stream similar to Lotus FM3/FMT files.
 
 </details>
 

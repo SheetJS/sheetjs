@@ -1,5 +1,8 @@
 if(has_buf && typeof require != 'undefined') (function() {
-	var Readable = require('stream').Readable;
+	var strmod = require('stream');
+	if(!strmod) return;
+	var Readable = strmod.Readable;
+	if(!Readable) return;
 
 	var write_csv_stream = function(sheet/*:Worksheet*/, opts/*:?Sheet2CSVOpts*/) {
 		var stream = Readable();
