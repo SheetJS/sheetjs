@@ -2,48 +2,49 @@
 <html lang="en">
 <head>
 	<meta charset="utf-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<meta name="author" content="https://github.com/gitbrent">
 	<meta name="website" content="https://github.com/gitbrent/xlsx-js-style/">
 	<meta name="version" content="1.1.0-beta">
-	<meta name="updated" content="2021-01-28">
+	<meta name="updated" content="2022-01-04">
 	<title>xlsx-js-style browser demo</title>
-	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootswatch/4.4.0/yeti/bootstrap.min.css">
-	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootswatch/4.4.0/cyborg/bootstrap.min.css" media="(prefers-color-scheme: dark)">
-	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootswatch/4.4.0/yeti/bootstrap.min.css"
-		media="(prefers-color-scheme: no-preference), (prefers-color-scheme: light)">
-	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.15.0/themes/prism-okaidia.min.css">
-
-	<script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n"
-		crossorigin="anonymous"></script>
-	<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
-		crossorigin="anonymous"></script>
-	<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6"
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/5.1.3/darkly/bootstrap.min.css"
+		integrity="sha512-ZdxIsDOtKj2Xmr/av3D/uo1g15yxNFjkhrcfLooZV5fW0TT7aF7Z3wY1LOA16h0VgFLwteg14lWqlYUQK3to/w==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/5.1.0/yeti/bootstrap.min.css"
+		integrity="sha512-weyvl9mBvXvMHAcN2LCuQ5w0i7ihzrg3EQy6HixwCP88lXKbkL8IRYG8K75sCx1bRTQRDBXLfpW3fKlYfAAsaw==" crossorigin="anonymous" referrerpolicy="no-referrer"
+		media="(prefers-color-scheme: no-preference), (prefers-color-scheme: light)" />
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.24.1/themes/prism-okaidia.min.css"
+		integrity="sha512-mIs9kKbaw6JZFfSuo+MovjU+Ntggfoj8RwAmJbVXQ5mkAX5LlgETQEweFPI18humSPHymTb5iikEOKWF7I8ncQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"
 		crossorigin="anonymous"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.15.0/prism.min.js"></script>
 	<!--
 		<script src="../../dist/xlsx.bundle.js"></script>
+	-->
+	<!--
 		<script src="../../libs/jszip.js"></script>
 		<script src="../../dist/xlsx.min.js"></script>
 	-->
 	<!--
 	-->
-		<script src="../../libs/jszip.js"></script>
-		<script src="../../src/xlsx.js"></script>
+	<script src="../../libs/jszip.js"></script>
+	<script src="../../src/xlsx.js"></script>
 	<script>
 		// ==================================================================================================================
 
 		function popDemoCode() {
-			$('#codeDemo').text('// STEP 1: Create a new Workbook\n'
+			document.querySelector("#codeDemo").textContent =
+				'// STEP 1: Create a new Workbook\n'
 				+ 'const wb = XLSX.utils.book_new();\n'
 				+ '\n'
 				+ '// STEP 2: Create data rows\n'
 				+ 'let row1 = ["a", "b", "c"];\n'
 				+ 'let row2 = [1, 2, 3];\n'
 				+ 'let row3 = [\n'
-				+ "    { v: 'Courier 24', t: 's', s: { font: { name: 'Courier', sz: 24 } } },\n"
-				+ "    { v: 'bold', t: 's', s: { font: { bold: true, color: { rgb: 'FFFF0000' } } } },\n"
-				+ "    { v: 'filled', t: 's', s: { fill: { fgColor: { rgb: 'FFE9E9E9' } } } },\n"
+				+ "    { v: 'Courier: 24', t: 's', s: { font: { name: 'Courier', sz: 24 } } },\n"
+				+ "    { v: 'bold & color', t: 's', s: { font: { bold: true, color: { rgb: 'FFFF0000' } } } },\n"
+				+ "    { v: 'fill: color', t: 's', s: { fill: { fgColor: { rgb: 'FFE9E9' } } } },\n"
+				+ "    { v: 'line\\nbreak', t: 's', s: { alignment: { wrapText: true } } },\n"
 				+ ']\n'
 				+ '\n'
 				+ '// STEP 3: Create Worksheet, add data, set cols widths\n'
@@ -52,12 +53,9 @@
 				+ "XLSX.utils.book_append_sheet(wb, ws, 'browser-demo');\n"
 				+ '\n'
 				+ '// STEP 4: Write Excel file to browser\n'
-				+ 'XLSX.writeFile(wb, "xlsx-js-style-demo.xlsx");\n'
-			);
+				+ 'XLSX.writeFile(wb, "xlsx-js-style-demo.xlsx");\n';
 
-			$('code.language-javascript').each((idx, ele) => {
-				Prism.highlightElement($(ele)[0]);
-			});
+			Prism.highlightElement(document.querySelector("code.language-javascript"));
 		}
 
 		// ==================================================================================================================
@@ -67,10 +65,10 @@
 			let row1 = ["a", "b", "c"];
 			let row2 = [1, 2, 3];
 			let row3 = [
-				{ v: 'Courier 24', t: 's', s: { font: { name: 'Courier', sz: 24 } } },
-				{ v: 'bold', t: 's', s: { font: { bold: true, color: { rgb: 'FFFF0000' } } } },
-				{ v: 'filled', t: 's', s: { fill: { fgColor: { rgb: 'FFE9E9E9' } } } },
-				{ v: 'line break\n"test"', t: 's', s: { alignment: { wrapText:true } } },
+				{ v: 'Courier: 24', t: 's', s: { font: { name: 'Courier', sz: 24 } } },
+				{ v: 'bold & color', t: 's', s: { font: { bold: true, color: { rgb: 'FFFF0000' } } } },
+				{ v: 'fill: color', t: 's', s: { fill: { fgColor: { rgb: 'FFE9E9E9' } } } },
+				{ v: 'line\nbreak', t: 's', s: { alignment: { wrapText: true } } },
 			]
 			const ws = XLSX.utils.aoa_to_sheet([row1, row2, row3]);
 			ws['!cols'] = [{ width: 30 }, { width: 20 }, { width: 20 }]
@@ -79,46 +77,49 @@
 		}
 
 		// ==================================================================================================================
-		$(document).ready(function() { popDemoCode() });
+		window.onload = () => { popDemoCode() };
 	</script>
 </head>
-<body class="bg-light">
-	<nav class="navbar navbar-expand-lg bg-dark">
-		<a class="navbar-brand" href="https://gitbrent.github.io/xlsx-js-style/">
-			<img src="images/favicon.png" width="30" height="30" class="d-inline-block align-top mr-2" alt="" />
-			xlsx-js-style
-		</a>
-		<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarColor01" aria-controls="navbarColor01" aria-expanded="false"
-			aria-label="Toggle navigation">
-			<span class="navbar-toggler-icon"></span>
-		</button>
+<body>
+	<nav class="navbar navbar-expand-lg navbar-dark bg-success">
+		<div class="container-fluid">
+			<a class="navbar-brand" href="https://gitbrent.github.io/xlsx-js-style/">
+				<img src="images/favicon.png" width="30" height="30" class="d-inline-block align-top me-2" alt="favicon" />
+				xlsx-js-style
+			</a>
+			<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-target="#navbarColor01" aria-controls="navbarColor01" aria-expanded="false"
+				aria-label="Toggle navigation">
+				<span class="navbar-toggler-icon"></span>
+			</button>
 
-		<div class="collapse navbar-collapse" id="navbarColor01">
-			<ul class="navbar-nav mr-auto">
-				<li class="nav-item active">
-					<a class="nav-link" href="https://gitbrent.github.io/xlsx-js-style/demo/index.html">
-						Demo Home <span class="sr-only">(current)</span>
-					</a>
-				</li>
-			</ul>
-			<form class="form-inline my-2 my-lg-0">
-				<button type="button" class="btn btn-outline-secondary mx-2 my-2 my-sm-0" onClick="window.open('https://github.com/gitbrent/xlsx-js-style/releases')">
-					Download
-				</button>
-				<button type="button" class="btn btn-outline-secondary mx-2 my-2 my-sm-0" onClick="window.open('https://github.com/gitbrent/xlsx-js-style')">
-					GitHub Project
-				</button>
-				<button type="button" class="btn btn-outline-secondary mx-2 my-2 my-sm-0" onClick="window.open('https://github.com/gitbrent/xlsx-js-style')">
-					API Documentation
-				</button>
-			</form>
+			<div class="collapse navbar-collapse" id="navbarColor01">
+				<ul class="navbar-nav me-auto mb-2 mb-lg-0">
+					<li class="nav-item">
+						<a class="nav-link active" aria-current="page" href="https://gitbrent.github.io/xlsx-js-style/demo/index.html">Browser Demo</a>
+					</li>
+				</ul>
+				<ul class="navbar-nav">
+					<li class="nav-item">
+						<a class="nav-link" href="https://github.com/gitbrent/xlsx-js-style/releases">Latest Release</a>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link" href="https://github.com/gitbrent/xlsx-js-style/">GitHub Project</a>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link" href="https://www.npmjs.com/package/xlsx-js-style">npm Package</a>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link" href="https://github.com/gitbrent/xlsx-js-style/">Documentation</a>
+					</li>
+				</ul>
+			</div>
 		</div>
 	</nav>
 
 	<header class="container my-4">
 		<div class="row">
 			<div class="col">
-				<h2 class="mb-0">Browser Demo</h2>
+				<h2 class="mb-0"><code>xlsx-js-style</code> browser demo</h2>
 			</div>
 		</div>
 	</header>
@@ -131,7 +132,7 @@
 		</div>
 		<div class="row">
 			<div class="col-auto">
-				<button class="btn btn-success px-5" onclick="doDemo()">Generate Demo Workbook</button>
+				<button class="btn btn-lg btn-success px-5" onclick="doDemo()">Generate Demo Workbook</button>
 			</div>
 		</div>
 	</main>
