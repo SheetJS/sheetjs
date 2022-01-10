@@ -121,6 +121,7 @@ Community Translations of this README:
   * [Other Workbook Formats](#other-workbook-formats)
     + [Lotus 1-2-3 (WKS/WK1/WK2/WK3/WK4/123)](#lotus-1-2-3-wkswk1wk2wk3wk4123)
     + [Quattro Pro (WQ1/WQ2/WB1/WB2/WB3/QPW)](#quattro-pro-wq1wq2wb1wb2wb3qpw)
+    + [Works for DOS / Windows Spreadsheet (WKS/XLR)](#works-for-dos--windows-spreadsheet-wksxlr)
     + [OpenDocument Spreadsheet (ODS/FODS)](#opendocument-spreadsheet-odsfods)
     + [Uniform Office Spreadsheet (UOS1/2)](#uniform-office-spreadsheet-uos12)
   * [Other Single-Worksheet Formats](#other-single-worksheet-formats)
@@ -465,7 +466,7 @@ Using `Blob#arrayBuffer`:
 
 ```js
 async function handleFileAsync(e) {
-  const file = evt.target.files[0];
+  const file = e.target.files[0];
   const data = await file.arrayBuffer();
   const workbook = XLSX.read(data);
 
@@ -1836,7 +1837,7 @@ file but Excel will know how to handle it.  This library applies similar logic:
 
 | Byte 0 | Raw File Type | Spreadsheet Types                                   |
 |:-------|:--------------|:----------------------------------------------------|
-| `0xD0` | CFB Container | BIFF 5/8 or password-protected XLSX/XLSB or WQ3/QPW |
+| `0xD0` | CFB Container | BIFF 5/8 or protected XLSX/XLSB or WQ3/QPW or XLR   |
 | `0x09` | BIFF Stream   | BIFF 2/3/4/5                                        |
 | `0x3C` | XML/HTML      | SpreadsheetML / Flat ODS / UOS1 / HTML / plain text |
 | `0x50` | ZIP Archive   | XLSB or XLSX/M or ODS or UOS2 or plain text         |
@@ -1852,6 +1853,8 @@ file but Excel will know how to handle it.  This library applies similar logic:
 
 DBF files are detected based on the first byte as well as the third and fourth
 bytes (corresponding to month and day of the file date)
+
+Works for Windows files are detected based on the BOF record with type `0xFF`
 
 Plain text format guessing follows the priority order:
 
@@ -2488,6 +2491,8 @@ Despite the library name `xlsx`, it supports numerous spreadsheet file formats:
 | Lotus 1-2-3 (WK1/WK3)                                        |   ✔   |   ✔   |
 | Lotus 1-2-3 (WKS/WK2/WK4/123)                                |   ✔   |       |
 | Quattro Pro Spreadsheet (WQ1/WQ2/WB1/WB2/WB3/QPW)            |   ✔   |       |
+| Works 1.x-3.x DOS / 2.x-5.x Windows Spreadsheet (WKS)        |   ✔   |       |
+| Works 6.x-9.x Spreadsheet (XLR)                              |   ✔   |       |
 | **Other Common Spreadsheet Output Formats**                  |:-----:|:-----:|
 | HTML Tables                                                  |   ✔   |   ✔   |
 | Rich Text Format tables (RTF)                                |       |   ✔   |
@@ -2505,6 +2510,8 @@ range limits will be silently truncated:
 | Excel 4.0 (XLS BIFF4)                     | IV16384    |      256 |    16384 |
 | Excel 3.0 (XLS BIFF3)                     | IV16384    |      256 |    16384 |
 | Excel 2.0/2.1 (XLS BIFF2)                 | IV16384    |      256 |    16384 |
+| Lotus 1-2-3 R2 - R5 (WK1/WK3/WK4)         | IV8192     |      256 |     8192 |
+| Lotus 1-2-3 R1 (WKS)                      | IV2048     |      256 |     2048 |
 
 Excel 2003 SpreadsheetML range limits are governed by the version of Excel and
 are not enforced by the writer.
@@ -2638,6 +2645,27 @@ Generated WK3 workbooks are compatible with Lotus 1-2-3 R9 and Excel 5.0.
 The Quattro Pro formats use binary records in the same way as BIFF and Lotus.
 Some of the newer formats (namely WB3 and QPW) use a CFB enclosure just like
 BIFF8 XLS.
+
+</details>
+
+#### Works for DOS / Windows Spreadsheet (WKS/XLR)
+
+<details>
+  <summary>(click to show)</summary>
+
+All versions of Works were limited to a single worksheet.
+
+Works for DOS 1.x - 3.x and Works for Windows 2.x extends the Lotus WKS format
+with additional record types.
+
+Works for Windows 3.x - 5.x uses the same format and WKS extension.  The BOF
+record has type `FF`
+
+Works for Windows 6.x - 9.x use the XLR format.  XLR is nearly identical to
+BIFF8 XLS: it uses the CFB container with a Workbook stream.  Works 9 saves the
+exact Workbook stream for the XLR and the 97-2003 XLS export.  Works 6 XLS
+includes two empty worksheets but the main worksheet has an identical encoding.
+XLR also includes a `WksSSWorkBook` stream similar to Lotus FM3/FMT files.
 
 </details>
 

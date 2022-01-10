@@ -68,6 +68,7 @@
   * [Other Workbook Formats](README.md#other-workbook-formats)
     + [Lotus 1-2-3 (WKS/WK1/WK2/WK3/WK4/123)](README.md#lotus-1-2-3-wkswk1wk2wk3wk4123)
     + [Quattro Pro (WQ1/WQ2/WB1/WB2/WB3/QPW)](README.md#quattro-pro-wq1wq2wb1wb2wb3qpw)
+    + [Works for DOS / Windows Spreadsheet (WKS/XLR)](README.md#works-for-dos--windows-spreadsheet-wksxlr)
     + [OpenDocument Spreadsheet (ODS/FODS)](README.md#opendocument-spreadsheet-odsfods)
     + [Uniform Office Spreadsheet (UOS1/2)](README.md#uniform-office-spreadsheet-uos12)
   * [Other Single-Worksheet Formats](README.md#other-single-worksheet-formats)
