@@ -59,14 +59,24 @@ function sheet_to_json(sheet/*:Worksheet*/, opts/*:?Sheet2JSONOpts*/) {
 		default: r = range;
 	}
 	if(header > 0) offset = 0;
-	var rr = encode_row(r.s.r);
 	var cols/*:Array<string>*/ = [];
 	var out/*:Array<any>*/ = [];
 	var outi = 0, counter = 0;
 	var dense = Array.isArray(sheet);
 	var R = r.s.r, C = 0, CC = 0;
+	var rowinfo/*:Array<ColInfo>*/ = o.skipHidden && sheet["!rows"] || [];
+	for (R = r.s.r + offset; R <= r.e.r; ++R) {
+		if (((rowinfo[R]||{}).hidden)) {
+			offset++;
+			continue;
+		}
+		break;
+	}
+	var rr = encode_row(R);
 	if(dense && !sheet[R]) sheet[R] = [];
+	var colinfo/*:Array<ColInfo>*/ = o.skipHidden && sheet["!cols"] || [];
 	for(C = r.s.c; C <= r.e.c; ++C) {
+		if (((colinfo[C]||{}).hidden)) continue;
 		cols[C] = encode_col(C);
 		val = dense ? sheet[R][C] : sheet[cols[C] + rr];
 		switch(header) {
@@ -82,6 +92,7 @@ function sheet_to_json(sheet/*:Worksheet*/, opts/*:?Sheet2JSONOpts*/) {
 		}
 	}
 	for (R = r.s.r + offset; R <= r.e.r; ++R) {
+		if (((rowinfo[R]||{}).hidden)) continue;
 		var row = make_json_row(sheet, r, R, cols, header, hdr, dense, o);
 		if((row.isempty === false) || (header === 1 ? o.blankrows !== false : !!o.blankrows)) out[outi++] = row.row;
 	}

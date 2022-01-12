@@ -680,6 +680,9 @@ export interface Sheet2JSONOpts extends DateNFOption {
 
     /** if true, return raw numbers; if false, return formatted numbers */
     rawNumbers?: boolean;
+
+    /** Skip hidden rows and columns; must be used with cellStyles:true in XLSX.read or XLSX.readFile */
+    skipHidden?: boolean;
 }
 
 export interface AOA2SheetOpts extends CommonOptions, DateNFOption {
