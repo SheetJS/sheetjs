@@ -535,6 +535,18 @@ var WS_XML_ROOT = writextag('worksheet', null, {
 	'xmlns:r': XMLNS.r
 });
 
+function write_ws_xml_datavalidation(validations) {
+	var o = '<dataValidations>';
+	for(var i=0; i < validations.length; i++) {
+		var validation = validations[i];
+		o += '<dataValidation type="list" showErrorMessage="1" errorStyle="error" errorTitle="Invalid choice" error="Please select one from the list" sqref="' + validation.sqref + '">';
+		o += '<formula1>' + validation.values + '</formula1>';
+		o += '</dataValidation>';
+	}
+	o += '</dataValidations>';
+	return o;
+}
+
 function write_ws_xml(idx/*:number*/, opts, wb/*:Workbook*/, rels)/*:string*/ {
 	var o = [XML_HEADER, WS_XML_ROOT];
 	var s = wb.SheetNames[idx], sidx = 0, rdata = "";
@@ -589,6 +601,7 @@ function write_ws_xml(idx/*:number*/, opts, wb/*:Workbook*/, rels)/*:string*/ {
 	/* customSheetViews */
 
 	if(ws['!merges'] != null && ws['!merges'].length > 0) o[o.length] = (write_ws_xml_merges(ws['!merges']));
+	if(ws['!dataValidation']) o[o.length] = write_ws_xml_datavalidation(ws['!dataValidation']);
 
 	/* phoneticPr */
 	/* conditionalFormatting */

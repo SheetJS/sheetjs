@@ -1,7 +1,13 @@
 {
-	"name": "xlsx",
-	"version": "0.17.5",
+	"name": "@algonomia/xlsx",
+	"version": "0.0.2",
 	"author": "sheetjs",
+	"contributors": [
+		{
+			"name": "Brice Guillaume",
+			"email": "brice.guillaume@algonomia.com"
+		}
+	],
 	"description": "SheetJS Spreadsheet data parser and writer",
 	"keywords": [
 		"excel",
