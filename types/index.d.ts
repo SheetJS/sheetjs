@@ -205,8 +205,16 @@ export interface ParsingOptions extends CommonOptions {
     dense?: boolean;
 }
 
+export interface SheetOption {
+  /**
+   * Name of Worksheet (for single-sheet formats)
+   * @default ''
+   */
+  sheet?: string;
+}
+
 /** Options for write and writeFile */
-export interface WritingOptions extends CommonOptions {
+export interface WritingOptions extends CommonOptions, SheetOption {
     /** Output data encoding */
     type?: 'base64' | 'binary' | 'buffer' | 'file' | 'array' | 'string';
 
@@ -221,12 +229,6 @@ export interface WritingOptions extends CommonOptions {
      * @default 'xlsx'
      */
     bookType?: BookType;
-
-    /**
-     * Name of Worksheet (for single-sheet formats)
-     * @default ''
-     */
-    sheet?: string;
 
     /**
      * Use ZIP compression for ZIP-based formats
@@ -702,7 +704,7 @@ export interface JSON2SheetOpts extends CommonOptions, DateNFOption {
 
 export interface SheetJSONOpts extends JSON2SheetOpts, OriginOption {}
 
-export interface Table2SheetOpts extends CommonOptions, DateNFOption, OriginOption {
+export interface Table2SheetOpts extends CommonOptions, DateNFOption, OriginOption, SheetOption {
     /** If true, plaintext parsing will not parse values */
     raw?: boolean;
 
