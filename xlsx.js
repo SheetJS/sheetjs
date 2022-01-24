@@ -2873,11 +2873,16 @@ function fuzzydate(s) {
 	var o = new Date(s), n = new Date(NaN);
 	var y = o.getYear(), m = o.getMonth(), d = o.getDate();
 	if(isNaN(d)) return n;
-	if(y < 0 || y > 8099) return n;
-	if((m > 0 || d > 1) && y != 101) return o;
-	if(s.toLowerCase().match(/jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec/)) return o;
-	if(s.match(/[^-0-9:,\/\\]/)) return n;
-	return o;
+	if(s.toLowerCase().match(/jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec/)){
+		if(y < 0 || y > 8099) return n;
+		if((m > 0 || d > 1) && y != 101) return o;
+		return n;
+	} else {
+		if(s.replace(/\s+/g,'').length > 10) return n;
+		var dotsep = s.split(".").length-1, slashsep = s.split("/").length-1, dashsep = s.split("-").length-1;
+		if(dotsep+slashsep+dashsep == 2 && ((!slashsep && !dashsep) || (!dotsep && !dashsep) || (!dotsep && !slashsep))) return o;
+	}
+	return n;
 }
 
 var safe_split_regex = "abacaba".split(/(:?b)/i).length == 5;
