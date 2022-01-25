@@ -879,14 +879,14 @@ var PSCLSID = {
 };
 function parse_xls_props(cfb/*:CFBContainer*/, props, o) {
 	/* [MS-OSHARED] 2.3.3.2.2 Document Summary Information Property Set */
-	var DSI = CFB.find(cfb, '!DocumentSummaryInformation');
+	var DSI = CFB.find(cfb, '/!DocumentSummaryInformation');
 	if(DSI && DSI.size > 0) try {
 		var DocSummary = parse_PropertySetStream(DSI, DocSummaryPIDDSI, PSCLSID.DSI);
 		for(var d in DocSummary) props[d] = DocSummary[d];
 	} catch(e) {if(o.WTF) throw e;/* empty */}
 
 	/* [MS-OSHARED] 2.3.3.2.1 Summary Information Property Set*/
-	var SI = CFB.find(cfb, '!SummaryInformation');
+	var SI = CFB.find(cfb, '/!SummaryInformation');
 	if(SI && SI.size > 0) try {
 		var Summary = parse_PropertySetStream(SI, SummaryPIDSI, PSCLSID.SI);
 		for(var s in Summary) if(props[s] == null) props[s] = Summary[s];
