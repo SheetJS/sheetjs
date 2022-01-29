@@ -1,0 +1,10 @@
+{
+	"parser": "@typescript-eslint/parser",
+	"env": { "shared-node-browser":true },
+	"plugins": ["@typescript-eslint"],
+	"extends": ["plugin:@typescript-eslint/recommended"],
+	"rules": {
+		"no-var": 0,
+		"semi": [ 2, "always" ]
+	}
+}

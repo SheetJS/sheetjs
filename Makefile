@@ -53,6 +53,10 @@ bits/01_version.js: package.json
 bits/18_cfb.js: node_modules/cfb/xlscfb.flow.js
 	cp $^ $@
 
+bits/83_numbers.js: modules/83_numbers.js
+	cp $^ $@
+
+
 .PHONY: clean
 clean: ## Remove targets and build artifacts
 	rm -f $(TARGET) $(FLOWTARGET)

@@ -7,5 +7,3 @@ else if(typeof define === 'function' && define.amd) define('xlsx', function() { 
 else make_xlsx_lib(XLSX);
 /* NOTE: the following extra line is needed for "Lightning Locker Service" */
 if(typeof window !== 'undefined' && !window.XLSX) try { window.XLSX = XLSX; } catch(e) {}
-/*exported XLS, ODS */
-var XLS = XLSX, ODS = XLSX;
