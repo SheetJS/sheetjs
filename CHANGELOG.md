@@ -7,6 +7,7 @@ changes may not be included if they are not expected to break existing code.
 ## v0.18.0
 
 * Browser scripts only expose `XLSX` variable
+* Module no longer ships with `dist/jszip.js` browser script
 
 ## v0.17.4
 

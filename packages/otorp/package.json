@@ -1,6 +1,6 @@
 {
 	"name": "otorp",
-	"version": "0.0.0",
+	"version": "0.0.1",
 	"author": "sheetjs",
 	"description": "Recover protobuf definitions from Mach-O binaries",
 	"bin": {

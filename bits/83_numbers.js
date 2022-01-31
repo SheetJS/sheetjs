@@ -54,6 +54,11 @@ var NUMBERS = (function() {
     });
     return out;
   };
+  var popcnt = function(x) {
+    x -= x >> 1 & 1431655765;
+    x = (x & 858993459) + (x >> 2 & 858993459);
+    return (x + (x >> 4) & 252645135) * 16843009 >>> 24;
+  };
 
   // src/proto.ts
   function parse_varint49(buf, ptr) {
@@ -126,12 +131,16 @@ var NUMBERS = (function() {
           break;
         case 5:
           len = 4;
+          res = buf.slice(ptr[0], ptr[0] + len);
+          ptr[0] += len;
+          break;
         case 1:
-          if (!len)
-            len = 8;
+          len = 8;
+          res = buf.slice(ptr[0], ptr[0] + len);
+          ptr[0] += len;
+          break;
         case 2:
-          if (!len)
-            len = parse_varint49(buf, ptr);
+          len = parse_varint49(buf, ptr);
           res = buf.slice(ptr[0], ptr[0] + len);
           ptr[0] += len;
           break;
@@ -140,7 +149,7 @@ var NUMBERS = (function() {
         default:
           throw new Error("PB Type ".concat(type, " for Field ").concat(num, " at offset ").concat(off));
       }
-      var v = { offset: off, data: res };
+      var v = { offset: off, data: res, type: type };
       if (out[num] == null)
         out[num] = [v];
       else
@@ -172,14 +181,14 @@ var NUMBERS = (function() {
       var t = buf[l++];
       var len = buf[l] | buf[l + 1] << 8 | buf[l + 2] << 16;
       l += 3;
-      out.push(process_chunk(t, buf.slice(l, l + len)));
+      out.push(parse_snappy_chunk(t, buf.slice(l, l + len)));
       l += len;
     }
     if (l !== buf.length)
       throw new Error("data is not a valid framed stream!");
     return u8concat(out);
   }
-  function process_chunk(type, buf) {
+  function parse_snappy_chunk(type, buf) {
     if (type != 0)
       throw new Error("Unexpected Snappy chunk type ".concat(type));
     var ptr = [0];
@@ -270,6 +279,62 @@ var NUMBERS = (function() {
     return out;
   }
 
+  // src/prebnccell.ts
+  function parseit(buf, version) {
+    var dv = u8_to_dataview(buf);
+    var ctype = buf[version == 4 ? 1 : 2];
+    var flags = dv.getUint32(4, true);
+    var data_offset = 12 + popcnt(flags & 16270) * 4;
+    var sidx = -1, ieee = NaN, dt = NaN;
+    if (flags & 16) {
+      sidx = dv.getUint32(data_offset, true);
+      data_offset += 4;
+    }
+    if (flags & 32) {
+      ieee = dv.getFloat64(data_offset, true);
+      data_offset += 8;
+    }
+    if (flags & 64) {
+      dt = dv.getFloat64(data_offset, true);
+      data_offset += 8;
+    }
+    var ret;
+    switch (ctype) {
+      case 0:
+        break;
+      case 2:
+        ret = { t: "n", v: ieee };
+        break;
+      case 3:
+        ret = { t: "s", v: sidx };
+        break;
+      case 5:
+        var dd = new Date(2001, 0, 1);
+        dd.setTime(dd.getTime() + dt * 1e3);
+        ret = { t: "d", v: dd };
+        break;
+      case 6:
+        ret = { t: "b", v: ieee > 0 };
+        break;
+      case 7:
+        ret = { t: "n", v: ieee };
+        break;
+      default:
+        throw new Error("Unsupported cell type ".concat(buf.slice(0, 4)));
+    }
+    return ret;
+  }
+  function parse(buf) {
+    var version = buf[0];
+    switch (version) {
+      case 3:
+      case 4:
+        return parseit(buf, version);
+      default:
+        throw new Error("Unsupported pre-BNC version ".concat(version));
+    }
+  }
+
   // src/numbers.ts
   var encode_col = function(C) {
     var s = "";
@@ -343,7 +408,7 @@ var NUMBERS = (function() {
     var pb = parse_shallow(root.data);
     var entries = pb[3];
     var data = [];
-    entries == null ? void 0 : entries.forEach(function(entry) {
+    (entries || []).forEach(function(entry) {
       var le = parse_shallow(entry.data);
       var key = varint_to_i32(le[1][0].data) >>> 0;
       data[key] = u8str(le[3][0].data);
@@ -405,50 +470,12 @@ var NUMBERS = (function() {
         tiles.forEach(function(tile2) {
           tile2.ref.forEach(function(row, R) {
             row.forEach(function(buf, C) {
-              var dv = u8_to_dataview(buf);
-              var ctype = buf[2];
               var addr = encode_cell({ r: R, c: C });
-              switch (ctype) {
-                case 0:
-                  {
-                    switch (buf[1]) {
-                      case 3:
-                        ws[addr] = { t: "s", v: sst[dv.getUint32(buf.length - 4, true)] };
-                        break;
-                      case 2:
-                        ws[addr] = { t: "n", v: dv.getFloat64(16, true) };
-                        break;
-                      case 0:
-                        break;
-                      case 5:
-                        break;
-                      case 7:
-                        break;
-                      case 6:
-                        ws[addr] = { t: "b", v: dv.getFloat64(buf.length - 8, true) > 0 };
-                        break;
-                      default:
-                        throw new Error("Unsupported cell type ".concat(buf.slice(0, 4)));
-                    }
-                  }
-                  break;
-                case 3:
-                  {
-                    ws[addr] = { t: "s", v: sst[dv.getUint32(16, true)] };
-                  }
-                  break;
-                case 2:
-                  {
-                    ws[addr] = { t: "n", v: dv.getFloat64(buf.length - 12, true) };
-                  }
-                  break;
-                case 6:
-                  {
-                    ws[addr] = { t: "b", v: dv.getFloat64(16, true) > 0 };
-                  }
-                  break;
-                default:
-                  throw new Error("Unsupported cell type ".concat(ctype));
+              var res = parse(buf);
+              if (res) {
+                ws[addr] = res;
+                if (res.t == "s" && typeof res.v == "number")
+                  res.v = sst[res.v];
               }
             });
           });

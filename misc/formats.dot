@@ -16,6 +16,7 @@ digraph G {
 
 	subgraph OLD {
 		node  [style=filled,color=cyan];
+		nums  [label="NUMBERS"];
 		ods   [label="ODS"];
 		fods  [label="FODS"];
 		uos   [label="UOS"];
@@ -63,6 +64,7 @@ digraph G {
 		wk4 -> csf
 		123 -> csf
 		qpw -> csf
+		nums -> csf
 	}
 	subgraph WORKSHEET {
 		edge [color=aquamarine4];

@@ -88,7 +88,7 @@ file but Excel will know how to handle it.  This library applies similar logic:
 | `0xD0` | CFB Container | BIFF 5/8 or protected XLSX/XLSB or WQ3/QPW or XLR   |
 | `0x09` | BIFF Stream   | BIFF 2/3/4/5                                        |
 | `0x3C` | XML/HTML      | SpreadsheetML / Flat ODS / UOS1 / HTML / plain text |
-| `0x50` | ZIP Archive   | XLSB or XLSX/M or ODS or UOS2 or plain text         |
+| `0x50` | ZIP Archive   | XLSB or XLSX/M or ODS or UOS2 or NUMBERS or text    |
 | `0x49` | Plain Text    | SYLK or plain text                                  |
 | `0x54` | Plain Text    | DIF or plain text                                   |
 | `0xEF` | UTF8 Encoded  | SpreadsheetML / Flat ODS / UOS1 / HTML / plain text |

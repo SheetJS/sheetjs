@@ -37,3 +37,11 @@ function u8indexOf(u8: Uint8Array, data: string | number | Uint8Array, byteOffse
 	return -1;
 }
 export { u8indexOf };
+
+/* Hopefully one day this will be added to the language */
+var popcnt = (x: number): number => {
+  x -= ((x >> 1) & 0x55555555);
+  x = (x & 0x33333333) + ((x >> 2) & 0x33333333);
+  return (((x + (x >> 4)) & 0x0F0F0F0F) * 0x01010101) >>> 24;
+};
+export { popcnt };

@@ -20,6 +20,7 @@ Despite the library name `xlsx`, it supports numerous spreadsheet file formats:
 | Lotus Formatted Text (PRN)                                   |   ✔   |   ✔   |
 | UTF-16 Unicode Text (TXT)                                    |   ✔   |   ✔   |
 | **Other Workbook/Worksheet Formats**                         |:-----:|:-----:|
+| Numbers 3.0+ / iWork 2013+ Spreadsheet (NUMBERS)             |   ✔   |       |
 | OpenDocument Spreadsheet (ODS)                               |   ✔   |   ✔   |
 | Flat XML ODF Spreadsheet (FODS)                              |   ✔   |   ✔   |
 | Uniform Office Format Spreadsheet (标文通 UOS1/UOS2)         |   ✔   |       |
@@ -202,6 +203,21 @@ BIFF8 XLS: it uses the CFB container with a Workbook stream.  Works 9 saves the
 exact Workbook stream for the XLR and the 97-2003 XLS export.  Works 6 XLS
 includes two empty worksheets but the main worksheet has an identical encoding.
 XLR also includes a `WksSSWorkBook` stream similar to Lotus FM3/FMT files.
+
+</details>
+
+#### Numbers 3.0+ / iWork 2013+ Spreadsheet (NUMBERS)
+
+<details>
+  <summary>(click to show)</summary>
+
+iWork 2013 (Numbers 3.0 / Pages 5.0 / Keynote 6.0) switched from a proprietary
+XML-based format to the current file format based on the iWork Archive (IWA).
+This format has been used up through the current release (Numbers 11.2).
+
+The parser focuses on extracting raw data from tables.  Numbers technically
+supports multiple tables in a logical worksheet, including custom titles.  This
+parser will only extract the raw data from the first table from each worksheet.
 
 </details>
 

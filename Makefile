@@ -94,7 +94,6 @@ dist: dist-deps $(TARGET) bower.json ## Prepare JS files for distribution
 dist-deps: ## Copy dependencies for distribution
 	mkdir -p dist
 	cp node_modules/codepage/dist/cpexcel.full.js dist/cpexcel.js
-	cp jszip.js dist/jszip.js
 
 .PHONY: aux
 aux: $(AUXTARGETS)

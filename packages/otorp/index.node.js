@@ -171,12 +171,16 @@ function parse_shallow(buf) {
         break;
       case 5:
         len = 4;
+        res = buf.slice(ptr[0], ptr[0] + len);
+        ptr[0] += len;
+        break;
       case 1:
-        if (!len)
-          len = 8;
+        len = 8;
+        res = buf.slice(ptr[0], ptr[0] + len);
+        ptr[0] += len;
+        break;
       case 2:
-        if (!len)
-          len = parse_varint49(buf, ptr);
+        len = parse_varint49(buf, ptr);
         res = buf.slice(ptr[0], ptr[0] + len);
         ptr[0] += len;
         break;
@@ -468,6 +472,9 @@ function otorp(buf, builtins = false) {
 var otorp_default = otorp;
 var is_referenced = (buf, pos) => {
   var dv = u8_to_dataview(buf);
+  for (var leaddr = 0; leaddr > -1 && leaddr < pos; leaddr = u8indexOf(buf, 141, leaddr + 1))
+    if (dv.getUint32(leaddr + 2, true) == pos - leaddr - 6)
+      return true;
   try {
     var headers = parse_macho(buf);
     for (var i = 0; i < headers.length; ++i) {
@@ -507,6 +514,7 @@ var proto_offsets = (buf) => {
       if (buf[--pos] != 10)
         continue;
       if (!is_referenced(buf, pos)) {
+        console.error(`Reference to ${name} not found`);
         continue;
       }
       var bin = meta.find((m) => m.offset <= pos && m.offset + m.size >= pos);

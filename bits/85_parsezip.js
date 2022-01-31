@@ -61,7 +61,7 @@ function parse_zip(zip/*:ZIP*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
 	if(safegetzipfile(zip, 'objectdata.xml')) return parse_ods(zip, opts);
 	/* Numbers */
 	if(safegetzipfile(zip, 'Index/Document.iwa')) {
-		if(typeof Uint8Array == "undefined") throw new Error('NUMBERS file parsing requires Uint8Array support')
+		if(typeof Uint8Array == "undefined") throw new Error('NUMBERS file parsing requires Uint8Array support');
 		if(typeof NUMBERS != "undefined") {
 			if(zip.FileIndex) return NUMBERS.parse_numbers(zip);
 			var _zip = CFB.utils.cfb_new();

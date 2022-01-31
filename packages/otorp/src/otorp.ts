@@ -55,6 +55,11 @@ export default otorp;
 var is_referenced = (buf: Uint8Array, pos: number): boolean => {
 	var dv = u8_to_dataview(buf);
 
+	/* Search for LEA reference (x86) */
+	for(var leaddr = 0; leaddr > -1 && leaddr < pos; leaddr = u8indexOf(buf, 0x8D, leaddr + 1))
+		if(dv.getUint32(leaddr + 2, true) == pos - leaddr - 6) return true;
+
+	/* Search for absolute reference to address */
 	try {
 		var headers = parse_macho(buf);
 		for(var i = 0; i < headers.length; ++i) {
@@ -69,7 +74,6 @@ var is_referenced = (buf: Uint8Array, pos: number): boolean => {
 			if(u8indexOf(b, ref, 0) > 0) return true;
 		}
 	} catch(e) {}
-
 	return false;
 };
 
@@ -90,7 +94,7 @@ var proto_offsets = (buf: Uint8Array): OffsetList => {
 		if(off - pos > 250) continue;
 		var name = u8str(buf.slice(pos + 1, off));
 		if(buf[--pos] != 0x0A) continue;
-		if(!is_referenced(buf, pos)) { /* console.error(`Reference to ${name} not found`); */ continue; }
+		if(!is_referenced(buf, pos)) { console.error(`Reference to ${name} not found`); continue; }
 		var bin = meta.find(m => m.offset <= pos && m.offset + m.size >= pos);
 		out.push([pos, name, bin?.type || -1, bin?.subtype || -1]);
 	}

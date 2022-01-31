@@ -5,6 +5,7 @@ import { u8str, u8_to_dataview } from './util';
 import { parse_shallow, varint_to_i32, parse_varint49, mappa } from './proto';
 import { deframe } from './frame';
 import { IWAArchiveInfo, IWAMessage, parse_iwa } from './iwa';
+import { parse as parse_bnc } from "./prebnccell";
 
 /* written here to avoid a full import of the 'xlsx' library */
 var encode_col = (C: number): string => {
@@ -59,7 +60,7 @@ function parse_TST_TableDataList(M: IWAMessage[][], root: IWAMessage): string[] 
 	var pb = parse_shallow(root.data);
 	var entries = pb[3];
 	var data = [];
-	entries?.forEach(entry => {
+	(entries||[]).forEach(entry => {
 		var le = parse_shallow(entry.data);
 		var key = varint_to_i32(le[1][0].data)>>>0;
 		data[key] = u8str(le[3][0].data);
@@ -129,33 +130,11 @@ function parse_TST_TableModelArchive(M: IWAMessage[][], root: IWAMessage, ws: Wo
 			tiles.forEach((tile) => {
 				tile.ref.forEach((row, R) => {
 					row.forEach((buf, C) => {
-						var dv = u8_to_dataview(buf);
-						//var version = buf[0]; // numbers 3.x use "3", 6.x - 11.x use "4"
-						/* TODO: find the correct field position of the data type and value. */
-						var ctype = buf[2];
 						var addr = encode_cell({r:R,c:C});
-						switch(ctype) {
-							case 0: { // TODO: generic ??
-								switch(buf[1]) {
-									case 3: ws[addr] = { t: "s", v: sst[dv.getUint32(buf.length - 4,true)] } as CellObject; break;
-									case 2: ws[addr] = { t: "n", v: dv.getFloat64(16, true) } as CellObject; break;
-									case 0: break; // ws[addr] = { t: "z" } as CellObject; // blank?
-									case 5: break; // date-time
-									case 7: break; // duration
-									case 6: ws[addr] = { t: "b", v: dv.getFloat64(buf.length - 8, true) > 0 } as CellObject; break;
-									default: throw new Error(`Unsupported cell type ${buf.slice(0,4)}`);
-								}
-							} break;
-							case 3: { // string
-								ws[addr] = { t: "s", v: sst[dv.getUint32(16,true)] } as CellObject;
-							} break;
-							case 2: { // number
-								ws[addr] = { t: "n", v: dv.getFloat64(buf.length - 12, true) } as CellObject;
-							} break;
-							case 6: { // boolean
-								ws[addr] = { t: "b", v: dv.getFloat64(16, true) > 0 } as CellObject; // 1 or 0
-							} break;
-							default: throw new Error(`Unsupported cell type ${ctype}`);
+						var res = parse_bnc(buf);
+						if(res) {
+							ws[addr] = res as CellObject;
+							if(res.t == "s" && typeof res.v == "number") res.v = sst[res.v];
 						}
 					});
 				});
