@@ -1,6 +1,6 @@
 /*! sheetjs (C) 2013-present SheetJS -- http://sheetjs.com */
 import { CFB$Container } from 'cfb';
-import { WorkBook, WorkSheet, CellAddress, Range, CellObject } from '../../';
+import { WorkBook, WorkSheet, CellAddress, Range } from '../../';
 import { u8str, u8_to_dataview } from './util';
 import { parse_shallow, varint_to_i32, parse_varint49, mappa } from './proto';
 import { deframe } from './frame';
@@ -17,7 +17,11 @@ var encode_cell = (c: CellAddress): string => `${encode_col(c.c)}${c.r+1}`;
 var encode_range = (r: Range): string => encode_cell(r.s) + ":" + encode_cell(r.e);
 var book_new = (): WorkBook => ({Sheets:{}, SheetNames:[]});
 var book_append_sheet = (wb: WorkBook, ws: WorkSheet, name?: string): void => {
-	if(!name) for(var i = 1; i < 9999; ++i) if(wb.SheetNames.indexOf(name = `Sheet ${i}`) == -1) break;
+	if(!name) for(var i = 1; i < 9999; ++i) {
+		if(wb.SheetNames.indexOf(name = `Sheet ${i}`) == -1) break;
+	} else if(wb.SheetNames.indexOf(name) > -1) for(var i = 1; i < 9999; ++i) {
+		if(wb.SheetNames.indexOf(`${name}_${i}`) == -1) { name = `${name}_${i}`; break; }
+	}
 	wb.SheetNames.push(name); wb.Sheets[name] = ws;
 };
 
@@ -58,12 +62,31 @@ function parse_Reference(buf: Uint8Array): number {
 // .TST.TableDataList
 function parse_TST_TableDataList(M: IWAMessage[][], root: IWAMessage): string[] {
 	var pb = parse_shallow(root.data);
+	// .TST.TableDataList.ListType
+	var type = varint_to_i32(pb[1][0].data);
+
 	var entries = pb[3];
 	var data = [];
 	(entries||[]).forEach(entry => {
+		// .TST.TableDataList.ListEntry
 		var le = parse_shallow(entry.data);
 		var key = varint_to_i32(le[1][0].data)>>>0;
-		data[key] = u8str(le[3][0].data);
+		switch(type) {
+			case 1: data[key] = u8str(le[3][0].data); break;
+			case 8: {
+				// .TSP.RichTextPayloadArchive
+				var rt = M[parse_Reference(le[9][0].data)][0];
+				var rtp = parse_shallow(rt.data);
+
+				// .TSWP.StorageArchive
+				var rtpref = M[parse_Reference(rtp[1][0].data)][0];
+				var mtype = varint_to_i32(rtpref.meta[1][0].data);
+				if(mtype != 2001) throw new Error(`2000 unexpected reference to ${mtype}`);
+				var tswpsa = parse_shallow(rtpref.data);
+
+				data[key] = tswpsa[3].map(x => u8str(x.data)).join("");
+			} break;
+		}
 	});
 	return data;
 }
@@ -116,6 +139,7 @@ function parse_TST_TableModelArchive(M: IWAMessage[][], root: IWAMessage, ws: Wo
 		var store = parse_shallow(pb[4][0].data);
 
 		var sst = parse_TST_TableDataList(M, M[parse_Reference(store[4][0].data)][0]);
+		var rsst: string[] = store[17]?.[0] ? parse_TST_TableDataList(M, M[parse_Reference(store[17][0].data)][0]) : [];
 		{
 			// .TST.TileStorage
 			var tile = parse_shallow(store[3][0].data);
@@ -131,11 +155,8 @@ function parse_TST_TableModelArchive(M: IWAMessage[][], root: IWAMessage, ws: Wo
 				tile.ref.forEach((row, R) => {
 					row.forEach((buf, C) => {
 						var addr = encode_cell({r:R,c:C});
-						var res = parse_bnc(buf);
-						if(res) {
-							ws[addr] = res as CellObject;
-							if(res.t == "s" && typeof res.v == "number") res.v = sst[res.v];
-						}
+						var res = parse_bnc(buf, sst, rsst);
+						if(res) ws[addr] = res;
 					});
 				});
 			});
@@ -155,19 +176,21 @@ function parse_TST_TableInfoArchive(M: IWAMessage[][], root: IWAMessage): WorkSh
 }
 
 // .TN.SheetArchive
-function parse_sheetroot(M: IWAMessage[][], root: IWAMessage): [WorkSheet, string] {
+interface NSheet {
+	name: string;
+	sheets: WorkSheet[];
+}
+function parse_sheetroot(M: IWAMessage[][], root: IWAMessage): NSheet {
 	var pb = parse_shallow(root.data);
-	var out: [WorkSheet, string] = [ { "!ref":"A1" }, (pb[1]?.[0] ? u8str(pb[1][0].data) : "") ];
+	var out: NSheet = {
+		name: (pb[1]?.[0] ? u8str(pb[1][0].data) : ""),
+		sheets: []
+	};
 	var shapeoffs = mappa(pb[2], parse_Reference);
-	var seen = false;
 	shapeoffs.forEach((off) => {
 		M[off].forEach((m: IWAMessage) => {
 			var mtype = varint_to_i32(m.meta[1][0].data);
-			if(mtype == 6000) {
-				if(seen) return; // TODO: multiple Tables in a sheet
-				out[0] = parse_TST_TableInfoArchive(M, m);
-				seen = true;
-			}
+			if(mtype == 6000) out.sheets.push(parse_TST_TableInfoArchive(M, m));
 		});
 	});
 	return out;
@@ -183,7 +206,7 @@ function parse_docroot(M: IWAMessage[][], root: IWAMessage): WorkBook {
 			var mtype = varint_to_i32(m.meta[1][0].data);
 			if(mtype == 2) {
 				var root = parse_sheetroot(M, m);
-				book_append_sheet(out, root[0], root[1]);
+				root.sheets.forEach(sheet => { book_append_sheet(out, sheet, root.name); });
 			}
 		});
 	});

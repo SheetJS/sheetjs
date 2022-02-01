@@ -81,15 +81,19 @@ function parse_rpr(rpr) {
 			case '<color':
 				if(y.rgb) font.color = y.rgb.slice(2,8);
 				break;
+			case '<color>': case '<color/>': case '</color>': break;
 
 			/* 18.8.18 family ST_FontFamily */
 			case '<family': font.family = y.val; break;
+			case '<family>': case '<family/>': case '</family>': break;
 
 			/* 18.4.14 vertAlign CT_VerticalAlignFontProperty TODO */
 			case '<vertAlign': font.valign = y.val; break;
+			case '<vertAlign>': case '<vertAlign/>': case '</vertAlign>': break;
 
 			/* 18.8.35 scheme CT_FontScheme TODO */
 			case '<scheme': break;
+			case '<scheme>': case '<scheme/>': case '</scheme>': break;
 
 			/* 18.2.10 extLst CT_ExtensionList ? */
 			case '<extLst': case '<extLst>': case '</extLst>': break;

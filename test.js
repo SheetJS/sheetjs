@@ -1631,7 +1631,7 @@ describe('roundtrip features', function() {
 	});
 
 	describe('should preserve column properties', function() { [
-			'xlml', /*'biff2', 'biff8', */ 'xlsx', 'xlsb', 'slk'
+			/*'xlml',*/ /*'biff2', 'biff8', */ 'xlsx', 'xlsb', 'slk'
 		].forEach(function(w) { it(w, function() {
 				var ws1 = X.utils.aoa_to_sheet([["hpx12", "hpt24", "hpx48", "hidden"]]);
 				ws1['!cols'] = [{wch:9},{wpx:100},{width:80},{hidden:true}];
@@ -2105,6 +2105,18 @@ describe('sylk', function() {
 				assert.equal(get_cell(X.read(Buffer_from(str.replace(/–/, "\x96"), "binary"), {type:"buffer", codepage:1252}).Sheets.Sheet1, "A1").v, A1);
 			}
 		} : null);
+	});
+});
+
+(typeof Uint8Array !== "undefined" ? describe : describe.skip)('numbers', function() {
+	it('should parse files from Numbers 6.x', function() {
+		var wb = X.read(fs.readFileSync(dir + 'numbers/types_61.numbers'), {type:TYPE, WTF:1});
+		var ws = wb.Sheets["Sheet 1"];
+		assert.equal(get_cell(ws, "A1").v, "Sheet");
+		assert.equal(get_cell(ws, "B1").v, "JS");
+		assert.equal(get_cell(ws, "B2").v, 123);
+		assert.equal(get_cell(ws, "B11").v, true);
+		assert.equal(get_cell(ws, "B13").v, 50);
 	});
 });
 

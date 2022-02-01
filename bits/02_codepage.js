@@ -8,7 +8,7 @@ if(typeof module !== "undefined" && typeof require !== 'undefined') {
 	}
 }
 
-var VALID_ANSI = [ 874, 932, 936, 949, 950 ];
+var VALID_ANSI = [ 874, 932, 936, 949, 950, 10000 ];
 for(var i = 0; i <= 8; ++i) VALID_ANSI.push(1250 + i);
 /* ECMA-376 Part I 18.4.1 charset to codepage mapping */
 var CS2CP = ({

@@ -40,7 +40,7 @@ var NUMBERS = (function() {
     return new DataView(array.buffer, array.byteOffset, array.byteLength);
   };
   var u8str = function(u8) {
-    return new TextDecoder().decode(u8);
+    return typeof TextDecoder != "undefined" ? new TextDecoder().decode(u8) : utf8read(a2s(u8));
   };
   var u8concat = function(u8a) {
     var len = u8a.reduce(function(acc, x) {
@@ -280,12 +280,17 @@ var NUMBERS = (function() {
   }
 
   // src/prebnccell.ts
-  function parseit(buf, version) {
+  function parseit(buf, sst, rsst, version) {
     var dv = u8_to_dataview(buf);
     var ctype = buf[version == 4 ? 1 : 2];
     var flags = dv.getUint32(4, true);
-    var data_offset = 12 + popcnt(flags & 16270) * 4;
-    var sidx = -1, ieee = NaN, dt = NaN;
+    var data_offset = 12 + popcnt(flags & 3470) * 4;
+    var ridx = -1, sidx = -1, ieee = NaN, dt = new Date(2001, 0, 1);
+    if (flags & 512) {
+      ridx = dv.getUint32(data_offset, true);
+      data_offset += 4;
+    }
+    data_offset += popcnt(flags & 12288) * 4;
     if (flags & 16) {
       sidx = dv.getUint32(data_offset, true);
       data_offset += 4;
@@ -295,7 +300,7 @@ var NUMBERS = (function() {
       data_offset += 8;
     }
     if (flags & 64) {
-      dt = dv.getFloat64(data_offset, true);
+      dt.setTime(dt.getTime() + dv.getFloat64(data_offset, true) * 1e3);
       data_offset += 8;
     }
     var ret;
@@ -306,12 +311,10 @@ var NUMBERS = (function() {
         ret = { t: "n", v: ieee };
         break;
       case 3:
-        ret = { t: "s", v: sidx };
+        ret = { t: "s", v: sst[sidx] };
         break;
       case 5:
-        var dd = new Date(2001, 0, 1);
-        dd.setTime(dd.getTime() + dt * 1e3);
-        ret = { t: "d", v: dd };
+        ret = { t: "d", v: dt };
         break;
       case 6:
         ret = { t: "b", v: ieee > 0 };
@@ -319,17 +322,32 @@ var NUMBERS = (function() {
       case 7:
         ret = { t: "n", v: ieee };
         break;
+      case 8:
+        ret = { t: "e", v: 0 };
+        break;
+      case 9:
+        {
+          if (ridx > -1)
+            ret = { t: "s", v: rsst[ridx] };
+          else if (sidx > -1)
+            ret = { t: "s", v: sst[sidx] };
+          else if (!isNaN(ieee))
+            ret = { t: "n", v: ieee };
+          else
+            throw new Error("Unsupported cell type ".concat(buf.slice(0, 4)));
+        }
+        break;
       default:
         throw new Error("Unsupported cell type ".concat(buf.slice(0, 4)));
     }
     return ret;
   }
-  function parse(buf) {
+  function parse(buf, sst, rsst) {
     var version = buf[0];
     switch (version) {
       case 3:
       case 4:
-        return parseit(buf, version);
+        return parseit(buf, sst, rsst, version);
       default:
         throw new Error("Unsupported pre-BNC version ".concat(version));
     }
@@ -352,11 +370,18 @@ var NUMBERS = (function() {
     return { Sheets: {}, SheetNames: [] };
   };
   var book_append_sheet = function(wb, ws, name) {
-    if (!name) {
-      for (var i = 1; i < 9999; ++i)
+    if (!name)
+      for (var i = 1; i < 9999; ++i) {
         if (wb.SheetNames.indexOf(name = "Sheet ".concat(i)) == -1)
           break;
-    }
+      }
+    else if (wb.SheetNames.indexOf(name) > -1)
+      for (var i = 1; i < 9999; ++i) {
+        if (wb.SheetNames.indexOf("".concat(name, "_").concat(i)) == -1) {
+          name = "".concat(name, "_").concat(i);
+          break;
+        }
+      }
     wb.SheetNames.push(name);
     wb.Sheets[name] = ws;
   };
@@ -406,12 +431,31 @@ var NUMBERS = (function() {
   }
   function parse_TST_TableDataList(M, root) {
     var pb = parse_shallow(root.data);
+    var type = varint_to_i32(pb[1][0].data);
     var entries = pb[3];
     var data = [];
     (entries || []).forEach(function(entry) {
       var le = parse_shallow(entry.data);
       var key = varint_to_i32(le[1][0].data) >>> 0;
-      data[key] = u8str(le[3][0].data);
+      switch (type) {
+        case 1:
+          data[key] = u8str(le[3][0].data);
+          break;
+        case 8:
+          {
+            var rt = M[parse_Reference(le[9][0].data)][0];
+            var rtp = parse_shallow(rt.data);
+            var rtpref = M[parse_Reference(rtp[1][0].data)][0];
+            var mtype = varint_to_i32(rtpref.meta[1][0].data);
+            if (mtype != 2001)
+              throw new Error("2000 unexpected reference to ".concat(mtype));
+            var tswpsa = parse_shallow(rtpref.data);
+            data[key] = tswpsa[3].map(function(x) {
+              return u8str(x.data);
+            }).join("");
+          }
+          break;
+      }
     });
     return data;
   }
@@ -444,6 +488,7 @@ var NUMBERS = (function() {
     }, []);
   }
   function parse_TST_TableModelArchive(M, root, ws) {
+    var _a;
     var pb = parse_shallow(root.data);
     var range = { s: { r: 0, c: 0 }, e: { r: 0, c: 0 } };
     range.e.r = (varint_to_i32(pb[6][0].data) >>> 0) - 1;
@@ -456,6 +501,7 @@ var NUMBERS = (function() {
     {
       var store = parse_shallow(pb[4][0].data);
       var sst = parse_TST_TableDataList(M, M[parse_Reference(store[4][0].data)][0]);
+      var rsst = ((_a = store[17]) == null ? void 0 : _a[0]) ? parse_TST_TableDataList(M, M[parse_Reference(store[17][0].data)][0]) : [];
       {
         var tile = parse_shallow(store[3][0].data);
         var tiles = [];
@@ -471,12 +517,9 @@ var NUMBERS = (function() {
           tile2.ref.forEach(function(row, R) {
             row.forEach(function(buf, C) {
               var addr = encode_cell({ r: R, c: C });
-              var res = parse(buf);
-              if (res) {
+              var res = parse(buf, sst, rsst);
+              if (res)
                 ws[addr] = res;
-                if (res.t == "s" && typeof res.v == "number")
-                  res.v = sst[res.v];
-              }
             });
           });
         });
@@ -496,18 +539,16 @@ var NUMBERS = (function() {
   function parse_sheetroot(M, root) {
     var _a;
     var pb = parse_shallow(root.data);
-    var out = [{ "!ref": "A1" }, ((_a = pb[1]) == null ? void 0 : _a[0]) ? u8str(pb[1][0].data) : ""];
+    var out = {
+      name: ((_a = pb[1]) == null ? void 0 : _a[0]) ? u8str(pb[1][0].data) : "",
+      sheets: []
+    };
     var shapeoffs = mappa(pb[2], parse_Reference);
-    var seen = false;
     shapeoffs.forEach(function(off) {
       M[off].forEach(function(m) {
         var mtype = varint_to_i32(m.meta[1][0].data);
-        if (mtype == 6e3) {
-          if (seen)
-            return;
-          out[0] = parse_TST_TableInfoArchive(M, m);
-          seen = true;
-        }
+        if (mtype == 6e3)
+          out.sheets.push(parse_TST_TableInfoArchive(M, m));
       });
     });
     return out;
@@ -521,7 +562,9 @@ var NUMBERS = (function() {
         var mtype = varint_to_i32(m.meta[1][0].data);
         if (mtype == 2) {
           var root2 = parse_sheetroot(M, m);
-          book_append_sheet(out, root2[0], root2[1]);
+          root2.sheets.forEach(function(sheet) {
+            book_append_sheet(out, sheet, root2.name);
+          });
         }
       });
     });

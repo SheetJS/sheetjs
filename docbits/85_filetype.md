@@ -217,7 +217,7 @@ This format has been used up through the current release (Numbers 11.2).
 
 The parser focuses on extracting raw data from tables.  Numbers technically
 supports multiple tables in a logical worksheet, including custom titles.  This
-parser will only extract the raw data from the first table from each worksheet.
+parser will generate one worksheet per Numbers table.
 
 </details>
 

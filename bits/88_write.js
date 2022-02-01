@@ -1,3 +1,26 @@
+function write_obj_str(factory/*:WriteObjStrFactory*/) {
+	return function write_str(wb/*:Workbook*/, o/*:WriteOpts*/)/*:string*/ {
+		var idx = 0;
+		if(o.sheet) {
+			if(typeof o.sheet == "number") idx = o.sheet;
+			else idx = wb.SheetNames.indexOf(o.sheet);
+			if(!wb.SheetNames[idx]) throw new Error("Sheet not found: " + o.sheet + " : " + (typeof o.sheet));
+		}
+		return factory.from_sheet(wb.Sheets[wb.SheetNames[idx]], o, wb);
+	};
+}
+
+var write_htm_str = write_obj_str(HTML_);
+var write_csv_str = write_obj_str({from_sheet:sheet_to_csv});
+var write_slk_str = write_obj_str(typeof SYLK !== "undefined" ? SYLK : {});
+var write_dif_str = write_obj_str(typeof DIF !== "undefined" ? DIF : {});
+var write_prn_str = write_obj_str(typeof PRN !== "undefined" ? PRN : {});
+var write_rtf_str = write_obj_str(typeof RTF !== "undefined" ? RTF : {});
+var write_txt_str = write_obj_str({from_sheet:sheet_to_txt});
+var write_dbf_buf = write_obj_str(typeof DBF !== "undefined" ? DBF : {});
+var write_eth_str = write_obj_str(typeof ETH !== "undefined" ? ETH : {});
+var write_wk1_buf = write_obj_str(typeof WK_ !== "undefined" ? {from_sheet:WK_.sheet_to_wk1} : {});
+
 function write_cfb_ctr(cfb/*:CFBContainer*/, o/*:WriteOpts*/)/*:any*/ {
 	switch(o.type) {
 		case "base64": case "binary": break;

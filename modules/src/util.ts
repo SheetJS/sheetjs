@@ -2,7 +2,7 @@
 var u8_to_dataview = (array: Uint8Array): DataView => new DataView(array.buffer, array.byteOffset, array.byteLength);
 export { u8_to_dataview };
 
-var u8str = (u8: Uint8Array): string => /* Buffer.isBuffer(u8) ? u8.toString() :*/ new TextDecoder().decode(u8);
+var u8str = (u8: Uint8Array): string => /* Buffer.isBuffer(u8) ? u8.toString() :*/ typeof TextDecoder != "undefined" ? new TextDecoder().decode(u8) : utf8read(a2s(u8));
 export { u8str };
 
 var u8concat = (u8a: Uint8Array[]): Uint8Array => {

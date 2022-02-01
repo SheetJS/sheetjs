@@ -118,6 +118,7 @@ Community Translations of this README:
     + [Lotus 1-2-3 (WKS/WK1/WK2/WK3/WK4/123)](#lotus-1-2-3-wkswk1wk2wk3wk4123)
     + [Quattro Pro (WQ1/WQ2/WB1/WB2/WB3/QPW)](#quattro-pro-wq1wq2wb1wb2wb3qpw)
     + [Works for DOS / Windows Spreadsheet (WKS/XLR)](#works-for-dos--windows-spreadsheet-wksxlr)
+    + [Numbers 3.0+ / iWork 2013+ Spreadsheet (NUMBERS)](#numbers-30--iwork-2013-spreadsheet-numbers)
     + [OpenDocument Spreadsheet (ODS/FODS)](#opendocument-spreadsheet-odsfods)
     + [Uniform Office Spreadsheet (UOS1/2)](#uniform-office-spreadsheet-uos12)
   * [Other Single-Worksheet Formats](#other-single-worksheet-formats)
@@ -1692,7 +1693,7 @@ file but Excel will know how to handle it.  This library applies similar logic:
 | `0xD0` | CFB Container | BIFF 5/8 or protected XLSX/XLSB or WQ3/QPW or XLR   |
 | `0x09` | BIFF Stream   | BIFF 2/3/4/5                                        |
 | `0x3C` | XML/HTML      | SpreadsheetML / Flat ODS / UOS1 / HTML / plain text |
-| `0x50` | ZIP Archive   | XLSB or XLSX/M or ODS or UOS2 or plain text         |
+| `0x50` | ZIP Archive   | XLSB or XLSX/M or ODS or UOS2 or NUMBERS or text    |
 | `0x49` | Plain Text    | SYLK or plain text                                  |
 | `0x54` | Plain Text    | DIF or plain text                                   |
 | `0xEF` | UTF8 Encoded  | SpreadsheetML / Flat ODS / UOS1 / HTML / plain text |
@@ -2302,6 +2303,7 @@ Despite the library name `xlsx`, it supports numerous spreadsheet file formats:
 | Lotus Formatted Text (PRN)                                   |   ✔   |   ✔   |
 | UTF-16 Unicode Text (TXT)                                    |   ✔   |   ✔   |
 | **Other Workbook/Worksheet Formats**                         |:-----:|:-----:|
+| Numbers 3.0+ / iWork 2013+ Spreadsheet (NUMBERS)             |   ✔   |       |
 | OpenDocument Spreadsheet (ODS)                               |   ✔   |   ✔   |
 | Flat XML ODF Spreadsheet (FODS)                              |   ✔   |   ✔   |
 | Uniform Office Format Spreadsheet (标文通 UOS1/UOS2)         |   ✔   |       |
@@ -2455,6 +2457,18 @@ BIFF8 XLS: it uses the CFB container with a Workbook stream.  Works 9 saves the
 exact Workbook stream for the XLR and the 97-2003 XLS export.  Works 6 XLS
 includes two empty worksheets but the main worksheet has an identical encoding.
 XLR also includes a `WksSSWorkBook` stream similar to Lotus FM3/FMT files.
+
+
+#### Numbers 3.0+ / iWork 2013+ Spreadsheet (NUMBERS)
+
+
+iWork 2013 (Numbers 3.0 / Pages 5.0 / Keynote 6.0) switched from a proprietary
+XML-based format to the current file format based on the iWork Archive (IWA).
+This format has been used up through the current release (Numbers 11.2).
+
+The parser focuses on extracting raw data from tables.  Numbers technically
+supports multiple tables in a logical worksheet, including custom titles.  This
+parser will generate one worksheet per Numbers table.
 
 
 #### OpenDocument Spreadsheet (ODS/FODS)
