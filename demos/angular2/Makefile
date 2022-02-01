@@ -1,5 +1,5 @@
-.PHONY: ng2 ng4 ng5 ng6 ng7 ng8 ng9 ng10 ng11 ng12
-ng2 ng4 ng5 ng6 ng7 ng8 ng9 ng10 ng11 ng12:
+.PHONY: ng2 ng4 ng5 ng6 ng7 ng8 ng9 ng10 ng11 ng12 ng13
+ng2 ng4 ng5 ng6 ng7 ng8 ng9 ng10 ng11 ng12 ng13:
 	rm -f angular.json tsconfig.app.json src/polyfills.ts
 	cp versions/package.json-$@ package.json
 	if [ -e versions/angular.json-$@ ]; then cp versions/angular.json-$@ angular.json; fi
@@ -13,7 +13,7 @@ ng2 ng4 ng5 ng6 ng7 ng8 ng9 ng10 ng11 ng12:
 
 .PHONY: all
 all:
-	for i in 2 4 5 6 7 8 9 10 11 12; do make ng$$i; done
+	for i in 2 4 5 6 7 8 9 10 11 12 13; do make ng$$i; done
 
 .PHONY: ionic
 ionic:
