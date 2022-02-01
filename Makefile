@@ -4,8 +4,6 @@ update:
 	git show master:dist/xlsx.core.min.js > xlsx.core.min.js
 	git show master:dist/xlsx.full.min.js > xlsx.full.min.js
 	git show master:xlsx.js > xlsx.js
-	git show master:jszip.js > jszip.js
-	git show master:jszip.js > tests/jszip.js
 	git show master:shim.js > shim.js
 	git show master:shim.js > tests/shim.js
 	git show master:tests/core.js > tests/core.js
