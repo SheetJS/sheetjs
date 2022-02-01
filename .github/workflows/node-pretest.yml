@@ -12,6 +12,8 @@ jobs:
         name: 'nvm install lts/* && npm install'
         with:
           node-version: 'lts/*'
+      - run: sudo curl -Lo /usr/bin/rooster https://github.com/SheetJS/rooster/releases/download/v0.2.0/rooster-v0.2.0-linux-amd64
+      - run: sudo chmod a+x /usr/bin/rooster
       - run: make init
       - run: 'cd test_files; make all; cd -'
       - run: npm run pretest
