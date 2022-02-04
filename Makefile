@@ -19,6 +19,7 @@ ESMJSDEPS=$(shell cat misc/mjs.lst)
 
 ULIB=$(shell echo $(LIB) | tr a-z A-Z)
 DEPS=$(sort $(wildcard bits/*.js))
+TSBITS=$(patsubst modules/%,bits/%,$(wildcard modules/[0-9][0-9]_*.js))
 TARGET=$(LIB).js
 FLOWTARGET=$(LIB).flow.js
 FLOWAUX=$(patsubst %.js,%.flow.js,$(AUXTARGETS))
@@ -53,7 +54,7 @@ bits/01_version.js: package.json
 bits/18_cfb.js: node_modules/cfb/xlscfb.flow.js
 	cp $^ $@
 
-bits/83_numbers.js: modules/83_numbers.js
+$(TSBITS): bits/%: modules/%
 	cp $^ $@
 
 

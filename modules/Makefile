@@ -5,6 +5,9 @@ ENTRIES=$(subst .ts,.js,$(TSFILES))
 .PHONY: all
 all: $(ENTRIES)
 
+04_base64.js: 04_base64.ts $(LIBFILES)
+	npx esbuild $< --outfile=$@ --platform=browser --target=es5
+
 83_numbers.js: 83_numbers.ts $(LIBFILES)
 	npx esbuild $< --bundle --outfile=$@ --platform=browser --format=iife --global-name=NUMBERS --target=es5
 
