@@ -15,6 +15,7 @@ OData
 OpenDocument
 OpenFormula
 PivotTable
+PivotTables
 Quattro
 SpreadsheetML
 Unhide
@@ -96,12 +97,14 @@ encodings
 filesystem
 globals
 javascript
+lifecycle
 metadata
 natively
 pre-built
 pre-generated
 prepend
 prepended
+programmatically
 repo
 runtime
 serverless

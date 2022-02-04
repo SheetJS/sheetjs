@@ -33,6 +33,11 @@ Write options are described in the [Writing Options](#writing-options) section.
 Utilities are available in the `XLSX.utils` object and are described in the
 [Utility Functions](#utility-functions) section:
 
+**Constructing:**
+
+- `book_new` creates an empty workbook
+- `book_append_sheet` adds a worksheet to a workbook
+
 **Importing:**
 
 - `aoa_to_sheet` converts an array of arrays of JS data to a worksheet.

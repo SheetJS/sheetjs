@@ -45,3 +45,12 @@ var popcnt = (x: number): number => {
   return (((x + (x >> 4)) & 0x0F0F0F0F) * 0x01010101) >>> 24;
 };
 export { popcnt };
+
+/* Used in the modern cell storage */
+var readDecimal128LE = (buf: Uint8Array, offset: number): number => {
+	var exp = ((buf[offset + 15] & 0x7F) << 7) | (buf[offset + 14] >> 1);
+	var mantissa = buf[offset + 14] & 1;
+	for(var j = offset + 13; j >= offset; --j) mantissa = mantissa * 256 + buf[j];
+	return ((buf[offset+15] & 0x80) ? -mantissa : mantissa) * Math.pow(10, exp - 0x1820);
+};
+export { readDecimal128LE };

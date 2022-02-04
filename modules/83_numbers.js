@@ -59,6 +59,13 @@ var NUMBERS = (function() {
     x = (x & 858993459) + (x >> 2 & 858993459);
     return (x + (x >> 4) & 252645135) * 16843009 >>> 24;
   };
+  var readDecimal128LE = function(buf, offset) {
+    var exp = (buf[offset + 15] & 127) << 7 | buf[offset + 14] >> 1;
+    var mantissa = buf[offset + 14] & 1;
+    for (var j = offset + 13; j >= offset; --j)
+      mantissa = mantissa * 256 + buf[j];
+    return (buf[offset + 15] & 128 ? -mantissa : mantissa) * Math.pow(10, exp - 6176);
+  };
 
   // src/proto.ts
   function parse_varint49(buf, ptr) {
@@ -279,10 +286,10 @@ var NUMBERS = (function() {
     return out;
   }
 
-  // src/prebnccell.ts
-  function parseit(buf, sst, rsst, version) {
+  // src/cell.ts
+  function parse_old_storage(buf, sst, rsst) {
     var dv = u8_to_dataview(buf);
-    var ctype = buf[version == 4 ? 1 : 2];
+    var ctype = buf[buf[0] == 4 ? 1 : 2];
     var flags = dv.getUint32(4, true);
     var data_offset = 12 + popcnt(flags & 3470) * 4;
     var ridx = -1, sidx = -1, ieee = NaN, dt = new Date(2001, 0, 1);
@@ -342,14 +349,79 @@ var NUMBERS = (function() {
     }
     return ret;
   }
+  function parse_storage(buf, sst, rsst) {
+    var dv = u8_to_dataview(buf);
+    var ctype = buf[1];
+    var flags = dv.getUint32(8, true);
+    var data_offset = 12;
+    var ridx = -1, sidx = -1, d128 = NaN, ieee = NaN, dt = new Date(2001, 0, 1);
+    if (flags & 1) {
+      d128 = readDecimal128LE(buf, data_offset);
+      data_offset += 16;
+    }
+    if (flags & 2) {
+      ieee = dv.getFloat64(data_offset, true);
+      data_offset += 8;
+    }
+    if (flags & 4) {
+      dt.setTime(dt.getTime() + dv.getFloat64(data_offset, true) * 1e3);
+      data_offset += 8;
+    }
+    if (flags & 8) {
+      sidx = dv.getUint32(data_offset, true);
+      data_offset += 4;
+    }
+    if (flags & 16) {
+      ridx = dv.getUint32(data_offset, true);
+      data_offset += 4;
+    }
+    var ret;
+    switch (ctype) {
+      case 0:
+        break;
+      case 2:
+        ret = { t: "n", v: d128 };
+        break;
+      case 3:
+        ret = { t: "s", v: sst[sidx] };
+        break;
+      case 5:
+        ret = { t: "d", v: dt };
+        break;
+      case 6:
+        ret = { t: "b", v: ieee > 0 };
+        break;
+      case 7:
+        ret = { t: "n", v: ieee };
+        break;
+      case 8:
+        ret = { t: "e", v: 0 };
+        break;
+      case 9:
+        {
+          if (ridx > -1)
+            ret = { t: "s", v: rsst[ridx] };
+          else
+            throw new Error("Unsupported cell type ".concat(ctype, " : ").concat(flags & 31, " : ").concat(buf.slice(0, 4)));
+        }
+        break;
+      case 10:
+        ret = { t: "n", v: d128 };
+        break;
+      default:
+        throw new Error("Unsupported cell type ".concat(ctype, " : ").concat(flags & 31, " : ").concat(buf.slice(0, 4)));
+    }
+    return ret;
+  }
   function parse(buf, sst, rsst) {
-    var version = buf[0];
-    switch (version) {
+    switch (buf[0]) {
       case 3:
       case 4:
-        return parseit(buf, sst, rsst, version);
+        return parse_old_storage(buf, sst, rsst);
+      case 5:
+        return parse_storage(buf, sst, rsst);
       default:
-        throw new Error("Unsupported pre-BNC version ".concat(version));
+        throw new Error("Unsupported payload version ".concat(buf[0]));
     }
   }
 
@@ -387,6 +459,10 @@ var NUMBERS = (function() {
   };
   function parse_numbers(cfb) {
     var out = [];
+    cfb.FullPaths.forEach(function(p) {
+      if (p.match(/\.iwpv2/))
+        throw new Error("Unsupported password protection");
+    });
     cfb.FileIndex.forEach(function(s) {
       if (!s.name.match(/\.iwa$/))
         return;
@@ -460,16 +536,30 @@ var NUMBERS = (function() {
     return data;
   }
   function parse_TST_TileRowInfo(u8) {
+    var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j;
     var pb = parse_shallow(u8);
     var R = varint_to_i32(pb[1][0].data) >>> 0;
-    var storage = pb[3][0].data;
-    var offsets = u8_to_dataview(pb[4][0].data);
+    var pre_bnc = (_b = (_a = pb[3]) == null ? void 0 : _a[0]) == null ? void 0 : _b.data;
+    var pre_bnc_offsets = ((_d = (_c = pb[4]) == null ? void 0 : _c[0]) == null ? void 0 : _d.data) && u8_to_dataview(pb[4][0].data);
+    var storage = (_f = (_e = pb[6]) == null ? void 0 : _e[0]) == null ? void 0 : _f.data;
+    var storage_offsets = ((_h = (_g = pb[7]) == null ? void 0 : _g[0]) == null ? void 0 : _h.data) && u8_to_dataview(pb[7][0].data);
+    var wide_offsets = ((_j = (_i = pb[8]) == null ? void 0 : _i[0]) == null ? void 0 : _j.data) && varint_to_i32(pb[8][0].data) > 0 || false;
+    var width = wide_offsets ? 4 : 1;
     var cells = [];
-    for (var C = 0; C < offsets.byteLength / 2; ++C) {
-      var off = offsets.getUint16(C * 2, true);
-      if (off > storage.length)
-        continue;
-      cells[C] = storage.subarray(off, offsets.getUint16(C * 2 + 2, true));
+    var off = 0;
+    for (var C = 0; C < pre_bnc_offsets.byteLength / 2; ++C) {
+      if (storage && storage_offsets) {
+        off = storage_offsets.getUint16(C * 2, true) * width;
+        if (off < storage.length) {
+          cells[C] = storage.subarray(off, storage_offsets.getUint16(C * 2 + 2, true) * width);
+          continue;
+        }
+      }
+      if (pre_bnc && pre_bnc_offsets) {
+        off = pre_bnc_offsets.getUint16(C * 2, true) * width;
+        if (off < pre_bnc.length)
+          cells[C] = pre_bnc.subarray(off, pre_bnc_offsets.getUint16(C * 2 + 2, true) * width);
+      }
     }
     return { R: R, cells: cells };
   }

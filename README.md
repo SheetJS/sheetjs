@@ -1,30 +1,13 @@
 # [SheetJS](https://sheetjs.com)
 
-Parser and writer for various spreadsheet formats.  Pure-JS cleanroom
-implementation from official specifications, related documents, and test files.
-Emphasis on parsing and writing robustness, cross-format feature compatibility
-with a unified JS representation, and ES3/ES5 browser compatibility back to IE6.
+The SheetJS Community Edition offers battle-tested open-source solutions for
+extracting useful data from almost any complex spreadsheet and generating new
+spreadsheets that will work with legacy and modern software alike.
 
-This is the community version.  We also offer a pro version with performance
-enhancements, additional features like styling, and dedicated support.
-
-
-Community Translations of this README:
-
-- [Simplified Chinese](https://github.com/rockboom/SheetJS-docs-zh-CN)
-
-
-[**Pro Version**](https://sheetjs.com/pro)
-
-[**Commercial Support**](https://sheetjs.com/support)
-
-[**Rendered Documentation**](https://docs.sheetjs.com/)
-
-[**In-Browser Demos**](https://sheetjs.com/demos)
-
-[**Source Code**](https://git.io/xlsx)
-
-[**Issues and Bug Reports**](https://github.com/sheetjs/sheetjs/issues)
+[SheetJS Pro](https://sheetjs.com/pro) offers solutions beyond data processing:
+Edit complex templates with ease; let out your inner Picasso with styling; make
+custom sheets with images/graphs/PivotTables; evaluate formula expressions and
+port calculations to web apps; automate common spreadsheet tasks, and much more!
 
 ![License](https://img.shields.io/github/license/SheetJS/sheetjs)
 [![Build Status](https://img.shields.io/github/workflow/status/sheetjs/sheetjs/Tests:%20node.js)](https://github.com/SheetJS/sheetjs/actions)
@@ -54,11 +37,11 @@ Community Translations of this README:
 
 <!-- toc -->
 
-- [Installation](#installation)
+- [Getting Started](#getting-started)
+  * [Installation](#installation)
+  * [Usage](#usage)
+    + [The Zen of SheetJS](#the-zen-of-sheetjs)
   * [JS Ecosystem Demos](#js-ecosystem-demos)
-  * [Optional Modules](#optional-modules)
-  * [ECMAScript 5 Compatibility](#ecmascript-5-compatibility)
-- [Philosophy](#philosophy)
 - [Parsing Workbooks](#parsing-workbooks)
   * [Parsing Examples](#parsing-examples)
   * [Streaming Read](#streaming-read)
@@ -89,8 +72,7 @@ Community Translations of this README:
     + [Miscellaneous Workbook Properties](#miscellaneous-workbook-properties)
   * [Document Features](#document-features)
     + [Formulae](#formulae)
-    + [Column Properties](#column-properties)
-    + [Row Properties](#row-properties)
+    + [Row and Column Properties](#row-and-column-properties)
     + [Number Formats](#number-formats)
     + [Hyperlinks](#hyperlinks)
     + [Cell Comments](#cell-comments)
@@ -112,27 +94,6 @@ Community Translations of this README:
   * [HTML Output](#html-output)
   * [JSON](#json)
 - [File Formats](#file-formats)
-  * [Excel 2007+ XML (XLSX/XLSM)](#excel-2007-xml-xlsxxlsm)
-  * [Excel 2.0-95 (BIFF2/BIFF3/BIFF4/BIFF5)](#excel-20-95-biff2biff3biff4biff5)
-  * [Excel 97-2004 Binary (BIFF8)](#excel-97-2004-binary-biff8)
-  * [Excel 2003-2004 (SpreadsheetML)](#excel-2003-2004-spreadsheetml)
-  * [Excel 2007+ Binary (XLSB, BIFF12)](#excel-2007-binary-xlsb-biff12)
-  * [Delimiter-Separated Values (CSV/TXT)](#delimiter-separated-values-csvtxt)
-  * [Other Workbook Formats](#other-workbook-formats)
-    + [Lotus 1-2-3 (WKS/WK1/WK2/WK3/WK4/123)](#lotus-1-2-3-wkswk1wk2wk3wk4123)
-    + [Quattro Pro (WQ1/WQ2/WB1/WB2/WB3/QPW)](#quattro-pro-wq1wq2wb1wb2wb3qpw)
-    + [Works for DOS / Windows Spreadsheet (WKS/XLR)](#works-for-dos--windows-spreadsheet-wksxlr)
-    + [Numbers 3.0+ / iWork 2013+ Spreadsheet (NUMBERS)](#numbers-30--iwork-2013-spreadsheet-numbers)
-    + [OpenDocument Spreadsheet (ODS/FODS)](#opendocument-spreadsheet-odsfods)
-    + [Uniform Office Spreadsheet (UOS1/2)](#uniform-office-spreadsheet-uos12)
-  * [Other Single-Worksheet Formats](#other-single-worksheet-formats)
-    + [dBASE and Visual FoxPro (DBF)](#dbase-and-visual-foxpro-dbf)
-    + [Symbolic Link (SYLK)](#symbolic-link-sylk)
-    + [Lotus Formatted Text (PRN)](#lotus-formatted-text-prn)
-    + [Data Interchange Format (DIF)](#data-interchange-format-dif)
-    + [HTML](#html)
-    + [Rich Text Format (RTF)](#rich-text-format-rtf)
-    + [Ethercalc Record Format (ETH)](#ethercalc-record-format-eth)
 - [Testing](#testing)
   * [Node](#node)
   * [Browser](#browser)
@@ -149,7 +110,9 @@ Community Translations of this README:
 
 </details>
 
-## Installation
+## Getting Started
+
+### Installation
 
 In the browser, just add a script tag:
 
@@ -187,6 +150,157 @@ With [bower](https://bower.io/search/?q=js-xlsx):
 ```bash
 $ bower install js-xlsx
 ```
+
+<details>
+  <summary><b>Optional features</b> (click to show)</summary>
+
+The node version automatically requires modules for additional features.  Some
+of these modules are rather large in size and are only needed in special
+circumstances, so they do not ship with the core.  For browser use, they must
+be included directly:
+
+```html
+<!-- international support from js-codepage -->
+<script src="dist/cpexcel.js"></script>
+```
+
+An appropriate version for each dependency is included in the dist/ directory.
+
+The complete single-file version is generated at `dist/xlsx.full.min.js`
+
+A slimmer build is generated at `dist/xlsx.mini.min.js`. Compared to full build:
+- codepage library skipped (no support for XLS encodings)
+- XLSX compression option not currently available
+- no support for XLSB / XLS / Lotus 1-2-3 / SpreadsheetML 2003
+- node stream utils removed
+
+Webpack and Browserify builds include optional modules by default.  Webpack can
+be configured to remove support with `resolve.alias`:
+
+```js
+  /* uncomment the lines below to remove support */
+  resolve: {
+    alias: { "./dist/cpexcel.js": "" } // <-- omit international support
+  }
+```
+
+</details>
+
+<details>
+  <summary><b>ECMAScript 3 Compatibility</b> (click to show)</summary>
+
+For broad compatibility with JavaScript engines, the library is written using
+ECMAScript 3 language dialect as well as some ES5 features like `Array#forEach`.
+Older browsers require shims to provide missing functions.
+
+To use the shim, add the shim before the script tag that loads `xlsx.js`:
+
+```html
+<!-- add the shim first -->
+<script type="text/javascript" src="shim.min.js"></script>
+<!-- after the shim is referenced, add the library -->
+<script type="text/javascript" src="xlsx.full.min.js"></script>
+```
+
+The script also includes `IE_LoadFile` and `IE_SaveFile` for loading and saving
+files in Internet Explorer versions 6-9.  The `xlsx.extendscript.js` script
+bundles the shim in a format suitable for Photoshop and other Adobe products.
+
+</details>
+
+### Usage
+
+Most scenarios involving spreadsheets and data can be broken into 5 parts:
+
+1) **Acquire Data**:  Data may be stored anywhere: local or remote files,
+   databases, HTML TABLE, or even generated programmatically in the web browser.
+
+2) **Extract Data**:  For spreadsheet files, this involves parsing raw bytes to
+   read the cell data. For general JS data, this involves reshaping the data.
+
+3) **Process Data**:  From generating summary statistics to cleaning data
+   records, this step is the heart of the problem.
+
+4) **Package Data**:  This can involve making a new spreadsheet or serializing
+   with `JSON.stringify` or writing XML or simply flattening data for UI tools.
+
+5) **Release Data**:  Spreadsheet files can be uploaded to a server or written
+   locally.  Data can be presented to users in an HTML TABLE or data grid.
+
+A common problem involves generating a valid spreadsheet export from data stored
+in an HTML table.  In this example, an HTML TABLE on the page will be scraped,
+a row will be added to the bottom with the date of the report, and a new file
+will be generated and downloaded locally. `XLSX.writeFile` takes care of
+packaging the data and attempting a local download:
+
+```js
+// Acquire Data (reference to the HTML table)
+var table_elt = document.getElementById("my-table-id");
+
+// Extract Data (create a workbook object from the table)
+var workbook = XLSX.utils.table_to_book(table_elt);
+
+// Process Data (add a new row)
+var worksheet = workbook.Sheets["Sheet1"];
+XLSX.utils.sheet_add_aoa([["Created "+new Date().toISOString()}]], {origin:-1});
+
+// Package and Release Data (`writeFile` tries to write and save an XLSB file)
+XLSX.writeFile(workbook, "Report.xlsb");
+```
+
+This library tries to simplify steps 2 and 4 with functions to extract useful
+data from spreadsheet files (`read` / `readFile`) and generate new spreadsheet
+files from data (`write` / `writeFile`).
+
+This documentation and various demo projects cover a number of common scenarios
+and approaches for steps 1 and 5.
+
+Utility functions help with step 3.
+
+
+#### The Zen of SheetJS
+
+
+_File formats are implementation details_
+
+The parser covers a wide gamut of common spreadsheet file formats to ensure that
+"HTML-saved-as-XLS" files work as well as actual XLS or XLSX files.
+
+The writer supports a number of common output formats for broad compatibility
+with the data ecosystem.
+
+
+_Data processing should fit in any workflow_
+
+The library does not impose a separate lifecycle.  It fits nicely in websites
+and apps built using any framework.  The plain JS data objects play nice with
+Web Workers and future APIs.
+
+["Parsing Workbooks"](#parsing-workbooks) describes solutions for common data
+import scenarios involving actual spreadsheet files.
+
+["Writing Workbooks"](#writing-workbooks) describes solutions for common data
+export scenarios involving actual spreadsheet files.
+
+["Utility Functions"](#utility-functions) details utility functions for
+translating JSON Arrays and other common JS structures into worksheet objects.
+
+
+_JavaScript is a powerful language for data processing_
+
+The ["Common Spreadsheet Format"](#common-spreadsheet-format) is a simple object
+representation of the core concepts of a workbook.  The various functions in the
+library provide low-level tools for working with the object.
+
+For friendly JS processing, there are utility functions for converting parts of
+a worksheet to/from an Array of Arrays.  For example, summing columns from an
+array of arrays can be implemented in a single Array reduce operation:
+
+```js
+var aoa = XLSX.utils.sheet_to_json(worksheet, {header: 1});
+var sum_of_column_B = aoa.reduce((acc, row) => acc + (+row[1]||0), 0);
+```
+
 
 ### JS Ecosystem Demos
 
@@ -227,100 +341,6 @@ The [`demos` directory](demos/) includes sample projects for:
 - [`internet explorer`](demos/oldie/)
 
 Other examples are included in the [showcase](demos/showcase/).
-
-### Optional Modules
-
-<details>
-  <summary><b>Optional features</b> (click to show)</summary>
-
-The node version automatically requires modules for additional features.  Some
-of these modules are rather large in size and are only needed in special
-circumstances, so they do not ship with the core.  For browser use, they must
-be included directly:
-
-```html
-<!-- international support from js-codepage -->
-<script src="dist/cpexcel.js"></script>
-```
-
-An appropriate version for each dependency is included in the dist/ directory.
-
-The complete single-file version is generated at `dist/xlsx.full.min.js`
-
-A slimmer build is generated at `dist/xlsx.mini.min.js`. Compared to full build:
-- codepage library skipped (no support for XLS encodings)
-- XLSX compression option not currently available
-- no support for XLSB / XLS / Lotus 1-2-3 / SpreadsheetML 2003
-- node stream utils removed
-
-Webpack and Browserify builds include optional modules by default.  Webpack can
-be configured to remove support with `resolve.alias`:
-
-```js
-  /* uncomment the lines below to remove support */
-  resolve: {
-    alias: { "./dist/cpexcel.js": "" } // <-- omit international support
-  }
-```
-
-</details>
-
-### ECMAScript 5 Compatibility
-
-Since the library uses functions like `Array#forEach`, older browsers require
-[shims to provide missing functions](https://oss.sheetjs.com/sheetjs/shim.js).
-
-To use the shim, add the shim before the script tag that loads `xlsx.js`:
-
-```html
-<!-- add the shim first -->
-<script type="text/javascript" src="shim.min.js"></script>
-<!-- after the shim is referenced, add the library -->
-<script type="text/javascript" src="xlsx.full.min.js"></script>
-```
-
-The script also includes `IE_LoadFile` and `IE_SaveFile` for loading and saving
-files in Internet Explorer versions 6-9.  The `xlsx.extendscript.js` script
-bundles the shim in a format suitable for Photoshop and other Adobe products.
-
-## Philosophy
-
-<details>
-  <summary><b>Philosophy</b> (click to show)</summary>
-
-Prior to SheetJS, APIs for processing spreadsheet files were format-specific.
-Third-party libraries either supported one format, or they involved a separate
-set of classes for each supported file type.  Even though XLSB was introduced in
-Excel 2007, nothing outside of SheetJS or Excel supported the format.
-
-To promote a format-agnostic view, SheetJS starts from a pure-JS representation
-that we call the ["Common Spreadsheet Format"](#common-spreadsheet-format).
-Emphasizing a uniform object representation enables new features like format
-conversion (reading an XLSX template and saving as XLS) and circumvents the mess
-of classes.  By abstracting the complexities of the various formats, tools
-need not worry about the specific file type!
-
-A simple object representation combined with careful coding practices enables
-use cases in older browsers and in alternative environments like ExtendScript
-and Web Workers. It is always tempting to use the latest and greatest features,
-but they tend to require the latest versions of browsers, limiting usability.
-
-Utility functions capture common use cases like generating JS objects or HTML.
-Most simple operations should only require a few lines of code.  More complex
-operations generally should be straightforward to implement.
-
-Excel pushes the XLSX format as default starting in Excel 2007.  However, there
-are other formats with more appealing properties.  For example, the XLSB format
-is spiritually similar to XLSX but files often tend up taking less than half the
-space and open much faster!  Even though an XLSX writer is available, other
-format writers are available so users can take advantage of the unique
-characteristics of each format.
-
-The primary focus of the Community Edition is correct data interchange, focused
-on extracting data from any compatible data representation and exporting data in
-various formats suitable for any third party interface.
-
-</details>
 
 ## Parsing Workbooks
 
@@ -890,6 +910,11 @@ Write options are described in the [Writing Options](#writing-options) section.
 Utilities are available in the `XLSX.utils` object and are described in the
 [Utility Functions](#utility-functions) section:
 
+**Constructing:**
+
+- `book_new` creates an empty workbook
+- `book_append_sheet` adds a worksheet to a workbook
+
 **Importing:**
 
 - `aoa_to_sheet` converts an array of arrays of JS data to a worksheet.
@@ -1391,7 +1416,23 @@ formulae and Lotus Parsed formulae have to be explicitly unwound.  OpenFormula
 formulae can be converted with regular expressions.
 </details>
 
-#### Column Properties
+#### Row and Column Properties
+
+<details>
+  <summary><b>Format Support</b> (click to show)</summary>
+
+**Row Properties**: XLSX/M, XLSB, BIFF8 XLS, XLML, SYLK, DOM, ODS
+
+**Column Properties**: XLSX/M, XLSB, BIFF8 XLS, XLML, SYLK, DOM
+
+</details>
+
+
+Row and Column properties are not extracted by default when reading from a file
+and are not persisted by default when writing to a file. The option
+`cellStyles: true` must be passed to the relevant read or write function.
+
+_Column Properties_
 
 The `!cols` array in each worksheet, if present, is a collection of `ColInfo`
 objects which have the following properties:
@@ -1411,6 +1452,30 @@ type ColInfo = {
   MDW?:    number;  // Excel's "Max Digit Width" unit, always integral
 };
 ```
+
+_Row Properties_
+
+The `!rows` array in each worksheet, if present, is a collection of `RowInfo`
+objects which have the following properties:
+
+```typescript
+type RowInfo = {
+  /* visibility */
+  hidden?: boolean; // if true, the row is hidden
+
+  /* row height is specified in one of the following ways: */
+  hpx?:    number;  // height in screen pixels
+  hpt?:    number;  // height in points
+
+  level?:  number;  // 0-indexed outline / group level
+};
+```
+
+_Outline / Group Levels Convention_
+
+The Excel UI displays the base outline level as `1` and the max level as `8`.
+Following JS conventions, SheetJS uses 0-indexed outline levels wherein the base
+outline level is `0` and the max level is `7`.
 
 <details>
   <summary><b>Why are there three width types?</b> (click to show)</summary>
@@ -1442,6 +1507,20 @@ when changing the pixel width, delete the `wch` and `width` properties.
 <details>
   <summary><b>Implementation details</b> (click to show)</summary>
 
+_Row Heights_
+
+Excel internally stores row heights in points.  The default resolution is 72 DPI
+or 96 PPI, so the pixel and point size should agree.  For different resolutions
+they may not agree, so the library separates the concepts.
+
+Even though all of the information is made available, writers are expected to
+follow the priority order:
+
+1) use `hpx` pixel height if available
+2) use `hpt` point height if available
+
+_Column Widths_
+
 Given the constraints, it is possible to determine the MDW without actually
 inspecting the font!  The parsers guess the pixel width by converting from width
 to pixels and back, repeating for all possible MDW and selecting the MDW that
@@ -1454,41 +1533,7 @@ follow the priority order:
 1) use `width` field if available
 2) use `wpx` pixel width if available
 3) use `wch` character count if available
-</details>
 
-#### Row Properties
-
-The `!rows` array in each worksheet, if present, is a collection of `RowInfo`
-objects which have the following properties:
-
-```typescript
-type RowInfo = {
-  /* visibility */
-  hidden?: boolean; // if true, the row is hidden
-
-  /* row height is specified in one of the following ways: */
-  hpx?:    number;  // height in screen pixels
-  hpt?:    number;  // height in points
-
-  level?:  number;  // 0-indexed outline / group level
-};
-```
-
-Note: Excel UI displays the base outline level as `1` and the max level as `8`.
-The `level` field stores the base outline as `0` and the max level as `7`.
-
-<details>
-  <summary><b>Implementation details</b> (click to show)</summary>
-
-Excel internally stores row heights in points.  The default resolution is 72 DPI
-or 96 PPI, so the pixel and point size should agree.  For different resolutions
-they may not agree, so the library separates the concepts.
-
-Even though all of the information is made available, writers are expected to
-follow the priority order:
-
-1) use `hpx` pixel height if available
-2) use `hpt` point height if available
 </details>
 
 #### Number Formats
@@ -2518,10 +2563,12 @@ range limits will be silently truncated:
 Excel 2003 SpreadsheetML range limits are governed by the version of Excel and
 are not enforced by the writer.
 
-### Excel 2007+ XML (XLSX/XLSM)
-
 <details>
-  <summary>(click to show)</summary>
+  <summary><b>File Format Details</b> (click to show)</summary>
+
+**Core Spreadsheet Formats**
+
+- **Excel 2007+ XML (XLSX/XLSM)**
 
 XLSX and XLSM files are ZIP containers containing a series of XML files in
 accordance with the Open Packaging Conventions (OPC).  The XLSM format, almost
@@ -2531,12 +2578,7 @@ The format is standardized in ECMA-376 and later in ISO/IEC 29500.  Excel does
 not follow the specification, and there are additional documents discussing how
 Excel deviates from the specification.
 
-</details>
-
-### Excel 2.0-95 (BIFF2/BIFF3/BIFF4/BIFF5)
-
-<details>
-  <summary>(click to show)</summary>
+- **Excel 2.0-95 (BIFF2/BIFF3/BIFF4/BIFF5)**
 
 BIFF 2/3 XLS are single-sheet streams of binary records.  Excel 4 introduced
 the concept of a workbook (`XLW` files) but also had single-sheet `XLS` format.
@@ -2548,12 +2590,7 @@ files in these formats, so record lengths and fields were determined by writing
 in all of the supported formats and comparing files.  Excel 2016 can generate
 BIFF5 files, enabling a full suite of file tests starting from XLSX or BIFF2.
 
-</details>
-
-### Excel 97-2004 Binary (BIFF8)
-
-<details>
-  <summary>(click to show)</summary>
+- **Excel 97-2004 Binary (BIFF8)**
 
 BIFF8 exclusively uses the Compound File Binary container format, splitting some
 content into streams within the file.  At its core, it still uses an extended
@@ -2562,24 +2599,14 @@ version of the binary record format from older versions of BIFF.
 The `MS-XLS` specification covers the basics of the file format, and other
 specifications expand on serialization of features like properties.
 
-</details>
-
-### Excel 2003-2004 (SpreadsheetML)
-
-<details>
-  <summary>(click to show)</summary>
+- **Excel 2003-2004 (SpreadsheetML)**
 
 Predating XLSX, SpreadsheetML files are simple XML files.  There is no official
 and comprehensive specification, although MS has released documentation on the
 format.  Since Excel 2016 can generate SpreadsheetML files, mapping features is
 pretty straightforward.
 
-</details>
-
-### Excel 2007+ Binary (XLSB, BIFF12)
-
-<details>
-  <summary>(click to show)</summary>
+- **Excel 2007+ Binary (XLSB, BIFF12)**
 
 Introduced in parallel with XLSX, the XLSB format combines the BIFF architecture
 with the content separation and ZIP container of XLSX.  For the most part nodes
@@ -2588,12 +2615,7 @@ in an XLSX sub-file can be mapped to XLSB records in a corresponding sub-file.
 The `MS-XLSB` specification covers the basics of the file format, and other
 specifications expand on serialization of features like properties.
 
-</details>
-
-### Delimiter-Separated Values (CSV/TXT)
-
-<details>
-  <summary>(click to show)</summary>
+- **Delimiter-Separated Values (CSV/TXT)**
 
 Excel CSV deviates from RFC4180 in a number of important ways.  The generated
 CSV files should generally work in Excel although they may not work in RFC4180
@@ -2602,32 +2624,20 @@ writer proactively generates cells for formulae if values are unavailable.
 
 Excel TXT uses tab as the delimiter and code page 1200.
 
-Notes:
+Like in Excel, files starting with `0x49 0x44 ("ID")` are treated as Symbolic
+Link files.  Unlike Excel, if the file does not have a valid SYLK header, it
+will be proactively reinterpreted as CSV.  There are some files with semicolon
+delimiter that align with a valid SYLK file.  For the broadest compatibility,
+all cells with the value of `ID` are automatically wrapped in double-quotes.
 
-- Like in Excel, files starting with `0x49 0x44 ("ID")` are treated as Symbolic
-  Link files.  Unlike Excel, if the file does not have a valid SYLK header, it
-  will be proactively reinterpreted as CSV.  There are some files with semicolon
-  delimiter that align with a valid SYLK file.  For the broadest compatibility,
-  all cells with the value of `ID` are automatically wrapped in double-quotes.
+**Miscellaneous Workbook Formats**
 
-</details>
-
-### Other Workbook Formats
-
-<details>
-  <summary>(click to show)</summary>
-
-Support for other formats is generally far XLS/XLSB/XLSX support, due in large
+Support for other formats is generally far behind XLS/XLSB/XLSX support, due in
 part to a lack of publicly available documentation.  Test files were produced in
 the respective apps and compared to their XLS exports to determine structure.
 The main focus is data extraction.
 
-</details>
-
-#### Lotus 1-2-3 (WKS/WK1/WK2/WK3/WK4/123)
-
-<details>
-  <summary>(click to show)</summary>
+- **Lotus 1-2-3 (WKS/WK1/WK2/WK3/WK4/123)**
 
 The Lotus formats consist of binary records similar to the BIFF structure. Lotus
 did release a specification decades ago covering the original WK1 format.  Other
@@ -2637,23 +2647,13 @@ Generated WK1 worksheets are compatible with Lotus 1-2-3 R2 and Excel 5.0.
 
 Generated WK3 workbooks are compatible with Lotus 1-2-3 R9 and Excel 5.0.
 
-</details>
-
-#### Quattro Pro (WQ1/WQ2/WB1/WB2/WB3/QPW)
-
-<details>
-  <summary>(click to show)</summary>
+- **Quattro Pro (WQ1/WQ2/WB1/WB2/WB3/QPW)**
 
 The Quattro Pro formats use binary records in the same way as BIFF and Lotus.
 Some of the newer formats (namely WB3 and QPW) use a CFB enclosure just like
 BIFF8 XLS.
 
-</details>
-
-#### Works for DOS / Windows Spreadsheet (WKS/XLR)
-
-<details>
-  <summary>(click to show)</summary>
+- **Works for DOS / Windows Spreadsheet (WKS/XLR)**
 
 All versions of Works were limited to a single worksheet.
 
@@ -2669,12 +2669,7 @@ exact Workbook stream for the XLR and the 97-2003 XLS export.  Works 6 XLS
 includes two empty worksheets but the main worksheet has an identical encoding.
 XLR also includes a `WksSSWorkBook` stream similar to Lotus FM3/FMT files.
 
-</details>
-
-#### Numbers 3.0+ / iWork 2013+ Spreadsheet (NUMBERS)
-
-<details>
-  <summary>(click to show)</summary>
+- **Numbers 3.0+ / iWork 2013+ Spreadsheet (NUMBERS)**
 
 iWork 2013 (Numbers 3.0 / Pages 5.0 / Keynote 6.0) switched from a proprietary
 XML-based format to the current file format based on the iWork Archive (IWA).
@@ -2684,39 +2679,24 @@ The parser focuses on extracting raw data from tables.  Numbers technically
 supports multiple tables in a logical worksheet, including custom titles.  This
 parser will generate one worksheet per Numbers table.
 
-</details>
-
-#### OpenDocument Spreadsheet (ODS/FODS)
-
-<details>
-  <summary>(click to show)</summary>
+- **OpenDocument Spreadsheet (ODS/FODS)**
 
 ODS is an XML-in-ZIP format akin to XLSX while FODS is an XML format akin to
 SpreadsheetML.  Both are detailed in the OASIS standard, but tools like LO/OO
 add undocumented extensions.  The parsers and writers do not implement the full
 standard, instead focusing on parts necessary to extract and store raw data.
 
-</details>
-
-#### Uniform Office Spreadsheet (UOS1/2)
-
-<details>
-  <summary>(click to show)</summary>
+- **Uniform Office Spreadsheet (UOS1/2)**
 
 UOS is a very similar format, and it comes in 2 varieties corresponding to ODS
 and FODS respectively.  For the most part, the difference between the formats
 is in the names of tags and attributes.
 
-</details>
-
-### Other Single-Worksheet Formats
+**Miscellaneous Worksheet Formats**
 
 Many older formats supported only one worksheet:
 
-#### dBASE and Visual FoxPro (DBF)
-
-<details>
-  <summary>(click to show)</summary>
+- **dBASE and Visual FoxPro (DBF)**
 
 DBF is really a typed table format: each column can only hold one data type and
 each record omits type information.  The parser generates a header row and
@@ -2727,12 +2707,7 @@ Multi-file extensions like external memos and tables are currently unsupported,
 limited by the general ability to read arbitrary files in the web browser.  The
 reader understands DBF Level 7 extensions like DATETIME.
 
-</details>
-
-#### Symbolic Link (SYLK)
-
-<details>
-  <summary>(click to show)</summary>
+- **Symbolic Link (SYLK)**
 
 There is no real documentation.  All knowledge was gathered by saving files in
 various versions of Excel to deduce the meaning of fields.  Notes:
@@ -2740,23 +2715,13 @@ various versions of Excel to deduce the meaning of fields.  Notes:
 - Plain formulae are stored in the RC form.
 - Column widths are rounded to integral characters.
 
-</details>
-
-#### Lotus Formatted Text (PRN)
-
-<details>
-  <summary>(click to show)</summary>
+- **Lotus Formatted Text (PRN)**
 
 There is no real documentation, and in fact Excel treats PRN as an output-only
 file format.  Nevertheless we can guess the column widths and reverse-engineer
 the original layout.  Excel's 240 character width limitation is not enforced.
 
-</details>
-
-#### Data Interchange Format (DIF)
-
-<details>
-  <summary>(click to show)</summary>
+- **Data Interchange Format (DIF)**
 
 There is no unified definition.  Visicalc DIF differs from Lotus DIF, and both
 differ from Excel DIF.  Where ambiguous, the parser/writer follows the expected
@@ -2769,12 +2734,7 @@ behavior from Excel.  In particular, Excel extends DIF in incompatible ways:
 - DIF technically has no support for formulae, but Excel will automatically
   convert plain formulae.  Array formulae are not preserved.
 
-</details>
-
-#### HTML
-
-<details>
-  <summary>(click to show)</summary>
+- **HTML**
 
 Excel HTML worksheets include special metadata encoded in styles.  For example,
 `mso-number-format` is a localized string containing the number format.  Despite
@@ -2785,22 +2745,12 @@ looks for those tags and overrides the default interpretation. For example, text
 like `<td>12345</td>` will be parsed as numbers but `<td t="s">12345</td>` will
 be parsed as text.
 
-</details>
-
-#### Rich Text Format (RTF)
-
-<details>
-  <summary>(click to show)</summary>
+- **Rich Text Format (RTF)**
 
 Excel RTF worksheets are stored in clipboard when copying cells or ranges from a
 worksheet.  The supported codes are a subset of the Word RTF support.
 
-</details>
-
-#### Ethercalc Record Format (ETH)
-
-<details>
-  <summary>(click to show)</summary>
+- **Ethercalc Record Format (ETH)**
 
 [Ethercalc](https://ethercalc.net/) is an open source web spreadsheet powered by
 a record format reminiscent of SYLK wrapped in a MIME multi-part message.

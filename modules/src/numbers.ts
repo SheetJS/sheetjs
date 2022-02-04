@@ -5,7 +5,7 @@ import { u8str, u8_to_dataview } from './util';
 import { parse_shallow, varint_to_i32, parse_varint49, mappa } from './proto';
 import { deframe } from './frame';
 import { IWAArchiveInfo, IWAMessage, parse_iwa } from './iwa';
-import { parse as parse_bnc } from "./prebnccell";
+import { parse as parse_storage } from "./cell";
 
 /* written here to avoid a full import of the 'xlsx' library */
 var encode_col = (C: number): string => {
@@ -27,6 +27,7 @@ var book_append_sheet = (wb: WorkBook, ws: WorkSheet, name?: string): void => {
 
 function parse_numbers(cfb: CFB$Container): WorkBook {
 	var out: IWAMessage[][] = [];
+	cfb.FullPaths.forEach(p => { if(p.match(/\.iwpv2/)) throw new Error(`Unsupported password protection`); });
 	/* collect entire message space */
 	cfb.FileIndex.forEach(s => {
 		if(!s.name.match(/\.iwa$/)) return;
@@ -99,13 +100,24 @@ interface TileRowInfo {
 function parse_TST_TileRowInfo(u8: Uint8Array): TileRowInfo {
 	var pb = parse_shallow(u8);
 	var R = varint_to_i32(pb[1][0].data) >>> 0;
-	var storage = pb[3][0].data;
-	var offsets = u8_to_dataview(pb[4][0].data);
+	var pre_bnc = pb[3]?.[0]?.data;
+	var pre_bnc_offsets = pb[4]?.[0]?.data && u8_to_dataview(pb[4][0].data);
+	var storage = pb[6]?.[0]?.data;
+	var storage_offsets = pb[7]?.[0]?.data && u8_to_dataview(pb[7][0].data);
+	var wide_offsets = pb[8]?.[0]?.data && varint_to_i32(pb[8][0].data) > 0 || false;
+	var width = wide_offsets ? 4 : 1;
 	var cells = [];
-	for(var C = 0; C < offsets.byteLength/2; ++C) {
-		var off = offsets.getUint16(C*2, true);
-		if(off > storage.length) continue;
-		cells[C] = storage.subarray(off, offsets.getUint16(C*2+2, true));
+	var off = 0;
+	for(var C = 0; C < pre_bnc_offsets.byteLength/2; ++C) {
+		/* prefer storage if it is present, otherwise fall back on pre_bnc */
+		if(storage && storage_offsets) {
+			off = storage_offsets.getUint16(C*2, true) * width;
+			if(off < storage.length) { cells[C] = storage.subarray(off, storage_offsets.getUint16(C*2+2, true) * width); continue; }
+		}
+		if(pre_bnc && pre_bnc_offsets) {
+			off = pre_bnc_offsets.getUint16(C*2, true) * width;
+			if(off < pre_bnc.length) cells[C] = pre_bnc.subarray(off, pre_bnc_offsets.getUint16(C*2+2, true) * width);
+		}
 	}
 	return { R, cells };
 }
@@ -155,7 +167,7 @@ function parse_TST_TableModelArchive(M: IWAMessage[][], root: IWAMessage, ws: Wo
 				tile.ref.forEach((row, R) => {
 					row.forEach((buf, C) => {
 						var addr = encode_cell({r:R,c:C});
-						var res = parse_bnc(buf, sst, rsst);
+						var res = parse_storage(buf, sst, rsst);
 						if(res) ws[addr] = res;
 					});
 				});

@@ -1,30 +1,13 @@
 # [SheetJS](https://sheetjs.com)
 
-Parser and writer for various spreadsheet formats.  Pure-JS cleanroom
-implementation from official specifications, related documents, and test files.
-Emphasis on parsing and writing robustness, cross-format feature compatibility
-with a unified JS representation, and ES3/ES5 browser compatibility back to IE6.
+The SheetJS Community Edition offers battle-tested open-source solutions for
+extracting useful data from almost any complex spreadsheet and generating new
+spreadsheets that will work with legacy and modern software alike.
 
-This is the community version.  We also offer a pro version with performance
-enhancements, additional features like styling, and dedicated support.
-
-
-Community Translations of this README:
-
-- [Simplified Chinese](https://github.com/rockboom/SheetJS-docs-zh-CN)
-
-
-[**Pro Version**](https://sheetjs.com/pro)
-
-[**Commercial Support**](https://sheetjs.com/support)
-
-[**Rendered Documentation**](https://docs.sheetjs.com/)
-
-[**In-Browser Demos**](https://sheetjs.com/demos)
-
-[**Source Code**](https://git.io/xlsx)
-
-[**Issues and Bug Reports**](https://github.com/sheetjs/sheetjs/issues)
+[SheetJS Pro](https://sheetjs.com/pro) offers solutions beyond data processing:
+Edit complex templates with ease; let out your inner Picasso with styling; make
+custom sheets with images/graphs/PivotTables; evaluate formula expressions and
+port calculations to web apps; automate common spreadsheet tasks, and much more!
 
 ![License](https://img.shields.io/github/license/SheetJS/sheetjs)
 [![Build Status](https://img.shields.io/github/workflow/status/sheetjs/sheetjs/Tests:%20node.js)](https://github.com/SheetJS/sheetjs/actions)
