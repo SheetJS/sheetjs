@@ -13,7 +13,7 @@ The library can also be imported directly from JSX code with:
 import XLSX from 'xlsx';
 ```
 
-This demo shows a simple React component transpiled in the browser using the babel
+This demo shows a simple React component transpiled in the browser using Babel
 standalone library.  Since there is no standard React table model, this demo
 settles on the array of arrays approach.
 
@@ -77,44 +77,28 @@ function make_cols(refstr/*:string*/) {
 Reproducing the full project is straightforward:
 
 ```bash
-# see native.sh
-react-native init SheetJS
-cd SheetJS
-npm i -S xlsx react react-native react-native-table-component react-native-fs
-cp ../react-native.js index.js
-react-native link
+$ make native     # build the project
+$ make ios        # build and run the iOS demo
+$ make android    # build and run the android demo
 ```
 
-`react-native-table-component` draws the data table.  `react-native-fs` reads
-and write files on devices.  The app will prompt before reading and after
-writing data.  The printed location will be:
+The app will prompt before reading and after writing data.  The printed location
+depends on the environment:
 
 - android: path in the device filesystem
 - iOS simulator: local path to file
 - iOS device: a path accessible from iTunes App Documents view
 
-`react-native-fs` supports `"ascii"` encoding for `readFile` and `writeFile`.
-In practice, that encoding uses binary strings compatible with `"binary"` type:
+Components used in the demo:
+- [`react-native-table-component`](https://npm.im/react-native-table-component)
+- [`react-native-file-access`](https://npm.im/react-native-file-access)
 
-```js
-import { writeFile, readFile } from 'react-native-fs';
-
-/* read a workbook */
-readFile(file, 'ascii').then((res) => {
-  const workbook = XLSX.read(res, {type:'binary'});
-  /* DO SOMETHING WITH workbook HERE */
-});
-
-/* write a workbook */
-const wbout = XLSX.write(wb, {type:'binary', bookType:"xlsx"});
-writeFile(file, wbout, 'ascii').then((r)=>{/* :) */}).catch((e)=>{/* :( */});
-```
+React Native does not provide a native component for reading and writing files.
+The sample script <`react-native.js`> uses `react-native-file-access` and has
+notes for integrations with `react-native-fetch-blob` and `react-native-fs`.
 
 Note: for real app deployments, the `UIFileSharingEnabled` flag must be manually
 set in the iOS project `Info.plist` file.
-
-To run the React Native demo, run either `make ios` or `make android` while
-connected to a device or emulator.
 
 #### Server-Rendered React Components with Next.js
 

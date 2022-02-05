@@ -1,10 +1,33 @@
 # Internet Explorer
 
-Despite the efforts to deprecate the pertinent operating systems, IE is still
-very popular, required for various government and corporate websites throughout
-the world.  The modern upload and download strategies are not available in older
-versions of IE, but there are alternative approaches.
+The modern upload and download strategies are not available in older versions of
+IE, but there are approaches using older technologies like ActiveX and Flash.
 
+<details>
+  <summary><b>Live Demos</b> (click to show)</summary>
+
+<http://oss.sheetjs.com/sheetjs/ajax.html> uses XMLHttpRequest to download test
+files and convert to CSV.
+
+<https://oss.sheetjs.com/sheetjs/> demonstrates reading files with `FileReader`.
+
+Older versions of IE do not support HTML5 File API but do support Base64.
+
+On OSX you can get the Base64 encoding with:
+
+```bash
+$ <target_file base64 | pbcopy
+```
+
+On Windows XP and up you can get the Base64 encoding using `certutil`:
+
+```cmd
+> certutil -encode target_file target_file.b64
+```
+
+(note: You have to open the file and remove the header and footer lines)
+
+</details>
 
 ## Upload Strategies
 
@@ -14,14 +37,14 @@ IE10 and IE11 support the standard HTML5 FileReader API:
 
 ```js
 function handle_fr(e) {
-	var files = e.target.files, f = files[0];
-	var reader = new FileReader();
-	reader.onload = function(e) {
-		var data = new Uint8Array(e.target.result);
-		var wb = XLSX.read(data, {type: 'array'});
-		process_wb(wb);
-	};
-	reader.readAsArrayBuffer(f);
+  var files = e.target.files, f = files[0];
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var data = new Uint8Array(e.target.result);
+    var wb = XLSX.read(data, {type: 'array'});
+    process_wb(wb);
+  };
+  reader.readAsArrayBuffer(f);
 }
 input_dom_element.addEventListener('change', handle_fr, false);
 ```
@@ -36,12 +59,12 @@ should be called from a file input `onchange` event:
 ```js
 var input_dom_element = document.getElementById("file");
 function handle_ie() {
-	/* get data from selected file */
-	var path = input_dom_element.value;
-	var bstr = IE_LoadFile(path);
-	/* read workbook */
-	var wb = XLSX.read(bstr, {type: 'binary'});
-	/* DO SOMETHING WITH workbook HERE */
+  /* get data from selected file */
+  var path = input_dom_element.value;
+  var bstr = IE_LoadFile(path);
+  /* read workbook */
+  var wb = XLSX.read(bstr, {type: 'binary'});
+  /* DO SOMETHING WITH workbook HERE */
 }
 input_dom_element.attachEvent('onchange', handle_ie);
 ```
@@ -105,10 +128,10 @@ to a Base64 string and passing to the library:
 
 ```js
 Downloadify.create(element_id, {
-	/* the demo includes the other options required by Downloadify */
-	filename: "test.xlsx",
-	data: function() { return XLSX.write(wb, {bookType:"xlsx", type:'base64'}); },
-	dataType: 'base64'
+  /* the demo includes the other options required by Downloadify */
+  filename: "test.xlsx",
+  data: function() { return XLSX.write(wb, {bookType:"xlsx", type:'base64'}); },
+  dataType: 'base64'
 });
 ```
 

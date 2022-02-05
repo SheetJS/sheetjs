@@ -14,12 +14,69 @@ import {
 } from 'react-native';
 import { Table, Row, Rows, TableWrapper } from 'react-native-table-component';
 
+// react-native-file-access
+var Base64 = function() {
+  var map = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
+  return {
+    encode: function(input) {
+      var o = "";
+      var c1 = 0, c2 = 0, c3 = 0, e1 = 0, e2 = 0, e3 = 0, e4 = 0;
+      for (var i = 0; i < input.length; ) {
+        c1 = input.charCodeAt(i++);
+        e1 = c1 >> 2;
+        c2 = input.charCodeAt(i++);
+        e2 = (c1 & 3) << 4 | c2 >> 4;
+        c3 = input.charCodeAt(i++);
+        e3 = (c2 & 15) << 2 | c3 >> 6;
+        e4 = c3 & 63;
+        if (isNaN(c2)) {
+          e3 = e4 = 64;
+        } else if (isNaN(c3)) {
+          e4 = 64;
+        }
+        o += map.charAt(e1) + map.charAt(e2) + map.charAt(e3) + map.charAt(e4);
+      }
+      return o;
+    },
+    decode: function(input) {
+      var o = "";
+      var c1 = 0, c2 = 0, c3 = 0, e1 = 0, e2 = 0, e3 = 0, e4 = 0;
+      input = input.replace(/[^\w\+\/\=]/g, "");
+      for (var i = 0; i < input.length; ) {
+        e1 = map.indexOf(input.charAt(i++));
+        e2 = map.indexOf(input.charAt(i++));
+        c1 = e1 << 2 | e2 >> 4;
+        o += String.fromCharCode(c1);
+        e3 = map.indexOf(input.charAt(i++));
+        c2 = (e2 & 15) << 4 | e3 >> 2;
+        if (e3 !== 64) {
+          o += String.fromCharCode(c2);
+        }
+        e4 = map.indexOf(input.charAt(i++));
+        c3 = (e3 & 3) << 6 | e4;
+        if (e4 !== 64) {
+          o += String.fromCharCode(c3);
+        }
+      }
+      return o;
+    }
+  };
+}();
+
+import { Dirs, FileSystem } from 'react-native-file-access';
+const DDP = Dirs.DocumentDir + "/";
+const readFile = (path, enc) => FileSystem.readFile(path, "base64");
+const writeFile = (path, data, enc) => FileSystem.writeFile(path, data, "base64");
+const input = res => Base64.decode(res);
+const output = str => Base64.encode(str);
+
 // react-native-fs
+/*
 import { writeFile, readFile, DocumentDirectoryPath } from 'react-native-fs';
 const DDP = DocumentDirectoryPath + "/";
 const input = res => res;
 const output = str => str;
-
+*/
 // react-native-fetch-blob
 /*
 import RNFetchBlob from 'react-native-fetch-blob';
@@ -36,7 +93,7 @@ export default class SheetJS extends Component {
 	constructor(props) {
 		super(props);
 		this.state = {
-			data: [[1,2,3],[4,5,6]],
+			data: [[2,3,4],[3,4,5]],
 			widthArr: [60, 60, 60],
 			cols: make_cols("A1:C2")
 		};

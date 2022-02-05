@@ -36,11 +36,18 @@ port calculations to web apps; automate common spreadsheet tasks, and much more!
 - [Getting Started](#getting-started)
   * [Installation](#installation)
   * [Usage](#usage)
-    + [The Zen of SheetJS](#the-zen-of-sheetjs)
+  * [The Zen of SheetJS](#the-zen-of-sheetjs)
   * [JS Ecosystem Demos](#js-ecosystem-demos)
-- [Parsing Workbooks](#parsing-workbooks)
-  * [Parsing Examples](#parsing-examples)
-  * [Streaming Read](#streaming-read)
+- [Acquiring and Extracting Data](#acquiring-and-extracting-data)
+  * [Parsing Workbooks](#parsing-workbooks)
+    + [API](#api)
+    + [Examples](#examples)
+  * [Processing JSON and JS Data](#processing-json-and-js-data)
+    + [API](#api-1)
+    + [Examples](#examples-1)
+  * [Processing HTML Tables](#processing-html-tables)
+    + [API](#api-2)
+    + [Examples](#examples-2)
 - [Working with the Workbook](#working-with-the-workbook)
   * [Parsing and Writing Examples](#parsing-and-writing-examples)
 - [Writing Workbooks](#writing-workbooks)
@@ -109,7 +116,8 @@ port calculations to web apps; automate common spreadsheet tasks, and much more!
 
 ### Installation
 
-In the browser, just add a script tag:
+The complete browser standalone build is saved to `dist/xlsx.full.min.js` and
+can be directly added to a page with a `script` tag:
 
 ```html
 <script lang="javascript" src="dist/xlsx.full.min.js"></script>
@@ -123,38 +131,13 @@ In the browser, just add a script tag:
 |    `CDNjs` | <https://cdnjs.com/libraries/xlsx>         |
 |    `packd` | <https://bundle.run/xlsx@latest?name=XLSX> |
 
-`unpkg` makes the latest version available at:
+For example, `unpkg` makes the latest version available at:
 
 ```html
 <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
 ```
 
 
-
-With [npm](https://www.npmjs.org/package/xlsx):
-
-```bash
-$ npm install xlsx
-```
-
-With [bower](https://bower.io/search/?q=js-xlsx):
-
-```bash
-$ bower install js-xlsx
-```
-
-
-The node version automatically requires modules for additional features.  Some
-of these modules are rather large in size and are only needed in special
-circumstances, so they do not ship with the core.  For browser use, they must
-be included directly:
-
-```html
-<!-- international support from js-codepage -->
-<script src="dist/cpexcel.js"></script>
-```
-
-An appropriate version for each dependency is included in the dist/ directory.
 
 The complete single-file version is generated at `dist/xlsx.full.min.js`
 
@@ -172,6 +155,28 @@ be configured to remove support with `resolve.alias`:
   resolve: {
     alias: { "./dist/cpexcel.js": "" } // <-- omit international support
   }
+```
+
+
+
+With [npm](https://www.npmjs.org/package/xlsx):
+
+```bash
+$ npm install xlsx
+```
+
+With [bower](https://bower.io/search/?q=js-xlsx):
+
+```bash
+$ bower install js-xlsx
+```
+
+`dist/xlsx.extendscript.js` is an ExtendScript build for Photoshop and InDesign
+that is included in the `npm` package.  It can be directly referenced with a
+`#include` directive:
+
+```extendscript
+#include "xlsx.extendscript.js"
 ```
 
 
@@ -227,8 +232,8 @@ var table_elt = document.getElementById("my-table-id");
 var workbook = XLSX.utils.table_to_book(table_elt);
 
 // Process Data (add a new row)
-var worksheet = workbook.Sheets["Sheet1"];
-XLSX.utils.sheet_add_aoa([["Created "+new Date().toISOString()}]], {origin:-1});
+var ws = workbook.Sheets["Sheet1"];
+XLSX.utils.sheet_add_aoa(ws, [["Created "+new Date().toISOString()]], {origin:-1});
 
 // Package and Release Data (`writeFile` tries to write and save an XLSB file)
 XLSX.writeFile(workbook, "Report.xlsb");
@@ -236,7 +241,8 @@ XLSX.writeFile(workbook, "Report.xlsb");
 
 This library tries to simplify steps 2 and 4 with functions to extract useful
 data from spreadsheet files (`read` / `readFile`) and generate new spreadsheet
-files from data (`write` / `writeFile`).
+files from data (`write` / `writeFile`).  Additional utility functions like
+`table_to_book` work with other common data sources like HTML tables.
 
 This documentation and various demo projects cover a number of common scenarios
 and approaches for steps 1 and 5.
@@ -244,7 +250,206 @@ and approaches for steps 1 and 5.
 Utility functions help with step 3.
 
 
-#### The Zen of SheetJS
+### The Zen of SheetJS
+
+_Data processing should fit in any workflow_
+
+The library does not impose a separate lifecycle.  It fits nicely in websites
+and apps built using any framework.  The plain JS data objects play nice with
+Web Workers and future APIs.
+
+["Acquiring and Extracting Data"](#acquiring-and-extracting-data) describes
+solutions for common data import scenarios.
+
+["Writing Workbooks"](#writing-workbooks) describes solutions for common data
+export scenarios involving actual spreadsheet files.
+
+["Utility Functions"](#utility-functions) details utility functions for
+translating JSON Arrays and other common JS structures into worksheet objects.
+
+_JavaScript is a powerful language for data processing_
+
+The ["Common Spreadsheet Format"](#common-spreadsheet-format) is a simple object
+representation of the core concepts of a workbook.  The various functions in the
+library provide low-level tools for working with the object.
+
+For friendly JS processing, there are utility functions for converting parts of
+a worksheet to/from an Array of Arrays.  The following example combines powerful
+JS Array methods with a network request library to download data, select the
+information we want and create a workbook file:
+
+
+The goal is to generate a XLSB workbook of US President names and birthdays.
+
+**Acquire Data**
+
+_Raw Data_
+
+<https://theunitedstates.io/congress-legislators/executive.json> has the desired
+data.  For example, John Adams:
+
+```js
+{
+  "id": { /* (data omitted) */ },
+  "name": {
+    "first": "John",          // <-- first name
+    "last": "Adams"           // <-- last name
+  },
+  "bio": {
+    "birthday": "1735-10-19", // <-- birthday
+    "gender": "M"
+  },
+  "terms": [
+    { "type": "viceprez", /* (other fields omitted) */ },
+    { "type": "viceprez", /* (other fields omitted) */ },
+    { "type": "prez", /* (other fields omitted) */ } // <-- look for "prez"
+  ]
+}
+```
+
+_Filtering for Presidents_
+
+The dataset includes Aaron Burr, a Vice President who was never President!
+
+`Array#filter` creates a new array with the desired rows.  A President served
+at least one term with `type` set to `"prez"`.  To test if a particular row has
+at least one `"prez"` term, `Array#some` is another native JS function.  The
+complete filter would be:
+
+```js
+const prez = raw_data.filter(row => row.terms.some(term => term.type === "prez"));
+```
+
+_Lining up the data_
+
+For this example, the name will be the first name combined with the last name
+(`row.name.first + " " + row.name.last`) and the birthday will be the subfield
+`row.bio.birthday`.  Using `Array#map`, the dataset can be massaged in one call:
+
+```js
+const rows = prez.map(row => ({
+  name: row.name.first + " " + row.name.last,
+  birthday: row.bio.birthday
+}));
+```
+
+The result is an array of "simple" objects with no nesting:
+
+```js
+[
+  { name: "George Washington", birthday: "1732-02-22" },
+  { name: "John Adams", birthday: "1735-10-19" },
+  // ... one row per President
+]
+```
+
+**Extract Data**
+
+With the cleaned dataset, `XLSX.utils.json_to_sheet` generates a worksheet:
+
+```js
+const worksheet = XLSX.utils.json_to_sheet(rows);
+```
+
+`XLSX.utils.book_new` creates a new workbook and `XLSX.utils.book_append_sheet`
+appends a worksheet to the workbook. The new worksheet will be called "Dates":
+
+```js
+const workbook = XLSX.utils.book_new();
+XLSX.utils.book_append_sheet(workbook, worksheet, "Dates");
+```
+
+**Process Data**
+
+_Fixing headers_
+
+By default, `json_to_sheet` creates a worksheet with a header row. In this case,
+the headers come from the JS object keys: "name" and "birthday".
+
+The headers are in cells A1 and B1.  `XLSX.utils.sheet_add_aoa` can write text
+values to the existing worksheet starting at cell A1:
+
+```js
+XLSX.utils.sheet_add_aoa(worksheet, [["Name", "Birthday"]], { origin: "A1" });
+```
+
+_Fixing Column Widths_
+
+Some of the names are longer than the default column width.  Column widths are
+set by [setting the `"!cols"` worksheet property](#row-and-column-properties).
+
+The following line sets the width of column A to approximately 10 characters:
+
+```js
+worksheet["!cols"] = [ { wch: 10 } ]; // set column A width to 10 characters
+```
+
+One `Array#reduce` call over `rows` can calculate the maximum width:
+
+```js
+const max_width = rows.reduce((w, r) => Math.max(w, r.name.length), 10);
+worksheet["!cols"] = [ { wch: max_width } ];
+```
+
+Note: If the starting point was a file or HTML table, `XLSX.utils.sheet_to_json`
+will generate an array of JS objects.
+
+**Package and Release Data**
+
+`XLSX.writeFile` creates a spreadsheet file and tries to write it to the system.
+In the browser, it will try to prompt the user to download the file.  In NodeJS,
+it will write to the local directory.
+
+```js
+XLSX.writeFile(workbook, "Presidents.xlsx");
+```
+
+**Complete Example**
+
+```js
+// Uncomment the next line for use in NodeJS:
+// const XLSX = require("xlsx"), axios = require("axios");
+
+(async() => {
+  /* fetch JSON data and parse */
+  const url = "https://theunitedstates.io/congress-legislators/executive.json";
+  const raw_data = (await axios(url, {responseType: "json"})).data;
+
+  /* filter for the Presidents */
+  const prez = raw_data.filter(row => row.terms.some(term => term.type === "prez"));
+
+  /* flatten objects */
+  const rows = prez.map(row => ({
+    name: row.name.first + " " + row.name.last,
+    birthday: row.bio.birthday
+  }));
+
+  /* generate worksheet and workbook */
+  const worksheet = XLSX.utils.json_to_sheet(rows);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Dates");
+
+  /* fix headers */
+  XLSX.utils.sheet_add_aoa(worksheet, [["Name", "Birthday"]], { origin: "A1" });
+
+  /* calculate column width */
+  const max_width = rows.reduce((w, r) => Math.max(w, r.name.length), 10);
+  worksheet["!cols"] = [ { wch: max_width } ];
+
+  /* create an XLSX file and try to save to Presidents.xlsx */
+  XLSX.writeFile(workbook, "Presidents.xlsx");
+})();
+```
+
+For use in the web browser, assuming the snippet is saved to `snippet.js`,
+script tags should be used to include the `axios` and `xlsx` standalone builds:
+
+```html
+<script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script src="snippet.js"></script>
+```
+
 
 
 _File formats are implementation details_
@@ -255,37 +460,8 @@ The parser covers a wide gamut of common spreadsheet file formats to ensure that
 The writer supports a number of common output formats for broad compatibility
 with the data ecosystem.
 
-
-_Data processing should fit in any workflow_
-
-The library does not impose a separate lifecycle.  It fits nicely in websites
-and apps built using any framework.  The plain JS data objects play nice with
-Web Workers and future APIs.
-
-["Parsing Workbooks"](#parsing-workbooks) describes solutions for common data
-import scenarios involving actual spreadsheet files.
-
-["Writing Workbooks"](#writing-workbooks) describes solutions for common data
-export scenarios involving actual spreadsheet files.
-
-["Utility Functions"](#utility-functions) details utility functions for
-translating JSON Arrays and other common JS structures into worksheet objects.
-
-
-_JavaScript is a powerful language for data processing_
-
-The ["Common Spreadsheet Format"](#common-spreadsheet-format) is a simple object
-representation of the core concepts of a workbook.  The various functions in the
-library provide low-level tools for working with the object.
-
-For friendly JS processing, there are utility functions for converting parts of
-a worksheet to/from an Array of Arrays.  For example, summing columns from an
-array of arrays can be implemented in a single Array reduce operation:
-
-```js
-var aoa = XLSX.utils.sheet_to_json(worksheet, {header: 1});
-var sum_of_column_B = aoa.reduce((acc, row) => acc + (+row[1]||0), 0);
-```
+To the greatest extent possible, data processing code should not have to worry
+about the specific file formats involved.
 
 
 ### JS Ecosystem Demos
@@ -328,74 +504,164 @@ The [`demos` directory](demos/) includes sample projects for:
 
 Other examples are included in the [showcase](demos/showcase/).
 
-## Parsing Workbooks
+## Acquiring and Extracting Data
 
-For parsing, the first step is to read the file.  This involves acquiring the
-data and feeding it into the library.  Here are a few common scenarios:
+### Parsing Workbooks
 
+#### API
 
-`readFile` is only available in server environments. Browsers have no API for
-reading arbitrary files given a path, so another strategy must be used.
+_Extract data from spreadsheet bytes_
 
 ```js
-if(typeof require !== 'undefined') XLSX = require('xlsx');
-var workbook = XLSX.readFile('test.xlsx');
-/* DO SOMETHING WITH workbook HERE */
+var workbook = XLSX.read(data, opts);
+```
+
+The `read` method can extract data from spreadsheet bytes stored in a JS string,
+"binary string", NodeJS buffer or typed array (`Uint8Array` or `ArrayBuffer`).
+
+
+_Read spreadsheet bytes from a local file and extract data_
+
+```js
+var workbook = XLSX.readFile(filename, opts);
+```
+
+The `readFile` method attempts to read a spreadsheet file at the supplied path.
+Browsers generally do not allow reading files in this way (it is deemed a
+security risk), and attempts to read files in this way will throw an error.
+
+The second `opts` argument is optional. ["Parsing Options"](#parsing-options)
+covers the supported properties and behaviors.
+
+#### Examples
+
+Here are a few common scenarios (click on each subtitle to see the code):
+
+
+`readFile` uses `fs.readFileSync` under the hood:
+
+```js
+var XLSX = require("xlsx");
+
+var workbook = XLSX.readFile("test.xlsx");
+```
+
+For Node ESM, the `readFile` helper is not enabled.  Instead, `fs.readFileSync`
+should be used to read the file data as a `Buffer` for use with `XLSX.read`:
+
+```js
+import { readFileSync } from "fs";
+import { read } from "xlsx/xlsx.mjs";
+
+const buf = readFileSync("test.xlsx");
+/* buf is a Buffer */
+const workbook = read(buf);
 ```
 
 
 
-`readFile` wraps the `File` logic in Photoshop and other ExtendScript targets.
-The specified path should be an absolute path:
+For modern websites targeting Chrome 76+, `File#arrayBuffer` is recommended:
 
 ```js
-#include "xlsx.extendscript.js"
-/* Read test.xlsx from the Documents folder */
-var workbook = XLSX.readFile(Folder.myDocuments + '/' + 'test.xlsx');
-/* DO SOMETHING WITH workbook HERE */
+// XLSX is a global from the standalone script
+
+async function handleDropAsync(e) {
+  e.stopPropagation(); e.preventDefault();
+  const f = e.dataTransfer.files[0];
+  /* f is a File */
+  const data = await f.arrayBuffer();
+  /* data is an ArrayBuffer */
+  const workbook = XLSX.read(data);
+
+  /* DO SOMETHING WITH workbook HERE */
+}
+drop_dom_element.addEventListener("drop", handleDropAsync, false);
 ```
 
-The [`extendscript` demo](demos/extendscript/) includes a more complex example.
-
-
-
-The `table_to_book` and `table_to_sheet` utility functions take a DOM TABLE
-element and iterate through the child nodes.
+For maximal compatibility, the `FileReader` API should be used:
 
 ```js
-var workbook = XLSX.utils.table_to_book(document.getElementById('tableau'));
-/* DO SOMETHING WITH workbook HERE */
+function handleDrop(e) {
+  e.stopPropagation(); e.preventDefault();
+  var f = e.dataTransfer.files[0];
+  /* f is a File */
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var data = e.target.result;
+    /* reader.readAsArrayBuffer(file) -> data will be an ArrayBuffer */
+    var workbook = XLSX.read(data);
+
+    /* DO SOMETHING WITH workbook HERE */
+  };
+  reader.readAsArrayBuffer(f);
+}
+drop_dom_element.addEventListener("drop", handleDrop, false);
 ```
 
-Multiple tables on a web page can be converted to individual worksheets:
+<https://oss.sheetjs.com/sheetjs/> demonstrates the FileReader technique.
+
+
+
+Starting with an HTML INPUT element with `type="file"`:
+
+```html
+<input type="file" id="input_dom_element">
+```
+
+For modern websites targeting Chrome 76+, `Blob#arrayBuffer` is recommended:
 
 ```js
-/* create new workbook */
-var workbook = XLSX.utils.book_new();
+// XLSX is a global from the standalone script
 
-/* convert table 'table1' to worksheet named "Sheet1" */
-var ws1 = XLSX.utils.table_to_sheet(document.getElementById('table1'));
-XLSX.utils.book_append_sheet(workbook, ws1, "Sheet1");
+async function handleFileAsync(e) {
+  const file = e.target.files[0];
+  const data = await file.arrayBuffer();
+  /* data is an ArrayBuffer */
+  const workbook = XLSX.read(data);
 
-/* convert table 'table2' to worksheet named "Sheet2" */
-var ws2 = XLSX.utils.table_to_sheet(document.getElementById('table2'));
-XLSX.utils.book_append_sheet(workbook, ws2, "Sheet2");
-
-/* workbook now has 2 worksheets */
+  /* DO SOMETHING WITH workbook HERE */
+}
+input_dom_element.addEventListener("change", handleFileAsync, false);
 ```
 
-Alternatively, the HTML code can be extracted and parsed:
+For broader support (including IE10+), the `FileReader` approach is recommended:
 
 ```js
-var htmlstr = document.getElementById('tableau').outerHTML;
-var workbook = XLSX.read(htmlstr, {type:'string'});
+function handleFile(e) {
+  var file = e.target.files[0];
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var data = e.target.result;
+    /* reader.readAsArrayBuffer(file) -> data will be an ArrayBuffer */
+    var workbook = XLSX.read(e.target.result);
+
+    /* DO SOMETHING WITH workbook HERE */
+  };
+  reader.readAsArrayBuffer(file);
+}
+input_dom_element.addEventListener("change", handleFile, false);
 ```
 
+The [`oldie` demo](demos/oldie/) shows an IE-compatible fallback scenario.
 
 
-Note: for a more complete example that works in older browsers, check the demo
-at <http://oss.sheetjs.com/sheetjs/ajax.html>.  The [`xhr` demo](demos/xhr/)
-includes more examples with `XMLHttpRequest` and `fetch`.
+
+For modern websites targeting Chrome 42+, `fetch` is recommended:
+
+```js
+// XLSX is a global from the standalone script
+
+(async() => {
+  const url = "http://oss.sheetjs.com/test_files/formula_stress_test.xlsx";
+  const data = await (await fetch(url)).arrayBuffer();
+  /* data is an ArrayBuffer */
+  const workbook = XLSX.read(data);
+
+  /* DO SOMETHING WITH workbook HERE */
+})();
+```
+
+For broader support, the `XMLHttpRequest` approach is recommended:
 
 ```js
 var url = "http://oss.sheetjs.com/test_files/formula_stress_test.xlsx";
@@ -409,133 +675,178 @@ req.onload = function(e) {
   var workbook = XLSX.read(req.response);
 
   /* DO SOMETHING WITH workbook HERE */
-}
+};
 
 req.send();
 ```
 
+The [`xhr` demo](demos/xhr/) includes a longer discussion and more examples.
+
+<http://oss.sheetjs.com/sheetjs/ajax.html> shows fallback approaches for IE6+.
 
 
-For modern browsers, `Blob#arrayBuffer` can read data from files:
+
+`readFile` wraps the `File` logic in Photoshop and other ExtendScript targets.
+The specified path should be an absolute path:
 
 ```js
-async function handleDropAsync(e) {
-  e.stopPropagation(); e.preventDefault();
-  const f = evt.dataTransfer.files[0];
-  const data = await f.arrayBuffer();
-  const workbook = XLSX.read(data);
+#include "xlsx.extendscript.js"
 
-  /* DO SOMETHING WITH workbook HERE */
-}
-drop_dom_element.addEventListener('drop', handleDropAsync, false);
+/* Read test.xlsx from the Documents folder */
+var workbook = XLSX.readFile(Folder.myDocuments + "/test.xlsx");
 ```
 
-For maximal compatibility, the `FileReader` API should be used:
+The [`extendscript` demo](demos/extendscript/) includes a more complex example.
+
+
+
+`readFile` can be used in the renderer process:
 
 ```js
-function handleDrop(e) {
-  e.stopPropagation(); e.preventDefault();
-  var f = e.dataTransfer.files[0];
-  var reader = new FileReader();
-  reader.onload = function(e) {
-    var workbook = XLSX.read(e.target.result);
+/* From the renderer process */
+var XLSX = require("xlsx");
+
+var workbook = XLSX.readFile(path);
+```
+
+Electron APIs have changed over time.  The [`electron` demo](demos/electron/)
+shows a complete example and details the required version-specific settings.
+
+
+
+The [`react` demo](demos/react) includes a sample React Native app.
+
+Since React Native does not provide a way to read files from the filesystem, a
+third-party library must be used.  The following libraries have been tested:
+
+- [`react-native-file-access`](https://npm.im/react-native-file-access)
+
+The `base64` encoding returns strings compatible with the `base64` type:
+
+```js
+import XLSX from "xlsx";
+import { FileSystem } from "react-native-file-access";
+
+const b64 = await FileSystem.readFile(path, "base64");
+/* b64 is a base64 string */
+const workbook = XLSX.read(b64, {type: "base64"});
+```
+
+- [`react-native-fs`](https://npm.im/react-native-fs)
+
+The `ascii` encoding returns binary strings compatible with the `binary` type:
+
+```js
+import XLSX from "xlsx";
+import { readFile } from "react-native-fs";
+
+const bstr = await readFile(path, "ascii");
+/* bstr is a binary string */
+const workbook = XLSX.read(bstr, {type: "binary"});
+```
+
+
+
+`read` can accept a NodeJS buffer.  `readFile` can read files generated by a
+HTTP POST request body parser like [`formidable`](https://npm.im/formidable):
+
+```js
+const XLSX = require("xlsx");
+const http = require("http");
+const formidable = require("formidable");
+
+const server = http.createServer((req, res) => {
+  const form = new formidable.IncomingForm();
+  form.parse(req, (err, fields, files) => {
+    /* grab the first file */
+    const f = Object.entries(files)[0][1];
+    const path = f.filepath;
+    const workbook = XLSX.readFile(path);
 
     /* DO SOMETHING WITH workbook HERE */
-  };
-  reader.readAsArrayBuffer(f);
-}
-drop_dom_element.addEventListener('drop', handleDrop, false);
+  });
+}).listen(process.env.PORT || 7262);
 ```
 
+The [`server` demo](demos/server) has more advanced examples.
 
 
-Data from file input elements can be processed using the same APIs as in the
-drag-and-drop example.
 
-Using `Blob#arrayBuffer`:
+Node 17.5 and 18.0 have native support for fetch:
 
 ```js
-async function handleFileAsync(e) {
-  const file = e.target.files[0];
-  const data = await file.arrayBuffer();
-  const workbook = XLSX.read(data);
+const XLSX = require("xlsx");
+
+const data = await (await fetch(url)).arrayBuffer();
+/* data is an ArrayBuffer */
+const workbook = XLSX.read(data);
+```
+
+For broader compatibility, third-party modules are recommended.
+
+[`request`](https://npm.im/request) requires a `null` encoding to yield Buffers:
+
+```js
+var XLSX = require("xlsx");
+var request = require("request");
+
+request({url: url, encoding: null}, function(err, resp, body) {
+  var workbook = XLSX.read(body);
 
   /* DO SOMETHING WITH workbook HERE */
-}
-input_dom_element.addEventListener('change', handleFileAsync, false);
+});
 ```
 
-Using `FileReader`:
+[`axios`](https://npm.im/axios) works the same way in browser and in NodeJS:
 
 ```js
-function handleFile(e) {
-  var files = e.target.files, f = files[0];
-  var reader = new FileReader();
-  reader.onload = function(e) {
-    var workbook = XLSX.read(e.target.result);
+const XLSX = require("xlsx");
+const axios = require("axios");
+
+(async() => {
+  const res = await axios.get(url, {responseType: "arraybuffer"});
+  /* res.data is a Buffer */
+  const workbook = XLSX.read(res.data);
+
+  /* DO SOMETHING WITH workbook HERE */
+})();
+```
+
+
+
+The `net` module in the main process can make HTTP/HTTPS requests to external
+resources.  Responses should be manually concatenated using `Buffer.concat`:
+
+```js
+const XLSX = require("xlsx");
+const { net } = require("electron");
+
+const req = net.request(url);
+req.on("response", (res) => {
+  const bufs = []; // this array will collect all of the buffers
+  res.on("data", (chunk) => { bufs.push(chunk); });
+  res.on("end", () => {
+    const workbook = XLSX.read(Buffer.concat(bufs));
 
     /* DO SOMETHING WITH workbook HERE */
-  };
-  reader.readAsArrayBuffer(f);
-}
-input_dom_element.addEventListener('change', handleFile, false);
+  });
+});
+req.end();
 ```
 
-The [`oldie` demo](demos/oldie/) shows an IE-compatible fallback scenario.
-
-
-More specialized cases, including mobile app file processing, are covered in the
-[included demos](demos/)
-
-### Parsing Examples
-
-- <https://oss.sheetjs.com/sheetjs/> HTML5 File API / Base64 Text / Web Workers
-
-Note that older versions of IE do not support HTML5 File API, so the Base64 mode
-is used for testing.
-
-
-On OSX you can get the Base64 encoding with:
-
-```bash
-$ <target_file base64 | pbcopy
-```
-
-On Windows XP and up you can get the Base64 encoding using `certutil`:
-
-```cmd
-> certutil -encode target_file target_file.b64
-```
-
-(note: You have to open the file and remove the header and footer lines)
-
-
-- <http://oss.sheetjs.com/sheetjs/ajax.html> XMLHttpRequest
-
-### Streaming Read
-
-
-The most common and interesting formats (XLS, XLSX/M, XLSB, ODS) are ultimately
-ZIP or CFB containers of files.  Neither format puts the directory structure at
-the beginning of the file: ZIP files place the Central Directory records at the
-end of the logical file, while CFB files can place the storage info anywhere in
-the file! As a result, to properly handle these formats, a streaming function
-would have to buffer the entire file before commencing.  That belies the
-expectations of streaming, so we do not provide any streaming read API.
 
 
 When dealing with Readable Streams, the easiest approach is to buffer the stream
-and process the whole thing at the end.  This can be done with a temporary file
-or by explicitly concatenating the stream:
-
+and process the whole thing at the end:
 
 ```js
-var fs = require('fs');
-var XLSX = require('xlsx');
-function process_RS(stream/*:ReadStream*/, cb/*:(wb:Workbook)=>void*/)/*:void*/{
+var fs = require("fs");
+var XLSX = require("xlsx");
+
+function process_RS(stream, cb) {
   var buffers = [];
-  stream.on('data', function(data) { buffers.push(data); });
-  stream.on('end', function() {
+  stream.on("data", function(data) { buffers.push(data); });
+  stream.on("end", function() {
     var buffer = Buffer.concat(buffers);
     var workbook = XLSX.read(buffer, {type:"buffer"});
 
@@ -545,28 +856,218 @@ function process_RS(stream/*:ReadStream*/, cb/*:(wb:Workbook)=>void*/)/*:void*/{
 }
 ```
 
-More robust solutions are available using modules like `concat-stream`.
 
 
-
-This example uses [`tempfile`](https://npm.im/tempfile) to generate file names:
+When dealing with `ReadableStream`, the easiest approach is to buffer the stream
+and process the whole thing at the end:
 
 ```js
-var fs = require('fs'), tempfile = require('tempfile');
-var XLSX = require('xlsx');
-function process_RS(stream/*:ReadStream*/, cb/*:(wb:Workbook)=>void*/)/*:void*/{
-  var fname = tempfile('.sheetjs');
-  console.log(fname);
-  var ostream = fs.createWriteStream(fname);
-  stream.pipe(ostream);
-  ostream.on('finish', function() {
-    var workbook = XLSX.readFile(fname);
-    fs.unlinkSync(fname);
+// XLSX is a global from the standalone script
 
-    /* DO SOMETHING WITH workbook IN THE CALLBACK */
-    cb(workbook);
-  });
+async function process_RS(stream) {
+  /* collect data */
+  const buffers = [];
+  const reader = stream.getReader();
+  for(;;) {
+    const res = await reader.read();
+    if(res.value) buffers.push(res.value);
+    if(res.done) break;
+  }
+
+  /* concat */
+  const out = new Uint8Array(buffers.reduce((acc, v) => acc + v.length, 0));
+
+  let off = 0;
+  for(const u8 of arr) {
+    out.set(u8, off);
+    off += u8.length;
+  }
+
+  return out;
 }
+
+const data = await process_RS(stream);
+/* data is Uint8Array */
+const workbook = XLSX.read(data);
+```
+
+
+More detailed examples are covered in the [included demos](demos/)
+
+
+### Processing JSON and JS Data
+
+JSON and JS data tend to represent single worksheets.  This section will use a
+few utility functions to generate workbooks:
+
+_Create a new Worksheet_
+
+```js
+var workbook = XLSX.utils.book_new();
+```
+
+The `book_new` utility function creates an empty workbook with no worksheets.
+
+
+_Append a Worksheet to a Workbook_
+
+```js
+XLSX.utils.book_append_sheet(workbook, worksheet, sheet_name);
+```
+
+The `book_append_sheet` utility function appends a worksheet to the workbook.
+The third argument specifies the desired worksheet name. Multiple worksheets can
+be added to a workbook by calling the function multiple times.
+
+
+#### API
+
+_Create a worksheet from an array of arrays of JS values_
+
+```js
+var worksheet = XLSX.utils.aoa_to_sheet(aoa, opts);
+```
+
+The `aoa_to_sheet` utility function walks an "array of arrays" in row-major
+order, generating a worksheet object.  The following snippet generates a sheet
+with cell `A1` set to the string `A1`, cell `B1` set to `B2`, etc:
+
+```js
+var worksheet = XLSX.utils.aoa_to_sheet([
+  ["A1", "B1", "C1"],
+  ["A2", "B2", "C2"],
+  ["A3", "B3", "C3"]
+])
+```
+
+["Array of Arrays Input"](#array-of-arrays-input) describes the function and the
+optional `opts` argument in more detail.
+
+
+_Create a worksheet from an array of JS objects_
+
+```js
+var worksheet = XLSX.utils.json_to_sheet(jsa, opts);
+```
+
+The `json_to_sheet` utility function walks an array of JS objects in order,
+generating a worksheet object.  By default, it will generate a header row and
+one row per object in the array.  The optional `opts` argument has settings to
+control the column order and header output.
+
+["Array of Objects Input"](#array-of-arrays-input) describes the function and
+the optional `opts` argument in more detail.
+
+#### Examples
+
+["Zen of SheetJS"](#the-zen-of-sheetjs) contains a detailed example "Get Data
+from a JSON Endpoint and Generate a Workbook"
+
+The [`database` demo](/demos/database/) includes examples of working with
+databases and query results.
+
+### Processing HTML Tables
+
+#### API
+
+_Create a worksheet by scraping an HTML TABLE in the page_
+
+```js
+var worksheet = XLSX.utils.table_to_sheet(dom_element, opts);
+```
+
+The `table_to_sheet` utility function takes a DOM TABLE element and iterates
+through the rows to generate a worksheet.  The `opts` argument is optional.
+["HTML Table Input"](#html-table-input) describes the function in more detail.
+
+
+
+_Create a workbook by scraping an HTML TABLE in the page_
+
+```js
+var workbook = XLSX.utils.table_to_book(dom_element, opts);
+```
+
+The `table_to_book` utility function follows the same logic as `table_to_sheet`.
+After generating a worksheet, it creates a blank workbook and appends the
+spreadsheet.
+
+The options argument supports the same options as `table_to_sheet`, with the
+addition of a `sheet` property to control the worksheet name.  If the property
+is missing or no options are specified, the default name `Sheet1` is used.
+
+#### Examples
+
+Here are a few common scenarios (click on each subtitle to see the code):
+
+
+```html
+<!-- include the standalone script and shim.  this uses the UNPKG CDN -->
+<script src="https://unpkg.com/xlsx/dist/shim.min.js"></script>
+<script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+
+<!-- example table with id attribute -->
+<table id="tableau">
+  <tr><td>Sheet</td><td>JS</td></tr>
+  <tr><td>12345</td><td>67</td></tr>
+</table>
+
+<!-- this block should appear after the table HTML and the standalone script -->
+<script type="text/javascript">
+  var workbook = XLSX.utils.table_to_book(document.getElementById("tableau"));
+
+  /* DO SOMETHING WITH workbook HERE */
+</script>
+```
+
+Multiple tables on a web page can be converted to individual worksheets:
+
+```js
+/* create new workbook */
+var workbook = XLSX.utils.book_new();
+
+/* convert table "table1" to worksheet named "Sheet1" */
+var sheet1 = XLSX.utils.table_to_sheet(document.getElementById("table1"));
+XLSX.utils.book_append_sheet(workbook, sheet1, "Sheet1");
+
+/* convert table "table2" to worksheet named "Sheet2" */
+var sheet2 = XLSX.utils.table_to_sheet(document.getElementById("table2"));
+XLSX.utils.book_append_sheet(workbook, sheet2, "Sheet2");
+
+/* workbook now has 2 worksheets */
+```
+
+Alternatively, the HTML code can be extracted and parsed:
+
+```js
+var htmlstr = document.getElementById("tableau").outerHTML;
+var workbook = XLSX.read(htmlstr, {type:"string"});
+```
+
+
+
+The [`chrome` demo](demos/chrome/) shows a complete example and details the
+required permissions and other settings.
+
+In an extension, it is recommended to generate the workbook in a content script
+and pass the object back to the extension:
+
+```js
+/* in the worker script */
+chrome.runtime.onMessage.addListener(function(msg, sender, cb) {
+  /* pass a message like { sheetjs: true } from the extension to scrape */
+  if(!msg || !msg.sheetjs) return;
+  /* create a new workbook */
+  var workbook = XLSX.utils.book_new();
+  /* loop through each table element */
+  var tables = document.getElementsByTagName("table")
+  for(var i = 0; i < tables.length; ++i) {
+    var worksheet = XLSX.utils.table_to_sheet(tables[i]);
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Table" + i);
+  }
+  /* pass back to the extension */
+  return cb(workbook);
+});
 ```
 
 

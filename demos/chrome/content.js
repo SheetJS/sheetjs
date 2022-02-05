@@ -7,7 +7,7 @@ document.addEventListener('mousedown', function(mouse) {
 });
 
 chrome.runtime.onMessage.addListener(function(msg, sender, cb) {
-	if(!msg && !msg['Sheet']) return;
+	if(!msg || !msg['Sheet']) return;
 	if(msg.Sheet == "JS") {
 		var elt = document.elementFromPoint(coords[0], coords[1]);
 		while(elt != null) {

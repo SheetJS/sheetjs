@@ -2,7 +2,8 @@
 
 ### Installation
 
-In the browser, just add a script tag:
+The complete browser standalone build is saved to `dist/xlsx.full.min.js` and
+can be directly added to a page with a `script` tag:
 
 ```html
 <script lang="javascript" src="dist/xlsx.full.min.js"></script>
@@ -18,7 +19,7 @@ In the browser, just add a script tag:
 |    `CDNjs` | <https://cdnjs.com/libraries/xlsx>         |
 |    `packd` | <https://bundle.run/xlsx@latest?name=XLSX> |
 
-`unpkg` makes the latest version available at:
+For example, `unpkg` makes the latest version available at:
 
 ```html
 <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
@@ -26,33 +27,8 @@ In the browser, just add a script tag:
 
 </details>
 
-
-With [npm](https://www.npmjs.org/package/xlsx):
-
-```bash
-$ npm install xlsx
-```
-
-With [bower](https://bower.io/search/?q=js-xlsx):
-
-```bash
-$ bower install js-xlsx
-```
-
 <details>
-  <summary><b>Optional features</b> (click to show)</summary>
-
-The node version automatically requires modules for additional features.  Some
-of these modules are rather large in size and are only needed in special
-circumstances, so they do not ship with the core.  For browser use, they must
-be included directly:
-
-```html
-<!-- international support from js-codepage -->
-<script src="dist/cpexcel.js"></script>
-```
-
-An appropriate version for each dependency is included in the dist/ directory.
+  <summary><b>Browser builds</b> (click to show)</summary>
 
 The complete single-file version is generated at `dist/xlsx.full.min.js`
 
@@ -74,8 +50,30 @@ be configured to remove support with `resolve.alias`:
 
 </details>
 
+
+With [npm](https://www.npmjs.org/package/xlsx):
+
+```bash
+$ npm install xlsx
+```
+
+With [bower](https://bower.io/search/?q=js-xlsx):
+
+```bash
+$ bower install js-xlsx
+```
+
+`dist/xlsx.extendscript.js` is an ExtendScript build for Photoshop and InDesign
+that is included in the `npm` package.  It can be directly referenced with a
+`#include` directive:
+
+```extendscript
+#include "xlsx.extendscript.js"
+```
+
+
 <details>
-  <summary><b>ECMAScript 3 Compatibility</b> (click to show)</summary>
+  <summary><b>Internet Explorer and ECMAScript 3 Compatibility</b> (click to show)</summary>
 
 For broad compatibility with JavaScript engines, the library is written using
 ECMAScript 3 language dialect as well as some ES5 features like `Array#forEach`.
