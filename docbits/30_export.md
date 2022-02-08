@@ -1,34 +1,79 @@
-## Writing Workbooks
+## Packaging and Releasing Data
 
-For writing, the first step is to generate output data.  The helper functions
-`write` and `writeFile` will produce the data in various formats suitable for
-dissemination.  The second step is to actual share the data with the end point.
-Assuming `workbook` is a workbook object:
+### Writing Workbooks
 
-<details>
-  <summary><b>nodejs write a file</b> (click to show)</summary>
+**API**
 
-`XLSX.writeFile` uses `fs.writeFileSync` in server environments:
+_Generate spreadsheet bytes (file) from data_
 
 ```js
-if(typeof require !== 'undefined') XLSX = require('xlsx');
+var data = XLSX.write(workbook, opts);
+```
+
+The `write` method attempts to package data from the workbook into a file in
+memory.  By default, XLSX files are generated, but that can be controlled with
+the `bookType` property of the `opts` argument.  Based on the `type` option,
+the data can be stored as a "binary string", JS string, `Uint8Array` or Buffer.
+
+The second `opts` argument is required.  ["Writing Options"](#writing-options)
+covers the supported properties and behaviors.
+
+_Generate and attempt to save file_
+
+```js
+XLSX.writeFile(workbook, filename, opts);
+```
+
+The `writeFile` method packages the data and attempts to save the new file.  The
+export file format is determined by the extension of `filename` (`SheetJS.xlsx`
+signals XLSX export, `SheetJS.xlsb` signals XLSB export, etc).
+
+The `writeFile` method uses platform-specific APIs to initiate the file save. In
+NodeJS, `fs.readFileSync` can create a file.  In the web browser, a download is
+attempted using the HTML5 `download` attribute, with fallbacks for IE.
+
+The second `opts` argument is optional.  ["Writing Options"](#writing-options)
+covers the supported properties and behaviors.
+
+**Examples**
+
+<details>
+  <summary><b>Local file in a NodeJS server</b> (click to show)</summary>
+
+`writeFile` uses `fs.writeFileSync` in server environments:
+
+```js
+var XLSX = require("xlsx");
+
 /* output format determined by filename */
-XLSX.writeFile(workbook, 'out.xlsb');
-/* at this point, out.xlsb is a file that you can distribute */
+XLSX.writeFile(workbook, "out.xlsb");
+```
+
+For Node ESM, the `writeFile` helper is not enabled. Instead, `fs.writeFileSync`
+should be used to write the file data to a `Buffer` for use with `XLSX.write`:
+
+```js
+import { writeFileSync } from "fs";
+import { write } from "xlsx/xlsx.mjs";
+
+const buf = write(workbook, {type: "buffer", bookType: "xlsb"});
+/* buf is a Buffer */
+const workbook = writeFileSync("out.xlsb", buf);
 ```
 
 </details>
 
 <details>
-  <summary><b>Photoshop ExtendScript write a file</b> (click to show)</summary>
+  <summary><b>Local file in a PhotoShop or InDesign plugin</b> (click to show)</summary>
 
 `writeFile` wraps the `File` logic in Photoshop and other ExtendScript targets.
 The specified path should be an absolute path:
 
 ```js
 #include "xlsx.extendscript.js"
+
 /* output format determined by filename */
-XLSX.writeFile(workbook, 'out.xlsx');
+XLSX.writeFile(workbook, "out.xlsx");
 /* at this point, out.xlsx is a file that you can distribute */
 ```
 
@@ -37,44 +82,7 @@ The [`extendscript` demo](demos/extendscript/) includes a more complex example.
 </details>
 
 <details>
-  <summary><b>Browser add TABLE element to page</b> (click to show)</summary>
-
-The `sheet_to_html` utility function generates HTML code that can be added to
-any DOM element.
-
-```js
-var worksheet = workbook.Sheets[workbook.SheetNames[0]];
-var container = document.getElementById('tableau');
-container.innerHTML = XLSX.utils.sheet_to_html(worksheet);
-```
-
-</details>
-
-<details>
-  <summary><b>Browser upload file (ajax)</b> (click to show)</summary>
-
-A complete example using XHR is [included in the XHR demo](demos/xhr/), along
-with examples for fetch and wrapper libraries.  This example assumes the server
-can handle Base64-encoded files (see the demo for a basic nodejs server):
-
-```js
-/* in this example, send a base64 string to the server */
-var wopts = { bookType:'xlsx', bookSST:false, type:'base64' };
-
-var wbout = XLSX.write(workbook,wopts);
-
-var req = new XMLHttpRequest();
-req.open("POST", "/upload", true);
-var formdata = new FormData();
-formdata.append('file', 'test.xlsx'); // <-- server expects `file` to hold name
-formdata.append('data', wbout); // <-- `data` holds the base64-encoded data
-req.send(formdata);
-```
-
-</details>
-
-<details>
-  <summary><b>Browser save file</b> (click to show)</summary>
+  <summary><b>Download a file in the browser to the user machine</b> (click to show)</summary>
 
 `XLSX.writeFile` wraps a few techniques for triggering a file save:
 
@@ -88,14 +96,14 @@ There is no standard way to determine if the actual file has been downloaded.
 
 ```js
 /* output format determined by filename */
-XLSX.writeFile(workbook, 'out.xlsb');
+XLSX.writeFile(workbook, "out.xlsb");
 /* at this point, out.xlsb will have been downloaded */
 ```
 
 </details>
 
 <details>
-  <summary><b>Browser save file (compatibility)</b> (click to show)</summary>
+  <summary><b>Download a file in legacy browsers</b> (click to show)</summary>
 
 `XLSX.writeFile` techniques work for most modern browsers as well as older IE.
 For much older browsers, there are workarounds implemented by wrapper libraries.
@@ -105,7 +113,7 @@ Note: `XLSX.writeFile` will automatically call `saveAs` if available.
 
 ```js
 /* bookType can be any supported output type */
-var wopts = { bookType:'xlsx', bookSST:false, type:'array' };
+var wopts = { bookType:"xlsx", bookSST:false, type:"array" };
 
 var wbout = XLSX.write(workbook,wopts);
 
@@ -118,11 +126,11 @@ to generate local files, suitable for environments where ActiveX is unavailable:
 
 ```js
 Downloadify.create(id,{
-	/* other options are required! read the downloadify docs for more info */
-	filename: "test.xlsx",
-	data: function() { return XLSX.write(wb, {bookType:"xlsx", type:'base64'}); },
-	append: false,
-	dataType: 'base64'
+  /* other options are required! read the downloadify docs for more info */
+  filename: "test.xlsx",
+  data: function() { return XLSX.write(wb, {bookType:"xlsx", type:"base64"}); },
+  append: false,
+  dataType: "base64"
 });
 ```
 
@@ -130,10 +138,97 @@ The [`oldie` demo](demos/oldie/) shows an IE-compatible fallback scenario.
 
 </details>
 
+<details>
+  <summary><b>Browser upload file (ajax)</b> (click to show)</summary>
+
+A complete example using XHR is [included in the XHR demo](demos/xhr/), along
+with examples for fetch and wrapper libraries.  This example assumes the server
+can handle Base64-encoded files (see the demo for a basic nodejs server):
+
+```js
+/* in this example, send a base64 string to the server */
+var wopts = { bookType:"xlsx", bookSST:false, type:"base64" };
+
+var wbout = XLSX.write(workbook,wopts);
+
+var req = new XMLHttpRequest();
+req.open("POST", "/upload", true);
+var formdata = new FormData();
+formdata.append("file", "test.xlsx"); // <-- server expects `file` to hold name
+formdata.append("data", wbout); // <-- `data` holds the base64-encoded data
+req.send(formdata);
+```
+
+</details>
+
+<details>
+  <summary><b>PhantomJS (Headless Webkit) File Generation</b> (click to show)</summary>
+
+The [`headless` demo](demos/headless/) includes a complete demo to convert HTML
+files to XLSB workbooks using [PhantomJS](https://phantomjs.org/). PhantomJS
+`fs.write` supports writing files from the main process but has a different
+interface from the NodeJS `fs` module:
+
+```js
+var XLSX = require('xlsx');
+var fs = require('fs');
+
+/* generate a binary string */
+var bin = XLSX.write(workbook, { type:"binary", bookType: "xlsx" });
+/* write to file */
+fs.write("test.xlsx", bin, "wb");
+```
+
+Note: The section ["Processing HTML Tables"](#processing-html-tables) shows how
+to generate a workbook from HTML tables in a page in "Headless WebKit".
+
+</details>
+
+
+
 The [included demos](demos/) cover mobile apps and other special deployments.
 
 ### Writing Examples
 
 - <http://sheetjs.com/demos/table.html> exporting an HTML table
 - <http://sheetjs.com/demos/writexlsx.html> generates a simple file
+
+### Streaming Write
+
+The streaming write functions are available in the `XLSX.stream` object.  They
+take the same arguments as the normal write functions but return a Readable
+Stream.  They are only exposed in NodeJS.
+
+- `XLSX.stream.to_csv` is the streaming version of `XLSX.utils.sheet_to_csv`.
+- `XLSX.stream.to_html` is the streaming version of `XLSX.utils.sheet_to_html`.
+- `XLSX.stream.to_json` is the streaming version of `XLSX.utils.sheet_to_json`.
+
+<details>
+  <summary><b>nodejs convert to CSV and write file</b> (click to show)</summary>
+
+```js
+var output_file_name = "out.csv";
+var stream = XLSX.stream.to_csv(worksheet);
+stream.pipe(fs.createWriteStream(output_file_name));
+```
+
+</details>
+
+<details>
+  <summary><b>nodejs write JSON stream to screen</b> (click to show)</summary>
+
+```js
+/* to_json returns an object-mode stream */
+var stream = XLSX.stream.to_json(worksheet, {raw:true});
+
+/* the following stream converts JS objects to text via JSON.stringify */
+var conv = new Transform({writableObjectMode:true});
+conv._transform = function(obj, e, cb){ cb(null, JSON.stringify(obj) + "\n"); };
+
+stream.pipe(conv); conv.pipe(process.stdout);
+```
+
+</details>
+
+<https://github.com/sheetjs/sheetaki> pipes write streams to nodejs response.
 

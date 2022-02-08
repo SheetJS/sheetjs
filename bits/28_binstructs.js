@@ -132,8 +132,7 @@ function parse_RkNumber(data)/*:number*/ {
 	var b = data.slice(data.l, data.l + 4);
 	var fX100 = (b[0] & 1), fInt = (b[0] & 2);
 	data.l += 4;
-	b[0] &= 0xFC; // b[0] &= ~3;
-	var RK = fInt === 0 ? __double([0, 0, 0, 0, b[0], b[1], b[2], b[3]], 0) : __readInt32LE(b, 0) >> 2;
+	var RK = fInt === 0 ? __double([0, 0, 0, 0, (b[0] & 0xFC), b[1], b[2], b[3]], 0) : __readInt32LE(b, 0) >> 2;
 	return fX100 ? (RK / 100) : RK;
 }
 function write_RkNumber(data/*:number*/, o) {

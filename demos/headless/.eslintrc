@@ -1,0 +1,11 @@
+{
+
+	"env": { "node":true },
+	"parserOptions": {
+		"ecmaVersion": 8
+	},
+	"rules": {
+		"no-var": 0,
+		"semi": [ 2, "always" ]
+	}
+}

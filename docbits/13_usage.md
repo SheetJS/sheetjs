@@ -48,7 +48,6 @@ and approaches for steps 1 and 5.
 
 Utility functions help with step 3.
 
-
 ### The Zen of SheetJS
 
 _Data processing should fit in any workflow_

@@ -139,6 +139,7 @@ function sheet_add_dom(ws/*:Worksheet*/, table/*:HTMLElement*/, _opts/*:?any*/)/
 			or_R = _origin.r; or_C = _origin.c;
 		}
 	}
+
 	var rows/*:HTMLCollection<HTMLTableRowElement>*/ = table.getElementsByTagName('tr');
 	var sheetRows = Math.min(opts.sheetRows||10000000, rows.length);
 	var range/*:Range*/ = {s:{r:0,c:0},e:{r:or_R,c:or_C}};
@@ -223,7 +224,7 @@ function is_dom_element_hidden(element/*:HTMLElement*/)/*:boolean*/ {
 	var display/*:string*/ = '';
 	var get_computed_style/*:?function*/ = get_get_computed_style_function(element);
 	if(get_computed_style) display = get_computed_style(element).getPropertyValue('display');
-	if(!display) display = element.style.display; // Fallback for cases when getComputedStyle is not available (e.g. an old browser or some Node.js environments) or doesn't work (e.g. if the element is not inserted to a document)
+	if(!display) display = element.style && element.style.display;
 	return display === 'none';
 }
 

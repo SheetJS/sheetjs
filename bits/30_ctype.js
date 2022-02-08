@@ -111,7 +111,7 @@ var ct2type/*{[string]:string}*/ = ({
 
 	/* VBA */
 	"application/vnd.ms-office.vbaProject": "vba",
-	"application/vnd.ms-office.vbaProjectSignature": "vba",
+	"application/vnd.ms-office.vbaProjectSignature": "TODO",
 
 	/* Volatile Dependencies */
 	"application/vnd.ms-office.volatileDependencies": "TODO",

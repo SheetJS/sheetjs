@@ -23,7 +23,7 @@ The third argument specifies the desired worksheet name. Multiple worksheets can
 be added to a workbook by calling the function multiple times.
 
 
-#### API
+**API**
 
 _Create a worksheet from an array of arrays of JS values_
 
@@ -61,17 +61,68 @@ control the column order and header output.
 ["Array of Objects Input"](#array-of-arrays-input) describes the function and
 the optional `opts` argument in more detail.
 
-#### Examples
+**Examples**
 
 ["Zen of SheetJS"](#the-zen-of-sheetjs) contains a detailed example "Get Data
 from a JSON Endpoint and Generate a Workbook"
 
+
+[`x-spreadsheet`](https://github.com/myliang/x-spreadsheet) is an interactive
+data grid for previewing and modifying structured data in the web browser.  The
+[`xspreadsheet` demo](/demos/xspreadsheet) includes a sample script with the
+`xtos` function for converting from x-spreadsheet data object to a workbook.
+<https://oss.sheetjs.com/sheetjs/x-spreadsheet> is a live demo.
+
+<details>
+  <summary><b>Records from a database query (SQL or no-SQL)</b> (click to show)</summary>
+
 The [`database` demo](/demos/database/) includes examples of working with
 databases and query results.
 
+</details>
+
+
+<details>
+  <summary><b>Numerical Computations with TensorFlow.js</b> (click to show)</summary>
+
+[`@tensorflow/tfjs`](@tensorflow/tfjs) and other libraries expect data in simple
+arrays, well-suited for worksheets where each column is a data vector.  That is
+the transpose of how most people use spreadsheets, where each row is a vector.
+
+When recovering data from `tfjs`, the returned data points are stored in a typed
+array.  An array of arrays can be constructed with loops. `Array#unshift` can
+prepend a title row before the conversion:
+
+```js
+const XLSX = require("xlsx");
+const tf = require('@tensorflow/tfjs');
+
+/* suppose xs and ys are vectors (1D tensors) -> tfarr will be a typed array */
+const tfdata = tf.stack([xs, ys]).transpose();
+const shape = tfdata.shape;
+const tfarr = tfdata.dataSync();
+
+/* construct the array of arrays */
+const aoa = [];
+for(let j = 0; j < shape[0]; ++j) {
+  aoa[j] = [];
+  for(let i = 0; i < shape[1]; ++i) aoa[j][i] = tfarr[j * shape[1] + i];
+}
+/* add headers to the top */
+aoa.unshift(["x", "y"]);
+
+/* generate worksheet */
+const worksheet = XLSX.utils.aoa_to_sheet(aoa);
+```
+
+The [`array` demo](demos/array/) shows a complete example.
+
+</details>
+
+
 ### Processing HTML Tables
 
-#### API
+**API**
 
 _Create a worksheet by scraping an HTML TABLE in the page_
 
@@ -99,7 +150,7 @@ The options argument supports the same options as `table_to_sheet`, with the
 addition of a `sheet` property to control the worksheet name.  If the property
 is missing or no options are specified, the default name `Sheet1` is used.
 
-#### Examples
+**Examples**
 
 Here are a few common scenarios (click on each subtitle to see the code):
 
@@ -176,6 +227,116 @@ chrome.runtime.onMessage.addListener(function(msg, sender, cb) {
   /* pass back to the extension */
   return cb(workbook);
 });
+```
+
+</details>
+
+<details>
+  <summary><b>Server-Side HTML Tables with Headless Chrome</b> (click to show)</summary>
+
+The [`headless` demo](demos/headless/) includes a complete demo to convert HTML
+files to XLSB workbooks.  The core idea is to add the script to the page, parse
+the table in the page context, generate a `base64` workbook and send it back
+for further processing:
+
+```js
+const XLSX = require("xlsx");
+const { readFileSync } = require("fs"), puppeteer = require("puppeteer");
+
+const url = `https://sheetjs.com/demos/table`;
+
+/* get the standalone build source (node_modules/xlsx/dist/xlsx.full.min.js) */
+const lib = readFileSync(require.resolve("xlsx/dist/xlsx.full.min.js"), "utf8");
+
+(async() => {
+  /* start browser and go to web page */
+  const browser = await puppeteer.launch();
+  const page = await browser.newPage();
+  await page.goto(url, {waitUntil: "networkidle2"});
+
+  /* inject library */
+  await page.addScriptTag({content: lib});
+
+  /* this function `s5s` will be called by the script below, receiving the Base64-encoded file */
+  await page.exposeFunction("s5s", async(b64) => {
+    const workbook = XLSX.read(b64, {type: "base64" });
+
+    /* DO SOMETHING WITH workbook HERE */
+  });
+
+  /* generate XLSB file in webpage context and send back result */
+  await page.addScriptTag({content: `
+    /* call table_to_book on first table */
+    var workbook = XLSX.utils.table_to_book(document.querySelector("TABLE"));
+
+    /* generate XLSX file */
+    var b64 = XLSX.write(workbook, {type: "base64", bookType: "xlsb"});
+
+    /* call "s5s" hook exposed from the node process */
+    window.s5s(b64);
+  `});
+
+  /* cleanup */
+  await browser.close();
+})();
+```
+
+</details>
+
+<details>
+  <summary><b>Server-Side HTML Tables with Headless WebKit</b> (click to show)</summary>
+
+The [`headless` demo](demos/headless/) includes a complete demo to convert HTML
+files to XLSB workbooks using [PhantomJS](https://phantomjs.org/). The core idea
+is to add the script to the page, parse the table in the page context, generate
+a `binary` workbook and send it back for further processing:
+
+```js
+var XLSX = require('xlsx');
+var page = require('webpage').create();
+
+/* this code will be run in the page */
+var code = [ "function(){",
+  /* call table_to_book on first table */
+  "var wb = XLSX.utils.table_to_book(document.body.getElementsByTagName('table')[0]);",
+
+  /* generate XLSB file and return binary string */
+  "return XLSX.write(wb, {type: 'binary', bookType: 'xlsb'});",
+"}" ].join("");
+
+page.open('https://sheetjs.com/demos/table', function() {
+  /* Load the browser script from the UNPKG CDN */
+  page.includeJs("https://unpkg.com/xlsx/dist/xlsx.full.min.js", function() {
+    /* The code will return an XLSB file encoded as binary string */
+    var bin = page.evaluateJavaScript(code);
+
+    var workbook = XLSX.read(bin, {type: "binary"});
+    /* DO SOMETHING WITH workbook HERE */
+
+    phantom.exit();
+  });
+});
+```
+
+</details>
+
+<details>
+  <summary><b>NodeJS HTML Tables without a browser</b> (click to show)</summary>
+
+NodeJS does not include a DOM implementation and Puppeteer requires a hefty
+Chromium build.  [`jsdom`](https://npm.im/jsdom) is a lightweight alternative:
+
+```js
+const XLSX = require("xlsx");
+const { readFileSync } = require("fs");
+const { JSDOM } = require("jsdom");
+
+/* obtain HTML string.  This example reads from test.html */
+const html_str = fs.readFileSync("test.html", "utf8");
+/* get first TABLE element */
+const doc = new JSDOM(html_str).window.document.querySelector("table");
+/* generate workbook */
+const workbook = XLSX.utils.table_to_book(doc);
 ```
 
 </details>

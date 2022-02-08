@@ -244,6 +244,12 @@ function write_BrtShortRk(cell, ncell, o) {
 	return o;
 }
 
+/* [MS-XLSB] 2.4.323 BrtCellRString */
+function parse_BrtCellRString(data) {
+	var cell = parse_XLSBCell(data);
+	var value = parse_RichStr(data);
+	return [cell, value, 'is'];
+}
 
 /* [MS-XLSB] 2.4.317 BrtCellSt */
 function parse_BrtCellSt(data) {
@@ -564,6 +570,7 @@ function parse_ws_bin(data, _opts, idx, rels, wb/*:WBWBProps*/, themes, styles)/
 			case 0x0010: /* 'BrtShortReal' */
 			case 0x0011: /* 'BrtShortSt' */
 			case 0x0012: /* 'BrtShortIsst' */
+			case 0x003E: /* 'BrtCellRString' */
 				p = ({t:val[2]}/*:any*/);
 				switch(val[2]) {
 					case 'n': p.v = val[1]; break;
@@ -571,6 +578,7 @@ function parse_ws_bin(data, _opts, idx, rels, wb/*:WBWBProps*/, themes, styles)/
 					case 'b': p.v = val[1] ? true : false; break;
 					case 'e': p.v = val[1]; if(opts.cellText !== false) p.w = BErr[p.v]; break;
 					case 'str': p.t = 's'; p.v = val[1]; break;
+					case 'is': p.t = 's'; p.v = val[1].t; break;
 				}
 				if((cf = styles.CellXf[val[0].iStyleRef])) safe_format(p,cf.numFmtId,null,opts, themes, styles);
 				C = val[0].c == -1 ? C + 1 : val[0].c;

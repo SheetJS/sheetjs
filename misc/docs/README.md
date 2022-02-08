@@ -40,19 +40,16 @@ port calculations to web apps; automate common spreadsheet tasks, and much more!
   * [JS Ecosystem Demos](#js-ecosystem-demos)
 - [Acquiring and Extracting Data](#acquiring-and-extracting-data)
   * [Parsing Workbooks](#parsing-workbooks)
-    + [API](#api)
-    + [Examples](#examples)
   * [Processing JSON and JS Data](#processing-json-and-js-data)
-    + [API](#api-1)
-    + [Examples](#examples-1)
   * [Processing HTML Tables](#processing-html-tables)
-    + [API](#api-2)
-    + [Examples](#examples-2)
 - [Working with the Workbook](#working-with-the-workbook)
   * [Parsing and Writing Examples](#parsing-and-writing-examples)
-- [Writing Workbooks](#writing-workbooks)
+- [Packaging and Releasing Data](#packaging-and-releasing-data)
+  * [Writing Workbooks](#writing-workbooks)
   * [Writing Examples](#writing-examples)
   * [Streaming Write](#streaming-write)
+  * [Generating JSON and JS Data](#generating-json-and-js-data)
+  * [Generating HTML Tables](#generating-html-tables)
 - [Interface](#interface)
   * [Parsing functions](#parsing-functions)
   * [Writing functions](#writing-functions)
@@ -248,7 +245,6 @@ This documentation and various demo projects cover a number of common scenarios
 and approaches for steps 1 and 5.
 
 Utility functions help with step 3.
-
 
 ### The Zen of SheetJS
 
@@ -508,7 +504,7 @@ Other examples are included in the [showcase](demos/showcase/).
 
 ### Parsing Workbooks
 
-#### API
+**API**
 
 _Extract data from spreadsheet bytes_
 
@@ -533,7 +529,7 @@ security risk), and attempts to read files in this way will throw an error.
 The second `opts` argument is optional. ["Parsing Options"](#parsing-options)
 covers the supported properties and behaviors.
 
-#### Examples
+**Examples**
 
 Here are a few common scenarios (click on each subtitle to see the code):
 
@@ -546,7 +542,7 @@ var XLSX = require("xlsx");
 var workbook = XLSX.readFile("test.xlsx");
 ```
 
-For Node ESM, the `readFile` helper is not enabled.  Instead, `fs.readFileSync`
+For Node ESM, the `readFile` helper is not enabled. Instead, `fs.readFileSync`
 should be used to read the file data as a `Buffer` for use with `XLSX.read`:
 
 ```js
@@ -893,8 +889,6 @@ const workbook = XLSX.read(data);
 
 
 More detailed examples are covered in the [included demos](demos/)
-
-
 ### Processing JSON and JS Data
 
 JSON and JS data tend to represent single worksheets.  This section will use a
@@ -920,7 +914,7 @@ The third argument specifies the desired worksheet name. Multiple worksheets can
 be added to a workbook by calling the function multiple times.
 
 
-#### API
+**API**
 
 _Create a worksheet from an array of arrays of JS values_
 
@@ -958,17 +952,62 @@ control the column order and header output.
 ["Array of Objects Input"](#array-of-arrays-input) describes the function and
 the optional `opts` argument in more detail.
 
-#### Examples
+**Examples**
 
 ["Zen of SheetJS"](#the-zen-of-sheetjs) contains a detailed example "Get Data
 from a JSON Endpoint and Generate a Workbook"
 
+
+[`x-spreadsheet`](https://github.com/myliang/x-spreadsheet) is an interactive
+data grid for previewing and modifying structured data in the web browser.  The
+[`xspreadsheet` demo](/demos/xspreadsheet) includes a sample script with the
+`xtos` function for converting from x-spreadsheet data object to a workbook.
+<https://oss.sheetjs.com/sheetjs/x-spreadsheet> is a live demo.
+
+
 The [`database` demo](/demos/database/) includes examples of working with
 databases and query results.
 
+
+
+
+[`@tensorflow/tfjs`](@tensorflow/tfjs) and other libraries expect data in simple
+arrays, well-suited for worksheets where each column is a data vector.  That is
+the transpose of how most people use spreadsheets, where each row is a vector.
+
+When recovering data from `tfjs`, the returned data points are stored in a typed
+array.  An array of arrays can be constructed with loops. `Array#unshift` can
+prepend a title row before the conversion:
+
+```js
+const XLSX = require("xlsx");
+const tf = require('@tensorflow/tfjs');
+
+/* suppose xs and ys are vectors (1D tensors) -> tfarr will be a typed array */
+const tfdata = tf.stack([xs, ys]).transpose();
+const shape = tfdata.shape;
+const tfarr = tfdata.dataSync();
+
+/* construct the array of arrays */
+const aoa = [];
+for(let j = 0; j < shape[0]; ++j) {
+  aoa[j] = [];
+  for(let i = 0; i < shape[1]; ++i) aoa[j][i] = tfarr[j * shape[1] + i];
+}
+/* add headers to the top */
+aoa.unshift(["x", "y"]);
+
+/* generate worksheet */
+const worksheet = XLSX.utils.aoa_to_sheet(aoa);
+```
+
+The [`array` demo](demos/array/) shows a complete example.
+
+
+
 ### Processing HTML Tables
 
-#### API
+**API**
 
 _Create a worksheet by scraping an HTML TABLE in the page_
 
@@ -996,7 +1035,7 @@ The options argument supports the same options as `table_to_sheet`, with the
 addition of a `sheet` property to control the worksheet name.  If the property
 is missing or no options are specified, the default name `Sheet1` is used.
 
-#### Examples
+**Examples**
 
 Here are a few common scenarios (click on each subtitle to see the code):
 
@@ -1068,6 +1107,107 @@ chrome.runtime.onMessage.addListener(function(msg, sender, cb) {
   /* pass back to the extension */
   return cb(workbook);
 });
+```
+
+
+
+The [`headless` demo](demos/headless/) includes a complete demo to convert HTML
+files to XLSB workbooks.  The core idea is to add the script to the page, parse
+the table in the page context, generate a `base64` workbook and send it back
+for further processing:
+
+```js
+const XLSX = require("xlsx");
+const { readFileSync } = require("fs"), puppeteer = require("puppeteer");
+
+const url = `https://sheetjs.com/demos/table`;
+
+/* get the standalone build source (node_modules/xlsx/dist/xlsx.full.min.js) */
+const lib = readFileSync(require.resolve("xlsx/dist/xlsx.full.min.js"), "utf8");
+
+(async() => {
+  /* start browser and go to web page */
+  const browser = await puppeteer.launch();
+  const page = await browser.newPage();
+  await page.goto(url, {waitUntil: "networkidle2"});
+
+  /* inject library */
+  await page.addScriptTag({content: lib});
+
+  /* this function `s5s` will be called by the script below, receiving the Base64-encoded file */
+  await page.exposeFunction("s5s", async(b64) => {
+    const workbook = XLSX.read(b64, {type: "base64" });
+
+    /* DO SOMETHING WITH workbook HERE */
+  });
+
+  /* generate XLSB file in webpage context and send back result */
+  await page.addScriptTag({content: `
+    /* call table_to_book on first table */
+    var workbook = XLSX.utils.table_to_book(document.querySelector("TABLE"));
+
+    /* generate XLSX file */
+    var b64 = XLSX.write(workbook, {type: "base64", bookType: "xlsb"});
+
+    /* call "s5s" hook exposed from the node process */
+    window.s5s(b64);
+  `});
+
+  /* cleanup */
+  await browser.close();
+})();
+```
+
+
+
+The [`headless` demo](demos/headless/) includes a complete demo to convert HTML
+files to XLSB workbooks using [PhantomJS](https://phantomjs.org/). The core idea
+is to add the script to the page, parse the table in the page context, generate
+a `binary` workbook and send it back for further processing:
+
+```js
+var XLSX = require('xlsx');
+var page = require('webpage').create();
+
+/* this code will be run in the page */
+var code = [ "function(){",
+  /* call table_to_book on first table */
+  "var wb = XLSX.utils.table_to_book(document.body.getElementsByTagName('table')[0]);",
+
+  /* generate XLSB file and return binary string */
+  "return XLSX.write(wb, {type: 'binary', bookType: 'xlsb'});",
+"}" ].join("");
+
+page.open('https://sheetjs.com/demos/table', function() {
+  /* Load the browser script from the UNPKG CDN */
+  page.includeJs("https://unpkg.com/xlsx/dist/xlsx.full.min.js", function() {
+    /* The code will return an XLSB file encoded as binary string */
+    var bin = page.evaluateJavaScript(code);
+
+    var workbook = XLSX.read(bin, {type: "binary"});
+    /* DO SOMETHING WITH workbook HERE */
+
+    phantom.exit();
+  });
+});
+```
+
+
+
+NodeJS does not include a DOM implementation and Puppeteer requires a hefty
+Chromium build.  [`jsdom`](https://npm.im/jsdom) is a lightweight alternative:
+
+```js
+const XLSX = require("xlsx");
+const { readFileSync } = require("fs");
+const { JSDOM } = require("jsdom");
+
+/* obtain HTML string.  This example reads from test.html */
+const html_str = fs.readFileSync("test.html", "utf8");
+/* get first TABLE element */
+const doc = new JSDOM(html_str).window.document.querySelector("table");
+/* generate workbook */
+const workbook = XLSX.utils.table_to_book(doc);
 ```
 
 
@@ -1145,21 +1285,65 @@ Some helper functions in `XLSX.utils` generate different views of the sheets:
 - `XLSX.utils.sheet_to_json` generates an array of objects
 - `XLSX.utils.sheet_to_formulae` generates a list of formulae
 
-## Writing Workbooks
+## Packaging and Releasing Data
 
-For writing, the first step is to generate output data.  The helper functions
-`write` and `writeFile` will produce the data in various formats suitable for
-dissemination.  The second step is to actual share the data with the end point.
-Assuming `workbook` is a workbook object:
+### Writing Workbooks
 
+**API**
 
-`XLSX.writeFile` uses `fs.writeFileSync` in server environments:
+_Generate spreadsheet bytes (file) from data_
 
 ```js
-if(typeof require !== 'undefined') XLSX = require('xlsx');
+var data = XLSX.write(workbook, opts);
+```
+
+The `write` method attempts to package data from the workbook into a file in
+memory.  By default, XLSX files are generated, but that can be controlled with
+the `bookType` property of the `opts` argument.  Based on the `type` option,
+the data can be stored as a "binary string", JS string, `Uint8Array` or Buffer.
+
+The second `opts` argument is required.  ["Writing Options"](#writing-options)
+covers the supported properties and behaviors.
+
+_Generate and attempt to save file_
+
+```js
+XLSX.writeFile(workbook, filename, opts);
+```
+
+The `writeFile` method packages the data and attempts to save the new file.  The
+export file format is determined by the extension of `filename` (`SheetJS.xlsx`
+signals XLSX export, `SheetJS.xlsb` signals XLSB export, etc).
+
+The `writeFile` method uses platform-specific APIs to initiate the file save. In
+NodeJS, `fs.readFileSync` can create a file.  In the web browser, a download is
+attempted using the HTML5 `download` attribute, with fallbacks for IE.
+
+The second `opts` argument is optional.  ["Writing Options"](#writing-options)
+covers the supported properties and behaviors.
+
+**Examples**
+
+
+`writeFile` uses `fs.writeFileSync` in server environments:
+
+```js
+var XLSX = require("xlsx");
+
 /* output format determined by filename */
-XLSX.writeFile(workbook, 'out.xlsb');
-/* at this point, out.xlsb is a file that you can distribute */
+XLSX.writeFile(workbook, "out.xlsb");
+```
+
+For Node ESM, the `writeFile` helper is not enabled. Instead, `fs.writeFileSync`
+should be used to write the file data to a `Buffer` for use with `XLSX.write`:
+
+```js
+import { writeFileSync } from "fs";
+import { write } from "xlsx/xlsx.mjs";
+
+const buf = write(workbook, {type: "buffer", bookType: "xlsb"});
+/* buf is a Buffer */
+const workbook = writeFileSync("out.xlsb", buf);
 ```
 
 
@@ -1169,43 +1353,13 @@ The specified path should be an absolute path:
 
 ```js
 #include "xlsx.extendscript.js"
+
 /* output format determined by filename */
-XLSX.writeFile(workbook, 'out.xlsx');
+XLSX.writeFile(workbook, "out.xlsx");
 /* at this point, out.xlsx is a file that you can distribute */
 ```
 
 The [`extendscript` demo](demos/extendscript/) includes a more complex example.
-
-
-
-The `sheet_to_html` utility function generates HTML code that can be added to
-any DOM element.
-
-```js
-var worksheet = workbook.Sheets[workbook.SheetNames[0]];
-var container = document.getElementById('tableau');
-container.innerHTML = XLSX.utils.sheet_to_html(worksheet);
-```
-
-
-
-A complete example using XHR is [included in the XHR demo](demos/xhr/), along
-with examples for fetch and wrapper libraries.  This example assumes the server
-can handle Base64-encoded files (see the demo for a basic nodejs server):
-
-```js
-/* in this example, send a base64 string to the server */
-var wopts = { bookType:'xlsx', bookSST:false, type:'base64' };
-
-var wbout = XLSX.write(workbook,wopts);
-
-var req = new XMLHttpRequest();
-req.open("POST", "/upload", true);
-var formdata = new FormData();
-formdata.append('file', 'test.xlsx'); // <-- server expects `file` to hold name
-formdata.append('data', wbout); // <-- `data` holds the base64-encoded data
-req.send(formdata);
-```
 
 
 
@@ -1221,7 +1375,7 @@ There is no standard way to determine if the actual file has been downloaded.
 
 ```js
 /* output format determined by filename */
-XLSX.writeFile(workbook, 'out.xlsb');
+XLSX.writeFile(workbook, "out.xlsb");
 /* at this point, out.xlsb will have been downloaded */
 ```
 
@@ -1235,7 +1389,7 @@ Note: `XLSX.writeFile` will automatically call `saveAs` if available.
 
 ```js
 /* bookType can be any supported output type */
-var wopts = { bookType:'xlsx', bookSST:false, type:'array' };
+var wopts = { bookType:"xlsx", bookSST:false, type:"array" };
 
 var wbout = XLSX.write(workbook,wopts);
 
@@ -1248,15 +1402,57 @@ to generate local files, suitable for environments where ActiveX is unavailable:
 
 ```js
 Downloadify.create(id,{
-	/* other options are required! read the downloadify docs for more info */
-	filename: "test.xlsx",
-	data: function() { return XLSX.write(wb, {bookType:"xlsx", type:'base64'}); },
-	append: false,
-	dataType: 'base64'
+  /* other options are required! read the downloadify docs for more info */
+  filename: "test.xlsx",
+  data: function() { return XLSX.write(wb, {bookType:"xlsx", type:"base64"}); },
+  append: false,
+  dataType: "base64"
 });
 ```
 
 The [`oldie` demo](demos/oldie/) shows an IE-compatible fallback scenario.
+
+
+
+A complete example using XHR is [included in the XHR demo](demos/xhr/), along
+with examples for fetch and wrapper libraries.  This example assumes the server
+can handle Base64-encoded files (see the demo for a basic nodejs server):
+
+```js
+/* in this example, send a base64 string to the server */
+var wopts = { bookType:"xlsx", bookSST:false, type:"base64" };
+
+var wbout = XLSX.write(workbook,wopts);
+
+var req = new XMLHttpRequest();
+req.open("POST", "/upload", true);
+var formdata = new FormData();
+formdata.append("file", "test.xlsx"); // <-- server expects `file` to hold name
+formdata.append("data", wbout); // <-- `data` holds the base64-encoded data
+req.send(formdata);
+```
+
+
+
+The [`headless` demo](demos/headless/) includes a complete demo to convert HTML
+files to XLSB workbooks using [PhantomJS](https://phantomjs.org/). PhantomJS
+`fs.write` supports writing files from the main process but has a different
+interface from the NodeJS `fs` module:
+
+```js
+var XLSX = require('xlsx');
+var fs = require('fs');
+
+/* generate a binary string */
+var bin = XLSX.write(workbook, { type:"binary", bookType: "xlsx" });
+/* write to file */
+fs.write("test.xlsx", bin, "wb");
+```
+
+Note: The section ["Processing HTML Tables"](#processing-html-tables) shows how
+to generate a workbook from HTML tables in a page in "Headless WebKit".
+
+
 
 
 The [included demos](demos/) cover mobile apps and other special deployments.
@@ -1298,6 +1494,208 @@ stream.pipe(conv); conv.pipe(process.stdout);
 
 
 <https://github.com/sheetjs/sheetaki> pipes write streams to nodejs response.
+
+### Generating JSON and JS Data
+
+JSON and JS data tend to represent single worksheets. The utility functions in
+this section work with single worksheets.
+
+The ["Common Spreadsheet Format"](#common-spreadsheet-format) section describes
+the object structure in more detail.  `workbook.SheetNames` is an ordered list
+of the worksheet names.  `workbook.Sheets` is an object whose keys are sheet
+names and whose values are worksheet objects.
+
+The "first worksheet" is stored at `workbook.Sheets[workbook.SheetNames[0]]`.
+
+**API**
+
+_Create an array of JS objects from a worksheet_
+
+```js
+var jsa = XLSX.utils.sheet_to_json(worksheet, opts);
+```
+
+_Create an array of arrays of JS values from a worksheet_
+
+```js
+var aoa = XLSX.utils.sheet_to_json(worksheet, {...opts, header: 1});
+```
+
+The `sheet_to_json` utility function walks a workbook in row-major order,
+generating an array of objects.  The second `opts` argument controls a number of
+export decisions including the type of values (JS values or formatted text). The
+["JSON"](#json) section describes the argument in more detail.
+
+By default, `sheet_to_json` scans the first row and uses the values as headers.
+With the `header: 1` option, the function exports an array of arrays of values.
+
+**Examples**
+
+[`x-spreadsheet`](https://github.com/myliang/x-spreadsheet) is an interactive
+data grid for previewing and modifying structured data in the web browser.  The
+[`xspreadsheet` demo](/demos/xspreadsheet) includes a sample script with the
+`stox` function for converting from a workbook to x-spreadsheet data object.
+<https://oss.sheetjs.com/sheetjs/x-spreadsheet> is a live demo.
+
+
+The [`database` demo](/demos/database/) includes examples of working with
+databases and query results.
+
+
+
+[`@tensorflow/tfjs`](@tensorflow/tfjs) and other libraries expect data in simple
+arrays, well-suited for worksheets where each column is a data vector.  That is
+the transpose of how most people use spreadsheets, where each row is a vector.
+
+A single `Array#map` can pull individual named rows from `sheet_to_json` export:
+
+```js
+const XLSX = require("xlsx");
+const tf = require('@tensorflow/tfjs');
+
+const key = "age"; // this is the field we want to pull
+const ages = XLSX.utils.sheet_to_json(worksheet).map(r => r[key]);
+const tf_data = tf.tensor1d(ages);
+```
+
+All fields can be processed at once using a transpose of the 2D tensor generated
+with the `sheet_to_json` export with `header: 1`. The first row, if it contains
+header labels, should be removed with a slice:
+
+```js
+const XLSX = require("xlsx");
+const tf = require('@tensorflow/tfjs');
+
+/* array of arrays of the data starting on the second row */
+const aoa = XLSX.utils.sheet_to_json(worksheet, {header: 1}).slice(1);
+/* dataset in the "correct orientation" */
+const tf_dataset = tf.tensor2d(aoa).transpose();
+/* pull out each dataset with a slice */
+const tf_field0 = tf_dataset.slice([0,0], [1,tensor.shape[1]]).flatten();
+const tf_field1 = tf_dataset.slice([1,0], [1,tensor.shape[1]]).flatten();
+```
+
+The [`array` demo](demos/array/) shows a complete example.
+
+
+
+### Generating HTML Tables
+
+**API**
+
+_Generate HTML Table from Worksheet_
+
+```js
+var html = XLSX.utils.sheet_to_html(worksheet);
+```
+
+The `sheet_to_html` utility function generates HTML code based on the worksheet
+data.  Each cell in the worksheet is mapped to a `<TD>` element.  Merged cells
+in the worksheet are serialized by setting `colspan` and `rowspan` attributes.
+
+**Examples**
+
+The `sheet_to_html` utility function generates HTML code that can be added to
+any DOM element by setting the `innerHTML`:
+
+```js
+var container = document.getElementById("tavolo");
+container.innerHTML = XLSX.utils.sheet_to_html(worksheet);
+```
+
+Combining with `fetch`, constructing a site from a workbook is straightforward:
+
+
+```html
+<body>
+  <style>TABLE { border-collapse: collapse; } TD { border: 1px solid; }</style>
+  <div id="tavolo"></div>
+  <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+  <script type="text/javascript">
+(async() => {
+  /* fetch and parse workbook -- see the fetch example for details */
+  const workbook = XLSX.read(await (await fetch("sheetjs.xlsx")).arrayBuffer());
+
+  let output = [];
+  /* loop through the worksheet names in order */
+  workbook.SheetNames.forEach(name => {
+
+    /* generate HTML from the corresponding worksheets */
+    const worksheet = workbook.Sheets[name];
+    const html = XLSX.utils.sheet_to_html(worksheet);
+
+    /* add a header with the title name followed by the table */
+    output.push(`<H3>${name}</H3>${html}`);
+  });
+  /* write to the DOM at the end */
+  tavolo.innerHTML = output.join("\n");
+})();
+  </script>
+</body>
+```
+
+
+
+It is generally recommended to use a React-friendly workflow, but it is possible
+to generate HTML and use it in React with `dangerouslySetInnerHTML`:
+
+```jsx
+function Tabeller(props) {
+  /* the workbook object is the state */
+  const [workbook, setWorkbook] = React.useState(XLSX.utils.book_new());
+
+  /* fetch and update the workbook with an effect */
+  React.useEffect(() => { (async() => {
+    /* fetch and parse workbook -- see the fetch example for details */
+    const wb = XLSX.read(await (await fetch("sheetjs.xlsx")).arrayBuffer());
+    setWorkbook(wb);
+  })(); });
+
+  return workbook.SheetNames.map(name => (<>
+    <h3>name</h3>
+    <div dangerouslySetInnerHTML={{
+      /* this __html mantra is needed to set the inner HTML */
+      __html: XLSX.utils.sheet_to_html(workbook.Sheets[name])
+    }} />
+  </>));
+}
+```
+
+The [`react` demo](demos/react) includes more React examples.
+
+
+
+It is generally recommended to use a VueJS-friendly workflow, but it is possible
+to generate HTML and use it in VueJS with the `v-html` directive:
+
+```jsx
+import { read, utils } from 'xlsx';
+import { reactive } from 'vue';
+
+const S5SComponent = {
+  mounted() { (async() => {
+    /* fetch and parse workbook -- see the fetch example for details */
+    const workbook = read(await (await fetch("sheetjs.xlsx")).arrayBuffer());
+    /* loop through the worksheet names in order */
+    workbook.SheetNames.forEach(name => {
+      /* generate HTML from the corresponding worksheets */
+      const html = utils.sheet_to_html(workbook.Sheets[name]);
+      /* add to state */
+      this.wb.wb.push({ name, html });
+    });
+  })(); },
+  /* this state mantra is required for array updates to work */
+  setup() { return { wb: reactive({ wb: [] }) }; },
+  template: `
+  <div v-for="ws in wb.wb" :key="ws.name">
+    <h3>{{ ws.name }}</h3>
+    <div v-html="ws.html"></div>
+  </div>`
+};
+```
+
+The [`vuejs` demo](demos/vue) includes more React examples.
+
 
 ## Interface
 

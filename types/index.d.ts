@@ -22,7 +22,7 @@ export function writeFile(data: WorkBook, filename: string, opts?: WritingOption
 type CBFunc = () => void;
 export function writeFileAsync(filename: string, data: WorkBook, opts: WritingOptions | CBFunc, cb?: CBFunc): any;
 /** Attempts to write the workbook data */
-export function write(data: WorkBook, opts?: WritingOptions): any;
+export function write(data: WorkBook, opts: WritingOptions): any;
 
 /** Utility Functions */
 export const utils: XLSX$Utils;
@@ -261,7 +261,7 @@ export interface WorkBook {
     Props?: FullProperties;
 
     /** Custom workbook Properties */
-    Custprops?: any;
+    Custprops?: object;
 
     Workbook?: WBProps;
 

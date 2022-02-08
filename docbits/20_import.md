@@ -2,7 +2,7 @@
 
 ### Parsing Workbooks
 
-#### API
+**API**
 
 _Extract data from spreadsheet bytes_
 
@@ -27,7 +27,7 @@ security risk), and attempts to read files in this way will throw an error.
 The second `opts` argument is optional. ["Parsing Options"](#parsing-options)
 covers the supported properties and behaviors.
 
-#### Examples
+**Examples**
 
 Here are a few common scenarios (click on each subtitle to see the code):
 
@@ -42,7 +42,7 @@ var XLSX = require("xlsx");
 var workbook = XLSX.readFile("test.xlsx");
 ```
 
-For Node ESM, the `readFile` helper is not enabled.  Instead, `fs.readFileSync`
+For Node ESM, the `readFile` helper is not enabled. Instead, `fs.readFileSync`
 should be used to read the file data as a `Buffer` for use with `XLSX.read`:
 
 ```js
@@ -423,5 +423,3 @@ const workbook = XLSX.read(data);
 </details>
 
 More detailed examples are covered in the [included demos](demos/)
-
-
