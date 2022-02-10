@@ -12,6 +12,7 @@ $(BAREJS): %.js: %.ts $(LIBFILES)
 
 83_numbers.js: 83_numbers.ts $(LIBFILES)
 	npx esbuild $< --bundle --outfile=$@ --platform=browser --format=iife --global-name=NUMBERS --target=es5
+	sed -i '' 's/NUMBERS = /NUMBERS = !Object.defineProperty ? (void 0) :/g' $@
 
 %.node.js: %.node.ts $(LIBFILES)
 	npx esbuild $< --bundle --external:xlsx --outfile=$@ --minify --platform=node

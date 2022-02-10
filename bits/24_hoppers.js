@@ -44,7 +44,7 @@ function buf_array()/*:BufArray*/ {
 
 	var end = function ba_end() {
 		endbuf();
-		return __toBuffer([bufs]);
+		return bconcat(bufs);
 	};
 
 	var push = function ba_push(buf) { endbuf(); curbuf = buf; if(curbuf.l == null) curbuf.l = curbuf.length; next(blksz); };

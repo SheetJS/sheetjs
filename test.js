@@ -571,21 +571,22 @@ describe('parse options', function() {
 			checkcells(X.read(fs.readFileSync(p), {type:TYPE, sheetRows:10}), false, false, false, true);
 		}); });
 		it('sheetRows n=1', function() { ofmt.forEach(function(fmt) {
+		[TYPE, "base64", "binary", "array"].forEach(function(ot) {
 			var data = [[1,2],[3,4],[5,6]];
 			var ws = X.utils.aoa_to_sheet(data);
 			assert(ws['!ref'] === "A1:B3");
 			var wb = X.utils.book_new();
 			X.utils.book_append_sheet(wb, ws, "Sheet1");
-			var bs = X.write(wb, { bookType: fmt, type: "binary" });
+			var bs = X.write(wb, { bookType: fmt, type: ot, WTF: 1 });
 
-			var wb0 = X.read(bs, { type: "binary" });
+			var wb0 = X.read(bs, { type: ot, WTF: 1 });
 			var ws0 = wb0.Sheets.Sheet1;
 			assert.equal(ws0['!ref'], "A1:B3");
 			assert.equal(get_cell(ws0, "A1").v, 1);
 			assert.equal(get_cell(ws0, "B2").v, 4);
 			assert.equal(get_cell(ws0, "A3").v, 5);
 
-			var wb1 = X.read(bs, { type: "binary", sheetRows: 1 });
+			var wb1 = X.read(bs, { type: ot, sheetRows: 1 });
 			var ws1 = wb1.Sheets.Sheet1;
 			assert.equal(ws1['!ref'], "A1:B1");
 			assert.equal(get_cell(ws1, "A1").v, 1);
@@ -593,7 +594,7 @@ describe('parse options', function() {
 			assert(!get_cell(ws1, "A3"));
 			if(ws1['!fullref']) assert.equal(ws1['!fullref'], "A1:B3");
 
-			var wb2 = X.read(bs, { type: "binary", sheetRows: 2 });
+			var wb2 = X.read(bs, { type: ot, sheetRows: 2 });
 			var ws2 = wb2.Sheets.Sheet1;
 			assert.equal(ws2['!ref'], "A1:B2");
 			assert.equal(get_cell(ws2, "A1").v, 1);
@@ -601,14 +602,14 @@ describe('parse options', function() {
 			assert(!get_cell(ws2, "A3"));
 			if(ws2['!fullref']) assert.equal(ws2['!fullref'], "A1:B3");
 
-			var wb3 = X.read(bs, { type: "binary", sheetRows: 3 });
+			var wb3 = X.read(bs, { type: ot, sheetRows: 3 });
 			var ws3 = wb3.Sheets.Sheet1;
 			assert.equal(ws3['!ref'], "A1:B3");
 			assert.equal(get_cell(ws3, "A1").v, 1);
 			assert.equal(get_cell(ws3, "B2").v, 4);
 			assert.equal(get_cell(ws3, "A3").v, 5);
 			if(ws3['!fullref']) assert.equal(ws3['!fullref'], "A1:B3");
-		}); });
+		}); }); });
 	});
 	describe('book', function() {
 		it('bookSheets should not generate sheets', function() {
@@ -1565,8 +1566,8 @@ describe('roundtrip features', function() {
 		['xlsx', paths.fstxlsx],
 		['ods',  paths.fstods]
 	].forEach(function(w) { it(w[0], function() {
-		var wb1 = X.read(fs.readFileSync(w[1]), {type:TYPE, cellFormula:true});
-		var wb2 = X.read(X.write(wb1, {bookType:w[0], type:TYPE}), {cellFormula:true, type:TYPE});
+		var wb1 = X.read(fs.readFileSync(w[1]), {type:TYPE, cellFormula:true, WTF:1});
+		var wb2 = X.read(X.write(wb1, {bookType:w[0], type:TYPE}), {cellFormula:true, type:TYPE, WTF:1});
 		wb1.SheetNames.forEach(function(n) {
 			assert.equal(
 				X.utils.sheet_to_formulae(wb1.Sheets[n]).sort().join("\n"),

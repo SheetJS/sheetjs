@@ -4,7 +4,6 @@
 importScripts('dist/shim.min.js');
 /* uncomment the next line for encoding support */
 importScripts('dist/cpexcel.js');
-importScripts('jszip.js');
 importScripts('xlsx.js');
 /*::self.*/postMessage({t:"ready"});
 

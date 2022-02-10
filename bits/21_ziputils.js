@@ -1,10 +1,10 @@
 function getdatastr(data)/*:?string*/ {
 	if(!data) return null;
+	if(data.content && data.type) return cc2str(data.content, true);
 	if(data.data) return debom(data.data);
 	if(data.asNodeBuffer && has_buf) return debom(data.asNodeBuffer().toString('binary'));
 	if(data.asBinary) return debom(data.asBinary());
 	if(data._data && data._data.getContent) return debom(cc2str(Array.prototype.slice.call(data._data.getContent(),0)));
-	if(data.content && data.type) return debom(cc2str(data.content));
 	return null;
 }
 
@@ -66,40 +66,29 @@ function zipentries(zip) {
 }
 
 function zip_add_file(zip, path, content) {
-	if(zip.FullPaths) CFB.utils.cfb_add(zip, path, content);
+	if(zip.FullPaths) {
+		if(typeof content == "string") {
+			var res;
+			if(has_buf) res = Buffer_from(content);
+			/* TODO: investigate performance in Edge 13 */
+			//else if(typeof TextEncoder !== "undefined") res = new TextEncoder().encode(content);
+			else res = utf8decode(content);
+			return CFB.utils.cfb_add(zip, path, res);
+		}
+		CFB.utils.cfb_add(zip, path, content);
+	}
 	else zip.file(path, content);
 }
 
-var jszip;
-/*:: declare var JSZipSync:any; */
-/*global JSZipSync:true */
-if(typeof JSZipSync !== 'undefined') jszip = JSZipSync;
-if(typeof exports !== 'undefined') {
-	if(typeof module !== 'undefined' && module.exports) {
-		if(typeof jszip === 'undefined') jszip = require('./jszip.js');
-	}
-}
-
-function zip_new() {
-	if(!jszip) return CFB.utils.cfb_new();
-	return new jszip();
-}
+function zip_new() { return CFB.utils.cfb_new(); }
 
 function zip_read(d, o) {
-	var zip;
-	if(jszip) switch(o.type) {
-		case "base64": zip = new jszip(d, { base64:true }); break;
-		case "binary": case "array": zip = new jszip(d, { base64:false }); break;
-		case "buffer": zip = new jszip(d); break;
-		default: throw new Error("Unrecognized type " + o.type);
+	switch(o.type) {
+		case "base64": return CFB.read(d, { type: "base64" });
+		case "binary": return CFB.read(d, { type: "binary" });
+		case "buffer": case "array": return CFB.read(d, { type: "buffer" });
 	}
-	else switch(o.type) {
-		case "base64": zip = CFB.read(d, { type: "base64" }); break;
-		case "binary": zip = CFB.read(d, { type: "binary" }); break;
-		case "buffer": case "array": zip = CFB.read(d, { type: "buffer" }); break;
-		default: throw new Error("Unrecognized type " + o.type);
-	}
-	return zip;
+	throw new Error("Unrecognized type " + o.type);
 }
 
 function resolve_path(path/*:string*/, base/*:string*/)/*:string*/ {

@@ -64,50 +64,53 @@ var _getchar = function _gc1(x) { return String.fromCharCode(x); };
 var _getansi = function _ga1(x) { return String.fromCharCode(x); };
 var DENSE = null;
 var DIF_XL = true;
-var Base64 = (function make_b64(){
-	var map = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
-	return {
-		encode: function(input) {
-			var o = "";
-			var c1=0, c2=0, c3=0, e1=0, e2=0, e3=0, e4=0;
-			for(var i = 0; i < input.length; ) {
-				c1 = input.charCodeAt(i++);
-				e1 = (c1 >> 2);
-
-				c2 = input.charCodeAt(i++);
-				e2 = ((c1 & 3) << 4) | (c2 >> 4);
-
-				c3 = input.charCodeAt(i++);
-				e3 = ((c2 & 15) << 2) | (c3 >> 6);
-				e4 = (c3 & 63);
-				if (isNaN(c2)) { e3 = e4 = 64; }
-				else if (isNaN(c3)) { e4 = 64; }
-				o += map.charAt(e1) + map.charAt(e2) + map.charAt(e3) + map.charAt(e4);
-			}
-			return o;
-		},
-		decode: function b64_decode(input) {
-			var o = "";
-			var c1=0, c2=0, c3=0, e1=0, e2=0, e3=0, e4=0;
-			input = input.replace(/[^\w\+\/\=]/g, "");
-			for(var i = 0; i < input.length;) {
-				e1 = map.indexOf(input.charAt(i++));
-				e2 = map.indexOf(input.charAt(i++));
-				c1 = (e1 << 2) | (e2 >> 4);
-				o += String.fromCharCode(c1);
-
-				e3 = map.indexOf(input.charAt(i++));
-				c2 = ((e2 & 15) << 4) | (e3 >> 2);
-				if (e3 !== 64) { o += String.fromCharCode(c2); }
-
-				e4 = map.indexOf(input.charAt(i++));
-				c3 = ((e3 & 3) << 6) | e4;
-				if (e4 !== 64) { o += String.fromCharCode(c3); }
-			}
-			return o;
-		}
-	};
-})();
+var Base64 = function() {
+  var map = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
+  return {
+    encode: function(input) {
+      var o = "";
+      var c1 = 0, c2 = 0, c3 = 0, e1 = 0, e2 = 0, e3 = 0, e4 = 0;
+      for (var i = 0; i < input.length; ) {
+        c1 = input.charCodeAt(i++);
+        e1 = c1 >> 2;
+        c2 = input.charCodeAt(i++);
+        e2 = (c1 & 3) << 4 | c2 >> 4;
+        c3 = input.charCodeAt(i++);
+        e3 = (c2 & 15) << 2 | c3 >> 6;
+        e4 = c3 & 63;
+        if (isNaN(c2)) {
+          e3 = e4 = 64;
+        } else if (isNaN(c3)) {
+          e4 = 64;
+        }
+        o += map.charAt(e1) + map.charAt(e2) + map.charAt(e3) + map.charAt(e4);
+      }
+      return o;
+    },
+    decode: function(input) {
+      var o = "";
+      var c1 = 0, c2 = 0, c3 = 0, e1 = 0, e2 = 0, e3 = 0, e4 = 0;
+      input = input.replace(/[^\w\+\/\=]/g, "");
+      for (var i = 0; i < input.length; ) {
+        e1 = map.indexOf(input.charAt(i++));
+        e2 = map.indexOf(input.charAt(i++));
+        c1 = e1 << 2 | e2 >> 4;
+        o += String.fromCharCode(c1);
+        e3 = map.indexOf(input.charAt(i++));
+        c2 = (e2 & 15) << 4 | e3 >> 2;
+        if (e3 !== 64) {
+          o += String.fromCharCode(c2);
+        }
+        e4 = map.indexOf(input.charAt(i++));
+        c3 = (e3 & 3) << 6 | e4;
+        if (e4 !== 64) {
+          o += String.fromCharCode(c3);
+        }
+      }
+      return o;
+    }
+  };
+}();
 var has_buf = (typeof Buffer !== 'undefined' && typeof process !== 'undefined' && typeof process.versions !== 'undefined' && !!process.versions.node);
 
 var Buffer_from = function(){};
@@ -124,13 +127,13 @@ if(typeof Buffer !== 'undefined') {
 
 function new_raw_buf(len) {
 	/* jshint -W056 */
-	return has_buf ? Buffer.alloc(len) : new Array(len);
+	return has_buf ? Buffer.alloc(len) : typeof Uint8Array != "undefined" ? new Uint8Array(len) : new Array(len);
 	/* jshint +W056 */
 }
 
 function new_unsafe_buf(len) {
 	/* jshint -W056 */
-	return has_buf ? Buffer.allocUnsafe(len) : new Array(len);
+	return has_buf ? Buffer.allocUnsafe(len) : typeof Uint8Array != "undefined" ? new Uint8Array(len) : new Array(len);
 	/* jshint +W056 */
 }
 
@@ -164,7 +167,53 @@ var o = new Array(data.length);
 	return o;
 }
 
-var bconcat = function(bufs) { return [].concat.apply([], bufs); };
+function utf8decode(content) {
+	var out = [], widx = 0;
+	var o = new_raw_buf(content.length + 255);
+	for(var ridx = 0; ridx < content.length; ++ridx) {
+		var c = content.charCodeAt(ridx);
+		if(c < 0x80) o[widx++] = c;
+		else if(c < 0x800) {
+			o[widx++] = (192|((c>>6)&31));
+			o[widx++] = (128|(c&63));
+		} else if(c >= 0xD800 && c < 0xE000) {
+			c = (c&1023)+64;
+			var d = str.charCodeAt(++ridx)&1023;
+			o[widx++] = (240|((c>>8)&7));
+			o[widx++] = (128|((c>>2)&63));
+			o[widx++] = (128|((d>>6)&15)|((c&3)<<4));
+			o[widx++] = (128|(d&63));
+		} else {
+			o[widx++] = (224|((c>>12)&15));
+			o[widx++] = (128|((c>>6)&63));
+			o[widx++] = (128|(c&63));
+		}
+		if(widx > 65530) {
+			out.push(o.slice(0, widx));
+			widx = 0;
+			o = new_raw_buf(65535);
+		}
+	}
+	out.push(o.slice(0, widx));
+	return bconcat(out);
+}
+
+var bconcat = function(bufs) {
+	if(typeof Uint8Array !== "undefined") {
+		var i = 0, maxlen = 0;
+		for(i = 0; i < bufs.length; ++i) maxlen += bufs[i].length;
+		var o = new Uint8Array(maxlen);
+		var len = 0;
+		for(i = 0, maxlen = 0; i < bufs.length; maxlen += len, ++i) {
+			len = bufs[i].length;
+			if(bufs[i] instanceof Uint8Array) o.set(bufs[i], maxlen);
+			else if(typeof bufs[i] == "string") { throw "wtf"; }
+			else o.set(new Uint8Array(bufs[i]), maxlen);
+		}
+		return o;
+	}
+	return [].concat.apply([], bufs.map(function(buf) { return Array.isArray(buf) ? buf : [].slice.call(buf); }));
+};
 
 var chr0 = /\u0000/g, chr1 = /[\u0001-\u0006]/g;
 /* ssf.js (C) 2013-present SheetJS -- http://sheetjs.com */
@@ -1222,7 +1271,7 @@ var DO_NOT_EXPORT_CFB = true;
 /* vim: set ts=2: */
 /*jshint eqnull:true */
 /*exported CFB */
-/*global Uint8Array:false, Uint16Array:false */
+/*global module, require:false, process:false, Buffer:false, Uint8Array:false, Uint16Array:false */
 
 /* crc32.js (C) 2014-present SheetJS -- http://sheetjs.com */
 /* vim: set ts=2: */
@@ -1257,70 +1306,68 @@ function signed_crc_table() {
 	return typeof Int32Array !== 'undefined' ? new Int32Array(table) : table;
 }
 
-var T = signed_crc_table();
+var T0 = signed_crc_table();
+function slice_by_16_tables(T) {
+	var c = 0, v = 0, n = 0, table = typeof Int32Array !== 'undefined' ? new Int32Array(4096) : new Array(4096) ;
+
+	for(n = 0; n != 256; ++n) table[n] = T[n];
+	for(n = 0; n != 256; ++n) {
+		v = T[n];
+		for(c = 256 + n; c < 4096; c += 256) v = table[c] = (v >>> 8) ^ T[v & 0xFF];
+	}
+	var out = [];
+	for(n = 1; n != 16; ++n) out[n - 1] = typeof Int32Array !== 'undefined' ? table.subarray(n * 256, n * 256 + 256) : table.slice(n * 256, n * 256 + 256);
+	return out;
+}
+var TT = slice_by_16_tables(T0);
+var T1 = TT[0],  T2 = TT[1],  T3 = TT[2],  T4 = TT[3],  T5 = TT[4];
+var T6 = TT[5],  T7 = TT[6],  T8 = TT[7],  T9 = TT[8],  Ta = TT[9];
+var Tb = TT[10], Tc = TT[11], Td = TT[12], Te = TT[13], Tf = TT[14];
 function crc32_bstr(bstr, seed) {
-	var C = seed ^ -1, L = bstr.length - 1;
-	for(var i = 0; i < L;) {
-		C = (C>>>8) ^ T[(C^bstr.charCodeAt(i++))&0xFF];
-		C = (C>>>8) ^ T[(C^bstr.charCodeAt(i++))&0xFF];
-	}
-	if(i === L) C = (C>>>8) ^ T[(C ^ bstr.charCodeAt(i))&0xFF];
-	return C ^ -1;
+	var C = seed ^ -1;
+	for(var i = 0, L = bstr.length; i < L;) C = (C>>>8) ^ T0[(C^bstr.charCodeAt(i++))&0xFF];
+	return ~C;
 }
 
-function crc32_buf(buf, seed) {
-	if(buf.length > 10000) return crc32_buf_8(buf, seed);
-	var C = seed ^ -1, L = buf.length - 3;
-	for(var i = 0; i < L;) {
-		C = (C>>>8) ^ T[(C^buf[i++])&0xFF];
-		C = (C>>>8) ^ T[(C^buf[i++])&0xFF];
-		C = (C>>>8) ^ T[(C^buf[i++])&0xFF];
-		C = (C>>>8) ^ T[(C^buf[i++])&0xFF];
-	}
-	while(i < L+3) C = (C>>>8) ^ T[(C^buf[i++])&0xFF];
-	return C ^ -1;
-}
-
-function crc32_buf_8(buf, seed) {
-	var C = seed ^ -1, L = buf.length - 7;
-	for(var i = 0; i < L;) {
-		C = (C>>>8) ^ T[(C^buf[i++])&0xFF];
-		C = (C>>>8) ^ T[(C^buf[i++])&0xFF];
-		C = (C>>>8) ^ T[(C^buf[i++])&0xFF];
-		C = (C>>>8) ^ T[(C^buf[i++])&0xFF];
-		C = (C>>>8) ^ T[(C^buf[i++])&0xFF];
-		C = (C>>>8) ^ T[(C^buf[i++])&0xFF];
-		C = (C>>>8) ^ T[(C^buf[i++])&0xFF];
-		C = (C>>>8) ^ T[(C^buf[i++])&0xFF];
-	}
-	while(i < L+7) C = (C>>>8) ^ T[(C^buf[i++])&0xFF];
-	return C ^ -1;
+function crc32_buf(B, seed) {
+	var C = seed ^ -1, L = B.length - 15, i = 0;
+	for(; i < L;) C =
+		Tf[B[i++] ^ (C & 255)] ^
+		Te[B[i++] ^ ((C >> 8) & 255)] ^
+		Td[B[i++] ^ ((C >> 16) & 255)] ^
+		Tc[B[i++] ^ (C >>> 24)] ^
+		Tb[B[i++]] ^ Ta[B[i++]] ^ T9[B[i++]] ^ T8[B[i++]] ^
+		T7[B[i++]] ^ T6[B[i++]] ^ T5[B[i++]] ^ T4[B[i++]] ^
+		T3[B[i++]] ^ T2[B[i++]] ^ T1[B[i++]] ^ T0[B[i++]];
+	L += 15;
+	while(i < L) C = (C>>>8) ^ T0[(C^B[i++])&0xFF];
+	return ~C;
 }
 
 function crc32_str(str, seed) {
 	var C = seed ^ -1;
-	for(var i = 0, L=str.length, c, d; i < L;) {
+	for(var i = 0, L = str.length, c = 0, d = 0; i < L;) {
 		c = str.charCodeAt(i++);
 		if(c < 0x80) {
-			C = (C>>>8) ^ T[(C ^ c)&0xFF];
+			C = (C>>>8) ^ T0[(C^c)&0xFF];
 		} else if(c < 0x800) {
-			C = (C>>>8) ^ T[(C ^ (192|((c>>6)&31)))&0xFF];
-			C = (C>>>8) ^ T[(C ^ (128|(c&63)))&0xFF];
+			C = (C>>>8) ^ T0[(C ^ (192|((c>>6)&31)))&0xFF];
+			C = (C>>>8) ^ T0[(C ^ (128|(c&63)))&0xFF];
 		} else if(c >= 0xD800 && c < 0xE000) {
 			c = (c&1023)+64; d = str.charCodeAt(i++)&1023;
-			C = (C>>>8) ^ T[(C ^ (240|((c>>8)&7)))&0xFF];
-			C = (C>>>8) ^ T[(C ^ (128|((c>>2)&63)))&0xFF];
-			C = (C>>>8) ^ T[(C ^ (128|((d>>6)&15)|((c&3)<<4)))&0xFF];
-			C = (C>>>8) ^ T[(C ^ (128|(d&63)))&0xFF];
+			C = (C>>>8) ^ T0[(C ^ (240|((c>>8)&7)))&0xFF];
+			C = (C>>>8) ^ T0[(C ^ (128|((c>>2)&63)))&0xFF];
+			C = (C>>>8) ^ T0[(C ^ (128|((d>>6)&15)|((c&3)<<4)))&0xFF];
+			C = (C>>>8) ^ T0[(C ^ (128|(d&63)))&0xFF];
 		} else {
-			C = (C>>>8) ^ T[(C ^ (224|((c>>12)&15)))&0xFF];
-			C = (C>>>8) ^ T[(C ^ (128|((c>>6)&63)))&0xFF];
-			C = (C>>>8) ^ T[(C ^ (128|(c&63)))&0xFF];
+			C = (C>>>8) ^ T0[(C ^ (224|((c>>12)&15)))&0xFF];
+			C = (C>>>8) ^ T0[(C ^ (128|((c>>6)&63)))&0xFF];
+			C = (C>>>8) ^ T0[(C ^ (128|(c&63)))&0xFF];
 		}
 	}
-	return C ^ -1;
+	return ~C;
 }
-CRC32.table = T;
+CRC32.table = T0;
 CRC32.bstr = crc32_bstr;
 CRC32.buf = crc32_buf;
 CRC32.str = crc32_str;
@@ -1328,7 +1375,7 @@ CRC32.str = crc32_str;
 /* [MS-CFB] v20171201 */
 var CFB = (function _CFB(){
 var exports = {};
-exports.version = '1.1.4';
+exports.version = '1.2.1';
 /* [MS-CFB] 2.6.4 */
 function namecmp(l, r) {
 	var L = l.split("/"), R = r.split("/");
@@ -1418,6 +1465,7 @@ var fs;
 function get_fs() { return fs || (fs = require('fs')); }
 function parse(file, options) {
 if(file[0] == 0x50 && file[1] == 0x4b) return parse_zip(file, options);
+if((file[0] | 0x20) == 0x6d && (file[1]|0x20) == 0x69) return parse_mad(file, options);
 if(file.length < 512) throw new Error("CFB file size " + file.length + " < 512");
 var mver = 3;
 var ssz = 512;
@@ -1627,7 +1675,7 @@ function sleuth_fat(idx, cnt, sectors, ssz, fat_addrs) {
 			if((q = __readInt32LE(sector,i*4)) === ENDOFCHAIN) break;
 			fat_addrs.push(q);
 		}
-		if(cnt >= 1) sleuth_fat(__readInt32LE(sector,ssz-4),cnt - 1, sectors, ssz, fat_addrs);
+		sleuth_fat(__readInt32LE(sector,ssz-4),cnt - 1, sectors, ssz, fat_addrs);
 	}
 }
 
@@ -1739,7 +1787,11 @@ function read_file(filename, options) {
 }
 
 function read(blob, options) {
-	switch(options && options.type || "base64") {
+	var type = options && options.type;
+	if(!type) {
+		if(has_buf && Buffer.isBuffer(blob)) type = "buffer";
+	}
+	switch(type || "base64") {
 		case "file": return read_file(blob, options);
 		case "base64": return parse(s2a(Base64.decode(blob)), options);
 		case "binary": return parse(s2a(blob), options);
@@ -1788,22 +1840,28 @@ function rebuild_cfb(cfb, f) {
 	if(!gc && !f) return;
 
 	var now = new Date(1987, 1, 19), j = 0;
+	// Track which names exist
+	var fullPaths = Object.create ? Object.create(null) : {};
 	var data = [];
 	for(i = 0; i < cfb.FullPaths.length; ++i) {
+		fullPaths[cfb.FullPaths[i]] = true;
 		if(cfb.FileIndex[i].type === 0) continue;
 		data.push([cfb.FullPaths[i], cfb.FileIndex[i]]);
 	}
 	for(i = 0; i < data.length; ++i) {
 		var dad = dirname(data[i][0]);
-		s = false;
-		for(j = 0; j < data.length; ++j) if(data[j][0] === dad) s = true;
-		if(!s) data.push([dad, ({
-			name: filename(dad).replace("/",""),
-			type: 1,
-			clsid: HEADER_CLSID,
-			ct: now, mt: now,
-			content: null
-		})]);
+		s = fullPaths[dad];
+		if(!s) {
+			data.push([dad, ({
+				name: filename(dad).replace("/",""),
+				type: 1,
+				clsid: HEADER_CLSID,
+				ct: now, mt: now,
+				content: null
+			})]);
+			// Add name to set
+			fullPaths[dad] = true;
+		}
 	}
 
 	data.sort(function(x,y) { return namecmp(x[0], y[0]); });
@@ -1838,8 +1896,13 @@ function rebuild_cfb(cfb, f) {
 
 function _write(cfb, options) {
 	var _opts = options || {};
+	/* MAD is order-sensitive, skip rebuild and sort */
+	if(_opts.fileType == 'mad') return write_mad(cfb, _opts);
 	rebuild_cfb(cfb);
-	if(_opts.fileType == 'zip') return write_zip(cfb, _opts);
+	switch(_opts.fileType) {
+		case 'zip': return write_zip(cfb, _opts);
+		//case 'mad': return write_mad(cfb, _opts);
+	}
 	var L = (function(cfb){
 		var mini_size = 0, fat_size = 0;
 		for(var i = 0; i < cfb.FileIndex.length; ++i) {
@@ -1953,18 +2016,35 @@ flen = file.content.length;
 		file = cfb.FileIndex[i];
 if(file.size >= 0x1000) {
 			o.l = (file.start+1) << 9;
-			for(j = 0; j < file.size; ++j) o.write_shift(1, file.content[j]);
-			for(; j & 0x1FF; ++j) o.write_shift(1, 0);
+			if (has_buf && Buffer.isBuffer(file.content)) {
+				file.content.copy(o, o.l, 0, file.size);
+				// o is a 0-filled Buffer so just set next offset
+				o.l += (file.size + 511) & -512;
+			} else {
+				for(j = 0; j < file.size; ++j) o.write_shift(1, file.content[j]);
+				for(; j & 0x1FF; ++j) o.write_shift(1, 0);
+			}
 		}
 	}
 	for(i = 1; i < cfb.FileIndex.length; ++i) {
 		file = cfb.FileIndex[i];
 if(file.size > 0 && file.size < 0x1000) {
-			for(j = 0; j < file.size; ++j) o.write_shift(1, file.content[j]);
-			for(; j & 0x3F; ++j) o.write_shift(1, 0);
+			if (has_buf && Buffer.isBuffer(file.content)) {
+				file.content.copy(o, o.l, 0, file.size);
+				// o is a 0-filled Buffer so just set next offset
+				o.l += (file.size + 63) & -64;
+			} else {
+				for(j = 0; j < file.size; ++j) o.write_shift(1, file.content[j]);
+				for(; j & 0x3F; ++j) o.write_shift(1, 0);
+			}
 		}
 	}
-	while(o.l < o.length) o.write_shift(1, 0);
+	if (has_buf) {
+		o.l = o.length;
+	} else {
+		// When using Buffer, already 0-filled
+		while(o.l < o.length) o.write_shift(1, 0);
+	}
 	return o;
 }
 /* [MS-CFB] 2.6.4 (Unicode 3.0.1 case conversion) */
@@ -2027,10 +2107,13 @@ function a2s(o) {
 
 function write(cfb, options) {
 	var o = _write(cfb, options);
-	switch(options && options.type) {
+	switch(options && options.type || "buffer") {
 		case "file": get_fs(); fs.writeFileSync(options.filename, (o)); return o;
-		case "binary": return a2s(o);
-		case "base64": return Base64.encode(a2s(o));
+		case "binary": return typeof o == "string" ? o : a2s(o);
+		case "base64": return Base64.encode(typeof o == "string" ? o : a2s(o));
+		case "buffer": if(has_buf) return Buffer.isBuffer(o) ? o : Buffer_from(o);
+			/* falls through */
+		case "array": return typeof o == "string" ? s2a(o) : o;
 	}
 	return o;
 }
@@ -2100,6 +2183,38 @@ function read_bits_n(buf, bl, n) {
 	return v & f;
 }
 
+/* helpers for unaligned bit writes */
+function write_bits_3(buf, bl, v) { var w = bl & 7, h = bl >>> 3;
+	if(w <= 5) buf[h] |= (v & 7) << w;
+	else {
+		buf[h] |= (v << w) & 0xFF;
+		buf[h+1] = (v&7) >> (8-w);
+	}
+	return bl + 3;
+}
+
+function write_bits_1(buf, bl, v) {
+	var w = bl & 7, h = bl >>> 3;
+	v = (v&1) << w;
+	buf[h] |= v;
+	return bl + 1;
+}
+function write_bits_8(buf, bl, v) {
+	var w = bl & 7, h = bl >>> 3;
+	v <<= w;
+	buf[h] |=  v & 0xFF; v >>>= 8;
+	buf[h+1] = v;
+	return bl + 8;
+}
+function write_bits_16(buf, bl, v) {
+	var w = bl & 7, h = bl >>> 3;
+	v <<= w;
+	buf[h] |=  v & 0xFF; v >>>= 8;
+	buf[h+1] = v & 0xFF;
+	buf[h+2] = v >>> 8;
+	return bl + 16;
+}
+
 /* until ArrayBuffer#realloc is a thing, fake a realloc */
 function realloc(b, sz) {
 	var L = b.length, M = 2*L > sz ? 2*L : sz + 5, i = 0;
@@ -2113,7 +2228,7 @@ function realloc(b, sz) {
 	} else if(use_typed_arrays) {
 		var a = new Uint8Array(M);
 		if(a.set) a.set(b);
-		else for(; i < b.length; ++i) a[i] = b[i];
+		else for(; i < L; ++i) a[i] = b[i];
 		return a;
 	}
 	b.length = M;
@@ -2125,30 +2240,7 @@ function zero_fill_array(n) {
 	var o = new Array(n);
 	for(var i = 0; i < n; ++i) o[i] = 0;
 	return o;
-}var _deflate = (function() {
-var _deflateRaw = (function() {
-	return function deflateRaw(data, out) {
-		var boff = 0;
-		while(boff < data.length) {
-			var L = Math.min(0xFFFF, data.length - boff);
-			var h = boff + L == data.length;
-			/* TODO: this is only type 0 stored */
-			out.write_shift(1, +h);
-			out.write_shift(2, L);
-			out.write_shift(2, (~L) & 0xFFFF);
-			while(L-- > 0) out[out.l++] = data[boff++];
-		}
-		return out.l;
-	};
-})();
-
-return function(data) {
-	var buf = new_buf(50+Math.floor(data.length*1.1));
-	var off = _deflateRaw(data, buf);
-	return buf.slice(0, off);
-};
-})();
-/* modified inflate function also moves original read head */
+}
 
 /* build tree (used for literals and lengths) */
 function build_tree(clens, cmap, MAX) {
@@ -2188,6 +2280,7 @@ function build_tree(clens, cmap, MAX) {
 	return maxlen;
 }
 
+/* Fixed Huffman */
 var fix_lmap = use_typed_arrays ? new Uint16Array(512) : zero_fill_array(512);
 var fix_dmap = use_typed_arrays ? new Uint16Array(32)  : zero_fill_array(32);
 if(!use_typed_arrays) {
@@ -2207,7 +2300,124 @@ if(!use_typed_arrays) {
 	for(; i<=279; i++) clens.push(7);
 	for(; i<=287; i++) clens.push(8);
 	build_tree(clens, fix_lmap, 288);
+})();var _deflateRaw = (function _deflateRawIIFE() {
+	var DST_LN_RE = use_typed_arrays ? new Uint8Array(0x8000) : [];
+	var j = 0, k = 0;
+	for(; j < DST_LN.length - 1; ++j) {
+		for(; k < DST_LN[j+1]; ++k) DST_LN_RE[k] = j;
+	}
+	for(;k < 32768; ++k) DST_LN_RE[k] = 29;
+
+	var LEN_LN_RE = use_typed_arrays ? new Uint8Array(0x103) : [];
+	for(j = 0, k = 0; j < LEN_LN.length - 1; ++j) {
+		for(; k < LEN_LN[j+1]; ++k) LEN_LN_RE[k] = j;
+	}
+
+	function write_stored(data, out) {
+		var boff = 0;
+		while(boff < data.length) {
+			var L = Math.min(0xFFFF, data.length - boff);
+			var h = boff + L == data.length;
+			out.write_shift(1, +h);
+			out.write_shift(2, L);
+			out.write_shift(2, (~L) & 0xFFFF);
+			while(L-- > 0) out[out.l++] = data[boff++];
+		}
+		return out.l;
+	}
+
+	/* Fixed Huffman */
+	function write_huff_fixed(data, out) {
+		var bl = 0;
+		var boff = 0;
+		var addrs = use_typed_arrays ? new Uint16Array(0x8000) : [];
+		while(boff < data.length) {
+			var L = /* data.length - boff; */ Math.min(0xFFFF, data.length - boff);
+
+			/* write a stored block for short data */
+			if(L < 10) {
+				bl = write_bits_3(out, bl, +!!(boff + L == data.length)); // jshint ignore:line
+				if(bl & 7) bl += 8 - (bl & 7);
+				out.l = (bl / 8) | 0;
+				out.write_shift(2, L);
+				out.write_shift(2, (~L) & 0xFFFF);
+				while(L-- > 0) out[out.l++] = data[boff++];
+				bl = out.l * 8;
+				continue;
+			}
+
+			bl = write_bits_3(out, bl, +!!(boff + L == data.length) + 2); // jshint ignore:line
+			var hash = 0;
+			while(L-- > 0) {
+				var d = data[boff];
+				hash = ((hash << 5) ^ d) & 0x7FFF;
+
+				var match = -1, mlen = 0;
+
+				if((match = addrs[hash])) {
+					match |= boff & ~0x7FFF;
+					if(match > boff) match -= 0x8000;
+					if(match < boff) while(data[match + mlen] == data[boff + mlen] && mlen < 250) ++mlen;
+				}
+
+				if(mlen > 2) {
+					/* Copy Token  */
+					d = LEN_LN_RE[mlen];
+					if(d <= 22) bl = write_bits_8(out, bl, bitswap8[d+1]>>1) - 1;
+					else {
+						write_bits_8(out, bl, 3);
+						bl += 5;
+						write_bits_8(out, bl, bitswap8[d-23]>>5);
+						bl += 3;
+					}
+					var len_eb = (d < 8) ? 0 : ((d - 4)>>2);
+					if(len_eb > 0) {
+						write_bits_16(out, bl, mlen - LEN_LN[d]);
+						bl += len_eb;
+					}
+
+					d = DST_LN_RE[boff - match];
+					bl = write_bits_8(out, bl, bitswap8[d]>>3);
+					bl -= 3;
+
+					var dst_eb = d < 4 ? 0 : (d-2)>>1;
+					if(dst_eb > 0) {
+						write_bits_16(out, bl, boff - match - DST_LN[d]);
+						bl += dst_eb;
+					}
+					for(var q = 0; q < mlen; ++q) {
+						addrs[hash] = boff & 0x7FFF;
+						hash = ((hash << 5) ^ data[boff]) & 0x7FFF;
+						++boff;
+					}
+					L-= mlen - 1;
+				} else {
+					/* Literal Token */
+					if(d <= 143) d = d + 48;
+					else bl = write_bits_1(out, bl, 1);
+					bl = write_bits_8(out, bl, bitswap8[d]);
+					addrs[hash] = boff & 0x7FFF;
+					++boff;
+				}
+			}
+
+			bl = write_bits_8(out, bl, 0) - 1;
+		}
+		out.l = ((bl + 7)/8)|0;
+		return out.l;
+	}
+	return function _deflateRaw(data, out) {
+		if(data.length < 8) return write_stored(data, out);
+		return write_huff_fixed(data, out);
+	};
 })();
+
+function _deflate(data) {
+	var buf = new_buf(50+Math.floor(data.length*1.1));
+	var off = _deflateRaw(data, buf);
+	return buf.slice(0, off);
+}
+/* modified inflate function also moves original read head */
 
 var dyn_lmap = use_typed_arrays ? new Uint16Array(32768) : zero_fill_array(32768);
 var dyn_dmap = use_typed_arrays ? new Uint16Array(32768) : zero_fill_array(32768);
@@ -2312,14 +2522,12 @@ function inflate(data, usz) {
 			var sz = data[boff>>>3] | data[(boff>>>3)+1]<<8;
 			boff += 32;
 			/* push sz bytes */
-			if(!usz && OL < woff + sz) { outbuf = realloc(outbuf, woff + sz); OL = outbuf.length; }
-			if(typeof data.copy === 'function') {
-				// $FlowIgnore
-				data.copy(outbuf, woff, boff>>>3, (boff>>>3)+sz);
-				woff += sz; boff += 8*sz;
-			} else while(sz-- > 0) { outbuf[woff++] = data[boff>>>3]; boff += 8; }
+			if(sz > 0) {
+				if(!usz && OL < woff + sz) { outbuf = realloc(outbuf, woff + sz); OL = outbuf.length; }
+				while(sz-- > 0) { outbuf[woff++] = data[boff>>>3]; boff += 8; }
+			}
 			continue;
-		} else if((header >>> 1) == 1) {
+		} else if((header >> 1) == 1) {
 			/* Fixed Huffman */
 			max_len_1 = 9; max_len_2 = 5;
 		} else {
@@ -2327,8 +2535,8 @@ function inflate(data, usz) {
 			boff = dyn(data, boff);
 			max_len_1 = dyn_len_1; max_len_2 = dyn_len_2;
 		}
-		if(!usz && (OL < woff + 32767)) { outbuf = realloc(outbuf, woff + 32767); OL = outbuf.length; }
 		for(;;) { // while(true) is apparently out of vogue in modern JS circles
+			if(!usz && (OL < woff + 32767)) { outbuf = realloc(outbuf, woff + 32767); OL = outbuf.length; }
 			/* ingest code and move read head */
 			var bits = read_bits_n(data, boff, max_len_1);
 			var code = (header>>>1) == 1 ? fix_lmap[bits] : dyn_lmap[bits];
@@ -2359,12 +2567,13 @@ function inflate(data, usz) {
 				}
 
 				/* in the common case, manual byte copy is faster than TA set / Buffer copy */
-				if(!usz && OL < tgt) { outbuf = realloc(outbuf, tgt); OL = outbuf.length; }
+				if(!usz && OL < tgt) { outbuf = realloc(outbuf, tgt + 100); OL = outbuf.length; }
 				while(woff < tgt) { outbuf[woff] = outbuf[woff - dst]; ++woff; }
 			}
 		}
 	}
-	return [usz ? outbuf : outbuf.slice(0, woff), (boff+7)>>>3];
+	if(usz) return [outbuf, (boff+7)>>>3];
+	return [outbuf.slice(0, woff), (boff+7)>>>3];
 }
 
 function _inflate(payload, usz) {
@@ -2422,7 +2631,6 @@ function parse_zip(file, options) {
 		parse_local_file(blob, csz, usz, o, EF);
 		blob.l = L;
 	}
-
 	return o;
 }
 
@@ -2458,7 +2666,7 @@ function parse_local_file(blob, csz, usz, o, EF) {
 	var data = blob.slice(blob.l, blob.l + _csz);
 	switch(meth) {
 		case 8: data = _inflateRawSync(blob, _usz); break;
-		case 0: break;
+		case 0: break; // TODO: scan for magic number
 		default: throw new Error("Unsupported ZIP Compression method " + meth);
 	}
 
@@ -2473,8 +2681,8 @@ function parse_local_file(blob, csz, usz, o, EF) {
 
 	if(_csz != csz) warn_or_throw(wrn, "Bad compressed size: " + csz + " != " + _csz);
 	if(_usz != usz) warn_or_throw(wrn, "Bad uncompressed size: " + usz + " != " + _usz);
-	var _crc32 = CRC32.buf(data, 0);
-	if((crc32>>0) != (_crc32>>0)) warn_or_throw(wrn, "Bad CRC32 checksum: " + crc32 + " != " + _crc32);
+	//var _crc32 = CRC32.buf(data, 0);
+	//if((crc32>>0) != (_crc32>>0)) warn_or_throw(wrn, "Bad CRC32 checksum: " + crc32 + " != " + _crc32);
 	cfb_add(o, name, data, {unsafe: true, mt: date});
 }
 function write_zip(cfb, options) {
@@ -2525,7 +2733,10 @@ function write_zip(cfb, options) {
 		start_cd += namebuf.length;
 		out.push(namebuf);
 
+		/* TODO: extra fields? */
+
 		/* TODO: encryption header ? */
+
 		start_cd += outbuf.length;
 		out.push(outbuf);
 
@@ -2578,6 +2789,212 @@ function write_zip(cfb, options) {
 	o.write_shift(2, 0);
 
 	return bconcat(([bconcat((out)), bconcat(cdirs), o]));
+}
+var ContentTypeMap = ({
+	"htm": "text/html",
+	"xml": "text/xml",
+
+	"gif": "image/gif",
+	"jpg": "image/jpeg",
+	"png": "image/png",
+
+	"mso": "application/x-mso",
+	"thmx": "application/vnd.ms-officetheme",
+	"sh33tj5": "application/octet-stream"
+});
+
+function get_content_type(fi, fp) {
+	if(fi.ctype) return fi.ctype;
+
+	var ext = fi.name || "", m = ext.match(/\.([^\.]+)$/);
+	if(m && ContentTypeMap[m[1]]) return ContentTypeMap[m[1]];
+
+	if(fp) {
+		m = (ext = fp).match(/[\.\\]([^\.\\])+$/);
+		if(m && ContentTypeMap[m[1]]) return ContentTypeMap[m[1]];
+	}
+
+	return "application/octet-stream";
+}
+
+/* 76 character chunks TODO: intertwine encoding */
+function write_base64_76(bstr) {
+	var data = Base64.encode(bstr);
+	var o = [];
+	for(var i = 0; i < data.length; i+= 76) o.push(data.slice(i, i+76));
+	return o.join("\r\n") + "\r\n";
+}
+
+/*
+Rules for QP:
+	- escape =## applies for all non-display characters and literal "="
+	- space or tab at end of line must be encoded
+	- \r\n newlines can be preserved, but bare \r and \n must be escaped
+	- lines must not exceed 76 characters, use soft breaks =\r\n
+
+TODO: Some files from word appear to write line extensions with bare equals:
+
+```
+<table class=3DMsoTableGrid border=3D1 cellspacing=3D0 cellpadding=3D0 width=
+="70%"
+```
+*/
+function write_quoted_printable(text) {
+	var encoded = text.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7E-\xFF=]/g, function(c) {
+		var w = c.charCodeAt(0).toString(16).toUpperCase();
+		return "=" + (w.length == 1 ? "0" + w : w);
+	});
+
+	encoded = encoded.replace(/ $/mg, "=20").replace(/\t$/mg, "=09");
+
+	if(encoded.charAt(0) == "\n") encoded = "=0D" + encoded.slice(1);
+	encoded = encoded.replace(/\r(?!\n)/mg, "=0D").replace(/\n\n/mg, "\n=0A").replace(/([^\r\n])\n/mg, "$1=0A");
+
+	var o = [], split = encoded.split("\r\n");
+	for(var si = 0; si < split.length; ++si) {
+		var str = split[si];
+		if(str.length == 0) { o.push(""); continue; }
+		for(var i = 0; i < str.length;) {
+			var end = 76;
+			var tmp = str.slice(i, i + end);
+			if(tmp.charAt(end - 1) == "=") end --;
+			else if(tmp.charAt(end - 2) == "=") end -= 2;
+			else if(tmp.charAt(end - 3) == "=") end -= 3;
+			tmp = str.slice(i, i + end);
+			i += end;
+			if(i < str.length) tmp += "=";
+			o.push(tmp);
+		}
+	}
+
+	return o.join("\r\n");
+}
+function parse_quoted_printable(data) {
+	var o = [];
+
+	/* unify long lines */
+	for(var di = 0; di < data.length; ++di) {
+		var line = data[di];
+		while(di <= data.length && line.charAt(line.length - 1) == "=") line = line.slice(0, line.length - 1) + data[++di];
+		o.push(line);
+	}
+
+	/* decode */
+	for(var oi = 0; oi < o.length; ++oi) o[oi] = o[oi].replace(/[=][0-9A-Fa-f]{2}/g, function($$) { return String.fromCharCode(parseInt($$.slice(1), 16)); });
+	return s2a(o.join("\r\n"));
+}
+
+
+function parse_mime(cfb, data, root) {
+	var fname = "", cte = "", ctype = "", fdata;
+	var di = 0;
+	for(;di < 10; ++di) {
+		var line = data[di];
+		if(!line || line.match(/^\s*$/)) break;
+		var m = line.match(/^(.*?):\s*([^\s].*)$/);
+		if(m) switch(m[1].toLowerCase()) {
+			case "content-location": fname = m[2].trim(); break;
+			case "content-type": ctype = m[2].trim(); break;
+			case "content-transfer-encoding": cte = m[2].trim(); break;
+		}
+	}
+	++di;
+	switch(cte.toLowerCase()) {
+		case 'base64': fdata = s2a(Base64.decode(data.slice(di).join(""))); break;
+		case 'quoted-printable': fdata = parse_quoted_printable(data.slice(di)); break;
+		default: throw new Error("Unsupported Content-Transfer-Encoding " + cte);
+	}
+	var file = cfb_add(cfb, fname.slice(root.length), fdata, {unsafe: true});
+	if(ctype) file.ctype = ctype;
+}
+
+function parse_mad(file, options) {
+	if(a2s(file.slice(0,13)).toLowerCase() != "mime-version:") throw new Error("Unsupported MAD header");
+	var root = (options && options.root || "");
+	// $FlowIgnore
+	var data = (has_buf && Buffer.isBuffer(file) ? file.toString("binary") : a2s(file)).split("\r\n");
+	var di = 0, row = "";
+
+	/* if root is not specified, scan for the common prefix */
+	for(di = 0; di < data.length; ++di) {
+		row = data[di];
+		if(!/^Content-Location:/i.test(row)) continue;
+		row = row.slice(row.indexOf("file"));
+		if(!root) root = row.slice(0, row.lastIndexOf("/") + 1);
+		if(row.slice(0, root.length) == root) continue;
+		while(root.length > 0) {
+			root = root.slice(0, root.length - 1);
+			root = root.slice(0, root.lastIndexOf("/") + 1);
+			if(row.slice(0,root.length) == root) break;
+		}
+	}
+
+	var mboundary = (data[1] || "").match(/boundary="(.*?)"/);
+	if(!mboundary) throw new Error("MAD cannot find boundary");
+	var boundary = "--" + (mboundary[1] || "");
+
+	var FileIndex = [], FullPaths = [];
+	var o = {
+		FileIndex: FileIndex,
+		FullPaths: FullPaths
+	};
+	init_cfb(o);
+	var start_di, fcnt = 0;
+	for(di = 0; di < data.length; ++di) {
+		var line = data[di];
+		if(line !== boundary && line !== boundary + "--") continue;
+		if(fcnt++) parse_mime(o, data.slice(start_di, di), root);
+		start_di = di;
+	}
+	return o;
+}
+
+function write_mad(cfb, options) {
+	var opts = options || {};
+	var boundary = opts.boundary || "SheetJS";
+	boundary = '------=' + boundary;
+
+	var out = [
+		'MIME-Version: 1.0',
+		'Content-Type: multipart/related; boundary="' + boundary.slice(2) + '"',
+		'',
+		'',
+		''
+	];
+
+	var root = cfb.FullPaths[0], fp = root, fi = cfb.FileIndex[0];
+	for(var i = 1; i < cfb.FullPaths.length; ++i) {
+		fp = cfb.FullPaths[i].slice(root.length);
+		fi = cfb.FileIndex[i];
+		if(!fi.size || !fi.content || fp == "\u0001Sh33tJ5") continue;
+
+		/* Normalize filename */
+		fp = fp.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7E-\xFF]/g, function(c) {
+			return "_x" + c.charCodeAt(0).toString(16) + "_";
+		}).replace(/[\u0080-\uFFFF]/g, function(u) {
+			return "_u" + u.charCodeAt(0).toString(16) + "_";
+		});
+
+		/* Extract content as binary string */
+		var ca = fi.content;
+		// $FlowIgnore
+		var cstr = has_buf && Buffer.isBuffer(ca) ? ca.toString("binary") : a2s(ca);
+
+		/* 4/5 of first 1024 chars ascii -> quoted printable, else base64 */
+		var dispcnt = 0, L = Math.min(1024, cstr.length), cc = 0;
+		for(var csl = 0; csl <= L; ++csl) if((cc=cstr.charCodeAt(csl)) >= 0x20 && cc < 0x80) ++dispcnt;
+		var qp = dispcnt >= L * 4 / 5;
+
+		out.push(boundary);
+		out.push('Content-Location: ' + (opts.root || 'file:///C:/SheetJS/') + fp);
+		out.push('Content-Transfer-Encoding: ' + (qp ? 'quoted-printable' : 'base64'));
+		out.push('Content-Type: ' + get_content_type(fi, fp));
+		out.push('');
+
+		out.push(qp ? write_quoted_printable(cstr) : write_base64_76(cstr));
+	}
+	out.push(boundary + '--\r\n');
+	return out.join("\r\n");
 }
 function cfb_new(opts) {
 	var o = ({});
@@ -2818,10 +3235,18 @@ if(fixdate > 0) d.setTime(d.getTime() + d.getTimezoneOffset() * 60 * 1000);
 	return out;
 }
 
-function cc2str(arr) {
-	var o = "";
-	for(var i = 0; i != arr.length; ++i) o += String.fromCharCode(arr[i]);
-	return o;
+function cc2str(arr, debomit) {
+	if(has_buf && Buffer.isBuffer(arr)) {
+		if(debomit) {
+			if(arr[0] == 0xFF && arr[1] == 0xFE) return arr.slice(2).toString("utf16le");
+			if(arr[1] == 0xFE && arr[2] == 0xFF) return utf16beread(arr.slice(2).toString("binary"));
+		}
+		return arr.toString("binary");
+	}
+	/* TODO: investigate performance degradation of TextEncoder in Edge 13 */
+	var o = [];
+	for(var i = 0; i != arr.length; ++i) o.push(String.fromCharCode(arr[i]));
+	return o.join("");
 }
 
 function dup(o) {
@@ -2931,8 +3356,6 @@ function zip_add_file(zip, path, content) {
 	if(zip.FullPaths) CFB.utils.cfb_add(zip, path, typeof content == "string" ? (has_buf ? Buffer_from(content) : s2a(utf8write(content))) : content);
 	else zip.file(path, content);
 }
-
-var jszip;
 
 function zip_new() {
 	return CFB.utils.cfb_new();
@@ -3276,7 +3699,7 @@ var __8lpp4 = function(b,i) { var len = __readUInt32LE(b,i); return len > 0 ? __
 var ___8lpp4 = __8lpp4;
 var __double, ___double;
 __double = ___double = function(b, idx) { return read_double_le(b, idx);};
-var is_buf = function is_buf_a(a) { return Array.isArray(a); };
+var is_buf = function is_buf_a(a) { return Array.isArray(a) || (typeof Uint8Array !== "undefined" && a instanceof Uint8Array); };
 
 if(has_buf) {
 	__utf16le = function(b,s,e) { if(!Buffer.isBuffer(b)) return ___utf16le(b,s,e); return b.toString('utf16le',s,e).replace(chr0,'')/*.replace(chr1,'!')*/; };
@@ -3287,10 +3710,10 @@ if(has_buf) {
 	__lpp4 = function lpp4_b(b, i) { if(!Buffer.isBuffer(b)) return ___lpp4(b, i); var len = b.readUInt32LE(i); return b.toString('utf16le',i+4,i+4+len);};
 	__8lpp4 = function lpp4_8b(b, i) { if(!Buffer.isBuffer(b)) return ___8lpp4(b, i); var len = b.readUInt32LE(i); return b.toString('utf8',i+4,i+4+len);};
 	__utf8 = function utf8_b(b, s, e) { return (Buffer.isBuffer(b)) ? b.toString('utf8',s,e) : ___utf8(b,s,e); };
-	__toBuffer = function(bufs) { return (bufs[0].length > 0 && Buffer.isBuffer(bufs[0][0])) ? Buffer.concat(bufs[0]) : ___toBuffer(bufs);};
-	bconcat = function(bufs) { return Buffer.isBuffer(bufs[0]) ? Buffer.concat(bufs) : [].concat.apply([], bufs); };
+	__toBuffer = function(bufs) { return (bufs[0].length > 0 && Buffer.isBuffer(bufs[0][0])) ? Buffer.concat(bufs[0].map(function(x) { return Buffer.isBuffer(x) ? x : Buffer_from(x); })) : ___toBuffer(bufs);};
+	bconcat = function(bufs) { return Buffer.concat(bufs.map(function(buf) { return Buffer.isBuffer(buf) ? buf : Buffer_from(buf); })); };
 	__double = function double_(b, i) { if(Buffer.isBuffer(b)) return b.readDoubleLE(i); return ___double(b,i); };
-	is_buf = function is_buf_b(a) { return Buffer.isBuffer(a) || Array.isArray(a); };
+	is_buf = function is_buf_b(a) { return Buffer.isBuffer(a) || Array.isArray(a) || (typeof Uint8Array !== "undefined" && a instanceof Uint8Array); };
 }
 
 /* from js-xls */
@@ -3510,7 +3933,7 @@ function buf_array() {
 
 	var end = function ba_end() {
 		endbuf();
-		return __toBuffer([bufs]);
+		return bconcat(bufs);
 	};
 
 	var push = function ba_push(buf) { endbuf(); curbuf = buf; if(curbuf.l == null) curbuf.l = curbuf.length; next(blksz); };
@@ -4153,7 +4576,7 @@ var ct2type/*{[string]:string}*/ = ({
 
 	/* VBA */
 	"application/vnd.ms-office.vbaProject": "vba",
-	"application/vnd.ms-office.vbaProjectSignature": "vba",
+	"application/vnd.ms-office.vbaProjectSignature": "TODO",
 
 	/* Volatile Dependencies */
 	"application/vnd.ms-office.volatileDependencies": "TODO",
@@ -5635,7 +6058,7 @@ var PRN = (function() {
 			default: throw new Error("Unrecognized type " + opts.type);
 		}
 		if(bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF) str = utf8read(str.slice(3));
-		else if(opts.type != 'string' && opts.codepage == 65001) str = utf8read(str);
+		else if(opts.type != 'string' && opts.type != 'buffer' && opts.codepage == 65001) str = utf8read(str);
 		else if((opts.type == 'binary') && typeof cptable !== 'undefined' && opts.codepage)  str = cptable.utils.decode(opts.codepage, cptable.utils.encode(28591,str));
 		if(str.slice(0,19) == "socialcalc:version:") return ETH.to_sheet(opts.type == 'string' ? str : utf8read(str), opts);
 		return prn_to_sheet_str(str, opts);
@@ -6974,25 +7397,25 @@ function write_comments_xml(data) {
 }
 var CT_VBA = "application/vnd.ms-office.vbaProject";
 function make_vba_xls(cfb) {
-	var newcfb = CFB.utils.cfb_new({root:"R"});
-	cfb.FullPaths.forEach(function(p, i) {
-		if(p.slice(-1) === "/" || !p.match(/_VBA_PROJECT_CUR/)) return;
-		var newpath = p.replace(/^[^\/]*/,"R").replace(/\/_VBA_PROJECT_CUR\u0000*/, "");
-		CFB.utils.cfb_add(newcfb, newpath, cfb.FileIndex[i].content);
-	});
-	return CFB.write(newcfb);
+  var newcfb = CFB.utils.cfb_new({ root: "R" });
+  cfb.FullPaths.forEach(function(p, i) {
+    if (p.slice(-1) === "/" || !p.match(/_VBA_PROJECT_CUR/))
+      return;
+    var newpath = p.replace(/^[^\/]*/, "R").replace(/\/_VBA_PROJECT_CUR\u0000*/, "");
+    CFB.utils.cfb_add(newcfb, newpath, cfb.FileIndex[i].content);
+  });
+  return CFB.write(newcfb);
 }
-
 function fill_vba_xls(cfb, vba) {
-	vba.FullPaths.forEach(function(p, i) {
-		if(i == 0) return;
-		var newpath = p.replace(/[^\/]*[\/]/, "/_VBA_PROJECT_CUR/");
-		if(newpath.slice(-1) !== "/") CFB.utils.cfb_add(cfb, newpath, vba.FileIndex[i].content);
-	});
+  vba.FullPaths.forEach(function(p, i) {
+    if (i == 0)
+      return;
+    var newpath = p.replace(/[^\/]*[\/]/, "/_VBA_PROJECT_CUR/");
+    if (newpath.slice(-1) !== "/")
+      CFB.utils.cfb_add(cfb, newpath, vba.FileIndex[i].content);
+  });
 }
-
-var VBAFMTS = [ "xlsb", "xlsm", "xlam", "biff8", "xla" ];
-
+var VBAFMTS = ["xlsb", "xlsm", "xlam", "biff8", "xla"];
 RELS.DS = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/dialogsheet";
 RELS.MS = "http://schemas.microsoft.com/office/2006/relationships/xlMacrosheet";
 
@@ -8614,6 +9037,7 @@ function sheet_add_dom(ws, table, _opts) {
 			or_R = _origin.r; or_C = _origin.c;
 		}
 	}
+
 	var rows = table.getElementsByTagName('tr');
 	var sheetRows = Math.min(opts.sheetRows||10000000, rows.length);
 	var range = {s:{r:0,c:0},e:{r:or_R,c:or_C}};
@@ -8698,7 +9122,7 @@ function is_dom_element_hidden(element) {
 	var display = '';
 	var get_computed_style = get_get_computed_style_function(element);
 	if(get_computed_style) display = get_computed_style(element).getPropertyValue('display');
-	if(!display) display = element.style.display; // Fallback for cases when getComputedStyle is not available (e.g. an old browser or some Node.js environments) or doesn't work (e.g. if the element is not inserted to a document)
+	if(!display) display = element.style && element.style.display;
 	return display === 'none';
 }
 
@@ -9576,7 +10000,7 @@ function write_ods(wb, opts) {
 	return zip;
 }
 
-var NUMBERS = (function() {
+var NUMBERS = !Object.defineProperty ? (void 0) :(function() {
   var __defProp = Object.defineProperty;
   var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
   var __getOwnPropNames = Object.getOwnPropertyNames;
@@ -9636,6 +10060,13 @@ var NUMBERS = (function() {
     x -= x >> 1 & 1431655765;
     x = (x & 858993459) + (x >> 2 & 858993459);
     return (x + (x >> 4) & 252645135) * 16843009 >>> 24;
+  };
+  var readDecimal128LE = function(buf, offset) {
+    var exp = (buf[offset + 15] & 127) << 7 | buf[offset + 14] >> 1;
+    var mantissa = buf[offset + 14] & 1;
+    for (var j = offset + 13; j >= offset; --j)
+      mantissa = mantissa * 256 + buf[j];
+    return (buf[offset + 15] & 128 ? -mantissa : mantissa) * Math.pow(10, exp - 6176);
   };
 
   // src/proto.ts
@@ -9857,10 +10288,10 @@ var NUMBERS = (function() {
     return out;
   }
 
-  // src/prebnccell.ts
-  function parseit(buf, sst, rsst, version) {
+  // src/cell.ts
+  function parse_old_storage(buf, sst, rsst) {
     var dv = u8_to_dataview(buf);
-    var ctype = buf[version == 4 ? 1 : 2];
+    var ctype = buf[buf[0] == 4 ? 1 : 2];
     var flags = dv.getUint32(4, true);
     var data_offset = 12 + popcnt(flags & 3470) * 4;
     var ridx = -1, sidx = -1, ieee = NaN, dt = new Date(2001, 0, 1);
@@ -9920,14 +10351,79 @@ var NUMBERS = (function() {
     }
     return ret;
   }
+  function parse_storage(buf, sst, rsst) {
+    var dv = u8_to_dataview(buf);
+    var ctype = buf[1];
+    var flags = dv.getUint32(8, true);
+    var data_offset = 12;
+    var ridx = -1, sidx = -1, d128 = NaN, ieee = NaN, dt = new Date(2001, 0, 1);
+    if (flags & 1) {
+      d128 = readDecimal128LE(buf, data_offset);
+      data_offset += 16;
+    }
+    if (flags & 2) {
+      ieee = dv.getFloat64(data_offset, true);
+      data_offset += 8;
+    }
+    if (flags & 4) {
+      dt.setTime(dt.getTime() + dv.getFloat64(data_offset, true) * 1e3);
+      data_offset += 8;
+    }
+    if (flags & 8) {
+      sidx = dv.getUint32(data_offset, true);
+      data_offset += 4;
+    }
+    if (flags & 16) {
+      ridx = dv.getUint32(data_offset, true);
+      data_offset += 4;
+    }
+    var ret;
+    switch (ctype) {
+      case 0:
+        break;
+      case 2:
+        ret = { t: "n", v: d128 };
+        break;
+      case 3:
+        ret = { t: "s", v: sst[sidx] };
+        break;
+      case 5:
+        ret = { t: "d", v: dt };
+        break;
+      case 6:
+        ret = { t: "b", v: ieee > 0 };
+        break;
+      case 7:
+        ret = { t: "n", v: ieee };
+        break;
+      case 8:
+        ret = { t: "e", v: 0 };
+        break;
+      case 9:
+        {
+          if (ridx > -1)
+            ret = { t: "s", v: rsst[ridx] };
+          else
+            throw new Error("Unsupported cell type ".concat(ctype, " : ").concat(flags & 31, " : ").concat(buf.slice(0, 4)));
+        }
+        break;
+      case 10:
+        ret = { t: "n", v: d128 };
+        break;
+      default:
+        throw new Error("Unsupported cell type ".concat(ctype, " : ").concat(flags & 31, " : ").concat(buf.slice(0, 4)));
+    }
+    return ret;
+  }
   function parse(buf, sst, rsst) {
-    var version = buf[0];
-    switch (version) {
+    switch (buf[0]) {
       case 3:
       case 4:
-        return parseit(buf, sst, rsst, version);
+        return parse_old_storage(buf, sst, rsst);
+      case 5:
+        return parse_storage(buf, sst, rsst);
       default:
-        throw new Error("Unsupported pre-BNC version ".concat(version));
+        throw new Error("Unsupported payload version ".concat(buf[0]));
     }
   }
 
@@ -9965,6 +10461,10 @@ var NUMBERS = (function() {
   };
   function parse_numbers(cfb) {
     var out = [];
+    cfb.FullPaths.forEach(function(p) {
+      if (p.match(/\.iwpv2/))
+        throw new Error("Unsupported password protection");
+    });
     cfb.FileIndex.forEach(function(s) {
       if (!s.name.match(/\.iwa$/))
         return;
@@ -10038,16 +10538,30 @@ var NUMBERS = (function() {
     return data;
   }
   function parse_TST_TileRowInfo(u8) {
+    var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j;
     var pb = parse_shallow(u8);
     var R = varint_to_i32(pb[1][0].data) >>> 0;
-    var storage = pb[3][0].data;
-    var offsets = u8_to_dataview(pb[4][0].data);
+    var pre_bnc = (_b = (_a = pb[3]) == null ? void 0 : _a[0]) == null ? void 0 : _b.data;
+    var pre_bnc_offsets = ((_d = (_c = pb[4]) == null ? void 0 : _c[0]) == null ? void 0 : _d.data) && u8_to_dataview(pb[4][0].data);
+    var storage = (_f = (_e = pb[6]) == null ? void 0 : _e[0]) == null ? void 0 : _f.data;
+    var storage_offsets = ((_h = (_g = pb[7]) == null ? void 0 : _g[0]) == null ? void 0 : _h.data) && u8_to_dataview(pb[7][0].data);
+    var wide_offsets = ((_j = (_i = pb[8]) == null ? void 0 : _i[0]) == null ? void 0 : _j.data) && varint_to_i32(pb[8][0].data) > 0 || false;
+    var width = wide_offsets ? 4 : 1;
     var cells = [];
-    for (var C = 0; C < offsets.byteLength / 2; ++C) {
-      var off = offsets.getUint16(C * 2, true);
-      if (off > storage.length)
-        continue;
-      cells[C] = storage.subarray(off, offsets.getUint16(C * 2 + 2, true));
+    var off = 0;
+    for (var C = 0; C < pre_bnc_offsets.byteLength / 2; ++C) {
+      if (storage && storage_offsets) {
+        off = storage_offsets.getUint16(C * 2, true) * width;
+        if (off < storage.length) {
+          cells[C] = storage.subarray(off, storage_offsets.getUint16(C * 2 + 2, true) * width);
+          continue;
+        }
+      }
+      if (pre_bnc && pre_bnc_offsets) {
+        off = pre_bnc_offsets.getUint16(C * 2, true) * width;
+        if (off < pre_bnc.length)
+          cells[C] = pre_bnc.subarray(off, pre_bnc_offsets.getUint16(C * 2 + 2, true) * width);
+      }
     }
     return { R: R, cells: cells };
   }

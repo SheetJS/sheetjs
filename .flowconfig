@@ -17,7 +17,6 @@
 .*/xlsx.mini.js
 .*/xlsx.mini.flow.js
 .*/xlsxworker.js
-.*/jszip.js
 .*/tests/.*
 .*/demos/.*
 

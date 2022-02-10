@@ -64,8 +64,6 @@ function zip_add_file(zip, path, content) {
 	else zip.file(path, content);
 }
 
-var jszip;
-
 function zip_new() {
 	return CFB.utils.cfb_new();
 }

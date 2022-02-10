@@ -1,7 +1,7 @@
 {
   "name": "js-xlsx",
   "homepage": "https://github.com/SheetJS/js-xlsx",
-  "main": ["jszip.js", "xlsx.js"],
+  "main": ["xlsx.js"],
   "ignore": [
     "bin",
     "bits",

@@ -1,7 +1,7 @@
 SHELL=/bin/bash
 LIB=xlsx
 FMT=xlsx xlsm xlsb ods xls xml misc full
-REQS=jszip.js
+REQS=
 ADDONS=dist/cpexcel.js
 AUXTARGETS=
 CMDS=bin/xlsx.njs

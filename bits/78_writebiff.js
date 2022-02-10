@@ -350,7 +350,7 @@ function write_biff8_global(wb/*:Workbook*/, bufs, opts/*:WriteOpts*/) {
 	if(a.length) out.push(a);
 	if(b.length) out.push(b);
 	if(c.length) out.push(c);
-	return __toBuffer([out]);
+	return bconcat(out);
 }
 
 /* [MS-XLS] 2.1.7.20 Workbook Stream */
@@ -378,7 +378,7 @@ function write_biff8_buf(wb/*:Workbook*/, opts/*:WriteOpts*/) {
 
 	for(var i = 0; i < wb.SheetNames.length; ++i) bufs[bufs.length] = write_ws_biff8(i, o, wb);
 	bufs.unshift(write_biff8_global(wb, bufs, o));
-	return __toBuffer([bufs]);
+	return bconcat(bufs);
 }
 
 function write_biff_buf(wb/*:Workbook*/, opts/*:WriteOpts*/) {

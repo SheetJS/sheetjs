@@ -1,2 +1,1 @@
 var DO_NOT_EXPORT_CODEPAGE = true;
-var DO_NOT_EXPORT_JSZIP = true;
