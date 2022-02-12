@@ -10,7 +10,7 @@ bits/11_ssfutils.js
 misc/18_esmcfb.js
 misc/19_mjsfs.js
 bits/20_jsutils.js
-misc/21_ziputils.js
+bits/21_ziputils.js
 bits/22_xmlutils.js
 bits/23_binutils.js
 bits/24_hoppers.js

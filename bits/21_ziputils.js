@@ -61,7 +61,7 @@ function getzipbin(zip, file/*:string*/, safe/*:?boolean*/)/*:any*/ {
 
 function zipentries(zip) {
 	var k = zip.FullPaths || keys(zip.files), o = [];
-	for(var i = 0; i < k.length; ++i) if(k[i].slice(-1) != '/') o.push(k[i]);
+	for(var i = 0; i < k.length; ++i) if(k[i].slice(-1) != '/') o.push(k[i].replace(/^Root Entry[\/]/, ""));
 	return o.sort();
 }
 

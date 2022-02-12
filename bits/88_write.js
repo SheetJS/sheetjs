@@ -47,7 +47,7 @@ function write_zip_type(wb/*:Workbook*/, opts/*:?WriteOpts*/)/*:any*/ {
 		case "file": oopts.type = has_buf ? "nodebuffer" : "string"; break;
 		default: throw new Error("Unrecognized type " + o.type);
 	}
-	var out = z.FullPaths ? CFB.write(z, {fileType:"zip", type: /*::(*/{"nodebuffer": "buffer", "string": "binary"}/*:: :any)*/[oopts.type] || oopts.type}) : z.generate(oopts);
+	var out = z.FullPaths ? CFB.write(z, {fileType:"zip", type: /*::(*/{"nodebuffer": "buffer", "string": "binary"}/*:: :any)*/[oopts.type] || oopts.type, compression: !!o.compression}) : z.generate(oopts);
 	if(typeof Deno !== "undefined" && typeof out == "string") out = new Uint8Array(s2ab(out));
 /*jshint -W083 */
 	if(o.password && typeof encrypt_agile !== 'undefined') return write_cfb_ctr(encrypt_agile(out, o.password), o); // eslint-disable-line no-undef
