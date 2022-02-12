@@ -35,6 +35,7 @@ tooltips
 Browserify
 CDNjs
 CommonJS
+Deno
 Ethercalc
 ExtendScript
 IndexedDB

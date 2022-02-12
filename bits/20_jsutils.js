@@ -146,7 +146,7 @@ function fuzzydate(s/*:string*/)/*:Date*/ {
 	if(isNaN(d)) return n;
 	var lower = s.toLowerCase();
 	if(lower.match(/jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec/)) {
-		lower = lower.replace(/[^a-z]/g,"");
+		lower = lower.replace(/[^a-z]/g,"").replace(/([^a-z]|^)[ap]m?([^a-z]|$)/,"");
 		if(lower.length > 3 && lower_months.indexOf(lower) == -1) return n;
 	} else if(lower.match(/[a-z]/)) return n;
 	if(y < 0 || y > 8099) return n;

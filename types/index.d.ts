@@ -1,16 +1,23 @@
 /* index.d.ts (C) 2015-present SheetJS and contributors */
 // TypeScript Version: 2.2
-import * as CFB from "cfb";
-import * as SSF from "ssf";
+// import * as CFB from "cfb";
+// import * as SSF from "ssf";
 
 /** Version string */
 export const version: string;
 
 /** SSF Formatter Library */
-export { SSF };
+// export { SSF };
+export const SSF: any;
 
 /** CFB Library */
-export { CFB };
+// export { CFB };
+export const CFB: any;
+
+/** ESM ONLY! Set internal `fs` instance */
+export function set_fs(fs: any): void;
+/** ESM ONLY! Set internal codepage tables */
+export function set_cptable(cptable: any): void;
 
 /** NODE ONLY! Attempts to read filename and parse */
 export function readFile(filename: string, opts?: ParsingOptions): WorkBook;

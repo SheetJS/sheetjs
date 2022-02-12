@@ -508,7 +508,7 @@ var SYLK = (function() {
 			case 'b': o += cell.v ? "TRUE" : "FALSE"; break;
 			case 'e': o += cell.w || cell.v; break;
 			case 'd': o += '"' + (cell.w || cell.v) + '"'; break;
-			case 's': o += '"' + cell.v.replace(/"/g,"") + '"'; break;
+			case 's': o += '"' + cell.v.replace(/"/g,"").replace(/;/g, ";;") + '"'; break;
 		}
 		return o;
 	}

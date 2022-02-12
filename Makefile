@@ -11,8 +11,6 @@ MINITGT=xlsx.mini.js
 MINIFLOW=xlsx.mini.flow.js
 MINIDEPS=$(shell cat mini.lst)
 
-NODESMTGT=xlsx.esm.mjs
-NODESMDEPS=$(shell cat misc/esm.lst)
 ESMJSTGT=xlsx.mjs
 ESMJSDEPS=$(shell cat misc/mjs.lst)
 
@@ -31,7 +29,7 @@ CLOSURE=/usr/local/lib/node_modules/google-closure-compiler/compiler.jar
 ## Main Targets
 
 .PHONY: all
-all: $(TARGET) $(AUXTARGETS) $(AUXSCPTS) $(MINITGT) $(NODESMTGT) $(ESMJSTGT) ## Build library and auxiliary scripts
+all: $(TARGET) $(AUXTARGETS) $(AUXSCPTS) $(MINITGT) $(ESMJSTGT) ## Build library and auxiliary scripts
 
 $(FLOWTGTS): %.js : %.flow.js
 	node -e 'process.stdout.write(require("fs").readFileSync("$<","utf8").replace(/^[ \t]*\/\*[:#][^*]*\*\/\s*(\n)?/gm,"").replace(/\/\*[:#][^*]*\*\//gm,""))' > $@
@@ -40,9 +38,6 @@ $(FLOWTARGET): $(DEPS)
 	cat $^ | tr -d '\15\32' > $@
 
 $(MINIFLOW): $(MINIDEPS)
-	cat $^ | tr -d '\15\32' > $@
-
-$(NODESMTGT): $(NODESMDEPS)
 	cat $^ | tr -d '\15\32' > $@
 
 $(ESMJSTGT): $(ESMJSDEPS)

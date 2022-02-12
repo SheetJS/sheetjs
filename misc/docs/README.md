@@ -113,6 +113,8 @@ port calculations to web apps; automate common spreadsheet tasks, and much more!
 
 ### Installation
 
+**Standalone Browser Scripts**
+
 The complete browser standalone build is saved to `dist/xlsx.full.min.js` and
 can be directly added to a page with a `script` tag:
 
@@ -156,17 +158,49 @@ be configured to remove support with `resolve.alias`:
 
 
 
+With [bower](https://bower.io/search/?q=js-xlsx):
+
+```bash
+$ bower install js-xlsx
+```
+
+**Deno**
+
+The [`sheetjs`](https://deno.land/x/sheetjs) package is available on deno:
+
+```ts
+import * as XLSX from 'https://deno.land/x/sheetjs/xlsx.mjs'
+```
+
+**NodeJS**
+
 With [npm](https://www.npmjs.org/package/xlsx):
 
 ```bash
 $ npm install xlsx
 ```
 
-With [bower](https://bower.io/search/?q=js-xlsx):
+By default, the module supports `require`:
 
-```bash
-$ bower install js-xlsx
+```js
+var XLSX = require("xlsx");
 ```
+
+The module also ships with `xlsx.mjs` for use with `import`:
+
+```js
+import * as XLSX from 'xlsx/xlsx.mjs';
+
+/* load 'fs' for readFile and writeFile support */
+import * as fs from 'fs';
+XLSX.set_fs(fs);
+
+/* load the codepage support library for extended support with older formats  */
+import * as cpexcel from 'xlsx/dist/cpexcel.full.mjs';
+XLSX.set_cptable(cpexcel);
+```
+
+**PhotoShop and InDesign**
 
 `dist/xlsx.extendscript.js` is an ExtendScript build for Photoshop and InDesign
 that is included in the `npm` package.  It can be directly referenced with a
@@ -1541,7 +1575,9 @@ data grid for previewing and modifying structured data in the web browser.  The
 [`react-data-grid`](https://npm.im/react-data-grid) is a data grid tailored for
 react.  It expects two properties: `rows` of data objects and `columns` which
 describe the columns.  For the purposes of massaging the data to fit the react
-data grid API it is easiest to start from an array of arrays:
+data grid API it is easiest to start from an array of arrays.
+
+This demo starts by fetching a remote file and using `XLSX.read` to extract:
 
 ```js
 import { useEffect, useState } from "react";

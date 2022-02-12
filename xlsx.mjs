@@ -6,7 +6,7 @@ var XLSX = {};
 XLSX.version = '0.18.0';
 var current_codepage = 1200, current_ansi = 1252;
 
-var VALID_ANSI = [ 874, 932, 936, 949, 950 ];
+var VALID_ANSI = [ 874, 932, 936, 949, 950, 10000 ];
 for(var i = 0; i <= 8; ++i) VALID_ANSI.push(1250 + i);
 /* ECMA-376 Part I 18.4.1 charset to codepage mapping */
 var CS2CP = ({
@@ -61,6 +61,24 @@ var debom = function(data/*:string*/)/*:string*/ {
 
 var _getchar = function _gc1(x/*:number*/)/*:string*/ { return String.fromCharCode(x); };
 var _getansi = function _ga1(x/*:number*/)/*:string*/ { return String.fromCharCode(x); };
+
+var cptable;
+function set_cptable(_cptable) {
+	cptable = _cptable;
+	set_cp = function(cp/*:number*/) { current_codepage = cp; set_ansi(cp); };
+	debom = function(data/*:string*/) {
+		if(data.charCodeAt(0) === 0xFF && data.charCodeAt(1) === 0xFE) { return cptable.utils.decode(1200, char_codes(data.slice(2))); }
+		return data;
+	};
+	_getchar = function _gc2(x/*:number*/)/*:string*/ {
+		if(current_codepage === 1200) return String.fromCharCode(x);
+		return cptable.utils.decode(current_codepage, [x&255,x>>8])[0];
+	};
+	_getansi = function _ga2(x/*:number*/)/*:string*/ {
+		return cptable.utils.decode(current_ansi, [x])[0];
+	};
+}
+export { set_cptable };
 var DENSE = null;
 var DIF_XL = true;
 var Base64 = function() {
@@ -2793,6 +2811,16 @@ function blobify(data) {
 function write_dl(fname/*:string*/, payload/*:any*/, enc/*:?string*/) {
 	/*global IE_SaveFile, Blob, navigator, saveAs, document, File, chrome */
 	if(typeof _fs !== 'undefined' && _fs.writeFileSync) return enc ? _fs.writeFileSync(fname, payload, enc) : _fs.writeFileSync(fname, payload);
+	if(typeof Deno !== 'undefined') {
+		/* in this spot, it's safe to assume typed arrays and TextEncoder/TextDecoder exist */
+		if(enc) switch(enc) {
+			case "utf8": payload = new TextEncoder(enc).encode(payload); break;
+			case "binary": payload = s2ab(payload); break;
+			/* TODO: binary equivalent */
+			default: throw new Error("Unsupported encoding " + enc);
+		}
+		return Deno.writeFileSync(fname, payload);
+	}
 	var data = (enc == "utf8") ? utf8write(payload) : payload;
 	/*:: declare var IE_SaveFile: any; */
 	if(typeof IE_SaveFile !== 'undefined') return IE_SaveFile(data, fname);
@@ -2832,6 +2860,7 @@ function write_dl(fname/*:string*/, payload/*:any*/, enc/*:?string*/) {
 /* read binary data from file */
 function read_binary(path/*:string*/) {
 	if(typeof _fs !== 'undefined') return _fs.readFileSync(path);
+	if(typeof Deno !== 'undefined') return Deno.readFileSync(path);
 	// $FlowIgnore
 	if(typeof $ !== 'undefined' && typeof File !== 'undefined' && typeof Folder !== 'undefined') try { // extendscript
 		// $FlowIgnore
@@ -2982,13 +3011,18 @@ function fuzzynum(s/*:string*/)/*:number*/ {
 	if(!isNaN(v = Number(ss))) return v / wt;
 	return v;
 }
+var lower_months = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
 function fuzzydate(s/*:string*/)/*:Date*/ {
 	var o = new Date(s), n = new Date(NaN);
 	var y = o.getYear(), m = o.getMonth(), d = o.getDate();
 	if(isNaN(d)) return n;
+	var lower = s.toLowerCase();
+	if(lower.match(/jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec/)) {
+		lower = lower.replace(/[^a-z]/g,"").replace(/([^a-z]|^)[ap]m?([^a-z]|$)/,"");
+		if(lower.length > 3 && lower_months.indexOf(lower) == -1) return n;
+	} else if(lower.match(/[a-z]/)) return n;
 	if(y < 0 || y > 8099) return n;
 	if((m > 0 || d > 1) && y != 101) return o;
-	if(s.toLowerCase().match(/jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec/)) return o;
 	if(s.match(/[^-0-9:,\/\\]/)) return n;
 	return o;
 }
@@ -7540,7 +7574,7 @@ var SYLK = (function() {
 			case 'b': o += cell.v ? "TRUE" : "FALSE"; break;
 			case 'e': o += cell.w || cell.v; break;
 			case 'd': o += '"' + (cell.w || cell.v) + '"'; break;
-			case 's': o += '"' + cell.v.replace(/"/g,"") + '"'; break;
+			case 's': o += '"' + cell.v.replace(/"/g,"").replace(/;/g, ";;") + '"'; break;
 		}
 		return o;
 	}
@@ -22590,7 +22624,7 @@ function readSync(data/*:RawData*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
 	_ssfopts = {};
 	if(o.dateNF) _ssfopts.dateNF = o.dateNF;
 	if(!o.type) o.type = (has_buf && Buffer.isBuffer(data)) ? "buffer" : "base64";
-	if(o.type == "file") { o.type = has_buf ? "buffer" : "binary"; d = read_binary(data); }
+	if(o.type == "file") { o.type = has_buf ? "buffer" : "binary"; d = read_binary(data); if(typeof Uint8Array !== 'undefined' && !has_buf) o.type = "array"; }
 	if(o.type == "string") { str = true; o.type = "binary"; o.codepage = 65001; d = bstrify(data); }
 	if(o.type == 'array' && typeof Uint8Array !== 'undefined' && data instanceof Uint8Array && typeof ArrayBuffer !== 'undefined') {
 		// $FlowIgnore
@@ -22682,6 +22716,7 @@ function write_zip_type(wb/*:Workbook*/, opts/*:?WriteOpts*/)/*:any*/ {
 		default: throw new Error("Unrecognized type " + o.type);
 	}
 	var out = z.FullPaths ? CFB.write(z, {fileType:"zip", type: /*::(*/{"nodebuffer": "buffer", "string": "binary"}/*:: :any)*/[oopts.type] || oopts.type}) : z.generate(oopts);
+	if(typeof Deno !== "undefined" && typeof out == "string") out = new Uint8Array(s2ab(out));
 /*jshint -W083 */
 	if(o.password && typeof encrypt_agile !== 'undefined') return write_cfb_ctr(encrypt_agile(out, o.password), o); // eslint-disable-line no-undef
 /*jshint +W083 */

@@ -75,5 +75,5 @@ const headers: string[] = get_header_row(aoa2);
 const CFB = XLSX.CFB;
 const vbawb = XLSX.readFile("test.xlsm", {bookVBA:true});
 if(vbawb.vbaraw) {
-    const cfb: XLSX.CFB.CFB$Container = CFB.read(vbawb.vbaraw, {type: "buffer"});
+    const cfb: any /* XLSX.CFB.CFB$Container */ = CFB.read(vbawb.vbaraw, {type: "buffer"});
 }
