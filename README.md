@@ -177,10 +177,15 @@ $ bower install js-xlsx
 
 **Deno**
 
-The [`sheetjs`](https://deno.land/x/sheetjs) package is available on deno:
+The [`sheetjs`](https://deno.land/x/sheetjs) package is hosted by Deno:
 
 ```ts
+// @deno-types="https://deno.land/x/sheetjs/types/index.d.ts"
 import * as XLSX from 'https://deno.land/x/sheetjs/xlsx.mjs'
+
+/* load the codepage support library for extended support with older formats  */
+import * as cptable from 'https://deno.land/x/sheetjs/dist/cpexcel.full.mjs';
+XLSX.set_cptable(cptable);
 ```
 
 **NodeJS**
@@ -211,7 +216,7 @@ import * as cpexcel from 'xlsx/dist/cpexcel.full.mjs';
 XLSX.set_cptable(cpexcel);
 ```
 
-**PhotoShop and InDesign**
+**Photoshop and InDesign**
 
 `dist/xlsx.extendscript.js` is an ExtendScript build for Photoshop and InDesign
 that is included in the `npm` package.  It can be directly referenced with a
@@ -538,9 +543,11 @@ The [`demos` directory](demos/) includes sample projects for:
 - [`webpack 2.x`](demos/webpack/)
 
 **Platforms and Integrations**
+- [`deno`](demos/deno/)
 - [`electron application`](demos/electron/)
 - [`nw.js application`](demos/nwjs/)
 - [`Chrome / Chromium extensions`](demos/chrome/)
+- [`Download a Google Sheet locally`](demos/google-sheet/)
 - [`Adobe ExtendScript`](demos/extendscript/)
 - [`Headless Browsers`](demos/headless/)
 - [`canvas-datagrid`](demos/datagrid/)
@@ -606,6 +613,23 @@ const buf = readFileSync("test.xlsx");
 /* buf is a Buffer */
 const workbook = read(buf);
 ```
+
+</details>
+
+<details>
+  <summary><b>Local file in a Deno application</b> (click to show)</summary>
+
+`readFile` uses `Deno.readFileSync` under the hood:
+
+```js
+// @deno-types="https://deno.land/x/sheetjs/types/index.d.ts"
+import * as XLSX from 'https://deno.land/x/sheetjs/xlsx.mjs'
+
+const workbook = XLSX.readFile("test.xlsx");
+```
+
+Applications reading files must be invoked with the `--allow-read` flag.  The
+[`deno` demo](demos/deno/) has more examples
 
 </details>
 
@@ -1464,6 +1488,23 @@ const buf = write(workbook, {type: "buffer", bookType: "xlsb"});
 /* buf is a Buffer */
 const workbook = writeFileSync("out.xlsb", buf);
 ```
+
+</details>
+
+<details>
+  <summary><b>Local file in a Deno application</b> (click to show)</summary>
+
+`writeFile` uses `Deno.writeFileSync` under the hood:
+
+```js
+// @deno-types="https://deno.land/x/sheetjs/types/index.d.ts"
+import * as XLSX from 'https://deno.land/x/sheetjs/xlsx.mjs'
+
+XLSX.writeFile(workbook, "test.xlsx");
+```
+
+Applications writing files must be invoked with the `--allow-write` flag.  The
+[`deno` demo](demos/deno/) has more examples
 
 </details>
 

@@ -209,7 +209,12 @@ export interface ParsingOptions extends CommonOptions {
     /** If true, plaintext parsing will not parse values */
     raw?: boolean;
 
+    /** If true, preserve _xlfn. prefixes in formula function names */
+    xlfn?: boolean;
+
     dense?: boolean;
+
+    PRN?: boolean;
 }
 
 export interface SheetOption {
@@ -548,7 +553,7 @@ export type ExcelDataType = 'b' | 'n' | 'e' | 's' | 'd' | 'z';
  * Type of generated workbook
  * @default 'xlsx'
  */
-export type BookType = 'xlsx' | 'xlsm' | 'xlsb' | 'xls' | 'xla' | 'biff8' | 'biff5' | 'biff2' | 'xlml' | 'ods' | 'fods' | 'csv' | 'txt' | 'sylk' | 'html' | 'dif' | 'rtf' | 'prn' | 'eth';
+export type BookType = 'xlsx' | 'xlsm' | 'xlsb' | 'xls' | 'xla' | 'biff8' | 'biff5' | 'biff2' | 'xlml' | 'ods' | 'fods' | 'csv' | 'txt' | 'sylk' | 'slk' | 'html' | 'dif' | 'rtf' | 'prn' | 'eth' | 'dbf';
 
 /** Comment element */
 export interface Comment {

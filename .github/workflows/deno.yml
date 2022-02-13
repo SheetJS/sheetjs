@@ -1,0 +1,39 @@
+name: 'Tests: deno 1.x'
+
+on: [pull_request, push]
+
+jobs:
+  # small test
+  misc:
+    runs-on: ubuntu-latest
+    env:
+      FMTS: misc
+    steps:
+      - uses: actions/checkout@v2
+      - uses: denoland/setup-deno@main
+        with:
+          deno-version: v1.x
+      - uses: ljharb/actions/node/install@main
+        with:
+          node-version: '16.'
+      - run: sudo curl -Lo /usr/bin/rooster https://github.com/SheetJS/rooster/releases/download/v0.2.0/rooster-v0.2.0-linux-amd64
+      - run: sudo chmod a+x /usr/bin/rooster
+      - run: make init
+      - run: 'cd test_files; make all; cd -'
+      - run: deno test --allow-env --allow-read --allow-write test.ts
+  # full test
+  full:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: denoland/setup-deno@main
+        with:
+          deno-version: v1.x
+      - uses: ljharb/actions/node/install@main
+        with:
+          node-version: '16.'
+      - run: sudo curl -Lo /usr/bin/rooster https://github.com/SheetJS/rooster/releases/download/v0.2.0/rooster-v0.2.0-linux-amd64
+      - run: sudo chmod a+x /usr/bin/rooster
+      - run: make init
+      - run: 'cd test_files; make all; cd -'
+      - run: deno test --allow-env --allow-read --allow-write test.ts

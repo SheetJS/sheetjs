@@ -61,10 +61,15 @@ $ bower install js-xlsx
 
 **Deno**
 
-The [`sheetjs`](https://deno.land/x/sheetjs) package is available on deno:
+The [`sheetjs`](https://deno.land/x/sheetjs) package is hosted by Deno:
 
 ```ts
+// @deno-types="https://deno.land/x/sheetjs/types/index.d.ts"
 import * as XLSX from 'https://deno.land/x/sheetjs/xlsx.mjs'
+
+/* load the codepage support library for extended support with older formats  */
+import * as cptable from 'https://deno.land/x/sheetjs/dist/cpexcel.full.mjs';
+XLSX.set_cptable(cptable);
 ```
 
 **NodeJS**
@@ -95,7 +100,7 @@ import * as cpexcel from 'xlsx/dist/cpexcel.full.mjs';
 XLSX.set_cptable(cpexcel);
 ```
 
-**PhotoShop and InDesign**
+**Photoshop and InDesign**
 
 `dist/xlsx.extendscript.js` is an ExtendScript build for Photoshop and InDesign
 that is included in the `npm` package.  It can be directly referenced with a

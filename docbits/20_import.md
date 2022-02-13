@@ -57,6 +57,23 @@ const workbook = read(buf);
 </details>
 
 <details>
+  <summary><b>Local file in a Deno application</b> (click to show)</summary>
+
+`readFile` uses `Deno.readFileSync` under the hood:
+
+```js
+// @deno-types="https://deno.land/x/sheetjs/types/index.d.ts"
+import * as XLSX from 'https://deno.land/x/sheetjs/xlsx.mjs'
+
+const workbook = XLSX.readFile("test.xlsx");
+```
+
+Applications reading files must be invoked with the `--allow-read` flag.  The
+[`deno` demo](demos/deno/) has more examples
+
+</details>
+
+<details>
   <summary><b>User-submitted file in a web page ("Drag-and-Drop")</b> (click to show)</summary>
 
 For modern websites targeting Chrome 76+, `File#arrayBuffer` is recommended:

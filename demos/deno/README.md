@@ -37,12 +37,26 @@ Deno.writeFileSync("test.xlsb", u8);
 
 ## Demos
 
+**Complete Example**
+
+`sheet2csv.ts` is a complete command-line tool for generating CSV text from
+workbooks.  Building the application is incredibly straightforward:
+
+```bash
+$ deno compile -r --allow-read sheet2csv.ts  # build the sheet2csv binary
+$ ./sheet2csv test.xlsx                      # print the first worksheet as CSV
+$ ./sheet2csv test.xlsx s5s                  # print worksheet "s5s" as CSV
+```
+
+**Module Import Scenarios**
+
 All demos attempt to read a file and write a new file.  [`doit.ts`](./doit.ts)
 accepts the `XLSX` module as an argument.
 
 - `x` imports the ESM build without the codepage library:
 
 ```ts
+// @deno-types="https://deno.land/x/sheetjs/types/index.d.ts"
 import * as XLSX from 'https://deno.land/x/sheetjs/xlsx.mjs';
 ```
 

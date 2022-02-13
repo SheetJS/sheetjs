@@ -40,6 +40,7 @@ can be installed with Bash on Windows or with `cygwin`.
 - [`webpack 2.x`](webpack/)
 
 **Platforms and Integrations**
+- [`deno`](deno/)
 - [`electron application`](electron/)
 - [`nw.js application`](nwjs/)
 - [`Chrome / Chromium extensions`](chrome/)

@@ -48,7 +48,12 @@ function write_zip_type(wb/*:Workbook*/, opts/*:?WriteOpts*/)/*:any*/ {
 		default: throw new Error("Unrecognized type " + o.type);
 	}
 	var out = z.FullPaths ? CFB.write(z, {fileType:"zip", type: /*::(*/{"nodebuffer": "buffer", "string": "binary"}/*:: :any)*/[oopts.type] || oopts.type, compression: !!o.compression}) : z.generate(oopts);
-	if(typeof Deno !== "undefined" && typeof out == "string") out = new Uint8Array(s2ab(out));
+	if(typeof Deno !== "undefined") {
+		if(typeof out == "string") {
+			if(o.type == "binary" || o.type == "base64") return out;
+			out = new Uint8Array(s2ab(out));
+		}
+	}
 /*jshint -W083 */
 	if(o.password && typeof encrypt_agile !== 'undefined') return write_cfb_ctr(encrypt_agile(out, o.password), o); // eslint-disable-line no-undef
 /*jshint +W083 */
@@ -72,6 +77,7 @@ function write_string_type(out/*:string*/, opts/*:WriteOpts*/, bom/*:?string*/)/
 		case "file": return write_dl(opts.file, o, 'utf8');
 		case "buffer": {
 			if(has_buf) return Buffer_from(o, 'utf8');
+			else if(typeof TextEncoder !== "undefined") return new TextEncoder().encode(o);
 			else return write_string_type(o, {type:'binary'}).split("").map(function(c) { return c.charCodeAt(0); });
 		}
 	}

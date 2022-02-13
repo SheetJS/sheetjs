@@ -66,7 +66,7 @@ function utf8decode(content/*:string*/) {
 			o[widx++] = (128|(c&63));
 		} else if(c >= 0xD800 && c < 0xE000) {
 			c = (c&1023)+64;
-			var d = str.charCodeAt(++ridx)&1023;
+			var d = content.charCodeAt(++ridx)&1023;
 			o[widx++] = (240|((c>>8)&7));
 			o[widx++] = (128|((c>>2)&63));
 			o[widx++] = (128|((d>>6)&15)|((c&3)<<4));

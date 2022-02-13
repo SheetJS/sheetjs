@@ -71,5 +71,6 @@ function set_cptable(_cptable) {
 	_getansi = function _ga2(x/*:number*/)/*:string*/ {
 		return cptable.utils.decode(current_ansi, [x])[0];
 	};
+	cpdoit();
 }
 export { set_cptable };

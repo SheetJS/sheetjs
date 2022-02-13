@@ -64,6 +64,23 @@ const workbook = writeFileSync("out.xlsb", buf);
 </details>
 
 <details>
+  <summary><b>Local file in a Deno application</b> (click to show)</summary>
+
+`writeFile` uses `Deno.writeFileSync` under the hood:
+
+```js
+// @deno-types="https://deno.land/x/sheetjs/types/index.d.ts"
+import * as XLSX from 'https://deno.land/x/sheetjs/xlsx.mjs'
+
+XLSX.writeFile(workbook, "test.xlsx");
+```
+
+Applications writing files must be invoked with the `--allow-write` flag.  The
+[`deno` demo](demos/deno/) has more examples
+
+</details>
+
+<details>
   <summary><b>Local file in a PhotoShop or InDesign plugin</b> (click to show)</summary>
 
 `writeFile` wraps the `File` logic in Photoshop and other ExtendScript targets.

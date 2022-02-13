@@ -63,7 +63,7 @@ if(has_buf/*:: && typeof Buffer !== 'undefined'*/) {
 }
 
 /* from js-xls */
-if(typeof cptable !== 'undefined') {
+function cpdoit() {
 	__utf16le = function(b/*:RawBytes|CFBlob*/,s/*:number*/,e/*:number*/) { return cptable.utils.decode(1200, b.slice(s,e)).replace(chr0, ''); };
 	__utf8 = function(b/*:RawBytes|CFBlob*/,s/*:number*/,e/*:number*/) { return cptable.utils.decode(65001, b.slice(s,e)); };
 	__lpstr = function(b/*:RawBytes|CFBlob*/,i/*:number*/) { var len = __readUInt32LE(b,i); return len > 0 ? cptable.utils.decode(current_ansi, b.slice(i+4, i+4+len-1)) : "";};
@@ -72,6 +72,7 @@ if(typeof cptable !== 'undefined') {
 	__lpp4 = function(b/*:RawBytes|CFBlob*/,i/*:number*/) { var len = __readUInt32LE(b,i); return len > 0 ? cptable.utils.decode(1200, b.slice(i+4,i+4+len)) : "";};
 	__8lpp4 = function(b/*:RawBytes|CFBlob*/,i/*:number*/) { var len = __readUInt32LE(b,i); return len > 0 ? cptable.utils.decode(65001, b.slice(i+4,i+4+len)) : "";};
 }
+if(typeof cptable !== 'undefined') cpdoit();
 
 var __readUInt8 = function(b/*:RawBytes|CFBlob*/, idx/*:number*/)/*:number*/ { return b[idx]; };
 var __readUInt16LE = function(b/*:RawBytes|CFBlob*/, idx/*:number*/)/*:number*/ { return (b[idx+1]*(1<<8))+b[idx]; };

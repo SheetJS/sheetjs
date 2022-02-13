@@ -4,6 +4,11 @@ This log is intended to keep track of backwards-incompatible changes, including
 but not limited to API changes and file location changes.  Minor behavioral
 changes may not be included if they are not expected to break existing code.
 
+## v0.18.1
+
+* Removed Node ESM build script and folded into standard ESM build
+* Removed undocumented aliases including `make_formulae` and `get_formulae`
+
 ## v0.18.0
 
 * Browser scripts only expose `XLSX` variable

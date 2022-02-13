@@ -25,9 +25,11 @@ The [`demos` directory](demos/) includes sample projects for:
 - [`webpack 2.x`](demos/webpack/)
 
 **Platforms and Integrations**
+- [`deno`](demos/deno/)
 - [`electron application`](demos/electron/)
 - [`nw.js application`](demos/nwjs/)
 - [`Chrome / Chromium extensions`](demos/chrome/)
+- [`Download a Google Sheet locally`](demos/google-sheet/)
 - [`Adobe ExtendScript`](demos/extendscript/)
 - [`Headless Browsers`](demos/headless/)
 - [`canvas-datagrid`](demos/datagrid/)
