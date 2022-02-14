@@ -9,6 +9,8 @@ export {
 	writeFileSync as writeFile,
 	writeFileSync,
 	writeFileAsync,
+	writeSyncXLSX as writeXLSX,
+	writeFileSyncXLSX as writeFileXLSX,
 	utils,
 	SSF,
 	CFB

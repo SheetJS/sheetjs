@@ -32,6 +32,17 @@ The `writeFile` method uses platform-specific APIs to initiate the file save. In
 NodeJS, `fs.readFileSync` can create a file.  In the web browser, a download is
 attempted using the HTML5 `download` attribute, with fallbacks for IE.
 
+_Generate and attempt to save an XLSX file_
+
+```js
+XLSX.writeFileXLSX(workbook, filename, opts);
+```
+
+The `writeFile` method embeds a number of different export functions.  This is
+great for developer experience but not amenable to dead code elimination using
+the current toolset.  When only XLSX exports are needed, this method avoids
+referencing the other export codecs.
+
 The second `opts` argument is optional.  ["Writing Options"](#writing-options)
 covers the supported properties and behaviors.
 

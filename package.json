@@ -1,6 +1,6 @@
 {
 	"name": "xlsx",
-	"version": "0.18.0",
+	"version": "0.18.1",
 	"author": "sheetjs",
 	"description": "SheetJS Spreadsheet data parser and writer",
 	"keywords": [
@@ -21,6 +21,7 @@
 		"xlsx": "./bin/xlsx.njs"
 	},
 	"main": "xlsx.js",
+	"module": "xlsx.mjs",
 	"unpkg": "dist/xlsx.full.min.js",
 	"jsdelivr": "dist/xlsx.full.min.js",
 	"types": "types/index.d.ts",

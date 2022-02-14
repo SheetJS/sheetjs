@@ -8,5 +8,7 @@ XLSX.writeFile = writeFileSync;
 XLSX.writeFileSync = writeFileSync;
 XLSX.writeFileAsync = writeFileAsync;
 XLSX.utils = utils;
+XLSX.writeXLSX = writeSyncXLSX;
+XLSX.writeFileXLSX = writeFileSyncXLSX;
 XLSX.SSF = SSF;
 if(typeof CFB !== "undefined") XLSX.CFB = CFB;

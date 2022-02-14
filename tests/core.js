@@ -248,7 +248,7 @@ function parsetest(x/*:string*/, wb/*:Workbook*/, full/*:boolean*/, ext/*:?strin
 	describe(x + ext + ' should generate CSV', function() {
 		wb.SheetNames.forEach(function(ws, i) {
 			it('#' + i + ' (' + ws + ')', function() {
-				X.utils.make_csv(wb.Sheets[ws]);
+				X.utils.sheet_to_csv(wb.Sheets[ws]);
 			});
 		});
 	});
@@ -262,7 +262,7 @@ function parsetest(x/*:string*/, wb/*:Workbook*/, full/*:boolean*/, ext/*:?strin
 	describe(x + ext + ' should generate formulae', function() {
 		wb.SheetNames.forEach(function(ws, i) {
 			it('#' + i + ' (' + ws + ')', function() {
-				X.utils.get_formulae(wb.Sheets[ws]);
+				X.utils.sheet_to_formulae(wb.Sheets[ws]);
 			});
 		});
 	});
@@ -289,7 +289,7 @@ function parsetest(x/*:string*/, wb/*:Workbook*/, full/*:boolean*/, ext/*:?strin
 			var name = getfile(dir, x, i, ".csv");
 			if(fs.existsSync(name)) it('#' + i + ' (' + ws + ')', function() {
 				var file = fs.readFileSync(name, 'utf-8');
-				var csv = X.utils.make_csv(wb.Sheets[ws]);
+				var csv = X.utils.sheet_to_csv(wb.Sheets[ws]);
 				assert.equal(fixcsv(csv), fixcsv(file), "CSV badness");
 			});
 		});
@@ -299,14 +299,14 @@ function parsetest(x/*:string*/, wb/*:Workbook*/, full/*:boolean*/, ext/*:?strin
 			var rawjson = getfile(dir, x, i, ".rawjson");
 			if(fs.existsSync(rawjson)) it('#' + i + ' (' + ws + ')', function() {
 				var file = fs.readFileSync(rawjson, 'utf-8');
-				var json = X.utils.make_json(wb.Sheets[ws],{raw:true});
+				var json = X.utils.sheet_to_json(wb.Sheets[ws],{raw:true});
 				assert.equal(JSON.stringify(json), fixjson(file), "JSON badness");
 			});
 
 			var jsonf = getfile(dir, x, i, ".json");
 			if(fs.existsSync(jsonf)) it('#' + i + ' (' + ws + ')', function() {
 				var file = fs.readFileSync(jsonf, 'utf-8');
-				var json = X.utils.make_json(wb.Sheets[ws], {raw:false});
+				var json = X.utils.sheet_to_json(wb.Sheets[ws], {raw:false});
 				assert.equal(JSON.stringify(json), fixjson(file), "JSON badness");
 			});
 		});
@@ -1760,7 +1760,7 @@ describe('json output', function() {
 	if(typeof before != 'undefined') before(bef);
 	else it('before', bef);
 	it('should use first-row headers and full sheet by default', function() {
-		var json = X.utils.sheet_to_json(ws, {raw: null});
+		var json = X.utils.sheet_to_json(ws, {raw: false});
 		assert.equal(json.length, data.length - 1);
 		assert.equal(json[0][1], "TRUE");
 		assert.equal(json[1][2], "bar");
@@ -1769,7 +1769,7 @@ describe('json output', function() {
 		assert.throws(function() { seeker(json, [1,2,3], "baz"); });
 	});
 	it('should create array of arrays if header == 1', function() {
-		var json = X.utils.sheet_to_json(ws, {header:1, raw:""});
+		var json = X.utils.sheet_to_json(ws, {header:1, raw:false});
 		assert.equal(json.length, data.length);
 		assert.equal(json[1][0], "TRUE");
 		assert.equal(json[2][1], "bar");
@@ -2322,9 +2322,9 @@ describe('corner cases', function() {
 		get_cell(ws,"A1").f = ""; get_cell(ws,"A1").w = "";
 		delete get_cell(ws,"C3").w; delete get_cell(ws,"C3").z; get_cell(ws,"C3").XF = {ifmt:14};
 		get_cell(ws,"A4").t = "e";
-		X.utils.get_formulae(ws);
-		X.utils.make_csv(ws);
-		X.utils.make_json(ws);
+		X.utils.sheet_to_formulae(ws);
+		X.utils.sheet_to_csv(ws);
+		X.utils.sheet_to_json(ws);
 		ws['!cols'] = [ {wch:6}, {wch:7}, {wch:10}, {wch:20} ];
 
 		var wb = {SheetNames:['sheetjs'], Sheets:{sheetjs:ws}};
@@ -2336,7 +2336,7 @@ describe('corner cases', function() {
 		X.write(wb, {type: "binary", bookType: 'biff5'});
 		X.write(wb, {type: "binary", bookType: 'biff8'});
 		get_cell(ws,"A2").t = "f";
-		assert.throws(function() { X.utils.make_json(ws); });
+		assert.throws(function() { X.utils.sheet_to_json(ws); });
 	});
 	it('SSF', function() {
 		X.SSF.format("General", "dafuq");

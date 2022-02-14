@@ -6,10 +6,16 @@ ng2 ng4 ng5 ng6 ng7 ng8 ng9 ng10 ng11 ng12 ng13:
 	if [ -e versions/tsconfig.app.json-$@ ]; then cp versions/tsconfig.app.json-$@ tsconfig.app.json; fi
 	if [ -e versions/polyfills.ts-$@ ]; then cp versions/polyfills.ts-$@ src/polyfills.ts; fi
 	rm -rf node_modules
-	npm install
 	if [ ! -e node_modules ]; then mkdir node_modules; fi
+	npm install
 	if [ ! -e node_modules/xlsx ]; then cd node_modules; ln -s ../../../ xlsx; cd -; fi
 	npm run build
+
+.PHONY: refresh
+refresh: ## refresh the `xlsx` symlink to force angular to rebuild
+	rm -f node_modules/xlsx
+	cd node_modules; ln -s ../../../ xlsx; cd -
+	touch node_modules/xlsx
 
 .PHONY: all
 all:

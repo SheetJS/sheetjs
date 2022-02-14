@@ -2,7 +2,9 @@
 /* vim: set ts=2: */
 import { Component } from '@angular/core';
 
-import * as XLSX from 'xlsx';
+import { WorkBook, WorkSheet, WritingOptions, read, writeFileXLSX as writeFile, utils, version, set_cptable } from 'xlsx';
+//import * as cpexcel from 'xlsx/dist/cpexcel.full.mjs';
+//set_cptable(cpexcel);
 
 type AOA = any[][];
 
@@ -24,9 +26,9 @@ type AOA = any[][];
 
 export class SheetJSComponent {
 	data: AOA = [ [1, 2], [3, 4] ];
-	wopts: XLSX.WritingOptions = { bookType: 'xlsx', type: 'array' };
+	wopts: WritingOptions = { bookType: 'xlsx', type: 'array' };
 	fileName: string = 'SheetJS.xlsx';
-	ver: string = XLSX.version;
+	ver: string = version;
 
 	onFileChange(evt: any) {
 		/* wire up file reader */
@@ -36,27 +38,27 @@ export class SheetJSComponent {
 		reader.onload = (e: any) => {
 			/* read workbook */
 			const ab: ArrayBuffer = e.target.result;
-			const wb: XLSX.WorkBook = XLSX.read(ab);
+			const wb: WorkBook = read(ab);
 
 			/* grab first sheet */
 			const wsname: string = wb.SheetNames[0];
-			const ws: XLSX.WorkSheet = wb.Sheets[wsname];
+			const ws: WorkSheet = wb.Sheets[wsname];
 
 			/* save data */
-			this.data = <AOA>(XLSX.utils.sheet_to_json(ws, {header: 1}));
+			this.data = <AOA>(utils.sheet_to_json(ws, {header: 1}));
 		};
 		reader.readAsArrayBuffer(target.files[0]);
 	}
 
 	export(): void {
 		/* generate worksheet */
-		const ws: XLSX.WorkSheet = XLSX.utils.aoa_to_sheet(this.data);
+		const ws: WorkSheet = utils.aoa_to_sheet(this.data);
 
 		/* generate workbook and add the worksheet */
-		const wb: XLSX.WorkBook = XLSX.utils.book_new();
-		XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
+		const wb: WorkBook = utils.book_new();
+		utils.book_append_sheet(wb, ws, 'Sheet1');
 
 		/* save to file */
-		XLSX.writeFile(wb, this.fileName);
+		writeFile(wb, this.fileName);
 	}
 }

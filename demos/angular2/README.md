@@ -1,9 +1,9 @@
 # Angular 2+
 
-The library can be imported directly from TS code with:
+The ESM build can be imported directly from TS code with:
 
 ```typescript
-import * as XLSX from 'xlsx';
+import { read, utils, writeFileXLSX } from 'xlsx';
 ```
 
 This demo uses an array of arrays (type `Array<Array<any>>`) as the core state.

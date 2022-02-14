@@ -36,6 +36,14 @@ function write_cfb_ctr(cfb/*:CFBContainer*/, o/*:WriteOpts*/)/*:any*/ {
 function write_zip_type(wb/*:Workbook*/, opts/*:?WriteOpts*/)/*:any*/ {
 	var o = dup(opts||{});
 	var z = write_zip(wb, o);
+	return write_zip_denouement(z, o);
+}
+function write_zip_typeXLSX(wb/*:Workbook*/, opts/*:?WriteOpts*/)/*:any*/ {
+	var o = dup(opts||{});
+	var z = write_zip_xlsx(wb, o);
+	return write_zip_denouement(z, o);
+}
+function write_zip_denouement(z/*:any*/, o/*:?WriteOpts*/)/*:any*/ {
 	var oopts = {};
 	if(o.compression) oopts.compression = 'DEFLATE';
 	if(o.password) oopts.type = has_buf ? "nodebuffer" : "string";
@@ -114,6 +122,15 @@ function write_binary_type(out, opts/*:WriteOpts*/)/*:any*/ {
 	}
 }
 
+function writeSyncXLSX(wb/*:Workbook*/, opts/*:?WriteOpts*/) {
+	reset_cp();
+	check_wb(wb);
+	var o = dup(opts||{});
+	if(o.cellStyles) { o.cellNF = true; o.sheetStubs = true; }
+	if(o.type == "array") { o.type = "binary"; var out/*:string*/ = (writeSyncXLSX(wb, o)/*:any*/); o.type = "array"; return s2ab(out); }
+	return write_zip_typeXLSX(wb, o);
+}
+
 function writeSync(wb/*:Workbook*/, opts/*:?WriteOpts*/) {
 	reset_cp();
 	check_wb(wb);
@@ -173,6 +190,14 @@ function writeFileSync(wb/*:Workbook*/, filename/*:string*/, opts/*:?WriteFileOp
 	resolve_book_type(o);
 	return writeSync(wb, o);
 }
+
+function writeFileSyncXLSX(wb/*:Workbook*/, filename/*:string*/, opts/*:?WriteFileOpts*/) {
+	var o = opts||{}; o.type = 'file';
+	o.file = filename;
+	resolve_book_type(o);
+	return writeSyncXLSX(wb, o);
+}
+
 
 function writeFileAsync(filename/*:string*/, wb/*:Workbook*/, opts/*:?WriteFileOpts*/, cb/*:?(e?:ErrnoError)=>void*/) {
 	var o = opts||{}; o.type = 'file';

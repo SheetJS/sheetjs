@@ -51,6 +51,8 @@ make.cmd
 xlsworker.js
 shim.js
 test.js
+test.mjs
+test.ts
 .jscs.json
 .gitmodules
 .travis.yml

@@ -40,16 +40,6 @@ A slimmer build is generated at `dist/xlsx.mini.min.js`. Compared to full build:
 - no support for XLSB / XLS / Lotus 1-2-3 / SpreadsheetML 2003
 - node stream utils removed
 
-Webpack and Browserify builds include optional modules by default.  Webpack can
-be configured to remove support with `resolve.alias`:
-
-```js
-  /* uncomment the lines below to remove support */
-  resolve: {
-    alias: { "./dist/cpexcel.js": "" } // <-- omit international support
-  }
-```
-
 </details>
 
 
@@ -57,6 +47,34 @@ With [bower](https://bower.io/search/?q=js-xlsx):
 
 ```bash
 $ bower install js-xlsx
+```
+
+**ECMAScript Modules**
+
+The ECMAScript Module build is saved to `xlsx.mjs` and can be directly added to
+a page with a `script` tag using `type=module`:
+
+```html
+<script type="module">
+import { read, writeFileXLSX } from "./xlsx.mjs";
+
+/* load the codepage support library for extended support with older formats  */
+import { set_cptable } from "./xlsx.mjs";
+import * as cptable from './dist/cpexcel.full.mjs';
+set_cptable(cptable);
+</script>
+```
+
+The [npm package](https://www.npmjs.org/package/xlsx) also exposes the module
+with the `module` parameter, supported in Angular and other projects:
+
+```ts
+import { read, writeFileXLSX } from "xlsx";
+
+/* load the codepage support library for extended support with older formats  */
+import { set_cptable } from "xlsx";
+import * as cptable from 'xlsx/dist/cpexcel.full.mjs';
+set_cptable(cptable);
 ```
 
 **Deno**
