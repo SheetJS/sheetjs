@@ -53,6 +53,7 @@ function buf_array()/*:BufArray*/ {
 }
 
 function write_record(ba/*:BufArray*/, type/*:string*/, payload, length/*:?number*/) {
+	if(!XLSBRE) make_XLSBRE();
 	var t/*:number*/ = +XLSBRE[type], l;
 	if(isNaN(t)) return; // TODO: throw something here?
 	if(!length) length = XLSBRecordEnum[t].p || (payload||[]).length || 0;

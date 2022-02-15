@@ -4,7 +4,7 @@
 /*global global, exports, module, require:false, process:false, Buffer:false, ArrayBuffer:false */
 var XLSX = {};
 function make_xlsx_lib(XLSX){
-XLSX.version = '0.18.1';
+XLSX.version = '0.18.2';
 var current_codepage = 1200, current_ansi = 1252;
 /*global cptable:true, window */
 if(typeof module !== "undefined" && typeof require !== 'undefined') {
@@ -189,7 +189,7 @@ var o = new Array(data.length);
 }
 
 function utf8decode(content) {
-	var out = [], widx = 0;
+	var out = [], widx = 0, L = content.length + 250;
 	var o = new_raw_buf(content.length + 255);
 	for(var ridx = 0; ridx < content.length; ++ridx) {
 		var c = content.charCodeAt(ridx);
@@ -209,10 +209,11 @@ function utf8decode(content) {
 			o[widx++] = (128|((c>>6)&63));
 			o[widx++] = (128|(c&63));
 		}
-		if(widx > 65530) {
+		if(widx > L) {
 			out.push(o.slice(0, widx));
 			widx = 0;
 			o = new_raw_buf(65535);
+			L = 65530;
 		}
 	}
 	out.push(o.slice(0, widx));
@@ -3992,6 +3993,7 @@ function buf_array() {
 }
 
 function write_record(ba, type, payload, length) {
+	if(!XLSBRE) make_XLSBRE();
 	var t = +XLSBRE[type], l;
 	if(isNaN(t)) return; // TODO: throw something here?
 	if(!length) length = XLSBRecordEnum[t].p || (payload||[]).length || 0;

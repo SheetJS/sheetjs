@@ -56,7 +56,7 @@ function ab2a(data/*:ArrayBuffer|Uint8Array*/)/*:Array<number>*/ {
 }
 
 function utf8decode(content/*:string*/) {
-	var out = [], widx = 0;
+	var out = [], widx = 0, L = content.length + 250;
 	var o = new_raw_buf(content.length + 255);
 	for(var ridx = 0; ridx < content.length; ++ridx) {
 		var c = content.charCodeAt(ridx);
@@ -76,10 +76,11 @@ function utf8decode(content/*:string*/) {
 			o[widx++] = (128|((c>>6)&63));
 			o[widx++] = (128|(c&63));
 		}
-		if(widx > 65530) {
+		if(widx > L) {
 			out.push(o.slice(0, widx));
 			widx = 0;
 			o = new_raw_buf(65535);
+			L = 65530;
 		}
 	}
 	out.push(o.slice(0, widx));

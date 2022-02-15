@@ -1485,9 +1485,9 @@ XLSX.writeFileXLSX(workbook, filename, opts);
 ```
 
 The `writeFile` method embeds a number of different export functions.  This is
-great for developer experience but not amenable to dead code elimination using
-the current toolset.  When only XLSX exports are needed, this method avoids
-referencing the other export codecs.
+great for developer experience but not amenable to tree shaking using the
+current developer tools.  When only XLSX exports are needed, this method avoids
+referencing the other export functions.
 
 The second `opts` argument is optional.  ["Writing Options"](#writing-options)
 covers the supported properties and behaviors.
