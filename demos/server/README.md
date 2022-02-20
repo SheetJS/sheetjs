@@ -163,4 +163,96 @@ curl -X POST http://localhost:7262/file?f=sheetjs.csv
 curl -X GET http://localhost:7262/?f=sheetjs.xlsb
 ```
 
+
+
+## NestJS
+
+[NestJS](https://nestjs.com/) is a Node.js framework for server-side web applications.
+
+This demo uses SheetJS to injest a spreadsheet via a POST API endpoint. The file will 
+arrive to the endpoint as body `form-data` with key/value pair `file` / `test.xlsx` 
+
+[Install](https://docs.nestjs.com/first-steps) NestJS:
+
+```bash 
+npm i -g @nestjs/cli
+```
+
+Create a new NestJS project:
+
+```bash
+nest new xlsx-demo 
+```
+
+Add SheetJS to the project:
+
+```bash
+cd xlsx-demo
+npm install --save xlsx
+```
+
+Install types for Multer:
+```bash
+npm install --save-dev @types/multer
+```
+
+Select NPM as the project's package manager when prompted.
+
+Create a module and a controller in that module:
+
+```bash
+nest generate module sheetjs && nest generate controller sheetjs
+```
+
+Set a directory for file storage in `src/sheetjs/sheetjs.module.ts`:
+
+```ts
+import { Module } from '@nestjs/common';
+import { SheetjsController } from './sheetjs.controller';
+import { MulterModule } from '@nestjs/platform-express';
+
+@Module({
+  controllers: [SheetjsController],
+  imports: [
+    MulterModule.register({
+      dest: './upload',
+    }),
+  ],
+})
+export class SheetjsModule {}
+
+```
+
+Create an endpoint in the controller `src/sheetjs/sheetjs.controller.ts`:
+
+```ts
+import { Controller, Logger, Post, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { readFile } from 'xlsx';
+
+@Controller('sheetjs')
+export class SheetjsController {
+  private readonly logger = new Logger(SheetjsController.name);
+
+  @Post('upload-xlsx-file')
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadXlsxFile(@UploadedFile() file: Express.Multer.File) {
+    // Open the uploaded XLSX file and perform SheetJS operations
+    const workbook = readFile(file.path);
+    const sheetNames = workbook.SheetNames;
+    const firstSheet = workbook.Sheets[sheetNames[0]];
+    const output = `SheetJS/NestJS demo found the following data in cell A1: "${firstSheet['A1'].v}"`;
+    this.logger.log(output);
+    return output;
+  }
+}
+```
+
+Start the server:
+```bash
+npm run start
+```
+
+The file upload endpoint is complete.
+
 [![Analytics](https://ga-beacon.appspot.com/UA-36810333-1/SheetJS/js-xlsx?pixel)](https://github.com/SheetJS/js-xlsx)
