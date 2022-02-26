@@ -43,6 +43,7 @@ tmp
 .eslintignore
 .eslintrc
 .jshintrc
+xlsx.mini.js
 CONTRIBUTING.md
 Makefile
 make.cmd

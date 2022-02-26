@@ -25,7 +25,7 @@ The following commands are required in order to test the [Koa](https://github.co
 ```bash
 npm install koa printj formidable xlsx
 node koa.js
-``` 
+```
 
 ### Hapi Setup
 
@@ -36,7 +36,7 @@ The following commands are required in order to test the [Hapi](https://github.c
 ```bash
 npm install hapi@16.x printj tiny-worker xlsx
 node hapi.js
-``` 
+```
 
 
 
@@ -162,5 +162,37 @@ curl -X POST http://localhost:7262/file?f=sheetjs.csv
 # write sheetjs.xlsb in the XLSB format
 curl -X GET http://localhost:7262/?f=sheetjs.xlsb
 ```
+
+
+
+## NestJS
+
+[NestJS](https://nestjs.com/) is a Node.js framework for server-side web applications.
+
+This demo uses SheetJS to injest a spreadsheet via a POST API endpoint. The file
+arrive to the endpoint as body `form-data`, accessible using the `file` key.
+After parsing the file, CSV contents of the first worksheet will be returned.
+[Body parsing uses `multer`](https://docs.nestjs.com/techniques/file-upload).
+
+Before running the demo, the NestJS CLI tool must be installed.  The instruction
+is described in the NestJS ["First Steps"](https://docs.nestjs.com/first-steps):
+
+```bash
+npm i -g @nestjs/cli
+make nest
+```
+
+The demo can be tested using the `/sheetjs/upload-xlsx-file` endpoint:
+
+```bash
+curl -X POST -F "file=@test.xlsx" http://localhost:3000/sheetjs/upload-xlsx-file
+```
+
+The included [`nest.sh`](./nest.sh) script creates and configures the project.
+
+
+This demo creates a module and a controller.  The controller handles the actual
+requests (creating the endpoint) while the module is used to configure `multer`.
+
 
 [![Analytics](https://ga-beacon.appspot.com/UA-36810333-1/SheetJS/js-xlsx?pixel)](https://github.com/SheetJS/js-xlsx)

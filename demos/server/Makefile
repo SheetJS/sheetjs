@@ -19,3 +19,7 @@ koa: init ## koa demo
 hapi: init ## hapi demo
 	cp ../../dist/xlsx.full.min.js .
 	node hapi.js
+
+.PHONY: nest
+nest: init ## nest demo
+	bash -c ./nest.sh
