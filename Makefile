@@ -73,18 +73,24 @@ DISTHDR=misc/suppress_export.js
 .PHONY: dist
 dist: dist-deps $(TARGET) bower.json ## Prepare JS files for distribution
 	mkdir -p dist
-	<$(TARGET) sed "s/require('....*')/undefined/g" > dist/$(TARGET)
 	cp LICENSE dist/
 	uglifyjs shim.js $(UGLIFYOPTS) -o dist/shim.min.js --preamble "$$(head -n 1 bits/00_header.js)"
-	uglifyjs $(DISTHDR) dist/$(TARGET) $(UGLIFYOPTS) -o dist/$(LIB).min.js --source-map dist/$(LIB).min.map --preamble "$$(head -n 1 bits/00_header.js)"
-	misc/strip_sourcemap.sh dist/$(LIB).min.js
-	uglifyjs $(DISTHDR) $(REQS) dist/$(TARGET) $(UGLIFYOPTS) -o dist/$(LIB).core.min.js --source-map dist/$(LIB).core.min.map --preamble "$$(head -n 1 bits/00_header.js)"
+	@#
+	<$(TARGET) sed "s/require('.*')/undefined/g;s/ process / undefined /g;s/process.versions/({})/g" > dist/$(TARGET)
+	<$(MINITGT) sed "s/require('.*')/undefined/g;s/ process / undefined /g;s/process.versions/({})/g" > dist/$(MINITGT)
+	@# core
+	uglifyjs $(REQS) dist/$(TARGET) $(UGLIFYOPTS) -o dist/$(LIB).core.min.js --source-map dist/$(LIB).core.min.map --preamble "$$(head -n 1 bits/00_header.js)"
 	misc/strip_sourcemap.sh dist/$(LIB).core.min.js
+	@# full
 	uglifyjs $(DISTHDR) $(REQS) $(ADDONS) dist/$(TARGET) $(AUXTARGETS) $(UGLIFYOPTS) -o dist/$(LIB).full.min.js --source-map dist/$(LIB).full.min.map --preamble "$$(head -n 1 bits/00_header.js)"
-	uglifyjs $(DISTHDR) $(MINITGT) $(UGLIFYOPTS) -o dist/$(LIB).mini.min.js --source-map dist/$(LIB).mini.min.map --preamble "$$(head -n 1 bits/00_header.js)"
 	misc/strip_sourcemap.sh dist/$(LIB).full.min.js
+	@# mini
+	uglifyjs dist/$(MINITGT) $(UGLIFYOPTS) -o dist/$(LIB).mini.min.js --source-map dist/$(LIB).mini.min.map --preamble "$$(head -n 1 bits/00_header.js)"
 	misc/strip_sourcemap.sh dist/$(LIB).mini.min.js
+	@# extendscript
 	cat <(head -n 1 bits/00_header.js) shim.js $(DISTHDR) $(REQS) dist/$(TARGET) > dist/$(LIB).extendscript.js
+	@#
+	rm dist/$(TARGET) dist/$(MINITGT)
 
 .PHONY: dist-deps
 dist-deps: ## Copy dependencies for distribution
@@ -94,10 +100,12 @@ dist-deps: ## Copy dependencies for distribution
 .PHONY: aux
 aux: $(AUXTARGETS)
 
-BYTEFILE=dist/xlsx.min.js dist/xlsx.{core,full,mini}.min.js dist/xlsx.extendscript.js
+BYTEFILEC=dist/xlsx.{full,core,mini}.min.js
+BYTEFILER=dist/xlsx.extendscript.js
 .PHONY: bytes
 bytes: ## Display minified and gzipped file sizes
-	for i in $(BYTEFILE); do printj "%-30s %7d %10d" $$i $$(wc -c < $$i) $$(gzip --best --stdout $$i | wc -c); done
+	@for i in $(BYTEFILEC); do printj "%-30s %7d %10d" $$i $$(wc -c < $$i) $$(gzip --best --stdout $$i | wc -c); done
+	@for i in $(BYTEFILER); do printj "%-30s %7d" $$i $$(wc -c < $$i); done
 
 .PHONY: graph
 graph: formats.png legend.png ## Rebuild format conversion graph

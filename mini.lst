@@ -1,6 +1,6 @@
 bits/00_header.js
 bits/01_version.js
-bits/02_codepage.js
+misc/02_cpmini.js
 bits/03_consts.js
 bits/04_base64.js
 bits/05_buf.js
@@ -19,6 +19,7 @@ bits/27_csfutils.js
 bits/29_xlsenum.js
 bits/30_ctype.js
 bits/31_rels.js
+bits/32_odmanrdf.js
 bits/33_coreprops.js
 bits/34_extprops.js
 bits/35_custprops.js
@@ -35,17 +36,17 @@ bits/57_cmntxml.js
 bits/59_vba.js
 bits/60_macrovba.js
 bits/61_fcommon.js
+bits/65_fods.js
 bits/66_wscommon.js
 bits/67_wsxml.js
 bits/69_chartxml.js
-bits/70_csheet.js
+misc/70_csheet.js
 bits/71_wbcommon.js
 bits/72_wbxml.js
 bits/74_xmlbin.js
 bits/79_html.js
 bits/80_parseods.js
 bits/81_writeods.js
-bits/83_numbers.js
 bits/84_defaults.js
 bits/85_parsezip.js
 bits/86_writezip.js

@@ -43,6 +43,7 @@ function read_plaintext_raw(data/*:RawData*/, o/*:ParseOpts*/)/*:Workbook*/ {
 		default: throw new Error("Unrecognized type " + o.type);
 	}
 	if(bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF) str = utf8read(str);
+	o.type = "binary";
 	return read_plaintext(str, o);
 }
 

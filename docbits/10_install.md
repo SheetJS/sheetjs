@@ -34,10 +34,12 @@ For example, `unpkg` makes the latest version available at:
 
 The complete single-file version is generated at `dist/xlsx.full.min.js`
 
+`dist/xlsx.core.min.js` omits codepage library (no support for XLS encodings)
+
 A slimmer build is generated at `dist/xlsx.mini.min.js`. Compared to full build:
 - codepage library skipped (no support for XLS encodings)
 - XLSX compression option not currently available
-- no support for XLSB / XLS / Lotus 1-2-3 / SpreadsheetML 2003
+- no support for XLSB / XLS / Lotus 1-2-3 / SpreadsheetML 2003 / Numbers
 - node stream utils removed
 
 </details>
