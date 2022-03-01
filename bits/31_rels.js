@@ -61,7 +61,9 @@ var RELS_EXTERN = [RELS.HLINK, RELS.XPATH, RELS.XMISS];
 function add_rels(rels, rId/*:number*/, f, type, relobj, targetmode/*:?string*/)/*:number*/ {
 	if(!relobj) relobj = {};
 	if(!rels['!id']) rels['!id'] = {};
-	if(rId < 0) for(rId = 1; rels['!id']['rId' + rId]; ++rId){/* empty */}
+	if(!rels['!idx']) rels['!idx'] = 1;
+	if(rId < 0) for(rId = rels['!idx']; rels['!id']['rId' + rId]; ++rId){/* empty */}
+	rels['!idx'] = rId + 1;
 	relobj.Id = 'rId' + rId;
 	relobj.Type = type;
 	relobj.Target = f;
