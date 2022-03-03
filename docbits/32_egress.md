@@ -255,3 +255,42 @@ The [`vuejs` demo](demos/vue) includes more React examples.
 
 </details>
 
+### Generating Single-Worksheet Snapshots
+
+The `sheet_to_*` functions accept a worksheet object.
+
+**API**
+
+_Generate a CSV from a single worksheet_
+
+```js
+var csv = XLSX.utils.sheet_to_csv(worksheet, opts);
+```
+
+This snapshot is designed to replicate the "CSV UTF8 (`.csv`)" output type.
+["Delimiter-Separated Output"](#delimiter-separated-output) describes the
+function and the optional `opts` argument in more detail.
+
+_Generate "Text" from a single worksheet_
+
+```js
+var txt = XLSX.utils.sheet_to_txt(worksheet, opts);
+```
+
+This snapshot is designed to replicate the "UTF16 Text (`.txt`)" output type.
+["Delimiter-Separated Output"](#delimiter-separated-output) describes the
+function and the optional `opts` argument in more detail.
+
+_Generate a list of formulae from a single worksheet_
+
+```js
+var fmla = XLSX.utils.sheet_to_formulae(worksheet);
+```
+
+This snapshot generates an array of entries representing the embedded formulae.
+Array formulae are rendered in the form `range=formula` while plain cells are
+rendered in the form `cell=formula or value`.  String literals are prefixed with
+an apostrophe `'`, consistent with Excel's formula bar display.
+
+["Formulae Output"](#formulae-output) describes the function in more detail.
+

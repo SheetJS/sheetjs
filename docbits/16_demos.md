@@ -40,3 +40,9 @@ The [`demos` directory](demos/) includes sample projects for:
 
 Other examples are included in the [showcase](demos/showcase/).
 
+<https://sheetjs.com/demos/modify.html> shows a complete example of reading,
+modifying, and writing files.
+
+<https://github.com/SheetJS/sheetjs/blob/HEAD/bin/xlsx.njs> is the command-line
+tool included with node installations, reading spreadsheet files and exporting
+the contents in various formats.

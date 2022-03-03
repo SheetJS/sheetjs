@@ -24,9 +24,5 @@ port calculations to web apps; automate common spreadsheet tasks, and much more!
 
 ![circo graph of format support](formats.png)
 
-<details><summary><b>Diagram Legend</b> (click to show)</summary>
-
 ![graph legend](legend.png)
-
-</details>
 

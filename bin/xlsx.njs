@@ -129,6 +129,7 @@ function wb_fmt() {
 	seen = true;
 	opts.cellFormula = true;
 	opts.cellNF = true;
+	opts.xlfn = true;
 	if(program.output) sheetname = program.output;
 }
 function isfmt(m/*:string*/)/*:boolean*/ {

@@ -41,6 +41,7 @@ ExtendScript
 IndexedDB
 JavaScriptCore
 LocalStorage
+NestJS
 NPM
 Nuxt.js
 Redis

@@ -28,6 +28,7 @@ bits/42_sstxml.js
 bits/46_stycommon.js
 bits/47_styxml.js
 bits/49_theme.js
+misc/51_xlsxmeta.js
 bits/53_externlink.js
 bits/54_drawing.js
 bits/55_vml.js

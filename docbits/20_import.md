@@ -440,3 +440,4 @@ const workbook = XLSX.read(data);
 </details>
 
 More detailed examples are covered in the [included demos](demos/)
+

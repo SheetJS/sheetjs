@@ -538,6 +538,8 @@ function parse_ws_bin(data, _opts, idx, rels, wb/*:WBWBProps*/, themes, styles)/
 
 	XLSBRecordEnum[0x0010] = { n:"BrtShortReal", f:parse_BrtShortReal };
 
+	var cm, vm;
+
 	recordhopper(data, function ws_parse(val, R_n, RT) {
 		if(end) return;
 		switch(RT) {
@@ -595,6 +597,7 @@ function parse_ws_bin(data, _opts, idx, rels, wb/*:WBWBProps*/, themes, styles)/
 					}
 					if(!af && val.length > 3) p.f = val[3];
 				}
+
 				if(refguess.s.r > row.r) refguess.s.r = row.r;
 				if(refguess.s.c > C) refguess.s.c = C;
 				if(refguess.e.r < row.r) refguess.e.r = row.r;
@@ -602,12 +605,17 @@ function parse_ws_bin(data, _opts, idx, rels, wb/*:WBWBProps*/, themes, styles)/
 				if(opts.cellDates && cf && p.t == 'n' && SSF.is_date(SSF._table[cf.numFmtId])) {
 					var _d = SSF.parse_date_code(p.v); if(_d) { p.t = 'd'; p.v = new Date(_d.y, _d.m-1,_d.d,_d.H,_d.M,_d.S,_d.u); }
 				}
+				if(cm) {
+					if(cm.name == 'XLDAPR') p.D = true;
+					cm = void 0;
+				}
+				if(vm) vm = void 0;
 				break;
 
 			case 0x0001: /* 'BrtCellBlank' */
 			case 0x000C: /* 'BrtShortBlank' */
 				if(!opts.sheetStubs || pass) break;
-				p = ({t:'z',v:undefined}/*:any*/);
+				p = ({t:'z',v:void 0}/*:any*/);
 				C = val[0].c == -1 ? C + 1 : val[0].c;
 				if(opts.dense) { if(!s[R]) s[R] = []; s[R][C] = p; }
 				else s[encode_col(C) + rr] = p;
@@ -615,10 +623,19 @@ function parse_ws_bin(data, _opts, idx, rels, wb/*:WBWBProps*/, themes, styles)/
 				if(refguess.s.c > C) refguess.s.c = C;
 				if(refguess.e.r < row.r) refguess.e.r = row.r;
 				if(refguess.e.c < C) refguess.e.c = C;
+				if(cm) {
+					if(cm.name == 'XLDAPR') p.D = true;
+					cm = void 0;
+				}
+				if(vm) vm = void 0;
 				break;
 
 			case 0x00B0: /* 'BrtMergeCell' */
 				merges.push(val); break;
+
+			case 0x0031: { /* 'BrtCellMeta' */
+				cm = ((opts.xlmeta||{}).Types||[])[val-1];
+			} break;
 
 			case 0x01EE: /* 'BrtHLink' */
 				var rel = rels['!id'][val.relId];
@@ -707,7 +724,6 @@ function parse_ws_bin(data, _opts, idx, rels, wb/*:WBWBProps*/, themes, styles)/
 			case 0x041A: /* 'BrtCFVO14' */
 			case 0x0289: /* 'BrtCellIgnoreEC' */
 			case 0x0451: /* 'BrtCellIgnoreEC14' */
-			case 0x0031: /* 'BrtCellMeta' */
 			case 0x024D: /* 'BrtCellSmartTagProperty' */
 			case 0x025F: /* 'BrtCellWatch' */
 			case 0x0234: /* 'BrtColor' */

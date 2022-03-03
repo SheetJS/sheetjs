@@ -14,7 +14,7 @@ function write_dl(fname/*:string*/, payload/*:any*/, enc/*:?string*/) {
 	if(typeof _fs !== 'undefined' && _fs.writeFileSync) return enc ? _fs.writeFileSync(fname, payload, enc) : _fs.writeFileSync(fname, payload);
 	if(typeof Deno !== 'undefined') {
 		/* in this spot, it's safe to assume typed arrays and TextEncoder/TextDecoder exist */
-		if(enc) switch(enc) {
+		if(enc && typeof payload == "string") switch(enc) {
 			case "utf8": payload = new TextEncoder(enc).encode(payload); break;
 			case "binary": payload = s2ab(payload); break;
 			/* TODO: binary equivalent */

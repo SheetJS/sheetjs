@@ -1,38 +1,54 @@
-## Working with the Workbook
+## Processing Data
 
-The full object format is described later in this README.
+The ["Common Spreadsheet Format"](#common-spreadsheet-format) is a simple object
+representation of the core concepts of a workbook.  The utility functions work
+with the object representation and are intended to handle common use cases.
 
-<details>
-  <summary><b>Reading a specific cell </b> (click to show)</summary>
+### Modifying Workbook Structure
 
-This example extracts the value stored in cell A1 from the first worksheet:
+**API**
+
+_Append a Worksheet to a Workbook_
 
 ```js
-var first_sheet_name = workbook.SheetNames[0];
-var address_of_cell = 'A1';
-
-/* Get worksheet */
-var worksheet = workbook.Sheets[first_sheet_name];
-
-/* Find desired cell */
-var desired_cell = worksheet[address_of_cell];
-
-/* Get the value */
-var desired_value = (desired_cell ? desired_cell.v : undefined);
+XLSX.utils.book_append_sheet(workbook, worksheet, sheet_name);
 ```
 
-</details>
+The `book_append_sheet` utility function appends a worksheet to the workbook.
+The third argument specifies the desired worksheet name. Multiple worksheets can
+be added to a workbook by calling the function multiple times.
+
+_List the Worksheet names in tab order_
+
+```js
+var wsnames = workbook.SheetNames;
+```
+
+The `SheetNames` property of the workbook object is a list of the worksheet
+names in "tab order".  API functions will look at this array.
+
+_Replace a Worksheet in place_
+
+```js
+workbook.Sheets[sheet_name] = new_worksheet;
+```
+
+The `Sheets` property of the workbook object is an object whose keys are names
+and whose values are worksheet objects.  By reassigning to a property of the
+`Sheets` object, the worksheet object can be changed without disrupting the
+rest of the worksheet structure.
+
+**Examples**
 
 <details>
-  <summary><b>Adding a new worksheet to a workbook</b> (click to show)</summary>
+  <summary><b>Add a new worksheet to a workbook</b> (click to show)</summary>
 
-This example uses [`XLSX.utils.aoa_to_sheet`](#array-of-arrays-input) to make a
-sheet and `XLSX.utils.book_append_sheet` to append the sheet to the workbook:
+This example uses [`XLSX.utils.aoa_to_sheet`](#array-of-arrays-input).
 
 ```js
 var ws_name = "SheetJS";
 
-/* make worksheet */
+/* Create worksheet */
 var ws_data = [
   [ "S", "h", "e", "e", "t", "J", "S" ],
   [  1 ,  2 ,  3 ,  4 ,  5 ]
@@ -45,39 +61,58 @@ XLSX.utils.book_append_sheet(wb, ws, ws_name);
 
 </details>
 
-<details>
-  <summary><b>Creating a new workbook from scratch</b> (click to show)</summary>
+### Modifying Cell Values
 
-The workbook object contains a `SheetNames` array of names and a `Sheets` object
-mapping sheet names to sheet objects. The `XLSX.utils.book_new` utility function
-creates a new workbook object:
+**API**
+
+_Modify a single cell value in a worksheet_
 
 ```js
-/* create a new blank workbook */
-var wb = XLSX.utils.book_new();
+XLSX.utils.sheet_add_aoa(worksheet, [[new_value]], { origin: address });
 ```
 
-The new workbook is blank and contains no worksheets. The write functions will
-error if the workbook is empty.
+_Modify multiple cell values in a worksheet_
+
+```js
+XLSX.utils.sheet_add_aoa(worksheet, aoa, opts);
+```
+
+The `sheet_add_aoa` utility function modifies cell values in a worksheet.  The
+first argument is the worksheet object.  The second argument is an array of
+arrays of values.  The `origin` key of the third argument controls where cells
+will be written.  The following snippet sets `B3=1` and `E5="abc"`:
+
+```js
+XLSX.utils.sheet_add_aoa(worksheet, [
+  [1],                             // <-- Write 1 to cell B3
+  ,                                // <-- Do nothing in row 4
+  [/*B5*/, /*C5*/, /*D5*/, "abc"]  // <-- Write "abc" to cell E5
+], { origin: "B3" });
+```
+
+["Array of Arrays Input"](#array-of-arrays-input) describes the function and the
+optional `opts` argument in more detail.
+
+**Examples**
+
+<details>
+  <summary><b>Appending rows to a worksheet</b> (click to show)</summary>
+
+The special origin value `-1` instructs `sheet_add_aoa` to start in column A of
+the row after the last row in the range, appending the data:
+
+```js
+XLSX.utils.sheet_add_aoa(worksheet, [
+  ["first row after data", 1],
+  ["second row after data", 2]
+], { origin: -1 });
+```
 
 </details>
 
 
-### Parsing and Writing Examples
+### Modifying Other Worksheet / Workbook / Cell Properties
 
-- <https://sheetjs.com/demos/modify.html> read + modify + write files
-
-- <https://github.com/SheetJS/sheetjs/blob/HEAD/bin/xlsx.njs> node
-
-The node version installs a command line tool `xlsx` which can read spreadsheet
-files and output the contents in various formats.  The source is available at
-`xlsx.njs` in the bin directory.
-
-Some helper functions in `XLSX.utils` generate different views of the sheets:
-
-- `XLSX.utils.sheet_to_csv` generates CSV
-- `XLSX.utils.sheet_to_txt` generates UTF16 Formatted Text
-- `XLSX.utils.sheet_to_html` generates HTML
-- `XLSX.utils.sheet_to_json` generates an array of objects
-- `XLSX.utils.sheet_to_formulae` generates a list of formulae
+The ["Common Spreadsheet Format"](#common-spreadsheet-format) section describes
+the object structures in greater detail.
 

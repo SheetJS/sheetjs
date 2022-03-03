@@ -124,6 +124,11 @@ function write_zip_xlsxb(wb/*:Workbook*/, opts/*:WriteOpts*/)/*:ZIP*/ {
 		add_rels(opts.wbrels, -1, "vbaProject.bin", RELS.VBA);
 	}
 
+	f = "xl/metadata." + wbext;
+	zip_add_file(zip, f, write_xlmeta(f));
+	ct.metadata.push(f);
+	add_rels(opts.wbrels, -1, "metadata." + wbext, RELS.XLMETA);
+
 	zip_add_file(zip, "[Content_Types].xml", write_ct(ct, opts));
 	zip_add_file(zip, '_rels/.rels', write_rels(opts.rels));
 	zip_add_file(zip, 'xl/_rels/workbook.' + wbext + '.rels', write_rels(opts.wbrels));
@@ -132,7 +137,7 @@ function write_zip_xlsxb(wb/*:Workbook*/, opts/*:WriteOpts*/)/*:ZIP*/ {
 	return zip;
 }
 
-
+/* this version does not reference XLSB write functions */
 function write_zip_xlsx(wb/*:Workbook*/, opts/*:WriteOpts*/)/*:ZIP*/ {
 	_shapeid = 1024;
 	if(wb && !wb.SSF) {
@@ -253,6 +258,11 @@ function write_zip_xlsx(wb/*:Workbook*/, opts/*:WriteOpts*/)/*:ZIP*/ {
 		ct.vba.push(f);
 		add_rels(opts.wbrels, -1, "vbaProject.bin", RELS.VBA);
 	}
+
+	f = "xl/metadata." + wbext;
+	zip_add_file(zip, f, write_xlmeta_xml());
+	ct.metadata.push(f);
+	add_rels(opts.wbrels, -1, "metadata." + wbext, RELS.XLMETA);
 
 	zip_add_file(zip, "[Content_Types].xml", write_ct(ct, opts));
 	zip_add_file(zip, '_rels/.rels', write_rels(opts.rels));

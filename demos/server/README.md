@@ -169,8 +169,8 @@ curl -X GET http://localhost:7262/?f=sheetjs.xlsb
 
 [NestJS](https://nestjs.com/) is a Node.js framework for server-side web applications.
 
-This demo uses SheetJS to injest a spreadsheet via a POST API endpoint. The file
-arrive to the endpoint as body `form-data`, accessible using the `file` key.
+This demo uses SheetJS to parse a spreadsheet via a POST API endpoint. The file
+arrives to the endpoint as body `form-data`, accessible using the `file` key.
 After parsing the file, CSV contents of the first worksheet will be returned.
 [Body parsing uses `multer`](https://docs.nestjs.com/techniques/file-upload).
 

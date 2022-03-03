@@ -870,7 +870,7 @@ function stringify_formula(formula/*Array<any>*/, range, cell/*:any*/, supbooks,
 				var lbl = (supbooks.names||[])[nameidx-1] || (supbooks[0]||[])[nameidx];
 				var name = lbl ? lbl.Name : "SH33TJSNAME" + String(nameidx);
 				/* [MS-XLSB] 2.5.97.10 Ftab -- last verified 20220204 */
-				if(name && name.slice(0,6) == "_xlfn.") name = name.slice(6);
+				if(name && name.slice(0,6) == "_xlfn." && !opts.xlfn) name = name.slice(6);
 				stack.push(name);
 				break;
 

@@ -1,9 +1,9 @@
 ### Processing JSON and JS Data
 
 JSON and JS data tend to represent single worksheets.  This section will use a
-few utility functions to generate workbooks:
+few utility functions to generate workbooks.
 
-_Create a new Worksheet_
+_Create a new Workbook_
 
 ```js
 var workbook = XLSX.utils.book_new();
@@ -11,16 +11,9 @@ var workbook = XLSX.utils.book_new();
 
 The `book_new` utility function creates an empty workbook with no worksheets.
 
-
-_Append a Worksheet to a Workbook_
-
-```js
-XLSX.utils.book_append_sheet(workbook, worksheet, sheet_name);
-```
-
-The `book_append_sheet` utility function appends a worksheet to the workbook.
-The third argument specifies the desired worksheet name. Multiple worksheets can
-be added to a workbook by calling the function multiple times.
+Spreadsheet software generally require at least one worksheet and enforce the
+requirement in the user interface.  This library enforces the requirement at
+write time, throwing errors if an empty workbook is passed to write functions.
 
 
 **API**
@@ -33,14 +26,14 @@ var worksheet = XLSX.utils.aoa_to_sheet(aoa, opts);
 
 The `aoa_to_sheet` utility function walks an "array of arrays" in row-major
 order, generating a worksheet object.  The following snippet generates a sheet
-with cell `A1` set to the string `A1`, cell `B1` set to `B2`, etc:
+with cell `A1` set to the string `A1`, cell `B1` set to `B1`, etc:
 
 ```js
 var worksheet = XLSX.utils.aoa_to_sheet([
   ["A1", "B1", "C1"],
   ["A2", "B2", "C2"],
   ["A3", "B3", "C3"]
-])
+]);
 ```
 
 ["Array of Arrays Input"](#array-of-arrays-input) describes the function and the

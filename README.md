@@ -24,11 +24,7 @@ port calculations to web apps; automate common spreadsheet tasks, and much more!
 
 ![circo graph of format support](formats.png)
 
-<details><summary><b>Diagram Legend</b> (click to show)</summary>
-
 ![graph legend](legend.png)
-
-</details>
 
 ## Table of Contents
 
@@ -46,14 +42,17 @@ port calculations to web apps; automate common spreadsheet tasks, and much more!
   * [Parsing Workbooks](#parsing-workbooks)
   * [Processing JSON and JS Data](#processing-json-and-js-data)
   * [Processing HTML Tables](#processing-html-tables)
-- [Working with the Workbook](#working-with-the-workbook)
-  * [Parsing and Writing Examples](#parsing-and-writing-examples)
+- [Processing Data](#processing-data)
+  * [Modifying Workbook Structure](#modifying-workbook-structure)
+  * [Modifying Cell Values](#modifying-cell-values)
+  * [Modifying Other Worksheet / Workbook / Cell Properties](#modifying-other-worksheet--workbook--cell-properties)
 - [Packaging and Releasing Data](#packaging-and-releasing-data)
   * [Writing Workbooks](#writing-workbooks)
   * [Writing Examples](#writing-examples)
   * [Streaming Write](#streaming-write)
   * [Generating JSON and JS Data](#generating-json-and-js-data)
   * [Generating HTML Tables](#generating-html-tables)
+  * [Generating Single-Worksheet Snapshots](#generating-single-worksheet-snapshots)
 - [Interface](#interface)
   * [Parsing functions](#parsing-functions)
   * [Writing functions](#writing-functions)
@@ -150,10 +149,11 @@ For example, `unpkg` makes the latest version available at:
 
 The complete single-file version is generated at `dist/xlsx.full.min.js`
 
+`dist/xlsx.core.min.js` omits codepage library (no support for XLS encodings)
+
 A slimmer build is generated at `dist/xlsx.mini.min.js`. Compared to full build:
 - codepage library skipped (no support for XLS encodings)
-- XLSX compression option not currently available
-- no support for XLSB / XLS / Lotus 1-2-3 / SpreadsheetML 2003
+- no support for XLSB / XLS / Lotus 1-2-3 / SpreadsheetML 2003 / Numbers
 - node stream utils removed
 
 </details>
@@ -317,6 +317,18 @@ and approaches for steps 1 and 5.
 
 Utility functions help with step 3.
 
+["Acquiring and Extracting Data"](#acquiring-and-extracting-data) describes
+solutions for common data import scenarios.
+
+["Packaging and Releasing Data"](#packaging-and-releasing-data) describes
+solutions for common data export scenarios.
+
+["Processing Data"](#packaging-and-releasing-data) describes solutions for
+common workbook processing and manipulation scenarios.
+
+["Utility Functions"](#utility-functions) details utility functions for
+translating JSON Arrays and other common JS structures into worksheet objects.
+
 ### The Zen of SheetJS
 
 _Data processing should fit in any workflow_
@@ -324,15 +336,6 @@ _Data processing should fit in any workflow_
 The library does not impose a separate lifecycle.  It fits nicely in websites
 and apps built using any framework.  The plain JS data objects play nice with
 Web Workers and future APIs.
-
-["Acquiring and Extracting Data"](#acquiring-and-extracting-data) describes
-solutions for common data import scenarios.
-
-["Writing Workbooks"](#writing-workbooks) describes solutions for common data
-export scenarios involving actual spreadsheet files.
-
-["Utility Functions"](#utility-functions) details utility functions for
-translating JSON Arrays and other common JS structures into worksheet objects.
 
 _JavaScript is a powerful language for data processing_
 
@@ -576,6 +579,12 @@ The [`demos` directory](demos/) includes sample projects for:
 
 Other examples are included in the [showcase](demos/showcase/).
 
+<https://sheetjs.com/demos/modify.html> shows a complete example of reading,
+modifying, and writing files.
+
+<https://github.com/SheetJS/sheetjs/blob/HEAD/bin/xlsx.njs> is the command-line
+tool included with node installations, reading spreadsheet files and exporting
+the contents in various formats.
 ## Acquiring and Extracting Data
 
 ### Parsing Workbooks
@@ -1018,12 +1027,13 @@ const workbook = XLSX.read(data);
 </details>
 
 More detailed examples are covered in the [included demos](demos/)
+
 ### Processing JSON and JS Data
 
 JSON and JS data tend to represent single worksheets.  This section will use a
-few utility functions to generate workbooks:
+few utility functions to generate workbooks.
 
-_Create a new Worksheet_
+_Create a new Workbook_
 
 ```js
 var workbook = XLSX.utils.book_new();
@@ -1031,16 +1041,9 @@ var workbook = XLSX.utils.book_new();
 
 The `book_new` utility function creates an empty workbook with no worksheets.
 
-
-_Append a Worksheet to a Workbook_
-
-```js
-XLSX.utils.book_append_sheet(workbook, worksheet, sheet_name);
-```
-
-The `book_append_sheet` utility function appends a worksheet to the workbook.
-The third argument specifies the desired worksheet name. Multiple worksheets can
-be added to a workbook by calling the function multiple times.
+Spreadsheet software generally require at least one worksheet and enforce the
+requirement in the user interface.  This library enforces the requirement at
+write time, throwing errors if an empty workbook is passed to write functions.
 
 
 **API**
@@ -1053,14 +1056,14 @@ var worksheet = XLSX.utils.aoa_to_sheet(aoa, opts);
 
 The `aoa_to_sheet` utility function walks an "array of arrays" in row-major
 order, generating a worksheet object.  The following snippet generates a sheet
-with cell `A1` set to the string `A1`, cell `B1` set to `B2`, etc:
+with cell `A1` set to the string `A1`, cell `B1` set to `B1`, etc:
 
 ```js
 var worksheet = XLSX.utils.aoa_to_sheet([
   ["A1", "B1", "C1"],
   ["A2", "B2", "C2"],
   ["A3", "B3", "C3"]
-])
+]);
 ```
 
 ["Array of Arrays Input"](#array-of-arrays-input) describes the function and the
@@ -1361,41 +1364,57 @@ const workbook = XLSX.utils.table_to_book(doc);
 
 </details>
 
-## Working with the Workbook
+## Processing Data
 
-The full object format is described later in this README.
+The ["Common Spreadsheet Format"](#common-spreadsheet-format) is a simple object
+representation of the core concepts of a workbook.  The utility functions work
+with the object representation and are intended to handle common use cases.
 
-<details>
-  <summary><b>Reading a specific cell </b> (click to show)</summary>
+### Modifying Workbook Structure
 
-This example extracts the value stored in cell A1 from the first worksheet:
+**API**
+
+_Append a Worksheet to a Workbook_
 
 ```js
-var first_sheet_name = workbook.SheetNames[0];
-var address_of_cell = 'A1';
-
-/* Get worksheet */
-var worksheet = workbook.Sheets[first_sheet_name];
-
-/* Find desired cell */
-var desired_cell = worksheet[address_of_cell];
-
-/* Get the value */
-var desired_value = (desired_cell ? desired_cell.v : undefined);
+XLSX.utils.book_append_sheet(workbook, worksheet, sheet_name);
 ```
 
-</details>
+The `book_append_sheet` utility function appends a worksheet to the workbook.
+The third argument specifies the desired worksheet name. Multiple worksheets can
+be added to a workbook by calling the function multiple times.
+
+_List the Worksheet names in tab order_
+
+```js
+var wsnames = workbook.SheetNames;
+```
+
+The `SheetNames` property of the workbook object is a list of the worksheet
+names in "tab order".  API functions will look at this array.
+
+_Replace a Worksheet in place_
+
+```js
+workbook.Sheets[sheet_name] = new_worksheet;
+```
+
+The `Sheets` property of the workbook object is an object whose keys are names
+and whose values are worksheet objects.  By reassigning to a property of the
+`Sheets` object, the worksheet object can be changed without disrupting the
+rest of the worksheet structure.
+
+**Examples**
 
 <details>
-  <summary><b>Adding a new worksheet to a workbook</b> (click to show)</summary>
+  <summary><b>Add a new worksheet to a workbook</b> (click to show)</summary>
 
-This example uses [`XLSX.utils.aoa_to_sheet`](#array-of-arrays-input) to make a
-sheet and `XLSX.utils.book_append_sheet` to append the sheet to the workbook:
+This example uses [`XLSX.utils.aoa_to_sheet`](#array-of-arrays-input).
 
 ```js
 var ws_name = "SheetJS";
 
-/* make worksheet */
+/* Create worksheet */
 var ws_data = [
   [ "S", "h", "e", "e", "t", "J", "S" ],
   [  1 ,  2 ,  3 ,  4 ,  5 ]
@@ -1408,41 +1427,60 @@ XLSX.utils.book_append_sheet(wb, ws, ws_name);
 
 </details>
 
-<details>
-  <summary><b>Creating a new workbook from scratch</b> (click to show)</summary>
+### Modifying Cell Values
 
-The workbook object contains a `SheetNames` array of names and a `Sheets` object
-mapping sheet names to sheet objects. The `XLSX.utils.book_new` utility function
-creates a new workbook object:
+**API**
+
+_Modify a single cell value in a worksheet_
 
 ```js
-/* create a new blank workbook */
-var wb = XLSX.utils.book_new();
+XLSX.utils.sheet_add_aoa(worksheet, [[new_value]], { origin: address });
 ```
 
-The new workbook is blank and contains no worksheets. The write functions will
-error if the workbook is empty.
+_Modify multiple cell values in a worksheet_
+
+```js
+XLSX.utils.sheet_add_aoa(worksheet, aoa, opts);
+```
+
+The `sheet_add_aoa` utility function modifies cell values in a worksheet.  The
+first argument is the worksheet object.  The second argument is an array of
+arrays of values.  The `origin` key of the third argument controls where cells
+will be written.  The following snippet sets `B3=1` and `E5="abc"`:
+
+```js
+XLSX.utils.sheet_add_aoa(worksheet, [
+  [1],                             // <-- Write 1 to cell B3
+  ,                                // <-- Do nothing in row 4
+  [/*B5*/, /*C5*/, /*D5*/, "abc"]  // <-- Write "abc" to cell E5
+], { origin: "B3" });
+```
+
+["Array of Arrays Input"](#array-of-arrays-input) describes the function and the
+optional `opts` argument in more detail.
+
+**Examples**
+
+<details>
+  <summary><b>Appending rows to a worksheet</b> (click to show)</summary>
+
+The special origin value `-1` instructs `sheet_add_aoa` to start in column A of
+the row after the last row in the range, appending the data:
+
+```js
+XLSX.utils.sheet_add_aoa(worksheet, [
+  ["first row after data", 1],
+  ["second row after data", 2]
+], { origin: -1 });
+```
 
 </details>
 
 
-### Parsing and Writing Examples
+### Modifying Other Worksheet / Workbook / Cell Properties
 
-- <https://sheetjs.com/demos/modify.html> read + modify + write files
-
-- <https://github.com/SheetJS/sheetjs/blob/HEAD/bin/xlsx.njs> node
-
-The node version installs a command line tool `xlsx` which can read spreadsheet
-files and output the contents in various formats.  The source is available at
-`xlsx.njs` in the bin directory.
-
-Some helper functions in `XLSX.utils` generate different views of the sheets:
-
-- `XLSX.utils.sheet_to_csv` generates CSV
-- `XLSX.utils.sheet_to_txt` generates UTF16 Formatted Text
-- `XLSX.utils.sheet_to_html` generates HTML
-- `XLSX.utils.sheet_to_json` generates an array of objects
-- `XLSX.utils.sheet_to_formulae` generates a list of formulae
+The ["Common Spreadsheet Format"](#common-spreadsheet-format) section describes
+the object structures in greater detail.
 
 ## Packaging and Releasing Data
 
@@ -1963,6 +2001,45 @@ The [`vuejs` demo](demos/vue) includes more React examples.
 
 </details>
 
+### Generating Single-Worksheet Snapshots
+
+The `sheet_to_*` functions accept a worksheet object.
+
+**API**
+
+_Generate a CSV from a single worksheet_
+
+```js
+var csv = XLSX.utils.sheet_to_csv(worksheet, opts);
+```
+
+This snapshot is designed to replicate the "CSV UTF8 (`.csv`)" output type.
+["Delimiter-Separated Output"](#delimiter-separated-output) describes the
+function and the optional `opts` argument in more detail.
+
+_Generate "Text" from a single worksheet_
+
+```js
+var txt = XLSX.utils.sheet_to_txt(worksheet, opts);
+```
+
+This snapshot is designed to replicate the "UTF16 Text (`.txt`)" output type.
+["Delimiter-Separated Output"](#delimiter-separated-output) describes the
+function and the optional `opts` argument in more detail.
+
+_Generate a list of formulae from a single worksheet_
+
+```js
+var fmla = XLSX.utils.sheet_to_formulae(worksheet);
+```
+
+This snapshot generates an array of entries representing the embedded formulae.
+Array formulae are rendered in the form `range=formula` while plain cells are
+rendered in the form `cell=formula or value`.  String literals are prefixed with
+an apostrophe `'`, consistent with Excel's formula bar display.
+
+["Formulae Output"](#formulae-output) describes the function in more detail.
+
 ## Interface
 
 `XLSX` is the exposed variable in the browser and the exported node variable
@@ -2065,6 +2142,7 @@ Cell objects are plain JS objects with keys and values following the convention:
 | `t` | type: `b` Boolean, `e` Error, `n` Number, `d` Date, `s` Text, `z` Stub |
 | `f` | cell formula encoded as an A1-style string (if applicable)             |
 | `F` | range of enclosing array if formula is array formula (if applicable)   |
+| `D` | if true, array formula is dynamic (if applicable)                      |
 | `r` | rich text encoding (if applicable)                                     |
 | `h` | HTML rendering of the rich text (if applicable)                        |
 | `c` | comments associated with the cell                                      |
@@ -2416,79 +2494,7 @@ Even though some formats store formulae with a leading equal sign, CSF formulae
 do not start with `=`.
 
 <details>
-  <summary><b>Representation of A1=1, A2=2, A3=A1+A2</b> (click to show)</summary>
-
-```js
-{
-  "!ref": "A1:A3",
-  A1: { t:'n', v:1 },
-  A2: { t:'n', v:2 },
-  A3: { t:'n', v:3, f:'A1+A2' }
-}
-```
-</details>
-
-Shared formulae are decompressed and each cell has the formula corresponding to
-its cell.  Writers generally do not attempt to generate shared formulae.
-
-Cells with formula entries but no value will be serialized in a way that Excel
-and other spreadsheet tools will recognize.  This library will not automatically
-compute formula results!  For example, to compute `BESSELJ` in a worksheet:
-
-<details>
-  <summary><b>Formula without known value</b> (click to show)</summary>
-
-```js
-{
-  "!ref": "A1:A3",
-  A1: { t:'n', v:3.14159 },
-  A2: { t:'n', v:2 },
-  A3: { t:'n', f:'BESSELJ(A1,A2)' }
-}
-```
-</details>
-
-**Array Formulae**
-
-Array formulae are stored in the top-left cell of the array block.  All cells
-of an array formula have a `F` field corresponding to the range.  A single-cell
-formula can be distinguished from a plain formula by the presence of `F` field.
-
-<details>
-  <summary><b>Array Formula examples</b> (click to show)</summary>
-
-For example, setting the cell `C1` to the array formula `{=SUM(A1:A3*B1:B3)}`:
-
-```js
-worksheet['C1'] = { t:'n', f: "SUM(A1:A3*B1:B3)", F:"C1:C1" };
-```
-
-For a multi-cell array formula, every cell has the same array range but only the
-first cell specifies the formula.  Consider `D1:D3=A1:A3*B1:B3`:
-
-```js
-worksheet['D1'] = { t:'n', F:"D1:D3", f:"A1:A3*B1:B3" };
-worksheet['D2'] = { t:'n', F:"D1:D3" };
-worksheet['D3'] = { t:'n', F:"D1:D3" };
-```
-
-</details>
-
-Utilities and writers are expected to check for the presence of a `F` field and
-ignore any possible formula element `f` in cells other than the starting cell.
-They are not expected to perform validation of the formulae!
-
-<details>
-  <summary><b>Formula Output Utility Function</b> (click to show)</summary>
-
-The `sheet_to_formulae` method generates one line per formula or array formula.
-Array formulae are rendered in the form `range=formula` while plain cells are
-rendered in the form `cell=formula or value`.  Note that string literals are
-prefixed with an apostrophe `'`, consistent with Excel's formula bar display.
-</details>
-
-<details>
-  <summary><b>Formulae File Format Details</b> (click to show)</summary>
+  <summary><b>Formulae File Format Support</b> (click to show)</summary>
 
 | Storage Representation | Formats                  | Read  | Write |
 |:-----------------------|:-------------------------|:-----:|:-----:|
@@ -2502,6 +2508,272 @@ Since Excel prohibits named cells from colliding with names of A1 or RC style
 cell references, a (not-so-simple) regex conversion is possible.  BIFF Parsed
 formulae and Lotus Parsed formulae have to be explicitly unwound.  OpenFormula
 formulae can be converted with regular expressions.
+
+Shared formulae are decompressed and each cell has the formula corresponding to
+its cell.  Writers generally do not attempt to generate shared formulae.
+</details>
+
+**Single-Cell Formulae**
+
+For simple formulae, the `f` key of the desired cell can be set to the actual
+formula text.  This worksheet represents `A1=1`, `A2=2`, and `A3=A1+A2`:
+
+```js
+var worksheet = {
+  "!ref": "A1:A3",
+  A1: { t:'n', v:1 },
+  A2: { t:'n', v:2 },
+  A3: { t:'n', v:3, f:'A1+A2' }
+};
+```
+
+Utilities like `aoa_to_sheet` will accept cell objects in lieu of values:
+
+```js
+var worksheet = XLSX.utils.aoa_to_sheet([
+  [ 1 ], // A1
+  [ 2 ], // A2
+  [ {t: "n", v: 3, f: "A1+A2"} ] // A3
+]);
+```
+
+Cells with formula entries but no value will be serialized in a way that Excel
+and other spreadsheet tools will recognize.  This library will not automatically
+compute formula results!  For example, the following worksheet will include the
+`BESSELJ` function but the result will not be available in JavaScript:
+
+```js
+var worksheet = XLSX.utils.aoa_to_sheet([
+  [ 3.14159, 2 ], // Row "1"
+  [ { t:'n', f:'BESSELJ(A1,B1)' } ] // Row "2" will be calculated on file open
+}
+```
+
+If the actual results are needed in JS, [SheetJS Pro](https://sheetjs.com/pro)
+offers a formula calculator component for evaluating expressions, updating
+values and dependent cells, and refreshing entire workbooks.
+
+
+**Array Formulae**
+
+_Assign an array formula_
+
+```js
+XLSX.utils.sheet_set_array_formula(worksheet, range, formula);
+```
+
+Array formulae are stored in the top-left cell of the array block.  All cells
+of an array formula have a `F` field corresponding to the range.  A single-cell
+formula can be distinguished from a plain formula by the presence of `F` field.
+
+For example, setting the cell `C1` to the array formula `{=SUM(A1:A3*B1:B3)}`:
+
+```js
+// API function
+XLSX.utils.sheet_set_array_formula(worksheet, "C1", "SUM(A1:A3*B1:B3)");
+
+// ... OR raw operations
+worksheet['C1'] = { t:'n', f: "SUM(A1:A3*B1:B3)", F:"C1:C1" };
+```
+
+For a multi-cell array formula, every cell has the same array range but only the
+first cell specifies the formula.  Consider `D1:D3=A1:A3*B1:B3`:
+
+```js
+// API function
+XLSX.utils.sheet_set_array_formula(worksheet, "D1:D3", "A1:A3*B1:B3");
+
+// ... OR raw operations
+worksheet['D1'] = { t:'n', F:"D1:D3", f:"A1:A3*B1:B3" };
+worksheet['D2'] = { t:'n', F:"D1:D3" };
+worksheet['D3'] = { t:'n', F:"D1:D3" };
+```
+
+Utilities and writers are expected to check for the presence of a `F` field and
+ignore any possible formula element `f` in cells other than the starting cell.
+They are not expected to perform validation of the formulae!
+
+
+**Dynamic Array Formulae**
+
+_Assign a dynamic array formula_
+
+```js
+XLSX.utils.sheet_set_array_formula(worksheet, range, formula, true);
+```
+
+Released in 2020, Dynamic Array Formulae are supported in the XLSX/XLSM and XLSB
+file formats.  They are represented like normal array formulae but have special
+cell metadata indicating that the formula should be allowed to adjust the range.
+
+An array formula can be marked as dynamic by setting the cell's `D` property to
+true.  The `F` range is expected but can be the set to the current cell:
+
+```js
+// API function
+XLSX.utils.sheet_set_array_formula(worksheet, "C1", "_xlfn.UNIQUE(A1:A3)", 1);
+
+// ... OR raw operations
+worksheet['C1'] = { t: "s", f: "_xlfn.UNIQUE(A1:A3)", F:"C1", D: 1 }; // dynamic
+```
+
+**Localization with Function Names**
+
+SheetJS operates at the file level.  Excel stores formula expressions using the
+English (United States) function names.  For non-English users, Excel uses a
+localized set of function names.
+
+For example, when the computer language and region is set to French (France),
+Excel interprets `=SOMME(A1:C3)` as if `SOMME` is the `SUM` function.  However,
+in the actual file, Excel stores `SUM(A1:C3)`.
+
+**Prefixed "Future Functions"**
+
+Functions introduced in newer versions of Excel are prefixed with `_xlfn.` when
+stored in files.  When writing formula expressions using these functions, the
+prefix is required for maximal compatibility:
+
+```js
+// Broadest compatibility
+XLSX.utils.sheet_set_array_formula(worksheet, "C1", "_xlfn.UNIQUE(A1:A3)", 1);
+
+// Can cause errors in spreadsheet software
+XLSX.utils.sheet_set_array_formula(worksheet, "C1", "UNIQUE(A1:A3)", 1);
+```
+
+When reading a file, the `xlfn` option preserves the prefixes.
+
+<details>
+  <summary><b> Functions requiring `_xlfn.` prefix</b> (click to show)</summary>
+
+This list is growing with each Excel release.
+
+```
+ACOT
+ACOTH
+AGGREGATE
+ARABIC
+BASE
+BETA.DIST
+BETA.INV
+BINOM.DIST
+BINOM.DIST.RANGE
+BINOM.INV
+BITAND
+BITLSHIFT
+BITOR
+BITRSHIFT
+BITXOR
+BYCOL
+BYROW
+CEILING.MATH
+CEILING.PRECISE
+CHISQ.DIST
+CHISQ.DIST.RT
+CHISQ.INV
+CHISQ.INV.RT
+CHISQ.TEST
+COMBINA
+CONFIDENCE.NORM
+CONFIDENCE.T
+COT
+COTH
+COVARIANCE.P
+COVARIANCE.S
+CSC
+CSCH
+DAYS
+DECIMAL
+ERF.PRECISE
+ERFC.PRECISE
+EXPON.DIST
+F.DIST
+F.DIST.RT
+F.INV
+F.INV.RT
+F.TEST
+FIELDVALUE
+FILTERXML
+FLOOR.MATH
+FLOOR.PRECISE
+FORMULATEXT
+GAMMA
+GAMMA.DIST
+GAMMA.INV
+GAMMALN.PRECISE
+GAUSS
+HYPGEOM.DIST
+IFNA
+IMCOSH
+IMCOT
+IMCSC
+IMCSCH
+IMSEC
+IMSECH
+IMSINH
+IMTAN
+ISFORMULA
+ISOMITTED
+ISOWEEKNUM
+LAMBDA
+LET
+LOGNORM.DIST
+LOGNORM.INV
+MAKEARRAY
+MAP
+MODE.MULT
+MODE.SNGL
+MUNIT
+NEGBINOM.DIST
+NORM.DIST
+NORM.INV
+NORM.S.DIST
+NORM.S.INV
+NUMBERVALUE
+PDURATION
+PERCENTILE.EXC
+PERCENTILE.INC
+PERCENTRANK.EXC
+PERCENTRANK.INC
+PERMUTATIONA
+PHI
+POISSON.DIST
+QUARTILE.EXC
+QUARTILE.INC
+QUERYSTRING
+RANDARRAY
+RANK.AVG
+RANK.EQ
+REDUCE
+RRI
+SCAN
+SEC
+SECH
+SEQUENCE
+SHEET
+SHEETS
+SKEW.P
+SORTBY
+STDEV.P
+STDEV.S
+T.DIST
+T.DIST.2T
+T.DIST.RT
+T.INV
+T.INV.2T
+T.TEST
+UNICHAR
+UNICODE
+UNIQUE
+VAR.P
+VAR.S
+WEBSERVICE
+WEIBULL.DIST
+XLOOKUP
+XOR
+Z.TEST
+```
+
 </details>
 
 #### Row and Column Properties

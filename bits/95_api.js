@@ -98,7 +98,7 @@ utils.cell_add_comment = function(cell/*:Cell*/, text/*:string*/, author/*:?stri
 };
 
 /* set array formula and flush related cells */
-utils.sheet_set_array_formula = function(ws/*:Worksheet*/, range, formula/*:string*/) {
+utils.sheet_set_array_formula = function(ws/*:Worksheet*/, range, formula/*:string*/, dynamic/*:boolean*/) {
 	var rng = typeof range != "string" ? range : safe_decode_range(range);
 	var rngstr = typeof range == "string" ? range : encode_range(range);
 	for(var R = rng.s.r; R <= rng.e.r; ++R) for(var C = rng.s.c; C <= rng.e.c; ++C) {
@@ -106,7 +106,10 @@ utils.sheet_set_array_formula = function(ws/*:Worksheet*/, range, formula/*:stri
 		cell.t = 'n';
 		cell.F = rngstr;
 		delete cell.v;
-		if(R == rng.s.r && C == rng.s.c) cell.f = formula;
+		if(R == rng.s.r && C == rng.s.c) {
+			cell.f = formula;
+			if(dynamic) cell.D = true;
+		}
 	}
 	return ws;
 };

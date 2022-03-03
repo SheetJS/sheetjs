@@ -18,6 +18,7 @@ ESMJSDEPS=$(shell cat misc/mjs.lst)
 ULIB=$(shell echo $(LIB) | tr a-z A-Z)
 DEPS=$(sort $(wildcard bits/*.js))
 TSBITS=$(patsubst modules/%,bits/%,$(wildcard modules/[0-9][0-9]_*.js))
+MTSBITS=$(patsubst modules/%,misc/%,$(wildcard modules/[0-9][0-9]_*.js))
 TARGET=$(LIB).js
 FLOWTARGET=$(LIB).flow.js
 FLOWAUX=$(patsubst %.js,%.flow.js,$(AUXTARGETS))
@@ -52,6 +53,9 @@ bits/18_cfb.js: node_modules/cfb/xlscfb.flow.js
 $(TSBITS): bits/%: modules/%
 	cp $^ $@
 
+$(MTSBITS): misc/%: modules/%
+	cp $^ $@
+
 
 .PHONY: clean
 clean: ## Remove targets and build artifacts
@@ -82,6 +86,7 @@ dist: dist-deps $(TARGET) bower.json ## Prepare JS files for distribution
 	uglifyjs $(REQS) dist/$(TARGET) $(UGLIFYOPTS) -o dist/$(LIB).core.min.js --source-map dist/$(LIB).core.min.map --preamble "$$(head -n 1 bits/00_header.js)"
 	misc/strip_sourcemap.sh dist/$(LIB).core.min.js
 	@# full
+	#cat <(head -n 1 bits/00_header.js) $(DISTHDR) $(REQS) $(ADDONS) dist/$(TARGET) $(AUXTARGETS) > dist/$(LIB).full.js
 	uglifyjs $(DISTHDR) $(REQS) $(ADDONS) dist/$(TARGET) $(AUXTARGETS) $(UGLIFYOPTS) -o dist/$(LIB).full.min.js --source-map dist/$(LIB).full.min.map --preamble "$$(head -n 1 bits/00_header.js)"
 	misc/strip_sourcemap.sh dist/$(LIB).full.min.js
 	@# mini
@@ -101,7 +106,7 @@ dist-deps: ## Copy dependencies for distribution
 aux: $(AUXTARGETS)
 
 BYTEFILEC=dist/xlsx.{full,core,mini}.min.js
-BYTEFILER=dist/xlsx.extendscript.js
+BYTEFILER=dist/xlsx.extendscript.js xlsx.mjs
 .PHONY: bytes
 bytes: ## Display minified and gzipped file sizes
 	@for i in $(BYTEFILEC); do printj "%-30s %7d %10d" $$i $$(wc -c < $$i) $$(gzip --best --stdout $$i | wc -c); done

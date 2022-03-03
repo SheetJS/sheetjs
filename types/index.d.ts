@@ -833,7 +833,7 @@ export interface XLSX$Utils {
     cell_add_comment(cell: CellObject, text: string, author?: string): void;
 
     /** Assign an Array Formula to a range */
-    sheet_set_array_formula(ws: WorkSheet, range: Range|string, formula: string): WorkSheet;
+    sheet_set_array_formula(ws: WorkSheet, range: Range|string, formula: string, dynamic?: boolean): WorkSheet;
 
     /** Add an array of arrays of JS data to a worksheet */
     sheet_add_aoa<T>(ws: WorkSheet, data: T[][], opts?: SheetAOAOpts): WorkSheet;

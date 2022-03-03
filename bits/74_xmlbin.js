@@ -52,6 +52,11 @@ function parse_xlink(data, rel, name/*:string*/, opts) {
 	return parse_xlink_xml((data/*:any*/), rel, name, opts);
 }
 
+function parse_xlmeta(data, name/*:string*/, opts) {
+	if(name.slice(-4)===".bin") return parse_xlmeta_bin((data/*:any*/), name, opts);
+	return parse_xlmeta_xml((data/*:any*/), name, opts);
+}
+
 function write_wb(wb, name/*:string*/, opts) {
 	return (name.slice(-4)===".bin" ? write_wb_bin : write_wb_xml)(wb, opts);
 }
@@ -81,3 +86,7 @@ function write_cc(data, name:string, opts) {
 	return (name.slice(-4)===".bin" ? write_cc_bin : write_cc_xml)(data, opts);
 }
 */
+
+function write_xlmeta(name/*:string*/) {
+	return (name.slice(-4)===".bin" ? write_xlmeta_bin : write_xlmeta_xml)();
+}

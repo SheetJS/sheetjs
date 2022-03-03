@@ -38,7 +38,6 @@ The complete single-file version is generated at `dist/xlsx.full.min.js`
 
 A slimmer build is generated at `dist/xlsx.mini.min.js`. Compared to full build:
 - codepage library skipped (no support for XLS encodings)
-- XLSX compression option not currently available
 - no support for XLSB / XLS / Lotus 1-2-3 / SpreadsheetML 2003 / Numbers
 - node stream utils removed
 

@@ -45,14 +45,15 @@ function write_zip_typeXLSX(wb/*:Workbook*/, opts/*:?WriteOpts*/)/*:any*/ {
 }
 function write_zip_denouement(z/*:any*/, o/*:?WriteOpts*/)/*:any*/ {
 	var oopts = {};
+	var ftype = has_buf ? "nodebuffer" : (typeof Uint8Array !== "undefined" ? "array" : "string");
 	if(o.compression) oopts.compression = 'DEFLATE';
-	if(o.password) oopts.type = has_buf ? "nodebuffer" : "string";
+	if(o.password) oopts.type = ftype;
 	else switch(o.type) {
 		case "base64": oopts.type = "base64"; break;
 		case "binary": oopts.type = "string"; break;
 		case "string": throw new Error("'string' output type invalid for '" + o.bookType + "' files");
 		case "buffer":
-		case "file": oopts.type = has_buf ? "nodebuffer" : "string"; break;
+		case "file": oopts.type = ftype; break;
 		default: throw new Error("Unrecognized type " + o.type);
 	}
 	var out = z.FullPaths ? CFB.write(z, {fileType:"zip", type: /*::(*/{"nodebuffer": "buffer", "string": "binary"}/*:: :any)*/[oopts.type] || oopts.type, compression: !!o.compression}) : z.generate(oopts);

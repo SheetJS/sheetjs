@@ -161,8 +161,15 @@ function parse_zip(zip/*:ZIP*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
 	var wbrelsi = dir.workbooks[0].lastIndexOf("/");
 	var wbrelsfile = (dir.workbooks[0].slice(0, wbrelsi+1) + "_rels/" + dir.workbooks[0].slice(wbrelsi+1) + ".rels").replace(/^\//,"");
 	if(!safegetzipfile(zip, wbrelsfile)) wbrelsfile = 'xl/_rels/workbook.' + wbext + '.rels';
-	var wbrels = parse_rels(getzipstr(zip, wbrelsfile, true), wbrelsfile);
+	var wbrels = parse_rels(getzipstr(zip, wbrelsfile, true), wbrelsfile.replace(/_rels.*/, "s5s"));
+
+	if((dir.metadata || []).length >= 1) {
+		/* TODO: MDX and other types of metadata */
+		opts.xlmeta = parse_xlmeta(getzipdata(zip, strip_front_slash(dir.metadata[0])),dir.metadata[0],opts);
+	}
+
 	if(wbrels) wbrels = safe_parse_wbrels(wbrels, wb.Sheets);
+
 
 	/* Numbers iOS hack */
 	var nmode = (getzipdata(zip,"xl/worksheets/sheet.xml",true))?1:0;

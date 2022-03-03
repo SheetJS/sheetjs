@@ -61,8 +61,8 @@ var ct2type/*{[string]:string}*/ = ({
 	"application/vnd.openxmlformats-officedocument.spreadsheetml.externalLink+xml": "links",
 
 	/* Metadata */
-	"application/vnd.ms-excel.sheetMetadata": "TODO",
-	"application/vnd.openxmlformats-officedocument.spreadsheetml.sheetMetadata+xml": "TODO",
+	"application/vnd.ms-excel.sheetMetadata": "metadata",
+	"application/vnd.openxmlformats-officedocument.spreadsheetml.sheetMetadata+xml": "metadata",
 
 	/* PivotCache */
 	"application/vnd.ms-excel.pivotCacheDefinition": "TODO",
@@ -179,6 +179,10 @@ var CT_LIST = (function(){
 			xlsx: "application/vnd.ms-excel.macrosheet+xml",
 			xlsb: "application/vnd.ms-excel.macrosheet"
 		},
+		metadata: { /* Metadata (Stock/Geography and Dynamic Array) */
+			xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheetMetadata+xml",
+			xlsb: "application/vnd.ms-excel.sheetMetadata"
+		},
 		styles: { /* Styles */
 			xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml",
 			xlsb: "application/vnd.ms-excel.styles"
@@ -198,7 +202,7 @@ function new_ct()/*:any*/ {
 		workbooks:[], sheets:[], charts:[], dialogs:[], macros:[],
 		rels:[], strs:[], comments:[], links:[],
 		coreprops:[], extprops:[], custprops:[], themes:[], styles:[],
-		calcchains:[], vba: [], drawings: [],
+		calcchains:[], vba: [], drawings: [], metadata: [],
 		TODO:[], xmlns: "" }/*:any*/);
 }
 
@@ -297,6 +301,7 @@ function write_ct(ct, opts)/*:string*/ {
 	f3('vba');
 	f3('comments');
 	f3('drawings');
+	f2('metadata');
 	if(o.length>2){ o[o.length] = ('</Types>'); o[1]=o[1].replace("/>",">"); }
 	return o.join("");
 }

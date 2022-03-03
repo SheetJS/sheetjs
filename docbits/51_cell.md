@@ -9,6 +9,7 @@ Cell objects are plain JS objects with keys and values following the convention:
 | `t` | type: `b` Boolean, `e` Error, `n` Number, `d` Date, `s` Text, `z` Stub |
 | `f` | cell formula encoded as an A1-style string (if applicable)             |
 | `F` | range of enclosing array if formula is array formula (if applicable)   |
+| `D` | if true, array formula is dynamic (if applicable)                      |
 | `r` | rich text encoding (if applicable)                                     |
 | `h` | HTML rendering of the rich text (if applicable)                        |
 | `c` | comments associated with the cell                                      |

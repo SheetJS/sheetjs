@@ -1,3 +1,6 @@
+function parse_Int32LE(data) {
+	return data.read_shift(4, 'i');
+}
 function write_UInt32LE(x/*:number*/, o) {
 	if (!o) o = new_buf(4);
 	o.write_shift(4, x);

@@ -48,6 +48,18 @@ and approaches for steps 1 and 5.
 
 Utility functions help with step 3.
 
+["Acquiring and Extracting Data"](#acquiring-and-extracting-data) describes
+solutions for common data import scenarios.
+
+["Packaging and Releasing Data"](#packaging-and-releasing-data) describes
+solutions for common data export scenarios.
+
+["Processing Data"](#packaging-and-releasing-data) describes solutions for
+common workbook processing and manipulation scenarios.
+
+["Utility Functions"](#utility-functions) details utility functions for
+translating JSON Arrays and other common JS structures into worksheet objects.
+
 ### The Zen of SheetJS
 
 _Data processing should fit in any workflow_
@@ -55,15 +67,6 @@ _Data processing should fit in any workflow_
 The library does not impose a separate lifecycle.  It fits nicely in websites
 and apps built using any framework.  The plain JS data objects play nice with
 Web Workers and future APIs.
-
-["Acquiring and Extracting Data"](#acquiring-and-extracting-data) describes
-solutions for common data import scenarios.
-
-["Writing Workbooks"](#writing-workbooks) describes solutions for common data
-export scenarios involving actual spreadsheet files.
-
-["Utility Functions"](#utility-functions) details utility functions for
-translating JSON Arrays and other common JS structures into worksheet objects.
 
 _JavaScript is a powerful language for data processing_
 

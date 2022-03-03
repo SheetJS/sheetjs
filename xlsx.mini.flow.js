@@ -4,16 +4,8 @@
 /*global global, exports, module, require:false, process:false, Buffer:false, ArrayBuffer:false */
 var XLSX = {};
 function make_xlsx_lib(XLSX){
-XLSX.version = '0.18.2';
+XLSX.version = '0.18.3';
 var current_codepage = 1200, current_ansi = 1252;
-/*:: declare var cptable:any; */
-/*global cptable:true, window */
-if(typeof module !== "undefined" && typeof require !== 'undefined') {
-	if(typeof cptable === 'undefined') {
-		if(typeof global !== 'undefined') global.cptable = require('./dist/cpexcel.js');
-		else if(typeof window !== 'undefined') window.cptable = require('./dist/cpexcel.js');
-	}
-}
 
 var VALID_ANSI = [ 874, 932, 936, 949, 950, 10000 ];
 for(var i = 0; i <= 8; ++i) VALID_ANSI.push(1250 + i);
@@ -70,20 +62,6 @@ var debom = function(data/*:string*/)/*:string*/ {
 
 var _getchar = function _gc1(x/*:number*/)/*:string*/ { return String.fromCharCode(x); };
 var _getansi = function _ga1(x/*:number*/)/*:string*/ { return String.fromCharCode(x); };
-if(typeof cptable !== 'undefined') {
-	set_cp = function(cp/*:number*/) { current_codepage = cp; set_ansi(cp); };
-	debom = function(data/*:string*/) {
-		if(data.charCodeAt(0) === 0xFF && data.charCodeAt(1) === 0xFE) { return cptable.utils.decode(1200, char_codes(data.slice(2))); }
-		return data;
-	};
-	_getchar = function _gc2(x/*:number*/)/*:string*/ {
-		if(current_codepage === 1200) return String.fromCharCode(x);
-		return cptable.utils.decode(current_codepage, [x&255,x>>8])[0];
-	};
-	_getansi = function _ga2(x/*:number*/)/*:string*/ {
-		return cptable.utils.decode(current_ansi, [x])[0];
-	};
-}
 var DENSE = null;
 var DIF_XL = true;
 var Base64 = function() {
@@ -3189,7 +3167,7 @@ function write_dl(fname/*:string*/, payload/*:any*/, enc/*:?string*/) {
 	if(typeof _fs !== 'undefined' && _fs.writeFileSync) return enc ? _fs.writeFileSync(fname, payload, enc) : _fs.writeFileSync(fname, payload);
 	if(typeof Deno !== 'undefined') {
 		/* in this spot, it's safe to assume typed arrays and TextEncoder/TextDecoder exist */
-		if(enc) switch(enc) {
+		if(enc && typeof payload == "string") switch(enc) {
 			case "utf8": payload = new TextEncoder(enc).encode(payload); break;
 			case "binary": payload = s2ab(payload); break;
 			/* TODO: binary equivalent */
@@ -4670,8 +4648,8 @@ var ct2type/*{[string]:string}*/ = ({
 	"application/vnd.openxmlformats-officedocument.spreadsheetml.externalLink+xml": "links",
 
 	/* Metadata */
-	"application/vnd.ms-excel.sheetMetadata": "TODO",
-	"application/vnd.openxmlformats-officedocument.spreadsheetml.sheetMetadata+xml": "TODO",
+	"application/vnd.ms-excel.sheetMetadata": "metadata",
+	"application/vnd.openxmlformats-officedocument.spreadsheetml.sheetMetadata+xml": "metadata",
 
 	/* PivotCache */
 	"application/vnd.ms-excel.pivotCacheDefinition": "TODO",
@@ -4788,6 +4766,10 @@ var CT_LIST = (function(){
 			xlsx: "application/vnd.ms-excel.macrosheet+xml",
 			xlsb: "application/vnd.ms-excel.macrosheet"
 		},
+		metadata: { /* Metadata (Stock/Geography and Dynamic Array) */
+			xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheetMetadata+xml",
+			xlsb: "application/vnd.ms-excel.sheetMetadata"
+		},
 		styles: { /* Styles */
 			xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml",
 			xlsb: "application/vnd.ms-excel.styles"
@@ -4807,7 +4789,7 @@ function new_ct()/*:any*/ {
 		workbooks:[], sheets:[], charts:[], dialogs:[], macros:[],
 		rels:[], strs:[], comments:[], links:[],
 		coreprops:[], extprops:[], custprops:[], themes:[], styles:[],
-		calcchains:[], vba: [], drawings: [],
+		calcchains:[], vba: [], drawings: [], metadata: [],
 		TODO:[], xmlns: "" }/*:any*/);
 }
 
@@ -4906,6 +4888,7 @@ function write_ct(ct, opts)/*:string*/ {
 	f3('vba');
 	f3('comments');
 	f3('drawings');
+	f2('metadata');
 	if(o.length>2){ o[o.length] = ('</Types>'); o[1]=o[1].replace("/>",">"); }
 	return o.join("");
 }
@@ -4972,7 +4955,9 @@ var RELS_EXTERN = [RELS.HLINK, RELS.XPATH, RELS.XMISS];
 function add_rels(rels, rId/*:number*/, f, type, relobj, targetmode/*:?string*/)/*:number*/ {
 	if(!relobj) relobj = {};
 	if(!rels['!id']) rels['!id'] = {};
-	if(rId < 0) for(rId = 1; rels['!id']['rId' + rId]; ++rId){/* empty */}
+	if(!rels['!idx']) rels['!idx'] = 1;
+	if(rId < 0) for(rId = rels['!idx']; rels['!id']['rId' + rId]; ++rId){/* empty */}
+	rels['!idx'] = rId + 1;
 	relobj.Id = 'rId' + rId;
 	relobj.Type = type;
 	relobj.Target = f;
@@ -4983,6 +4968,71 @@ function add_rels(rels, rId/*:number*/, f, type, relobj, targetmode/*:?string*/)
 	rels[('/' + relobj.Target).replace("//","/")] = relobj;
 	return rId;
 }
+/* Open Document Format for Office Applications (OpenDocument) Version 1.2 */
+/* Part 3 Section 4 Manifest File */
+var CT_ODS = "application/vnd.oasis.opendocument.spreadsheet";
+function parse_manifest(d, opts) {
+	var str = xlml_normalize(d);
+	var Rn;
+	var FEtag;
+	while((Rn = xlmlregex.exec(str))) switch(Rn[3]) {
+		case 'manifest': break; // 4.2 <manifest:manifest>
+		case 'file-entry': // 4.3 <manifest:file-entry>
+			FEtag = parsexmltag(Rn[0], false);
+			if(FEtag.path == '/' && FEtag.type !== CT_ODS) throw new Error("This OpenDocument is not a spreadsheet");
+			break;
+		case 'encryption-data': // 4.4 <manifest:encryption-data>
+		case 'algorithm': // 4.5 <manifest:algorithm>
+		case 'start-key-generation': // 4.6 <manifest:start-key-generation>
+		case 'key-derivation': // 4.7 <manifest:key-derivation>
+			throw new Error("Unsupported ODS Encryption");
+		default: if(opts && opts.WTF) throw Rn;
+	}
+}
+
+function write_manifest(manifest/*:Array<Array<string> >*/)/*:string*/ {
+	var o = [XML_HEADER];
+	o.push('<manifest:manifest xmlns:manifest="urn:oasis:names:tc:opendocument:xmlns:manifest:1.0" manifest:version="1.2">\n');
+	o.push('  <manifest:file-entry manifest:full-path="/" manifest:version="1.2" manifest:media-type="application/vnd.oasis.opendocument.spreadsheet"/>\n');
+	for(var i = 0; i < manifest.length; ++i) o.push('  <manifest:file-entry manifest:full-path="' + manifest[i][0] + '" manifest:media-type="' + manifest[i][1] + '"/>\n');
+	o.push('</manifest:manifest>');
+	return o.join("");
+}
+
+/* Part 3 Section 6 Metadata Manifest File */
+function write_rdf_type(file/*:string*/, res/*:string*/, tag/*:?string*/) {
+	return [
+		'  <rdf:Description rdf:about="' + file + '">\n',
+		'    <rdf:type rdf:resource="http://docs.oasis-open.org/ns/office/1.2/meta/' + (tag || "odf") + '#' + res + '"/>\n',
+		'  </rdf:Description>\n'
+	].join("");
+}
+function write_rdf_has(base/*:string*/, file/*:string*/) {
+	return [
+		'  <rdf:Description rdf:about="' + base + '">\n',
+		'    <ns0:hasPart xmlns:ns0="http://docs.oasis-open.org/ns/office/1.2/meta/pkg#" rdf:resource="' + file + '"/>\n',
+		'  </rdf:Description>\n'
+	].join("");
+}
+function write_rdf(rdf) {
+	var o = [XML_HEADER];
+	o.push('<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">\n');
+	for(var i = 0; i != rdf.length; ++i) {
+		o.push(write_rdf_type(rdf[i][0], rdf[i][1]));
+		o.push(write_rdf_has("",rdf[i][0]));
+	}
+	o.push(write_rdf_type("","Document", "pkg"));
+	o.push('</rdf:RDF>');
+	return o.join("");
+}
+/* TODO: pull properties */
+var write_meta_ods/*:{(wb:Workbook, opts:any):string}*/ = (function() {
+	var payload = '<office:document-meta xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" xmlns:meta="urn:oasis:names:tc:opendocument:xmlns:meta:1.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:xlink="http://www.w3.org/1999/xlink" office:version="1.2"><office:meta><meta:generator>Sheet' + 'JS ' + XLSX.version + '</meta:generator></office:meta></office:document-meta>';
+	return function wmo(/*:: wb: Workbook, opts: any*/)/*:string*/ {
+		return payload;
+	};
+})();
+
 /* ECMA-376 Part II 11.1 Core Properties Part */
 /* [MS-OSHARED] 2.3.3.2.[1-2].1 (PIDSI/PIDDSI) */
 var CORE_PROPS/*:Array<Array<string> >*/ = [
@@ -7325,6 +7375,69 @@ function write_theme(Themes, opts)/*:string*/ {
 	o[o.length] = '</a:theme>';
 	return o.join("");
 }
+RELS.XLMETA = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/sheetMetadata";
+function parse_xlmeta_xml(data, name, opts) {
+  var out = { Types: [] };
+  if (!data)
+    return out;
+  var pass = false;
+  data.replace(tagregex, function(x, idx) {
+    var y = parsexmltag(x);
+    switch (strip_ns(y[0])) {
+      case "<?xml":
+        break;
+      case "<metadata":
+      case "</metadata>":
+        break;
+      case "<metadataTypes":
+      case "</metadataTypes>":
+        break;
+      case "<metadataType":
+        out.Types.push({ name: y.name });
+        break;
+      case "<futureMetadata":
+        break;
+      case "</futureMetadata>":
+        break;
+      case "<bk>":
+        break;
+      case "</bk>":
+        break;
+      case "<rc":
+        break;
+      case "</rc>":
+        break;
+      case "<cellMetadata":
+      case "</cellMetadata>":
+        break;
+      case "<valueMetadata":
+        break;
+      case "</valueMetadata>":
+        break;
+      case "<extLst":
+      case "<extLst>":
+      case "</extLst>":
+      case "<extLst/>":
+        break;
+      case "<ext":
+        pass = true;
+        break;
+      case "</ext>":
+        pass = false;
+        break;
+      default:
+        if (!pass && opts.WTF)
+          throw new Error("unrecognized " + y[0] + " in metadata");
+    }
+    return x;
+  });
+  return out;
+}
+function write_xlmeta_xml() {
+  var o = [XML_HEADER];
+  o.push('<metadata xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:xlrd="http://schemas.microsoft.com/office/spreadsheetml/2017/richdata" xmlns:xda="http://schemas.microsoft.com/office/spreadsheetml/2017/dynamicarray">\n  <metadataTypes count="1">\n    <metadataType name="XLDAPR" minSupportedVersion="120000" copy="1" pasteAll="1" pasteValues="1" merge="1" splitFirst="1" rowColShift="1" clearFormats="1" clearComments="1" assign="1" coerce="1" cellMeta="1"/>\n  </metadataTypes>\n  <futureMetadata name="XLDAPR" count="1">\n    <bk>\n      <extLst>\n        <ext uri="{bdbb8cdc-fa1e-496e-a857-3c3f30c029c3}">\n          <xda:dynamicArrayProperties fDynamic="1" fCollapsed="0"/>\n        </ext>\n      </extLst>\n    </bk>\n  </futureMetadata>\n  <cellMetadata count="1">\n    <bk>\n      <rc t="1" v="0"/>\n    </bk>\n  </cellMetadata>\n</metadata>');
+  return o.join("");
+}
 /* 18.14 Supplementary Workbook Data */
 function parse_xlink_xml(/*::data, rel, name:string, _opts*/) {
 	//var opts = _opts || {};
@@ -7629,6 +7742,38 @@ function fuzzyfmla(f/*:string*/)/*:boolean*/ {
 function _xlfn(f/*:string*/)/*:string*/ {
 	return f.replace(/_xlfn\./g,"");
 }
+/* Part 3 TODO: actually parse formulae */
+function ods_to_csf_formula(f/*:string*/)/*:string*/ {
+	if(f.slice(0,3) == "of:") f = f.slice(3);
+	/* 5.2 Basic Expressions */
+	if(f.charCodeAt(0) == 61) {
+		f = f.slice(1);
+		if(f.charCodeAt(0) == 61) f = f.slice(1);
+	}
+	f = f.replace(/COM\.MICROSOFT\./g, "");
+	/* Part 3 Section 5.8 References */
+	f = f.replace(/\[((?:\.[A-Z]+[0-9]+)(?::\.[A-Z]+[0-9]+)?)\]/g, function($$, $1) { return $1.replace(/\./g,""); });
+	/* TODO: something other than this */
+	f = f.replace(/\[.(#[A-Z]*[?!])\]/g, "$1");
+	return f.replace(/[;~]/g,",").replace(/\|/g,";");
+}
+
+function csf_to_ods_formula(f/*:string*/)/*:string*/ {
+	var o = "of:=" + f.replace(crefregex, "$1[.$2$3$4$5]").replace(/\]:\[/g,":");
+	/* TODO: something other than this */
+	return o.replace(/;/g, "|").replace(/,/g,";");
+}
+
+function ods_to_csf_3D(r/*:string*/)/*:[string, string]*/ {
+	var a = r.split(":");
+	var s = a[0].split(".")[0];
+	return [s, a[0].split(".")[1] + (a.length > 1 ? (":" + (a[1].split(".")[1] || a[1].split(".")[0])) : "")];
+}
+
+function csf_to_ods_3D(r/*:string*/)/*:string*/ {
+	return r.replace(/\./,"!");
+}
+
 var strs = {}; // shared strings
 var _ssfopts = {}; // spreadsheet formatting options
 
@@ -8063,6 +8208,7 @@ function write_ws_xml_cell(cell/*:Cell*/, ref, ws, opts/*::, idx, wb*/)/*:string
 	}
 	if(cell.l) ws['!links'].push([ref, cell.l]);
 	if(cell.c) ws['!comments'].push([ref, cell.c]);
+	if(cell.D) o.cm = 1;
 	return writextag('c', v, o);
 }
 
@@ -8239,6 +8385,10 @@ return function parse_ws_xml_data(sdata/*:string*/, s, opts, guess/*:Range*/, th
 			}
 			safe_format(p, fmtid, fillid, opts, themes, styles);
 			if(opts.cellDates && do_format && p.t == 'n' && SSF.is_date(SSF._table[fmtid])) { p.t = 'd'; p.v = numdate(p.v); }
+			if(tag.cm && opts.xlmeta) {
+				var cm = (opts.xlmeta.Types||[])[+tag.cm-1];
+				if(cm && cm.name == 'XLDAPR') p.D = true;
+			}
 			if(dense) {
 				var _r = decode_cell(tag.r);
 				if(!s[_r.r]) s[_r.r] = [];
@@ -8492,80 +8642,6 @@ function write_cs_xml(idx/*:number*/, opts, wb/*:Workbook*/, rels)/*:string*/ {
 	add_rels(rels, -1, "../drawings/drawing" + (idx+1) + ".xml", RELS.DRAW);
 	if(o.length>2) { o[o.length] = ('</chartsheet>'); o[1]=o[1].replace("/>",">"); }
 	return o.join("");
-}
-
-/* [MS-XLSB] 2.4.331 BrtCsProp */
-function parse_BrtCsProp(data, length/*:number*/) {
-	data.l += 10;
-	var name = parse_XLWideString(data, length - 10);
-	return { name: name };
-}
-
-/* [MS-XLSB] 2.1.7.7 Chart Sheet */
-function parse_cs_bin(data, opts, idx/*:number*/, rels, wb/*::, themes, styles*/)/*:Worksheet*/ {
-	if(!data) return data;
-	if(!rels) rels = {'!id':{}};
-	var s = {'!type':"chart", '!drawel':null, '!rel':""};
-	var state/*:Array<string>*/ = [];
-	var pass = false;
-	recordhopper(data, function cs_parse(val, R_n, RT) {
-		switch(RT) {
-
-			case 0x0226: /* 'BrtDrawing' */
-				s['!rel'] = val; break;
-
-			case 0x028B: /* 'BrtCsProp' */
-				if(!wb.Sheets[idx]) wb.Sheets[idx] = {};
-				if(val.name) wb.Sheets[idx].CodeName = val.name;
-				break;
-
-			case 0x0232: /* 'BrtBkHim' */
-			case 0x028C: /* 'BrtCsPageSetup' */
-			case 0x029D: /* 'BrtCsProtection' */
-			case 0x02A7: /* 'BrtCsProtectionIso' */
-			case 0x0227: /* 'BrtLegacyDrawing' */
-			case 0x0228: /* 'BrtLegacyDrawingHF' */
-			case 0x01DC: /* 'BrtMargins' */
-			case 0x0C00: /* 'BrtUid' */
-				break;
-
-			case 0x0023: /* 'BrtFRTBegin' */
-				pass = true; break;
-			case 0x0024: /* 'BrtFRTEnd' */
-				pass = false; break;
-			case 0x0025: /* 'BrtACBegin' */
-				state.push(R_n); break;
-			case 0x0026: /* 'BrtACEnd' */
-				state.pop(); break;
-
-			default:
-				if((R_n||"").indexOf("Begin") > 0) state.push(R_n);
-				else if((R_n||"").indexOf("End") > 0) state.pop();
-				else if(!pass || opts.WTF) throw new Error("Unexpected record " + RT + " " + R_n);
-		}
-	}, opts);
-
-	if(rels['!id'][s['!rel']]) s['!drawel'] = rels['!id'][s['!rel']];
-	return s;
-}
-function write_cs_bin(/*::idx:number, opts, wb:Workbook, rels*/) {
-	var ba = buf_array();
-	write_record(ba, "BrtBeginSheet");
-	/* [BrtCsProp] */
-	/* CSVIEWS */
-	/* [[BrtCsProtectionIso] BrtCsProtection] */
-	/* [USERCSVIEWS] */
-	/* [BrtMargins] */
-	/* [BrtCsPageSetup] */
-	/* [HEADERFOOTER] */
-	/* BrtDrawing */
-	/* [BrtLegacyDrawing] */
-	/* [BrtLegacyDrawingHF] */
-	/* [BrtBkHim] */
-	/* [WEBPUBITEMS] */
-	/* FRTCHARTSHEET */
-	write_record(ba, "BrtEndSheet");
-	return ba.end();
 }
 /* 18.2.28 (CT_WorkbookProtection) Defaults */
 var WBPropsDef = [
@@ -9014,6 +9090,11 @@ function parse_xlink(data, rel, name/*:string*/, opts) {
 	return parse_xlink_xml((data/*:any*/), rel, name, opts);
 }
 
+function parse_xlmeta(data, name/*:string*/, opts) {
+	if(name.slice(-4)===".bin") return parse_xlmeta_bin((data/*:any*/), name, opts);
+	return parse_xlmeta_xml((data/*:any*/), name, opts);
+}
+
 function write_wb(wb, name/*:string*/, opts) {
 	return (name.slice(-4)===".bin" ? write_wb_bin : write_wb_xml)(wb, opts);
 }
@@ -9043,6 +9124,10 @@ function write_cc(data, name:string, opts) {
 	return (name.slice(-4)===".bin" ? write_cc_bin : write_cc_xml)(data, opts);
 }
 */
+
+function write_xlmeta(name/*:string*/) {
+	return (name.slice(-4)===".bin" ? write_xlmeta_bin : write_xlmeta_xml)();
+}
 /* note: browser DOM element cannot see mso- style attrs, must parse */
 var HTML_ = (function() {
 	function html_to_sheet(str/*:string*/, _opts)/*:Workbook*/ {
@@ -10147,673 +10232,6 @@ function write_ods(wb/*:any*/, opts/*:any*/) {
 	return zip;
 }
 
-var NUMBERS = !Object.defineProperty ? (void 0) :(function() {
-  var __defProp = Object.defineProperty;
-  var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
-  var __getOwnPropNames = Object.getOwnPropertyNames;
-  var __hasOwnProp = Object.prototype.hasOwnProperty;
-  var __markAsModule = function(target) {
-    return __defProp(target, "__esModule", { value: true });
-  };
-  var __export = function(target, all) {
-    for (var name in all)
-      __defProp(target, name, { get: all[name], enumerable: true });
-  };
-  var __reExport = function(target, module, copyDefault, desc) {
-    if (module && typeof module === "object" || typeof module === "function")
-      for (var keys = __getOwnPropNames(module), i = 0, n = keys.length, key; i < n; i++) {
-        key = keys[i];
-        if (!__hasOwnProp.call(target, key) && (copyDefault || key !== "default"))
-          __defProp(target, key, { get: function(k) {
-            return module[k];
-          }.bind(null, key), enumerable: !(desc = __getOwnPropDesc(module, key)) || desc.enumerable });
-      }
-    return target;
-  };
-  var __toCommonJS = /* @__PURE__ */ function(cache) {
-    return function(module, temp) {
-      return cache && cache.get(module) || (temp = __reExport(__markAsModule({}), module, 1), cache && cache.set(module, temp), temp);
-    };
-  }(typeof WeakMap !== "undefined" ? /* @__PURE__ */ new WeakMap() : 0);
-
-  // 83_numbers.ts
-  var numbers_exports = {};
-  __export(numbers_exports, {
-    parse_numbers: function() {
-      return numbers_default;
-    }
-  });
-
-  // src/util.ts
-  var u8_to_dataview = function(array) {
-    return new DataView(array.buffer, array.byteOffset, array.byteLength);
-  };
-  var u8str = function(u8) {
-    return typeof TextDecoder != "undefined" ? new TextDecoder().decode(u8) : utf8read(a2s(u8));
-  };
-  var u8concat = function(u8a) {
-    var len = u8a.reduce(function(acc, x) {
-      return acc + x.length;
-    }, 0);
-    var out = new Uint8Array(len);
-    var off = 0;
-    u8a.forEach(function(u8) {
-      out.set(u8, off);
-      off += u8.length;
-    });
-    return out;
-  };
-  var popcnt = function(x) {
-    x -= x >> 1 & 1431655765;
-    x = (x & 858993459) + (x >> 2 & 858993459);
-    return (x + (x >> 4) & 252645135) * 16843009 >>> 24;
-  };
-  var readDecimal128LE = function(buf, offset) {
-    var exp = (buf[offset + 15] & 127) << 7 | buf[offset + 14] >> 1;
-    var mantissa = buf[offset + 14] & 1;
-    for (var j = offset + 13; j >= offset; --j)
-      mantissa = mantissa * 256 + buf[j];
-    return (buf[offset + 15] & 128 ? -mantissa : mantissa) * Math.pow(10, exp - 6176);
-  };
-
-  // src/proto.ts
-  function parse_varint49(buf, ptr) {
-    var l = ptr ? ptr[0] : 0;
-    var usz = buf[l] & 127;
-    varint:
-      if (buf[l++] >= 128) {
-        usz |= (buf[l] & 127) << 7;
-        if (buf[l++] < 128)
-          break varint;
-        usz |= (buf[l] & 127) << 14;
-        if (buf[l++] < 128)
-          break varint;
-        usz |= (buf[l] & 127) << 21;
-        if (buf[l++] < 128)
-          break varint;
-        usz += (buf[l] & 127) * Math.pow(2, 28);
-        ++l;
-        if (buf[l++] < 128)
-          break varint;
-        usz += (buf[l] & 127) * Math.pow(2, 35);
-        ++l;
-        if (buf[l++] < 128)
-          break varint;
-        usz += (buf[l] & 127) * Math.pow(2, 42);
-        ++l;
-        if (buf[l++] < 128)
-          break varint;
-      }
-    if (ptr)
-      ptr[0] = l;
-    return usz;
-  }
-  function varint_to_i32(buf) {
-    var l = 0, i32 = buf[l] & 127;
-    varint:
-      if (buf[l++] >= 128) {
-        i32 |= (buf[l] & 127) << 7;
-        if (buf[l++] < 128)
-          break varint;
-        i32 |= (buf[l] & 127) << 14;
-        if (buf[l++] < 128)
-          break varint;
-        i32 |= (buf[l] & 127) << 21;
-        if (buf[l++] < 128)
-          break varint;
-        i32 |= (buf[l] & 127) << 28;
-      }
-    return i32;
-  }
-  function parse_shallow(buf) {
-    var out = [], ptr = [0];
-    while (ptr[0] < buf.length) {
-      var off = ptr[0];
-      var num = parse_varint49(buf, ptr);
-      var type = num & 7;
-      num = Math.floor(num / 8);
-      var len = 0;
-      var res;
-      if (num == 0)
-        break;
-      switch (type) {
-        case 0:
-          {
-            var l = ptr[0];
-            while (buf[ptr[0]++] >= 128)
-              ;
-            res = buf.slice(l, ptr[0]);
-          }
-          break;
-        case 5:
-          len = 4;
-          res = buf.slice(ptr[0], ptr[0] + len);
-          ptr[0] += len;
-          break;
-        case 1:
-          len = 8;
-          res = buf.slice(ptr[0], ptr[0] + len);
-          ptr[0] += len;
-          break;
-        case 2:
-          len = parse_varint49(buf, ptr);
-          res = buf.slice(ptr[0], ptr[0] + len);
-          ptr[0] += len;
-          break;
-        case 3:
-        case 4:
-        default:
-          throw new Error("PB Type ".concat(type, " for Field ").concat(num, " at offset ").concat(off));
-      }
-      var v = { offset: off, data: res, type: type };
-      if (out[num] == null)
-        out[num] = [v];
-      else
-        out[num].push(v);
-    }
-    return out;
-  }
-  function mappa(data, cb) {
-    if (!data)
-      return [];
-    return data.map(function(d) {
-      var _a;
-      try {
-        return cb(d.data);
-      } catch (e) {
-        var m = (_a = e.message) == null ? void 0 : _a.match(/at offset (\d+)/);
-        if (m)
-          e.message = e.message.replace(/at offset (\d+)/, "at offset " + (+m[1] + d.offset));
-        throw e;
-      }
-    });
-  }
-
-  // src/frame.ts
-  function deframe(buf) {
-    var out = [];
-    var l = 0;
-    while (l < buf.length) {
-      var t = buf[l++];
-      var len = buf[l] | buf[l + 1] << 8 | buf[l + 2] << 16;
-      l += 3;
-      out.push(parse_snappy_chunk(t, buf.slice(l, l + len)));
-      l += len;
-    }
-    if (l !== buf.length)
-      throw new Error("data is not a valid framed stream!");
-    return u8concat(out);
-  }
-  function parse_snappy_chunk(type, buf) {
-    if (type != 0)
-      throw new Error("Unexpected Snappy chunk type ".concat(type));
-    var ptr = [0];
-    var usz = parse_varint49(buf, ptr);
-    var chunks = [];
-    while (ptr[0] < buf.length) {
-      var tag = buf[ptr[0]] & 3;
-      if (tag == 0) {
-        var len = buf[ptr[0]++] >> 2;
-        if (len < 60)
-          ++len;
-        else {
-          var c = len - 59;
-          len = buf[ptr[0]];
-          if (c > 1)
-            len |= buf[ptr[0] + 1] << 8;
-          if (c > 2)
-            len |= buf[ptr[0] + 2] << 16;
-          if (c > 3)
-            len |= buf[ptr[0] + 3] << 24;
-          len >>>= 0;
-          len++;
-          ptr[0] += c;
-        }
-        chunks.push(buf.slice(ptr[0], ptr[0] + len));
-        ptr[0] += len;
-        continue;
-      } else {
-        var offset = 0, length = 0;
-        if (tag == 1) {
-          length = (buf[ptr[0]] >> 2 & 7) + 4;
-          offset = (buf[ptr[0]++] & 224) << 3;
-          offset |= buf[ptr[0]++];
-        } else {
-          length = (buf[ptr[0]++] >> 2) + 1;
-          if (tag == 2) {
-            offset = buf[ptr[0]] | buf[ptr[0] + 1] << 8;
-            ptr[0] += 2;
-          } else {
-            offset = (buf[ptr[0]] | buf[ptr[0] + 1] << 8 | buf[ptr[0] + 2] << 16 | buf[ptr[0] + 3] << 24) >>> 0;
-            ptr[0] += 4;
-          }
-        }
-        chunks = [u8concat(chunks)];
-        if (offset == 0)
-          throw new Error("Invalid offset 0");
-        if (offset > chunks[0].length)
-          throw new Error("Invalid offset beyond length");
-        if (length >= offset) {
-          chunks.push(chunks[0].slice(-offset));
-          length -= offset;
-          while (length >= chunks[chunks.length - 1].length) {
-            chunks.push(chunks[chunks.length - 1]);
-            length -= chunks[chunks.length - 1].length;
-          }
-        }
-        chunks.push(chunks[0].slice(-offset, -offset + length));
-      }
-    }
-    var o = u8concat(chunks);
-    if (o.length != usz)
-      throw new Error("Unexpected length: ".concat(o.length, " != ").concat(usz));
-    return o;
-  }
-
-  // src/iwa.ts
-  function parse_iwa(buf) {
-    var out = [], ptr = [0];
-    while (ptr[0] < buf.length) {
-      var len = parse_varint49(buf, ptr);
-      var ai = parse_shallow(buf.slice(ptr[0], ptr[0] + len));
-      ptr[0] += len;
-      var res = {
-        id: varint_to_i32(ai[1][0].data),
-        messages: []
-      };
-      ai[2].forEach(function(b) {
-        var mi = parse_shallow(b.data);
-        var fl = varint_to_i32(mi[3][0].data);
-        res.messages.push({
-          meta: mi,
-          data: buf.slice(ptr[0], ptr[0] + fl)
-        });
-        ptr[0] += fl;
-      });
-      out.push(res);
-    }
-    return out;
-  }
-
-  // src/cell.ts
-  function parse_old_storage(buf, sst, rsst) {
-    var dv = u8_to_dataview(buf);
-    var ctype = buf[buf[0] == 4 ? 1 : 2];
-    var flags = dv.getUint32(4, true);
-    var data_offset = 12 + popcnt(flags & 3470) * 4;
-    var ridx = -1, sidx = -1, ieee = NaN, dt = new Date(2001, 0, 1);
-    if (flags & 512) {
-      ridx = dv.getUint32(data_offset, true);
-      data_offset += 4;
-    }
-    data_offset += popcnt(flags & 12288) * 4;
-    if (flags & 16) {
-      sidx = dv.getUint32(data_offset, true);
-      data_offset += 4;
-    }
-    if (flags & 32) {
-      ieee = dv.getFloat64(data_offset, true);
-      data_offset += 8;
-    }
-    if (flags & 64) {
-      dt.setTime(dt.getTime() + dv.getFloat64(data_offset, true) * 1e3);
-      data_offset += 8;
-    }
-    var ret;
-    switch (ctype) {
-      case 0:
-        break;
-      case 2:
-        ret = { t: "n", v: ieee };
-        break;
-      case 3:
-        ret = { t: "s", v: sst[sidx] };
-        break;
-      case 5:
-        ret = { t: "d", v: dt };
-        break;
-      case 6:
-        ret = { t: "b", v: ieee > 0 };
-        break;
-      case 7:
-        ret = { t: "n", v: ieee };
-        break;
-      case 8:
-        ret = { t: "e", v: 0 };
-        break;
-      case 9:
-        {
-          if (ridx > -1)
-            ret = { t: "s", v: rsst[ridx] };
-          else if (sidx > -1)
-            ret = { t: "s", v: sst[sidx] };
-          else if (!isNaN(ieee))
-            ret = { t: "n", v: ieee };
-          else
-            throw new Error("Unsupported cell type ".concat(buf.slice(0, 4)));
-        }
-        break;
-      default:
-        throw new Error("Unsupported cell type ".concat(buf.slice(0, 4)));
-    }
-    return ret;
-  }
-  function parse_storage(buf, sst, rsst) {
-    var dv = u8_to_dataview(buf);
-    var ctype = buf[1];
-    var flags = dv.getUint32(8, true);
-    var data_offset = 12;
-    var ridx = -1, sidx = -1, d128 = NaN, ieee = NaN, dt = new Date(2001, 0, 1);
-    if (flags & 1) {
-      d128 = readDecimal128LE(buf, data_offset);
-      data_offset += 16;
-    }
-    if (flags & 2) {
-      ieee = dv.getFloat64(data_offset, true);
-      data_offset += 8;
-    }
-    if (flags & 4) {
-      dt.setTime(dt.getTime() + dv.getFloat64(data_offset, true) * 1e3);
-      data_offset += 8;
-    }
-    if (flags & 8) {
-      sidx = dv.getUint32(data_offset, true);
-      data_offset += 4;
-    }
-    if (flags & 16) {
-      ridx = dv.getUint32(data_offset, true);
-      data_offset += 4;
-    }
-    var ret;
-    switch (ctype) {
-      case 0:
-        break;
-      case 2:
-        ret = { t: "n", v: d128 };
-        break;
-      case 3:
-        ret = { t: "s", v: sst[sidx] };
-        break;
-      case 5:
-        ret = { t: "d", v: dt };
-        break;
-      case 6:
-        ret = { t: "b", v: ieee > 0 };
-        break;
-      case 7:
-        ret = { t: "n", v: ieee };
-        break;
-      case 8:
-        ret = { t: "e", v: 0 };
-        break;
-      case 9:
-        {
-          if (ridx > -1)
-            ret = { t: "s", v: rsst[ridx] };
-          else
-            throw new Error("Unsupported cell type ".concat(ctype, " : ").concat(flags & 31, " : ").concat(buf.slice(0, 4)));
-        }
-        break;
-      case 10:
-        ret = { t: "n", v: d128 };
-        break;
-      default:
-        throw new Error("Unsupported cell type ".concat(ctype, " : ").concat(flags & 31, " : ").concat(buf.slice(0, 4)));
-    }
-    return ret;
-  }
-  function parse(buf, sst, rsst) {
-    switch (buf[0]) {
-      case 3:
-      case 4:
-        return parse_old_storage(buf, sst, rsst);
-      case 5:
-        return parse_storage(buf, sst, rsst);
-      default:
-        throw new Error("Unsupported payload version ".concat(buf[0]));
-    }
-  }
-
-  // src/numbers.ts
-  var encode_col = function(C) {
-    var s = "";
-    for (++C; C; C = Math.floor((C - 1) / 26))
-      s = String.fromCharCode((C - 1) % 26 + 65) + s;
-    return s;
-  };
-  var encode_cell = function(c) {
-    return "".concat(encode_col(c.c)).concat(c.r + 1);
-  };
-  var encode_range = function(r) {
-    return encode_cell(r.s) + ":" + encode_cell(r.e);
-  };
-  var book_new = function() {
-    return { Sheets: {}, SheetNames: [] };
-  };
-  var book_append_sheet = function(wb, ws, name) {
-    if (!name)
-      for (var i = 1; i < 9999; ++i) {
-        if (wb.SheetNames.indexOf(name = "Sheet ".concat(i)) == -1)
-          break;
-      }
-    else if (wb.SheetNames.indexOf(name) > -1)
-      for (var i = 1; i < 9999; ++i) {
-        if (wb.SheetNames.indexOf("".concat(name, "_").concat(i)) == -1) {
-          name = "".concat(name, "_").concat(i);
-          break;
-        }
-      }
-    wb.SheetNames.push(name);
-    wb.Sheets[name] = ws;
-  };
-  function parse_numbers(cfb) {
-    var out = [];
-    cfb.FullPaths.forEach(function(p) {
-      if (p.match(/\.iwpv2/))
-        throw new Error("Unsupported password protection");
-    });
-    cfb.FileIndex.forEach(function(s) {
-      if (!s.name.match(/\.iwa$/))
-        return;
-      var o;
-      try {
-        o = deframe(s.content);
-      } catch (e) {
-        return console.log("?? " + s.content.length + " " + (e.message || e));
-      }
-      var packets;
-      try {
-        packets = parse_iwa(o);
-      } catch (e) {
-        return console.log("## " + (e.message || e));
-      }
-      packets.forEach(function(packet) {
-        out[+packet.id] = packet.messages;
-      });
-    });
-    if (!out.length)
-      throw new Error("File has no messages");
-    var docroot;
-    out.forEach(function(iwams) {
-      iwams.forEach(function(iwam) {
-        var mtype = varint_to_i32(iwam.meta[1][0].data) >>> 0;
-        if (mtype == 1) {
-          if (!docroot)
-            docroot = iwam;
-          else
-            throw new Error("Document has multiple roots");
-        }
-      });
-    });
-    if (!docroot)
-      throw new Error("Cannot find Document root");
-    return parse_docroot(out, docroot);
-  }
-  var numbers_default = parse_numbers;
-  function parse_Reference(buf) {
-    var pb = parse_shallow(buf);
-    return parse_varint49(pb[1][0].data);
-  }
-  function parse_TST_TableDataList(M, root) {
-    var pb = parse_shallow(root.data);
-    var type = varint_to_i32(pb[1][0].data);
-    var entries = pb[3];
-    var data = [];
-    (entries || []).forEach(function(entry) {
-      var le = parse_shallow(entry.data);
-      var key = varint_to_i32(le[1][0].data) >>> 0;
-      switch (type) {
-        case 1:
-          data[key] = u8str(le[3][0].data);
-          break;
-        case 8:
-          {
-            var rt = M[parse_Reference(le[9][0].data)][0];
-            var rtp = parse_shallow(rt.data);
-            var rtpref = M[parse_Reference(rtp[1][0].data)][0];
-            var mtype = varint_to_i32(rtpref.meta[1][0].data);
-            if (mtype != 2001)
-              throw new Error("2000 unexpected reference to ".concat(mtype));
-            var tswpsa = parse_shallow(rtpref.data);
-            data[key] = tswpsa[3].map(function(x) {
-              return u8str(x.data);
-            }).join("");
-          }
-          break;
-      }
-    });
-    return data;
-  }
-  function parse_TST_TileRowInfo(u8) {
-    var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j;
-    var pb = parse_shallow(u8);
-    var R = varint_to_i32(pb[1][0].data) >>> 0;
-    var pre_bnc = (_b = (_a = pb[3]) == null ? void 0 : _a[0]) == null ? void 0 : _b.data;
-    var pre_bnc_offsets = ((_d = (_c = pb[4]) == null ? void 0 : _c[0]) == null ? void 0 : _d.data) && u8_to_dataview(pb[4][0].data);
-    var storage = (_f = (_e = pb[6]) == null ? void 0 : _e[0]) == null ? void 0 : _f.data;
-    var storage_offsets = ((_h = (_g = pb[7]) == null ? void 0 : _g[0]) == null ? void 0 : _h.data) && u8_to_dataview(pb[7][0].data);
-    var wide_offsets = ((_j = (_i = pb[8]) == null ? void 0 : _i[0]) == null ? void 0 : _j.data) && varint_to_i32(pb[8][0].data) > 0 || false;
-    var width = wide_offsets ? 4 : 1;
-    var cells = [];
-    var off = 0;
-    for (var C = 0; C < pre_bnc_offsets.byteLength / 2; ++C) {
-      if (storage && storage_offsets) {
-        off = storage_offsets.getUint16(C * 2, true) * width;
-        if (off < storage.length) {
-          cells[C] = storage.subarray(off, storage_offsets.getUint16(C * 2 + 2, true) * width);
-          continue;
-        }
-      }
-      if (pre_bnc && pre_bnc_offsets) {
-        off = pre_bnc_offsets.getUint16(C * 2, true) * width;
-        if (off < pre_bnc.length)
-          cells[C] = pre_bnc.subarray(off, pre_bnc_offsets.getUint16(C * 2 + 2, true) * width);
-      }
-    }
-    return { R: R, cells: cells };
-  }
-  function parse_TST_Tile(M, root) {
-    var pb = parse_shallow(root.data);
-    var ri = mappa(pb[5], parse_TST_TileRowInfo);
-    return ri.reduce(function(acc, x) {
-      if (!acc[x.R])
-        acc[x.R] = [];
-      x.cells.forEach(function(cell, C) {
-        if (acc[x.R][C])
-          throw new Error("Duplicate cell r=".concat(x.R, " c=").concat(C));
-        acc[x.R][C] = cell;
-      });
-      return acc;
-    }, []);
-  }
-  function parse_TST_TableModelArchive(M, root, ws) {
-    var _a;
-    var pb = parse_shallow(root.data);
-    var range = { s: { r: 0, c: 0 }, e: { r: 0, c: 0 } };
-    range.e.r = (varint_to_i32(pb[6][0].data) >>> 0) - 1;
-    if (range.e.r < 0)
-      throw new Error("Invalid row varint ".concat(pb[6][0].data));
-    range.e.c = (varint_to_i32(pb[7][0].data) >>> 0) - 1;
-    if (range.e.c < 0)
-      throw new Error("Invalid col varint ".concat(pb[7][0].data));
-    ws["!ref"] = encode_range(range);
-    {
-      var store = parse_shallow(pb[4][0].data);
-      var sst = parse_TST_TableDataList(M, M[parse_Reference(store[4][0].data)][0]);
-      var rsst = ((_a = store[17]) == null ? void 0 : _a[0]) ? parse_TST_TableDataList(M, M[parse_Reference(store[17][0].data)][0]) : [];
-      {
-        var tile = parse_shallow(store[3][0].data);
-        var tiles = [];
-        tile[1].forEach(function(t) {
-          var tl = parse_shallow(t.data);
-          var ref = M[parse_Reference(tl[2][0].data)][0];
-          var mtype = varint_to_i32(ref.meta[1][0].data);
-          if (mtype != 6002)
-            throw new Error("6001 unexpected reference to ".concat(mtype));
-          tiles.push({ id: varint_to_i32(tl[1][0].data), ref: parse_TST_Tile(M, ref) });
-        });
-        tiles.forEach(function(tile2) {
-          tile2.ref.forEach(function(row, R) {
-            row.forEach(function(buf, C) {
-              var addr = encode_cell({ r: R, c: C });
-              var res = parse(buf, sst, rsst);
-              if (res)
-                ws[addr] = res;
-            });
-          });
-        });
-      }
-    }
-  }
-  function parse_TST_TableInfoArchive(M, root) {
-    var pb = parse_shallow(root.data);
-    var out = { "!ref": "A1" };
-    var tableref = M[parse_Reference(pb[2][0].data)];
-    var mtype = varint_to_i32(tableref[0].meta[1][0].data);
-    if (mtype != 6001)
-      throw new Error("6000 unexpected reference to ".concat(mtype));
-    parse_TST_TableModelArchive(M, tableref[0], out);
-    return out;
-  }
-  function parse_sheetroot(M, root) {
-    var _a;
-    var pb = parse_shallow(root.data);
-    var out = {
-      name: ((_a = pb[1]) == null ? void 0 : _a[0]) ? u8str(pb[1][0].data) : "",
-      sheets: []
-    };
-    var shapeoffs = mappa(pb[2], parse_Reference);
-    shapeoffs.forEach(function(off) {
-      M[off].forEach(function(m) {
-        var mtype = varint_to_i32(m.meta[1][0].data);
-        if (mtype == 6e3)
-          out.sheets.push(parse_TST_TableInfoArchive(M, m));
-      });
-    });
-    return out;
-  }
-  function parse_docroot(M, root) {
-    var out = book_new();
-    var pb = parse_shallow(root.data);
-    var sheetoffs = mappa(pb[1], parse_Reference);
-    sheetoffs.forEach(function(off) {
-      M[off].forEach(function(m) {
-        var mtype = varint_to_i32(m.meta[1][0].data);
-        if (mtype == 2) {
-          var root2 = parse_sheetroot(M, m);
-          root2.sheets.forEach(function(sheet) {
-            book_append_sheet(out, sheet, root2.name);
-          });
-        }
-      });
-    });
-    if (out.SheetNames.length == 0)
-      throw new Error("Empty NUMBERS file");
-    return out;
-  }
-  return __toCommonJS(numbers_exports);
-})();
-/*! sheetjs (C) 2013-present SheetJS -- http://sheetjs.com */
 function fix_opts_func(defaults/*:Array<Array<any> >*/)/*:{(o:any):void}*/ {
 	return function fix_opts(opts) {
 		for(var i = 0; i != defaults.length; ++i) {
@@ -11021,8 +10439,15 @@ function parse_zip(zip/*:ZIP*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
 	var wbrelsi = dir.workbooks[0].lastIndexOf("/");
 	var wbrelsfile = (dir.workbooks[0].slice(0, wbrelsi+1) + "_rels/" + dir.workbooks[0].slice(wbrelsi+1) + ".rels").replace(/^\//,"");
 	if(!safegetzipfile(zip, wbrelsfile)) wbrelsfile = 'xl/_rels/workbook.' + wbext + '.rels';
-	var wbrels = parse_rels(getzipstr(zip, wbrelsfile, true), wbrelsfile);
+	var wbrels = parse_rels(getzipstr(zip, wbrelsfile, true), wbrelsfile.replace(/_rels.*/, "s5s"));
+
+	if((dir.metadata || []).length >= 1) {
+		/* TODO: MDX and other types of metadata */
+		opts.xlmeta = parse_xlmeta(getzipdata(zip, strip_front_slash(dir.metadata[0])),dir.metadata[0],opts);
+	}
+
 	if(wbrels) wbrels = safe_parse_wbrels(wbrels, wb.Sheets);
+
 
 	/* Numbers iOS hack */
 	var nmode = (getzipdata(zip,"xl/worksheets/sheet.xml",true))?1:0;
@@ -11259,6 +10684,11 @@ function write_zip_xlsxb(wb/*:Workbook*/, opts/*:WriteOpts*/)/*:ZIP*/ {
 		add_rels(opts.wbrels, -1, "vbaProject.bin", RELS.VBA);
 	}
 
+	f = "xl/metadata." + wbext;
+	zip_add_file(zip, f, write_xlmeta(f));
+	ct.metadata.push(f);
+	add_rels(opts.wbrels, -1, "metadata." + wbext, RELS.XLMETA);
+
 	zip_add_file(zip, "[Content_Types].xml", write_ct(ct, opts));
 	zip_add_file(zip, '_rels/.rels', write_rels(opts.rels));
 	zip_add_file(zip, 'xl/_rels/workbook.' + wbext + '.rels', write_rels(opts.wbrels));
@@ -11267,7 +10697,7 @@ function write_zip_xlsxb(wb/*:Workbook*/, opts/*:WriteOpts*/)/*:ZIP*/ {
 	return zip;
 }
 
-
+/* this version does not reference XLSB write functions */
 function write_zip_xlsx(wb/*:Workbook*/, opts/*:WriteOpts*/)/*:ZIP*/ {
 	_shapeid = 1024;
 	if(wb && !wb.SSF) {
@@ -11389,6 +10819,11 @@ function write_zip_xlsx(wb/*:Workbook*/, opts/*:WriteOpts*/)/*:ZIP*/ {
 		add_rels(opts.wbrels, -1, "vbaProject.bin", RELS.VBA);
 	}
 
+	f = "xl/metadata." + wbext;
+	zip_add_file(zip, f, write_xlmeta_xml());
+	ct.metadata.push(f);
+	add_rels(opts.wbrels, -1, "metadata." + wbext, RELS.XLMETA);
+
 	zip_add_file(zip, "[Content_Types].xml", write_ct(ct, opts));
 	zip_add_file(zip, '_rels/.rels', write_rels(opts.rels));
 	zip_add_file(zip, 'xl/_rels/workbook.' + wbext + '.rels', write_rels(opts.wbrels));
@@ -11442,6 +10877,7 @@ function read_plaintext_raw(data/*:RawData*/, o/*:ParseOpts*/)/*:Workbook*/ {
 		default: throw new Error("Unrecognized type " + o.type);
 	}
 	if(bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF) str = utf8read(str);
+	o.type = "binary";
 	return read_plaintext(str, o);
 }
 
@@ -11561,14 +10997,15 @@ function write_zip_typeXLSX(wb/*:Workbook*/, opts/*:?WriteOpts*/)/*:any*/ {
 }
 function write_zip_denouement(z/*:any*/, o/*:?WriteOpts*/)/*:any*/ {
 	var oopts = {};
+	var ftype = has_buf ? "nodebuffer" : (typeof Uint8Array !== "undefined" ? "array" : "string");
 	if(o.compression) oopts.compression = 'DEFLATE';
-	if(o.password) oopts.type = has_buf ? "nodebuffer" : "string";
+	if(o.password) oopts.type = ftype;
 	else switch(o.type) {
 		case "base64": oopts.type = "base64"; break;
 		case "binary": oopts.type = "string"; break;
 		case "string": throw new Error("'string' output type invalid for '" + o.bookType + "' files");
 		case "buffer":
-		case "file": oopts.type = has_buf ? "nodebuffer" : "string"; break;
+		case "file": oopts.type = ftype; break;
 		default: throw new Error("Unrecognized type " + o.type);
 	}
 	var out = z.FullPaths ? CFB.write(z, {fileType:"zip", type: /*::(*/{"nodebuffer": "buffer", "string": "binary"}/*:: :any)*/[oopts.type] || oopts.type, compression: !!o.compression}) : z.generate(oopts);
@@ -12092,7 +11529,7 @@ utils.cell_add_comment = function(cell/*:Cell*/, text/*:string*/, author/*:?stri
 };
 
 /* set array formula and flush related cells */
-utils.sheet_set_array_formula = function(ws/*:Worksheet*/, range, formula/*:string*/) {
+utils.sheet_set_array_formula = function(ws/*:Worksheet*/, range, formula/*:string*/, dynamic/*:boolean*/) {
 	var rng = typeof range != "string" ? range : safe_decode_range(range);
 	var rngstr = typeof range == "string" ? range : encode_range(range);
 	for(var R = rng.s.r; R <= rng.e.r; ++R) for(var C = rng.s.c; C <= rng.e.c; ++C) {
@@ -12100,7 +11537,10 @@ utils.sheet_set_array_formula = function(ws/*:Worksheet*/, range, formula/*:stri
 		cell.t = 'n';
 		cell.F = rngstr;
 		delete cell.v;
-		if(R == rng.s.r && C == rng.s.c) cell.f = formula;
+		if(R == rng.s.r && C == rng.s.c) {
+			cell.f = formula;
+			if(dynamic) cell.D = true;
+		}
 	}
 	return ws;
 };
