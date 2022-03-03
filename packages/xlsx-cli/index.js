@@ -25,8 +25,8 @@ function run() {
     .option('-Y, --ods', 'emit ODS  to <sheetname> or <file>.ods')
     .option('-8, --xls', 'emit XLS  to <sheetname> or <file>.xls (BIFF8)')
     .option('-5, --biff5', 'emit XLS  to <sheetname> or <file>.xls (BIFF5)')
-    //.option('-4, --biff4','emit XLS  to <sheetname> or <file>.xls (BIFF4)')
-    //.option('-3, --biff3','emit XLS  to <sheetname> or <file>.xls (BIFF3)')
+    .option('-4, --biff4', 'emit XLS  to <sheetname> or <file>.xls (BIFF4)')
+    .option('-3, --biff3', 'emit XLS  to <sheetname> or <file>.xls (BIFF3)')
     .option('-2, --biff2', 'emit XLS  to <sheetname> or <file>.xls (BIFF2)')
     .option('-i, --xla', 'emit XLA to <sheetname> or <file>.xla')
     .option('-6, --xlml', 'emit SSML to <sheetname> or <file>.xls (2003 XML)')
@@ -114,6 +114,7 @@ function run() {
     seen = true;
     opts.cellFormula = true;
     opts.cellNF = true;
+    opts.xlfn = true;
     if (program.output) sheetname = program.output;
   }
   function isfmt(m/*:string*/)/*:boolean*/ {

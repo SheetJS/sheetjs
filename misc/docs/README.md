@@ -3158,7 +3158,7 @@ output formats.  The specific file type is controlled with `bookType` option:
 | `xlml`     | `.xls`   |   none    | multi  | Excel 2003-2004 (SpreadsheetML) |
 | `ods`      | `.ods`   |    ZIP    | multi  | OpenDocument Spreadsheet        |
 | `fods`     | `.fods`  |   none    | multi  | Flat OpenDocument Spreadsheet   |
-| `wk3`      | `.wk3`   |   none    | single | Lotus Workbook (WK3)            |
+| `wk3`      | `.wk3`   |   none    | multi  | Lotus Workbook (WK3)            |
 | `csv`      | `.csv`   |   none    | single | Comma Separated Values          |
 | `txt`      | `.txt`   |   none    | single | UTF-16 Unicode Text (TXT)       |
 | `sylk`     | `.sylk`  |   none    | single | Symbolic Link (SYLK)            |
