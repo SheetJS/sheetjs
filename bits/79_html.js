@@ -59,7 +59,7 @@ var HTML_ = (function() {
 		return ws;
 	}
 	function html_to_book(str/*:string*/, opts)/*:Workbook*/ {
-		var mtch = str.match(/<table.*?>[\s\S]*?<\/table>/gi);
+		var mtch = str.match(/<table[\s\S]*?>[\s\S]*?<\/table>/gi);
 		if(!mtch || mtch.length == 0) throw new Error("Invalid HTML: could not find <table>");
 		if(mtch.length == 1) return sheet_to_workbook(html_to_sheet(mtch[0], opts), opts);
 		var wb = utils.book_new();
