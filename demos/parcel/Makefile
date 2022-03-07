@@ -1,7 +1,7 @@
 .PHONY: app
 app:
-	parcel build index.html --public-url ./
+	npx parcel build index.html
 
 .PHONY: ctest 
 ctest:
-	parcel index.html
+	npx parcel index.html

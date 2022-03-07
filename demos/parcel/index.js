@@ -1,6 +1,6 @@
 /* xlsx.js (C) 2013-present SheetJS -- http://sheetjs.com */
 /*jshint browser:true */
-import X from '../../' 
+import * as X from '../../';
 
 console.log(X.version);
 

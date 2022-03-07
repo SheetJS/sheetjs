@@ -1,10 +1,10 @@
 # Parcel
 
 Parcel Bundler starting from version 1.5.0 should play nice with this library
-out of the box.  The standard import form can be used in JS files:
+out of the box:
 
 ```js
-import XLSX from 'xlsx'
+import { read, write, utils } from 'xlsx'
 ```
 
 Errors of the form `Could not statically evaluate fs call` stem from a parcel

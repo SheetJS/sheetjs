@@ -1,12 +1,8 @@
 # Electron
 
 This library is compatible with Electron and should just work out of the box.
-The demonstration uses Electron 14.0.0.  The library is added via `require` from
+The demonstration uses Electron 17.1.0.  The library is added via `require` from
 the renderer process.
-
-Electron 9.0.0 and later require the preference `nodeIntegration: true` in order
-to `require('XLSX')` in the renderer process.  Electron 12.0.0 and later also
-require `worldSafeExecuteJavascript: true` and `contextIsolation: true`
 
 The library can also be required from the main process, as shown in this demo
 to render a version string in the About dialog on OSX.
@@ -36,6 +32,18 @@ var workbook = XLSX.readFile(o[0]);
 var o = dialog.showSaveDialog();
 XLSX.writeFile(workbook, o);
 ```
+
+## Breaking Changes in Electron
+
+The first version of this demo used Electron 1.7.5.
+
+Electron 9.0.0 and later require the preference `nodeIntegration: true` in order
+to `require('XLSX')` in the renderer process.
+
+Electron 12.0.0 and later also require `worldSafeExecuteJavascript: true` and
+`contextIsolation: true`.
+
+Electron 14+ must use `@electron/remote` instead of `remote`.
 
 
 

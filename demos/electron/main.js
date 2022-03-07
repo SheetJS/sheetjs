@@ -3,6 +3,7 @@
 var electron = require('electron');
 var XLSX = require('xlsx');
 var app = electron.app;
+require('@electron/remote/main').initialize();
 
 var win = null;
 
@@ -18,6 +19,7 @@ function createWindow() {
 		}
 	});
 	win.loadURL("file://" + __dirname + "/index.html");
+	require('@electron/remote/main').enable(win.webContents);
 	win.webContents.openDevTools();
 	win.on('closed', function () { win = null; });
 }

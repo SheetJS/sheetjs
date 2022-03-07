@@ -1,0 +1,1 @@
+{ "source": "index.html", "scripts": { "build": "parcel build" } }

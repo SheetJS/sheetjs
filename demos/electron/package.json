@@ -4,8 +4,9 @@
 	"version": "0.0.0",
 	"main": "main.js",
 	"dependencies": {
-		"xlsx": "*",
-		"electron": "^9.0.5"
+		"@electron/remote": "^2.0.5",
+		"electron": "^17.1.0",
+		"xlsx": "^0.18.3"
 	},
 	"scripts": {
 		"start": "electron ."

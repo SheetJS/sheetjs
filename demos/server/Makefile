@@ -23,3 +23,7 @@ hapi: init ## hapi demo
 .PHONY: nest
 nest: init ## nest demo
 	bash -c ./nest.sh
+
+.PHONY: drash
+drash: ## drash demo
+	deno run --allow-net drash.ts

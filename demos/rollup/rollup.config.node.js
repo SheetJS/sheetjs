@@ -1,6 +1,5 @@
 /* xlsx.js (C) 2013-present SheetJS -- http://sheetjs.com */
 import resolve from '@rollup/plugin-node-resolve';
-import commonjs from '@rollup/plugin-commonjs';
 export default {
 	input: 'main.js',
 	output: {
@@ -12,7 +11,6 @@ export default {
 		resolve({
 			module: false,
 			browser: true,
-		}),
-		commonjs()
+		})
 	],
 };

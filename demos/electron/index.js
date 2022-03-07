@@ -1,6 +1,6 @@
 /* xlsx.js (C) 2013-present SheetJS -- https://sheetjs.com */
 const XLSX = require('xlsx');
-const electron = require('electron').remote;
+const electron = require('@electron/remote');
 
 const EXTENSIONS = "xls|xlsx|xlsm|xlsb|xml|csv|txt|dif|sylk|slk|prn|ods|fods|htm|html".split("|");
 
