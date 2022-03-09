@@ -1,0 +1,18 @@
+{
+	"extends": "dtslint/dtslint.json",
+	"rules": {
+		"no-implicit-dependencies": false,
+		"whitespace": false,
+		"no-sparse-arrays": false,
+		"only-arrow-functions": false,
+		"no-consecutive-blank-lines": false,
+		"prefer-conditional-expression": false,
+		"one-variable-per-declaration": false,
+		"strict-export-declare-modifiers": false,
+		"no-redundant-jsdoc": false,
+		"no-any-union": false,
+		"no-unnecessary-generics": false,
+		"no-unnecessary-type-assertion": false,
+		"prefer-template": false
+	}
+}

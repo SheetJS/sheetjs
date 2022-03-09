@@ -1,0 +1,24 @@
+{
+	"env": { "shared-node-browser":true },
+	"globals": {},
+	"parserOptions": {
+		"ecmaVersion": 3
+	},
+	"plugins": [ "html", "json" ],
+	"extends": "eslint:recommended",
+	"rules": {
+		"comma-style": [ 2, "last" ],
+		"comma-dangle": [ 2, "never" ],
+		"curly": 0,
+		"no-bitwise": 0,
+		"no-console": 0,
+		"no-control-regex": 0,
+		"no-empty": 0,
+		"no-trailing-spaces": 2,
+		"no-use-before-define": [ 1, {
+			"functions":false, "classes":true, "variables":false
+		}],
+		"no-useless-escape": 0,
+		"semi": [ 2, "always" ]
+	}
+}

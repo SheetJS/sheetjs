@@ -1,0 +1,45 @@
+language: node_js
+dist: xenial
+node_js:
+  - "14"
+  - "13"
+  - "12"
+  - "11"
+  - "10"
+  - "9"
+  - "8"
+  - "7"
+  - "6"
+  - "5"
+  - "4"
+  - "0.12"
+  - "0.10"
+  - "0.8"
+matrix:
+  include:
+    - node_js: "14"
+      env: TZ="America/New_York"
+    - node_js: "12"
+      env: TZ="America/Los_Angeles"
+    - node_js: "10"
+      env: TZ="Europe/London"
+    - node_js: "8"
+      env: TZ="Europe/Berlin"
+    - node_js: "6"
+      env: TZ="Asia/Kolkata"
+    - node_js: "4"
+      env: TZ="Asia/Shanghai"
+    - node_js: "0.12"
+      env: TZ="Asia/Seoul"
+
+before_install:
+  - "npm config set strict-ssl false"
+  - "./misc/node_version.sh"
+  - "npm install -g mocha@2.x voc"
+  - "npm install blanket"
+  - "npm install word"
+  - "npm install coveralls mocha-lcov-reporter"
+install:
+  - npm install
+after_success:
+  - "make coveralls"

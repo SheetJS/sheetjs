@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<!-- ssf.js (C) 2013-present  SheetJS http://sheetjs.com -->
+<!-- vim: set ts=2: -->
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>SSF Live Demo</title>
+<style>
+a { text-decoration: none }
+</style>
+</head>
+<body>
+<pre>
+<b><a href="http://sheetjs.com">SSF (Spreadsheet Number Format) Live Demo</a></b>
+
+<a href="https://github.com/SheetJS/ssf">Source Code Repo</a>
+<a href="https://github.com/SheetJS/ssf/issues">Issues?  Something look weird?  Click here and report an issue</a>
+</pre>
+<table>
+	<tr><td><b>Format code:</b></td><td><input type="text" id="fmt" value="General"></td></tr>
+	<tr><td><b>Value:</b></td><td><input type="text" id="val" value="3.1415926535"></td></tr>
+	<tr><td colspan="2">&nbsp;</td></tr>
+	<tr><td><b>Formatted Number:</b></td><td><pre id="num"></pre></td></tr>
+	<tr><td><b>Formatted Text</b></td><td><pre id="txt"></pre></td></tr>
+</table>
+<script src="ssf.js"></script>
+<script>
+/*jshint browser:true */
+/*eslint-env browser */
+/*eslint no-use-before-define:0 */
+/*global SSF */
+var F = document.getElementById('fmt');
+var V = document.getElementById('val');
+var N = document.getElementById('num');
+var T = document.getElementById('txt');
+
+function update() {
+	try {
+		N.innerHTML = SSF.format(F.value, Number(V.value));
+	} catch(e) { N.innerHTML = e; }
+	try {
+		T.innerHTML = SSF.format(F.value, V.value);
+	} catch(e) { T.innerHTML = e; }
+}
+
+/* Bind to relevant events */
+if(F.addEventListener) {
+	F.addEventListener('keyup', update);
+	V.addEventListener('keyup', update);
+} else if(F.attachEvent) {
+	F.attachEvent('onkeyup', update);
+	V.attachEvent('onkeyup', update);
+} else {
+	F.oninput = update;
+	V.oninput = update;
+}
+
+update();
+	var _gaq = _gaq || [];
+	_gaq.push(['_setAccount', 'UA-36810333-1']);
+	_gaq.push(['_trackPageview']);
+
+	(function() {
+		var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+		ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+		var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+	})();
+</script>
+</body>
+</html>
