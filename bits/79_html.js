@@ -38,7 +38,7 @@ var HTML_ = (function() {
 				m = htmldecode(m);
 				if(range.s.r > R) range.s.r = R; if(range.e.r < R) range.e.r = R;
 				if(range.s.c > C) range.s.c = C; if(range.e.c < C) range.e.c = C;
-				if(!m.length) continue;
+				if(!m.length) { C += CS; continue; }
 				var o/*:Cell*/ = {t:'s', v:m};
 				if(opts.raw || !m.trim().length || _t == 's'){}
 				else if(m === 'TRUE') o = {t:'b', v:true};
