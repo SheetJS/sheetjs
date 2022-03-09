@@ -12,6 +12,7 @@ export {
 	writeSyncXLSX as writeXLSX,
 	writeFileSyncXLSX as writeFileXLSX,
 	utils,
+	__stream as stream,
 	SSF,
 	CFB
 };

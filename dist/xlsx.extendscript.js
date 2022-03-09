@@ -3830,6 +3830,17 @@ function write_vt(s, xlsx) {
 	throw new Error("Unable to serialize " + s);
 }
 
+function xlml_normalize(d) {
+	if(has_buf && Buffer.isBuffer(d)) return d.toString('utf8');
+	if(typeof d === 'string') return d;
+	/* duktape */
+	if(typeof Uint8Array !== 'undefined' && d instanceof Uint8Array) return utf8read(a2s(ab2a(d)));
+	throw new Error("Bad input format: expected Buffer or string");
+}
+/* UOS uses CJK in tags */
+var xlmlregex = /<(\/?)([^\s?><!\/:]*:|)([^\s?<>:\/]+)(?:[\s?:\/][^>]*)?>/mg;
+//var xlmlregex = /<(\/?)([a-z0-9]*:|)(\w+)[^>]*>/mg;
+
 var XMLNS = ({
 	'dc': 'http://purl.org/dc/elements/1.1/',
 	'dcterms': 'http://purl.org/dc/terms/',
@@ -17196,18 +17207,7 @@ function xlml_clean_comment(comment) {
 	comment.v = comment.w = comment.ixfe = undefined;
 }
 
-function xlml_normalize(d) {
-	if(has_buf && Buffer.isBuffer(d)) return d.toString('utf8');
-	if(typeof d === 'string') return d;
-	/* duktape */
-	if(typeof Uint8Array !== 'undefined' && d instanceof Uint8Array) return utf8read(a2s(ab2a(d)));
-	throw new Error("Bad input format: expected Buffer or string");
-}
-
 /* TODO: Everything */
-/* UOS uses CJK in tags */
-var xlmlregex = /<(\/?)([^\s?><!\/:]*:|)([^\s?<>:\/]+)(?:[\s?:\/][^>]*)?>/mg;
-//var xlmlregex = /<(\/?)([a-z0-9]*:|)(\w+)[^>]*>/mg;
 function parse_xlml_xml(d, _opts) {
 	var opts = _opts || {};
 	make_ssf(SSF);
@@ -21033,7 +21033,7 @@ var HTML_ = (function() {
 		return ws;
 	}
 	function html_to_book(str, opts) {
-		var mtch = str.match(/<table.*?>[\s\S]*?<\/table>/gi);
+		var mtch = str.match(/<table[\s\S]*?>[\s\S]*?<\/table>/gi);
 		if(!mtch || mtch.length == 0) throw new Error("Invalid HTML: could not find <table>");
 		if(mtch.length == 1) return sheet_to_workbook(html_to_sheet(mtch[0], opts), opts);
 		var wb = utils.book_new();
@@ -23739,7 +23739,7 @@ function sheet_to_json(sheet, opts) {
 				if(val == null) val = {w: "__EMPTY", t: "s"};
 				vv = v = format_cell(val, null, o);
 				counter = 0;
-				for(CC = 0; CC < hdr.length; ++CC) if(hdr[CC] == vv) vv = v + "_" + (++counter);
+				for(CC = 0; CC < hdr.length; ++CC) if(hdr[CC] == vv) { vv = v + "_" + (++counter); CC = -1; }
 				hdr[C] = vv;
 		}
 	}
@@ -23788,12 +23788,13 @@ function sheet_to_csv(sheet, opts) {
 	var colinfo = o.skipHidden && sheet["!cols"] || [];
 	var rowinfo = o.skipHidden && sheet["!rows"] || [];
 	for(var C = r.s.c; C <= r.e.c; ++C) if (!((colinfo[C]||{}).hidden)) cols[C] = encode_col(C);
+	var w = 0;
 	for(var R = r.s.r; R <= r.e.r; ++R) {
 		if ((rowinfo[R]||{}).hidden) continue;
 		row = make_csv_row(sheet, r, R, cols, fs, rs, FS, o);
 		if(row == null) { continue; }
 		if(o.strip) row = row.replace(endregex,"");
-		out.push(row + RS);
+		if(row || (o.blankrows !== false)) out.push((w++ ? RS : "") + row);
 	}
 	delete o.dense;
 	return out.join("");
@@ -24048,131 +24049,126 @@ utils.sheet_set_array_formula = function(ws, range, formula, dynamic) {
 return utils;
 })(utils);
 
-if(has_buf && typeof require != 'undefined') (function() {
-	var strmod = undefined;
-	if(!strmod) return;
-	var Readable = strmod.Readable;
-	if(!Readable) return;
+var _Readable;
+function set_readable(R) { _Readable = R; }
 
-	var write_csv_stream = function(sheet, opts) {
-		var stream = Readable();
-		var o = opts == null ? {} : opts;
-		if(sheet == null || sheet["!ref"] == null) { stream.push(null); return stream; }
-		var r = safe_decode_range(sheet["!ref"]);
-		var FS = o.FS !== undefined ? o.FS : ",", fs = FS.charCodeAt(0);
-		var RS = o.RS !== undefined ? o.RS : "\n", rs = RS.charCodeAt(0);
-		var endregex = new RegExp((FS=="|" ? "\\|" : FS)+"+$");
-		var row = "", cols = [];
-		o.dense = Array.isArray(sheet);
-		var colinfo = o.skipHidden && sheet["!cols"] || [];
-		var rowinfo = o.skipHidden && sheet["!rows"] || [];
-		for(var C = r.s.c; C <= r.e.c; ++C) if (!((colinfo[C]||{}).hidden)) cols[C] = encode_col(C);
-		var R = r.s.r;
-		var BOM = false;
-		stream._read = function() {
-			if(!BOM) { BOM = true; return stream.push("\uFEFF"); }
-			while(R <= r.e.r) {
-				++R;
-				if ((rowinfo[R-1]||{}).hidden) continue;
-				row = make_csv_row(sheet, r, R-1, cols, fs, rs, FS, o);
-				if(row != null) {
-					if(o.strip) row = row.replace(endregex,"");
-					stream.push(row + RS);
-					break;
-				}
-			}
-			if(R > r.e.r) return stream.push(null);
-		};
-		return stream;
-	};
-
-	var write_html_stream = function(ws, opts) {
-		var stream = Readable();
-
-		var o = opts || {};
-		var header = o.header != null ? o.header : HTML_.BEGIN;
-		var footer = o.footer != null ? o.footer : HTML_.END;
-		stream.push(header);
-		var r = decode_range(ws['!ref']);
-		o.dense = Array.isArray(ws);
-		stream.push(HTML_._preamble(ws, r, o));
-		var R = r.s.r;
-		var end = false;
-		stream._read = function() {
-			if(R > r.e.r) {
-				if(!end) { end = true; stream.push("</table>" + footer); }
-				return stream.push(null);
-			}
-			while(R <= r.e.r) {
-				stream.push(HTML_._row(ws, r, R, o));
-				++R;
-				break;
-			}
-		};
-		return stream;
-	};
-
-	var write_json_stream = function(sheet, opts) {
-		var stream = Readable({objectMode:true});
-
-		if(sheet == null || sheet["!ref"] == null) { stream.push(null); return stream; }
-		var val = {t:'n',v:0}, header = 0, offset = 1, hdr = [], v=0, vv="";
-		var r = {s:{r:0,c:0},e:{r:0,c:0}};
-		var o = opts || {};
-		var range = o.range != null ? o.range : sheet["!ref"];
-		if(o.header === 1) header = 1;
-		else if(o.header === "A") header = 2;
-		else if(Array.isArray(o.header)) header = 3;
-		switch(typeof range) {
-			case 'string': r = safe_decode_range(range); break;
-			case 'number': r = safe_decode_range(sheet["!ref"]); r.s.r = range; break;
-			default: r = range;
-		}
-		if(header > 0) offset = 0;
-		var rr = encode_row(r.s.r);
-		var cols = [];
-		var counter = 0;
-		var dense = Array.isArray(sheet);
-		var R = r.s.r, C = 0, CC = 0;
-		if(dense && !sheet[R]) sheet[R] = [];
-		for(C = r.s.c; C <= r.e.c; ++C) {
-			cols[C] = encode_col(C);
-			val = dense ? sheet[R][C] : sheet[cols[C] + rr];
-			switch(header) {
-				case 1: hdr[C] = C - r.s.c; break;
-				case 2: hdr[C] = cols[C]; break;
-				case 3: hdr[C] = o.header[C - r.s.c]; break;
-				default:
-					if(val == null) val = {w: "__EMPTY", t: "s"};
-					vv = v = format_cell(val, null, o);
-					counter = 0;
-					for(CC = 0; CC < hdr.length; ++CC) if(hdr[CC] == vv) vv = v + "_" + (++counter);
-					hdr[C] = vv;
+function write_csv_stream(sheet, opts) {
+	var stream = _Readable();
+	var o = opts == null ? {} : opts;
+	if(sheet == null || sheet["!ref"] == null) { stream.push(null); return stream; }
+	var r = safe_decode_range(sheet["!ref"]);
+	var FS = o.FS !== undefined ? o.FS : ",", fs = FS.charCodeAt(0);
+	var RS = o.RS !== undefined ? o.RS : "\n", rs = RS.charCodeAt(0);
+	var endregex = new RegExp((FS=="|" ? "\\|" : FS)+"+$");
+	var row = "", cols = [];
+	o.dense = Array.isArray(sheet);
+	var colinfo = o.skipHidden && sheet["!cols"] || [];
+	var rowinfo = o.skipHidden && sheet["!rows"] || [];
+	for(var C = r.s.c; C <= r.e.c; ++C) if (!((colinfo[C]||{}).hidden)) cols[C] = encode_col(C);
+	var R = r.s.r;
+	var BOM = false, w = 0;
+	stream._read = function() {
+		if(!BOM) { BOM = true; return stream.push("\uFEFF"); }
+		while(R <= r.e.r) {
+			++R;
+			if ((rowinfo[R-1]||{}).hidden) continue;
+			row = make_csv_row(sheet, r, R-1, cols, fs, rs, FS, o);
+			if(row != null) {
+				if(o.strip) row = row.replace(endregex,"");
+				if(row || (o.blankrows !== false)) return stream.push((w++ ? RS : "") + row);
 			}
 		}
-		R = r.s.r + offset;
-		stream._read = function() {
-			if(R > r.e.r) return stream.push(null);
-			while(R <= r.e.r) {
-				//if ((rowinfo[R-1]||{}).hidden) continue;
-				var row = make_json_row(sheet, r, R, cols, header, hdr, dense, o);
-				++R;
-				if((row.isempty === false) || (header === 1 ? o.blankrows !== false : !!o.blankrows)) {
-					stream.push(row.row);
-					break;
-				}
+		return stream.push(null);
+	};
+	return stream;
+}
+
+function write_html_stream(ws, opts) {
+	var stream = _Readable();
+
+	var o = opts || {};
+	var header = o.header != null ? o.header : HTML_.BEGIN;
+	var footer = o.footer != null ? o.footer : HTML_.END;
+	stream.push(header);
+	var r = decode_range(ws['!ref']);
+	o.dense = Array.isArray(ws);
+	stream.push(HTML_._preamble(ws, r, o));
+	var R = r.s.r;
+	var end = false;
+	stream._read = function() {
+		if(R > r.e.r) {
+			if(!end) { end = true; stream.push("</table>" + footer); }
+			return stream.push(null);
+		}
+		while(R <= r.e.r) {
+			stream.push(HTML_._row(ws, r, R, o));
+			++R;
+			break;
+		}
+	};
+	return stream;
+}
+
+function write_json_stream(sheet, opts) {
+	var stream = _Readable({objectMode:true});
+
+	if(sheet == null || sheet["!ref"] == null) { stream.push(null); return stream; }
+	var val = {t:'n',v:0}, header = 0, offset = 1, hdr = [], v=0, vv="";
+	var r = {s:{r:0,c:0},e:{r:0,c:0}};
+	var o = opts || {};
+	var range = o.range != null ? o.range : sheet["!ref"];
+	if(o.header === 1) header = 1;
+	else if(o.header === "A") header = 2;
+	else if(Array.isArray(o.header)) header = 3;
+	switch(typeof range) {
+		case 'string': r = safe_decode_range(range); break;
+		case 'number': r = safe_decode_range(sheet["!ref"]); r.s.r = range; break;
+		default: r = range;
+	}
+	if(header > 0) offset = 0;
+	var rr = encode_row(r.s.r);
+	var cols = [];
+	var counter = 0;
+	var dense = Array.isArray(sheet);
+	var R = r.s.r, C = 0, CC = 0;
+	if(dense && !sheet[R]) sheet[R] = [];
+	for(C = r.s.c; C <= r.e.c; ++C) {
+		cols[C] = encode_col(C);
+		val = dense ? sheet[R][C] : sheet[cols[C] + rr];
+		switch(header) {
+			case 1: hdr[C] = C - r.s.c; break;
+			case 2: hdr[C] = cols[C]; break;
+			case 3: hdr[C] = o.header[C - r.s.c]; break;
+			default:
+				if(val == null) val = {w: "__EMPTY", t: "s"};
+				vv = v = format_cell(val, null, o);
+				counter = 0;
+				for(CC = 0; CC < hdr.length; ++CC) if(hdr[CC] == vv) vv = v + "_" + (++counter);
+				hdr[C] = vv;
+		}
+	}
+	R = r.s.r + offset;
+	stream._read = function() {
+		while(R <= r.e.r) {
+			//if ((rowinfo[R-1]||{}).hidden) continue;
+			var row = make_json_row(sheet, r, R, cols, header, hdr, dense, o);
+			++R;
+			if((row.isempty === false) || (header === 1 ? o.blankrows !== false : !!o.blankrows)) {
+				stream.push(row.row);
+				return;
 			}
-		};
-		return stream;
+		}
+		return stream.push(null);
 	};
+	return stream;
+};
 
-	XLSX.stream = {
-		to_json: write_json_stream,
-		to_html: write_html_stream,
-		to_csv: write_csv_stream
-	};
-})();
-
+var __stream = {
+	to_json: write_json_stream,
+	to_html: write_html_stream,
+	to_csv: write_csv_stream,
+  set_readable: set_readable
+};
 if(typeof parse_xlscfb !== "undefined") XLSX.parse_xlscfb = parse_xlscfb;
 XLSX.parse_zip = parse_zip;
 XLSX.read = readSync; //xlsread
@@ -24186,7 +24182,12 @@ XLSX.utils = utils;
 XLSX.writeXLSX = writeSyncXLSX;
 XLSX.writeFileXLSX = writeFileSyncXLSX;
 XLSX.SSF = SSF;
+if(typeof __stream !== "undefined") XLSX.stream = __stream;
 if(typeof CFB !== "undefined") XLSX.CFB = CFB;
+if(typeof require !== "undefined") {
+  var strmod = undefined;
+  if((strmod||{}).Readable) set_readable(strmod.Readable);
+}
 }
 /*global define */
 if(typeof exports !== 'undefined') make_xlsx_lib(exports);

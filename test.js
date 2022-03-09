@@ -1837,6 +1837,14 @@ describe('json output', function() {
 			assert.equal(json[i].S_1, 7 + i);
 		}
 	});
+	it('should handle collisions in disambiguation', function() {
+		var _data = [["a_1","a","a"],[1,2,3]];
+		var _ws = X.utils.aoa_to_sheet(_data);
+		var json = X.utils.sheet_to_json(_ws);
+		assert.equal(json[0].a, 2);
+		assert.equal(json[0].a_1, 1);
+		assert.equal(json[0].a_2, 3);
+	});
 	it('should handle raw data if requested', function() {
 		var _ws = X.utils.aoa_to_sheet(data, {cellDates:true});
 		var json = X.utils.sheet_to_json(_ws, {header:1, raw:true});
@@ -2086,6 +2094,13 @@ describe('CSV', function() {
 			ws["!cols"] = [{hidden:true},null,null,null];
 			assert.equal(X.utils.sheet_to_csv(ws, {skipHidden:true}), "2,3,\nFALSE,,sheetjs\nbar,2/19/14,0.3\n,,\n,qux,");
 			delete ws["!cols"];
+		});
+		it('should properly handle blankrows and strip options', function() {
+			var _ws = X.utils.aoa_to_sheet([[""],[],["", ""]]);
+			assert.equal(X.utils.sheet_to_csv(_ws, {}), ",\n,\n,");
+			assert.equal(X.utils.sheet_to_csv(_ws, {strip: true}), "\n\n");
+			assert.equal(X.utils.sheet_to_csv(_ws, {blankrows: false}), ",\n,");
+			assert.equal(X.utils.sheet_to_csv(_ws, {blankrows: false, strip: true}), "");
 		});
 	});
 });

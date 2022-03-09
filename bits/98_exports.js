@@ -11,4 +11,9 @@ XLSX.utils = utils;
 XLSX.writeXLSX = writeSyncXLSX;
 XLSX.writeFileXLSX = writeFileSyncXLSX;
 XLSX.SSF = SSF;
+if(typeof __stream !== "undefined") XLSX.stream = __stream;
 if(typeof CFB !== "undefined") XLSX.CFB = CFB;
+if(typeof require !== "undefined") {
+  var strmod = require('stream');
+  if((strmod||{}).Readable) set_readable(strmod.Readable);
+}

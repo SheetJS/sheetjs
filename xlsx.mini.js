@@ -3653,6 +3653,17 @@ function write_vt(s, xlsx) {
 	throw new Error("Unable to serialize " + s);
 }
 
+function xlml_normalize(d) {
+	if(has_buf && Buffer.isBuffer(d)) return d.toString('utf8');
+	if(typeof d === 'string') return d;
+	/* duktape */
+	if(typeof Uint8Array !== 'undefined' && d instanceof Uint8Array) return utf8read(a2s(ab2a(d)));
+	throw new Error("Bad input format: expected Buffer or string");
+}
+/* UOS uses CJK in tags */
+var xlmlregex = /<(\/?)([^\s?><!\/:]*:|)([^\s?<>:\/]+)(?:[\s?:\/][^>]*)?>/mg;
+//var xlmlregex = /<(\/?)([a-z0-9]*:|)(\w+)[^>]*>/mg;
+
 var XMLNS = ({
 	'dc': 'http://purl.org/dc/elements/1.1/',
 	'dcterms': 'http://purl.org/dc/terms/',
@@ -9095,7 +9106,7 @@ var HTML_ = (function() {
 		return ws;
 	}
 	function html_to_book(str, opts) {
-		var mtch = str.match(/<table.*?>[\s\S]*?<\/table>/gi);
+		var mtch = str.match(/<table[\s\S]*?>[\s\S]*?<\/table>/gi);
 		if(!mtch || mtch.length == 0) throw new Error("Invalid HTML: could not find <table>");
 		if(mtch.length == 1) return sheet_to_workbook(html_to_sheet(mtch[0], opts), opts);
 		var wb = utils.book_new();
@@ -11134,7 +11145,7 @@ function sheet_to_json(sheet, opts) {
 				if(val == null) val = {w: "__EMPTY", t: "s"};
 				vv = v = format_cell(val, null, o);
 				counter = 0;
-				for(CC = 0; CC < hdr.length; ++CC) if(hdr[CC] == vv) vv = v + "_" + (++counter);
+				for(CC = 0; CC < hdr.length; ++CC) if(hdr[CC] == vv) { vv = v + "_" + (++counter); CC = -1; }
 				hdr[C] = vv;
 		}
 	}
@@ -11183,12 +11194,13 @@ function sheet_to_csv(sheet, opts) {
 	var colinfo = o.skipHidden && sheet["!cols"] || [];
 	var rowinfo = o.skipHidden && sheet["!rows"] || [];
 	for(var C = r.s.c; C <= r.e.c; ++C) if (!((colinfo[C]||{}).hidden)) cols[C] = encode_col(C);
+	var w = 0;
 	for(var R = r.s.r; R <= r.e.r; ++R) {
 		if ((rowinfo[R]||{}).hidden) continue;
 		row = make_csv_row(sheet, r, R, cols, fs, rs, FS, o);
 		if(row == null) { continue; }
 		if(o.strip) row = row.replace(endregex,"");
-		out.push(row + RS);
+		if(row || (o.blankrows !== false)) out.push((w++ ? RS : "") + row);
 	}
 	delete o.dense;
 	return out.join("");
@@ -11456,7 +11468,12 @@ XLSX.utils = utils;
 XLSX.writeXLSX = writeSyncXLSX;
 XLSX.writeFileXLSX = writeFileSyncXLSX;
 XLSX.SSF = SSF;
+if(typeof __stream !== "undefined") XLSX.stream = __stream;
 if(typeof CFB !== "undefined") XLSX.CFB = CFB;
+if(typeof require !== "undefined") {
+  var strmod = require('stream');
+  if((strmod||{}).Readable) set_readable(strmod.Readable);
+}
 }
 /*global define */
 if(typeof exports !== 'undefined') make_xlsx_lib(exports);

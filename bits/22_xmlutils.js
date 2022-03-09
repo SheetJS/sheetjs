@@ -238,6 +238,17 @@ function write_vt(s, xlsx/*:?boolean*/)/*:string*/ {
 	throw new Error("Unable to serialize " + s);
 }
 
+function xlml_normalize(d)/*:string*/ {
+	if(has_buf &&/*::typeof Buffer !== "undefined" && d != null && d instanceof Buffer &&*/ Buffer.isBuffer(d)) return d.toString('utf8');
+	if(typeof d === 'string') return d;
+	/* duktape */
+	if(typeof Uint8Array !== 'undefined' && d instanceof Uint8Array) return utf8read(a2s(ab2a(d)));
+	throw new Error("Bad input format: expected Buffer or string");
+}
+/* UOS uses CJK in tags */
+var xlmlregex = /<(\/?)([^\s?><!\/:]*:|)([^\s?<>:\/]+)(?:[\s?:\/][^>]*)?>/mg;
+//var xlmlregex = /<(\/?)([a-z0-9]*:|)(\w+)[^>]*>/mg;
+
 var XMLNS = ({
 	'dc': 'http://purl.org/dc/elements/1.1/',
 	'dcterms': 'http://purl.org/dc/terms/',

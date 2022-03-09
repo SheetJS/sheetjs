@@ -438,8 +438,11 @@ takes an options argument:
 | array of strings | Use specified strings as keys in row objects              |
 | (default)        | Read and disambiguate first row as keys                   |
 
-If header is not `1`, the row object will contain the non-enumerable property
-`__rowNum__` that represents the row of the sheet corresponding to the entry.
+- If header is not `1`, the row object will contain the non-enumerable property
+  `__rowNum__` that represents the row of the sheet corresponding to the entry.
+- If header is an array, the keys will not be disambiguated.  This can lead to
+  unexpected results if the array values are not unique!
+
 
 <details>
   <summary><b>Examples</b> (click to show)</summary>

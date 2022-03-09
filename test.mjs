@@ -1442,8 +1442,8 @@ describe('write features', function() {
 		var wb = X.utils.book_new();
 		X.utils.book_append_sheet(wb, X.utils.aoa_to_sheet([[1,2],[3,4]]), "Sheet1");
 		X.utils.book_append_sheet(wb, X.utils.aoa_to_sheet([[5,6],[7,8]]), "Sheet2");
-		assert.equal(X.write(wb, {type:"string", bookType:"csv", sheet:"Sheet1"}), "1,2\n3,4\n");
-		assert.equal(X.write(wb, {type:"string", bookType:"csv", sheet:"Sheet2"}), "5,6\n7,8\n");
+		assert.equal(X.write(wb, {type:"string", bookType:"csv", sheet:"Sheet1"}), "1,2\n3,4");
+		assert.equal(X.write(wb, {type:"string", bookType:"csv", sheet:"Sheet2"}), "5,6\n7,8");
 		assert.throws(function() { X.write(wb, {type:"string", bookType:"csv", sheet:"Sheet3"}); });
 	});
 });
@@ -1823,6 +1823,14 @@ describe('json output', function() {
 			assert.equal(json[i].S_1, 7 + i);
 		}
 	});
+	it('should handle collisions in disambiguation', function() {
+		var _data = [["a_1","a","a"],[1,2,3]];
+		var _ws = X.utils.aoa_to_sheet(_data);
+		var json = X.utils.sheet_to_json(_ws);
+		assert.equal(json[0].a, 2);
+		assert.equal(json[0].a_1, 1);
+		assert.equal(json[0].a_2, 3);
+	});
 	it('should handle raw data if requested', function() {
 		var _ws = X.utils.aoa_to_sheet(data, {cellDates:true});
 		var json = X.utils.sheet_to_json(_ws, {header:1, raw:true});
@@ -2016,7 +2024,7 @@ describe('CSV', function() {
 		if(typeof before != 'undefined') before(bef);
 		else it('before', bef);
 		it('should generate csv', function() {
-			var baseline = "1,2,3,\nTRUE,FALSE,,sheetjs\nfoo,bar,2/19/14,0.3\n,,,\nbaz,,qux,\n";
+			var baseline = "1,2,3,\nTRUE,FALSE,,sheetjs\nfoo,bar,2/19/14,0.3\n,,,\nbaz,,qux,";
 			assert.equal(baseline, X.utils.sheet_to_csv(ws));
 		});
 		it('should handle FS', function() {
@@ -2028,18 +2036,18 @@ describe('CSV', function() {
 			assert.equal(X.utils.sheet_to_csv(ws, {RS:";"}).replace(/[;]/g,"\n"), X.utils.sheet_to_csv(ws));
 		});
 		it('should handle dateNF', function() {
-			var baseline = "1,2,3,\nTRUE,FALSE,,sheetjs\nfoo,bar,20140219,0.3\n,,,\nbaz,,qux,\n";
+			var baseline = "1,2,3,\nTRUE,FALSE,,sheetjs\nfoo,bar,20140219,0.3\n,,,\nbaz,,qux,";
 			var _ws =  X.utils.aoa_to_sheet(data, {cellDates:true});
 			delete get_cell(_ws,"C3").w;
 			delete get_cell(_ws,"C3").z;
 			assert.equal(baseline, X.utils.sheet_to_csv(_ws, {dateNF:"YYYYMMDD"}));
 		});
 		it('should handle strip', function() {
-			var baseline = "1,2,3\nTRUE,FALSE,,sheetjs\nfoo,bar,2/19/14,0.3\n\nbaz,,qux\n";
+			var baseline = "1,2,3\nTRUE,FALSE,,sheetjs\nfoo,bar,2/19/14,0.3\n\nbaz,,qux";
 			assert.equal(baseline, X.utils.sheet_to_csv(ws, {strip:true}));
 		});
 		it('should handle blankrows', function() {
-			var baseline = "1,2,3,\nTRUE,FALSE,,sheetjs\nfoo,bar,2/19/14,0.3\nbaz,,qux,\n";
+			var baseline = "1,2,3,\nTRUE,FALSE,,sheetjs\nfoo,bar,2/19/14,0.3\nbaz,,qux,";
 			assert.equal(baseline, X.utils.sheet_to_csv(ws, {blankrows:false}));
 		});
 		it('should handle various line endings', function() {
@@ -2052,26 +2060,33 @@ describe('CSV', function() {
 			});
 		});
 		it('should handle skipHidden for rows if requested', function() {
-			var baseline = "1,2,3,\nTRUE,FALSE,,sheetjs\nfoo,bar,2/19/14,0.3\n,,,\nbaz,,qux,\n";
+			var baseline = "1,2,3,\nTRUE,FALSE,,sheetjs\nfoo,bar,2/19/14,0.3\n,,,\nbaz,,qux,";
 			delete ws["!rows"];
 			assert.equal(X.utils.sheet_to_csv(ws), baseline);
 			assert.equal(X.utils.sheet_to_csv(ws, {skipHidden:true}), baseline);
 			ws["!rows"] = [null,{hidden:true},null,null];
 			assert.equal(X.utils.sheet_to_csv(ws), baseline);
-			assert.equal(X.utils.sheet_to_csv(ws, {skipHidden:true}), "1,2,3,\nfoo,bar,2/19/14,0.3\n,,,\nbaz,,qux,\n");
+			assert.equal(X.utils.sheet_to_csv(ws, {skipHidden:true}), "1,2,3,\nfoo,bar,2/19/14,0.3\n,,,\nbaz,,qux,");
 			delete ws["!rows"];
 		});
 		it('should handle skipHidden for columns if requested', function() {
-			var baseline = "1,2,3,\nTRUE,FALSE,,sheetjs\nfoo,bar,2/19/14,0.3\n,,,\nbaz,,qux,\n";
+			var baseline = "1,2,3,\nTRUE,FALSE,,sheetjs\nfoo,bar,2/19/14,0.3\n,,,\nbaz,,qux,";
 			delete ws["!cols"];
 			assert.equal(X.utils.sheet_to_csv(ws), baseline);
 			assert.equal(X.utils.sheet_to_csv(ws, {skipHidden:true}), baseline);
 			ws["!cols"] = [null,{hidden:true},null,null];
 			assert.equal(X.utils.sheet_to_csv(ws), baseline);
-			assert.equal(X.utils.sheet_to_csv(ws, {skipHidden:true}), "1,3,\nTRUE,,sheetjs\nfoo,2/19/14,0.3\n,,\nbaz,qux,\n");
+			assert.equal(X.utils.sheet_to_csv(ws, {skipHidden:true}), "1,3,\nTRUE,,sheetjs\nfoo,2/19/14,0.3\n,,\nbaz,qux,");
 			ws["!cols"] = [{hidden:true},null,null,null];
-			assert.equal(X.utils.sheet_to_csv(ws, {skipHidden:true}), "2,3,\nFALSE,,sheetjs\nbar,2/19/14,0.3\n,,\n,qux,\n");
+			assert.equal(X.utils.sheet_to_csv(ws, {skipHidden:true}), "2,3,\nFALSE,,sheetjs\nbar,2/19/14,0.3\n,,\n,qux,");
 			delete ws["!cols"];
+		});
+		it('should properly handle blankrows and strip options', function() {
+			var _ws = X.utils.aoa_to_sheet([[""],[],["", ""]]);
+			assert.equal(X.utils.sheet_to_csv(_ws, {}), ",\n,\n,");
+			assert.equal(X.utils.sheet_to_csv(_ws, {strip: true}), "\n\n");
+			assert.equal(X.utils.sheet_to_csv(_ws, {blankrows: false}), ",\n,");
+			assert.equal(X.utils.sheet_to_csv(_ws, {blankrows: false, strip: true}), "");
 		});
 	});
 });
@@ -2249,11 +2264,11 @@ describe('HTML', function() {
 		var html = "<table><thead><tr><th>A</th><th>B</th></tr></thead><tbody><tr><td>1</td><td>2</td></tr><tr><td>3</td><td>4</td></tr></tbody><tfoot><tr><th>4</th><th>6</th></tr></tfoot></table>";
 		it('HTML string', function() {
 			var ws = X.read(html, {type:'string'}).Sheets.Sheet1;
-			assert.equal(X.utils.sheet_to_csv(ws),  "A,B\n1,2\n3,4\n4,6\n");
+			assert.equal(X.utils.sheet_to_csv(ws),  "A,B\n1,2\n3,4\n4,6");
 		});
 		if(domtest) it('DOM', function() {
 			var ws = X.utils.table_to_sheet(get_dom_element(html));
-			assert.equal(X.utils.sheet_to_csv(ws),  "A,B\n1,2\n3,4\n4,6\n");
+			assert.equal(X.utils.sheet_to_csv(ws),  "A,B\n1,2\n3,4\n4,6");
 		});
 	});
 });

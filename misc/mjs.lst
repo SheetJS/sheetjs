@@ -77,4 +77,5 @@ bits/87_read.js
 bits/88_write.js
 bits/90_utils.js
 bits/95_api.js
+bits/97_node.js
 misc/98_esmxport.js

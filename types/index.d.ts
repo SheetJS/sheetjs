@@ -868,4 +868,6 @@ export interface StreamUtils {
     to_html(sheet: WorkSheet, opts?: Sheet2HTMLOpts): any;
     /** JSON object stream, generate one row at a time */
     to_json(sheet: WorkSheet, opts?: Sheet2JSONOpts): any;
+    /** Set `Readable` (internal) */
+    set_readable(Readable: any): void;
 }
