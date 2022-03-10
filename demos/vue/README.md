@@ -1,4 +1,4 @@
-# VueJS 2
+# VueJS
 
 The `xlsx.core.min.js` and `xlsx.full.min.js` scripts are designed to be dropped
 into web pages with script tags:
@@ -10,7 +10,11 @@ into web pages with script tags:
 The library can also be imported directly from single-file components with:
 
 ```js
-import XLSX from 'xlsx';
+// full import
+import * as XLSX from 'xlsx';
+
+// named imports
+import { read, utils, writeFileXLSX } from 'xlsx';
 ```
 
 This demo directly generates HTML using `sheet_to_html` and adds an element to
@@ -93,19 +97,30 @@ fs.writeFileSync("sheetjs.xls", new Buffer(str, "base64"));
 
 ## Other Demos
 
-#### Server-Rendered VueJS Components with Nuxt.js
+### Nuxt Content
 
-The scripts should be treated as external resources in `nuxt.config.js`:
+`@nuxt/content` parser can be extended to support spreadsheet hot reload:
 
 ```js
-module.exports = {
-	head: {
-		script: [
-			{ src: "https://unpkg.com/xlsx/dist/shim.min.js" },
-			{ src: "https://unpkg.com/xlsx/dist/xlsx.full.min.js" }
-		]
-	}
-};
+// nuxt.config.js
+import { readFile, utils } from 'xlsx';
+
+const parseXLSX = (file, { path }) => {
+  const wb = readFile(path);
+  const o = wb.SheetNames.map(name => ({ name, data: utils.sheet_to_json(wb.Sheets[name])}));
+  return { data: o };
+}
+
+export default {
+  content: {
+    extendParser: {
+      ".numbers": parseXLSX,
+      ".xlsx": parseXLSX,
+      ".xls": parseXLSX
+      // ... other extensions
+    }
+  }
+}
 ```
 
 [![Analytics](https://ga-beacon.appspot.com/UA-36810333-1/SheetJS/js-xlsx?pixel)](https://github.com/SheetJS/js-xlsx)

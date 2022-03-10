@@ -343,6 +343,21 @@ export interface WorkbookProperties {
     CodeName?: string;
 }
 
+/** DBF Field Header */
+export interface DBFField {
+    /** Original Field Name */
+    name?: string;
+
+    /** Field Type */
+    type?: string;
+
+    /** Field Length */
+    len?: number;
+
+    /** Field Decimal Count */
+    dec?: number;
+}
+
 /** Column Properties Object */
 export interface ColInfo {
     /* --- visibility --- */
@@ -366,6 +381,9 @@ export interface ColInfo {
 
     /** Excel's "Max Digit Width" unit, always integral */
     MDW?: number;
+
+    /** DBF Field Header */
+    DBF?: DBFField;
 }
 
 /** Row Properties Object */

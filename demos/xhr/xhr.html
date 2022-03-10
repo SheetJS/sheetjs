@@ -25,28 +25,37 @@ a { text-decoration: none }
 </pre>
 <script src="xlsx.full.min.js"></script>
 <script>
-var demo = 'xhr', book = 'xlsx';
+var demo = 'xhr', book = 'xlsx', orig = 'sheetjs.xlsx2';
 
-if(!window.XMLHttpRequest || typeof Uint8Array === 'undefined')
-	throw new Error("This demo is not supported in your browser");
+if(!window.XMLHttpRequest || typeof Uint8Array === 'undefined') throw new Error("This demo is not supported in your browser");
 
 function process_wb(wb) {
 	console.log(wb);
 	htmlout.innerHTML = XLSX.utils.sheet_to_html(wb.Sheets[wb.SheetNames[0]], {editable:true}).replace("<table", '<table id="table" border="1"');
 }
 
-var url = "sheetjs.xlsx";
-document.getElementById('fileurl').innerHTML = '<a href="' + url + '">Download original file</a>';
-document.getElementById('outfile').innerHTML = '<a href="' + demo + '.' + book + '">Download new file</a>';
+var path = 'files/' + demo + '.' + book;
+document.getElementById('fileurl').innerHTML = '<a href="' + orig + '">Download original file</a>';
+document.getElementById('outfile').innerHTML = '<a href="' + path + '">Download new file: ' + path + '</a>';
 
 {
 	var req = new XMLHttpRequest();
-	req.open("GET", url, true);
+	req.open("GET", orig, true);
 	req.responseType = "arraybuffer";
 	req.onload = function(e) {
-		var data = new Uint8Array(req.response);
-		var wb = XLSX.read(data, {type:"array"});
-		process_wb(wb);
+		if(req.status == 200) {
+			var data = new Uint8Array(req.response);
+			var wb = XLSX.read(data, {type:"array"});
+			process_wb(wb);
+			return;
+		}
+		var ws = XLSX.utils.aoa_to_sheet([
+			["Fetch for " + orig + " failed :("],
+			["Error Code",  req.status],
+			["Error Text", req.statusText],
+		]);
+		ws["!merges"] = [XLSX.utils.decode_range("A1:B1")];
+		process_wb({ "Sheets": { "Sheet1": ws }, "SheetNames": [ "Sheet1" ] });
 	};
 	req.send();
 }

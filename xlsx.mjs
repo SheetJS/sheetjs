@@ -7678,7 +7678,7 @@ function dbf_to_aoa(buf, opts)/*:AOA*/ {
 					out[R][C] = new Date(dd.read_shift(-8, 'f') - 0x388317533400);
 					break;
 				case 'T': out[R][C] = new Date((dd.read_shift(4) - 0x253D8C) * 0x5265C00 + dd.read_shift(4)); break;
-				case 'Y': out[R][C] = dd.read_shift(4,'i')/1e4; break;
+				case 'Y': out[R][C] = dd.read_shift(4,'i')/1e4 + (dd.read_shift(4, 'i')/1e4)*Math.pow(2,32); break;
 				case 'O': out[R][C] = -dd.read_shift(-8, 'f'); break;
 				case 'B': if(vfp && fields[C].len == 8) { out[R][C] = dd.read_shift(8,'f'); break; }
 					/* falls through */
@@ -7692,13 +7692,20 @@ function dbf_to_aoa(buf, opts)/*:AOA*/ {
 	}
 	if(ft != 0x02) if(d.l < d.length && d[d.l++] != 0x1A) throw new Error("DBF EOF Marker missing " + (d.l-1) + " of " + d.length + " " + d[d.l-1].toString(16));
 	if(opts && opts.sheetRows) out = out.slice(0, opts.sheetRows);
+	opts.DBF = fields;
 	return out;
 }
 
 function dbf_to_sheet(buf, opts)/*:Worksheet*/ {
 	var o = opts || {};
 	if(!o.dateNF) o.dateNF = "yyyymmdd";
-	return aoa_to_sheet(dbf_to_aoa(buf, o), o);
+	var ws = aoa_to_sheet(dbf_to_aoa(buf, o), o);
+	ws["!cols"] = o.DBF.map(function(field) { return {
+		wch: field.len,
+		DBF: field
+	}});
+	delete o.DBF;
+	return ws;
 }
 
 function dbf_to_workbook(buf, opts)/*:Workbook*/ {
@@ -7714,10 +7721,11 @@ function sheet_to_dbf(ws/*:Worksheet*/, opts/*:WriteOpts*/) {
 	if(o.type == "string") throw new Error("Cannot write DBF to JS string");
 	var ba = buf_array();
 	var aoa/*:AOA*/ = sheet_to_json(ws, {header:1, raw:true, cellDates:true});
-	var headers = aoa[0], data = aoa.slice(1);
+	var headers = aoa[0], data = aoa.slice(1), cols = ws["!cols"] || [];
 	var i = 0, j = 0, hcnt = 0, rlen = 1;
 	for(i = 0; i < headers.length; ++i) {
-		if(i == null) continue;
+		if(((cols[i]||{}).DBF||{}).name) { headers[i] = cols[i].DBF.name; ++hcnt; continue; }
+		if(headers[i] == null) continue;
 		++hcnt;
 		if(typeof headers[i] === 'number') headers[i] = headers[i].toString(10);
 		if(typeof headers[i] !== 'string') throw new Error("DBF Invalid column name " + headers[i] + " |" + (typeof headers[i]) + "|");
@@ -7726,13 +7734,15 @@ function sheet_to_dbf(ws/*:Worksheet*/, opts/*:WriteOpts*/) {
 	}
 	var range = safe_decode_range(ws['!ref']);
 	var coltypes/*:Array<string>*/ = [];
+	var colwidths/*:Array<number>*/ = [];
+	var coldecimals/*:Array<number>*/ = [];
 	for(i = 0; i <= range.e.c - range.s.c; ++i) {
+		var guess = '', _guess = '', maxlen = 0;
 		var col/*:Array<any>*/ = [];
 		for(j=0; j < data.length; ++j) {
 			if(data[j][i] != null) col.push(data[j][i]);
 		}
 		if(col.length == 0 || headers[i] == null) { coltypes[i] = '?'; continue; }
-		var guess = '', _guess = '';
 		for(j = 0; j < col.length; ++j) {
 			switch(typeof col[j]) {
 				/* TODO: check if L2 compat is desired */
@@ -7742,10 +7752,23 @@ function sheet_to_dbf(ws/*:Worksheet*/, opts/*:WriteOpts*/) {
 				case 'object': _guess = col[j] instanceof Date ? 'D' : 'C'; break;
 				default: _guess = 'C';
 			}
+			maxlen = Math.max(maxlen, String(col[j]).length);
 			guess = guess && guess != _guess ? 'C' : _guess;
-			if(guess == 'C') break;
+			//if(guess == 'C') break;
 		}
-		rlen += _RLEN[guess] || 0;
+		if(maxlen > 250) maxlen = 250;
+		_guess = ((cols[i]||{}).DBF||{}).type;
+		/* TODO: more fine grained control over DBF type resolution */
+		if(_guess == 'C') {
+			if(cols[i].DBF.len > maxlen) maxlen = cols[i].DBF.len;
+		}
+		if(guess == 'B' && _guess == 'N') {
+			guess = 'N';
+			coldecimals[i] = cols[i].DBF.dec;
+			maxlen = cols[i].DBF.len;
+		}
+		colwidths[i] = guess == 'C' || _guess == 'N' ? maxlen : (_RLEN[guess] || 0);
+		rlen += colwidths[i];
 		coltypes[i] = guess;
 	}
 
@@ -7764,14 +7787,14 @@ function sheet_to_dbf(ws/*:Worksheet*/, opts/*:WriteOpts*/) {
 		hf.write_shift(1, _f, "sbcs");
 		hf.write_shift(1, coltypes[i] == '?' ? 'C' : coltypes[i], "sbcs");
 		hf.write_shift(4, j);
-		hf.write_shift(1, _RLEN[coltypes[i]] || 0);
-		hf.write_shift(1, 0);
+		hf.write_shift(1, colwidths[i] || _RLEN[coltypes[i]] || 0);
+		hf.write_shift(1, coldecimals[i] || 0);
 		hf.write_shift(1, 0x02);
 		hf.write_shift(4, 0);
 		hf.write_shift(1, 0);
 		hf.write_shift(4, 0);
 		hf.write_shift(4, 0);
-		j += _RLEN[coltypes[i]] || 0;
+		j += (colwidths[i] || _RLEN[coltypes[i]] || 0);
 	}
 
 	var hb = ba.next(264);
@@ -7785,6 +7808,12 @@ function sheet_to_dbf(ws/*:Worksheet*/, opts/*:WriteOpts*/) {
 			switch(coltypes[j]) {
 				case 'L': rout.write_shift(1, data[i][j] == null ? 0x3F : data[i][j] ? 0x54 : 0x46); break;
 				case 'B': rout.write_shift(8, data[i][j]||0, 'f'); break;
+				case 'N':
+					var _n = "0";
+					if(typeof data[i][j] == "number") _n = data[i][j].toFixed(coldecimals[j]||0);
+					for(hcnt=0; hcnt < colwidths[j]-_n.length; ++hcnt) rout.write_shift(1, 0x20);
+					rout.write_shift(1, _n, "sbcs");
+					break;
 				case 'D':
 					if(!data[i][j]) rout.write_shift(8, "00000000", "sbcs");
 					else {
@@ -7793,9 +7822,9 @@ function sheet_to_dbf(ws/*:Worksheet*/, opts/*:WriteOpts*/) {
 						rout.write_shift(2, ("00"+data[i][j].getDate()).slice(-2), "sbcs");
 					} break;
 				case 'C':
-					var _s = String(data[i][j]||"");
+					var _s = String(data[i][j] != null ? data[i][j] : "").slice(0, colwidths[j]);
 					rout.write_shift(1, _s, "sbcs");
-					for(hcnt=0; hcnt < 250-_s.length; ++hcnt) rout.write_shift(1, 0x20); break;
+					for(hcnt=0; hcnt < colwidths[j]-_s.length; ++hcnt) rout.write_shift(1, 0x20); break;
 			}
 		}
 		// data
@@ -20970,7 +20999,7 @@ var HTML_ = (function() {
 				m = htmldecode(m);
 				if(range.s.r > R) range.s.r = R; if(range.e.r < R) range.e.r = R;
 				if(range.s.c > C) range.s.c = C; if(range.e.c < C) range.e.c = C;
-				if(!m.length) continue;
+				if(!m.length) { C += CS; continue; }
 				var o/*:Cell*/ = {t:'s', v:m};
 				if(opts.raw || !m.trim().length || _t == 's'){}
 				else if(m === 'TRUE') o = {t:'b', v:true};
@@ -22478,13 +22507,14 @@ var NUMBERS = !Object.defineProperty ? (void 0) :(function() {
     return { Sheets: {}, SheetNames: [] };
   };
   var book_append_sheet = function(wb, ws, name) {
+    var i = 1;
     if (!name)
-      for (var i = 1; i < 9999; ++i) {
+      for (; i < 9999; ++i) {
         if (wb.SheetNames.indexOf(name = "Sheet ".concat(i)) == -1)
           break;
       }
     else if (wb.SheetNames.indexOf(name) > -1)
-      for (var i = 1; i < 9999; ++i) {
+      for (; i < 9999; ++i) {
         if (wb.SheetNames.indexOf("".concat(name, "_").concat(i)) == -1) {
           name = "".concat(name, "_").concat(i);
           break;
@@ -23695,7 +23725,8 @@ function sheet_to_json(sheet/*:Worksheet*/, opts/*:?Sheet2JSONOpts*/) {
 	var out/*:Array<any>*/ = [];
 	var outi = 0, counter = 0;
 	var dense = Array.isArray(sheet);
-	var R = r.s.r, C = 0, CC = 0;
+	var R = r.s.r, C = 0;
+	var header_cnt = {};
 	if(dense && !sheet[R]) sheet[R] = [];
 	for(C = r.s.c; C <= r.e.c; ++C) {
 		cols[C] = encode_col(C);
@@ -23707,8 +23738,12 @@ function sheet_to_json(sheet/*:Worksheet*/, opts/*:?Sheet2JSONOpts*/) {
 			default:
 				if(val == null) val = {w: "__EMPTY", t: "s"};
 				vv = v = format_cell(val, null, o);
-				counter = 0;
-				for(CC = 0; CC < hdr.length; ++CC) if(hdr[CC] == vv) { vv = v + "_" + (++counter); CC = -1; }
+				counter = header_cnt[v] || 0;
+				if(!counter) header_cnt[v] = 1;
+				else {
+					do { vv = v + "_" + (counter++); } while(header_cnt[vv]); header_cnt[v] = counter;
+					header_cnt[vv] = 1;
+				}
 				hdr[C] = vv;
 		}
 	}
@@ -24099,7 +24134,8 @@ function write_json_stream(sheet/*:Worksheet*/, opts/*:?Sheet2CSVOpts*/) {
 	var cols/*:Array<string>*/ = [];
 	var counter = 0;
 	var dense = Array.isArray(sheet);
-	var R = r.s.r, C = 0, CC = 0;
+	var R = r.s.r, C = 0;
+	var header_cnt = {};
 	if(dense && !sheet[R]) sheet[R] = [];
 	for(C = r.s.c; C <= r.e.c; ++C) {
 		cols[C] = encode_col(C);
@@ -24111,8 +24147,12 @@ function write_json_stream(sheet/*:Worksheet*/, opts/*:?Sheet2CSVOpts*/) {
 			default:
 				if(val == null) val = {w: "__EMPTY", t: "s"};
 				vv = v = format_cell(val, null, o);
-				counter = 0;
-				for(CC = 0; CC < hdr.length; ++CC) if(hdr[CC] == vv) vv = v + "_" + (++counter);
+				counter = header_cnt[v] || 0;
+				if(!counter) header_cnt[v] = 1;
+				else {
+					do { vv = v + "_" + (counter++); } while(header_cnt[vv]); header_cnt[v] = counter;
+					header_cnt[vv] = 1;
+				}
 				hdr[C] = vv;
 		}
 	}
@@ -24130,7 +24170,7 @@ function write_json_stream(sheet/*:Worksheet*/, opts/*:?Sheet2CSVOpts*/) {
 		return stream.push(null);
 	};
 	return stream;
-};
+}
 
 var __stream = {
 	to_json: write_json_stream,

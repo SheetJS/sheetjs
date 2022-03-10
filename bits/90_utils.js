@@ -64,7 +64,8 @@ function sheet_to_json(sheet/*:Worksheet*/, opts/*:?Sheet2JSONOpts*/) {
 	var out/*:Array<any>*/ = [];
 	var outi = 0, counter = 0;
 	var dense = Array.isArray(sheet);
-	var R = r.s.r, C = 0, CC = 0;
+	var R = r.s.r, C = 0;
+	var header_cnt = {};
 	if(dense && !sheet[R]) sheet[R] = [];
 	for(C = r.s.c; C <= r.e.c; ++C) {
 		cols[C] = encode_col(C);
@@ -76,8 +77,12 @@ function sheet_to_json(sheet/*:Worksheet*/, opts/*:?Sheet2JSONOpts*/) {
 			default:
 				if(val == null) val = {w: "__EMPTY", t: "s"};
 				vv = v = format_cell(val, null, o);
-				counter = 0;
-				for(CC = 0; CC < hdr.length; ++CC) if(hdr[CC] == vv) { vv = v + "_" + (++counter); CC = -1; }
+				counter = header_cnt[v] || 0;
+				if(!counter) header_cnt[v] = 1;
+				else {
+					do { vv = v + "_" + (counter++); } while(header_cnt[vv]); header_cnt[v] = counter;
+					header_cnt[vv] = 1;
+				}
 				hdr[C] = vv;
 		}
 	}

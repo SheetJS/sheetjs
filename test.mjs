@@ -2271,6 +2271,20 @@ describe('HTML', function() {
 			assert.equal(X.utils.sheet_to_csv(ws),  "A,B\n1,2\n3,4\n4,6");
 		});
 	});
+	describe('empty cell containing html element should increment cell index', function() {
+		var html = "<table><tr><td>abc</td><td><b> </b></td><td>def</td></tr></table>";
+		var expectedCellCount = 3;
+		it('HTML string', function() {
+			var ws = X.read(html, {type:'string'}).Sheets.Sheet1;
+			var range = X.utils.decode_range(ws['!ref']);
+			assert.equal(range.e.c,expectedCellCount - 1);
+		});
+		if(domtest) it('DOM', function() {
+			var ws = X.utils.table_to_sheet(get_dom_element(html));
+			var range = X.utils.decode_range(ws['!ref']);
+			assert.equal(range.e.c, expectedCellCount - 1);
+		});
+	});
 });
 
 describe('js -> file -> js', function() {

@@ -79,7 +79,8 @@ function write_json_stream(sheet/*:Worksheet*/, opts/*:?Sheet2CSVOpts*/) {
 	var cols/*:Array<string>*/ = [];
 	var counter = 0;
 	var dense = Array.isArray(sheet);
-	var R = r.s.r, C = 0, CC = 0;
+	var R = r.s.r, C = 0;
+	var header_cnt = {};
 	if(dense && !sheet[R]) sheet[R] = [];
 	for(C = r.s.c; C <= r.e.c; ++C) {
 		cols[C] = encode_col(C);
@@ -91,8 +92,12 @@ function write_json_stream(sheet/*:Worksheet*/, opts/*:?Sheet2CSVOpts*/) {
 			default:
 				if(val == null) val = {w: "__EMPTY", t: "s"};
 				vv = v = format_cell(val, null, o);
-				counter = 0;
-				for(CC = 0; CC < hdr.length; ++CC) if(hdr[CC] == vv) vv = v + "_" + (++counter);
+				counter = header_cnt[v] || 0;
+				if(!counter) header_cnt[v] = 1;
+				else {
+					do { vv = v + "_" + (counter++); } while(header_cnt[vv]); header_cnt[v] = counter;
+					header_cnt[vv] = 1;
+				}
 				hdr[C] = vv;
 		}
 	}
@@ -110,7 +115,7 @@ function write_json_stream(sheet/*:Worksheet*/, opts/*:?Sheet2CSVOpts*/) {
 		return stream.push(null);
 	};
 	return stream;
-};
+}
 
 var __stream = {
 	to_json: write_json_stream,

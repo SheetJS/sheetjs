@@ -70,7 +70,8 @@ init: ## Initial setup for development
 	git submodule init
 	git submodule update
 	#git submodule foreach git pull origin master
-	git submodule foreach make
+	#git submodule foreach make
+	git submodule foreach make all
 	mkdir -p tmp
 
 DISTHDR=misc/suppress_export.js

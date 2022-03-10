@@ -442,13 +442,14 @@ var NUMBERS = !Object.defineProperty ? (void 0) :(function() {
     return { Sheets: {}, SheetNames: [] };
   };
   var book_append_sheet = function(wb, ws, name) {
+    var i = 1;
     if (!name)
-      for (var i = 1; i < 9999; ++i) {
+      for (; i < 9999; ++i) {
         if (wb.SheetNames.indexOf(name = "Sheet ".concat(i)) == -1)
           break;
       }
     else if (wb.SheetNames.indexOf(name) > -1)
-      for (var i = 1; i < 9999; ++i) {
+      for (; i < 9999; ++i) {
         if (wb.SheetNames.indexOf("".concat(name, "_").concat(i)) == -1) {
           name = "".concat(name, "_").concat(i);
           break;

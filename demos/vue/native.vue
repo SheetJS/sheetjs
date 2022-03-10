@@ -27,7 +27,7 @@
 </style>
 
 <script>
-import XLSX from 'xlsx';
+import * as XLSX from 'xlsx';
 const modal = weex.requireModule('modal');
 const stream = weex.requireModule('stream');
 export default {

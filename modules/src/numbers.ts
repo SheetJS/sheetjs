@@ -17,9 +17,10 @@ var encode_cell = (c: CellAddress): string => `${encode_col(c.c)}${c.r+1}`;
 var encode_range = (r: Range): string => encode_cell(r.s) + ":" + encode_cell(r.e);
 var book_new = (): WorkBook => ({Sheets:{}, SheetNames:[]});
 var book_append_sheet = (wb: WorkBook, ws: WorkSheet, name?: string): void => {
-	if(!name) for(var i = 1; i < 9999; ++i) {
+	var i = 1;
+	if(!name) for(; i < 9999; ++i) {
 		if(wb.SheetNames.indexOf(name = `Sheet ${i}`) == -1) break;
-	} else if(wb.SheetNames.indexOf(name) > -1) for(var i = 1; i < 9999; ++i) {
+	} else if(wb.SheetNames.indexOf(name) > -1) for(; i < 9999; ++i) {
 		if(wb.SheetNames.indexOf(`${name}_${i}`) == -1) { name = `${name}_${i}`; break; }
 	}
 	wb.SheetNames.push(name); wb.Sheets[name] = ws;

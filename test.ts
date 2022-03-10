@@ -2126,6 +2126,15 @@ Deno.test('HTML', async function(t) {
 			assert.equal(X.utils.sheet_to_csv(ws),  "A,B\n1,2\n3,4\n4,6");
 		});
 	});
+	await t.step('empty cell containing html element should increment cell index', async function(t) {
+		var html = "<table><tr><td>abc</td><td><b> </b></td><td>def</td></tr></table>";
+		var expectedCellCount = 3;
+		await t.step('HTML string', async function() {
+			var ws = X.read(html, {type:'string'}).Sheets.Sheet1;
+			var range = X.utils.decode_range(ws['!ref']||"A1");
+			assert.equal(range.e.c,expectedCellCount - 1);
+		});
+	});
 });
 
 Deno.test('js -> file -> js', async function(t) {

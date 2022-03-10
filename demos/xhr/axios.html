@@ -26,21 +26,33 @@ a { text-decoration: none }
 <script src="xlsx.full.min.js"></script>
 <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
 <script>
-var demo = 'axios', book = 'xlsx';
+var demo = 'axios', book = 'xlsx', orig = 'sheetjs.xlsx';
+
+if(!window.axios) throw new Error("This demo is not supported in your browser");
 
 function process_wb(wb) {
 	console.log(wb);
 	htmlout.innerHTML = XLSX.utils.sheet_to_html(wb.Sheets[wb.SheetNames[0]], {editable:true}).replace("<table", '<table id="table" border="1"');
 }
 
-var url = "sheetjs.xlsx";
-document.getElementById('fileurl').innerHTML = '<a href="' + url + '">Download original file</a>';
-document.getElementById('outfile').innerHTML = '<a href="' + demo + '.' + book + '">Download new file</a>';
+var path = 'files/' + demo + '.' + book;
+document.getElementById('fileurl').innerHTML = '<a href="' + orig + '">Download original file</a>';
+document.getElementById('outfile').innerHTML = '<a href="' + path + '">Download new file: ' + path + '</a>';
 
-axios(url, {responseType:'arraybuffer'}).then(function(res) {
+axios(orig, {responseType:'arraybuffer'}).then(function(res) {
 		var data = new Uint8Array(res.data);
 		var wb = XLSX.read(data, {type:"array"});
 		process_wb(wb);
+}).catch(function(e) {
+	if(/404/.test(e.message) || e.response.status) {
+		var ws = XLSX.utils.aoa_to_sheet([
+			["Fetch for " + orig + " failed :("],
+			["Error Code",  e.response.status],
+			["Error Text", e.message],
+		]);
+		ws["!merges"] = [XLSX.utils.decode_range("A1:B1")];
+		process_wb({ "Sheets": { "Sheet1": ws }, "SheetNames": [ "Sheet1" ] });
+	}
 });
 
 document.getElementById('ulbutton').onclick = function() {

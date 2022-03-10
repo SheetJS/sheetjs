@@ -25,27 +25,36 @@ a { text-decoration: none }
 </pre>
 <script src="xlsx.full.min.js"></script>
 <script>
-var demo = 'fetch', book = 'xlsx';
+var demo = 'fetch', book = 'xlsx', orig = 'sheetjs.xlsx';
 
-if(!window.fetch)
-	throw new Error("This demo is not supported in your browser");
+if(!window.fetch) throw new Error("This demo is not supported in your browser");
 
 function process_wb(wb) {
 	console.log(wb);
 	htmlout.innerHTML = XLSX.utils.sheet_to_html(wb.Sheets[wb.SheetNames[0]], {editable:true}).replace("<table", '<table id="table" border="1"');
 }
 
-var url = "sheetjs.xlsx";
-document.getElementById('fileurl').innerHTML = '<a href="' + url + '">Download original file</a>';
-document.getElementById('outfile').innerHTML = '<a href="' + demo + '.' + book + '">Download new file</a>';
+var path = 'files/' + demo + '.' + book;
+document.getElementById('fileurl').innerHTML = '<a href="' + orig + '">Download original file</a>';
+document.getElementById('outfile').innerHTML = '<a href="' + path + '">Download new file: ' + path + '</a>';
 
-fetch(url).then(function(res) {
-	if(!res.ok) throw new Error("fetch failed");
+fetch(orig).then(function(res) {
+	if(!res.ok) { var e = new Error(res.statusText); e.response = res; return Promise.reject(e);}
 	return res.arrayBuffer();
 }).then(function(ab) {
 	var data = new Uint8Array(ab);
 	var wb = XLSX.read(data, {type:"array"});
 	process_wb(wb);
+}).catch(function(e) {
+	if(/404/.test(e.message) || e.response.status) {
+		var ws = XLSX.utils.aoa_to_sheet([
+			["Fetch for " + orig + " failed :("],
+			["Error Code",  e.response.status],
+			["Error Text", e.message],
+		]);
+		ws["!merges"] = [XLSX.utils.decode_range("A1:B1")];
+		process_wb({ "Sheets": { "Sheet1": ws }, "SheetNames": [ "Sheet1" ] });
+	}
 });
 
 document.getElementById('ulbutton').onclick = function() {
