@@ -577,6 +577,7 @@ The [`demos` directory](demos/) includes sample projects for:
 - [`Headless Browsers`](demos/headless/)
 - [`canvas-datagrid`](demos/datagrid/)
 - [`x-spreadsheet`](demos/xspreadsheet/)
+- [`react-data-grid`](demos/react/modify/)
 - [`Swift JSC and other engines`](demos/altjs/)
 - [`"serverless" functions`](demos/function/)
 - [`internet explorer`](demos/oldie/)

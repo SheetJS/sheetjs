@@ -10,16 +10,18 @@ into web pages with script tags:
 The library can also be imported directly from JSX code with:
 
 ```js
-import XLSX from 'xlsx';
+import { read, utils, writeFileXLSX } from 'xlsx';
 ```
 
 This demo shows a simple React component transpiled in the browser using Babel
 standalone library.  Since there is no standard React table model, this demo
 settles on the array of arrays approach.
 
+
 Other scripts in this demo show:
 - server-rendered React component (with `next.js`)
 - `react-native` deployment for iOS and android
+- [`react-data-grid` reading, modifying, and writing files](modify/)
 
 ## How to run
 

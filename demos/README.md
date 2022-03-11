@@ -49,6 +49,7 @@ can be installed with Bash on Windows or with `cygwin`.
 - [`Headless Browsers`](headless/)
 - [`canvas-datagrid`](datagrid/)
 - [`x-spreadsheet`](xspreadsheet/)
+- [`react-data-grid`](react/modify/)
 - [`Swift JSC and other engines`](altjs/)
 - [`"serverless" functions`](function/)
 - [`internet explorer`](oldie/)

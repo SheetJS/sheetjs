@@ -1,0 +1,14 @@
+input {
+  margin: 0.5rem;
+}
+
+.flex-cont {
+  display: flex;
+  margin: 0.5rem;
+  justify-content: center;
+}
+
+.flex-cont button {
+    margin: 0.3rem;
+    padding: 0.2rem;
+}
