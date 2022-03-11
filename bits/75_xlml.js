@@ -168,7 +168,7 @@ function parse_xlml_xml(d, _opts)/*:Workbook*/ {
 	make_ssf(SSF);
 	var str = debom(xlml_normalize(d));
 	if(opts.type == 'binary' || opts.type == 'array' || opts.type == 'base64') {
-		if(typeof cptable !== 'undefined') str = cptable.utils.decode(65001, char_codes(str));
+		if(typeof $cptable !== 'undefined') str = $cptable.utils.decode(65001, char_codes(str));
 		else str = utf8read(str);
 	}
 	var opening = str.slice(0, 1024).toLowerCase(), ishtml = false;

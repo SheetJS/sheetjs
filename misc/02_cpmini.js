@@ -1,7 +1,6 @@
 var current_codepage = 1200, current_ansi = 1252;
 
-var VALID_ANSI = [ 874, 932, 936, 949, 950, 10000 ];
-for(var i = 0; i <= 8; ++i) VALID_ANSI.push(1250 + i);
+var VALID_ANSI = [ 874, 932, 936, 949, 950, 1250, 1251, 1252, 1253, 1254, 1255, 1256, 1257, 1258, 10000 ];
 /* ECMA-376 Part I 18.4.1 charset to codepage mapping */
 var CS2CP = ({
 	/*::[*/0/*::]*/:    1252, /* ANSI */

@@ -1,5 +1,5 @@
 /* OpenDocument */
-var write_styles_ods/*:{(wb:any, opts:any):string}*/ = (function() {
+var write_styles_ods/*:{(wb:any, opts:any):string}*/ = /* @__PURE__ */(function() {
 	var master_styles = [
 		'<office:master-styles>',
 			'<style:master-page style:name="mp1" style:page-layout-name="mp1">',
@@ -30,7 +30,7 @@ var write_styles_ods/*:{(wb:any, opts:any):string}*/ = (function() {
 		return XML_HEADER + payload;
 	};
 })();
-var write_content_ods/*:{(wb:any, opts:any):string}*/ = (function() {
+var write_content_ods/*:{(wb:any, opts:any):string}*/ = /* @__PURE__ */(function() {
 	/* 6.1.2 White Space Characters */
 	var write_text_p = function(text/*:string*/)/*:string*/ {
 		return escapexml(text)

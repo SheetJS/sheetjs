@@ -1,4 +1,3 @@
-var DO_NOT_EXPORT_CFB = true;
 /*::
 declare var Base64:any;
 declare var ReadShift:any;
@@ -25,7 +24,6 @@ declare var Buffer_from:any;
 /*global module, require:false, process:false, Buffer:false, Uint8Array:false, Uint16Array:false */
 
 /*::
-declare var DO_NOT_EXPORT_CFB:?boolean;
 type SectorEntry = {
 	name?:string;
 	nodes?:Array<number>;
@@ -42,14 +40,7 @@ type CFBFiles = {[n:string]:CFBEntry};
 /* crc32.js (C) 2014-present SheetJS -- http://sheetjs.com */
 /* vim: set ts=2: */
 /*exported CRC32 */
-var CRC32;
-(function (factory) {
-	/*jshint ignore:start */
-	/*eslint-disable */
-	factory(CRC32 = {});
-	/*eslint-enable */
-	/*jshint ignore:end */
-}(function(CRC32) {
+var CRC32 = (function(CRC32) {
 CRC32.version = '1.2.0';
 /* see perf/crc32table.js */
 /*global Int32Array */
@@ -137,7 +128,8 @@ CRC32.table = T0;
 CRC32.bstr = crc32_bstr;
 CRC32.buf = crc32_buf;
 CRC32.str = crc32_str;
-}));
+return CRC32;
+})({});
 /* [MS-CFB] v20171201 */
 var CFB = (function _CFB(){
 var exports/*:CFBModule*/ = /*::(*/{}/*:: :any)*/;
@@ -1849,4 +1841,3 @@ exports.utils = {
 return exports;
 })();
 
-if(typeof require !== 'undefined' && typeof module !== 'undefined' && typeof DO_NOT_EXPORT_CFB === 'undefined') { module.exports = CFB; }

@@ -111,25 +111,36 @@ for(defi = 79; defi <= 81; ++defi) default_map[defi] = defi - 34;
 // 82 ->  0 ... 65536 -> 0 (omitted)
 
 /* These formats technically refer to Accounting formats with no equivalent */
-var default_str/*:Array<string>*/ = [];
+var default_str = {
+	//  5 -- Currency,   0 decimal, black negative
+	5:  '"$"#,##0_);\\("$"#,##0\\)',
+	63: '"$"#,##0_);\\("$"#,##0\\)',
 
-//  5 -- Currency,   0 decimal, black negative
-default_str[5] = default_str[63] = '"$"#,##0_);\\("$"#,##0\\)';
-//  6 -- Currency,   0 decimal, red   negative
-default_str[6] = default_str[64] = '"$"#,##0_);[Red]\\("$"#,##0\\)';
-//  7 -- Currency,   2 decimal, black negative
-default_str[7] = default_str[65] = '"$"#,##0.00_);\\("$"#,##0.00\\)';
-//  8 -- Currency,   2 decimal, red   negative
-default_str[8] = default_str[66] = '"$"#,##0.00_);[Red]\\("$"#,##0.00\\)';
+	//  6 -- Currency,   0 decimal, red   negative
+	6:  '"$"#,##0_);[Red]\\("$"#,##0\\)',
+	64: '"$"#,##0_);[Red]\\("$"#,##0\\)',
 
-// 41 -- Accounting, 0 decimal, No Symbol
-default_str[41] = '_(* #,##0_);_(* \\(#,##0\\);_(* "-"_);_(@_)';
-// 42 -- Accounting, 0 decimal, $  Symbol
-default_str[42] = '_("$"* #,##0_);_("$"* \\(#,##0\\);_("$"* "-"_);_(@_)';
-// 43 -- Accounting, 2 decimal, No Symbol
-default_str[43] = '_(* #,##0.00_);_(* \\(#,##0.00\\);_(* "-"??_);_(@_)';
-// 44 -- Accounting, 2 decimal, $  Symbol
-default_str[44] = '_("$"* #,##0.00_);_("$"* \\(#,##0.00\\);_("$"* "-"??_);_(@_)';
+	//  7 -- Currency,   2 decimal, black negative
+	7:  '"$"#,##0.00_);\\("$"#,##0.00\\)',
+	65: '"$"#,##0.00_);\\("$"#,##0.00\\)',
+
+	//  8 -- Currency,   2 decimal, red   negative
+	8:  '"$"#,##0.00_);[Red]\\("$"#,##0.00\\)',
+	66: '"$"#,##0.00_);[Red]\\("$"#,##0.00\\)',
+
+	// 41 -- Accounting, 0 decimal, No Symbol
+	41: '_(* #,##0_);_(* \\(#,##0\\);_(* "-"_);_(@_)',
+
+	// 42 -- Accounting, 0 decimal, $  Symbol
+	42: '_("$"* #,##0_);_("$"* \\(#,##0\\);_("$"* "-"_);_(@_)',
+
+	// 43 -- Accounting, 2 decimal, No Symbol
+	43: '_(* #,##0.00_);_(* \\(#,##0.00\\);_(* "-"??_);_(@_)',
+
+	// 44 -- Accounting, 2 decimal, $  Symbol
+	44: '_("$"* #,##0.00_);_("$"* \\(#,##0.00\\);_("$"* "-"??_);_(@_)'
+};
+
 function frac(x/*:number*/, D/*:number*/, mixed/*:?boolean*/)/*:Array<number>*/ {
 	var sgn = x < 0 ? -1 : 1;
 	var B = x * sgn;

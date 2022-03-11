@@ -158,16 +158,14 @@ function parse_wb_xml(data, opts)/*:WorkbookFile*/ {
 	return wb;
 }
 
-var WB_XML_ROOT = writextag('workbook', null, {
-	'xmlns': XMLNS.main[0],
-	//'xmlns:mx': XMLNS.mx,
-	//'xmlns:s': XMLNS.main[0],
-	'xmlns:r': XMLNS.r
-});
-
 function write_wb_xml(wb/*:Workbook*//*::, opts:?WriteOpts*/)/*:string*/ {
 	var o = [XML_HEADER];
-	o[o.length] = WB_XML_ROOT;
+	o[o.length] = writextag('workbook', null, {
+		'xmlns': XMLNS.main[0],
+		//'xmlns:mx': XMLNS.mx,
+		//'xmlns:s': XMLNS.main[0],
+		'xmlns:r': XMLNS.r
+	});
 
 	var write_names = (wb.Workbook && (wb.Workbook.Names||[]).length > 0);
 

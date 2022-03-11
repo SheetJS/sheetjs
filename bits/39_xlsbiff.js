@@ -804,8 +804,8 @@ function parse_Obj(blob, length, opts) {
 	return { cmo: cmo, ft:fts };
 }
 /* from older spec */
-var parse_BIFF5OT = [];
-parse_BIFF5OT[0x08] = function(blob, length) {
+var parse_BIFF5OT = {
+0x08: function(blob, length) {
 	var tgt = blob.l + length;
 	blob.l += 10; // todo
 	var cf = blob.read_shift(2);
@@ -818,6 +818,7 @@ parse_BIFF5OT[0x08] = function(blob, length) {
 	blob.l += cchName; // TODO: stName
 	blob.l = tgt; // TODO: fmla
 	return { fmt:cf };
+}
 };
 
 function parse_BIFF5Obj(blob, length, opts) {
@@ -850,7 +851,7 @@ try {
 	var ot = (opts.lastobj||{cmo:[0,0]}).cmo[1];
 	var controlInfo; // eslint-disable-line no-unused-vars
 	if([0,5,7,11,12,14].indexOf(ot) == -1) blob.l += 6;
-	else controlInfo = parse_ControlInfo(blob, 6, opts);
+	else controlInfo = parse_ControlInfo(blob, 6, opts); // eslint-disable-line no-unused-vars
 	var cchText = blob.read_shift(2);
 	/*var cbRuns = */blob.read_shift(2);
 	/*var ifntEmpty = */parseuint16(blob, 2);

@@ -423,7 +423,7 @@ var WK_ = /*#__PURE__*/ (function() {
 				case 0x06: {
 					/* TODO: text encoding */
 					var Z = ""; while((cc = blob[blob.l++])) Z += String.fromCharCode(cc);
-					out.push('"' + Z.replace(/"/g, '""') + '"'); break;
+					out.push('"' + Z.replace(/"/g, '""') + '"');
 				} break;
 
 				case 0x08: out.push("-" + out.pop()); break;

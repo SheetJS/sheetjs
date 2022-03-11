@@ -1,0 +1,12 @@
+{
+  "parserOptions": {
+    "sourceType": "module",
+    "ecmaVersion": 2020
+  },
+  "plugins": [
+    "tree-shaking"
+  ],
+  "rules": {
+    "tree-shaking/no-side-effects-in-initialization": 2
+  }
+}

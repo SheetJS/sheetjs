@@ -64,15 +64,15 @@ if(has_buf/*:: && typeof Buffer !== 'undefined'*/) {
 
 /* from js-xls */
 function cpdoit() {
-	__utf16le = function(b/*:RawBytes|CFBlob*/,s/*:number*/,e/*:number*/) { return cptable.utils.decode(1200, b.slice(s,e)).replace(chr0, ''); };
-	__utf8 = function(b/*:RawBytes|CFBlob*/,s/*:number*/,e/*:number*/) { return cptable.utils.decode(65001, b.slice(s,e)); };
-	__lpstr = function(b/*:RawBytes|CFBlob*/,i/*:number*/) { var len = __readUInt32LE(b,i); return len > 0 ? cptable.utils.decode(current_ansi, b.slice(i+4, i+4+len-1)) : "";};
-	__cpstr = function(b/*:RawBytes|CFBlob*/,i/*:number*/) { var len = __readUInt32LE(b,i); return len > 0 ? cptable.utils.decode(current_codepage, b.slice(i+4, i+4+len-1)) : "";};
-	__lpwstr = function(b/*:RawBytes|CFBlob*/,i/*:number*/) { var len = 2*__readUInt32LE(b,i); return len > 0 ? cptable.utils.decode(1200, b.slice(i+4,i+4+len-1)) : "";};
-	__lpp4 = function(b/*:RawBytes|CFBlob*/,i/*:number*/) { var len = __readUInt32LE(b,i); return len > 0 ? cptable.utils.decode(1200, b.slice(i+4,i+4+len)) : "";};
-	__8lpp4 = function(b/*:RawBytes|CFBlob*/,i/*:number*/) { var len = __readUInt32LE(b,i); return len > 0 ? cptable.utils.decode(65001, b.slice(i+4,i+4+len)) : "";};
+	__utf16le = function(b/*:RawBytes|CFBlob*/,s/*:number*/,e/*:number*/) { return $cptable.utils.decode(1200, b.slice(s,e)).replace(chr0, ''); };
+	__utf8 = function(b/*:RawBytes|CFBlob*/,s/*:number*/,e/*:number*/) { return $cptable.utils.decode(65001, b.slice(s,e)); };
+	__lpstr = function(b/*:RawBytes|CFBlob*/,i/*:number*/) { var len = __readUInt32LE(b,i); return len > 0 ? $cptable.utils.decode(current_ansi, b.slice(i+4, i+4+len-1)) : "";};
+	__cpstr = function(b/*:RawBytes|CFBlob*/,i/*:number*/) { var len = __readUInt32LE(b,i); return len > 0 ? $cptable.utils.decode(current_codepage, b.slice(i+4, i+4+len-1)) : "";};
+	__lpwstr = function(b/*:RawBytes|CFBlob*/,i/*:number*/) { var len = 2*__readUInt32LE(b,i); return len > 0 ? $cptable.utils.decode(1200, b.slice(i+4,i+4+len-1)) : "";};
+	__lpp4 = function(b/*:RawBytes|CFBlob*/,i/*:number*/) { var len = __readUInt32LE(b,i); return len > 0 ? $cptable.utils.decode(1200, b.slice(i+4,i+4+len)) : "";};
+	__8lpp4 = function(b/*:RawBytes|CFBlob*/,i/*:number*/) { var len = __readUInt32LE(b,i); return len > 0 ? $cptable.utils.decode(65001, b.slice(i+4,i+4+len)) : "";};
 }
-if(typeof cptable !== 'undefined') cpdoit();
+if(typeof $cptable !== 'undefined') cpdoit();
 
 var __readUInt8 = function(b/*:RawBytes|CFBlob*/, idx/*:number*/)/*:number*/ { return b[idx]; };
 var __readUInt16LE = function(b/*:RawBytes|CFBlob*/, idx/*:number*/)/*:number*/ { return (b[idx+1]*(1<<8))+b[idx]; };
@@ -95,7 +95,7 @@ function ReadShift(size/*:number*/, t/*:?string*/)/*:number|string*/ {
 		case 'utf16le': size *= 2; o = __utf16le(this, this.l, this.l + size); break;
 
 		case 'wstr':
-			if(typeof cptable !== 'undefined') o = cptable.utils.decode(current_codepage, this.slice(this.l, this.l+2*size));
+			if(typeof $cptable !== 'undefined') o = $cptable.utils.decode(current_codepage, this.slice(this.l, this.l+2*size));
 			else return ReadShift.call(this, size, 'dbcs');
 			size = 2 * size; break;
 
@@ -130,8 +130,8 @@ function ReadShift(size/*:number*/, t/*:?string*/)/*:number|string*/ {
 			} o = oo.join(""); size *= 2; break;
 
 		case 'cpstr':
-			if(typeof cptable !== 'undefined') {
-				o = cptable.utils.decode(current_codepage, this.slice(this.l, this.l + size));
+			if(typeof $cptable !== 'undefined') {
+				o = $cptable.utils.decode(current_codepage, this.slice(this.l, this.l + size));
 				break;
 			}
 		/* falls through */
@@ -177,11 +177,11 @@ function WriteShift(t/*:number*/, val/*:string|number*/, f/*:?string*/)/*:any*/ 
 		for(i = 0; i != val.length; ++i) __writeUInt16LE(this, val.charCodeAt(i), this.l + 2 * i);
 		size = 2 * val.length;
 	} else if(f === 'sbcs') {
-		if(typeof cptable !== 'undefined' && current_ansi == 874) {
+		if(typeof $cptable !== 'undefined' && current_ansi == 874) {
 			/* TODO: use tables directly, don't encode */
 			/*:: if(typeof val !== "string") throw new Error("unreachable"); */
 			for(i = 0; i != val.length; ++i) {
-				var cppayload = cptable.utils.encode(current_ansi, val.charAt(i));
+				var cppayload = $cptable.utils.encode(current_ansi, val.charAt(i));
 				this[this.l + i] = cppayload[0];
 			}
 		} else {

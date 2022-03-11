@@ -410,15 +410,13 @@ return function parse_sty_xml(data, themes, opts) {
 };
 })();
 
-var STYLES_XML_ROOT = writextag('styleSheet', null, {
-	'xmlns': XMLNS.main[0],
-	'xmlns:vt': XMLNS.vt
-});
-
 RELS.STY = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles";
 
 function write_sty_xml(wb/*:Workbook*/, opts)/*:string*/ {
-	var o = [XML_HEADER, STYLES_XML_ROOT], w;
+	var o = [XML_HEADER, writextag('styleSheet', null, {
+		'xmlns': XMLNS.main[0],
+		'xmlns:vt': XMLNS.vt
+	})], w;
 	if(wb.SSF && (w = write_numFmts(wb.SSF)) != null) o[o.length] = w;
 	o[o.length] = ('<fonts count="1"><font><sz val="12"/><color theme="1"/><name val="Calibri"/><family val="2"/><scheme val="minor"/></font></fonts>');
 	o[o.length] = ('<fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills>');

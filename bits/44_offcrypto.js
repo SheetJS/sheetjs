@@ -1,5 +1,5 @@
 function _JS2ANSI(str/*:string*/)/*:Array<number>*/ {
-	if(typeof cptable !== 'undefined') return cptable.utils.encode(current_ansi, str);
+	if(typeof $cptable !== 'undefined') return $cptable.utils.encode(current_ansi, str);
 	var o/*:Array<number>*/ = [], oo = str.split("");
 	for(var i = 0; i < oo.length; ++i) o[i] = oo[i].charCodeAt(0);
 	return o;

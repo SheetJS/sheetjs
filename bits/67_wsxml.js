@@ -535,13 +535,11 @@ function write_ws_xml_data(ws/*:Worksheet*/, opts, idx/*:number*/, wb/*:Workbook
 	return o.join("");
 }
 
-var WS_XML_ROOT = writextag('worksheet', null, {
-	'xmlns': XMLNS.main[0],
-	'xmlns:r': XMLNS.r
-});
-
 function write_ws_xml(idx/*:number*/, opts, wb/*:Workbook*/, rels)/*:string*/ {
-	var o = [XML_HEADER, WS_XML_ROOT];
+	var o = [XML_HEADER, writextag('worksheet', null, {
+		'xmlns': XMLNS.main[0],
+		'xmlns:r': XMLNS.r
+	})];
 	var s = wb.SheetNames[idx], sidx = 0, rdata = "";
 	var ws = wb.Sheets[s];
 	if(ws == null) ws = {};

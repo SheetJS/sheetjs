@@ -1,4 +1,4 @@
-var NUMBERS = !Object.defineProperty ? (void 0) :(function() {
+var NUMBERS = !Object.defineProperty ? (void 0) :/* @__PURE__ */(function() {
   var __defProp = Object.defineProperty;
   var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
   var __getOwnPropNames = Object.getOwnPropertyNames;

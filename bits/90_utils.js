@@ -146,8 +146,8 @@ function sheet_to_csv(sheet/*:Worksheet*/, opts/*:?Sheet2CSVOpts*/)/*:string*/ {
 function sheet_to_txt(sheet/*:Worksheet*/, opts/*:?Sheet2CSVOpts*/) {
 	if(!opts) opts = {}; opts.FS = "\t"; opts.RS = "\n";
 	var s = sheet_to_csv(sheet, opts);
-	if(typeof cptable == 'undefined' || opts.type == 'string') return s;
-	var o = cptable.utils.encode(1200, s, 'str');
+	if(typeof $cptable == 'undefined' || opts.type == 'string') return s;
+	var o = $cptable.utils.encode(1200, s, 'str');
 	return String.fromCharCode(255) + String.fromCharCode(254) + o;
 }
 
@@ -216,7 +216,7 @@ function sheet_add_json(_ws/*:?Worksheet*/, js/*:Array<any>*/, opts)/*:Worksheet
 			var t = 'z';
 			var z = "";
 			var ref = encode_cell({c:_C + C,r:_R + R + offset});
-			cell = utils.sheet_get_cell(ws, ref);
+			cell = ws_get_cell_stub(ws, ref);
 			if(v && typeof v === 'object' && !(v instanceof Date)){
 				ws[ref] = v;
 			} else {
@@ -247,29 +247,107 @@ function sheet_add_json(_ws/*:?Worksheet*/, js/*:Array<any>*/, opts)/*:Worksheet
 }
 function json_to_sheet(js/*:Array<any>*/, opts)/*:Worksheet*/ { return sheet_add_json(null, js, opts); }
 
-var utils/*:any*/ = {
-	encode_col: encode_col,
-	encode_row: encode_row,
-	encode_cell: encode_cell,
-	encode_range: encode_range,
-	decode_col: decode_col,
-	decode_row: decode_row,
-	split_cell: split_cell,
-	decode_cell: decode_cell,
-	decode_range: decode_range,
-	format_cell: format_cell,
-	sheet_add_aoa: sheet_add_aoa,
-	sheet_add_json: sheet_add_json,
-	sheet_add_dom: sheet_add_dom,
-	aoa_to_sheet: aoa_to_sheet,
-	json_to_sheet: json_to_sheet,
-	table_to_sheet: parse_dom_table,
-	table_to_book: table_to_book,
-	sheet_to_csv: sheet_to_csv,
-	sheet_to_txt: sheet_to_txt,
-	sheet_to_json: sheet_to_json,
-	sheet_to_html: HTML_.from_sheet,
-	sheet_to_formulae: sheet_to_formulae,
-	sheet_to_row_object_array: sheet_to_json
-};
+/* get cell, creating a stub if necessary */
+function ws_get_cell_stub(ws/*:Worksheet*/, R, C/*:?number*/)/*:Cell*/ {
+	/* A1 cell address */
+	if(typeof R == "string") {
+		/* dense */
+		if(Array.isArray(ws)) {
+			var RC = decode_cell(R);
+			if(!ws[RC.r]) ws[RC.r] = [];
+			return ws[RC.r][RC.c] || (ws[RC.r][RC.c] = {t:'z'});
+		}
+		return ws[R] || (ws[R] = {t:'z'});
+	}
+	/* cell address object */
+	if(typeof R != "number") return ws_get_cell_stub(ws, encode_cell(R));
+	/* R and C are 0-based indices */
+	return ws_get_cell_stub(ws, encode_cell({r:R,c:C||0}));
+}
+
+/* find sheet index for given name / validate index */
+function wb_sheet_idx(wb/*:Workbook*/, sh/*:number|string*/) {
+	if(typeof sh == "number") {
+		if(sh >= 0 && wb.SheetNames.length > sh) return sh;
+		throw new Error("Cannot find sheet # " + sh);
+	} else if(typeof sh == "string") {
+		var idx = wb.SheetNames.indexOf(sh);
+		if(idx > -1) return idx;
+		throw new Error("Cannot find sheet name |" + sh + "|");
+	} else throw new Error("Cannot find sheet |" + sh + "|");
+}
+
+/* simple blank workbook object */
+function book_new()/*:Workbook*/ {
+	return { SheetNames: [], Sheets: {} };
+}
+
+/* add a worksheet to the end of a given workbook */
+function book_append_sheet(wb/*:Workbook*/, ws/*:Worksheet*/, name/*:?string*/) {
+	if(!name) for(var i = 1; i <= 0xFFFF; ++i, name = undefined) if(wb.SheetNames.indexOf(name = "Sheet" + i) == -1) break;
+	if(!name || wb.SheetNames.length >= 0xFFFF) throw new Error("Too many worksheets");
+	check_ws_name(name);
+	if(wb.SheetNames.indexOf(name) >= 0) throw new Error("Worksheet with name |" + name + "| already exists!");
+
+	wb.SheetNames.push(name);
+	wb.Sheets[name] = ws;
+}
+
+/* set sheet visibility (visible/hidden/very hidden) */
+function book_set_sheet_visibility(wb/*:Workbook*/, sh/*:number|string*/, vis/*:number*/) {
+	if(!wb.Workbook) wb.Workbook = {};
+	if(!wb.Workbook.Sheets) wb.Workbook.Sheets = [];
+
+	var idx = wb_sheet_idx(wb, sh);
+	// $FlowIgnore
+	if(!wb.Workbook.Sheets[idx]) wb.Workbook.Sheets[idx] = {};
+
+	switch(vis) {
+		case 0: case 1: case 2: break;
+		default: throw new Error("Bad sheet visibility setting " + vis);
+	}
+	// $FlowIgnore
+	wb.Workbook.Sheets[idx].Hidden = vis;
+}
+
+/* set number format */
+function cell_set_number_format(cell/*:Cell*/, fmt/*:string|number*/) {
+	cell.z = fmt;
+	return cell;
+}
+
+/* set cell hyperlink */
+function cell_set_hyperlink(cell/*:Cell*/, target/*:string*/, tooltip/*:?string*/) {
+	if(!target) {
+		delete cell.l;
+	} else {
+		cell.l = ({ Target: target }/*:Hyperlink*/);
+		if(tooltip) cell.l.Tooltip = tooltip;
+	}
+	return cell;
+}
+function cell_set_internal_link(cell/*:Cell*/, range/*:string*/, tooltip/*:?string*/) { return cell_set_hyperlink(cell, "#" + range, tooltip); }
+
+/* add to cell comments */
+function cell_add_comment(cell/*:Cell*/, text/*:string*/, author/*:?string*/) {
+	if(!cell.c) cell.c = [];
+	cell.c.push({t:text, a:author||"SheetJS"});
+}
+
+/* set array formula and flush related cells */
+function sheet_set_array_formula(ws/*:Worksheet*/, range, formula/*:string*/, dynamic/*:boolean*/) {
+	var rng = typeof range != "string" ? range : safe_decode_range(range);
+	var rngstr = typeof range == "string" ? range : encode_range(range);
+	for(var R = rng.s.r; R <= rng.e.r; ++R) for(var C = rng.s.c; C <= rng.e.c; ++C) {
+		var cell = ws_get_cell_stub(ws, R, C);
+		cell.t = 'n';
+		cell.F = rngstr;
+		delete cell.v;
+		if(R == rng.s.r && C == rng.s.c) {
+			cell.f = formula;
+			if(dynamic) cell.D = true;
+		}
+	}
+	return ws;
+}
 

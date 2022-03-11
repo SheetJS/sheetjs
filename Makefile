@@ -47,8 +47,8 @@ $(ESMJSTGT): $(ESMJSDEPS)
 bits/01_version.js: package.json
 	echo "$(ULIB).version = '"`grep version package.json | awk '{gsub(/[^0-9a-z\.-]/,"",$$2); print $$2}'`"';" > $@
 
-bits/18_cfb.js: node_modules/cfb/xlscfb.flow.js
-	cp $^ $@
+#bits/18_cfb.js: node_modules/cfb/xlscfb.flow.js
+#	cp $^ $@
 
 $(TSBITS): bits/%: modules/%
 	cp $^ $@
@@ -110,8 +110,8 @@ BYTEFILEC=dist/xlsx.{full,core,mini}.min.js
 BYTEFILER=dist/xlsx.extendscript.js xlsx.mjs
 .PHONY: bytes
 bytes: ## Display minified and gzipped file sizes
-	@for i in $(BYTEFILEC); do printj "%-30s %7d %10d" $$i $$(wc -c < $$i) $$(gzip --best --stdout $$i | wc -c); done
-	@for i in $(BYTEFILER); do printj "%-30s %7d" $$i $$(wc -c < $$i); done
+	@for i in $(BYTEFILEC); do npx printj "%-30s %7d %10d" $$i $$(wc -c < $$i) $$(gzip --best --stdout $$i | wc -c); done
+	@for i in $(BYTEFILER); do npx printj "%-30s %7d" $$i $$(wc -c < $$i); done
 
 .PHONY: graph
 graph: formats.png legend.png ## Rebuild format conversion graph
@@ -207,6 +207,10 @@ tslint: $(TARGET) ## Run typescript checks
 .PHONY: flow
 flow: lint ## Run flow checker
 	@./node_modules/.bin/flow check --all --show-all-errors --include-warnings
+
+.PHONY: mjslint
+mjslint: $(ESMJSTGT) ## Lint the ESM build
+	@npx eslint -c .eslintmjs $<
 
 .PHONY: cov
 cov: misc/coverage.html ## Run coverage test

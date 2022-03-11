@@ -50,7 +50,7 @@ function read_plaintext_raw(data/*:RawData*/, o/*:ParseOpts*/)/*:Workbook*/ {
 function read_utf16(data/*:RawData*/, o/*:ParseOpts*/)/*:Workbook*/ {
 	var d = data;
 	if(o.type == 'base64') d = Base64.decode(d);
-	d = cptable.utils.decode(1200, d.slice(2), 'str');
+	d = $cptable.utils.decode(1200, d.slice(2), 'str');
 	o.type = "binary";
 	return read_plaintext(d, o);
 }
