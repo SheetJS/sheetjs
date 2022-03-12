@@ -42,6 +42,7 @@ tmp
 .spelling
 .eslintignore
 .eslintrc
+.eslintmjs
 .jshintrc
 xlsx.mini.js
 CONTRIBUTING.md

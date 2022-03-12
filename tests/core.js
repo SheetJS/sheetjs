@@ -1823,6 +1823,30 @@ describe('json output', function() {
 		X.utils.sheet_to_json(ws, {raw:true});
 		X.utils.sheet_to_json(ws, {raw:true, defval: 'jimjin'});
 	});
+	it('should handle skipHidden for rows if requested', function() {
+		var ws2 = X.utils.aoa_to_sheet(data), json = X.utils.sheet_to_json(ws2);
+		assert.equal(json[0]["1"], true);
+		assert.equal(json[2]["3"], "qux");
+		ws2["!rows"] = [null,{hidden:true},null,null]; json = X.utils.sheet_to_json(ws2, {skipHidden: 1});
+		assert.equal(json[0]["1"], "foo");
+		assert.equal(json[1]["3"], "qux");
+	});
+	it('should handle skipHidden for columns if requested', function() {
+		var ws2 = X.utils.aoa_to_sheet(data), json = X.utils.sheet_to_json(ws2);
+		assert.equal(json[1]["2"], "bar");
+		assert.equal(json[2]["3"], "qux");
+		ws2["!cols"] = [null,{hidden:true},null,null]; json = X.utils.sheet_to_json(ws2, {skipHidden: 1});
+		assert.equal(json[1]["2"], void 0);
+		assert.equal(json[2]["3"], "qux");
+	});
+	it('should handle skipHidden when first row is hidden', function() {
+		var ws2 = X.utils.aoa_to_sheet(data), json = X.utils.sheet_to_json(ws2);
+		assert.equal(json[0]["1"], true);
+		assert.equal(json[2]["3"], "qux");
+		ws2["!rows"] = [{hidden:true},null,null,null]; json = X.utils.sheet_to_json(ws2, {skipHidden: 1});
+		assert.equal(json[1]["1"], "foo");
+		assert.equal(json[2]["3"], "qux");
+	});
 	it('should disambiguate headers', function() {
 		var _data = [["S","h","e","e","t","J","S"],[1,2,3,4,5,6,7],[2,3,4,5,6,7,8]];
 		var _ws = X.utils.aoa_to_sheet(_data);
@@ -2284,6 +2308,20 @@ describe('HTML', function() {
 		if(domtest) it('DOM', function() {
 			var ws = X.utils.table_to_sheet(get_dom_element(html));
 			assert.equal(X.utils.sheet_to_csv(ws),  "A,B\n1,2\n3,4\n4,6");
+		});
+	});
+	describe('empty cell containing html element should increment cell index', function() {
+		var html = "<table><tr><td>abc</td><td><b> </b></td><td>def</td></tr></table>";
+		var expectedCellCount = 3;
+		it('HTML string', function() {
+			var ws = X.read(html, {type:'string'}).Sheets.Sheet1;
+			var range = X.utils.decode_range(ws['!ref']);
+			assert.equal(range.e.c,expectedCellCount - 1);
+		});
+		if(domtest) it('DOM', function() {
+			var ws = X.utils.table_to_sheet(get_dom_element(html));
+			var range = X.utils.decode_range(ws['!ref']);
+			assert.equal(range.e.c, expectedCellCount - 1);
 		});
 	});
 });

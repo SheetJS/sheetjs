@@ -714,6 +714,9 @@ export interface Sheet2JSONOpts extends DateNFOption {
     /** if true, return raw data; if false, return formatted text */
     raw?: boolean;
 
+    /** if true, skip hidden rows and columns */
+    skipHidden?: boolean;
+
     /** if true, return raw numbers; if false, return formatted numbers */
     rawNumbers?: boolean;
 }

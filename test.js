@@ -1823,6 +1823,30 @@ describe('json output', function() {
 		X.utils.sheet_to_json(ws, {raw:true});
 		X.utils.sheet_to_json(ws, {raw:true, defval: 'jimjin'});
 	});
+	it('should handle skipHidden for rows if requested', function() {
+		var ws2 = X.utils.aoa_to_sheet(data), json = X.utils.sheet_to_json(ws2);
+		assert.equal(json[0]["1"], true);
+		assert.equal(json[2]["3"], "qux");
+		ws2["!rows"] = [null,{hidden:true},null,null]; json = X.utils.sheet_to_json(ws2, {skipHidden: 1});
+		assert.equal(json[0]["1"], "foo");
+		assert.equal(json[1]["3"], "qux");
+	});
+	it('should handle skipHidden for columns if requested', function() {
+		var ws2 = X.utils.aoa_to_sheet(data), json = X.utils.sheet_to_json(ws2);
+		assert.equal(json[1]["2"], "bar");
+		assert.equal(json[2]["3"], "qux");
+		ws2["!cols"] = [null,{hidden:true},null,null]; json = X.utils.sheet_to_json(ws2, {skipHidden: 1});
+		assert.equal(json[1]["2"], void 0);
+		assert.equal(json[2]["3"], "qux");
+	});
+	it('should handle skipHidden when first row is hidden', function() {
+		var ws2 = X.utils.aoa_to_sheet(data), json = X.utils.sheet_to_json(ws2);
+		assert.equal(json[0]["1"], true);
+		assert.equal(json[2]["3"], "qux");
+		ws2["!rows"] = [{hidden:true},null,null,null]; json = X.utils.sheet_to_json(ws2, {skipHidden: 1});
+		assert.equal(json[1]["1"], "foo");
+		assert.equal(json[2]["3"], "qux");
+	});
 	it('should disambiguate headers', function() {
 		var _data = [["S","h","e","e","t","J","S"],[1,2,3,4,5,6,7],[2,3,4,5,6,7,8]];
 		var _ws = X.utils.aoa_to_sheet(_data);
