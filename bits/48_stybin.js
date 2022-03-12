@@ -211,54 +211,54 @@ function parse_sty_bin(data, themes, opts) {
 	styles.Fonts = [];
 	var state/*:Array<string>*/ = [];
 	var pass = false;
-	recordhopper(data, function hopper_sty(val, R_n, RT) {
+	recordhopper(data, function hopper_sty(val, R, RT) {
 		switch(RT) {
-			case 0x002C: /* 'BrtFmt' */
+			case 0x002C: /* BrtFmt */
 				styles.NumberFmt[val[0]] = val[1]; SSF.load(val[1], val[0]);
 				break;
-			case 0x002B: /* 'BrtFont' */
+			case 0x002B: /* BrtFont */
 				styles.Fonts.push(val);
 				if(val.color.theme != null && themes && themes.themeElements && themes.themeElements.clrScheme) {
 					val.color.rgb = rgb_tint(themes.themeElements.clrScheme[val.color.theme].rgb, val.color.tint || 0);
 				}
 				break;
-			case 0x0401: /* 'BrtKnownFonts' */ break;
-			case 0x002D: /* 'BrtFill' */
+			case 0x0401: /* BrtKnownFonts */ break;
+			case 0x002D: /* BrtFill */
 				break;
-			case 0x002E: /* 'BrtBorder' */
+			case 0x002E: /* BrtBorder */
 				break;
-			case 0x002F: /* 'BrtXF' */
-				if(state[state.length - 1] == "BrtBeginCellXFs") {
+			case 0x002F: /* BrtXF */
+				if(state[state.length - 1] == 0x0269 /* BrtBeginCellXFs */) {
 					styles.CellXf.push(val);
 				}
 				break;
-			case 0x0030: /* 'BrtStyle' */
-			case 0x01FB: /* 'BrtDXF' */
-			case 0x023C: /* 'BrtMRUColor' */
-			case 0x01DB: /* 'BrtIndexedColor': */
+			case 0x0030: /* BrtStyle */
+			case 0x01FB: /* BrtDXF */
+			case 0x023C: /* BrtMRUColor */
+			case 0x01DB: /* BrtIndexedColor */
 				break;
 
-			case 0x0493: /* 'BrtDXF14' */
-			case 0x0836: /* 'BrtDXF15' */
-			case 0x046A: /* 'BrtSlicerStyleElement' */
-			case 0x0200: /* 'BrtTableStyleElement' */
-			case 0x082F: /* 'BrtTimelineStyleElement' */
-			case 0x0C00: /* 'BrtUid' */
+			case 0x0493: /* BrtDXF14 */
+			case 0x0836: /* BrtDXF15 */
+			case 0x046A: /* BrtSlicerStyleElement */
+			case 0x0200: /* BrtTableStyleElement */
+			case 0x082F: /* BrtTimelineStyleElement */
+			case 0x0C00: /* BrtUid */
 				break;
 
-			case 0x0023: /* 'BrtFRTBegin' */
+			case 0x0023: /* BrtFRTBegin */
 				pass = true; break;
-			case 0x0024: /* 'BrtFRTEnd' */
+			case 0x0024: /* BrtFRTEnd */
 				pass = false; break;
-			case 0x0025: /* 'BrtACBegin' */
-				state.push(R_n); pass = true; break;
-			case 0x0026: /* 'BrtACEnd' */
+			case 0x0025: /* BrtACBegin */
+				state.push(RT); pass = true; break;
+			case 0x0026: /* BrtACEnd */
 				state.pop(); pass = false; break;
 
 			default:
-				if((R_n||"").indexOf("Begin") > 0) state.push(R_n);
-				else if((R_n||"").indexOf("End") > 0) state.pop();
-				else if(!pass || (opts.WTF && state[state.length-1] != "BrtACBegin")) throw new Error("Unexpected record " + RT + " " + R_n);
+				if(R.T > 0) state.push(RT);
+				else if(R.T < 0) state.pop();
+				else if(!pass || (opts.WTF && state[state.length-1] != 0x0025 /* BrtACBegin */)) throw new Error("Unexpected record 0x" + RT.toString(16));
 		}
 	});
 	return styles;
@@ -273,20 +273,20 @@ function write_FMTS_bin(ba, NF/*:?SSFTable*/) {
 	});
 
 	if(cnt == 0) return;
-	write_record(ba, "BrtBeginFmts", write_UInt32LE(cnt));
+	write_record(ba, 0x0267 /* BrtBeginFmts */, write_UInt32LE(cnt));
 	[[5,8],[23,26],[41,44],[/*63*/50,/*66],[164,*/392]].forEach(function(r) {
 		/*:: if(!NF) return; */
-		for(var i = r[0]; i <= r[1]; ++i) if(NF[i] != null) write_record(ba, "BrtFmt", write_BrtFmt(i, NF[i]));
+		for(var i = r[0]; i <= r[1]; ++i) if(NF[i] != null) write_record(ba, 0x002C /* BrtFmt */, write_BrtFmt(i, NF[i]));
 	});
-	write_record(ba, "BrtEndFmts");
+	write_record(ba, 0x0268 /* BrtEndFmts */);
 }
 
 function write_FONTS_bin(ba/*::, data*/) {
 	var cnt = 1;
 
 	if(cnt == 0) return;
-	write_record(ba, "BrtBeginFonts", write_UInt32LE(cnt));
-	write_record(ba, "BrtFont", write_BrtFont({
+	write_record(ba, 0x0263 /* BrtBeginFonts */, write_UInt32LE(cnt));
+	write_record(ba, 0x002B /* BrtFont */, write_BrtFont({
 		sz:12,
 		color: {theme:1},
 		name: "Calibri",
@@ -294,77 +294,77 @@ function write_FONTS_bin(ba/*::, data*/) {
 		scheme: "minor"
 	}));
 	/* 1*65491BrtFont [ACFONTS] */
-	write_record(ba, "BrtEndFonts");
+	write_record(ba, 0x0264 /* BrtEndFonts */);
 }
 
 function write_FILLS_bin(ba/*::, data*/) {
 	var cnt = 2;
 
 	if(cnt == 0) return;
-	write_record(ba, "BrtBeginFills", write_UInt32LE(cnt));
-	write_record(ba, "BrtFill", write_BrtFill({patternType:"none"}));
-	write_record(ba, "BrtFill", write_BrtFill({patternType:"gray125"}));
+	write_record(ba, 0x025B /* BrtBeginFills */, write_UInt32LE(cnt));
+	write_record(ba, 0x002D /* BrtFill */, write_BrtFill({patternType:"none"}));
+	write_record(ba, 0x002D /* BrtFill */, write_BrtFill({patternType:"gray125"}));
 	/* 1*65431BrtFill */
-	write_record(ba, "BrtEndFills");
+	write_record(ba, 0x025C /* BrtEndFills */);
 }
 
 function write_BORDERS_bin(ba/*::, data*/) {
 	var cnt = 1;
 
 	if(cnt == 0) return;
-	write_record(ba, "BrtBeginBorders", write_UInt32LE(cnt));
-	write_record(ba, "BrtBorder", write_BrtBorder({}));
+	write_record(ba, 0x0265 /* BrtBeginBorders */, write_UInt32LE(cnt));
+	write_record(ba, 0x002E /* BrtBorder */, write_BrtBorder({}));
 	/* 1*65430BrtBorder */
-	write_record(ba, "BrtEndBorders");
+	write_record(ba, 0x0266 /* BrtEndBorders */);
 }
 
 function write_CELLSTYLEXFS_bin(ba/*::, data*/) {
 	var cnt = 1;
-	write_record(ba, "BrtBeginCellStyleXFs", write_UInt32LE(cnt));
-	write_record(ba, "BrtXF", write_BrtXF({
+	write_record(ba, 0x0272 /* BrtBeginCellStyleXFs */, write_UInt32LE(cnt));
+	write_record(ba, 0x002F /* BrtXF */, write_BrtXF({
 		numFmtId: 0,
 		fontId:   0,
 		fillId:   0,
 		borderId: 0
 	}, 0xFFFF));
 	/* 1*65430(BrtXF *FRT) */
-	write_record(ba, "BrtEndCellStyleXFs");
+	write_record(ba, 0x0273 /* BrtEndCellStyleXFs */);
 }
 
 function write_CELLXFS_bin(ba, data) {
-	write_record(ba, "BrtBeginCellXFs", write_UInt32LE(data.length));
-	data.forEach(function(c) { write_record(ba, "BrtXF", write_BrtXF(c,0)); });
+	write_record(ba, 0x0269 /* BrtBeginCellXFs */, write_UInt32LE(data.length));
+	data.forEach(function(c) { write_record(ba, 0x002F /* BrtXF */, write_BrtXF(c,0)); });
 	/* 1*65430(BrtXF *FRT) */
-	write_record(ba, "BrtEndCellXFs");
+	write_record(ba, 0x026A /* BrtEndCellXFs */);
 }
 
 function write_STYLES_bin(ba/*::, data*/) {
 	var cnt = 1;
 
-	write_record(ba, "BrtBeginStyles", write_UInt32LE(cnt));
-	write_record(ba, "BrtStyle", write_BrtStyle({
+	write_record(ba, 0x026B /* BrtBeginStyles */, write_UInt32LE(cnt));
+	write_record(ba, 0x0030 /* BrtStyle */, write_BrtStyle({
 		xfId:0,
 		builtinId:0,
 		name:"Normal"
 	}));
 	/* 1*65430(BrtStyle *FRT) */
-	write_record(ba, "BrtEndStyles");
+	write_record(ba, 0x026C /* BrtEndStyles */);
 }
 
 function write_DXFS_bin(ba/*::, data*/) {
 	var cnt = 0;
 
-	write_record(ba, "BrtBeginDXFs", write_UInt32LE(cnt));
+	write_record(ba, 0x01F9 /* BrtBeginDXFs */, write_UInt32LE(cnt));
 	/* *2147483647(BrtDXF *FRT) */
-	write_record(ba, "BrtEndDXFs");
+	write_record(ba, 0x01FA /* BrtEndDXFs */);
 }
 
 function write_TABLESTYLES_bin(ba/*::, data*/) {
 	var cnt = 0;
 
-	write_record(ba, "BrtBeginTableStyles", write_BrtBeginTableStyles(cnt, "TableStyleMedium9", "PivotStyleMedium4"));
+	write_record(ba, 0x01FC /* BrtBeginTableStyles */, write_BrtBeginTableStyles(cnt, "TableStyleMedium9", "PivotStyleMedium4"));
 	/* *TABLESTYLE */
-	write_record(ba, "BrtEndTableStyles");
+	write_record(ba, 0x01FD /* BrtEndTableStyles */);
 }
 
 function write_COLORPALETTE_bin(/*::ba, data*/) {
@@ -375,7 +375,7 @@ function write_COLORPALETTE_bin(/*::ba, data*/) {
 /* [MS-XLSB] 2.1.7.50 Styles */
 function write_sty_bin(wb, opts) {
 	var ba = buf_array();
-	write_record(ba, "BrtBeginStyleSheet");
+	write_record(ba, 0x0116 /* BrtBeginStyleSheet */);
 	write_FMTS_bin(ba, wb.SSF);
 	write_FONTS_bin(ba, wb);
 	write_FILLS_bin(ba, wb);
@@ -387,6 +387,6 @@ function write_sty_bin(wb, opts) {
 	write_TABLESTYLES_bin(ba, wb);
 	write_COLORPALETTE_bin(ba, wb);
 	/* FRTSTYLESHEET*/
-	write_record(ba, "BrtEndStyleSheet");
+	write_record(ba, 0x0117 /* BrtEndStyleSheet */);
 	return ba.end();
 }

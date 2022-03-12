@@ -99,7 +99,7 @@ function parse_wb_bin(data, opts)/*:WorkbookFile*/ {
 
 	XLSBRecordEnum[0x0010] = { n:"BrtFRTArchID$", f:parse_BrtFRTArchID$ };
 
-	recordhopper(data, function hopper_wb(val, R_n, RT) {
+	recordhopper(data, function hopper_wb(val, R, RT) {
 		switch(RT) {
 			case 0x009C: /* 'BrtBundleSh' */
 				supbooks.SheetNames.push(val.name);
@@ -169,20 +169,19 @@ function parse_wb_bin(data, opts)/*:WorkbookFile*/ {
 				break;
 
 			case 0x0023: /* 'BrtFRTBegin' */
-				state.push(R_n); pass = true; break;
+				state.push(RT); pass = true; break;
 			case 0x0024: /* 'BrtFRTEnd' */
 				state.pop(); pass = false; break;
 			case 0x0025: /* 'BrtACBegin' */
-				state.push(R_n); pass = true; break;
+				state.push(RT); pass = true; break;
 			case 0x0026: /* 'BrtACEnd' */
 				state.pop(); pass = false; break;
 
 			case 0x0010: /* 'BrtFRTArchID$' */ break;
 
 			default:
-				if((R_n||"").indexOf("Begin") > 0){/* empty */}
-				else if((R_n||"").indexOf("End") > 0){/* empty */}
-				else if(!pass || (opts.WTF && state[state.length-1] != "BrtACBegin" && state[state.length-1] != "BrtFRTBegin")) throw new Error("Unexpected record " + RT + " " + R_n);
+				if(R.T){/* empty */}
+				else if(!pass || (opts.WTF && state[state.length-1] != 0x0025 /* BrtACBegin */ && state[state.length-1] != 0x0023 /* BrtFRTBegin */)) throw new Error("Unexpected record 0x" + RT.toString(16));
 		}
 	}, opts);
 
@@ -196,13 +195,13 @@ function parse_wb_bin(data, opts)/*:WorkbookFile*/ {
 }
 
 function write_BUNDLESHS(ba, wb/*::, opts*/) {
-	write_record(ba, "BrtBeginBundleShs");
+	write_record(ba, 0x008F /* BrtBeginBundleShs */);
 	for(var idx = 0; idx != wb.SheetNames.length; ++idx) {
 		var viz = wb.Workbook && wb.Workbook.Sheets && wb.Workbook.Sheets[idx] && wb.Workbook.Sheets[idx].Hidden || 0;
 		var d = { Hidden: viz, iTabID: idx+1, strRelID: 'rId' + (idx+1), name: wb.SheetNames[idx] };
-		write_record(ba, "BrtBundleSh", write_BrtBundleSh(d));
+		write_record(ba, 0x009C /* BrtBundleSh */, write_BrtBundleSh(d));
 	}
-	write_record(ba, "BrtEndBundleShs");
+	write_record(ba, 0x0090 /* BrtEndBundleShs */);
 }
 
 /* [MS-XLSB] 2.4.649 BrtFileVersion */
@@ -241,10 +240,10 @@ function write_BOOKVIEWS(ba, wb/*::, opts*/) {
 		else if(sheets[i].Hidden == 1 && hidden == -1) hidden = i;
 	}
 	if(hidden > vistab) return;
-	write_record(ba, "BrtBeginBookViews");
-	write_record(ba, "BrtBookView", write_BrtBookView(vistab));
+	write_record(ba, 0x0087 /* BrtBeginBookViews */);
+	write_record(ba, 0x009E /* BrtBookView */, write_BrtBookView(vistab));
 	/* 1*(BrtBookView *FRT) */
-	write_record(ba, "BrtEndBookViews");
+	write_record(ba, 0x0088 /* BrtEndBookViews */);
 }
 
 /* [MS-XLSB] 2.4.305 BrtCalcProp */
@@ -270,10 +269,10 @@ function write_BOOKVIEWS(ba, wb/*::, opts*/) {
 /* [MS-XLSB] 2.1.7.61 Workbook */
 function write_wb_bin(wb, opts) {
 	var ba = buf_array();
-	write_record(ba, "BrtBeginBook");
-	write_record(ba, "BrtFileVersion", write_BrtFileVersion());
+	write_record(ba, 0x0083 /* BrtBeginBook */);
+	write_record(ba, 0x0080 /* BrtFileVersion */, write_BrtFileVersion());
 	/* [[BrtFileSharingIso] BrtFileSharing] */
-	write_record(ba, "BrtWbProp", write_BrtWbProp(wb.Workbook && wb.Workbook.WBProps || null));
+	write_record(ba, 0x0099 /* BrtWbProp */, write_BrtWbProp(wb.Workbook && wb.Workbook.WBProps || null));
 	/* [ACABSPATH] */
 	/* [[BrtBookProtectionIso] BrtBookProtection] */
 	write_BOOKVIEWS(ba, wb, opts);
@@ -281,18 +280,18 @@ function write_wb_bin(wb, opts) {
 	/* [FNGROUP] */
 	/* [EXTERNALS] */
 	/* *BrtName */
-	/* write_record(ba, "BrtCalcProp", write_BrtCalcProp()); */
+	/* write_record(ba, 0x009D BrtCalcProp, write_BrtCalcProp()); */
 	/* [BrtOleSize] */
 	/* *(BrtUserBookView *FRT) */
 	/* [PIVOTCACHEIDS] */
 	/* [BrtWbFactoid] */
 	/* [SMARTTAGTYPES] */
 	/* [BrtWebOpt] */
-	/* write_record(ba, "BrtFileRecover", write_BrtFileRecover()); */
+	/* write_record(ba, 0x009B BrtFileRecover, write_BrtFileRecover()); */
 	/* [WEBPUBITEMS] */
 	/* [CRERRS] */
 	/* FRTWORKBOOK */
-	write_record(ba, "BrtEndBook");
+	write_record(ba, 0x0084 /* BrtEndBook */);
 
 	return ba.end();
 }

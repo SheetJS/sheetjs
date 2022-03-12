@@ -36,15 +36,14 @@ function parse_BrtCalcChainItem$(data) {
 function parse_cc_bin(data, name, opts) {
 	var out = [];
 	var pass = false;
-	recordhopper(data, function hopper_cc(val, R_n, RT) {
+	recordhopper(data, function hopper_cc(val, R, RT) {
 		switch(RT) {
 			case 0x003F: /* 'BrtCalcChainItem$' */
 				out.push(val); break;
 
 			default:
-				if((R_n||"").indexOf("Begin") > 0){/* empty */}
-				else if((R_n||"").indexOf("End") > 0){/* empty */}
-				else if(!pass || opts.WTF) throw new Error("Unexpected record " + RT + " " + R_n);
+				if(R.T){/* empty */}
+				else if(!pass || opts.WTF) throw new Error("Unexpected record 0x" + RT.toString(16));
 		}
 	});
 	return out;

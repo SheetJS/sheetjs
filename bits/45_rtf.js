@@ -1,4 +1,4 @@
-var RTF = (function() {
+var RTF = /*#__PURE__*/(function() {
 	function rtf_to_sheet(d/*:RawData*/, opts)/*:Worksheet*/ {
 		switch(opts.type) {
 			case 'base64': return rtf_to_sheet_str(Base64.decode(d), opts);

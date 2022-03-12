@@ -369,7 +369,7 @@ function write_cellXfs(cellXfs)/*:string*/ {
 }
 
 /* 18.8 Styles CT_Stylesheet*/
-var parse_sty_xml= (function make_pstyx() {
+var parse_sty_xml= /*#__PURE__*/(function make_pstyx() {
 var numFmtRegex = /<(?:\w+:)?numFmts([^>]*)>[\S\s]*?<\/(?:\w+:)?numFmts>/;
 var cellXfRegex = /<(?:\w+:)?cellXfs([^>]*)>[\S\s]*?<\/(?:\w+:)?cellXfs>/;
 var fillsRegex = /<(?:\w+:)?fills([^>]*)>[\S\s]*?<\/(?:\w+:)?fills>/;
@@ -414,7 +414,7 @@ RELS.STY = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/
 
 function write_sty_xml(wb/*:Workbook*/, opts)/*:string*/ {
 	var o = [XML_HEADER, writextag('styleSheet', null, {
-		'xmlns': XMLNS.main[0],
+		'xmlns': XMLNS_main[0],
 		'xmlns:vt': XMLNS.vt
 	})], w;
 	if(wb.SSF && (w = write_numFmts(wb.SSF)) != null) o[o.length] = w;

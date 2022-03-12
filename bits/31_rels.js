@@ -40,7 +40,6 @@ function parse_rels(data/*:?string*/, currentFilePath/*:string*/) {
 	return rels;
 }
 
-XMLNS.RELS = 'http://schemas.openxmlformats.org/package/2006/relationships';
 
 var RELS_ROOT = writextag('Relationships', null, {
 	//'xmlns:ns0': XMLNS.RELS,

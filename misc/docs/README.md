@@ -220,6 +220,10 @@ import * as XLSX from 'xlsx/xlsx.mjs';
 import * as fs from 'fs';
 XLSX.set_fs(fs);
 
+/* load 'stream' for stream support */
+import { Readable } from 'stream';
+XLSX.stream.set_readable(Readable);
+
 /* load the codepage support library for extended support with older formats  */
 import * as cpexcel from 'xlsx/dist/cpexcel.full.mjs';
 XLSX.set_cptable(cpexcel);
@@ -1606,8 +1610,8 @@ The [included demos](demos/) cover mobile apps and other special deployments.
 ### Streaming Write
 
 The streaming write functions are available in the `XLSX.stream` object.  They
-take the same arguments as the normal write functions but return a Readable
-Stream.  They are only exposed in NodeJS.
+take the same arguments as the normal write functions but return a NodeJS
+Readable Stream.
 
 - `XLSX.stream.to_csv` is the streaming version of `XLSX.utils.sheet_to_csv`.
 - `XLSX.stream.to_html` is the streaming version of `XLSX.utils.sheet_to_html`.
@@ -3603,8 +3607,11 @@ takes an options argument:
 | array of strings | Use specified strings as keys in row objects              |
 | (default)        | Read and disambiguate first row as keys                   |
 
-If header is not `1`, the row object will contain the non-enumerable property
-`__rowNum__` that represents the row of the sheet corresponding to the entry.
+- If header is not `1`, the row object will contain the non-enumerable property
+  `__rowNum__` that represents the row of the sheet corresponding to the entry.
+- If header is an array, the keys will not be disambiguated.  This can lead to
+  unexpected results if the array values are not unique!
+
 
 
 For the example sheet:

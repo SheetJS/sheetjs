@@ -3,4 +3,4 @@
 /*jshint -W041 */
 /*:: declare var DO_NOT_EXPORT_SSF: any; */
 var SSF/*:SSFModule*/ = ({}/*:any*/);
-var make_ssf = function make_ssf(SSF/*:SSFModule*/){
+function make_ssf(SSF/*:SSFModule*/){

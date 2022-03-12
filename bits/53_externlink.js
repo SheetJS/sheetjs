@@ -11,7 +11,7 @@ function parse_xlink_bin(data, rel, name/*:string*/, _opts) {
 
 	var pass = false, end = false;
 
-	recordhopper(data, function xlink_parse(val, R_n, RT) {
+	recordhopper(data, function xlink_parse(val, R, RT) {
 		if(end) return;
 		switch(RT) {
 			case 0x0167: /* 'BrtSupTabs' */
@@ -43,9 +43,8 @@ function parse_xlink_bin(data, rel, name/*:string*/, _opts) {
 				pass = false; break;
 
 			default:
-				if((R_n||"").indexOf("Begin") > 0){/* empty */}
-				else if((R_n||"").indexOf("End") > 0){/* empty */}
-				else if(!pass || opts.WTF) throw new Error("Unexpected record " + RT.toString(16) + " " + R_n);
+				if(R.T){/* empty */}
+				else if(!pass || opts.WTF) throw new Error("Unexpected record 0x" + RT.toString(16));
 		}
 	}, opts);
 }

@@ -1,7 +1,7 @@
 /* ssf.js (C) 2013-present SheetJS -- http://sheetjs.com */
 /*jshint -W041 */
 var SSF/*:SSFModule*/ = ({}/*:any*/);
-var make_ssf = function make_ssf(SSF/*:SSFModule*/){
+function make_ssf(SSF/*:SSFModule*/){
 SSF.version = '0.11.2';
 function _strrev(x/*:string*/)/*:string*/ { var o = "", i = x.length-1; while(i>=0) o += x.charAt(i--); return o; }
 function fill(c/*:string*/,l/*:number*/)/*:string*/ { var o = ""; while(o.length < l) o+=c; return o; }
@@ -983,5 +983,5 @@ SSF.load_table = function load_table(tbl/*:SSFTable*/)/*:void*/ {
 };
 SSF.init_table = init_table;
 SSF.format = format;
-};
+}
 make_ssf(SSF);

@@ -304,7 +304,7 @@ function write_ws_xml_cell(cell/*:Cell*/, ref, ws, opts/*::, idx, wb*/)/*:string
 	return writextag('c', v, o);
 }
 
-var parse_ws_xml_data = (function() {
+var parse_ws_xml_data = /*#__PURE__*/(function() {
 	var cellregex = /<(?:\w+:)?c[ \/>]/, rowregex = /<\/(?:\w+:)?row>/;
 	var rregex = /r=["']([^"']*)["']/, isregex = /<(?:\w+:)?is>([\S\s]*?)<\/(?:\w+:)?is>/;
 	var refregex = /ref=["']([^"']*)["']/;
@@ -537,7 +537,7 @@ function write_ws_xml_data(ws/*:Worksheet*/, opts, idx/*:number*/, wb/*:Workbook
 
 function write_ws_xml(idx/*:number*/, opts, wb/*:Workbook*/, rels)/*:string*/ {
 	var o = [XML_HEADER, writextag('worksheet', null, {
-		'xmlns': XMLNS.main[0],
+		'xmlns': XMLNS_main[0],
 		'xmlns:r': XMLNS.r
 	})];
 	var s = wb.SheetNames[idx], sidx = 0, rdata = "";

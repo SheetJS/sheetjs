@@ -46,7 +46,7 @@ var rencoding = evert(encodings);
 //var rencstr = "&<>'\"".split("");
 
 // TODO: CP remap (need to read file version to determine OS)
-var unescapexml/*:StringConv*/ = (function() {
+var unescapexml/*:StringConv*/ = /*#__PURE__*/(function() {
 	/* 22.4.2.4 bstr (Basic String) */
 	var encregex = /&(?:quot|apos|gt|lt|amp|#x?([\da-fA-F]+));/ig, coderegex = /_x([\da-fA-F]{4})_/ig;
 	return function unescapexml(text/*:string*/)/*:string*/ {
@@ -76,14 +76,12 @@ function escapexlml(text/*:string*/)/*:string*/{
 }
 
 /* TODO: handle codepages */
-var xlml_fixstr/*:StringConv*/ = (function() {
+var xlml_fixstr/*:StringConv*/ = /*#__PURE__*/(function() {
 	var entregex = /&#(\d+);/g;
 	function entrepl($$/*:string*/,$1/*:string*/)/*:string*/ { return String.fromCharCode(parseInt($1,10)); }
 	return function xlml_fixstr(str/*:string*/)/*:string*/ { return str.replace(entregex,entrepl); };
 })();
-var xlml_unfixstr/*:StringConv*/ = (function() {
-	return function xlml_unfixstr(str/*:string*/)/*:string*/ { return str.replace(/(\r\n|[\r\n])/g,"\&#10;"); };
-})();
+function xlml_unfixstr(str/*:string*/)/*:string*/ { return str.replace(/(\r\n|[\r\n])/g,"\&#10;"); };
 
 function parsexmlbool(value/*:any*/)/*:boolean*/ {
 	switch(value) {
@@ -162,7 +160,7 @@ if(has_buf) {
 }
 
 // matches <foo>...</foo> extracts content
-var matchtag = (function() {
+var matchtag = /*#__PURE__*/(function() {
 	var mtcache/*:{[k:string]:RegExp}*/ = ({}/*:any*/);
 	return function matchtag(f/*:string*/,g/*:?string*/)/*:RegExp*/ {
 		var t = f+"|"+(g||"");
@@ -171,7 +169,7 @@ var matchtag = (function() {
 	};
 })();
 
-var htmldecode/*:{(s:string):string}*/ = (function() {
+var htmldecode/*:{(s:string):string}*/ = /*#__PURE__*/(function() {
 	var entities/*:Array<[RegExp, string]>*/ = [
 		['nbsp', ' '], ['middot', '·'],
 		['quot', '"'], ['apos', "'"], ['gt',   '>'], ['lt',   '<'], ['amp',  '&']
@@ -195,7 +193,7 @@ var htmldecode/*:{(s:string):string}*/ = (function() {
 	};
 })();
 
-var vtregex = (function(){ var vt_cache = {};
+var vtregex = /*#__PURE__*/(function(){ var vt_cache = {};
 	return function vt_regex(bt) {
 		if(vt_cache[bt] !== undefined) return vt_cache[bt];
 		return (vt_cache[bt] = new RegExp("<(?:vt:)?" + bt + ">([\\s\\S]*?)</(?:vt:)?" + bt + ">", 'g') );
@@ -250,6 +248,11 @@ var xlmlregex = /<(\/?)([^\s?><!\/:]*:|)([^\s?<>:\/]+)(?:[\s?:\/][^>]*)?>/mg;
 //var xlmlregex = /<(\/?)([a-z0-9]*:|)(\w+)[^>]*>/mg;
 
 var XMLNS = ({
+	CORE_PROPS: 'http://schemas.openxmlformats.org/package/2006/metadata/core-properties',
+	CUST_PROPS: "http://schemas.openxmlformats.org/officeDocument/2006/custom-properties",
+	EXT_PROPS: "http://schemas.openxmlformats.org/officeDocument/2006/extended-properties",
+	CT: 'http://schemas.openxmlformats.org/package/2006/content-types',
+	RELS: 'http://schemas.openxmlformats.org/package/2006/relationships',
 	'dc': 'http://purl.org/dc/elements/1.1/',
 	'dcterms': 'http://purl.org/dc/terms/',
 	'dcmitype': 'http://purl.org/dc/dcmitype/',
@@ -261,7 +264,7 @@ var XMLNS = ({
 	'xsd': 'http://www.w3.org/2001/XMLSchema'
 }/*:any*/);
 
-XMLNS.main = [
+var XMLNS_main = [
 	'http://schemas.openxmlformats.org/spreadsheetml/2006/main',
 	'http://purl.oclc.org/ooxml/spreadsheetml/main',
 	'http://schemas.microsoft.com/office/excel/2006/main',

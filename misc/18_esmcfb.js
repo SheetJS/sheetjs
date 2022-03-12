@@ -40,7 +40,7 @@ type CFBFiles = {[n:string]:CFBEntry};
 /* crc32.js (C) 2014-present SheetJS -- http://sheetjs.com */
 /* vim: set ts=2: */
 /*exported CRC32 */
-var CRC32 = (function() {
+var CRC32 = /*#__PURE__*/(function() {
 var CRC32 = {};
 CRC32.version = '1.2.0';
 /* see perf/crc32table.js */
@@ -132,7 +132,7 @@ CRC32.str = crc32_str;
 return CRC32;
 })();
 /* [MS-CFB] v20171201 */
-var CFB = (function _CFB(){
+var CFB = /*#__PURE__*/(function _CFB(){
 var exports = {};
 exports.version = '1.2.1';
 /* [MS-CFB] 2.6.4 */
@@ -1065,7 +1065,7 @@ if(!use_typed_arrays) {
 	for(; i<=279; i++) clens.push(7);
 	for(; i<=287; i++) clens.push(8);
 	build_tree(clens, fix_lmap, 288);
-})();var _deflateRaw = (function _deflateRawIIFE() {
+})();var _deflateRaw = /*#__PURE__*/(function _deflateRawIIFE() {
 	var DST_LN_RE = use_typed_arrays ? new Uint8Array(0x8000) : [];
 	var j = 0, k = 0;
 	for(; j < DST_LN.length - 1; ++j) {

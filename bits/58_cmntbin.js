@@ -29,7 +29,7 @@ function parse_comments_bin(data, opts)/*:Array<RawComment>*/ {
 	var authors/*:Array<string>*/ = [];
 	var c = {};
 	var pass = false;
-	recordhopper(data, function hopper_cmnt(val, R_n, RT) {
+	recordhopper(data, function hopper_cmnt(val, R, RT) {
 		switch(RT) {
 			case 0x0278: /* 'BrtCommentAuthor' */
 				authors.push(val); break;
@@ -56,9 +56,8 @@ function parse_comments_bin(data, opts)/*:Array<RawComment>*/ {
 
 
 			default:
-				if((R_n||"").indexOf("Begin") > 0){/* empty */}
-				else if((R_n||"").indexOf("End") > 0){/* empty */}
-				else if(!pass || opts.WTF) throw new Error("Unexpected record " + RT + " " + R_n);
+				if(R.T){/* empty */}
+				else if(!pass || opts.WTF) throw new Error("Unexpected record 0x" + RT.toString(16));
 		}
 	});
 	return out;
@@ -67,31 +66,31 @@ function parse_comments_bin(data, opts)/*:Array<RawComment>*/ {
 function write_comments_bin(data/*::, opts*/) {
 	var ba = buf_array();
 	var iauthor/*:Array<string>*/ = [];
-	write_record(ba, "BrtBeginComments");
+	write_record(ba, 0x0274 /* BrtBeginComments */);
 
-	write_record(ba, "BrtBeginCommentAuthors");
+	write_record(ba, 0x0276 /* BrtBeginCommentAuthors */);
 	data.forEach(function(comment) {
 		comment[1].forEach(function(c) {
 			if(iauthor.indexOf(c.a) > -1) return;
 			iauthor.push(c.a.slice(0,54));
-			write_record(ba, "BrtCommentAuthor", write_BrtCommentAuthor(c.a));
+			write_record(ba, 0x0278 /* BrtCommentAuthor */, write_BrtCommentAuthor(c.a));
 		});
 	});
-	write_record(ba, "BrtEndCommentAuthors");
+	write_record(ba, 0x0277 /* BrtEndCommentAuthors */);
 
-	write_record(ba, "BrtBeginCommentList");
+	write_record(ba, 0x0279 /* BrtBeginCommentList */);
 	data.forEach(function(comment) {
 		comment[1].forEach(function(c) {
 			c.iauthor = iauthor.indexOf(c.a);
 			var range = {s:decode_cell(comment[0]),e:decode_cell(comment[0])};
-			write_record(ba, "BrtBeginComment", write_BrtBeginComment([range, c]));
-			if(c.t && c.t.length > 0) write_record(ba, "BrtCommentText", write_BrtCommentText(c));
-			write_record(ba, "BrtEndComment");
+			write_record(ba, 0x027B /* BrtBeginComment */, write_BrtBeginComment([range, c]));
+			if(c.t && c.t.length > 0) write_record(ba, 0x027D /* BrtCommentText */, write_BrtCommentText(c));
+			write_record(ba, 0x027C /* BrtEndComment */);
 			delete c.iauthor;
 		});
 	});
-	write_record(ba, "BrtEndCommentList");
+	write_record(ba, 0x027A /* BrtEndCommentList */);
 
-	write_record(ba, "BrtEndComments");
+	write_record(ba, 0x0275 /* BrtEndComments */);
 	return ba.end();
 }

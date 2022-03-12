@@ -14,7 +14,6 @@ var EXT_PROPS/*:Array<Array<string> >*/ = [
 	["TitlesOfParts", "TitlesOfParts", "raw"]
 ];
 
-XMLNS.EXT_PROPS = "http://schemas.openxmlformats.org/officeDocument/2006/extended-properties";
 RELS.EXT_PROPS  = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/extended-properties';
 
 var PseudoPropsPairs = [

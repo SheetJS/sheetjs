@@ -1,5 +1,5 @@
 /* note: browser DOM element cannot see mso- style attrs, must parse */
-var HTML_ = (function() {
+var HTML_ = /*#__PURE__*/(function() {
 	function html_to_sheet(str/*:string*/, _opts)/*:Workbook*/ {
 		var opts = _opts || {};
 		if(DENSE != null && opts.dense == null) opts.dense = DENSE;
@@ -62,8 +62,8 @@ var HTML_ = (function() {
 		var mtch = str.match(/<table[\s\S]*?>[\s\S]*?<\/table>/gi);
 		if(!mtch || mtch.length == 0) throw new Error("Invalid HTML: could not find <table>");
 		if(mtch.length == 1) return sheet_to_workbook(html_to_sheet(mtch[0], opts), opts);
-		var wb = utils.book_new();
-		mtch.forEach(function(s, idx) { utils.book_append_sheet(wb, html_to_sheet(s, opts), "Sheet" + (idx+1)); });
+		var wb = book_new();
+		mtch.forEach(function(s, idx) { book_append_sheet(wb, html_to_sheet(s, opts), "Sheet" + (idx+1)); });
 		return wb;
 	}
 	function make_html_row(ws/*:Worksheet*/, r/*:Range*/, R/*:number*/, o/*:Sheet2HTMLOpts*/)/*:string*/ {

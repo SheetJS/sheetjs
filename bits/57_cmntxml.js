@@ -31,7 +31,7 @@ function parse_comments_xml(data/*:string*/, opts)/*:Array<RawComment>*/ {
 }
 
 function write_comments_xml(data/*::, opts*/) {
-	var o = [XML_HEADER, writextag('comments', null, { 'xmlns': XMLNS.main[0] })];
+	var o = [XML_HEADER, writextag('comments', null, { 'xmlns': XMLNS_main[0] })];
 
 	var iauthor/*:Array<string>*/ = [];
 	o.push("<authors>");

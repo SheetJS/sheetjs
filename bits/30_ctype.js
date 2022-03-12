@@ -5,13 +5,37 @@
 var ct2type/*{[string]:string}*/ = ({
 	/* Workbook */
 	"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml": "workbooks",
+	"application/vnd.ms-excel.sheet.macroEnabled.main+xml": "workbooks",
+	"application/vnd.ms-excel.sheet.binary.macroEnabled.main": "workbooks",
+	"application/vnd.ms-excel.addin.macroEnabled.main+xml": "workbooks",
+	"application/vnd.openxmlformats-officedocument.spreadsheetml.template.main+xml": "workbooks",
 
 	/* Worksheet */
+	"application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml": "sheets",
+	"application/vnd.ms-excel.worksheet": "sheets",
 	"application/vnd.ms-excel.binIndexWs": "TODO", /* Binary Index */
 
+	/* Chartsheet */
+	"application/vnd.openxmlformats-officedocument.spreadsheetml.chartsheet+xml": "charts",
+	"application/vnd.ms-excel.chartsheet": "charts",
+
 	/* Macrosheet */
+	"application/vnd.ms-excel.macrosheet+xml": "macros",
+	"application/vnd.ms-excel.macrosheet": "macros",
 	"application/vnd.ms-excel.intlmacrosheet": "TODO",
 	"application/vnd.ms-excel.binIndexMs": "TODO", /* Binary Index */
+
+	/* Dialogsheet */
+	"application/vnd.openxmlformats-officedocument.spreadsheetml.dialogsheet+xml": "dialogs",
+	"application/vnd.ms-excel.dialogsheet": "dialogs",
+
+	/* Shared Strings */
+	"application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml": "strs",
+	"application/vnd.ms-excel.sharedStrings": "strs",
+
+	/* Styles */
+	"application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml": "styles",
+	"application/vnd.ms-excel.styles": "styles",
 
 	/* File Properties */
 	"application/vnd.openxmlformats-package.core-properties+xml": "coreprops",
@@ -21,6 +45,14 @@ var ct2type/*{[string]:string}*/ = ({
 	/* Custom Data Properties */
 	"application/vnd.openxmlformats-officedocument.customXmlProperties+xml": "TODO",
 	"application/vnd.openxmlformats-officedocument.spreadsheetml.customProperty": "TODO",
+
+	/* Comments */
+	"application/vnd.openxmlformats-officedocument.spreadsheetml.comments+xml": "comments",
+	"application/vnd.ms-excel.comments": "comments",
+
+	/* Metadata (Stock/Geography and Dynamic Array) */
+	"application/vnd.openxmlformats-officedocument.spreadsheetml.sheetMetadata+xml": "metadata",
+	"application/vnd.ms-excel.sheetMetadata": "metadata",
 
 	/* PivotTable */
 	"application/vnd.ms-excel.pivotTable": "TODO",
@@ -146,8 +178,7 @@ var ct2type/*{[string]:string}*/ = ({
 	"sheet": "js"
 }/*:any*/);
 
-var CT_LIST = (function(){
-	var o = {
+var CT_LIST = {
 		workbooks: {
 			xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml",
 			xlsm: "application/vnd.ms-excel.sheet.macroEnabled.main+xml",
@@ -187,15 +218,7 @@ var CT_LIST = (function(){
 			xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml",
 			xlsb: "application/vnd.ms-excel.styles"
 		}
-	};
-	keys(o).forEach(function(k) { ["xlsm", "xlam"].forEach(function(v) { if(!o[k][v]) o[k][v] = o[k].xlsx; }); });
-	keys(o).forEach(function(k){ keys(o[k]).forEach(function(v) { ct2type[o[k][v]] = k; }); });
-	return o;
-})();
-
-var type2ct/*{[string]:Array<string>}*/ = evert_arr(ct2type);
-
-XMLNS.CT = 'http://schemas.openxmlformats.org/package/2006/content-types';
+};
 
 function new_ct()/*:any*/ {
 	return ({
@@ -250,12 +273,14 @@ var CTYPE_DEFAULTS = [
 	['jpg', 'image/jpeg'], ['jpeg', 'image/jpeg'],
 	['tif', 'image/tiff'], ['tiff', 'image/tiff'],
 	['pdf', 'application/pdf'],
-	['rels', type2ct.rels[0]]
+	['rels', 'application/vnd.openxmlformats-package.relationships+xml']
 ].map(function(x) {
 	return writextag('Default', null, {'Extension':x[0], 'ContentType': x[1]});
 });
 
 function write_ct(ct, opts)/*:string*/ {
+	var type2ct/*{[string]:Array<string>}*/ = evert_arr(ct2type);
+
 	var o/*:Array<string>*/ = [], v;
 	o[o.length] = (XML_HEADER);
 	o[o.length] = (CTYPE_XML_ROOT);
@@ -267,7 +292,7 @@ function write_ct(ct, opts)/*:string*/ {
 			v = ct[w][0];
 			o[o.length] = (writextag('Override', null, {
 				'PartName': (v[0] == '/' ? "":"/") + v,
-				'ContentType': CT_LIST[w][opts.bookType || 'xlsx']
+				'ContentType': CT_LIST[w][opts.bookType] || CT_LIST[w]['xlsx']
 			}));
 		}
 	};
@@ -277,7 +302,7 @@ function write_ct(ct, opts)/*:string*/ {
 		(ct[w]||[]).forEach(function(v) {
 			o[o.length] = (writextag('Override', null, {
 				'PartName': (v[0] == '/' ? "":"/") + v,
-				'ContentType': CT_LIST[w][opts.bookType || 'xlsx']
+				'ContentType': CT_LIST[w][opts.bookType] || CT_LIST[w]['xlsx']
 			}));
 		});
 	};

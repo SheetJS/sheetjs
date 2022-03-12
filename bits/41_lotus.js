@@ -1,4 +1,4 @@
-var WK_ = /*#__PURE__*/ (function() {
+var WK_ = /*#__PURE__*/(function() {
 	function lotushopper(data, cb/*:RecordHopperCB*/, opts/*:any*/) {
 		if(!data) return;
 		prep_blob(data, data.l || 0);

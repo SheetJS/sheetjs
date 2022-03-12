@@ -20,7 +20,7 @@ interface BufArray {
 	push(buf: RawData): void;
 }
 declare function buf_array(): BufArray;
-declare function write_record(ba: BufArray, type: string, payload?: RawData, length?: number): void;
+declare function write_record(ba: BufArray, type: number, payload?: RawData, length?: number): void;
 declare function new_buf(sz: number): RawData & WritableData & ReadableData;
 
 declare var tagregex: RegExp;

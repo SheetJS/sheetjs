@@ -1,35 +1,34 @@
 /* OpenDocument */
-var parse_content_xml = (function() {
+function parse_text_p(text/*:string*//*::, tag*/)/*:Array<any>*/ {
+	/* 6.1.2 White Space Characters */
+	var fixed = text
+		.replace(/[\t\r\n]/g, " ").trim().replace(/ +/g, " ")
+		.replace(/<text:s\/>/g," ")
+		.replace(/<text:s text:c="(\d+)"\/>/g, function($$,$1) { return Array(parseInt($1,10)+1).join(" "); })
+		.replace(/<text:tab[^>]*\/>/g,"\t")
+		.replace(/<text:line-break\/>/g,"\n");
+	var v = unescapexml(fixed.replace(/<[^>]*>/g,""));
 
-	var parse_text_p = function(text/*:string*//*::, tag*/)/*:Array<any>*/ {
-		/* 6.1.2 White Space Characters */
-		var fixed = text
-			.replace(/[\t\r\n]/g, " ").trim().replace(/ +/g, " ")
-			.replace(/<text:s\/>/g," ")
-			.replace(/<text:s text:c="(\d+)"\/>/g, function($$,$1) { return Array(parseInt($1,10)+1).join(" "); })
-			.replace(/<text:tab[^>]*\/>/g,"\t")
-			.replace(/<text:line-break\/>/g,"\n");
-		var v = unescapexml(fixed.replace(/<[^>]*>/g,""));
+	return [v];
+}
 
-		return [v];
-	};
+var number_formats_ods = {
+	/* ods name: [short ssf fmt, long ssf fmt] */
+	day:           ["d",   "dd"],
+	month:         ["m",   "mm"],
+	year:          ["y",   "yy"],
+	hours:         ["h",   "hh"],
+	minutes:       ["m",   "mm"],
+	seconds:       ["s",   "ss"],
+	"am-pm":       ["A/P", "AM/PM"],
+	"day-of-week": ["ddd", "dddd"],
+	era:           ["e",   "ee"],
+	/* there is no native representation of LO "Q" format */
+	quarter:       ["\\Qm", "m\\\"th quarter\""]
+};
 
-	var number_formats = {
-		/* ods name: [short ssf fmt, long ssf fmt] */
-		day:           ["d",   "dd"],
-		month:         ["m",   "mm"],
-		year:          ["y",   "yy"],
-		hours:         ["h",   "hh"],
-		minutes:       ["m",   "mm"],
-		seconds:       ["s",   "ss"],
-		"am-pm":       ["A/P", "AM/PM"],
-		"day-of-week": ["ddd", "dddd"],
-		era:           ["e",   "ee"],
-		/* there is no native representation of LO "Q" format */
-		quarter:       ["\\Qm", "m\\\"th quarter\""]
-	};
 
-	return function pcx(d/*:string*/, _opts)/*:Workbook*/ {
+function parse_content_xml(d/*:string*/, _opts)/*:Workbook*/ {
 		var opts = _opts || {};
 		if(DENSE != null && opts.dense == null) opts.dense = DENSE;
 		var str = xlml_normalize(d);
@@ -308,7 +307,7 @@ var parse_content_xml = (function() {
 					case 'time-style':
 					case 'date-style':
 						tag = parsexmltag(Rn[0], false);
-						NF += number_formats[Rn[3]][tag.style==='long'?1:0]; break;
+						NF += number_formats_ods[Rn[3]][tag.style==='long'?1:0]; break;
 				} break;
 
 			case 'fraction': break; // TODO 16.27.6 <number:fraction>
@@ -328,7 +327,7 @@ var parse_content_xml = (function() {
 					case 'time-style':
 					case 'date-style':
 						tag = parsexmltag(Rn[0], false);
-						NF += number_formats[Rn[3]][tag.style==='long'?1:0]; break;
+						NF += number_formats_ods[Rn[3]][tag.style==='long'?1:0]; break;
 				} break;
 
 			case 'boolean-style': break; // 16.27.23 <number:boolean-style>
@@ -552,8 +551,7 @@ var parse_content_xml = (function() {
 		}/*:any*/);
 		if(opts.bookSheets) delete /*::(*/out/*:: :any)*/.Sheets;
 		return out;
-	};
-})();
+}
 
 function parse_ods(zip/*:ZIPFile*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
 	opts = opts || ({}/*:any*/);

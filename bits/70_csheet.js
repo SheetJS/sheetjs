@@ -20,7 +20,7 @@ function parse_cs_xml(data/*:?string*/, opts, idx/*:number*/, rels, wb/*::, them
 }
 function write_cs_xml(idx/*:number*/, opts, wb/*:Workbook*/, rels)/*:string*/ {
 	var o = [XML_HEADER, writextag('chartsheet', null, {
-		'xmlns': XMLNS.main[0],
+		'xmlns': XMLNS_main[0],
 		'xmlns:r': XMLNS.r
 	})];
 	o[o.length] = writextag("drawing", null, {"r:id": "rId1"});
@@ -43,7 +43,7 @@ function parse_cs_bin(data, opts, idx/*:number*/, rels, wb/*::, themes, styles*/
 	var s = {'!type':"chart", '!drawel':null, '!rel':""};
 	var state/*:Array<string>*/ = [];
 	var pass = false;
-	recordhopper(data, function cs_parse(val, R_n, RT) {
+	recordhopper(data, function cs_parse(val, R, RT) {
 		switch(RT) {
 
 			case 0x0226: /* 'BrtDrawing' */
@@ -69,14 +69,14 @@ function parse_cs_bin(data, opts, idx/*:number*/, rels, wb/*::, themes, styles*/
 			case 0x0024: /* 'BrtFRTEnd' */
 				pass = false; break;
 			case 0x0025: /* 'BrtACBegin' */
-				state.push(R_n); break;
+				state.push(RT); break;
 			case 0x0026: /* 'BrtACEnd' */
 				state.pop(); break;
 
 			default:
-				if((R_n||"").indexOf("Begin") > 0) state.push(R_n);
-				else if((R_n||"").indexOf("End") > 0) state.pop();
-				else if(!pass || opts.WTF) throw new Error("Unexpected record " + RT + " " + R_n);
+				if(R.T > 0) state.push(RT);
+				else if(R.T < 0) state.pop();
+				else if(!pass || opts.WTF) throw new Error("Unexpected record 0x" + RT.toString(16));
 		}
 	}, opts);
 
@@ -85,7 +85,7 @@ function parse_cs_bin(data, opts, idx/*:number*/, rels, wb/*::, themes, styles*/
 }
 function write_cs_bin(/*::idx:number, opts, wb:Workbook, rels*/) {
 	var ba = buf_array();
-	write_record(ba, "BrtBeginSheet");
+	write_record(ba, 0x0081 /* BrtBeginSheet */);
 	/* [BrtCsProp] */
 	/* CSVIEWS */
 	/* [[BrtCsProtectionIso] BrtCsProtection] */
@@ -99,6 +99,6 @@ function write_cs_bin(/*::idx:number, opts, wb:Workbook, rels*/) {
 	/* [BrtBkHim] */
 	/* [WEBPUBITEMS] */
 	/* FRTCHARTSHEET */
-	write_record(ba, "BrtEndSheet");
+	write_record(ba, 0x0082 /* BrtEndSheet */);
 	return ba.end();
 }

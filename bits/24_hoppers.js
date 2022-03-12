@@ -14,7 +14,7 @@ function recordhopper(data, cb/*:RecordHopperCB*/, opts/*:?any*/) {
 		tgt = data.l + length;
 		var d = R.f && R.f(data, length, opts);
 		data.l = tgt;
-		if(cb(d, R.n, RT)) return;
+		if(cb(d, R, RT)) return;
 	}
 }
 
@@ -52,9 +52,8 @@ function buf_array()/*:BufArray*/ {
 	return ({ next:next, push:push, end:end, _bufs:bufs }/*:any*/);
 }
 
-function write_record(ba/*:BufArray*/, type/*:string*/, payload, length/*:?number*/) {
-	if(!XLSBRE) make_XLSBRE();
-	var t/*:number*/ = +XLSBRE[type], l;
+function write_record(ba/*:BufArray*/, type/*:number*/, payload, length/*:?number*/) {
+	var t/*:number*/ = +type, l;
 	if(isNaN(t)) return; // TODO: throw something here?
 	if(!length) length = XLSBRecordEnum[t].p || (payload||[]).length || 0;
 	l = 1 + (t >= 0x80 ? 1 : 0) + 1/* + length*/;

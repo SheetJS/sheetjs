@@ -7,24 +7,23 @@ function parse_BrtBeginSst(data) {
 function parse_sst_bin(data, opts)/*:SST*/ {
 	var s/*:SST*/ = ([]/*:any*/);
 	var pass = false;
-	recordhopper(data, function hopper_sst(val, R_n, RT) {
+	recordhopper(data, function hopper_sst(val, R, RT) {
 		switch(RT) {
-			case 0x009F: /* 'BrtBeginSst' */
+			case 0x009F: /* BrtBeginSst */
 				s.Count = val[0]; s.Unique = val[1]; break;
-			case 0x0013: /* 'BrtSSTItem' */
+			case 0x0013: /* BrtSSTItem */
 				s.push(val); break;
-			case 0x00A0: /* 'BrtEndSst' */
+			case 0x00A0: /* BrtEndSst */
 				return true;
 
-			case 0x0023: /* 'BrtFRTBegin' */
+			case 0x0023: /* BrtFRTBegin */
 				pass = true; break;
-			case 0x0024: /* 'BrtFRTEnd' */
+			case 0x0024: /* BrtFRTEnd */
 				pass = false; break;
 
 			default:
-				if(R_n.indexOf("Begin") > 0){/* empty */}
-				else if(R_n.indexOf("End") > 0){/* empty */}
-				if(!pass || opts.WTF) throw new Error("Unexpected record " + RT + " " + R_n);
+				if(R.T){}
+				if(!pass || opts.WTF) throw new Error("Unexpected record 0x" + RT.toString(16));
 		}
 	});
 	return s;
@@ -41,9 +40,9 @@ var write_BrtSSTItem = write_RichStr;
 
 function write_sst_bin(sst/*::, opts*/) {
 	var ba = buf_array();
-	write_record(ba, "BrtBeginSst", write_BrtBeginSst(sst));
-	for(var i = 0; i < sst.length; ++i) write_record(ba, "BrtSSTItem", write_BrtSSTItem(sst[i]));
+	write_record(ba, 0x009F /* BrtBeginSst */, write_BrtBeginSst(sst));
+	for(var i = 0; i < sst.length; ++i) write_record(ba, 0x0013 /* BrtSSTItem */, write_BrtSSTItem(sst[i]));
 	/* FRTSST */
-	write_record(ba, "BrtEndSst");
+	write_record(ba, 0x00A0 /* BrtEndSst */);
 	return ba.end();
 }

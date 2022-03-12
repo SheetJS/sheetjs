@@ -13,6 +13,7 @@ ng2 ng4 ng5 ng6 ng7 ng8 ng9 ng10 ng11 ng12 ng13:
 
 .PHONY: refresh
 refresh: ## refresh the `xlsx` symlink to force angular to rebuild
+	rm -rf .angular/
 	rm -f node_modules/xlsx
 	cd node_modules; ln -s ../../../ xlsx; cd -
 	touch node_modules/xlsx

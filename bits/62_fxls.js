@@ -572,7 +572,6 @@ var PtgDupes = {
 	/*::[*/0x5C/*::]*/: 0x3C, /*::[*/0x7C/*::]*/: 0x3C,
 	/*::[*/0x5D/*::]*/: 0x3D, /*::[*/0x7D/*::]*/: 0x3D
 };
-(function(){for(var y in PtgDupes) PtgTypes[y] = PtgTypes[PtgDupes[y]];})();
 
 var Ptg18 = {
 	/*::[*/0x01/*::]*/: { n:'PtgElfLel', f:parse_PtgElfLel },
@@ -646,7 +645,7 @@ function parse_Rgce(blob, length, opts) {
 	while(target != blob.l) {
 		length = target - blob.l;
 		id = blob[blob.l];
-		R = PtgTypes[id];
+		R = PtgTypes[id] || PtgTypes[PtgDupes[id]];
 		if(id === 0x18 || id === 0x19) R = (id === 0x18 ? Ptg18 : Ptg19)[blob[blob.l + 1]];
 		if(!R || !R.f) { /*ptgs.push*/(parsenoop(blob, length)); }
 		else { ptgs.push([R.n, R.f(blob, length, opts)]); }

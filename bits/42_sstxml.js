@@ -106,7 +106,7 @@ function parse_rpr(rpr) {
 	return font;
 }
 
-var parse_rs = (function() {
+var parse_rs = /*#__PURE__*/(function() {
 	var tregex = matchtag("t"), rpregex = matchtag("rPr");
 	/* 18.4.4 r CT_RElt */
 	function parse_r(r) {
@@ -127,7 +127,7 @@ var parse_rs = (function() {
 
 
 /* Parse a list of <r> tags */
-var rs_to_html = (function parse_rs_factory() {
+var rs_to_html = /*#__PURE__*/(function parse_rs_factory() {
 	var nlregex = /(\r\n|\n)/g;
 	function parse_rpr2(font, intro, outro) {
 		var style/*:Array<string>*/ = [];
@@ -219,7 +219,7 @@ function write_sst_xml(sst/*:SST*/, opts)/*:string*/ {
 	if(!opts.bookSST) return "";
 	var o = [XML_HEADER];
 	o[o.length] = (writextag('sst', null, {
-		xmlns: XMLNS.main[0],
+		xmlns: XMLNS_main[0],
 		count: sst.Count,
 		uniqueCount: sst.Unique
 	}));

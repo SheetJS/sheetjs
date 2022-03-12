@@ -151,7 +151,7 @@ function parse_wb_xml(data, opts)/*:WorkbookFile*/ {
 		}
 		return x;
 	});
-	if(XMLNS.main.indexOf(wb.xmlns) === -1) throw new Error("Unknown Namespace: " + wb.xmlns);
+	if(XMLNS_main.indexOf(wb.xmlns) === -1) throw new Error("Unknown Namespace: " + wb.xmlns);
 
 	parse_wb_defaults(wb);
 
@@ -161,9 +161,9 @@ function parse_wb_xml(data, opts)/*:WorkbookFile*/ {
 function write_wb_xml(wb/*:Workbook*//*::, opts:?WriteOpts*/)/*:string*/ {
 	var o = [XML_HEADER];
 	o[o.length] = writextag('workbook', null, {
-		'xmlns': XMLNS.main[0],
+		'xmlns': XMLNS_main[0],
 		//'xmlns:mx': XMLNS.mx,
-		//'xmlns:s': XMLNS.main[0],
+		//'xmlns:s': XMLNS_main[0],
 		'xmlns:r': XMLNS.r
 	});
 

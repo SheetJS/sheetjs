@@ -1,5 +1,6 @@
 /* from js-harb (C) 2014-present  SheetJS */
-var DBF = (function() {
+var DBF_SUPPORTED_VERSIONS = [0x02, 0x03, 0x30, 0x31, 0x83, 0x8B, 0x8C, 0xF5];
+var DBF = /*#__PURE__*/(function() {
 var dbf_codepage_map = {
 	/* Code Pages Supported by Visual FoxPro */
 	/*::[*/0x01/*::]*/:   437,           /*::[*/0x02/*::]*/:   850,
@@ -57,7 +58,6 @@ var dbf_reverse_map = evert({
 	/*::[*/0xCA/*::]*/:  1254,           /*::[*/0xCB/*::]*/:  1253,
 	/*::[*/0x00/*::]*/: 20127
 });
-var DBF_SUPPORTED_VERSIONS = [0x02, 0x03, 0x30, 0x31, 0x83, 0x8B, 0x8C, 0xF5];
 /* TODO: find an actual specification */
 function dbf_to_aoa(buf, opts)/*:AOA*/ {
 	var out/*:AOA*/ = [];
@@ -359,14 +359,13 @@ function sheet_to_dbf(ws/*:Worksheet*/, opts/*:WriteOpts*/) {
 	return ba.end();
 }
 	return {
-		versions: DBF_SUPPORTED_VERSIONS,
 		to_workbook: dbf_to_workbook,
 		to_sheet: dbf_to_sheet,
 		from_sheet: sheet_to_dbf
 	};
 })();
 
-var SYLK = (function() {
+var SYLK = /*#__PURE__*/(function() {
 	/* TODO: stress test sequences */
 	var sylk_escapes = ({
 		AA:'À', BA:'Á', CA:'Â', DA:195, HA:'Ä', JA:197,
@@ -595,7 +594,7 @@ var SYLK = (function() {
 	};
 })();
 
-var DIF = (function() {
+var DIF = /*#__PURE__*/(function() {
 	function dif_to_aoa(d/*:RawData*/, opts)/*:AOA*/ {
 		switch(opts.type) {
 			case 'base64': return dif_to_aoa_str(Base64.decode(d), opts);
@@ -644,7 +643,7 @@ var DIF = (function() {
 	function dif_to_sheet(str/*:string*/, opts)/*:Worksheet*/ { return aoa_to_sheet(dif_to_aoa(str, opts), opts); }
 	function dif_to_workbook(str/*:string*/, opts)/*:Workbook*/ { return sheet_to_workbook(dif_to_sheet(str, opts), opts); }
 
-	var sheet_to_dif = (function() {
+	var sheet_to_dif = /*#__PURE__*/(function() {
 		var push_field = function pf(o/*:Array<string>*/, topic/*:string*/, v/*:number*/, n/*:number*/, s/*:string*/) {
 			o.push(topic);
 			o.push(v + "," + n);
@@ -707,7 +706,7 @@ var DIF = (function() {
 	};
 })();
 
-var ETH = (function() {
+var ETH = /*#__PURE__*/(function() {
 	function decode(s/*:string*/)/*:string*/ { return s.replace(/\\b/g,"\\").replace(/\\c/g,":").replace(/\\n/g,"\n"); }
 	function encode(s/*:string*/)/*:string*/ { return s.replace(/\\/g, "\\b").replace(/:/g, "\\c").replace(/\n/g,"\\n"); }
 
@@ -807,7 +806,7 @@ var ETH = (function() {
 	};
 })();
 
-var PRN = (function() {
+var PRN = /*#__PURE__*/(function() {
 	function set_text_arr(data/*:string*/, arr/*:AOA*/, R/*:number*/, C/*:number*/, o/*:any*/) {
 		if(o.raw) arr[R][C] = data;
 		else if(data === ""){/* empty */}

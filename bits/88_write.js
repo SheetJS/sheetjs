@@ -1,26 +1,3 @@
-function write_obj_str(factory/*:WriteObjStrFactory*/) {
-	return function write_str(wb/*:Workbook*/, o/*:WriteOpts*/)/*:string*/ {
-		var idx = 0;
-		if(o.sheet) {
-			if(typeof o.sheet == "number") idx = o.sheet;
-			else idx = wb.SheetNames.indexOf(o.sheet);
-			if(!wb.SheetNames[idx]) throw new Error("Sheet not found: " + o.sheet + " : " + (typeof o.sheet));
-		}
-		return factory.from_sheet(wb.Sheets[wb.SheetNames[idx]], o, wb);
-	};
-}
-
-var write_htm_str = write_obj_str(HTML_);
-var write_csv_str = write_obj_str({from_sheet:sheet_to_csv});
-var write_slk_str = write_obj_str(typeof SYLK !== "undefined" ? SYLK : {});
-var write_dif_str = write_obj_str(typeof DIF !== "undefined" ? DIF : {});
-var write_prn_str = write_obj_str(typeof PRN !== "undefined" ? PRN : {});
-var write_rtf_str = write_obj_str(typeof RTF !== "undefined" ? RTF : {});
-var write_txt_str = write_obj_str({from_sheet:sheet_to_txt});
-var write_dbf_buf = write_obj_str(typeof DBF !== "undefined" ? DBF : {});
-var write_eth_str = write_obj_str(typeof ETH !== "undefined" ? ETH : {});
-var write_wk1_buf = write_obj_str(typeof WK_ !== "undefined" ? {from_sheet:WK_.sheet_to_wk1} : {});
-
 function write_cfb_ctr(cfb/*:CFBContainer*/, o/*:WriteOpts*/)/*:any*/ {
 	switch(o.type) {
 		case "base64": case "binary": break;
@@ -138,22 +115,28 @@ function writeSync(wb/*:Workbook*/, opts/*:?WriteOpts*/) {
 	var o = dup(opts||{});
 	if(o.cellStyles) { o.cellNF = true; o.sheetStubs = true; }
 	if(o.type == "array") { o.type = "binary"; var out/*:string*/ = (writeSync(wb, o)/*:any*/); o.type = "array"; return s2ab(out); }
+	var idx = 0;
+	if(o.sheet) {
+		if(typeof o.sheet == "number") idx = o.sheet;
+		else idx = wb.SheetNames.indexOf(o.sheet);
+		if(!wb.SheetNames[idx]) throw new Error("Sheet not found: " + o.sheet + " : " + (typeof o.sheet));
+	}
 	switch(o.bookType || 'xlsb') {
 		case 'xml':
 		case 'xlml': return write_string_type(write_xlml(wb, o), o);
 		case 'slk':
-		case 'sylk': return write_string_type(write_slk_str(wb, o), o);
+		case 'sylk': return write_string_type(SYLK.from_sheet(wb.Sheets[wb.SheetNames[idx]], o), o);
 		case 'htm':
-		case 'html': return write_string_type(write_htm_str(wb, o), o);
-		case 'txt': return write_stxt_type(write_txt_str(wb, o), o);
-		case 'csv': return write_string_type(write_csv_str(wb, o), o, "\ufeff");
-		case 'dif': return write_string_type(write_dif_str(wb, o), o);
-		case 'dbf': return write_binary_type(write_dbf_buf(wb, o), o);
-		case 'prn': return write_string_type(write_prn_str(wb, o), o);
-		case 'rtf': return write_string_type(write_rtf_str(wb, o), o);
-		case 'eth': return write_string_type(write_eth_str(wb, o), o);
+		case 'html': return write_string_type(HTML_.from_sheet(wb.Sheets[wb.SheetNames[idx]], o), o);
+		case 'txt': return write_stxt_type(sheet_to_txt(wb.Sheets[wb.SheetNames[idx]], o), o);
+		case 'csv': return write_string_type(sheet_to_csv(wb.Sheets[wb.SheetNames[idx]], o), o, "\ufeff");
+		case 'dif': return write_string_type(DIF.from_sheet(wb.Sheets[wb.SheetNames[idx]], o), o);
+		case 'dbf': return write_binary_type(DBF.from_sheet(wb.Sheets[wb.SheetNames[idx]], o), o);
+		case 'prn': return write_string_type(PRN.from_sheet(wb.Sheets[wb.SheetNames[idx]], o), o);
+		case 'rtf': return write_string_type(RTF.from_sheet(wb.Sheets[wb.SheetNames[idx]], o), o);
+		case 'eth': return write_string_type(ETH.from_sheet(wb.Sheets[wb.SheetNames[idx]], o), o);
 		case 'fods': return write_string_type(write_ods(wb, o), o);
-		case 'wk1': return write_binary_type(write_wk1_buf(wb, o), o);
+		case 'wk1': return write_binary_type(WK_.sheet_to_wk1(wb.Sheets[wb.SheetNames[idx]], o), o);
 		case 'wk3': return write_binary_type(WK_.book_to_wk3(wb, o), o);
 		case 'biff2': if(!o.biff) o.biff = 2; /* falls through */
 		case 'biff3': if(!o.biff) o.biff = 3; /* falls through */

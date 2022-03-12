@@ -38,7 +38,7 @@ function parse_xlmeta_bin(data, name, _opts) {
   var opts = _opts || {};
   var state = [];
   var pass = false;
-  recordhopper(data, function(val, R_n, RT) {
+  recordhopper(data, function(val, R, RT) {
     switch (RT) {
       case 335:
         out.Types.push({ name: val.name });
@@ -46,7 +46,7 @@ function parse_xlmeta_bin(data, name, _opts) {
       case 51:
         break;
       case 35:
-        state.push(R_n);
+        state.push(RT);
         pass = true;
         break;
       case 36:
@@ -54,35 +54,34 @@ function parse_xlmeta_bin(data, name, _opts) {
         pass = false;
         break;
       default:
-        if ((R_n || "").indexOf("Begin") > 0) {
-        } else if ((R_n || "").indexOf("End") > 0) {
-        } else if (!pass || opts.WTF && state[state.length - 1] != "BrtFRTBegin")
-          throw new Error("Unexpected record " + RT + " " + R_n);
+        if (R.T) {
+        } else if (!pass || opts.WTF && state[state.length - 1] != 35)
+          throw new Error("Unexpected record 0x" + RT.toString(16));
     }
   });
   return out;
 }
 function write_xlmeta_bin() {
   var ba = buf_array();
-  write_record(ba, "BrtBeginMetadata");
-  write_record(ba, "BrtBeginEsmdtinfo", write_UInt32LE(1));
-  write_record(ba, "BrtMdtinfo", write_BrtMdtinfo({
+  write_record(ba, 332);
+  write_record(ba, 334, write_UInt32LE(1));
+  write_record(ba, 335, write_BrtMdtinfo({
     name: "XLDAPR",
     version: 12e4,
     flags: 3496657072
   }));
-  write_record(ba, "BrtEndEsmdtinfo");
-  write_record(ba, "BrtBeginEsfmd", write_BrtBeginEsfmd(1, "XLDAPR"));
-  write_record(ba, "BrtBeginFmd");
-  write_record(ba, "BrtFRTBegin", write_UInt32LE(514));
-  write_record(ba, "BrtBeginDynamicArrayPr", write_UInt32LE(0));
-  write_record(ba, "BrtEndDynamicArrayPr", writeuint16(1));
-  write_record(ba, "BrtFRTEnd");
-  write_record(ba, "BrtEndFmd");
-  write_record(ba, "BrtEndEsfmd");
-  write_record(ba, "BrtBeginEsmdb", write_BrtBeginEsmdb(1, true));
-  write_record(ba, "BrtMdb", write_BrtMdb([[1, 0]]));
-  write_record(ba, "BrtEndEsmdb");
-  write_record(ba, "BrtEndMetadata");
+  write_record(ba, 336);
+  write_record(ba, 339, write_BrtBeginEsfmd(1, "XLDAPR"));
+  write_record(ba, 52);
+  write_record(ba, 35, write_UInt32LE(514));
+  write_record(ba, 4096, write_UInt32LE(0));
+  write_record(ba, 4097, writeuint16(1));
+  write_record(ba, 36);
+  write_record(ba, 53);
+  write_record(ba, 340);
+  write_record(ba, 337, write_BrtBeginEsmdb(1, true));
+  write_record(ba, 51, write_BrtMdb([[1, 0]]));
+  write_record(ba, 338);
+  write_record(ba, 333);
   return ba.end();
 }
