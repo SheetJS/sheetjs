@@ -1,5 +1,3 @@
-RELS.THEME = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/theme";
-
 /* Even though theme layout is dk1 lt1 dk2 lt2, true order is lt1 dk1 lt2 dk2 */
 var XLSXThemeClrScheme = [
 	'</a:lt1>', '</a:dk1>', '</a:lt2>', '</a:dk2>',

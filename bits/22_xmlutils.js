@@ -253,6 +253,7 @@ var XMLNS = ({
 	EXT_PROPS: "http://schemas.openxmlformats.org/officeDocument/2006/extended-properties",
 	CT: 'http://schemas.openxmlformats.org/package/2006/content-types',
 	RELS: 'http://schemas.openxmlformats.org/package/2006/relationships',
+	TCMNT: 'http://schemas.microsoft.com/office/spreadsheetml/2018/threadedcomments',
 	'dc': 'http://purl.org/dc/elements/1.1/',
 	'dcterms': 'http://purl.org/dc/terms/',
 	'dcmitype': 'http://purl.org/dc/dcmitype/',

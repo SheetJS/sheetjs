@@ -18,8 +18,6 @@ var CORE_PROPS/*:Array<Array<string> >*/ = [
 	["dcterms:modified", "ModifiedDate", 'date']
 ];
 
-RELS.CORE_PROPS  = 'http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties';
-
 var CORE_PROPS_REGEX/*:Array<RegExp>*/ = /*#__PURE__*/(function() {
 	var r = new Array(CORE_PROPS.length);
 	for(var i = 0; i < CORE_PROPS.length; ++i) {
@@ -43,15 +41,6 @@ function parse_core_props(data) {
 	return p;
 }
 
-var CORE_PROPS_XML_ROOT = writextag('cp:coreProperties', null, {
-	//'xmlns': XMLNS.CORE_PROPS,
-	'xmlns:cp': XMLNS.CORE_PROPS,
-	'xmlns:dc': XMLNS.dc,
-	'xmlns:dcterms': XMLNS.dcterms,
-	'xmlns:dcmitype': XMLNS.dcmitype,
-	'xmlns:xsi': XMLNS.xsi
-});
-
 function cp_doit(f, g, h, o, p) {
 	if(p[f] != null || g == null || g === "") return;
 	p[f] = g;
@@ -61,7 +50,14 @@ function cp_doit(f, g, h, o, p) {
 
 function write_core_props(cp, _opts) {
 	var opts = _opts || {};
-	var o = [XML_HEADER, CORE_PROPS_XML_ROOT], p = {};
+	var o = [XML_HEADER, writextag('cp:coreProperties', null, {
+		//'xmlns': XMLNS.CORE_PROPS,
+		'xmlns:cp': XMLNS.CORE_PROPS,
+		'xmlns:dc': XMLNS.dc,
+		'xmlns:dcterms': XMLNS.dcterms,
+		'xmlns:dcmitype': XMLNS.dcmitype,
+		'xmlns:xsi': XMLNS.xsi
+	})], p = {};
 	if(!cp && !opts.Props) return o.join("");
 
 	if(cp) {

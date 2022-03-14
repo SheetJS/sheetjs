@@ -248,7 +248,7 @@ function parse_PropertySet(blob, PIDSI) {
 	blob.l = start_addr + size; /* step ahead to skip padding */
 	return PropH;
 }
-var XLSPSSkip = [ "CodePage", "Thumbnail", "_PID_LINKBASE", "_PID_HLINKS", "SystemIdentifier", "FMTID" ].concat(PseudoPropsPairs);
+var XLSPSSkip = [ "CodePage", "Thumbnail", "_PID_LINKBASE", "_PID_HLINKS", "SystemIdentifier", "FMTID" ]; //.concat(PseudoPropsPairs);
 function guess_property_type(val/*:any*/)/*:number*/ {
 	switch(typeof val) {
 		case "boolean": return 0x0B;
@@ -292,7 +292,7 @@ function write_PropertySet(entries, RE, PIDSI) {
 
 	for(i = 0; i < entries.length; ++i) {
 		if(RE && !RE[entries[i][0]]) continue;
-		if(XLSPSSkip.indexOf(entries[i][0]) > -1) continue;
+		if(XLSPSSkip.indexOf(entries[i][0]) > -1 || PseudoPropsPairs.indexOf(entries[i][0]) > -1) continue;
 		if(entries[i][1] == null) continue;
 
 		var val = entries[i][1], idx = 0;

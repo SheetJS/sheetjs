@@ -1,6 +1,4 @@
-RELS.CMNT = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/comments";
-
-function sheet_insert_comments(sheet, comments/*:Array<RawComment>*/) {
+function sheet_insert_comments(sheet, comments/*:Array<RawComment>*/, threaded/*:boolean*/, people/*:?Array<any>*/) {
 	var dense = Array.isArray(sheet);
 	var cell/*:Cell*/;
 	comments.forEach(function(comment) {
@@ -23,8 +21,17 @@ function sheet_insert_comments(sheet, comments/*:Array<RawComment>*/) {
 		}
 
 		if (!cell.c) cell.c = [];
-		var o/*:Comment*/ = ({a: comment.author, t: comment.t, r: comment.r});
+		var o/*:Comment*/ = ({a: comment.author, t: comment.t, r: comment.r, T: threaded});
 		if(comment.h) o.h = comment.h;
+
+		/* threaded comments always override */
+		for(var i = cell.c.length - 1; i >= 0; --i) {
+			if(!threaded && cell.c[i].T) return;
+			if(threaded && !cell.c[i].T) cell.c.splice(i, 1);
+		}
+		if(threaded && people) for(var i = 0; i < people.length; ++i) {
+			if(o.a == people[i].id) { o.a = people[i].name || o.a; break; }
+		}
 		cell.c.push(o);
 	});
 }

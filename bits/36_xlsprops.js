@@ -31,9 +31,10 @@ var XLMLDocPropsMap = {
 	Identifier: 'Identifier', /* NOTE: missing from schema */
 	Language: 'Language' /* NOTE: missing from schema */
 };
-var evert_XLMLDPM = evert(XLMLDocPropsMap);
+var evert_XLMLDPM;
 
 function xlml_set_prop(Props, tag/*:string*/, val) {
+	if(!evert_XLMLDPM) evert_XLMLDPM = evert(XLMLDocPropsMap);
 	tag = evert_XLMLDPM[tag] || tag;
 	Props[tag] = val;
 }

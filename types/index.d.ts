@@ -584,6 +584,9 @@ export interface Comment {
 
     /** Plaintext of the comment */
     t: string;
+
+    /** If true, mark the comment as a part of a thread */
+    T?: boolean;
 }
 
 /** Cell comments */

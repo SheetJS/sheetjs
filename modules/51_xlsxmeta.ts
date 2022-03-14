@@ -1,12 +1,11 @@
 /// <reference path="src/types.ts"/>
 
-RELS.XLMETA = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/sheetMetadata";
-
 /* 12.3.10 Metadata Part */
 function parse_xlmeta_xml(data: string, name: string, opts?: ParseXLMetaOptions): XLMeta {
-	var out: XLMeta = { Types: [] };
+	var out: XLMeta = { Types: [], Cell: [], Value: [] };
 	if(!data) return out;
 	var pass = false;
+	var metatype: "cell" | "value" | "" = "";
 
 	data.replace(tagregex, (x: string, idx: number) => {
 		var y: any = parsexmltag(x);
@@ -23,6 +22,7 @@ function parse_xlmeta_xml(data: string, name: string, opts?: ParseXLMetaOptions)
 			case '<metadataType':
 				out.Types.push({ name: y.name });
 				break;
+			case '</metadataType>': break;
 
 			/* 18.9.4 */
 			case '<futureMetadata': break;
@@ -33,16 +33,19 @@ function parse_xlmeta_xml(data: string, name: string, opts?: ParseXLMetaOptions)
 			case '</bk>': break;
 
 			/* 18.9.15 */
-			case '<rc': break;
+			case '<rc':
+				if(metatype == "cell") out.Cell.push({ type: out.Types[y.t - 1].name, index: +y.v });
+				else if(metatype == "value") out.Value.push({ type: out.Types[y.t - 1].name, index: +y.v });
+				break;
 			case '</rc>': break;
 
 			/* 18.9.3 */
-			case '<cellMetadata':
-			case '</cellMetadata>': break;
+			case '<cellMetadata': metatype = "cell"; break;
+			case '</cellMetadata>': metatype = ""; break;
 
 			/* 18.9.17 */
-			case '<valueMetadata': break;
-			case '</valueMetadata>': break;
+			case '<valueMetadata': metatype = "value"; break;
+			case '</valueMetadata>': metatype = ""; break;
 
 			/* 18.2.10 extLst CT_ExtensionList ? */
 			case '<extLst': case '<extLst>': case '</extLst>': case '<extLst/>': break;

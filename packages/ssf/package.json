@@ -28,6 +28,7 @@
 	},
 	"scripts": {
 		"test": "make test",
+		"tests-only": "make travis",
 		"build": "make",
 		"lint": "make fullint",
 		"dtslint": "dtslint types"

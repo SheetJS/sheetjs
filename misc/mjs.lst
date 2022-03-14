@@ -38,7 +38,8 @@ bits/47_styxml.js
 bits/48_stybin.js
 bits/49_theme.js
 bits/50_styxls.js
-bits/51_xlmeta.js
+bits/51_xlsbmeta.js
+bits/51_xlsxmeta.js
 bits/52_calcchain.js
 bits/53_externlink.js
 bits/54_drawing.js

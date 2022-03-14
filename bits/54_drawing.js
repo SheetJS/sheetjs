@@ -1,7 +1,4 @@
 /* 20.5 DrawingML - SpreadsheetML Drawing */
-RELS.IMG = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/image";
-RELS.DRAW = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing";
-
 /* 20.5.2.35 wsDr CT_Drawing */
 function parse_drawing(data, rels/*:any*/) {
 	if(!data) return "??";

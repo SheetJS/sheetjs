@@ -49,6 +49,8 @@ var ct2type/*{[string]:string}*/ = ({
 	/* Comments */
 	"application/vnd.openxmlformats-officedocument.spreadsheetml.comments+xml": "comments",
 	"application/vnd.ms-excel.comments": "comments",
+	"application/vnd.ms-excel.threadedcomments+xml": "threadedcomments",
+	"application/vnd.ms-excel.person+xml": "people",
 
 	/* Metadata (Stock/Geography and Dynamic Array) */
 	"application/vnd.openxmlformats-officedocument.spreadsheetml.sheetMetadata+xml": "metadata",
@@ -223,9 +225,9 @@ var CT_LIST = {
 function new_ct()/*:any*/ {
 	return ({
 		workbooks:[], sheets:[], charts:[], dialogs:[], macros:[],
-		rels:[], strs:[], comments:[], links:[],
+		rels:[], strs:[], comments:[], threadedcomments:[], links:[],
 		coreprops:[], extprops:[], custprops:[], themes:[], styles:[],
-		calcchains:[], vba: [], drawings: [], metadata: [],
+		calcchains:[], vba: [], drawings: [], metadata: [], people:[],
 		TODO:[], xmlns: "" }/*:any*/);
 }
 
@@ -259,32 +261,30 @@ var CTYPE_XML_ROOT = writextag('Types', null, {
 	'xmlns:xsi': XMLNS.xsi
 });
 
-var CTYPE_DEFAULTS = [
-	['xml', 'application/xml'],
-	['bin', 'application/vnd.ms-excel.sheet.binary.macroEnabled.main'],
-	['vml', 'application/vnd.openxmlformats-officedocument.vmlDrawing'],
-	['data', 'application/vnd.openxmlformats-officedocument.model+data'],
-	/* from test files */
-	['bmp', 'image/bmp'],
-	['png', 'image/png'],
-	['gif', 'image/gif'],
-	['emf', 'image/x-emf'],
-	['wmf', 'image/x-wmf'],
-	['jpg', 'image/jpeg'], ['jpeg', 'image/jpeg'],
-	['tif', 'image/tiff'], ['tiff', 'image/tiff'],
-	['pdf', 'application/pdf'],
-	['rels', 'application/vnd.openxmlformats-package.relationships+xml']
-].map(function(x) {
-	return writextag('Default', null, {'Extension':x[0], 'ContentType': x[1]});
-});
-
 function write_ct(ct, opts)/*:string*/ {
 	var type2ct/*{[string]:Array<string>}*/ = evert_arr(ct2type);
 
 	var o/*:Array<string>*/ = [], v;
 	o[o.length] = (XML_HEADER);
 	o[o.length] = (CTYPE_XML_ROOT);
-	o = o.concat(CTYPE_DEFAULTS);
+	o = o.concat([
+		['xml', 'application/xml'],
+		['bin', 'application/vnd.ms-excel.sheet.binary.macroEnabled.main'],
+		['vml', 'application/vnd.openxmlformats-officedocument.vmlDrawing'],
+		['data', 'application/vnd.openxmlformats-officedocument.model+data'],
+		/* from test files */
+		['bmp', 'image/bmp'],
+		['png', 'image/png'],
+		['gif', 'image/gif'],
+		['emf', 'image/x-emf'],
+		['wmf', 'image/x-wmf'],
+		['jpg', 'image/jpeg'], ['jpeg', 'image/jpeg'],
+		['tif', 'image/tiff'], ['tiff', 'image/tiff'],
+		['pdf', 'application/pdf'],
+		['rels', 'application/vnd.openxmlformats-package.relationships+xml']
+	].map(function(x) {
+		return writextag('Default', null, {'Extension':x[0], 'ContentType': x[1]});
+	}));
 
 	/* only write first instance */
 	var f1 = function(w) {
@@ -325,8 +325,10 @@ function write_ct(ct, opts)/*:string*/ {
 	['coreprops', 'extprops', 'custprops'].forEach(f3);
 	f3('vba');
 	f3('comments');
+	f3('threadedcomments');
 	f3('drawings');
 	f2('metadata');
+	f3('people');
 	if(o.length>2){ o[o.length] = ('</Types>'); o[1]=o[1].replace("/>",">"); }
 	return o.join("");
 }

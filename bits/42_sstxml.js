@@ -213,7 +213,6 @@ function parse_sst_xml(data/*:string*/, opts)/*:SST*/ {
 	return s;
 }
 
-RELS.SST = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings";
 var straywsregex = /^\s|\s$|[\t\n\r]/;
 function write_sst_xml(sst/*:SST*/, opts)/*:string*/ {
 	if(!opts.bookSST) return "";

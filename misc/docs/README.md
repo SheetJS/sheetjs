@@ -562,6 +562,7 @@ The [`demos` directory](demos/) includes sample projects for:
 - [`Headless Browsers`](demos/headless/)
 - [`canvas-datagrid`](demos/datagrid/)
 - [`x-spreadsheet`](demos/xspreadsheet/)
+- [`react-data-grid`](demos/react/modify/)
 - [`Swift JSC and other engines`](demos/altjs/)
 - [`"serverless" functions`](demos/function/)
 - [`internet explorer`](demos/oldie/)
@@ -2906,6 +2907,26 @@ if(!ws.A2.c) ws.A2.c = [];
 ws.A2.c.hidden = true;
 ws.A2.c.push({a:"SheetJS", t:"This comment will be hidden"});
 ```
+
+
+_Threaded Comments_
+
+Introduced in Excel 365, threaded comments are plain text comment snippets with
+author metadata and parent references. They are supported in XLSX and XLSB.
+
+To mark a comment as threaded, each comment part must have a true `T` property:
+
+```js
+if(!ws.A1.c) ws.A1.c = [];
+ws.A1.c.push({a:"SheetJS", t:"This is not threaded"});
+
+if(!ws.A2.c) ws.A2.c = [];
+ws.A2.c.hidden = true;
+ws.A2.c.push({a:"SheetJS", t:"This is threaded", T: true});
+ws.A2.c.push({a:"JSSheet", t:"This is also threaded", T: true});
+```
+
+There is no Active Directory or Office 365 metadata associated with authors in a thread.
 
 #### Sheet Visibility
 

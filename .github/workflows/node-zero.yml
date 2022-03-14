@@ -51,6 +51,7 @@ jobs:
       - run: make init
       - run: 'cd test_files; make all; cd -'
       - run: npm run tests-only
+      #- run: 'cd packages/ssf; npm run tests-only; cd -'
 
 #  unstable:
 #    needs: [matrix, stable]

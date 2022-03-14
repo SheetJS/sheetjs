@@ -540,7 +540,7 @@ function parse_ws_bin(data, _opts, idx, rels, wb/*:WBWBProps*/, themes, styles)/
 
 	var cm, vm;
 
-	recordhopper(data, function ws_parse(val, R, RT) {
+	recordhopper(data, function ws_parse(val, RR, RT) {
 		if(end) return;
 		switch(RT) {
 			case 0x0094: /* 'BrtWsDim' */
@@ -606,7 +606,7 @@ function parse_ws_bin(data, _opts, idx, rels, wb/*:WBWBProps*/, themes, styles)/
 					var _d = SSF.parse_date_code(p.v); if(_d) { p.t = 'd'; p.v = new Date(_d.y, _d.m-1,_d.d,_d.H,_d.M,_d.S,_d.u); }
 				}
 				if(cm) {
-					if(cm.name == 'XLDAPR') p.D = true;
+					if(cm.type == 'XLDAPR') p.D = true;
 					cm = void 0;
 				}
 				if(vm) vm = void 0;
@@ -624,7 +624,7 @@ function parse_ws_bin(data, _opts, idx, rels, wb/*:WBWBProps*/, themes, styles)/
 				if(refguess.e.r < row.r) refguess.e.r = row.r;
 				if(refguess.e.c < C) refguess.e.c = C;
 				if(cm) {
-					if(cm.name == 'XLDAPR') p.D = true;
+					if(cm.type == 'XLDAPR') p.D = true;
 					cm = void 0;
 				}
 				if(vm) vm = void 0;
@@ -634,7 +634,7 @@ function parse_ws_bin(data, _opts, idx, rels, wb/*:WBWBProps*/, themes, styles)/
 				merges.push(val); break;
 
 			case 0x0031: { /* 'BrtCellMeta' */
-				cm = ((opts.xlmeta||{}).Types||[])[val-1];
+				cm = ((opts.xlmeta||{}).Cell||[])[val-1];
 			} break;
 
 			case 0x01EE: /* 'BrtHLink' */
@@ -774,7 +774,7 @@ function parse_ws_bin(data, _opts, idx, rels, wb/*:WBWBProps*/, themes, styles)/
 				state.pop(); pass = false; break;
 
 			default:
-				if(R.T){/* empty */}
+				if(RR.T){/* empty */}
 				else if(!pass || opts.WTF) throw new Error("Unexpected record 0x" + RT.toString(16));
 		}
 	}, opts);

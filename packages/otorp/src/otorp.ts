@@ -1,6 +1,6 @@
 /*! otorp (C) 2013-present SheetJS -- http://sheetjs.com */
 
-import { u8indexOf, u8str, u8_to_dataview } from "../../../modules/src/util";
+import { u8indexOf, u8str, u8_to_dataview } from "./util";
 import { parse_macho } from "./macho";
 import { Descriptor, parse_FileDescriptor, write_FileDescriptor } from './descriptor';
 

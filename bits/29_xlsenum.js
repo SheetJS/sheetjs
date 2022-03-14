@@ -101,9 +101,6 @@ var SummaryPIDSI = {
 	/*::[*/0x72627262/*::]*/: {}
 };
 
-var DocSummaryRE/*:{[key:string]:string}*/ = evert_key(DocSummaryPIDDSI, "n");
-var SummaryRE/*:{[key:string]:string}*/ = evert_key(SummaryPIDSI, "n");
-
 /* [MS-XLS] 2.4.63 Country/Region codes */
 var CountryEnum = {
 	/*::[*/0x0001/*::]*/: "US", // United States

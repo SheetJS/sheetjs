@@ -410,8 +410,6 @@ return function parse_sty_xml(data, themes, opts) {
 };
 })();
 
-RELS.STY = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles";
-
 function write_sty_xml(wb/*:Workbook*/, opts)/*:string*/ {
 	var o = [XML_HEADER, writextag('styleSheet', null, {
 		'xmlns': XMLNS_main[0],

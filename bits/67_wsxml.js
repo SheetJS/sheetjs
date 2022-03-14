@@ -257,7 +257,8 @@ function write_ws_xml_sheetviews(ws, opts, idx, wb)/*:string*/ {
 }
 
 function write_ws_xml_cell(cell/*:Cell*/, ref, ws, opts/*::, idx, wb*/)/*:string*/ {
-	if(cell.v === undefined && typeof cell.f !== "string" || cell.t === 'z') return "";
+	if(cell.c) ws['!comments'].push([ref, cell.c]);
+	if(cell.v === undefined && typeof cell.f !== "string" || cell.t === 'z' && !cell.f) return "";
 	var vv = "";
 	var oldt = cell.t, oldv = cell.v;
 	if(cell.t !== "z") switch(cell.t) {
@@ -299,7 +300,6 @@ function write_ws_xml_cell(cell/*:Cell*/, ref, ws, opts/*::, idx, wb*/)/*:string
 		v = writextag('f', escapexml(cell.f), ff) + (cell.v != null ? v : "");
 	}
 	if(cell.l) ws['!links'].push([ref, cell.l]);
-	if(cell.c) ws['!comments'].push([ref, cell.c]);
 	if(cell.D) o.cm = 1;
 	return writextag('c', v, o);
 }
@@ -478,8 +478,8 @@ return function parse_ws_xml_data(sdata/*:string*/, s, opts, guess/*:Range*/, th
 			safe_format(p, fmtid, fillid, opts, themes, styles);
 			if(opts.cellDates && do_format && p.t == 'n' && SSF.is_date(SSF._table[fmtid])) { p.t = 'd'; p.v = numdate(p.v); }
 			if(tag.cm && opts.xlmeta) {
-				var cm = (opts.xlmeta.Types||[])[+tag.cm-1];
-				if(cm && cm.name == 'XLDAPR') p.D = true;
+				var cm = (opts.xlmeta.Cell||[])[+tag.cm-1];
+				if(cm && cm.type == 'XLDAPR') p.D = true;
 			}
 			if(dense) {
 				var _r = decode_cell(tag.r);

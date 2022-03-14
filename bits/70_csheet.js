@@ -1,5 +1,3 @@
-RELS.CS = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/chartsheet";
-
 /* 18.3 Worksheets also covers Chartsheets */
 function parse_cs_xml(data/*:?string*/, opts, idx/*:number*/, rels, wb/*::, themes, styles*/)/*:Worksheet*/ {
 	if(!data) return data;

@@ -27,7 +27,7 @@ __export(index_node_exports, {
   otorp: () => otorp_default
 });
 
-// ../../modules/src/util.ts
+// src/util.ts
 var u8_to_dataview = (array) => new DataView(array.buffer, array.byteOffset, array.byteLength);
 var u8str = (u8) => new TextDecoder().decode(u8);
 var indent = (str, depth) => str.split(/\n/g).map((x) => x && "  ".repeat(depth) + x).join("\n");
@@ -100,7 +100,7 @@ var parse_macho = (buf) => {
   throw new Error("Unsupported file");
 };
 
-// ../../modules/src/proto.ts
+// src/proto.ts
 function parse_varint49(buf, ptr) {
   var l = ptr ? ptr[0] : 0;
   var usz = buf[l] & 127;
@@ -189,7 +189,7 @@ function parse_shallow(buf) {
       default:
         throw new Error(`PB Type ${type} for Field ${num} at offset ${off}`);
     }
-    var v = { offset: off, data: res };
+    var v = { offset: off, data: res, type };
     if (out[num] == null)
       out[num] = [v];
     else

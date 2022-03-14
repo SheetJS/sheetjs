@@ -1,10 +1,6 @@
 var strs = {}; // shared strings
 var _ssfopts = {}; // spreadsheet formatting options
 
-RELS.WS = [
-	"http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet",
-	"http://purl.oclc.org/ooxml/officeDocument/relationships/worksheet"
-];
 
 /*global Map */
 var browser_has_Map = typeof Map !== 'undefined';

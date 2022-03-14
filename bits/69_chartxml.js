@@ -1,6 +1,3 @@
-RELS.CHART = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/chart";
-RELS.CHARTEX = "http://schemas.microsoft.com/office/2014/relationships/chartEx";
-
 function parse_Cache(data/*:string*/)/*:[Array<number|string>, string, ?string]*/ {
 	var col/*:Array<number|string>*/ = [];
 	var num = data.match(/^<c:numCache>/);

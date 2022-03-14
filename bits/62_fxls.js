@@ -596,12 +596,12 @@ var Ptg19 = {
 	/*::[*/0x08/*::]*/: { n:'PtgAttrGoto', f:parse_PtgAttrGoto },
 	/*::[*/0x10/*::]*/: { n:'PtgAttrSum', f:parse_PtgAttrSum },
 	/*::[*/0x20/*::]*/: { n:'PtgAttrBaxcel', f:parse_PtgAttrBaxcel },
+	/*::[*/0x21/*::]*/: { n:'PtgAttrBaxcel', f:parse_PtgAttrBaxcel },
 	/*::[*/0x40/*::]*/: { n:'PtgAttrSpace', f:parse_PtgAttrSpace },
 	/*::[*/0x41/*::]*/: { n:'PtgAttrSpaceSemi', f:parse_PtgAttrSpaceSemi },
 	/*::[*/0x80/*::]*/: { n:'PtgAttrIfError', f:parse_PtgAttrIfError },
 	/*::[*/0xFF/*::]*/: {}
 };
-Ptg19[0x21] = Ptg19[0x20];
 
 /* [MS-XLS] 2.5.198.103 ; [MS-XLSB] 2.5.97.87 */
 function parse_RgbExtra(blob, length, rgce, opts) {

@@ -13,7 +13,7 @@ function safe_parse_wbrels(wbrels, sheets) {
 	return !wbrels || wbrels.length === 0 ? null : wbrels;
 }
 
-function safe_parse_sheet(zip, path/*:string*/, relsPath/*:string*/, sheet, idx/*:number*/, sheetRels, sheets, stype/*:string*/, opts, wb, themes, styles) {
+function safe_parse_sheet(zip, path/*:string*/, relsPath/*:string*/, sheet, idx/*:number*/, sheetRels, sheets, stype/*:string*/, opts, wb, themes, styles, people) {
 	try {
 		sheetRels[sheet]=parse_rels(getzipstr(zip, relsPath, true), path);
 		var data = getzipdata(zip, path);
@@ -35,16 +35,22 @@ function safe_parse_sheet(zip, path/*:string*/, relsPath/*:string*/, sheet, idx/
 		}
 		sheets[sheet] = _ws;
 
-		/* scan rels for comments */
-		var comments = [];
+		/* scan rels for comments and threaded comments */
+		var tcomments = [], tauthors = [];
 		if(sheetRels && sheetRels[sheet]) keys(sheetRels[sheet]).forEach(function(n) {
+			var dfile = "";
 			if(sheetRels[sheet][n].Type == RELS.CMNT) {
-				var dfile = resolve_path(sheetRels[sheet][n].Target, path);
-				comments = parse_cmnt(getzipdata(zip, dfile, true), dfile, opts);
+				dfile = resolve_path(sheetRels[sheet][n].Target, path);
+				var comments = parse_cmnt(getzipdata(zip, dfile, true), dfile, opts);
 				if(!comments || !comments.length) return;
-				sheet_insert_comments(_ws, comments);
+				sheet_insert_comments(_ws, comments, false);
+			}
+			if(sheetRels[sheet][n].Type == RELS.TCMNT) {
+				dfile = resolve_path(sheetRels[sheet][n].Target, path);
+				tcomments = tcomments.concat(parse_tcmnt_xml(getzipdata(zip, dfile, true), opts));
 			}
 		});
+		if(tcomments && tcomments.length) sheet_insert_comments(_ws, tcomments, true, opts.people || []);
 	} catch(e) { if(opts.WTF) throw e; }
 }
 
@@ -62,11 +68,11 @@ function parse_zip(zip/*:ZIP*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
 	/* Numbers */
 	if(safegetzipfile(zip, 'Index/Document.iwa')) {
 		if(typeof Uint8Array == "undefined") throw new Error('NUMBERS file parsing requires Uint8Array support');
-		if(typeof NUMBERS != "undefined") {
-			if(zip.FileIndex) return NUMBERS.parse_numbers(zip);
+		if(typeof parse_numbers_iwa != "undefined") {
+			if(zip.FileIndex) return parse_numbers_iwa(zip);
 			var _zip = CFB.utils.cfb_new();
 			zipentries(zip).forEach(function(e) { zip_add_file(_zip, e, getzipbin(zip, e)); });
-			return NUMBERS.parse_numbers(_zip);
+			return parse_numbers_iwa(_zip);
 		}
 		throw new Error('Unsupported NUMBERS file');
 	}
@@ -168,8 +174,11 @@ function parse_zip(zip/*:ZIP*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
 		opts.xlmeta = parse_xlmeta(getzipdata(zip, strip_front_slash(dir.metadata[0])),dir.metadata[0],opts);
 	}
 
-	if(wbrels) wbrels = safe_parse_wbrels(wbrels, wb.Sheets);
+	if((dir.people || []).length >= 1) {
+		opts.people = parse_people_xml(getzipdata(zip, strip_front_slash(dir.people[0])),opts);
+	}
 
+	if(wbrels) wbrels = safe_parse_wbrels(wbrels, wb.Sheets);
 
 	/* Numbers iOS hack */
 	var nmode = (getzipdata(zip,"xl/worksheets/sheet.xml",true))?1:0;

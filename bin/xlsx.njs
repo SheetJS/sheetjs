@@ -154,6 +154,7 @@ if(program.all) {
 	opts.cellStyles = true;
 	opts.sheetStubs = true;
 	opts.cellDates = true;
+	wopts.cellFormula = true;
 	wopts.cellStyles = true;
 	wopts.sheetStubs = true;
 	wopts.bookVBA = true;

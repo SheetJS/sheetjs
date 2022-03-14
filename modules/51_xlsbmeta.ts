@@ -24,6 +24,12 @@ function write_BrtMdtinfo(data: BrtMdtinfo): RawData {
 /* [MS-XLSB] 2.4.697 BrtMdb */
 type Mdir = [number, number]; // "t", "v" in XLSX parlance
 type BrtMdb = Mdir[];
+function parse_BrtMdb(data: ReadableData, length: number): BrtMdb {
+	var out: Mdir[] = [];
+	var cnt = data.read_shift(4);
+	while(cnt-- > 0) out.push([data.read_shift(4), data.read_shift(4)]);
+	return out;
+}
 function write_BrtMdb(mdb: BrtMdb): RawData {
 	var o = new_buf(4 + 8 * mdb.length);
 	o.write_shift(4, mdb.length);
@@ -43,6 +49,10 @@ function write_BrtBeginEsfmd(cnt: number, name: string): RawData {
 }
 
 /* [MS-XLSB] 2.4.73 BrtBeginEsmdb */
+function parse_BrtBeginEsmdb(data: ReadableData, length: number): boolean {
+	data.l += 4;
+	return data.read_shift(4) != 0;
+}
 function write_BrtBeginEsmdb(cnt: number, cm: boolean): RawData {
 	var o = new_buf(8);
 	o.write_shift(4, cnt);
@@ -52,18 +62,17 @@ function write_BrtBeginEsmdb(cnt: number, cm: boolean): RawData {
 
 /* [MS-XLSB] 2.1.7.34 Metadata */
 function parse_xlmeta_bin(data, name: string, _opts?: ParseXLMetaOptions): XLMeta {
-	var out: XLMeta = { Types: [] };
+	var out: XLMeta = { Types: [], Cell: [], Value: [] };
 	var opts = _opts || {};
 	var state: number[] = [];
 	var pass = false;
-
+	var esmdb: 0 | 1 = 0;
 	recordhopper(data, (val, R, RT) => {
 		switch(RT) {
 			// case 0x014C: /* BrtBeginMetadata */
 			// case 0x014D: /* BrtEndMetadata */
 			// case 0x014E: /* BrtBeginEsmdtinfo */
 			// case 0x0150: /* BrtEndEsmdtinfo */
-			// case 0x0151: /* BrtBeginEsmdb */
 			// case 0x0152: /* BrtEndEsmdb */
 			// case 0x0153: /* BrtBeginEsfmd */
 			// case 0x0154: /* BrtEndEsfmd */
@@ -75,10 +84,15 @@ function parse_xlmeta_bin(data, name: string, _opts?: ParseXLMetaOptions): XLMet
 			// case 0x138B: /* BrtEndRichValueBlock */
 
 			case 0x014F: /* BrtMdtinfo */
-				out.Types.push({name: (val as BrtMdtinfo).name});
-				break;
+				out.Types.push({name: (val as BrtMdtinfo).name}); break;
+
 			case 0x0033: /* BrtMdb */
-				break;
+				(val as BrtMdb).forEach(r => {
+					(esmdb == 1 ? out.Cell : out.Value).push({type: out.Types[r[0] - 1].name, index: r[1] });
+				}); break;
+
+			case 0x0151: /* BrtBeginEsmdb */
+				esmdb = (val as boolean) ? 1 /* cell */ : 0 /* value */; break;
 
 			case 0x0023: /* BrtFRTBegin */
 				state.push(RT); pass = true; break;

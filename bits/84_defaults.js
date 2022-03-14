@@ -8,7 +8,7 @@ function fix_opts_func(defaults/*:Array<Array<any> >*/)/*:{(o:any):void}*/ {
 	};
 }
 
-var fix_read_opts = function(opts) {
+function fix_read_opts(opts) {
 fix_opts_func([
 	['cellNF', false], /* emit cell number format string as .z */
 	['cellHTML', true], /* emit html string as .h */
@@ -29,9 +29,10 @@ fix_opts_func([
 	['password',''], /* password */
 	['WTF', false] /* WTF mode (throws errors) */
 ])(opts);
-};
+}
 
-var fix_write_opts = fix_opts_func([
+function fix_write_opts(opts) {
+fix_opts_func([
 	['cellDates', false], /* write date cells with type `d` */
 
 	['bookSST', false], /* Generate Shared String Table */
@@ -41,4 +42,5 @@ var fix_write_opts = fix_opts_func([
 	['compression', false], /* Use file compression */
 
 	['WTF', false] /* WTF mode (throws errors) */
-]);
+])(opts);
+}

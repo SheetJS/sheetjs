@@ -1,5 +1,14 @@
+/// <reference path="../../types/index.d.ts"/>
+
 declare type RawData = Uint8Array | number[];
-declare function recordhopper(data: RawData, cb:(val: any, R_n: string, RT: number)=>void): void;
+interface BinaryRecord {
+	n?: string;
+	f: any;
+	T?: -1 | 1;
+	p?: number;
+	r?: number;
+}
+declare function recordhopper(data: RawData, cb:(val: any, R: BinaryRecord, RT: number)=>void): void;
 declare interface ReadableData {
 	l: number;
 	read_shift(t: 4): number;
@@ -32,6 +41,8 @@ declare function write_UInt32LE(x: number, o?: WritableData): RawData;
 declare function write_XLWideString(data: string, o?: WritableData): RawData;
 declare function writeuint16(x: number): RawData;
 
+declare function utf8read(x: string): string;
+declare function a2s(a: RawData): string;
 
 interface ParseXLMetaOptions {
 	WTF?: number|boolean;
@@ -39,6 +50,12 @@ interface ParseXLMetaOptions {
 interface XLMDT {
 	name: string;
 }
+interface XLMetaRef {
+	type: string;
+	index: number;
+}
 interface XLMeta {
 	Types: XLMDT[];
+	Cell: XLMetaRef[];
+	Value: XLMetaRef[];
 }

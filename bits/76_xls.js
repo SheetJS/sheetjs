@@ -891,6 +891,8 @@ function parse_xls_props(cfb/*:CFBContainer*/, props, o) {
 function write_xls_props(wb/*:Workbook*/, cfb/*:CFBContainer*/) {
 	var DSEntries = [], SEntries = [], CEntries = [];
 	var i = 0, Keys;
+	var DocSummaryRE/*:{[key:string]:string}*/ = evert_key(DocSummaryPIDDSI, "n");
+	var SummaryRE/*:{[key:string]:string}*/ = evert_key(SummaryPIDSI, "n");
 	if(wb.Props) {
 		Keys = keys(wb.Props);
 		// $FlowIgnore
@@ -903,7 +905,7 @@ function write_xls_props(wb/*:Workbook*/, cfb/*:CFBContainer*/) {
 	}
 	var CEntries2 = [];
 	for(i = 0; i < CEntries.length; ++i) {
-		if(XLSPSSkip.indexOf(CEntries[i][0]) > -1) continue;
+		if(XLSPSSkip.indexOf(CEntries[i][0]) > -1 || PseudoPropsPairs.indexOf(CEntries[i][0]) > -1) continue;
 		if(CEntries[i][1] == null) continue;
 		CEntries2.push(CEntries[i]);
 	}

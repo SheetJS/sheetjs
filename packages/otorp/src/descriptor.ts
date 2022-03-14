@@ -1,7 +1,7 @@
 /*! otorp (C) 2013-present SheetJS -- http://sheetjs.com */
 
-import { parse_shallow, varint_to_i32, mappa } from "../../../modules/src/proto";
-import { u8str, indent } from "../../../modules/src/util";
+import { parse_shallow, varint_to_i32, mappa } from "./proto";
+import { u8str, indent } from "./util";
 
 var TYPES = [
 	"error",

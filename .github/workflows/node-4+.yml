@@ -82,6 +82,7 @@ jobs:
       - run: make init
       - run: 'cd test_files; make all; cd -'
       - run: npm run tests-only
+      - run: 'cd packages/ssf; npm install; npm run tests-only; cd -'
 
   node:
     name: 'node 4+'
