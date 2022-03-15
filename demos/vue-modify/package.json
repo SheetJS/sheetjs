@@ -1,0 +1,21 @@
+{
+  "name": "vue-modify",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "dev": "vite --host",
+    "build": "vue-tsc --noEmit && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "vue": "^3.2.25",
+    "vue3-table-lite": "^1.1.7-1",
+    "xlsx": "^0.18.3"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^2.2.0",
+    "typescript": "^4.5.4",
+    "vite": "^2.8.0",
+    "vue-tsc": "^0.29.8"
+  }
+}
