@@ -186,6 +186,9 @@ var paths: any = {
 	lonxls: dir + 'LONumbers.xls',
 	lonxlsx: dir + 'LONumbers.xlsx',
 
+	m19xlsx:  dir + 'metadata_2019.xlsx',
+	m19xlsb:  dir + 'metadata_2019.xlsb',
+
 	mcxls:  dir + 'merge_cells.xls',
 	mcxml:  dir + 'merge_cells.xls.xml',
 	mcxlsx:  dir + 'merge_cells.xlsx',
@@ -1519,6 +1522,22 @@ Deno.test('roundtrip features', async function(t) {
 				X.utils.sheet_to_formulae(wb2.Sheets[n]).sort().join("\n")
 			);
 		});
+	}); } });
+
+	await t.step('should preserve dynamic array formulae', async function(t) { var m19 = [
+		['xlsx', paths.m19xlsx]
+	]; for(var h1 = 0; h1 < m19.length; ++h1) { var w = m19[h1]; await t.step(w[0], async function (t) {
+		var wb1 = X.read(fs.readFileSync(w[1]), {xlfn: true, type:TYPE, cellFormula:true, WTF:true});
+		var wb2 = X.read(X.write(wb1, {bookType:w[0], type:TYPE}), {cellFormula:true, xlfn: true, type:TYPE, WTF:true});
+		assert.equal(!!get_cell(wb2.Sheets.Sheet1, "B3").D, true);
+		assert.equal(!!get_cell(wb2.Sheets.Sheet1, "B13").D, true);
+		assert.equal(!!get_cell(wb2.Sheets.Sheet1, "C13").D, true);
+
+		get_cell(wb2.Sheets.Sheet1, "B3").D = false;
+		var wb3 = X.read(X.write(wb2, {bookType:w[0], type:TYPE}), {cellFormula:true, xlfn: true, type:TYPE, WTF:true});
+		assert.equal(!!get_cell(wb3.Sheets.Sheet1, "B3").D, false);
+		assert.equal(!!get_cell(wb3.Sheets.Sheet1, "B13").D, true);
+		assert.equal(!!get_cell(wb3.Sheets.Sheet1, "C13").D, true);
 	}); } });
 
 	await t.step('should preserve hyperlink', async function(t) { var hl = [

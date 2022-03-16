@@ -29,7 +29,7 @@ function sheet_insert_comments(sheet, comments/*:Array<RawComment>*/, threaded/*
 			if(!threaded && cell.c[i].T) return;
 			if(threaded && !cell.c[i].T) cell.c.splice(i, 1);
 		}
-		if(threaded && people) for(var i = 0; i < people.length; ++i) {
+		if(threaded && people) for(i = 0; i < people.length; ++i) {
 			if(o.a == people[i].id) { o.a = people[i].name || o.a; break; }
 		}
 		cell.c.push(o);

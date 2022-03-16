@@ -181,8 +181,6 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 	var merges/*:Array<Range>*/ = [];
 	var objects = [];
 	var colinfo/*:Array<ColInfo>*/ = [], rowinfo/*:Array<RowInfo>*/ = [];
-	// eslint-disable-next-line no-unused-vars
-	var defwidth = 0, defheight = 0; // twips / MDW respectively
 	var seencol = false;
 	var supbooks = ([]/*:any*/); // 1-indexed, will hold extern names
 	supbooks.SheetNames = opts.snames;
@@ -227,7 +225,6 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 			/*:: val = (val:any); */
 			if(file_depth == 0 && [0x0009, 0x0209, 0x0409, 0x0809].indexOf(last_RT) === -1 /* 'BOF' */) continue;
 			switch(RecordType) {
-				/* Workbook Options */
 				case 0x0022 /* Date1904 */:
 					/*:: if(!Workbook.WBProps) Workbook.WBProps = {}; */
 					wb.opts.Date1904 = Workbook.WBProps.date1904 = val; break;
@@ -240,7 +237,6 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 					if(!val.valid) throw new Error("Password is incorrect");
 					break;
 				case 0x005c /* WriteAccess */: opts.lastuser = val; break;
-				case 0x005b /* FileSharing */: break; //TODO
 				case 0x0042 /* CodePage */:
 					var cpval = Number(val);
 					/* overrides based on test cases */
@@ -254,10 +250,6 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 					break;
 				case 0x013d /* RRTabId */: opts.rrtabid = val; break;
 				case 0x0019 /* WinProtect */: opts.winlocked = val; break;
-				case 0x0060 /* Template */: break; // TODO
-				case 0x00da /* BookBool */: break; // TODO
-				case 0x0160 /* UsesELFs */: break;
-				case 0x089a /* MTRSettings */: break;
 				case 0x01b7 /* RefreshAll */: wb.opts["RefreshAll"] = val; break;
 				case 0x000c /* CalcCount */: wb.opts["CalcCount"] = val; break;
 				case 0x0010 /* CalcDelta */: wb.opts["CalcDelta"] = val; break;
@@ -266,7 +258,6 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 				case 0x000e /* CalcPrecision */: wb.opts["CalcPrecision"] = val; break;
 				case 0x005f /* CalcSaveRecalc */: wb.opts["CalcSaveRecalc"] = val; break;
 				case 0x000f /* CalcRefMode */: opts.CalcRefMode = val; break; // TODO: implement R1C1
-				case 0x005e /* Uncalced */: break;
 				case 0x08a3 /* ForceFullCalculation */: wb.opts.FullCalc = val; break;
 				case 0x0081 /* WsBool */:
 					if(val.fDialog) out["!type"] = "dialog";
@@ -275,11 +266,6 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 					break; // TODO
 				case 0x00e0 /* XF */:
 					XFs.push(val); break;
-				case 0x00ff /* ExtSST */: break; // TODO
-				case 0x0863 /* BookExt */: break; // TODO
-				case 0x08a6 /* RichTextStream */: break;
-				case 0x00e9 /* BkHim */: break;
-
 				case 0x01ae /* SupBook */:
 					supbooks.push([val]);
 					supbooks[supbooks.length-1].XTI = [];
@@ -287,7 +273,6 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 				case 0x0023: case 0x0223 /* ExternName */:
 					supbooks[supbooks.length-1].push(val);
 					break;
-				case 0x000b: case 0x020b /* Index */: break; // TODO
 				case 0x0018: case 0x0218 /* Lbl */:
 					last_lbl = ({
 						Name: val.Name,
@@ -310,11 +295,8 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 					if(opts.biff < 8) break;
 					if(last_lbl != null) last_lbl.Comment = val[1];
 					break;
-
 				case 0x0012 /* Protect */: out["!protect"] = val; break; /* for sheet or book */
 				case 0x0013 /* Password */: if(val !== 0 && opts.WTF) console.error("Password verifier: " + val); break;
-				case 0x01af /* Prot4Rev */: case 0x01bc /* Prot4RevPass */: break; /*TODO: Revision Control*/
-
 				case 0x0085 /* BoundSheet8 */: {
 					Directory[val.pos] = val;
 					opts.snames.push(val.name);
@@ -380,11 +362,9 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 					objects = [];
 					opts.arrayf = arrayf = [];
 					colinfo = []; rowinfo = [];
-					defwidth = defheight = 0;
 					seencol = false;
 					wsprops = {Hidden:(Directory[s]||{hs:0}).hs, name:cur_sheet };
 				} break;
-
 				case 0x0203 /* Number */: case 0x0003 /* BIFF2NUM */: case 0x0002 /* BIFF2INT */: {
 					if(out["!type"] == "chart") if(options.dense ? (out[val.r]||[])[val.c]: out[encode_cell({c:val.c, r:val.r})]) ++val.c;
 					temp_val = ({ixfe: val.ixfe, XF: XFs[val.ixfe]||{}, v:val.val, t:'n'}/*:any*/);
@@ -538,8 +518,6 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 							if(cc && cc.l) cc.l.Tooltip = val[1];
 							}
 				} break;
-
-				/* Comments */
 				case 0x001c /* Note */: {
 					if(opts.biff <= 5 && opts.biff >= 2) break; /* TODO: BIFF5 */
 					cc = options.dense ? (out[val[0].r]||[])[val[0].c] : out[encode_cell(val[0])];
@@ -560,13 +538,7 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 					cmnt = {a:val[1],t:noteobj.TxO.t};
 					cc.c.push(cmnt);
 				} break;
-
-				case 0x105c /* ClrtClient */: break;
 				case 0x087d /* XFExt */: update_xfext(XFs[val.ixfe], val.ext); break;
-
-				case 0x0055 /* DefColWidth */: defwidth = val; break;
-				case 0x0225 /* DefaultRowHeight */: defheight = val[1]; break; // TODO: flags
-
 				case 0x007d /* ColInfo */: {
 					if(!opts.cellStyles) break;
 					while(val.e >= val.s) {
@@ -584,7 +556,6 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 						rowobj.hpt = val.hpt; rowobj.hpx = pt2px(val.hpt);
 					}
 				} break;
-
 				case 0x0026 /* LeftMargin */:
 				case 0x0027 /* RightMargin */:
 				case 0x0028 /* TopMargin */:
@@ -592,161 +563,126 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 					if(!out['!margins']) default_margins(out['!margins'] = {});
 					out['!margins'][({0x26: "left", 0x27:"right", 0x28:"top", 0x29:"bottom"})[RecordType]] = val;
 					break;
-
-				case 0x001d /* Selection */: break;
-
 				case 0x00a1 /* Setup */: // TODO
 					if(!out['!margins']) default_margins(out['!margins'] = {});
 					out['!margins'].header = val.header;
 					out['!margins'].footer = val.footer;
 					break;
-
 				case 0x023e /* Window2 */: // TODO
 					// $FlowIgnore
 					if(val.RTL) Workbook.Views[0].RTL = true;
 					break;
-
-				case 0x0014 /* Header */: // TODO
-				case 0x0015 /* Footer */: // TODO
-				case 0x0083 /* HCenter */: // TODO
-				case 0x0084 /* VCenter */: // TODO
-				case 0x004d /* Pls */: // TODO
-				case 0x00ab /* GCW */:
-				case 0x0094 /* LHRecord */:
-				case 0x00d7 /* DBCell */: // TODO
-				case 0x01c2 /* EntExU2 */: // TODO
-				case 0x00b0 /* SxView */: // TODO
-				case 0x00b1 /* Sxvd */: // TODO
-				case 0x00b2 /* SXVI */: // TODO
-				case 0x0100 /* SXVDEx */: // TODO
-				case 0x00b4 /* SxIvd */: // TODO
-				case 0x00cd /* SXString */: // TODO
-				case 0x0097 /* Sync */:
-				case 0x0087 /* Addin */:
-				case 0x00c5 /* SXDI */: // TODO
-				case 0x00b5 /* SXLI */: // TODO
-				case 0x00f1 /* SXEx */: // TODO
-				case 0x0802 /* QsiSXTag */: // TODO
-				case 0x0868 /* Feat */:
-				case 0x0867 /* FeatHdr */: case 0x0871 /* FeatHdr11 */:
-				case 0x0872 /* Feature11 */: case 0x0878 /* Feature12 */: case 0x0877 /* List12 */: break;
-				case 0x008c /* Country */: country = val; break;
-				case 0x01c1 /* RecalcId */:
-				case 0x0099 /* DxGCol */: // TODO: htmlify
-				case 0x1060 /* Fbi */: case 0x1068 /* Fbi2 */: case 0x1066 /* GelFrame */:
-				case 0x0031 /* Font */: // TODO
-				case 0x087c /* XFCRC */: // TODO
-				case 0x0293 /* Style */: // TODO
-				case 0x0892 /* StyleExt */: break; // TODO
 				case 0x0092 /* Palette */: palette = val; break;
 				case 0x0896 /* Theme */: themes = val; break;
-				/* Protection */
-				case 0x00dd /* ScenarioProtect */:
-				case 0x0063 /* ObjProtect */: break;
-
-				/* Conditional Formatting */
-				case 0x0879 /* CondFmt12 */:
-
-				/* Table */
-				case 0x0236 /* Table */: // TODO
-				case 0x088e /* TableStyles */: // TODO
-				case 0x088f /* TableStyle */: // TODO
-				case 0x0890 /* TableStyleElement */: // TODO
-
-				/* PivotTable */
-				case 0x00d5 /* SXStreamID */: // TODO
-				case 0x00e3 /* SXVS */: // TODO
-				case 0x0051 /* DConRef */: // TODO
-				case 0x0864 /* SXAddl */: // TODO
-				case 0x01b5 /* DConBin */: // TODO
-				case 0x0052 /* DConName */: // TODO
-				case 0x00b6 /* SXPI */: // TODO
-				case 0x00fb /* SxFormat */: // TODO
-				case 0x00f7 /* SxSelect */: // TODO
-				case 0x00f0 /* SxRule */: // TODO
-				case 0x00f2 /* SxFilt */: // TODO
-				case 0x00f5 /* SxItm */: // TODO
-				case 0x00f4 /* SxDXF */: // TODO
-
-				/* Scenario Manager */
-				case 0x00ae /* ScenMan */:
-
-				/* Data Consolidation */
-				case 0x0050 /* DCon */:
-
-				/* Watched Cell */
-				case 0x086c /* CellWatch */:
-
-				/* Print Settings */
-				case 0x002a /* PrintRowCol */:
-				case 0x002b /* PrintGrid */:
-				case 0x0033 /* PrintSize */:
-
-				case 0x0059 /* XCT */:
-				case 0x005a /* CRN */:
-
-				case 0x00a0 /* Scl */: {
-					//console.log("Zoom Level:", val[0]/val[1],val);
-				} 
-				case 0x0862 /* SheetExt */: {
-					/* empty */
-				}
-
-				/* VBA */
-				case 0x01bd /* ObNoMacros */: {
-					/* empty */
-				}
-				case 0x00d3 /* ObProj */: {
-					/* empty */
-				}
+				case 0x008c /* Country */: country = val; break;
 				case 0x01ba /* CodeName */: {
 					/*:: if(!Workbook.WBProps) Workbook.WBProps = {}; */
 					if(!cur_sheet) Workbook.WBProps.CodeName = val || "ThisWorkbook";
 					else wsprops.CodeName = val || wsprops.name;
-				}
-				case 0x0897 /* GUIDTypeLib */: {
-					/* empty */
-				}
-
-				case 0x080b /* WOpt */: // TODO: WTF?
+				} break;
+				case 0x0055 /* DefColWidth */:
+				case 0x0225 /* DefaultRowHeight */:
+				case 0x005e /* Uncalced */:
+				case 0x01af /* Prot4Rev */: case 0x01bc /* Prot4RevPass */: /*TODO: Revision Control*/
+				case 0x005b /* FileSharing */:
+				case 0x00ff /* ExtSST */:
+				case 0x0863 /* BookExt */:
+				case 0x08a6 /* RichTextStream */:
+				case 0x00e9 /* BkHim */:
+				case 0x0060 /* Template */:
+				case 0x00da /* BookBool */:
+				case 0x0160 /* UsesELFs */:
+				case 0x089a /* MTRSettings */:
+				case 0x000b: case 0x020b /* Index */:
+				case 0x105c /* ClrtClient */:
+				case 0x001d /* Selection */:
+				case 0x0014 /* Header */:
+				case 0x0015 /* Footer */:
+				case 0x0083 /* HCenter */:
+				case 0x0084 /* VCenter */:
+				case 0x004d /* Pls */:
+				case 0x00ab /* GCW */:
+				case 0x0094 /* LHRecord */:
+				case 0x00d7 /* DBCell */:
+				case 0x01c2 /* EntExU2 */:
+				case 0x00b0 /* SxView */:
+				case 0x00b1 /* Sxvd */:
+				case 0x00b2 /* SXVI */:
+				case 0x0100 /* SXVDEx */:
+				case 0x00b4 /* SxIvd */:
+				case 0x00cd /* SXString */:
+				case 0x0097 /* Sync */:
+				case 0x0087 /* Addin */:
+				case 0x00c5 /* SXDI */:
+				case 0x00b5 /* SXLI */:
+				case 0x00f1 /* SXEx */:
+				case 0x0802 /* QsiSXTag */:
+				case 0x0868 /* Feat */:
+				case 0x0867 /* FeatHdr */: case 0x0871 /* FeatHdr11 */:
+				case 0x0872 /* Feature11 */: case 0x0878 /* Feature12 */: case 0x0877 /* List12 */:
+				case 0x01c1 /* RecalcId */:
+				case 0x0099 /* DxGCol */:
+				case 0x1060 /* Fbi */: case 0x1068 /* Fbi2 */: case 0x1066 /* GelFrame */:
+				case 0x0031 /* Font */:
+				case 0x087c /* XFCRC */:
+				case 0x0293 /* Style */:
+				case 0x0892 /* StyleExt */:
+				case 0x00dd /* ScenarioProtect */:
+				case 0x0063 /* ObjProtect */:
+				case 0x0879 /* CondFmt12 */:
+				case 0x0236 /* Table */:
+				case 0x088e /* TableStyles */:
+				case 0x088f /* TableStyle */:
+				case 0x0890 /* TableStyleElement */:
+				case 0x00d5 /* SXStreamID */:
+				case 0x00e3 /* SXVS */:
+				case 0x0051 /* DConRef */:
+				case 0x0864 /* SXAddl */:
+				case 0x01b5 /* DConBin */:
+				case 0x0052 /* DConName */:
+				case 0x00b6 /* SXPI */:
+				case 0x00fb /* SxFormat */:
+				case 0x00f7 /* SxSelect */:
+				case 0x00f0 /* SxRule */:
+				case 0x00f2 /* SxFilt */:
+				case 0x00f5 /* SxItm */:
+				case 0x00f4 /* SxDXF */:
+				case 0x00ae /* ScenMan */:
+				case 0x0050 /* DCon */:
+				case 0x086c /* CellWatch */:
+				case 0x002a /* PrintRowCol */:
+				case 0x002b /* PrintGrid */:
+				case 0x0033 /* PrintSize */:
+				case 0x0059 /* XCT */:
+				case 0x005a /* CRN */:
+				case 0x00a0 /* Scl */:
+				case 0x0862 /* SheetExt */:
+				case 0x01bd /* ObNoMacros */:
+				case 0x00d3 /* ObProj */:
+				case 0x0897 /* GUIDTypeLib */:
+				case 0x080b /* WOpt */:
 				case 0x00ef /* PhoneticInfo */:
-
 				case 0x00de /* OleObjectSize */:
-
-				/* Differential Formatting */
 				case 0x088d /* DXF */:
-
-				/* Data Validation */
 				case 0x01be /* Dv */: case 0x01b2 /* DVal */:
-
-				/* Data Series */
-				case 0x1051 /* BRAI */: case 0x1003 /* Series */: case 0x100d /* SeriesText */: break;
-
-				/* Data Connection */
+				case 0x1051 /* BRAI */: case 0x1003 /* Series */: case 0x100d /* SeriesText */:
 				case 0x0876 /* DConn */:
 				case 0x00dc /* DbOrParamQry */:
 				case 0x0803 /* DBQueryExt */:
-
 				case 0x080a /* OleDbConn */:
 				case 0x0804 /* ExtString */:
-
-				/* Formatting */
 				case 0x104e /* IFmtRecord */:
 				case 0x01b0 /* CondFmt */: case 0x01b1 /* CF */: case 0x087a /* CF12 */: case 0x087b /* CFEx */:
-
-				/* Explicitly Ignored */
 				case 0x01c0 /* Excel9File */:
 				case 0x1001 /* Units */:
 				case 0x00e1 /* InterfaceHdr' */: case 0x00c1 /* Mms */: case 0x00e2 /* InterfaceEnd */: case 0x0161 /* DSF */:
 				case 0x009c /* BuiltInFnGroupCount */: /* 2.4.30 0x0E or 0x10 but excel 2011 generates 0x11? */ break;
-				/* View Stuff */
 				case 0x003d /* Window1 */: case 0x008d /* HideObj */: case 0x0082 /* GridSet */: case 0x0080 /* Guts */:
-				case 0x01a9 /* UserBView */: case 0x01aa /* UserSViewBegin */: case 0x01aa /* UserSViewEnd */:
+				case 0x01a9 /* UserBView */: case 0x01aa /* UserSViewBegin */: case 0x01ab /* UserSViewEnd */:
 				case 0x0041 /* Pane */:
-				/* Chart */
 				case 0x1063 /* Dat */:
-				case 0x1033 /* Begin */: case 0x1033 /* End */:
-				case 0x0852 /* StartBlock */: case 0x0853 /* EndBlock */: break;
+				case 0x1033 /* Begin */: case 0x1034 /* End */:
+				case 0x0852 /* StartBlock */: case 0x0853 /* EndBlock */:
 				case 0x1032 /* Frame */: case 0x101a /* Area */:
 				case 0x101d /* Axis */: case 0x1021 /* AxisLine */: case 0x101e /* Tick */:
 				case 0x1046 /* AxesUsed */:
@@ -767,69 +703,41 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 				case 0x1050 /* AlRuns */: case 0x1027 /* ObjectLink */:
 				case 0x1065 /* SIIndex */:
 				case 0x100c /* AttachedLabel */: case 0x0857 /* YMult */:
-
-				/* Chart Group */
 				case 0x1018 /* Line */: case 0x1017 /* Bar */:
 				case 0x103f /* Surf */:
-
-				/* Axis Group */
 				case 0x1041 /* AxisParent */:
 				case 0x104f /* Pos */:
 				case 0x101f /* ValueRange */:
-
-				/* Pivot Chart */
-				case 0x0810 /* SXViewEx9 */: // TODO
+				case 0x0810 /* SXViewEx9 */:
 				case 0x0858 /* SXViewLink */:
 				case 0x0859 /* PivotChartBits */:
 				case 0x1048 /* SBaseRef */:
 				case 0x08a5 /* TextPropsStream */:
-
-				/* Chart Misc */
 				case 0x08c9 /* LnExt */:
 				case 0x08ca /* MkrExt */:
 				case 0x08cb /* CrtCoopt */:
-
-				/* Query Table */
-				case 0x01ad /* Qsi */: case 0x0807 /* Qsif */: case 0x0806 /* Qsir */: case 0x0802 /* QsiSXTag */:
+				case 0x01ad /* Qsi */: case 0x0807 /* Qsif */: case 0x0806 /* Qsir */:
 				case 0x0805 /* TxtQry */:
-
-				/* Filter */
 				case 0x009b /* FilterMode */:
 				case 0x009e /* AutoFilter */: case 0x009d /* AutoFilterInfo */:
 				case 0x087e /* AutoFilter12 */:
 				case 0x0874 /* DropDownObjIds */:
 				case 0x0090 /* Sort */:
 				case 0x0895 /* SortData */:
-
-				/* Drawing */
 				case 0x08a4 /* ShapePropsStream */:
 				case 0x00ec /* MsoDrawing */: case 0x00eb /* MsoDrawingGroup*/: case 0x00ed /* MsoDrawingSelection */:
-				/* Pub Stuff */
 				case 0x0801 /* WebPub */: case 0x08c0 /* AutoWebPub */:
-
-				/* Print Stuff */
 				case 0x089c /* HeaderFooter */: case 0x0866 /* HFPicture */: case 0x088b /* PLV */:
 				case 0x001b /* HorizontalPageBreaks */: case 0x001a /* VerticalPageBreaks */:
-				/* Behavioral */
 				case 0x0040 /* Backup */: case 0x089b /* CompressPictures */: case 0x088c /* Compat12 */:
-
-				/* Should not Happen */
 				case 0x003c /* 'Continue' */: case 0x087f /* 'ContinueFrt12' */:
-
-				/* Future Records */
 				case 0x085a /* FrtFontList */: case 0x0851 /* 'FrtWrapper' */:
-
-				/* BIFF5 records */
 				case 0x00ea /* TabIdConf */: case 0x103e /* Radar */: case 0x1040 /* RadarArea */: case 0x103d /* DropBar */: case 'Intl': case 'CoordList': case 'SerAuxErrBar':
-
-				/* BIFF2-4 records */
 				case 0x0045 /* BIFF2FONTCLR */: case 0x001f /* BIFF2FMTCNT */: case 0x0032 /* BIFF2FONTXTRA */:
 				case 0x0043 /* BIFF2XF */: case 0x0243 /* BIFF3XF */: case 0x0443 /* BIFF4XF */:
 				case 0x0044 /* BIFF2XFINDEX */:
 				case 0x0056 /* BIFF4FMTCNT */: case 0x0008 /* BIFF2ROW */: case 0x003e /* BIFF2WINDOW2 */:
-
-				/* Miscellaneous */
-				case 0x00af /* SCENARIO */: case 0x01b5 /* DConBin */: case 0x103c /* PicF */: case 0x086a /* DataLabExt */:
+				case 0x00af /* SCENARIO */: case 0x103c /* PicF */: case 0x086a /* DataLabExt */:
 				case 0x01b9 /* Lel */: case 0x1061 /* BopPop */: case 0x1067 /* BopPopCustom */: case 0x0813 /* RealTimeData */:
 				case 0x0095 /* LHNGraph */: case 0x009a /* FnGroupName */: case 0x00c2 /* AddMenu */: case 0x0098 /* LPr */:
 				case 0x08c1 /* ListObj */: case 0x08c2 /* ListField */:

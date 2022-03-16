@@ -102,7 +102,7 @@ var XLSBFillPTNames = [
 	"gray125",
 	"gray0625"
 ];
-var rev_XLSBFillPTNames/*:EvertNumType*/
+var rev_XLSBFillPTNames/*:EvertNumType*/;
 /* TODO: gradient fill representation */
 var parse_BrtFill = parsenoop;
 function write_BrtFill(fill, o) {

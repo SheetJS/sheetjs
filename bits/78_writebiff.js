@@ -163,7 +163,7 @@ function write_ws_biff8_hlinks(ba/*:BufArray*/, ws) {
 	delete ws['!links'];
 }
 
-function write_ws_cols_biff8(ba, cols, ws) {
+function write_ws_cols_biff8(ba, cols) {
 	if(!cols) return;
 	var cnt = 0;
 	cols.forEach(function(col, idx) {
@@ -236,7 +236,7 @@ function write_ws_biff8(idx/*:number*/, opts, wb/*:Workbook*/) {
 	write_biff_rec(ba, 0x0083 /* HCenter */, writebool(false));
 	write_biff_rec(ba, 0x0084 /* VCenter */, writebool(false));
 	/* ... */
-	if(b8) write_ws_cols_biff8(ba, ws["!cols"], ws);
+	if(b8) write_ws_cols_biff8(ba, ws["!cols"]);
 	/* ... */
 	write_biff_rec(ba, 0x200, write_Dimensions(range, opts));
 	/* ... */
@@ -387,7 +387,7 @@ function write_biff_buf(wb/*:Workbook*/, opts/*:WriteOpts*/) {
 		if(!ws || !ws["!ref"]) continue;
 		var range = decode_range(ws["!ref"]);
 		if(range.e.c > 255) { // note: 255 is IV
-		  if(typeof console != "undefined" && console.error) console.error("Worksheet '" + wb.SheetNames[i] + "' extends beyond column IV (255).  Data may be lost.");
+		if(typeof console != "undefined" && console.error) console.error("Worksheet '" + wb.SheetNames[i] + "' extends beyond column IV (255).  Data may be lost.");
 		}
 	}
 

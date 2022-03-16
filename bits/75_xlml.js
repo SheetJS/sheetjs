@@ -180,7 +180,7 @@ function parse_xlml_xml(d, _opts)/*:Workbook*/ {
 	var state = [], tmp;
 	if(DENSE != null && opts.dense == null) opts.dense = DENSE;
 	var sheets = {}, sheetnames/*:Array<string>*/ = [], cursheet/*:Worksheet*/ = (opts.dense ? [] : {}), sheetname = "";
-	var table = {}, cell = ({}/*:any*/), row = {};// eslint-disable-line no-unused-vars
+	var cell = ({}/*:any*/), row = {};// eslint-disable-line no-unused-vars
 	var dtag = xlml_parsexmltag('<Data ss:Type="String">'), didx = 0;
 	var c = 0, r = 0;
 	var refguess/*:Range*/ = {s: {r:2000000, c:2000000}, e: {r:0, c:0} };
@@ -305,7 +305,6 @@ function parse_xlml_xml(d, _opts)/*:Workbook*/ {
 			if(Rn[1]==='/'){if((tmp=state.pop())[0]!==Rn[3]) throw new Error("Bad state: "+tmp.join("|"));}
 			else if(Rn[0].slice(-2) == "/>") break;
 			else {
-				table = xlml_parsexmltag(Rn[0]);
 				state.push([Rn[3], false]);
 				cstys = []; seencol = false;
 			}

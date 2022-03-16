@@ -94,10 +94,6 @@ var ct2type/*{[string]:string}*/ = ({
 	"application/vnd.ms-excel.externalLink": "links",
 	"application/vnd.openxmlformats-officedocument.spreadsheetml.externalLink+xml": "links",
 
-	/* Metadata */
-	"application/vnd.ms-excel.sheetMetadata": "metadata",
-	"application/vnd.openxmlformats-officedocument.spreadsheetml.sheetMetadata+xml": "metadata",
-
 	/* PivotCache */
 	"application/vnd.ms-excel.pivotCacheDefinition": "TODO",
 	"application/vnd.ms-excel.pivotCacheRecords": "TODO",

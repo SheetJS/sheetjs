@@ -81,7 +81,7 @@ var xlml_fixstr/*:StringConv*/ = /*#__PURE__*/(function() {
 	function entrepl($$/*:string*/,$1/*:string*/)/*:string*/ { return String.fromCharCode(parseInt($1,10)); }
 	return function xlml_fixstr(str/*:string*/)/*:string*/ { return str.replace(entregex,entrepl); };
 })();
-function xlml_unfixstr(str/*:string*/)/*:string*/ { return str.replace(/(\r\n|[\r\n])/g,"\&#10;"); };
+function xlml_unfixstr(str/*:string*/)/*:string*/ { return str.replace(/(\r\n|[\r\n])/g,"\&#10;"); }
 
 function parsexmlbool(value/*:any*/)/*:boolean*/ {
 	switch(value) {

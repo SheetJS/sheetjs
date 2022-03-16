@@ -13,7 +13,7 @@ function safe_parse_wbrels(wbrels, sheets) {
 	return !wbrels || wbrels.length === 0 ? null : wbrels;
 }
 
-function safe_parse_sheet(zip, path/*:string*/, relsPath/*:string*/, sheet, idx/*:number*/, sheetRels, sheets, stype/*:string*/, opts, wb, themes, styles, people) {
+function safe_parse_sheet(zip, path/*:string*/, relsPath/*:string*/, sheet, idx/*:number*/, sheetRels, sheets, stype/*:string*/, opts, wb, themes, styles) {
 	try {
 		sheetRels[sheet]=parse_rels(getzipstr(zip, relsPath, true), path);
 		var data = getzipdata(zip, path);
@@ -36,7 +36,7 @@ function safe_parse_sheet(zip, path/*:string*/, relsPath/*:string*/, sheet, idx/
 		sheets[sheet] = _ws;
 
 		/* scan rels for comments and threaded comments */
-		var tcomments = [], tauthors = [];
+		var tcomments = [];
 		if(sheetRels && sheetRels[sheet]) keys(sheetRels[sheet]).forEach(function(n) {
 			var dfile = "";
 			if(sheetRels[sheet][n].Type == RELS.CMNT) {

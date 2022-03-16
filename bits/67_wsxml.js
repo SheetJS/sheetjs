@@ -106,7 +106,7 @@ function parse_ws_xml_sheetpr(sheetPr/*:string*/, s, wb/*:WBWBProps*/, idx/*:num
 	if(!wb.Sheets[idx]) wb.Sheets[idx] = {};
 	if(data.codeName) wb.Sheets[idx].CodeName = unescapexml(utf8read(data.codeName));
 }
-function parse_ws_xml_sheetpr2(sheetPr/*:string*/, body/*:string*/, s, wb/*:WBWBProps*/, idx/*:number*/, styles, themes) {
+function parse_ws_xml_sheetpr2(sheetPr/*:string*/, body/*:string*/, s, wb/*:WBWBProps*/, idx/*:number*/) {
 	parse_ws_xml_sheetpr(sheetPr.slice(0, sheetPr.indexOf(">")), s, wb, idx);
 }
 function write_ws_xml_sheetpr(ws, wb, idx, opts, o) {

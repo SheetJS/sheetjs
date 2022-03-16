@@ -578,6 +578,7 @@ The [`demos` directory](demos/) includes sample projects for:
 - [`canvas-datagrid`](demos/datagrid/)
 - [`x-spreadsheet`](demos/xspreadsheet/)
 - [`react-data-grid`](demos/react/modify/)
+- [`vue3-table-light`](demos/vue/modify/)
 - [`Swift JSC and other engines`](demos/altjs/)
 - [`"serverless" functions`](demos/function/)
 - [`internet explorer`](demos/oldie/)
@@ -1828,6 +1829,14 @@ export default function App() {
   return <DataGrid columns={columns} rows={rows} />;
 }
 ```
+
+</details>
+
+<details>
+  <summary><b>Previewing data in a VueJS data grid</b> (click to show)</summary>
+
+[`vue3-table-lite`](https://github.com/linmasahiro/vue3-table-lite) is a simple
+VueJS 3 data table.  It is featured [in the VueJS demo](/demos/vue/modify/).
 
 </details>
 

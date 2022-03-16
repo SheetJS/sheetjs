@@ -21,7 +21,7 @@ declare var Buffer_from:any;
 /* vim: set ts=2: */
 /*jshint eqnull:true */
 /*exported CFB */
-/*global module, require:false, process:false, Buffer:false, Uint8Array:false, Uint16Array:false */
+/*global Uint8Array:false, Uint16Array:false */
 
 /*::
 type SectorEntry = {

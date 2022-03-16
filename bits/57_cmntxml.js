@@ -135,8 +135,8 @@ function write_tcmnt_xml(comments, people, opts) {
 /* [MS-XLSX] 2.1.18 */
 function parse_people_xml(data/*:string*/, opts) {
 	var out = [];
-	var pass = false, tidx = 0;
-	data.replace(tagregex, function xml_tcmnt(x, idx) {
+	var pass = false;
+	data.replace(tagregex, function xml_tcmnt(x) {
 		var y/*:any*/ = parsexmltag(x);
 		switch(strip_ns(y[0])) {
 			case '<?xml': break;
@@ -161,7 +161,7 @@ function parse_people_xml(data/*:string*/, opts) {
 	});
 	return out;
 }
-function write_people_xml(people, opts) {
+function write_people_xml(people/*, opts*/) {
 	var o = [XML_HEADER, writextag('personList', null, {
 		'xmlns': XMLNS.TCMNT,
 		'xmlns:x': XMLNS_main[0]

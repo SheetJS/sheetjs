@@ -5,9 +5,9 @@ function parse_xlmeta_xml(data: string, name: string, opts?: ParseXLMetaOptions)
 	var out: XLMeta = { Types: [], Cell: [], Value: [] };
 	if(!data) return out;
 	var pass = false;
-	var metatype: "cell" | "value" | "" = "";
+	var metatype: 0 | 1 | 2 = 2;
 
-	data.replace(tagregex, (x: string, idx: number) => {
+	data.replace(tagregex, (x: string/*, idx: number*/) => {
 		var y: any = parsexmltag(x);
 		switch(strip_ns(y[0])) {
 			case '<?xml': break;
@@ -34,18 +34,18 @@ function parse_xlmeta_xml(data: string, name: string, opts?: ParseXLMetaOptions)
 
 			/* 18.9.15 */
 			case '<rc':
-				if(metatype == "cell") out.Cell.push({ type: out.Types[y.t - 1].name, index: +y.v });
-				else if(metatype == "value") out.Value.push({ type: out.Types[y.t - 1].name, index: +y.v });
+				if(metatype == 1) out.Cell.push({ type: out.Types[y.t - 1].name, index: +y.v });
+				else if(metatype == 0) out.Value.push({ type: out.Types[y.t - 1].name, index: +y.v });
 				break;
 			case '</rc>': break;
 
 			/* 18.9.3 */
-			case '<cellMetadata': metatype = "cell"; break;
-			case '</cellMetadata>': metatype = ""; break;
+			case '<cellMetadata': metatype = 1; break;
+			case '</cellMetadata>': metatype = 2; break;
 
 			/* 18.9.17 */
-			case '<valueMetadata': metatype = "value"; break;
-			case '</valueMetadata>': metatype = ""; break;
+			case '<valueMetadata': metatype = 0; break;
+			case '</valueMetadata>': metatype = 2; break;
 
 			/* 18.2.10 extLst CT_ExtensionList ? */
 			case '<extLst': case '<extLst>': case '</extLst>': case '<extLst/>': break;

@@ -17,7 +17,7 @@ var RELS = ({
 	STY: "http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles",
 	THEME: "http://schemas.openxmlformats.org/officeDocument/2006/relationships/theme",
 	CHART: "http://schemas.openxmlformats.org/officeDocument/2006/relationships/chart",
-	CHARTEX: "http://schemas.microsoft.com/office/2014/relationships/chartEx",	
+	CHARTEX: "http://schemas.microsoft.com/office/2014/relationships/chartEx",
 	CS: "http://schemas.openxmlformats.org/officeDocument/2006/relationships/chartsheet",
 	WS: [
 		"http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet",

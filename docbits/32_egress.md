@@ -81,6 +81,14 @@ export default function App() {
 </details>
 
 <details>
+  <summary><b>Previewing data in a VueJS data grid</b> (click to show)</summary>
+
+[`vue3-table-lite`](https://github.com/linmasahiro/vue3-table-lite) is a simple
+VueJS 3 data table.  It is featured [in the VueJS demo](/demos/vue/modify/).
+
+</details>
+
+<details>
   <summary><b>Populating a database (SQL or no-SQL)</b> (click to show)</summary>
 
 The [`database` demo](/demos/database/) includes examples of working with

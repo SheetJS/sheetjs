@@ -12,7 +12,7 @@ function write_BrtMdtinfo(data) {
   write_XLWideString(data.name, o);
   return o.slice(0, o.l);
 }
-function parse_BrtMdb(data, length) {
+function parse_BrtMdb(data) {
   var out = [];
   var cnt = data.read_shift(4);
   while (cnt-- > 0)
@@ -34,7 +34,7 @@ function write_BrtBeginEsfmd(cnt, name) {
   write_XLWideString(name, o);
   return o.slice(0, o.l);
 }
-function parse_BrtBeginEsmdb(data, length) {
+function parse_BrtBeginEsmdb(data) {
   data.l += 4;
   return data.read_shift(4) != 0;
 }
@@ -49,7 +49,7 @@ function parse_xlmeta_bin(data, name, _opts) {
   var opts = _opts || {};
   var state = [];
   var pass = false;
-  var esmdb = 0;
+  var metatype = 2;
   recordhopper(data, function(val, R, RT) {
     switch (RT) {
       case 335:
@@ -57,11 +57,17 @@ function parse_xlmeta_bin(data, name, _opts) {
         break;
       case 51:
         val.forEach(function(r) {
-          (esmdb == 1 ? out.Cell : out.Value).push({ type: out.Types[r[0] - 1].name, index: r[1] });
+          if (metatype == 1)
+            out.Cell.push({ type: out.Types[r[0] - 1].name, index: r[1] });
+          else if (metatype == 0)
+            out.Value.push({ type: out.Types[r[0] - 1].name, index: r[1] });
         });
         break;
       case 337:
-        esmdb = val ? 1 : 0;
+        metatype = val ? 1 : 0;
+        break;
+      case 338:
+        metatype = 2;
         break;
       case 35:
         state.push(RT);

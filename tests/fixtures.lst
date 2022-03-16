@@ -96,6 +96,8 @@
 ./test_files/merge_cells.xlsx
 ./test_files/merge_cells.xlsb
 ./test_files/merge_cells.ods
+./test_files/metadata_2019.xlsx
+./test_files/metadata_2019.xlsb
 ./test_files/named_ranges_2011.xls.xml
 ./test_files/named_ranges_2011.xlsb
 ./test_files/named_ranges_2011.xlsx

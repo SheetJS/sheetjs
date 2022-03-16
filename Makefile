@@ -186,7 +186,7 @@ fullint: lint mdlint ## Run all checks (removed: old-lint, tslint, flow)
 
 .PHONY: lint
 lint: $(TARGET) $(AUXTARGETS) ## Run eslint checks
-	@./node_modules/.bin/eslint --ext .js,.njs,.json,.html,.htm $(TARGET) $(AUXTARGETS) $(CMDS) $(HTMLLINT) package.json bower.json
+	@./node_modules/.bin/eslint --ext .js,.njs,.json,.html,.htm $(FLOWTARGET) $(AUXTARGETS) $(CMDS) $(HTMLLINT) package.json bower.json
 	@if [ -x "$(CLOSURE)" ]; then java -jar $(CLOSURE) $(REQS) $(FLOWTARGET) --jscomp_warning=reportUnknownTypes >/dev/null; fi
 
 .PHONY: old-lint

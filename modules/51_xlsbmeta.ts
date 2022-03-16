@@ -24,7 +24,7 @@ function write_BrtMdtinfo(data: BrtMdtinfo): RawData {
 /* [MS-XLSB] 2.4.697 BrtMdb */
 type Mdir = [number, number]; // "t", "v" in XLSX parlance
 type BrtMdb = Mdir[];
-function parse_BrtMdb(data: ReadableData, length: number): BrtMdb {
+function parse_BrtMdb(data: ReadableData/*, length: number*/): BrtMdb {
 	var out: Mdir[] = [];
 	var cnt = data.read_shift(4);
 	while(cnt-- > 0) out.push([data.read_shift(4), data.read_shift(4)]);
@@ -49,7 +49,7 @@ function write_BrtBeginEsfmd(cnt: number, name: string): RawData {
 }
 
 /* [MS-XLSB] 2.4.73 BrtBeginEsmdb */
-function parse_BrtBeginEsmdb(data: ReadableData, length: number): boolean {
+function parse_BrtBeginEsmdb(data: ReadableData/*, length: number*/): boolean {
 	data.l += 4;
 	return data.read_shift(4) != 0;
 }
@@ -66,14 +66,13 @@ function parse_xlmeta_bin(data, name: string, _opts?: ParseXLMetaOptions): XLMet
 	var opts = _opts || {};
 	var state: number[] = [];
 	var pass = false;
-	var esmdb: 0 | 1 = 0;
+	var metatype: 0 | 1 | 2 = 2;
 	recordhopper(data, (val, R, RT) => {
 		switch(RT) {
 			// case 0x014C: /* BrtBeginMetadata */
 			// case 0x014D: /* BrtEndMetadata */
 			// case 0x014E: /* BrtBeginEsmdtinfo */
 			// case 0x0150: /* BrtEndEsmdtinfo */
-			// case 0x0152: /* BrtEndEsmdb */
 			// case 0x0153: /* BrtBeginEsfmd */
 			// case 0x0154: /* BrtEndEsfmd */
 			// case 0x0034: /* BrtBeginFmd */
@@ -88,11 +87,14 @@ function parse_xlmeta_bin(data, name: string, _opts?: ParseXLMetaOptions): XLMet
 
 			case 0x0033: /* BrtMdb */
 				(val as BrtMdb).forEach(r => {
-					(esmdb == 1 ? out.Cell : out.Value).push({type: out.Types[r[0] - 1].name, index: r[1] });
+					if(metatype == 1) out.Cell.push({type: out.Types[r[0] - 1].name, index: r[1] });
+					else if(metatype == 0) out.Value.push({type: out.Types[r[0] - 1].name, index: r[1] });
 				}); break;
 
 			case 0x0151: /* BrtBeginEsmdb */
-				esmdb = (val as boolean) ? 1 /* cell */ : 0 /* value */; break;
+				metatype = (val as boolean) ? 1 /* cell */ : 0 /* value */; break;
+			case 0x0152: /* BrtEndEsmdb */
+				metatype = 2; break;
 
 			case 0x0023: /* BrtFRTBegin */
 				state.push(RT); pass = true; break;

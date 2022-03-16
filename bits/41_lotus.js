@@ -373,10 +373,10 @@ var WK_ = /*#__PURE__*/(function() {
 		V = (rel ? B : 0) + ((V >= 0x2000) ? V - 0x4000 : V);
 		return (rel ? "" : "$") + (col ? encode_col(V) : encode_row(V));
 	}
-	var oprec = [
+	/* var oprec = [
 		8, 8, 8, 8, 8, 8, 8, 8, 6, 4, 4, 5, 5, 7, 3, 3,
 		3, 3, 3, 3, 1, 1, 2, 6, 8, 8, 8, 8, 8, 8, 8, 8
-	];
+	]; */
 	/* TODO: flesh out */
 	var FuncTab = {
 		0x33: ["FALSE", 0],
@@ -390,10 +390,10 @@ var WK_ = /*#__PURE__*/(function() {
 		0x6F: ["T", 1]
 	};
 	var BinOpTab = [
-		  "",   "",   "",   "",   "",   "",   "",   "",
-		  "",  "+",  "-",  "*",  "/",  "^",  "=", "<>",
-		"<=", ">=",  "<",  ">",   "",   "",   "",   "",
-		 "&",   "",   "",   "",   "",   "",   "",   ""
+		  "",   "",   "",   "",   "",   "",   "",   "", // eslint-disable-line no-mixed-spaces-and-tabs
+		  "",  "+",  "-",  "*",  "/",  "^",  "=", "<>", // eslint-disable-line no-mixed-spaces-and-tabs
+		"<=", ">=",  "<",  ">",   "",   "",   "",   "", // eslint-disable-line no-mixed-spaces-and-tabs
+		 "&",   "",   "",   "",   "",   "",   "",   ""  // eslint-disable-line no-mixed-spaces-and-tabs
 	];
 
 	function wk1_fmla_to_csf(blob, o) {
@@ -592,7 +592,7 @@ var WK_ = /*#__PURE__*/(function() {
 		if(!opts.qpro || length < 21) return;
 		var id = blob.read_shift(1);
 		blob.l += 17;
-		var len = blob.read_shift(1);
+		blob.l += 1; //var len = blob.read_shift(1);
 		blob.l += 2;
 		var nm = blob.read_shift(length - 21, 'cstr');
 		return [id, nm];

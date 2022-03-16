@@ -79,8 +79,9 @@ function write_zip_xlsxb(wb/*:Workbook*/, opts/*:WriteOpts*/)/*:ZIP*/ {
 		if(ws) {
 			var comments = ws['!comments'];
 			var need_vml = false;
+			var cf = "";
 			if(comments && comments.length > 0) {
-				var cf = "xl/comments" + rId + "." + wbext;
+				cf = "xl/comments" + rId + "." + wbext;
 				zip_add_file(zip, cf, write_cmnt(comments, cf, opts));
 				ct.comments.push(cf);
 				add_rels(wsrels, -1, "../comments" + rId + "." + wbext, RELS.CMNT);
@@ -216,6 +217,7 @@ function write_zip_xlsx(wb/*:Workbook*/, opts/*:WriteOpts*/)/*:ZIP*/ {
 		if(ws) {
 			var comments = ws['!comments'];
 			var need_vml = false;
+			var cf = "";
 			if(comments && comments.length > 0) {
 				var needtc = false;
 				comments.forEach(function(carr) {
@@ -228,7 +230,7 @@ function write_zip_xlsx(wb/*:Workbook*/, opts/*:WriteOpts*/)/*:ZIP*/ {
 					add_rels(wsrels, -1, "../threadedComments/threadedComment" + rId + "." + wbext, RELS.TCMNT);
 				}
 
-				var cf = "xl/comments" + rId + "." + wbext;
+				cf = "xl/comments" + rId + "." + wbext;
 				zip_add_file(zip, cf, write_comments_xml(comments, opts));
 				ct.comments.push(cf);
 				add_rels(wsrels, -1, "../comments" + rId + "." + wbext, RELS.CMNT);

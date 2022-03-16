@@ -35,6 +35,7 @@ The [`demos` directory](demos/) includes sample projects for:
 - [`canvas-datagrid`](demos/datagrid/)
 - [`x-spreadsheet`](demos/xspreadsheet/)
 - [`react-data-grid`](demos/react/modify/)
+- [`vue3-table-light`](demos/vue/modify/)
 - [`Swift JSC and other engines`](demos/altjs/)
 - [`"serverless" functions`](demos/function/)
 - [`internet explorer`](demos/oldie/)

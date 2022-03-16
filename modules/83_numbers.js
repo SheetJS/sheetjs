@@ -60,43 +60,6 @@ function parse_varint49(buf, ptr) {
     ptr[0] = l;
   return usz;
 }
-function write_varint49(v) {
-  var usz = new Uint8Array(7);
-  usz[0] = v & 127;
-  var L = 1;
-  sz:
-    if (v > 127) {
-      usz[L - 1] |= 128;
-      usz[L] = v >> 7 & 127;
-      ++L;
-      if (v <= 16383)
-        break sz;
-      usz[L - 1] |= 128;
-      usz[L] = v >> 14 & 127;
-      ++L;
-      if (v <= 2097151)
-        break sz;
-      usz[L - 1] |= 128;
-      usz[L] = v >> 21 & 127;
-      ++L;
-      if (v <= 268435455)
-        break sz;
-      usz[L - 1] |= 128;
-      usz[L] = v / 256 >>> 21 & 127;
-      ++L;
-      if (v <= 34359738367)
-        break sz;
-      usz[L - 1] |= 128;
-      usz[L] = v / 65536 >>> 21 & 127;
-      ++L;
-      if (v <= 4398046511103)
-        break sz;
-      usz[L - 1] |= 128;
-      usz[L] = v / 16777216 >>> 21 & 127;
-      ++L;
-    }
-  return usz.slice(0, L);
-}
 function varint_to_i32(buf) {
   var l = 0, i32 = buf[l] & 127;
   varint:
@@ -161,16 +124,6 @@ function parse_shallow(buf) {
       out[num].push(v);
   }
   return out;
-}
-function write_shallow(proto) {
-  var out = [];
-  proto.forEach(function(field, idx) {
-    field.forEach(function(item) {
-      out.push(write_varint49(idx * 8 + item.type));
-      out.push(item.data);
-    });
-  });
-  return u8concat(out);
 }
 function mappa(data, cb) {
   if (!data)

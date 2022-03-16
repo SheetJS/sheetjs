@@ -55,6 +55,7 @@ function parse_varint49(buf: Uint8Array, ptr?: Ptr): number {
 	if(ptr) ptr[0] = l;
 	return usz;
 }
+/*
 function write_varint49(v: number): Uint8Array {
 	var usz = new Uint8Array(7);
 	usz[0] = (v & 0x7F);
@@ -74,6 +75,7 @@ function write_varint49(v: number): Uint8Array {
 	}
 	return usz.slice(0, L);
 }
+*/
 
 /** Parse a 32-bit signed integer from the raw varint */
 function varint_to_i32(buf: Uint8Array): number {
@@ -124,6 +126,7 @@ function parse_shallow(buf: Uint8Array): ProtoMessage {
 	return out;
 }
 /** Serialize a shallow parse */
+/*
 function write_shallow(proto: ProtoMessage): Uint8Array {
 	var out: Uint8Array[] = [];
 	proto.forEach((field, idx) => {
@@ -134,6 +137,7 @@ function write_shallow(proto: ProtoMessage): Uint8Array {
 	});
 	return u8concat(out);
 }
+*/
 
 function mappa<U>(data: ProtoField, cb:(Uint8Array) => U): U[] {
 	if(!data) return [];

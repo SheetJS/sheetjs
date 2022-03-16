@@ -3,8 +3,8 @@ function parse_xlmeta_xml(data, name, opts) {
   if (!data)
     return out;
   var pass = false;
-  var metatype = "";
-  data.replace(tagregex, function(x, idx) {
+  var metatype = 2;
+  data.replace(tagregex, function(x) {
     var y = parsexmltag(x);
     switch (strip_ns(y[0])) {
       case "<?xml":
@@ -29,24 +29,24 @@ function parse_xlmeta_xml(data, name, opts) {
       case "</bk>":
         break;
       case "<rc":
-        if (metatype == "cell")
+        if (metatype == 1)
           out.Cell.push({ type: out.Types[y.t - 1].name, index: +y.v });
-        else if (metatype == "value")
+        else if (metatype == 0)
           out.Value.push({ type: out.Types[y.t - 1].name, index: +y.v });
         break;
       case "</rc>":
         break;
       case "<cellMetadata":
-        metatype = "cell";
+        metatype = 1;
         break;
       case "</cellMetadata>":
-        metatype = "";
+        metatype = 2;
         break;
       case "<valueMetadata":
-        metatype = "value";
+        metatype = 0;
         break;
       case "</valueMetadata>":
-        metatype = "";
+        metatype = 2;
         break;
       case "<extLst":
       case "<extLst>":
