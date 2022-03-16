@@ -109,7 +109,24 @@ function cc2str(arr/*:Array<number>*/, debomit)/*:string*/ {
 		}
 		return arr.toString("binary");
 	}
-	/* TODO: investigate performance degradation of TextEncoder in Edge 13 */
+
+	if(typeof TextDecoder !== "undefined") try {
+		if(debomit) {
+			if(arr[0] == 0xFF && arr[1] == 0xFE) return new TextEncoder("utf-16le").decode(arr.slice(2));
+			if(arr[0] == 0xFE && arr[1] == 0xFF) return new TextEncoder("utf-16be").decode(arr.slice(2));
+		}
+		var rev = {
+			"\u20ac": "\x80", "\u201a": "\x82", "\u0192": "\x83", "\u201e": "\x84",
+			"\u2026": "\x85", "\u2020": "\x86", "\u2021": "\x87", "\u02c6": "\x88",
+			"\u2030": "\x89", "\u0160": "\x8a", "\u2039": "\x8b", "\u0152": "\x8c",
+			"\u017d": "\x8e", "\u2018": "\x91", "\u2019": "\x92", "\u201c": "\x93",
+			"\u201d": "\x94", "\u2022": "\x95", "\u2013": "\x96", "\u2014": "\x97",
+			"\u02dc": "\x98", "\u2122": "\x99", "\u0161": "\x9a", "\u203a": "\x9b",
+			"\u0153": "\x9c", "\u017e": "\x9e", "\u0178": "\x9f"
+		};
+		return new TextDecoder("latin1").decode(arr).replace(/[\x80\x9F]/g, function(c) { return rev[c] || c; });
+	} catch(e) {}
+
 	var o = [];
 	for(var i = 0; i != arr.length; ++i) o.push(String.fromCharCode(arr[i]));
 	return o.join("");
