@@ -83,7 +83,7 @@ function safe_format_xf(p/*:any*/, opts/*:ParseOpts*/, date1904/*:?boolean*/) {
 		if(p.t === 'e') { p.w = p.w || BErr[p.v]; }
 		else if(fmtid === 0 || fmtid == "General") {
 			if(p.t === 'n') {
-				if((p.v|0) === p.v) p.w = SSF._general_int(p.v);
+				if((p.v|0) === p.v) p.w = p.v.toString(10);
 				else p.w = SSF._general_num(p.v);
 			}
 			else p.w = SSF._general(p.v);

@@ -124,7 +124,7 @@ function cc2str(arr/*:Array<number>*/, debomit)/*:string*/ {
 			"\u02dc": "\x98", "\u2122": "\x99", "\u0161": "\x9a", "\u203a": "\x9b",
 			"\u0153": "\x9c", "\u017e": "\x9e", "\u0178": "\x9f"
 		};
-		return new TextDecoder("latin1").decode(arr).replace(/[\x80\x9F]/g, function(c) { return rev[c] || c; });
+		return new TextDecoder("latin1").decode(arr).replace(/[€‚ƒ„…†‡ˆ‰Š‹ŒŽ‘’“”•–—˜™š›œžŸ]/g, function(c) { return rev[c] || c; });
 	} catch(e) {}
 
 	var o = [];

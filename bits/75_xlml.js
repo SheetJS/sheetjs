@@ -62,7 +62,7 @@ function safe_format_xlml(cell/*:Cell*/, nf, o) {
 		if(cell.t === 'e') { cell.w = cell.w || BErr[cell.v]; }
 		else if(nf === "General") {
 			if(cell.t === 'n') {
-				if((cell.v|0) === cell.v) cell.w = SSF._general_int(cell.v);
+				if((cell.v|0) === cell.v) cell.w = cell.v.toString(10);
 				else cell.w = SSF._general_num(cell.v);
 			}
 			else cell.w = SSF._general(cell.v);

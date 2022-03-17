@@ -1,7 +1,3 @@
-/* The longest 32-bit integer text is "-4294967296", exactly 11 chars */
-function general_fmt_int(v/*:number*/)/*:string*/ { return v.toString(10); }
-SSF._general_int = general_fmt_int;
-
 /* ECMA-376 18.8.30 numFmt*/
 /* Note: `toPrecision` uses standard form when prec > E and E >= -6 */
 var general_fmt_num = (function make_general_fmt_num() {
@@ -54,6 +50,7 @@ SSF._general_num = general_fmt_num;
 	- "up to 11 characters" displayed for numbers
 	- Default date format (code 14) used for Dates
 
+	The longest 32-bit integer text is "-2147483648", exactly 11 chars
 	TODO: technically the display depends on the width of the cell
 */
 function general_fmt(v/*:any*/, opts/*:any*/) {

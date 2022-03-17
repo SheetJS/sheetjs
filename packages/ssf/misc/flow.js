@@ -20,7 +20,6 @@ type SSFModule = {
 	_table:SSFTable;
 	init_table:any;
 
-	_general_int:(v:number)=>string;
 	_general_num:(v:number)=>string;
 	_general:(v:number, o:?any)=>string;
 	_eval:any;

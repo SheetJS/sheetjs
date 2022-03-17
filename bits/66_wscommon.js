@@ -92,12 +92,12 @@ function safe_format(p/*:Cell*/, fmtid/*:number*/, fillid/*:?number*/, opts, the
 		if(p.t === 'e') p.w = p.w || BErr[p.v];
 		else if(fmtid === 0) {
 			if(p.t === 'n') {
-				if((p.v|0) === p.v) p.w = SSF._general_int(p.v);
+				if((p.v|0) === p.v) p.w = p.v.toString(10);
 				else p.w = SSF._general_num(p.v);
 			}
 			else if(p.t === 'd') {
 				var dd = datenum(p.v);
-				if((dd|0) === dd) p.w = SSF._general_int(dd);
+				if((dd|0) === dd) p.w = dd.toString(10);
 				else p.w = SSF._general_num(dd);
 			}
 			else if(p.v === undefined) return "";
