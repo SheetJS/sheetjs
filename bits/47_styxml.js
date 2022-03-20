@@ -262,8 +262,8 @@ function parse_fonts(t, styles, themes, opts) {
 /* 18.8.31 numFmts CT_NumFmts */
 function parse_numFmts(t, styles, opts) {
 	styles.NumberFmt = [];
-	var k/*Array<number>*/ = (keys(SSF._table)/*:any*/);
-	for(var i=0; i < k.length; ++i) styles.NumberFmt[k[i]] = SSF._table[k[i]];
+	var k/*Array<number>*/ = (keys(table_fmt)/*:any*/);
+	for(var i=0; i < k.length; ++i) styles.NumberFmt[k[i]] = table_fmt[k[i]];
 	var m = t[0].match(tagregex);
 	if(!m) return;
 	for(i=0; i < m.length; ++i) {
@@ -278,7 +278,7 @@ function parse_numFmts(t, styles, opts) {
 						for(j = 0x188; j > 0x3c; --j) if(styles.NumberFmt[j] == null) break;
 						styles.NumberFmt[j] = f;
 					}
-					SSF.load(f,j);
+					SSF_load(f,j);
 				}
 			} break;
 			case '</numFmt>': break;

@@ -1,8 +1,7 @@
 var XML_HEADER = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\r\n';
 var attregexg=/([^"\s?>\/]+)\s*=\s*((?:")([^"]*)(?:")|(?:')([^']*)(?:')|([^'">\s]+))/g;
-var tagregex=/<[\/\?]?[a-zA-Z0-9:_-]+(?:\s+[^"\s?>\/]+\s*=\s*(?:"[^"]*"|'[^']*'|[^'">\s=]+))*\s*[\/\?]?>/mg;
-
-if(!(XML_HEADER.match(tagregex))) tagregex = /<[^>]*>/g;
+var tagregex1=/<[\/\?]?[a-zA-Z0-9:_-]+(?:\s+[^"\s?>\/]+\s*=\s*(?:"[^"]*"|'[^']*'|[^'">\s=]+))*\s*[\/\?]?>/mg, tagregex2 = /<[^>]*>/g;
+var tagregex = /*#__PURE__*/XML_HEADER.match(tagregex1) ? tagregex1 : tagregex2;
 var nsregex=/<\w*:/, nsregex2 = /<(\/?)\w+:/;
 function parsexmltag(tag/*:string*/, skip_root/*:?boolean*/, skip_LC/*:?boolean*/)/*:any*/ {
 	var z = ({}/*:any*/);
@@ -42,7 +41,7 @@ var encodings = {
 	'&lt;': '<',
 	'&amp;': '&'
 };
-var rencoding = evert(encodings);
+var rencoding = /*#__PURE__*/evert(encodings);
 //var rencstr = "&<>'\"".split("");
 
 // TODO: CP remap (need to read file version to determine OS)
@@ -91,7 +90,7 @@ function parsexmlbool(value/*:any*/)/*:boolean*/ {
 	}
 }
 
-var utf8read/*:StringConv*/ = function utf8reada(orig/*:string*/)/*:string*/ {
+function utf8reada(orig/*:string*/)/*:string*/ {
 	var out = "", i = 0, c = 0, d = 0, e = 0, f = 0, w = 0;
 	while (i < orig.length) {
 		c = orig.charCodeAt(i++);
@@ -106,9 +105,31 @@ var utf8read/*:StringConv*/ = function utf8reada(orig/*:string*/)/*:string*/ {
 		out += String.fromCharCode(0xDC00 + (w&1023));
 	}
 	return out;
-};
+}
 
-var utf8write/*:StringConv*/ = function(orig/*:string*/)/*:string*/ {
+function utf8readb(data) {
+	var out = new_raw_buf(2*data.length), w, i, j = 1, k = 0, ww=0, c;
+	for(i = 0; i < data.length; i+=j) {
+		j = 1;
+		if((c=data.charCodeAt(i)) < 128) w = c;
+		else if(c < 224) { w = (c&31)*64+(data.charCodeAt(i+1)&63); j=2; }
+		else if(c < 240) { w=(c&15)*4096+(data.charCodeAt(i+1)&63)*64+(data.charCodeAt(i+2)&63); j=3; }
+		else { j = 4;
+			w = (c & 7)*262144+(data.charCodeAt(i+1)&63)*4096+(data.charCodeAt(i+2)&63)*64+(data.charCodeAt(i+3)&63);
+			w -= 65536; ww = 0xD800 + ((w>>>10)&1023); w = 0xDC00 + (w&1023);
+		}
+		if(ww !== 0) { out[k++] = ww&255; out[k++] = ww>>>8; ww = 0; }
+		out[k++] = w%256; out[k++] = w>>>8;
+	}
+	return out.slice(0,k).toString('ucs2');
+}
+
+function utf8readc(data) { return Buffer_from(data, 'binary').toString('utf8'); }
+
+var utf8corpus = "foo bar baz\u00e2\u0098\u0083\u00f0\u009f\u008d\u00a3";
+var utf8read = has_buf && (/*#__PURE__*/utf8readc(utf8corpus) == /*#__PURE__*/utf8reada(utf8corpus) && utf8readc || /*#__PURE__*/utf8readb(utf8corpus) == /*#__PURE__*/utf8reada(utf8corpus) && utf8readb) || utf8reada;
+
+var utf8write/*:StringConv*/ = has_buf ? function(data) { return Buffer_from(data, 'utf8').toString("binary"); } : function(orig/*:string*/)/*:string*/ {
 	var out/*:Array<string>*/ = [], i = 0, c = 0, d = 0;
 	while(i < orig.length) {
 		c = orig.charCodeAt(i++);
@@ -133,31 +154,6 @@ var utf8write/*:StringConv*/ = function(orig/*:string*/)/*:string*/ {
 	}
 	return out.join("");
 };
-
-if(has_buf) {
-	var utf8readb = function utf8readb(data) {
-		var out = Buffer.alloc(2*data.length), w, i, j = 1, k = 0, ww=0, c;
-		for(i = 0; i < data.length; i+=j) {
-			j = 1;
-			if((c=data.charCodeAt(i)) < 128) w = c;
-			else if(c < 224) { w = (c&31)*64+(data.charCodeAt(i+1)&63); j=2; }
-			else if(c < 240) { w=(c&15)*4096+(data.charCodeAt(i+1)&63)*64+(data.charCodeAt(i+2)&63); j=3; }
-			else { j = 4;
-				w = (c & 7)*262144+(data.charCodeAt(i+1)&63)*4096+(data.charCodeAt(i+2)&63)*64+(data.charCodeAt(i+3)&63);
-				w -= 65536; ww = 0xD800 + ((w>>>10)&1023); w = 0xDC00 + (w&1023);
-			}
-			if(ww !== 0) { out[k++] = ww&255; out[k++] = ww>>>8; ww = 0; }
-			out[k++] = w%256; out[k++] = w>>>8;
-		}
-		return out.slice(0,k).toString('ucs2');
-	};
-	var corpus = "foo bar baz\u00e2\u0098\u0083\u00f0\u009f\u008d\u00a3";
-	if(utf8read(corpus) == utf8readb(corpus)) utf8read = utf8readb;
-	var utf8readc = function utf8readc(data) { return Buffer_from(data, 'binary').toString('utf8'); };
-	if(utf8read(corpus) == utf8readc(corpus)) utf8read = utf8readc;
-
-	utf8write = function(data) { return Buffer_from(data, 'utf8').toString("binary"); };
-}
 
 // matches <foo>...</foo> extracts content
 var matchtag = /*#__PURE__*/(function() {

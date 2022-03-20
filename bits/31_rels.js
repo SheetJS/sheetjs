@@ -63,14 +63,12 @@ function parse_rels(data/*:?string*/, currentFilePath/*:string*/) {
 }
 
 
-var RELS_ROOT = writextag('Relationships', null, {
-	//'xmlns:ns0': XMLNS.RELS,
-	'xmlns': XMLNS.RELS
-});
-
 /* TODO */
 function write_rels(rels)/*:string*/ {
-	var o = [XML_HEADER, RELS_ROOT];
+	var o = [XML_HEADER, writextag('Relationships', null, {
+		//'xmlns:ns0': XMLNS.RELS,
+		'xmlns': XMLNS.RELS
+	})];
 	keys(rels['!id']).forEach(function(rid) {
 		o[o.length] = (writextag('Relationship', null, rels['!id'][rid]));
 	});

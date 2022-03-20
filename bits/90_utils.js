@@ -230,7 +230,7 @@ function sheet_add_json(_ws/*:?Worksheet*/, js/*:Array<any>*/, opts)/*:Worksheet
 				else if(v instanceof Date) {
 					t = 'd';
 					if(!o.cellDates) { t = 'n'; v = datenum(v); }
-					z = (o.dateNF || SSF._table[14]);
+					z = (o.dateNF || table_fmt[14]);
 				}
 				else if(v === null && o.nullError) { t = 'e'; v = 0; }
 				if(!cell) ws[ref] = cell = ({t:t, v:v}/*:any*/);

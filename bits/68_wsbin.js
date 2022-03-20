@@ -602,8 +602,8 @@ function parse_ws_bin(data, _opts, idx, rels, wb/*:WBWBProps*/, themes, styles)/
 				if(refguess.s.c > C) refguess.s.c = C;
 				if(refguess.e.r < row.r) refguess.e.r = row.r;
 				if(refguess.e.c < C) refguess.e.c = C;
-				if(opts.cellDates && cf && p.t == 'n' && SSF.is_date(SSF._table[cf.numFmtId])) {
-					var _d = SSF.parse_date_code(p.v); if(_d) { p.t = 'd'; p.v = new Date(_d.y, _d.m-1,_d.d,_d.H,_d.M,_d.S,_d.u); }
+				if(opts.cellDates && cf && p.t == 'n' && fmt_is_date(table_fmt[cf.numFmtId])) {
+					var _d = SSF_parse_date_code(p.v); if(_d) { p.t = 'd'; p.v = new Date(_d.y, _d.m-1,_d.d,_d.H,_d.M,_d.S,_d.u); }
 				}
 				if(cm) {
 					if(cm.type == 'XLDAPR') p.D = true;
@@ -809,7 +809,7 @@ function write_ws_bin_cell(ba/*:BufArray*/, cell/*:Cell*/, R/*:number*/, C/*:num
 		case 'b': vv = cell.v ? "1" : "0"; break;
 		case 'd': // no BrtCellDate :(
 			cell = dup(cell);
-			cell.z = cell.z || SSF._table[14];
+			cell.z = cell.z || table_fmt[14];
 			cell.v = datenum(parseDate(cell.v)); cell.t = 'n';
 			break;
 		/* falls through */

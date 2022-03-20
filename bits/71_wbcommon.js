@@ -113,7 +113,7 @@ function safe1904(wb/*:Workbook*/)/*:string*/ {
 	return parsexmlbool(wb.Workbook.WBProps.date1904) ? "true" : "false";
 }
 
-var badchars = "][*?\/\\".split("");
+var badchars = /*#__PURE__*/"][*?\/\\".split("");
 function check_ws_name(n/*:string*/, safe/*:?boolean*/)/*:boolean*/ {
 	if(n.length > 31) { if(safe) return false; throw new Error("Sheet names cannot exceed 31 chars"); }
 	var _good = true;

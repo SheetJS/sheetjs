@@ -11,10 +11,10 @@ function write_zip(wb/*:Workbook*/, opts/*:WriteOpts*/)/*:ZIP*/ {
 function write_zip_xlsxb(wb/*:Workbook*/, opts/*:WriteOpts*/)/*:ZIP*/ {
 	_shapeid = 1024;
 	if(wb && !wb.SSF) {
-		wb.SSF = SSF.get_table();
+		wb.SSF = dup(table_fmt);
 	}
 	if(wb && wb.SSF) {
-		make_ssf(SSF); SSF.load_table(wb.SSF);
+		make_ssf(); SSF_load_table(wb.SSF);
 		// $FlowIgnore
 		opts.revssf = evert_num(wb.SSF); opts.revssf[wb.SSF[65535]] = 0;
 		opts.ssf = wb.SSF;
@@ -146,10 +146,10 @@ function write_zip_xlsxb(wb/*:Workbook*/, opts/*:WriteOpts*/)/*:ZIP*/ {
 function write_zip_xlsx(wb/*:Workbook*/, opts/*:WriteOpts*/)/*:ZIP*/ {
 	_shapeid = 1024;
 	if(wb && !wb.SSF) {
-		wb.SSF = SSF.get_table();
+		wb.SSF = dup(table_fmt);
 	}
 	if(wb && wb.SSF) {
-		make_ssf(SSF); SSF.load_table(wb.SSF);
+		make_ssf(); SSF_load_table(wb.SSF);
 		// $FlowIgnore
 		opts.revssf = evert_num(wb.SSF); opts.revssf[wb.SSF[65535]] = 0;
 		opts.ssf = wb.SSF;

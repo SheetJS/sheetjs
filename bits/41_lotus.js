@@ -59,7 +59,7 @@ var WK_ = /*#__PURE__*/(function() {
 				case 0x10: /* FORMULA */
 					/* TODO: actual translation of the format code */
 					if(RT == 0x0E && (val[2] & 0x70) == 0x70 && (val[2] & 0x0F) > 1 && (val[2] & 0x0F) < 15) {
-						val[1].z = o.dateNF || SSF._table[14];
+						val[1].z = o.dateNF || table_fmt[14];
 						if(o.cellDates) { val[1].t = 'd'; val[1].v = numdate(val[1].v); }
 					}
 

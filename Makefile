@@ -191,11 +191,11 @@ lint: $(TARGET) $(AUXTARGETS) ## Run eslint checks
 
 .PHONY: old-lint
 old-lint: $(TARGET) $(AUXTARGETS) ## Run jshint and jscs checks
+	@./node_modules/.bin/jscs $(TARGET) $(AUXTARGETS) test.js
 	@./node_modules/.bin/jshint --show-non-errors $(TARGET) $(AUXTARGETS)
 	@./node_modules/.bin/jshint --show-non-errors $(CMDS)
 	@./node_modules/.bin/jshint --show-non-errors package.json bower.json test.js
 	@./node_modules/.bin/jshint --show-non-errors --extract=always $(HTMLLINT)
-	@./node_modules/.bin/jscs $(TARGET) $(AUXTARGETS) test.js
 	@if [ -x "$(CLOSURE)" ]; then java -jar $(CLOSURE) $(REQS) $(FLOWTARGET) --jscomp_warning=reportUnknownTypes >/dev/null; fi
 
 .PHONY: tslint

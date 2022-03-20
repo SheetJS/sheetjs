@@ -80,8 +80,8 @@ function safe_decode_range(range/*:string*/)/*:Range*/ {
 
 function safe_format_cell(cell/*:Cell*/, v/*:any*/) {
 	var q = (cell.t == 'd' && v instanceof Date);
-	if(cell.z != null) try { return (cell.w = SSF.format(cell.z, q ? datenum(v) : v)); } catch(e) { }
-	try { return (cell.w = SSF.format((cell.XF||{}).numFmtId||(q ? 14 : 0),  q ? datenum(v) : v)); } catch(e) { return ''+v; }
+	if(cell.z != null) try { return (cell.w = SSF_format(cell.z, q ? datenum(v) : v)); } catch(e) { }
+	try { return (cell.w = SSF_format((cell.XF||{}).numFmtId||(q ? 14 : 0),  q ? datenum(v) : v)); } catch(e) { return ''+v; }
 }
 
 function format_cell(cell/*:Cell*/, v/*:any*/, o/*:any*/) {
@@ -145,9 +145,9 @@ function sheet_add_aoa(_ws/*:?Worksheet*/, data/*:AOA*/, opts/*:?any*/)/*:Worksh
 				else if(typeof cell.v === 'number') cell.t = 'n';
 				else if(typeof cell.v === 'boolean') cell.t = 'b';
 				else if(cell.v instanceof Date) {
-					cell.z = o.dateNF || SSF._table[14];
-					if(o.cellDates) { cell.t = 'd'; cell.w = SSF.format(cell.z, datenum(cell.v)); }
-					else { cell.t = 'n'; cell.v = datenum(cell.v); cell.w = SSF.format(cell.z, cell.v); }
+					cell.z = o.dateNF || table_fmt[14];
+					if(o.cellDates) { cell.t = 'd'; cell.w = SSF_format(cell.z, datenum(cell.v)); }
+					else { cell.t = 'n'; cell.v = datenum(cell.v); cell.w = SSF_format(cell.z, cell.v); }
 				}
 				else cell.t = 's';
 			}

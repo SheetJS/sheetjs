@@ -439,7 +439,7 @@ var SYLK = /*#__PURE__*/(function() {
 					else if(val === 'FALSE') val = false;
 					else if(!isNaN(fuzzynum(val))) {
 						val = fuzzynum(val);
-						if(next_cell_format !== null && SSF.is_date(next_cell_format)) val = numdate(val);
+						if(next_cell_format !== null && fmt_is_date(next_cell_format)) val = numdate(val);
 					} else if(!isNaN(fuzzydate(val).getDate())) {
 						val = parseDate(val);
 					}
@@ -684,7 +684,7 @@ var DIF = /*#__PURE__*/(function() {
 							push_value(o, 1, 0, (!DIF_XL || isNaN(cell.v)) ? cell.v : '="' + cell.v + '"');
 							break;
 						case 'd':
-							if(!cell.w) cell.w = SSF.format(cell.z || SSF._table[14], datenum(parseDate(cell.v)));
+							if(!cell.w) cell.w = SSF_format(cell.z || table_fmt[14], datenum(parseDate(cell.v)));
 							if(DIF_XL) push_value(o, 0, cell.w, "V");
 							else push_value(o, 1, 0, cell.w);
 							break;
@@ -781,7 +781,7 @@ var ETH = /*#__PURE__*/(function() {
 					case 'd':
 						var t = datenum(parseDate(cell.v));
 						oo[2] = 'vtc'; oo[3] = 'nd'; oo[4] = ""+t;
-						oo[5] = cell.w || SSF.format(cell.z || SSF._table[14], t);
+						oo[5] = cell.w || SSF_format(cell.z || table_fmt[14], t);
 						break;
 					case 'e': continue;
 				}
@@ -922,12 +922,12 @@ var PRN = /*#__PURE__*/(function() {
 			else if(s == "FALSE") { cell.t = 'b'; cell.v = false; }
 			else if(!isNaN(v = fuzzynum(s))) { cell.t = 'n'; if(o.cellText !== false) cell.w = s; cell.v = v; }
 			else if(!isNaN(fuzzydate(s).getDate()) || _re && s.match(_re)) {
-				cell.z = o.dateNF || SSF._table[14];
+				cell.z = o.dateNF || table_fmt[14];
 				var k = 0;
 				if(_re && s.match(_re)){ s=dateNF_fix(s, o.dateNF, (s.match(_re)||[])); k=1; }
 				if(o.cellDates) { cell.t = 'd'; cell.v = parseDate(s, k); }
 				else { cell.t = 'n'; cell.v = datenum(parseDate(s, k)); }
-				if(o.cellText !== false) cell.w = SSF.format(cell.z, cell.v instanceof Date ? datenum(cell.v):cell.v);
+				if(o.cellText !== false) cell.w = SSF_format(cell.z, cell.v instanceof Date ? datenum(cell.v):cell.v);
 				if(!o.cellNF) delete cell.z;
 			} else {
 				cell.t = 's';

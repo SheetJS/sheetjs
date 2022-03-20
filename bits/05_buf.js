@@ -1,26 +1,26 @@
-var has_buf = (typeof Buffer !== 'undefined' && typeof process !== 'undefined' && typeof process.versions !== 'undefined' && !!process.versions.node);
+var has_buf = /*#__PURE__*/(function() { return typeof Buffer !== 'undefined' && typeof process !== 'undefined' && typeof process.versions !== 'undefined' && !!process.versions.node; })();
 
-var Buffer_from = /*::(*/function(){}/*:: :any)*/;
+var Buffer_from = /*#__PURE__*/(function() {
+	if(typeof Buffer !== 'undefined') {
+		var nbfs = !Buffer.from;
+		if(!nbfs) try { Buffer.from("foo", "utf8"); } catch(e) { nbfs = true; }
+		return nbfs ? function(buf, enc) { return (enc) ? new Buffer(buf, enc) : new Buffer(buf); } : Buffer.from.bind(Buffer);
+	}
+	return function() {};
+})();
 
-if(typeof Buffer !== 'undefined') {
-	var nbfs = !Buffer.from;
-	if(!nbfs) try { Buffer.from("foo", "utf8"); } catch(e) { nbfs = true; }
-	Buffer_from = nbfs ? function(buf, enc) { return (enc) ? new Buffer(buf, enc) : new Buffer(buf); } : Buffer.from.bind(Buffer);
-	// $FlowIgnore
-	if(!Buffer.alloc) Buffer.alloc = function(n) { return new Buffer(n); };
-	// $FlowIgnore
-	if(!Buffer.allocUnsafe) Buffer.allocUnsafe = function(n) { return new Buffer(n); };
-}
 
 function new_raw_buf(len/*:number*/) {
 	/* jshint -W056 */
-	return has_buf ? Buffer.alloc(len) : typeof Uint8Array != "undefined" ? new Uint8Array(len) : new Array(len);
+	if(has_buf) return Buffer.alloc ? Buffer.alloc(len) : new Buffer(len);
+	return typeof Uint8Array != "undefined" ? new Uint8Array(len) : new Array(len);
 	/* jshint +W056 */
 }
 
 function new_unsafe_buf(len/*:number*/) {
 	/* jshint -W056 */
-	return has_buf ? Buffer.allocUnsafe(len) : typeof Uint8Array != "undefined" ? new Uint8Array(len) : new Array(len);
+	if(has_buf) return Buffer.allocUnsafe ? Buffer.allocUnsafe(len) : new Buffer(len);
+	return typeof Uint8Array != "undefined" ? new Uint8Array(len) : new Array(len);
 	/* jshint +W056 */
 }
 
@@ -55,6 +55,23 @@ function ab2a(data/*:ArrayBuffer|Uint8Array*/)/*:Array<number>*/ {
 	return o;
 }
 
+var bconcat = has_buf ? function(bufs) { return Buffer.concat(bufs.map(function(buf) { return Buffer.isBuffer(buf) ? buf : Buffer_from(buf); })); } : function(bufs) {
+	if(typeof Uint8Array !== "undefined") {
+		var i = 0, maxlen = 0;
+		for(i = 0; i < bufs.length; ++i) maxlen += bufs[i].length;
+		var o = new Uint8Array(maxlen);
+		var len = 0;
+		for(i = 0, maxlen = 0; i < bufs.length; maxlen += len, ++i) {
+			len = bufs[i].length;
+			if(bufs[i] instanceof Uint8Array) o.set(bufs[i], maxlen);
+			else if(typeof bufs[i] == "string") { throw "wtf"; }
+			else o.set(new Uint8Array(bufs[i]), maxlen);
+		}
+		return o;
+	}
+	return [].concat.apply([], bufs.map(function(buf) { return Array.isArray(buf) ? buf : [].slice.call(buf); }));
+};
+
 function utf8decode(content/*:string*/) {
 	var out = [], widx = 0, L = content.length + 250;
 	var o = new_raw_buf(content.length + 255);
@@ -86,22 +103,5 @@ function utf8decode(content/*:string*/) {
 	out.push(o.slice(0, widx));
 	return bconcat(out);
 }
-
-var bconcat = function(bufs) {
-	if(typeof Uint8Array !== "undefined") {
-		var i = 0, maxlen = 0;
-		for(i = 0; i < bufs.length; ++i) maxlen += bufs[i].length;
-		var o = new Uint8Array(maxlen);
-		var len = 0;
-		for(i = 0, maxlen = 0; i < bufs.length; maxlen += len, ++i) {
-			len = bufs[i].length;
-			if(bufs[i] instanceof Uint8Array) o.set(bufs[i], maxlen);
-			else if(typeof bufs[i] == "string") { throw "wtf"; }
-			else o.set(new Uint8Array(bufs[i]), maxlen);
-		}
-		return o;
-	}
-	return [].concat.apply([], bufs.map(function(buf) { return Array.isArray(buf) ? buf : [].slice.call(buf); }));
-};
 
 var chr0 = /\u0000/g, chr1 = /[\u0001-\u0006]/g;

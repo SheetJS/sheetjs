@@ -206,7 +206,7 @@ function write_BrtBeginTableStyles(cnt, defTableStyle, defPivotStyle) {
 function parse_sty_bin(data, themes, opts) {
 	var styles = {};
 	styles.NumberFmt = ([]/*:any*/);
-	for(var y in SSF._table) styles.NumberFmt[y] = SSF._table[y];
+	for(var y in table_fmt) styles.NumberFmt[y] = table_fmt[y];
 
 	styles.CellXf = [];
 	styles.Fonts = [];
@@ -215,7 +215,7 @@ function parse_sty_bin(data, themes, opts) {
 	recordhopper(data, function hopper_sty(val, R, RT) {
 		switch(RT) {
 			case 0x002C: /* BrtFmt */
-				styles.NumberFmt[val[0]] = val[1]; SSF.load(val[1], val[0]);
+				styles.NumberFmt[val[0]] = val[1]; SSF_load(val[1], val[0]);
 				break;
 			case 0x002B: /* BrtFont */
 				styles.Fonts.push(val);

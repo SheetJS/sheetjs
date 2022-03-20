@@ -689,10 +689,9 @@ var PtgBinOp = {
 };
 
 // List of invalid characters needs to be tested further
-var quoteCharacters /*:RegExp */ = new RegExp(/[^\w\u4E00-\u9FFF\u3040-\u30FF]/);
 function formula_quote_sheet_name(sname/*:string*/, opts)/*:string*/ {
 	if(!sname && !(opts && opts.biff <= 5 && opts.biff >= 2)) throw new Error("empty sheet name");
-	if (quoteCharacters.test(sname)) return "'" + sname + "'";
+	if (/[^\w\u4E00-\u9FFF\u3040-\u30FF]/.test(sname)) return "'" + sname + "'";
 	return sname;
 }
 function get_ixti_raw(supbooks, ixti/*:number*/, opts)/*:string*/ {

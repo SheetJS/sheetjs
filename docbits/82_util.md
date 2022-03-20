@@ -341,6 +341,10 @@ produces CSV output.  The function takes an options argument:
 - `blankrows` must be set to `false` to skip blank lines.
 - Fields containing the record or field separator will automatically be wrapped
   in double quotes; `forceQuotes` forces all cells to be wrapped in quotes.
+- `XLSX.write` with `csv` type will always prepend the UTF-8 byte-order mark for
+  Excel compatibility.  `sheet_to_csv` returns a JS string and omits the mark.
+  Using `XLSX.write` with type `string` will also skip the mark.
+
 
 <details>
   <summary><b>Examples</b> (click to show)</summary>

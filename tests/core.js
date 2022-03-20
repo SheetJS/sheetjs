@@ -1589,7 +1589,6 @@ describe('roundtrip features', function() {
 		assert.equal(!!get_cell(wb2.Sheets.Sheet1, "C13").D, true);
 
 		get_cell(wb2.Sheets.Sheet1, "B3").D = false;
-		console.log(wb2.Sheets.Sheet1);
 		var wb3 = X.read(X.write(wb2, {bookType:w[0], type:TYPE}), {cellFormula:true, xlfn: true, type:TYPE, WTF:1});
 		assert.equal(!!get_cell(wb3.Sheets.Sheet1, "B3").D, false);
 		assert.equal(!!get_cell(wb3.Sheets.Sheet1, "B13").D, true);

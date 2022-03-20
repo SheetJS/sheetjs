@@ -251,18 +251,17 @@ function parse_ct(data/*:?string*/) {
 	return ct;
 }
 
-var CTYPE_XML_ROOT = writextag('Types', null, {
-	'xmlns': XMLNS.CT,
-	'xmlns:xsd': XMLNS.xsd,
-	'xmlns:xsi': XMLNS.xsi
-});
-
 function write_ct(ct, opts)/*:string*/ {
 	var type2ct/*{[string]:Array<string>}*/ = evert_arr(ct2type);
 
 	var o/*:Array<string>*/ = [], v;
 	o[o.length] = (XML_HEADER);
-	o[o.length] = (CTYPE_XML_ROOT);
+	o[o.length] = writextag('Types', null, {
+		'xmlns': XMLNS.CT,
+		'xmlns:xsd': XMLNS.xsd,
+		'xmlns:xsi': XMLNS.xsi
+	});
+
 	o = o.concat([
 		['xml', 'application/xml'],
 		['bin', 'application/vnd.ms-excel.sheet.binary.macroEnabled.main'],

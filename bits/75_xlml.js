@@ -37,10 +37,13 @@ function xlml_parsexmltagobj(tag/*:string*/) {
 
 // ----
 
+/* map from xlml named formats to SSF TODO: localize */
+var XLMLFormatMap/*: {[string]:string}*/;
+
 function xlml_format(format, value)/*:string*/ {
 	var fmt = XLMLFormatMap[format] || unescapexml(format);
-	if(fmt === "General") return SSF._general(value);
-	return SSF.format(fmt, value);
+	if(fmt === "General") return SSF_general(value);
+	return SSF_format(fmt, value);
 }
 
 function xlml_set_custprop(Custprops, key, cp, val/*:string*/) {
@@ -63,17 +66,17 @@ function safe_format_xlml(cell/*:Cell*/, nf, o) {
 		else if(nf === "General") {
 			if(cell.t === 'n') {
 				if((cell.v|0) === cell.v) cell.w = cell.v.toString(10);
-				else cell.w = SSF._general_num(cell.v);
+				else cell.w = SSF_general_num(cell.v);
 			}
-			else cell.w = SSF._general(cell.v);
+			else cell.w = SSF_general(cell.v);
 		}
 		else cell.w = xlml_format(nf||"General", cell.v);
 	} catch(e) { if(o.WTF) throw e; }
 	try {
 		var z = XLMLFormatMap[nf]||nf||"General";
 		if(o.cellNF) cell.z = z;
-		if(o.cellDates && cell.t == 'n' && SSF.is_date(z)) {
-			var _d = SSF.parse_date_code(cell.v); if(_d) { cell.t = 'd'; cell.v = new Date(_d.y, _d.m-1,_d.d,_d.H,_d.M,_d.S,_d.u); }
+		if(o.cellDates && cell.t == 'n' && fmt_is_date(z)) {
+			var _d = SSF_parse_date_code(cell.v); if(_d) { cell.t = 'd'; cell.v = new Date(_d.y, _d.m-1,_d.d,_d.H,_d.M,_d.S,_d.u); }
 		}
 	} catch(e) { if(o.WTF) throw e; }
 }
@@ -165,7 +168,7 @@ function xlml_clean_comment(comment/*:any*/) {
 /* TODO: Everything */
 function parse_xlml_xml(d, _opts)/*:Workbook*/ {
 	var opts = _opts || {};
-	make_ssf(SSF);
+	make_ssf();
 	var str = debom(xlml_normalize(d));
 	if(opts.type == 'binary' || opts.type == 'array' || opts.type == 'base64') {
 		if(typeof $cptable !== 'undefined') str = $cptable.utils.decode(65001, char_codes(str));
@@ -175,7 +178,28 @@ function parse_xlml_xml(d, _opts)/*:Workbook*/ {
 	opening = opening.replace(/".*?"/g, "");
 	if((opening.indexOf(">") & 1023) > Math.min((opening.indexOf(",") & 1023), (opening.indexOf(";")&1023))) { var _o = dup(opts); _o.type = "string"; return PRN.to_workbook(str, _o); }
 	if(opening.indexOf("<?xml") == -1) ["html", "table", "head", "meta", "script", "style", "div"].forEach(function(tag) { if(opening.indexOf("<" + tag) >= 0) ishtml = true; });
-	if(ishtml) return HTML_.to_workbook(str, opts);
+	if(ishtml) return html_to_workbook(str, opts);
+
+	XLMLFormatMap = ({
+		"General Number": "General",
+		"General Date": table_fmt[22],
+		"Long Date": "dddd, mmmm dd, yyyy",
+		"Medium Date": table_fmt[15],
+		"Short Date": table_fmt[14],
+		"Long Time": table_fmt[19],
+		"Medium Time": table_fmt[18],
+		"Short Time": table_fmt[20],
+		"Currency": '"$"#,##0.00_);[Red]\\("$"#,##0.00\\)',
+		"Fixed": table_fmt[2],
+		"Standard": table_fmt[4],
+		"Percent": table_fmt[10],
+		"Scientific": table_fmt[11],
+		"Yes/No": '"Yes";"Yes";"No";@',
+		"True/False": '"True";"True";"False";@',
+		"On/Off": '"Yes";"Yes";"No";@'
+	}/*:any*/);
+
+
 	var Rn;
 	var state = [], tmp;
 	if(DENSE != null && opts.dense == null) opts.dense = DENSE;
@@ -318,8 +342,8 @@ function parse_xlml_xml(d, _opts)/*:Workbook*/ {
 		case 'numberformat' /*case 'NumberFormat'*/:
 			stag.nf = unescapexml(xlml_parsexmltag(Rn[0]).Format || "General");
 			if(XLMLFormatMap[stag.nf]) stag.nf = XLMLFormatMap[stag.nf];
-			for(var ssfidx = 0; ssfidx != 0x188; ++ssfidx) if(SSF._table[ssfidx] == stag.nf) break;
-			if(ssfidx == 0x188) for(ssfidx = 0x39; ssfidx != 0x188; ++ssfidx) if(SSF._table[ssfidx] == null) { SSF.load(stag.nf, ssfidx); break; }
+			for(var ssfidx = 0; ssfidx != 0x188; ++ssfidx) if(table_fmt[ssfidx] == stag.nf) break;
+			if(ssfidx == 0x188) for(ssfidx = 0x39; ssfidx != 0x188; ++ssfidx) if(table_fmt[ssfidx] == null) { SSF_load(stag.nf, ssfidx); break; }
 			break;
 
 		case 'column' /*case 'Column'*/:
@@ -887,7 +911,7 @@ function parse_xlml_xml(d, _opts)/*:Workbook*/ {
 	if(!opts.bookSheets && !opts.bookProps) out.Sheets = sheets;
 	out.SheetNames = sheetnames;
 	out.Workbook = Workbook;
-	out.SSF = SSF.get_table();
+	out.SSF = dup(table_fmt);
 	out.Props = Props;
 	out.Custprops = Custprops;
 	return out;
@@ -924,7 +948,7 @@ function write_sty_xlml(wb, opts)/*:string*/ {
 	var styles/*:Array<string>*/ = ['<Style ss:ID="Default" ss:Name="Normal"><NumberFormat/></Style>'];
 	opts.cellXfs.forEach(function(xf, id) {
 		var payload/*:Array<string>*/ = [];
-		payload.push(writextag('NumberFormat', null, {"ss:Format": escapexml(SSF._table[xf.numFmtId])}));
+		payload.push(writextag('NumberFormat', null, {"ss:Format": escapexml(table_fmt[xf.numFmtId])}));
 
 		var o = /*::(*/{"ss:ID": "s" + (21+id)}/*:: :any)*/;
 		styles.push(writextag('Style', payload.join(""), o));
@@ -1108,7 +1132,7 @@ function write_ws_xlml_cell(cell, ref/*:string*/, ws, opts, idx/*:number*/, wb, 
 		case 'n': t = 'Number'; p = String(cell.v); break;
 		case 'b': t = 'Boolean'; p = (cell.v ? "1" : "0"); break;
 		case 'e': t = 'Error'; p = BErr[cell.v]; break;
-		case 'd': t = 'DateTime'; p = new Date(cell.v).toISOString(); if(cell.z == null) cell.z = cell.z || SSF._table[14]; break;
+		case 'd': t = 'DateTime'; p = new Date(cell.v).toISOString(); if(cell.z == null) cell.z = cell.z || table_fmt[14]; break;
 		case 's': t = 'String'; p = escapexlml(cell.v||""); break;
 	}
 	/* TODO: cell style */
@@ -1188,9 +1212,9 @@ function write_ws_xlml(idx/*:number*/, opts, wb/*:Workbook*/)/*:string*/ {
 }
 function write_xlml(wb, opts)/*:string*/ {
 	if(!opts) opts = {};
-	if(!wb.SSF) wb.SSF = SSF.get_table();
+	if(!wb.SSF) wb.SSF = dup(table_fmt);
 	if(wb.SSF) {
-		make_ssf(SSF); SSF.load_table(wb.SSF);
+		make_ssf(); SSF_load_table(wb.SSF);
 		// $FlowIgnore
 		opts.revssf = evert_num(wb.SSF); opts.revssf[wb.SSF[65535]] = 0;
 		opts.ssf = wb.SSF;

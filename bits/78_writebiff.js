@@ -359,10 +359,10 @@ function write_biff8_buf(wb/*:Workbook*/, opts/*:WriteOpts*/) {
 	var bufs = [];
 
 	if(wb && !wb.SSF) {
-		wb.SSF = SSF.get_table();
+		wb.SSF = dup(table_fmt);
 	}
 	if(wb && wb.SSF) {
-		make_ssf(SSF); SSF.load_table(wb.SSF);
+		make_ssf(); SSF_load_table(wb.SSF);
 		// $FlowIgnore
 		o.revssf = evert_num(wb.SSF); o.revssf[wb.SSF[65535]] = 0;
 		o.ssf = wb.SSF;

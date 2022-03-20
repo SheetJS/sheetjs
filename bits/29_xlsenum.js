@@ -182,7 +182,7 @@ function rgbify(arr/*:Array<number>*/)/*:Array<[number, number, number]>*/ { ret
 
 /* [MS-XLS] 2.5.161 */
 /* [MS-XLSB] 2.5.75 Icv */
-var _XLSIcv = rgbify([
+var _XLSIcv = /*#__PURE__*/ rgbify([
 	/* Color Constants */
 	0x000000,
 	0xFFFFFF,
@@ -274,7 +274,7 @@ var _XLSIcv = rgbify([
 	0x000000, /* 0x50 icvInfoBk ?? */
 	0x000000 /* 0x51 icvInfoText ?? */
 ]);
-var XLSIcv = dup(_XLSIcv);
+var XLSIcv = /*#__PURE__*/dup(_XLSIcv);
 
 /* [MS-XLSB] 2.5.97.2 */
 var BErr = {
@@ -288,4 +288,16 @@ var BErr = {
 	/*::[*/0x2B/*::]*/: "#GETTING_DATA",
 	/*::[*/0xFF/*::]*/: "#WTF?"
 };
-var RBErr = evert_num(BErr);
+//var RBErr = evert_num(BErr);
+var RBErr = {
+	"#NULL!":        0x00,
+	"#DIV/0!":       0x07,
+	"#VALUE!":       0x0F,
+	"#REF!":         0x17,
+	"#NAME?":        0x1D,
+	"#NUM!":         0x24,
+	"#N/A":          0x2A,
+	"#GETTING_DATA": 0x2B,
+	"#WTF?":         0xFF
+};
+

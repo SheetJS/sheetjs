@@ -24,8 +24,6 @@ jobs:
   # full test
   full:
     runs-on: ubuntu-latest
-    env:
-      FMTS: misc # TODO: remove this
     steps:
       - uses: actions/checkout@v2
       - uses: denoland/setup-deno@main

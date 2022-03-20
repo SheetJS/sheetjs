@@ -57,7 +57,7 @@ function safe_parse_sheet(zip, path/*:string*/, relsPath/*:string*/, sheet, idx/
 function strip_front_slash(x/*:string*/)/*:string*/ { return x.charAt(0) == '/' ? x.slice(1) : x; }
 
 function parse_zip(zip/*:ZIP*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
-	make_ssf(SSF);
+	make_ssf();
 	opts = opts || {};
 	fix_read_opts(opts);
 
@@ -220,7 +220,7 @@ function parse_zip(zip/*:ZIP*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
 		Strings: strs,
 		Styles: styles,
 		Themes: themes,
-		SSF: SSF.get_table()
+		SSF: dup(table_fmt)
 	}/*:any*/);
 	if(opts && opts.bookFiles) {
 		if(zip.files) {

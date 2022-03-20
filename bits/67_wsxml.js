@@ -272,7 +272,7 @@ function write_ws_xml_cell(cell/*:Cell*/, ref, ws, opts/*::, idx, wb*/)/*:string
 				cell.t = 'n';
 				vv = ''+(cell.v = datenum(parseDate(cell.v)));
 			}
-			if(typeof cell.z === 'undefined') cell.z = SSF._table[14];
+			if(typeof cell.z === 'undefined') cell.z = table_fmt[14];
 			break;
 		default: vv = cell.v; break;
 	}
@@ -476,7 +476,7 @@ return function parse_ws_xml_data(sdata/*:string*/, s, opts, guess/*:Range*/, th
 				}
 			}
 			safe_format(p, fmtid, fillid, opts, themes, styles);
-			if(opts.cellDates && do_format && p.t == 'n' && SSF.is_date(SSF._table[fmtid])) { p.t = 'd'; p.v = numdate(p.v); }
+			if(opts.cellDates && do_format && p.t == 'n' && fmt_is_date(table_fmt[fmtid])) { p.t = 'd'; p.v = numdate(p.v); }
 			if(tag.cm && opts.xlmeta) {
 				var cm = (opts.xlmeta.Cell||[])[+tag.cm-1];
 				if(cm && cm.type == 'XLDAPR') p.D = true;

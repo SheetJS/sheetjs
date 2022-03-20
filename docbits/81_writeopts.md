@@ -79,3 +79,6 @@ The `type` argument for `write` mirrors the `type` argument for `read`:
 | `"array"`  | ArrayBuffer, fallback array of 8-bit unsigned int               |
 | `"file"`   | string: path of file that will be created (nodejs only)         |
 
+- For compatibility with Excel, `csv` output will always include the UTF-8 byte
+  order mark.
+

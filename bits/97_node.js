@@ -36,12 +36,12 @@ function write_html_stream(ws/*:Worksheet*/, opts/*:?Sheet2HTMLOpts*/) {
 	var stream = _Readable();
 
 	var o = opts || {};
-	var header = o.header != null ? o.header : HTML_.BEGIN;
-	var footer = o.footer != null ? o.footer : HTML_.END;
+	var header = o.header != null ? o.header : HTML_BEGIN;
+	var footer = o.footer != null ? o.footer : HTML_END;
 	stream.push(header);
 	var r = decode_range(ws['!ref']);
 	o.dense = Array.isArray(ws);
-	stream.push(HTML_._preamble(ws, r, o));
+	stream.push(make_html_preamble(ws, r, o));
 	var R = r.s.r;
 	var end = false;
 	stream._read = function() {
@@ -50,7 +50,7 @@ function write_html_stream(ws/*:Worksheet*/, opts/*:?Sheet2HTMLOpts*/) {
 			return stream.push(null);
 		}
 		while(R <= r.e.r) {
-			stream.push(HTML_._row(ws, r, R, o));
+			stream.push(make_html_row(ws, r, R, o));
 			++R;
 			break;
 		}

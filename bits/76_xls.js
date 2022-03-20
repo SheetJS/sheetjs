@@ -77,21 +77,21 @@ function safe_format_xf(p/*:any*/, opts/*:ParseOpts*/, date1904/*:?boolean*/) {
 	var fmtid = 0;
 	try {
 		fmtid = p.z || p.XF.numFmtId || 0;
-		if(opts.cellNF) p.z = SSF._table[fmtid];
+		if(opts.cellNF) p.z = table_fmt[fmtid];
 	} catch(e) { if(opts.WTF) throw e; }
 	if(!opts || opts.cellText !== false) try {
 		if(p.t === 'e') { p.w = p.w || BErr[p.v]; }
 		else if(fmtid === 0 || fmtid == "General") {
 			if(p.t === 'n') {
 				if((p.v|0) === p.v) p.w = p.v.toString(10);
-				else p.w = SSF._general_num(p.v);
+				else p.w = SSF_general_num(p.v);
 			}
-			else p.w = SSF._general(p.v);
+			else p.w = SSF_general(p.v);
 		}
-		else p.w = SSF.format(fmtid,p.v, {date1904:!!date1904, dateNF: opts && opts.dateNF});
+		else p.w = SSF_format(fmtid,p.v, {date1904:!!date1904, dateNF: opts && opts.dateNF});
 	} catch(e) { if(opts.WTF) throw e; }
-	if(opts.cellDates && fmtid && p.t == 'n' && SSF.is_date(SSF._table[fmtid] || String(fmtid))) {
-		var _d = SSF.parse_date_code(p.v); if(_d) { p.t = 'd'; p.v = new Date(_d.y, _d.m-1,_d.d,_d.H,_d.M,_d.S,_d.u); }
+	if(opts.cellDates && fmtid && p.t == 'n' && fmt_is_date(table_fmt[fmtid] || String(fmtid))) {
+		var _d = SSF_parse_date_code(p.v); if(_d) { p.t = 'd'; p.v = new Date(_d.y, _d.m-1,_d.d,_d.H,_d.M,_d.S,_d.u); }
 	}
 }
 
@@ -487,15 +487,15 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 				case 0x041e /* Format */: { /* val = [id, fmt] */
 					if(opts.biff == 4) {
 						BIFF2FmtTable[BIFF2Fmt++] = val[1];
-						for(var b4idx = 0; b4idx < BIFF2Fmt + 163; ++b4idx) if(SSF._table[b4idx] == val[1]) break;
-						if(b4idx >= 163) SSF.load(val[1], BIFF2Fmt + 163);
+						for(var b4idx = 0; b4idx < BIFF2Fmt + 163; ++b4idx) if(table_fmt[b4idx] == val[1]) break;
+						if(b4idx >= 163) SSF_load(val[1], BIFF2Fmt + 163);
 					}
-					else SSF.load(val[1], val[0]);
+					else SSF_load(val[1], val[0]);
 				} break;
 				case 0x001e /* BIFF2FORMAT */: {
 					BIFF2FmtTable[BIFF2Fmt++] = val;
-					for(var b2idx = 0; b2idx < BIFF2Fmt + 163; ++b2idx) if(SSF._table[b2idx] == val) break;
-					if(b2idx >= 163) SSF.load(val, BIFF2Fmt + 163);
+					for(var b2idx = 0; b2idx < BIFF2Fmt + 163; ++b2idx) if(table_fmt[b2idx] == val) break;
+					if(b2idx >= 163) SSF_load(val, BIFF2Fmt + 163);
 				} break;
 
 				case 0x00e5 /* MergeCells */: merges = merges.concat(val); break;
@@ -580,175 +580,11 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 					if(!cur_sheet) Workbook.WBProps.CodeName = val || "ThisWorkbook";
 					else wsprops.CodeName = val || wsprops.name;
 				} break;
-				case 0x0055 /* DefColWidth */:
-				case 0x0225 /* DefaultRowHeight */:
-				case 0x005e /* Uncalced */:
-				case 0x01af /* Prot4Rev */: case 0x01bc /* Prot4RevPass */: /*TODO: Revision Control*/
-				case 0x005b /* FileSharing */:
-				case 0x00ff /* ExtSST */:
-				case 0x0863 /* BookExt */:
-				case 0x08a6 /* RichTextStream */:
-				case 0x00e9 /* BkHim */:
-				case 0x0060 /* Template */:
-				case 0x00da /* BookBool */:
-				case 0x0160 /* UsesELFs */:
-				case 0x089a /* MTRSettings */:
-				case 0x000b: case 0x020b /* Index */:
-				case 0x105c /* ClrtClient */:
-				case 0x001d /* Selection */:
-				case 0x0014 /* Header */:
-				case 0x0015 /* Footer */:
-				case 0x0083 /* HCenter */:
-				case 0x0084 /* VCenter */:
-				case 0x004d /* Pls */:
-				case 0x00ab /* GCW */:
-				case 0x0094 /* LHRecord */:
-				case 0x00d7 /* DBCell */:
-				case 0x01c2 /* EntExU2 */:
-				case 0x00b0 /* SxView */:
-				case 0x00b1 /* Sxvd */:
-				case 0x00b2 /* SXVI */:
-				case 0x0100 /* SXVDEx */:
-				case 0x00b4 /* SxIvd */:
-				case 0x00cd /* SXString */:
-				case 0x0097 /* Sync */:
-				case 0x0087 /* Addin */:
-				case 0x00c5 /* SXDI */:
-				case 0x00b5 /* SXLI */:
-				case 0x00f1 /* SXEx */:
-				case 0x0802 /* QsiSXTag */:
-				case 0x0868 /* Feat */:
-				case 0x0867 /* FeatHdr */: case 0x0871 /* FeatHdr11 */:
-				case 0x0872 /* Feature11 */: case 0x0878 /* Feature12 */: case 0x0877 /* List12 */:
-				case 0x01c1 /* RecalcId */:
-				case 0x0099 /* DxGCol */:
-				case 0x1060 /* Fbi */: case 0x1068 /* Fbi2 */: case 0x1066 /* GelFrame */:
-				case 0x0031 /* Font */:
-				case 0x087c /* XFCRC */:
-				case 0x0293 /* Style */:
-				case 0x0892 /* StyleExt */:
-				case 0x00dd /* ScenarioProtect */:
-				case 0x0063 /* ObjProtect */:
-				case 0x0879 /* CondFmt12 */:
-				case 0x0236 /* Table */:
-				case 0x088e /* TableStyles */:
-				case 0x088f /* TableStyle */:
-				case 0x0890 /* TableStyleElement */:
-				case 0x00d5 /* SXStreamID */:
-				case 0x00e3 /* SXVS */:
-				case 0x0051 /* DConRef */:
-				case 0x0864 /* SXAddl */:
-				case 0x01b5 /* DConBin */:
-				case 0x0052 /* DConName */:
-				case 0x00b6 /* SXPI */:
-				case 0x00fb /* SxFormat */:
-				case 0x00f7 /* SxSelect */:
-				case 0x00f0 /* SxRule */:
-				case 0x00f2 /* SxFilt */:
-				case 0x00f5 /* SxItm */:
-				case 0x00f4 /* SxDXF */:
-				case 0x00ae /* ScenMan */:
-				case 0x0050 /* DCon */:
-				case 0x086c /* CellWatch */:
-				case 0x002a /* PrintRowCol */:
-				case 0x002b /* PrintGrid */:
-				case 0x0033 /* PrintSize */:
-				case 0x0059 /* XCT */:
-				case 0x005a /* CRN */:
-				case 0x00a0 /* Scl */:
-				case 0x0862 /* SheetExt */:
-				case 0x01bd /* ObNoMacros */:
-				case 0x00d3 /* ObProj */:
-				case 0x0897 /* GUIDTypeLib */:
-				case 0x080b /* WOpt */:
-				case 0x00ef /* PhoneticInfo */:
-				case 0x00de /* OleObjectSize */:
-				case 0x088d /* DXF */:
-				case 0x01be /* Dv */: case 0x01b2 /* DVal */:
-				case 0x1051 /* BRAI */: case 0x1003 /* Series */: case 0x100d /* SeriesText */:
-				case 0x0876 /* DConn */:
-				case 0x00dc /* DbOrParamQry */:
-				case 0x0803 /* DBQueryExt */:
-				case 0x080a /* OleDbConn */:
-				case 0x0804 /* ExtString */:
-				case 0x104e /* IFmtRecord */:
-				case 0x01b0 /* CondFmt */: case 0x01b1 /* CF */: case 0x087a /* CF12 */: case 0x087b /* CFEx */:
-				case 0x01c0 /* Excel9File */:
-				case 0x1001 /* Units */:
-				case 0x00e1 /* InterfaceHdr' */: case 0x00c1 /* Mms */: case 0x00e2 /* InterfaceEnd */: case 0x0161 /* DSF */:
-				case 0x009c /* BuiltInFnGroupCount */: /* 2.4.30 0x0E or 0x10 but excel 2011 generates 0x11? */ break;
-				case 0x003d /* Window1 */: case 0x008d /* HideObj */: case 0x0082 /* GridSet */: case 0x0080 /* Guts */:
-				case 0x01a9 /* UserBView */: case 0x01aa /* UserSViewBegin */: case 0x01ab /* UserSViewEnd */:
-				case 0x0041 /* Pane */:
-				case 0x1063 /* Dat */:
-				case 0x1033 /* Begin */: case 0x1034 /* End */:
-				case 0x0852 /* StartBlock */: case 0x0853 /* EndBlock */:
-				case 0x1032 /* Frame */: case 0x101a /* Area */:
-				case 0x101d /* Axis */: case 0x1021 /* AxisLine */: case 0x101e /* Tick */:
-				case 0x1046 /* AxesUsed */:
-				case 0x089d /* CrtLayout12 */: case 0x08a7 /* CrtLayout12A */: case 0x1022 /* CrtLink */: case 0x101c /* CrtLine */: case 0x089e /* CrtMlFrt */: case 0x089f /* CrtMlFrtContinue */:
-				case 0x1007 /* LineFormat */: case 0x100a /* AreaFormat */:
-				case 0x1002 /* Chart */: case 0x103a /* Chart3d */: case 0x105f /* Chart3DBarShape */: case 0x1014 /* ChartFormat */: case 0x0850 /* ChartFrtInfo */:
-				case 0x1035 /* PlotArea */: case 0x1064 /* PlotGrowth */:
-				case 0x1016 /* SeriesList */: case 0x104a /* SerParent */: case 0x104b /* SerAuxTrend */:
-				case 0x1006 /* DataFormat */: case 0x1045 /* SerToCrt */: case 0x1026 /* FontX */:
-				case 0x1020 /* CatSerRange */: case 0x1062 /* AxcExt */: case 0x105d /* SerFmt */:
-				case 0x1044 /* ShtProps */:
-				case 0x1024 /* DefaultText */: case 0x1025 /* Text */: case 0x0856 /* CatLab */:
-				case 0x086b /* DataLabExtContents */:
-				case 0x1015 /* Legend */: case 0x1043 /* LegendException */:
-				case 0x1019 /* Pie */: case 0x101b /* Scatter */:
-				case 0x100b /* PieFormat */: case 0x1009 /* MarkerFormat */:
-				case 0x0854 /* StartObject */: case 0x0855 /* EndObject */:
-				case 0x1050 /* AlRuns */: case 0x1027 /* ObjectLink */:
-				case 0x1065 /* SIIndex */:
-				case 0x100c /* AttachedLabel */: case 0x0857 /* YMult */:
-				case 0x1018 /* Line */: case 0x1017 /* Bar */:
-				case 0x103f /* Surf */:
-				case 0x1041 /* AxisParent */:
-				case 0x104f /* Pos */:
-				case 0x101f /* ValueRange */:
-				case 0x0810 /* SXViewEx9 */:
-				case 0x0858 /* SXViewLink */:
-				case 0x0859 /* PivotChartBits */:
-				case 0x1048 /* SBaseRef */:
-				case 0x08a5 /* TextPropsStream */:
-				case 0x08c9 /* LnExt */:
-				case 0x08ca /* MkrExt */:
-				case 0x08cb /* CrtCoopt */:
-				case 0x01ad /* Qsi */: case 0x0807 /* Qsif */: case 0x0806 /* Qsir */:
-				case 0x0805 /* TxtQry */:
-				case 0x009b /* FilterMode */:
-				case 0x009e /* AutoFilter */: case 0x009d /* AutoFilterInfo */:
-				case 0x087e /* AutoFilter12 */:
-				case 0x0874 /* DropDownObjIds */:
-				case 0x0090 /* Sort */:
-				case 0x0895 /* SortData */:
-				case 0x08a4 /* ShapePropsStream */:
-				case 0x00ec /* MsoDrawing */: case 0x00eb /* MsoDrawingGroup*/: case 0x00ed /* MsoDrawingSelection */:
-				case 0x0801 /* WebPub */: case 0x08c0 /* AutoWebPub */:
-				case 0x089c /* HeaderFooter */: case 0x0866 /* HFPicture */: case 0x088b /* PLV */:
-				case 0x001b /* HorizontalPageBreaks */: case 0x001a /* VerticalPageBreaks */:
-				case 0x0040 /* Backup */: case 0x089b /* CompressPictures */: case 0x088c /* Compat12 */:
-				case 0x003c /* 'Continue' */: case 0x087f /* 'ContinueFrt12' */:
-				case 0x085a /* FrtFontList */: case 0x0851 /* 'FrtWrapper' */:
-				case 0x00ea /* TabIdConf */: case 0x103e /* Radar */: case 0x1040 /* RadarArea */: case 0x103d /* DropBar */: case 'Intl': case 'CoordList': case 'SerAuxErrBar':
-				case 0x0045 /* BIFF2FONTCLR */: case 0x001f /* BIFF2FMTCNT */: case 0x0032 /* BIFF2FONTXTRA */:
-				case 0x0043 /* BIFF2XF */: case 0x0243 /* BIFF3XF */: case 0x0443 /* BIFF4XF */:
-				case 0x0044 /* BIFF2XFINDEX */:
-				case 0x0056 /* BIFF4FMTCNT */: case 0x0008 /* BIFF2ROW */: case 0x003e /* BIFF2WINDOW2 */:
-				case 0x00af /* SCENARIO */: case 0x103c /* PicF */: case 0x086a /* DataLabExt */:
-				case 0x01b9 /* Lel */: case 0x1061 /* BopPop */: case 0x1067 /* BopPopCustom */: case 0x0813 /* RealTimeData */:
-				case 0x0095 /* LHNGraph */: case 0x009a /* FnGroupName */: case 0x00c2 /* AddMenu */: case 0x0098 /* LPr */:
-				case 0x08c1 /* ListObj */: case 0x08c2 /* ListField */:
-				case 0x013f /* RRSort */:
-				case 0x0418 /* BigName */:
-				case 0x00bf /* ToolbarHdr */: case 0x00c0/* ToolbarEnd */:
-				case 0x0034 /* DDEObjName */:
-				case 0x08d6 /* FRTArchId$ */: break;
-				default: if(options.WTF) throw 'Unrecognized Record 0x' + RecordType.toString(16);
 			}
-		} else blob.l += length;
+		} else {
+			if(!R) console.error("Missing Info for XLS Record 0x" + RecordType.toString(16));
+			blob.l += length;
+		}
 	}
 	wb.SheetNames=keys(Directory).sort(function(a,b) { return Number(a) - Number(b); }).map(function(x){return Directory[x].name;});
 	if(!options.bookSheets) wb.Sheets=Sheets;
@@ -760,7 +596,7 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 	} else wb.Preamble=Preamble;
 	if(wb.Sheets) FilterDatabases.forEach(function(r,i) { wb.Sheets[wb.SheetNames[i]]['!autofilter'] = r; });
 	wb.Strings = sst;
-	wb.SSF = SSF.get_table();
+	wb.SSF = dup(table_fmt);
 	if(opts.enc) wb.Encryption = opts.enc;
 	if(themes) wb.Themes = themes;
 	wb.Metadata = {};

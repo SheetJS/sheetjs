@@ -19,7 +19,7 @@ var utils/*:any*/ = {
 	sheet_to_csv: sheet_to_csv,
 	sheet_to_txt: sheet_to_txt,
 	sheet_to_json: sheet_to_json,
-	sheet_to_html: HTML_.from_sheet,
+	sheet_to_html: sheet_to_html,
 	sheet_to_formulae: sheet_to_formulae,
 	sheet_to_row_object_array: sheet_to_json,
 	sheet_get_cell: ws_get_cell_stub,

@@ -31,16 +31,16 @@ function evert_arr(obj/*:any*/)/*:EvertArrType*/ {
 	return o;
 }
 
-var basedate = new Date(1899, 11, 30, 0, 0, 0); // 2209161600000
+var basedate = /*#__PURE__*/new Date(1899, 11, 30, 0, 0, 0); // 2209161600000
 function datenum(v/*:Date*/, date1904/*:?boolean*/)/*:number*/ {
-	var epoch = v.getTime();
+	var epoch = /*#__PURE__*/v.getTime();
 	if(date1904) epoch -= 1462*24*60*60*1000;
-	var dnthresh = basedate.getTime() + (v.getTimezoneOffset() - basedate.getTimezoneOffset()) * 60000;
+	var dnthresh = /*#__PURE__*/basedate.getTime() + (/*#__PURE__*/v.getTimezoneOffset() - /*#__PURE__*/basedate.getTimezoneOffset()) * 60000;
 	return (epoch - dnthresh) / (24 * 60 * 60 * 1000);
 }
-var refdate = new Date();
-var dnthresh = basedate.getTime() + (refdate.getTimezoneOffset() - basedate.getTimezoneOffset()) * 60000;
-var refoffset = refdate.getTimezoneOffset();
+var refdate = /*#__PURE__*/new Date();
+var dnthresh = /*#__PURE__*/basedate.getTime() + (/*#__PURE__*/refdate.getTimezoneOffset() - /*#__PURE__*/basedate.getTimezoneOffset()) * 60000;
+var refoffset = /*#__PURE__*/refdate.getTimezoneOffset();
 function numdate(v/*:number*/)/*:Date*/ {
 	var out = new Date();
 	out.setTime(v * 24 * 60 * 60 * 1000 + dnthresh);
@@ -77,9 +77,9 @@ function parse_isodur(s) {
 	return sec;
 }
 
-var good_pd_date = new Date('2017-02-19T19:06:09.000Z');
-if(isNaN(good_pd_date.getFullYear())) good_pd_date = new Date('2/19/17');
-var good_pd = good_pd_date.getFullYear() == 2017;
+var good_pd_date_1 = /*#__PURE__*/new Date('2017-02-19T19:06:09.000Z');
+var good_pd_date = /*#__PURE__*/isNaN(/*#__PURE__*/good_pd_date_1.getFullYear()) ? /*#__PURE__*/new Date('2/19/17') : good_pd_date_1;
+var good_pd = /*#__PURE__*/good_pd_date.getFullYear() == 2017;
 /* parses a date as a local date */
 function parseDate(str/*:string|Date*/, fixdate/*:?number*/)/*:Date*/ {
 	var d = new Date(str);
@@ -104,16 +104,16 @@ function parseDate(str/*:string|Date*/, fixdate/*:?number*/)/*:Date*/ {
 function cc2str(arr/*:Array<number>*/, debomit)/*:string*/ {
 	if(has_buf && Buffer.isBuffer(arr)) {
 		if(debomit) {
-			if(arr[0] == 0xFF && arr[1] == 0xFE) return arr.slice(2).toString("utf16le");
-			if(arr[1] == 0xFE && arr[2] == 0xFF) return utf16beread(arr.slice(2).toString("binary"));
+			if(arr[0] == 0xFF && arr[1] == 0xFE) return utf8write(arr.slice(2).toString("utf16le"));
+			if(arr[1] == 0xFE && arr[2] == 0xFF) return utf8write(utf16beread(arr.slice(2).toString("binary")));
 		}
 		return arr.toString("binary");
 	}
 
 	if(typeof TextDecoder !== "undefined") try {
 		if(debomit) {
-			if(arr[0] == 0xFF && arr[1] == 0xFE) return new TextEncoder("utf-16le").decode(arr.slice(2));
-			if(arr[0] == 0xFE && arr[1] == 0xFF) return new TextEncoder("utf-16be").decode(arr.slice(2));
+			if(arr[0] == 0xFF && arr[1] == 0xFE) return utf8write(new TextDecoder("utf-16le").decode(arr.slice(2)));
+			if(arr[0] == 0xFE && arr[1] == 0xFF) return utf8write(new TextDecoder("utf-16be").decode(arr.slice(2)));
 		}
 		var rev = {
 			"\u20ac": "\x80", "\u201a": "\x82", "\u0192": "\x83", "\u201e": "\x84",
@@ -124,6 +124,7 @@ function cc2str(arr/*:Array<number>*/, debomit)/*:string*/ {
 			"\u02dc": "\x98", "\u2122": "\x99", "\u0161": "\x9a", "\u203a": "\x9b",
 			"\u0153": "\x9c", "\u017e": "\x9e", "\u0178": "\x9f"
 		};
+		if(Array.isArray(arr)) arr = new Uint8Array(arr);
 		return new TextDecoder("latin1").decode(arr).replace(/[€‚ƒ„…†‡ˆ‰Š‹ŒŽ‘’“”•–—˜™š›œžŸ]/g, function(c) { return rev[c] || c; });
 	} catch(e) {}
 
@@ -171,10 +172,12 @@ function fuzzydate(s/*:string*/)/*:Date*/ {
 	return o;
 }
 
-var safe_split_regex = "abacaba".split(/(:?b)/i).length == 5;
-function split_regex(str/*:string*/, re, def/*:string*/)/*:Array<string>*/ {
-	if(safe_split_regex || typeof re == "string") return str.split(re);
-	var p = str.split(re), o = [p[0]];
-	for(var i = 1; i < p.length; ++i) { o.push(def); o.push(p[i]); }
-	return o;
-}
+var split_regex = /*#__PURE__*/(function() {
+	var safe_split_regex = "abacaba".split(/(:?b)/i).length == 5;
+	return function split_regex(str/*:string*/, re, def/*:string*/)/*:Array<string>*/ {
+		if(safe_split_regex || typeof re == "string") return str.split(re);
+		var p = str.split(re), o = [p[0]];
+		for(var i = 1; i < p.length; ++i) { o.push(def); o.push(p[i]); }
+		return o;
+	};
+})();

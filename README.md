@@ -3416,6 +3416,9 @@ The `type` argument for `write` mirrors the `type` argument for `read`:
 | `"array"`  | ArrayBuffer, fallback array of 8-bit unsigned int               |
 | `"file"`   | string: path of file that will be created (nodejs only)         |
 
+- For compatibility with Excel, `csv` output will always include the UTF-8 byte
+  order mark.
+
 ## Utility Functions
 
 The `sheet_to_*` functions accept a worksheet and an optional options object.
@@ -3759,6 +3762,10 @@ produces CSV output.  The function takes an options argument:
 - `blankrows` must be set to `false` to skip blank lines.
 - Fields containing the record or field separator will automatically be wrapped
   in double quotes; `forceQuotes` forces all cells to be wrapped in quotes.
+- `XLSX.write` with `csv` type will always prepend the UTF-8 byte-order mark for
+  Excel compatibility.  `sheet_to_csv` returns a JS string and omits the mark.
+  Using `XLSX.write` with type `string` will also skip the mark.
+
 
 <details>
   <summary><b>Examples</b> (click to show)</summary>
