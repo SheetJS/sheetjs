@@ -165,6 +165,8 @@ var paths: any = {
 	dtxlsx:  dir + 'xlsx-stream-d-date-cell.xlsx',
 	dtxlsb:  dir + 'xlsx-stream-d-date-cell.xlsb',
 
+	dtfxlsx: dir + 'DataTypesFormats.xlsx',
+
 	fstxls: dir + 'formula_stress_test.xls',
 	fstxml: dir + 'formula_stress_test.xls.xml',
 	fstxlsx: dir + 'formula_stress_test.xlsx',
@@ -951,7 +953,7 @@ Deno.test('parse features', async function(t) {
 				X.read(fs.readFileSync(paths.cpxml), {type:TYPE, WTF:true})
 			];
 
-		var s1 = ['XLSX', 'XLSB', 'XLS', 'XML']; for(var i = 0; i < s1.length; ++i) { let x = s1[i]; 
+		var s1 = ['XLSX', 'XLSB', 'XLS', 'XML']; for(var i = 0; i < s1.length; ++i) { let x = s1[i];
 			await t.step(x + ' should parse core properties', async function(t) { var P = wbs?.[i]?.Props; if(typeof P == "undefined") throw "missing props"; coreprop(P); });
 			await t.step(x + ' should parse custom properties', async function(t) { custprop(wbs?.[i]?.Custprops); });
 		}
@@ -1335,6 +1337,20 @@ Deno.test('parse features', async function(t) {
 			});
 		});
 	});
+
+	await t.step('data types formats', async function(t) {var dtf = [
+		['xlsx', paths.dtfxlsx]
+	]; for(var j = 0; j < dtf.length; ++j) { var m = dtf[j]; await t.step(m[0], async function(t) {
+		var wb = X.read(fs.readFileSync(m[1]), {type: TYPE, cellDates: true});
+		var ws = wb.Sheets[wb.SheetNames[0]];
+		var data = X.utils.sheet_to_json<any>(ws, { header: 1, raw: true, rawNumbers: false });
+		assert.assert(data[0][1] instanceof Date);
+		assert.assert(data[1][1] instanceof Date);
+		assert.equal(data[2][1], '$123.00');
+		assert.equal(data[3][1], '98.76%');
+		assert.equal(data[4][1], '456.00');
+		assert.equal(data[5][1], '7,890');
+	}); } });
 });
 
 Deno.test('write features', async function(t) {

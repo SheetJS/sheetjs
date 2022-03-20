@@ -144,6 +144,8 @@ var paths = {
 	dtxlsx:  dir + 'xlsx-stream-d-date-cell.xlsx',
 	dtxlsb:  dir + 'xlsx-stream-d-date-cell.xlsb',
 
+	dtfxlsx: dir + 'DataTypesFormats.xlsx',
+
 	fstxls: dir + 'formula_stress_test.xls',
 	fstxml: dir + 'formula_stress_test.xls.xml',
 	fstxlsx: dir + 'formula_stress_test.xlsx',
@@ -1381,6 +1383,20 @@ describe('parse features', function() {
 			});
 		});
 	});
+
+	describe('data types formats', function() {[
+		['xlsx', paths.dtfxlsx],
+	].forEach(function(m) { it(m[0], function() {
+		var wb = X.read(fs.readFileSync(m[1]), {type: TYPE, cellDates: true});
+		var ws = wb.Sheets[wb.SheetNames[0]];
+		var data = X.utils.sheet_to_json(ws, { header: 1, raw: true, rawNumbers: false });
+		assert(data[0][1] instanceof Date);
+		assert(data[1][1] instanceof Date);
+		assert.equal(data[2][1], '$123.00');
+		assert.equal(data[3][1], '98.76%');
+		assert.equal(data[4][1], '456.00');
+		assert.equal(data[5][1], '7,890');
+	}); }); });
 });
 
 describe('write features', function() {
