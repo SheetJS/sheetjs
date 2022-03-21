@@ -839,7 +839,7 @@ export interface XLSX$Utils {
     book_new(): WorkBook;
 
     /** Append a worksheet to a workbook */
-    book_append_sheet(workbook: WorkBook, worksheet: WorkSheet, name?: string): void;
+    book_append_sheet(workbook: WorkBook, worksheet: WorkSheet, name?: string, roll?: boolean): void;
 
     /** Set sheet visibility (visible/hidden/very hidden) */
     book_set_sheet_visibility(workbook: WorkBook, sheet: number|string, visibility: number): void;

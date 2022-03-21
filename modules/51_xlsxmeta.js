@@ -4,6 +4,7 @@ function parse_xlmeta_xml(data, name, opts) {
     return out;
   var pass = false;
   var metatype = 2;
+  var lastmeta;
   data.replace(tagregex, function(x) {
     var y = parsexmltag(x);
     switch (strip_ns(y[0])) {
@@ -21,6 +22,9 @@ function parse_xlmeta_xml(data, name, opts) {
       case "</metadataType>":
         break;
       case "<futureMetadata":
+        for (var j = 0; j < out.Types.length; ++j)
+          if (out.Types[j].name == y.name)
+            lastmeta = out.Types[j];
         break;
       case "</futureMetadata>":
         break;
@@ -58,6 +62,13 @@ function parse_xlmeta_xml(data, name, opts) {
         break;
       case "</ext>":
         pass = false;
+        break;
+      case "<rvb":
+        if (!lastmeta)
+          break;
+        if (!lastmeta.offsets)
+          lastmeta.offsets = [];
+        lastmeta.offsets.push(+y.i);
         break;
       default:
         if (!pass && opts.WTF)

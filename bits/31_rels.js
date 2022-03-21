@@ -76,7 +76,6 @@ function write_rels(rels)/*:string*/ {
 	return o.join("");
 }
 
-var RELS_EXTERN = [RELS.HLINK, RELS.XPATH, RELS.XMISS];
 function add_rels(rels, rId/*:number*/, f, type, relobj, targetmode/*:?string*/)/*:number*/ {
 	if(!relobj) relobj = {};
 	if(!rels['!id']) rels['!id'] = {};
@@ -87,7 +86,7 @@ function add_rels(rels, rId/*:number*/, f, type, relobj, targetmode/*:?string*/)
 	relobj.Type = type;
 	relobj.Target = f;
 	if(targetmode) relobj.TargetMode = targetmode;
-	else if(RELS_EXTERN.indexOf(relobj.Type) > -1) relobj.TargetMode = "External";
+	else if([RELS.HLINK, RELS.XPATH, RELS.XMISS].indexOf(relobj.Type) > -1) relobj.TargetMode = "External";
 	if(rels['!id'][relobj.Id]) throw new Error("Cannot rewrite rId " + rId);
 	rels['!id'][relobj.Id] = relobj;
 	rels[('/' + relobj.Target).replace("//","/")] = relobj;

@@ -13,6 +13,7 @@
 		"no-bitwise": 0,
 		"no-console": 0,
 		"no-control-regex": 0,
+		"no-unused-vars": 1,
 		"no-empty": 0,
 		"no-trailing-spaces": 2,
 		"no-use-before-define": [ 1, {

@@ -1,2 +1,7 @@
 test_files
-numbers_to_csv.node.js
+*.node.js
+*.[Pp][Rr][Oo][Tt][Oo]
+*.[Ii][Ww][Aa]
+*.[Jj][Pp][Gg]
+*.[Pp][Ll][Ii][Ss][Tt]
+DocumentIdentifier

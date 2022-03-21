@@ -46,7 +46,7 @@
 		"@sheetjs/uglify-js": "~2.7.3",
 		"@types/node": "^8.5.9",
 		"acorn": "7.4.1",
-		"alex": "^9.1.0",
+		"alex": "8.1.1",
 		"blanket": "~1.2.3",
 		"commander": "~2.17.1",
 		"dtslint": "^0.1.2",

@@ -49,6 +49,7 @@ interface ParseXLMetaOptions {
 }
 interface XLMDT {
 	name: string;
+	offsets?: number[];
 }
 interface XLMetaRef {
 	type: string;

@@ -6,6 +6,7 @@ function parse_xlmeta_xml(data: string, name: string, opts?: ParseXLMetaOptions)
 	if(!data) return out;
 	var pass = false;
 	var metatype: 0 | 1 | 2 = 2;
+	var lastmeta: XLMDT;
 
 	data.replace(tagregex, (x: string/*, idx: number*/) => {
 		var y: any = parsexmltag(x);
@@ -25,7 +26,9 @@ function parse_xlmeta_xml(data: string, name: string, opts?: ParseXLMetaOptions)
 			case '</metadataType>': break;
 
 			/* 18.9.4 */
-			case '<futureMetadata': break;
+			case '<futureMetadata':
+				for(var j = 0; j < out.Types.length; ++j) if(out.Types[j].name == y.name) lastmeta = out.Types[j];
+				break;
 			case '</futureMetadata>': break;
 
 			/* 18.9.1 */
@@ -53,6 +56,12 @@ function parse_xlmeta_xml(data: string, name: string, opts?: ParseXLMetaOptions)
 			/* 18.2.7  ext CT_Extension + */
 			case '<ext': pass=true; break; //TODO: check with versions of excel
 			case '</ext>': pass=false; break;
+
+			case '<rvb':
+				if(!lastmeta) break;
+				if(!lastmeta.offsets) lastmeta.offsets = [];
+				lastmeta.offsets.push(+y.i);
+				break;
 
 			default: if(!pass && opts.WTF) throw new Error('unrecognized ' + y[0] + ' in metadata');
 		}

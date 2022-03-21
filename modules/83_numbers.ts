@@ -1,6 +1,7 @@
 /*! sheetjs (C) 2013-present SheetJS -- http://sheetjs.com */
 /// <reference path="src/types.ts"/>
 
+/* these are type imports and do not show up in the generated JS */
 import { CFB$Container } from 'cfb';
 import { WorkBook, WorkSheet, Range, CellObject } from '../';
 import type { utils } from "../";
@@ -9,34 +10,37 @@ declare var encode_cell: typeof utils.encode_cell;
 declare var encode_range: typeof utils.encode_range;
 declare var book_new: typeof utils.book_new;
 declare var book_append_sheet: typeof utils.book_append_sheet;
+//<<import { utils } from "../../";
+//<<const { encode_cell, encode_range, book_new, book_append_sheet } = utils;
 
+function u8_to_dataview(array: Uint8Array): DataView { return new DataView(array.buffer, array.byteOffset, array.byteLength); }
 
-var u8_to_dataview = (array: Uint8Array): DataView => new DataView(array.buffer, array.byteOffset, array.byteLength);
+function u8str(u8: Uint8Array): string { return /* Buffer.isBuffer(u8) ? u8.toString() :*/ typeof TextDecoder != "undefined" ? new TextDecoder().decode(u8) : utf8read(a2s(u8)); }
 
-var u8str = (u8: Uint8Array): string => /* Buffer.isBuffer(u8) ? u8.toString() :*/ typeof TextDecoder != "undefined" ? new TextDecoder().decode(u8) : utf8read(a2s(u8));
-
-var u8concat = (u8a: Uint8Array[]): Uint8Array => {
+/** Concatenate Uint8Arrays */
+function u8concat(u8a: Uint8Array[]): Uint8Array {
 	var len = u8a.reduce((acc: number, x: Uint8Array) => acc + x.length, 0);
 	var out = new Uint8Array(len);
 	var off = 0;
 	u8a.forEach(u8 => { out.set(u8, off); off += u8.length; });
 	return out;
-};
+}
+//<<export { u8concat };
 
-/* Hopefully one day this will be added to the language */
-var popcnt = (x: number): number => {
+/** Count the number of bits set (assuming int32_t interpretation) */
+function popcnt(x: number): number {
   x -= ((x >> 1) & 0x55555555);
   x = (x & 0x33333333) + ((x >> 2) & 0x33333333);
   return (((x + (x >> 4)) & 0x0F0F0F0F) * 0x01010101) >>> 24;
-};
+}
 
-/* Used in the modern cell storage */
-var readDecimal128LE = (buf: Uint8Array, offset: number): number => {
+/** Read a 128-bit decimal from the modern cell storage */
+function readDecimal128LE(buf: Uint8Array, offset: number): number {
 	var exp = ((buf[offset + 15] & 0x7F) << 7) | (buf[offset + 14] >> 1);
 	var mantissa = buf[offset + 14] & 1;
 	for(var j = offset + 13; j >= offset; --j) mantissa = mantissa * 256 + buf[j];
 	return ((buf[offset+15] & 0x80) ? -mantissa : mantissa) * Math.pow(10, exp - 0x1820);
-};
+}
 
 type Ptr = [number];
 
@@ -55,7 +59,6 @@ function parse_varint49(buf: Uint8Array, ptr?: Ptr): number {
 	if(ptr) ptr[0] = l;
 	return usz;
 }
-/*
 function write_varint49(v: number): Uint8Array {
 	var usz = new Uint8Array(7);
 	usz[0] = (v & 0x7F);
@@ -75,7 +78,6 @@ function write_varint49(v: number): Uint8Array {
 	}
 	return usz.slice(0, L);
 }
-*/
 
 /** Parse a 32-bit signed integer from the raw varint */
 function varint_to_i32(buf: Uint8Array): number {
@@ -96,7 +98,7 @@ interface ProtoItem {
 }
 type ProtoField = Array<ProtoItem>
 type ProtoMessage = Array<ProtoField>;
-/** Shallow parse of a message */
+/** Shallow parse of a Protobuf message */
 function parse_shallow(buf: Uint8Array): ProtoMessage {
 	var out: ProtoMessage = [], ptr: Ptr = [0];
 	while(ptr[0] < buf.length) {
@@ -139,6 +141,7 @@ function write_shallow(proto: ProtoMessage): Uint8Array {
 }
 */
 
+/** Map over each entry in a repeated (or single-value) field */
 function mappa<U>(data: ProtoField, cb:(Uint8Array) => U): U[] {
 	if(!data) return [];
 	return data.map((d) => { try {
@@ -160,7 +163,7 @@ interface IWAArchiveInfo {
 	id?: number;
 	messages?: IWAMessage[];
 }
-
+/** Extract all messages from a IWA file */
 function parse_iwa_file(buf: Uint8Array): IWAArchiveInfo[] {
 	var out: IWAArchiveInfo[] = [], ptr: Ptr = [0];
 	while(ptr[0] < buf.length) {
@@ -187,6 +190,7 @@ function parse_iwa_file(buf: Uint8Array): IWAArchiveInfo[] {
 	return out;
 }
 
+/** Decompress a snappy chunk */
 function parse_snappy_chunk(type: number, buf: Uint8Array): Uint8Array {
 	if(type != 0) throw new Error(`Unexpected Snappy chunk type ${type}`);
 	var ptr: Ptr = [0];
@@ -237,7 +241,8 @@ function parse_snappy_chunk(type: number, buf: Uint8Array): Uint8Array {
 	return o;
 }
 
-function deframe(buf: Uint8Array): Uint8Array {
+/** Decompress IWA file */
+function decompress_iwa_file(buf: Uint8Array): Uint8Array {
 	var out = [];
 	var l = 0;
 	while(l < buf.length) {
@@ -250,23 +255,51 @@ function deframe(buf: Uint8Array): Uint8Array {
 	return u8concat(out);
 }
 
-function parse_old_storage(buf: Uint8Array, sst: string[], rsst: string[]): CellObject {
+/** Compress IWA file */
+function compress_iwa_file(buf: Uint8Array): Uint8Array {
+	var out: Uint8Array[] = [];
+	var l = 0;
+	while(l < buf.length) {
+		var c = Math.min(buf.length - l, 0xFFFFFFF);
+		var frame = new Uint8Array(4);
+		out.push(frame);
+		var usz = write_varint49(c);
+		var L = usz.length;
+		out.push(usz);
+
+		if(c <= 60) { L++; out.push(new Uint8Array([(c - 1)<<2])); }
+		else if(c <= 0x100)       { L += 2; out.push(new Uint8Array([0xF0, (c-1) & 0xFF])); }
+		else if(c <= 0x10000)     { L += 3; out.push(new Uint8Array([0xF4, (c-1) & 0xFF, ((c-1) >> 8) & 0xFF])); }
+		else if(c <= 0x1000000)   { L += 4; out.push(new Uint8Array([0xF8, (c-1) & 0xFF, ((c-1) >> 8) & 0xFF, ((c-1) >> 16) & 0xFF])); }
+		else if(c <= 0x100000000) { L += 5; out.push(new Uint8Array([0xFC, (c-1) & 0xFF, ((c-1) >> 8) & 0xFF, ((c-1) >> 16) & 0xFF, ((c-1) >>> 24) & 0xFF])); }
+
+		out.push(buf.slice(l, l + c)); L += c;
+
+		frame[0] = 0;
+		frame[1] = L & 0xFF; frame[2] = (L >>  8) & 0xFF; frame[3] = (L >> 16) & 0xFF;
+		l += c;
+	}
+	return u8concat(out);
+}
+//<<export { decompress_iwa_file, compress_iwa_file };
+
+/** Parse "old storage" (version 0..3) */
+function parse_old_storage(buf: Uint8Array, sst: string[], rsst: string[], v: 0|1|2|3): CellObject {
   var dv = u8_to_dataview(buf);
-  var ctype = buf[buf[0] == 4 ? 1 : 2];
+	var flags = dv.getUint32(4, true);
 
   /* TODO: find the correct field position of number formats, formulae, etc */
-  var flags = dv.getUint32(4, true);
-  var data_offset = 12 + popcnt(flags & 0x0D8E) * 4;
+  var data_offset = (v > 1 ? 12 : 8) + popcnt(flags & (v > 1 ? 0x0D8E : 0x018E)) * 4;
 
   var ridx = -1, sidx = -1, ieee = NaN, dt = new Date(2001, 0, 1);
   if(flags & 0x0200) { ridx = dv.getUint32(data_offset,  true); data_offset += 4; }
-  data_offset += popcnt(flags & 0x3000) * 4;
+  data_offset += popcnt(flags & (v > 1 ? 0x3000 : 0x1000)) * 4;
   if(flags & 0x0010) { sidx = dv.getUint32(data_offset,  true); data_offset += 4; }
   if(flags & 0x0020) { ieee = dv.getFloat64(data_offset, true); data_offset += 8; }
   if(flags & 0x0040) { dt.setTime(dt.getTime() +  dv.getFloat64(data_offset, true) * 1000); data_offset += 8; }
 
   var ret: CellObject;
-  switch(ctype) {
+  switch(buf[2]) {
     case 0: break; // return { t: "z" }; // blank?
     case 2: ret = { t: "n", v: ieee }; break; // number
     case 3: ret = { t: "s", v: sst[sidx] }; break; // string
@@ -289,10 +322,9 @@ function parse_old_storage(buf: Uint8Array, sst: string[], rsst: string[]): Cell
 
 function parse_storage(buf: Uint8Array, sst: string[], rsst: string[]): CellObject {
   var dv = u8_to_dataview(buf);
-  var ctype = buf[1];
+  var flags = dv.getUint32(8, true);
 
   /* TODO: find the correct field position of number formats, formulae, etc */
-  var flags = dv.getUint32(8, true);
   var data_offset = 12;
 
   var ridx = -1, sidx = -1, d128 = NaN, ieee = NaN, dt = new Date(2001, 0, 1);
@@ -304,7 +336,7 @@ function parse_storage(buf: Uint8Array, sst: string[], rsst: string[]): CellObje
   if(flags & 0x0010) { ridx = dv.getUint32(data_offset,  true); data_offset += 4; }
 
   var ret: CellObject;
-  switch(ctype) {
+  switch(buf[1]) {
     case 0: break; // return { t: "z" }; // blank?
     case 2: ret = { t: "n", v: d128 }; break; // number
     case 3: ret = { t: "s", v: sst[sidx] }; break; // string
@@ -314,10 +346,10 @@ function parse_storage(buf: Uint8Array, sst: string[], rsst: string[]): CellObje
     case 8: ret = { t: "e", v: 0}; break; // "formula error" TODO: enumerate and map errors to csf equivalents
     case 9: { // "automatic"?
       if(ridx > -1) ret = { t: "s", v: rsst[ridx] };
-      else throw new Error(`Unsupported cell type ${ctype} : ${flags & 0x1F} : ${buf.slice(0,4)}`);
+      else throw new Error(`Unsupported cell type ${buf[1]} : ${flags & 0x1F} : ${buf.slice(0,4)}`);
     } break;
     case 10: ret = { t: "n", v: d128 }; break; // currency
-    default: throw new Error(`Unsupported cell type ${ctype} : ${flags & 0x1F} : ${buf.slice(0,4)}`);
+    default: throw new Error(`Unsupported cell type ${buf[1]} : ${flags & 0x1F} : ${buf.slice(0,4)}`);
   }
   /* TODO: All styling fields appear after the cell data */
 
@@ -326,21 +358,28 @@ function parse_storage(buf: Uint8Array, sst: string[], rsst: string[]): CellObje
 
 function parse_cell_storage(buf: Uint8Array, sst: string[], rsst: string[]): CellObject {
   switch(buf[0]) {
-    /* TODO: 0-2? */
-    case 3: case 4: return parse_old_storage(buf, sst, rsst);
+    case 0: case 1:
+    case 2: case 3: return parse_old_storage(buf, sst, rsst, buf[0]);
     case 5: return parse_storage(buf, sst, rsst);
     default: throw new Error(`Unsupported payload version ${buf[0]}`);
   }
 }
 
-// .TSP.Reference
+/** .TSS.StylesheetArchive */
+//function parse_TSS_StylesheetArchive(M: IWAMessage[][], root: IWAMessage): void {
+//	var pb = parse_shallow(root.data);
+//}
+
+/** .TSP.Reference */
 function parse_TSP_Reference(buf: Uint8Array): number {
 	var pb = parse_shallow(buf);
 	return parse_varint49(pb[1][0].data);
 }
 
-// .TST.TableDataList
-function parse_TST_TableDataList(M: IWAMessage[][], root: IWAMessage): string[] {
+type MessageSpace = {[id: number]: IWAMessage[]};
+
+/** .TST.TableDataList */
+function parse_TST_TableDataList(M: MessageSpace, root: IWAMessage): string[] {
 	var pb = parse_shallow(root.data);
 	// .TST.TableDataList.ListType
 	var type = varint_to_i32(pb[1][0].data);
@@ -371,52 +410,67 @@ function parse_TST_TableDataList(M: IWAMessage[][], root: IWAMessage): string[] 
 	return data;
 }
 
+type TileStorageType = -1 | 0 | 1;
 interface TileRowInfo {
+	/** Row Index */
 	R: number;
+	/** Cell Storage */
 	cells?: Uint8Array[];
 }
-// .TSP.TileRowInfo
-function parse_TST_TileRowInfo(u8: Uint8Array): TileRowInfo {
+/** .TSP.TileRowInfo */
+function parse_TST_TileRowInfo(u8: Uint8Array, type: TileStorageType): TileRowInfo {
 	var pb = parse_shallow(u8);
 	var R = varint_to_i32(pb[1][0].data) >>> 0;
-	var pre_bnc = pb[3]?.[0]?.data;
-	var pre_bnc_offsets = pb[4]?.[0]?.data && u8_to_dataview(pb[4][0].data);
-	var storage = pb[6]?.[0]?.data;
-	var storage_offsets = pb[7]?.[0]?.data && u8_to_dataview(pb[7][0].data);
+	var cnt = varint_to_i32(pb[2][0].data) >>> 0;
+	// var version = pb?.[5]?.[0] && (varint_to_i32(pb[5][0].data) >>> 0);
 	var wide_offsets = pb[8]?.[0]?.data && varint_to_i32(pb[8][0].data) > 0 || false;
+
+	/* select storage by type (1 = modern / 0 = old / -1 = try modern, old) */
+	var used_storage_u8: Uint8Array, used_storage: Uint8Array;
+	if(pb[7]?.[0]?.data && type != 0) { used_storage_u8 = pb[7]?.[0]?.data; used_storage = pb[6]?.[0]?.data; }
+	else if(pb[4]?.[0]?.data && type != 1) { used_storage_u8 = pb[4]?.[0]?.data; used_storage = pb[3]?.[0]?.data; }
+	else throw `NUMBERS Tile missing ${type} cell storage`;
+
+	/* find all offsets -- 0xFFFF means cells are not present */
 	var width = wide_offsets ? 4 : 1;
-	var cells = [];
-	var off = 0;
-	for(var C = 0; C < pre_bnc_offsets.byteLength/2; ++C) {
-		/* prefer storage if it is present, otherwise fall back on pre_bnc */
-		if(storage && storage_offsets) {
-			off = storage_offsets.getUint16(C*2, true) * width;
-			if(off < storage.length) { cells[C] = storage.subarray(off, storage_offsets.getUint16(C*2+2, true) * width); continue; }
-		}
-		if(pre_bnc && pre_bnc_offsets) {
-			off = pre_bnc_offsets.getUint16(C*2, true) * width;
-			if(off < pre_bnc.length) cells[C] = pre_bnc.subarray(off, pre_bnc_offsets.getUint16(C*2+2, true) * width);
-		}
+	var used_storage_offsets = u8_to_dataview(used_storage_u8);
+	var offsets: Array<[number, number]> = [];
+	for(var C = 0; C < used_storage_u8.length / 2; ++C) {
+		var off = used_storage_offsets.getUint16(C*2, true);
+		if(off < 65535) offsets.push([C, off]);
 	}
+	if(offsets.length != cnt) throw `Expected ${cnt} cells, found ${offsets.length}`;
+
+	var cells: Uint8Array[] = [];
+	for(C = 0; C < offsets.length - 1; ++C) cells[offsets[C][0]] = used_storage.subarray(offsets[C][1] * width, offsets[C+1][1] * width);
+	cells[offsets[offsets.length - 1][0]] = used_storage.subarray(offsets[offsets.length - 1][1] * width);
 	return { R, cells };
 }
 
-// .TST.Tile
-function parse_TST_Tile(M: IWAMessage[][], root: IWAMessage): Uint8Array[][] {
+interface TileInfo {
+	data: Uint8Array[][];
+	nrows: number;
+}
+/** .TST.Tile */
+function parse_TST_Tile(M: MessageSpace, root: IWAMessage): TileInfo {
 	var pb = parse_shallow(root.data);
-	var ri = mappa(pb[5], parse_TST_TileRowInfo);
-	return ri.reduce((acc, x) => {
-		if(!acc[x.R]) acc[x.R] = [];
-		x.cells.forEach((cell, C) => {
-			if(acc[x.R][C]) throw new Error(`Duplicate cell r=${x.R} c=${C}`);
-			acc[x.R][C] = cell;
-		});
-		return acc;
-	}, [] as Uint8Array[][]);
+	var storage: TileStorageType = (pb?.[7]?.[0]) ? ((varint_to_i32(pb[7][0].data)>>>0) > 0 ? 1 : 0 ) : -1;
+	var ri = mappa(pb[5], (u8: Uint8Array) => parse_TST_TileRowInfo(u8, storage));
+	return {
+		nrows: varint_to_i32(pb[4][0].data)>>>0,
+		data: ri.reduce((acc, x) => {
+			if(!acc[x.R]) acc[x.R] = [];
+			x.cells.forEach((cell, C) => {
+				if(acc[x.R][C]) throw new Error(`Duplicate cell r=${x.R} c=${C}`);
+				acc[x.R][C] = cell;
+			});
+			return acc;
+		}, [] as Uint8Array[][])
+	};
 }
 
-// .TST.TableModelArchive
-function parse_TST_TableModelArchive(M: IWAMessage[][], root: IWAMessage, ws: WorkSheet) {
+/** .TST.TableModelArchive */
+function parse_TST_TableModelArchive(M: MessageSpace, root: IWAMessage, ws: WorkSheet) {
 	var pb = parse_shallow(root.data);
 	var range: Range = { s: {r:0, c:0}, e: {r:0, c:0} };
 	range.e.r = (varint_to_i32(pb[6][0].data) >>> 0) - 1;
@@ -425,38 +479,35 @@ function parse_TST_TableModelArchive(M: IWAMessage[][], root: IWAMessage, ws: Wo
 	if(range.e.c < 0) throw new Error(`Invalid col varint ${pb[7][0].data}`);
 	ws["!ref"] = encode_range(range);
 
-	{
-		// .TST.DataStore
-		var store = parse_shallow(pb[4][0].data);
+	// .TST.DataStore
+	var store = parse_shallow(pb[4][0].data);
+	var sst = parse_TST_TableDataList(M, M[parse_TSP_Reference(store[4][0].data)][0]);
+	var rsst: string[] = store[17]?.[0] ? parse_TST_TableDataList(M, M[parse_TSP_Reference(store[17][0].data)][0]) : [];
 
-		var sst = parse_TST_TableDataList(M, M[parse_TSP_Reference(store[4][0].data)][0]);
-		var rsst: string[] = store[17]?.[0] ? parse_TST_TableDataList(M, M[parse_TSP_Reference(store[17][0].data)][0]) : [];
-		{
-			// .TST.TileStorage
-			var tile = parse_shallow(store[3][0].data);
-			var tiles: Array<{id: number, ref: Uint8Array[][]}> = [];
-			tile[1].forEach(t => {
-				var tl = (parse_shallow(t.data));
-				var ref = M[parse_TSP_Reference(tl[2][0].data)][0];
-				var mtype = varint_to_i32(ref.meta[1][0].data);
-				if(mtype != 6002) throw new Error(`6001 unexpected reference to ${mtype}`);
-				tiles.push({id: varint_to_i32(tl[1][0].data), ref: parse_TST_Tile(M, ref) });
+	// .TST.TileStorage
+	var tile = parse_shallow(store[3][0].data);
+	var _R = 0;
+	/* TODO: should this list be sorted by id ? */
+	tile[1].forEach(t => {
+		var tl = (parse_shallow(t.data));
+		// var id = varint_to_i32(tl[1][0].data);
+		var ref = M[parse_TSP_Reference(tl[2][0].data)][0];
+		var mtype = varint_to_i32(ref.meta[1][0].data);
+		if(mtype != 6002) throw new Error(`6001 unexpected reference to ${mtype}`);
+		var _tile = parse_TST_Tile(M, ref);
+		_tile.data.forEach((row, R) => {
+			row.forEach((buf, C) => {
+				var addr = encode_cell({r:_R + R,c:C});
+				var res = parse_cell_storage(buf, sst, rsst);
+				if(res) ws[addr] = res;
 			});
-			tiles.forEach((tile) => {
-				tile.ref.forEach((row, R) => {
-					row.forEach((buf, C) => {
-						var addr = encode_cell({r:R,c:C});
-						var res = parse_cell_storage(buf, sst, rsst);
-						if(res) ws[addr] = res;
-					});
-				});
-			});
-		}
-	}
+		});
+		_R += _tile.nrows;
+	});
 }
 
-// .TST.TableInfoArchive
-function parse_TST_TableInfoArchive(M: IWAMessage[][], root: IWAMessage): WorkSheet {
+/** .TST.TableInfoArchive */
+function parse_TST_TableInfoArchive(M: MessageSpace, root: IWAMessage): WorkSheet {
 	var pb = parse_shallow(root.data);
 	var out: WorkSheet = { "!ref": "A1" };
 	var tableref = M[parse_TSP_Reference(pb[2][0].data)];
@@ -466,12 +517,12 @@ function parse_TST_TableInfoArchive(M: IWAMessage[][], root: IWAMessage): WorkSh
 	return out;
 }
 
-// .TN.SheetArchive
 interface NSheet {
 	name: string;
 	sheets: WorkSheet[];
 }
-function parse_TN_SheetArchive(M: IWAMessage[][], root: IWAMessage): NSheet {
+/** .TN.SheetArchive */
+function parse_TN_SheetArchive(M: MessageSpace, root: IWAMessage): NSheet {
 	var pb = parse_shallow(root.data);
 	var out: NSheet = {
 		name: (pb[1]?.[0] ? u8str(pb[1][0].data) : ""),
@@ -487,17 +538,26 @@ function parse_TN_SheetArchive(M: IWAMessage[][], root: IWAMessage): NSheet {
 	return out;
 }
 
-// .TN.DocumentArchive
-function parse_TN_DocumentArchive(M: IWAMessage[][], root: IWAMessage): WorkBook {
+/** .TN.DocumentArchive */
+function parse_TN_DocumentArchive(M: MessageSpace, root: IWAMessage): WorkBook {
 	var out = book_new();
 	var pb = parse_shallow(root.data);
+
+	// var stylesheet = mappa(pb[4], parse_TSP_Reference)[0];
+	// if(varint_to_i32(M[stylesheet][0].meta[1][0].data) == 401) parse_TSS_StylesheetArchive(M, M[stylesheet][0]);
+	// var sidebar = mappa(pb[5], parse_TSP_Reference);
+	// var theme = mappa(pb[6], parse_TSP_Reference);
+	// var docinfo = parse_shallow(pb[8][0].data);
+	// var tskinfo = parse_shallow(docinfo[1][0].data);
+	// var author_storage = mappa(tskinfo[7], parse_TSP_Reference);
+
 	var sheetoffs = mappa(pb[1], parse_TSP_Reference);
 	sheetoffs.forEach((off) => {
 		M[off].forEach((m: IWAMessage) => {
 			var mtype = varint_to_i32(m.meta[1][0].data);
 			if(mtype == 2) {
 				var root = parse_TN_SheetArchive(M, m);
-				root.sheets.forEach(sheet => { book_append_sheet(out, sheet, root.name); });
+				root.sheets.forEach((sheet, idx) => { book_append_sheet(out, sheet, idx == 0 ? root.name : root.name + "_" + idx, true); });
 			}
 		});
 	});
@@ -505,24 +565,26 @@ function parse_TN_DocumentArchive(M: IWAMessage[][], root: IWAMessage): WorkBook
 	return out;
 }
 
-/* exported parse_numbers_iwa */
+/** Parse NUMBERS file */
 function parse_numbers_iwa(cfb: CFB$Container): WorkBook {
-	var out: IWAMessage[][] = [];
+	var out: MessageSpace = {}, indices: number[] = [];
 	cfb.FullPaths.forEach(p => { if(p.match(/\.iwpv2/)) throw new Error(`Unsupported password protection`); });
+
 	/* collect entire message space */
 	cfb.FileIndex.forEach(s => {
 		if(!s.name.match(/\.iwa$/)) return;
 		var o: Uint8Array;
-		try { o = deframe(s.content as Uint8Array); } catch(e) { return console.log("?? " + s.content.length + " " + (e.message || e)); }
+		try { o = decompress_iwa_file(s.content as Uint8Array); } catch(e) { return console.log("?? " + s.content.length + " " + (e.message || e)); }
 		var packets: IWAArchiveInfo[];
 		try { packets = parse_iwa_file(o); } catch(e) { return console.log("## " + (e.message || e)); }
-		packets.forEach(packet => {out[+packet.id] = packet.messages;});
+		packets.forEach(packet => { out[packet.id] = packet.messages; indices.push(packet.id); });
 	});
-	if(!out.length) throw new Error("File has no messages");
+	if(!indices.length) throw new Error("File has no messages");
+
 	/* find document root */
-	var docroot: IWAMessage;
-	out.forEach((iwams) => {
-		iwams.forEach((iwam) => {
+	var docroot: IWAMessage = out?.[1]?.[0]?.meta?.[1]?.[0].data && varint_to_i32(out[1][0].meta[1][0].data) == 1 && out[1][0];
+	if(!docroot) indices.forEach((idx) => {
+		out[idx].forEach((iwam) => {
 			var mtype = varint_to_i32(iwam.meta[1][0].data) >>> 0;
 			if(mtype == 1) {
 				if(!docroot) docroot = iwam;
@@ -533,3 +595,5 @@ function parse_numbers_iwa(cfb: CFB$Container): WorkBook {
 	if(!docroot) throw new Error("Cannot find Document root");
 	return parse_TN_DocumentArchive(out, docroot);
 }
+
+//<<export { parse_numbers_iwa };

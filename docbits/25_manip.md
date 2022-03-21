@@ -16,7 +16,25 @@ XLSX.utils.book_append_sheet(workbook, worksheet, sheet_name);
 
 The `book_append_sheet` utility function appends a worksheet to the workbook.
 The third argument specifies the desired worksheet name. Multiple worksheets can
-be added to a workbook by calling the function multiple times.
+be added to a workbook by calling the function multiple times.  If the worksheet
+name is already used in the workbook, it will throw an error.
+
+_Append a Worksheet to a Workbook and find a unique name_
+
+```js
+var new_name = XLSX.utils.book_append_sheet(workbook, worksheet, name, true);
+```
+
+If the fourth argument is `true`, the function will start with the specified
+worksheet name.  If the sheet name exists in the workbook, a new worksheet name
+will be chosen by finding the name stem and incrementing the counter:
+
+```js
+XLSX.utils.book_append_sheet(workbook, sheetA, "Sheet2", true); // Sheet2
+XLSX.utils.book_append_sheet(workbook, sheetB, "Sheet2", true); // Sheet3
+XLSX.utils.book_append_sheet(workbook, sheetC, "Sheet2", true); // Sheet4
+XLSX.utils.book_append_sheet(workbook, sheetD, "Sheet2", true); // Sheet5
+```
 
 _List the Worksheet names in tab order_
 

@@ -287,14 +287,22 @@ function book_new()/*:Workbook*/ {
 }
 
 /* add a worksheet to the end of a given workbook */
-function book_append_sheet(wb/*:Workbook*/, ws/*:Worksheet*/, name/*:?string*/) {
-	if(!name) for(var i = 1; i <= 0xFFFF; ++i, name = undefined) if(wb.SheetNames.indexOf(name = "Sheet" + i) == -1) break;
+function book_append_sheet(wb/*:Workbook*/, ws/*:Worksheet*/, name/*:?string*/, roll/*:?boolean*/)/*:string*/ {
+	var i = 1;
+	if(!name) for(; i <= 0xFFFF; ++i, name = undefined) if(wb.SheetNames.indexOf(name = "Sheet" + i) == -1) break;
 	if(!name || wb.SheetNames.length >= 0xFFFF) throw new Error("Too many worksheets");
+	if(roll && wb.SheetNames.indexOf(name) >= 0) {
+		var m = name.match(/(^.*?)(\d+)$/);
+		i = m && +m[2] || 0;
+		var root = m && m[1] || name;
+		for(++i; i <= 0xFFFF; ++i) if(wb.SheetNames.indexOf(name = root + i) == -1) break;
+	}
 	check_ws_name(name);
 	if(wb.SheetNames.indexOf(name) >= 0) throw new Error("Worksheet with name |" + name + "| already exists!");
 
 	wb.SheetNames.push(name);
 	wb.Sheets[name] = ws;
+	return name;
 }
 
 /* set sheet visibility (visible/hidden/very hidden) */
