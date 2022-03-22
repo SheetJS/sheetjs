@@ -1,7 +1,7 @@
 var RTF = /*#__PURE__*/(function() {
 	function rtf_to_sheet(d/*:RawData*/, opts)/*:Worksheet*/ {
 		switch(opts.type) {
-			case 'base64': return rtf_to_sheet_str(Base64.decode(d), opts);
+			case 'base64': return rtf_to_sheet_str(Base64_decode(d), opts);
 			case 'binary': return rtf_to_sheet_str(d, opts);
 			case 'buffer': return rtf_to_sheet_str(has_buf && Buffer.isBuffer(d) ? d.toString('binary') : a2s(d), opts);
 			case 'array':  return rtf_to_sheet_str(cc2str(d), opts);

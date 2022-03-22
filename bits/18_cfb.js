@@ -1,5 +1,4 @@
 /*::
-declare var Base64:any;
 declare var ReadShift:any;
 declare var CheckField:any;
 declare var prep_blob:any;
@@ -552,7 +551,7 @@ function read(blob/*:RawBytes|string*/, options/*:CFBReadOpts*/) {
 	}
 	switch(type || "base64") {
 		case "file": /*:: if(typeof blob !== 'string') throw "Must pass a filename when type='file'"; */return read_file(blob, options);
-		case "base64": /*:: if(typeof blob !== 'string') throw "Must pass a base64-encoded binary string when type='file'"; */return parse(s2a(Base64.decode(blob)), options);
+		case "base64": /*:: if(typeof blob !== 'string') throw "Must pass a base64-encoded binary string when type='file'"; */return parse(s2a(Base64_decode(blob)), options);
 		case "binary": /*:: if(typeof blob !== 'string') throw "Must pass a binary string when type='file'"; */return parse(s2a(blob), options);
 	}
 	return parse(/*::typeof blob == 'string' ? new Buffer(blob, 'utf-8') : */blob, options);
@@ -875,7 +874,7 @@ function write(cfb/*:CFBContainer*/, options/*:CFBWriteOpts*/)/*:RawBytes|string
 	switch(options && options.type || "buffer") {
 		case "file": get_fs(); fs.writeFileSync(options.filename, (o/*:any*/)); return o;
 		case "binary": return typeof o == "string" ? o : a2s(o);
-		case "base64": return Base64.encode(typeof o == "string" ? o : a2s(o));
+		case "base64": return Base64_encode(typeof o == "string" ? o : a2s(o));
 		case "buffer": if(has_buf) return Buffer.isBuffer(o) ? o : Buffer_from(o);
 			/* falls through */
 		case "array": return typeof o == "string" ? s2a(o) : o;
@@ -1584,7 +1583,7 @@ function get_content_type(fi/*:CFBEntry*/, fp/*:string*/)/*:string*/ {
 
 /* 76 character chunks TODO: intertwine encoding */
 function write_base64_76(bstr/*:string*/)/*:string*/ {
-	var data = Base64.encode(bstr);
+	var data = Base64_encode(bstr);
 	var o = [];
 	for(var i = 0; i < data.length; i+= 76) o.push(data.slice(i, i+76));
 	return o.join("\r\n") + "\r\n";
@@ -1665,7 +1664,7 @@ function parse_mime(cfb/*:CFBContainer*/, data/*:Array<string>*/, root/*:string*
 	}
 	++di;
 	switch(cte.toLowerCase()) {
-		case 'base64': fdata = s2a(Base64.decode(data.slice(di).join(""))); break;
+		case 'base64': fdata = s2a(Base64_decode(data.slice(di).join(""))); break;
 		case 'quoted-printable': fdata = parse_quoted_printable(data.slice(di)); break;
 		default: throw new Error("Unsupported Content-Transfer-Encoding " + cte);
 	}

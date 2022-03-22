@@ -16,7 +16,7 @@ var WK_ = /*#__PURE__*/(function() {
 
 	function lotus_to_workbook(d/*:RawData*/, opts) {
 		switch(opts.type) {
-			case 'base64': return lotus_to_workbook_buf(s2a(Base64.decode(d)), opts);
+			case 'base64': return lotus_to_workbook_buf(s2a(Base64_decode(d)), opts);
 			case 'binary': return lotus_to_workbook_buf(s2a(d), opts);
 			case 'buffer':
 			case 'array': return lotus_to_workbook_buf(d, opts);

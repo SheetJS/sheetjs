@@ -63,7 +63,7 @@ function dbf_to_aoa(buf, opts)/*:AOA*/ {
 	var out/*:AOA*/ = [];
 	var d/*:Block*/ = (new_raw_buf(1)/*:any*/);
 	switch(opts.type) {
-		case 'base64': d = s2a(Base64.decode(buf)); break;
+		case 'base64': d = s2a(Base64_decode(buf)); break;
 		case 'binary': d = s2a(buf); break;
 		case 'buffer':
 		case 'array': d = buf; break;
@@ -394,7 +394,7 @@ var SYLK = /*#__PURE__*/(function() {
 	/* TODO: find an actual specification */
 	function sylk_to_aoa(d/*:RawData*/, opts)/*:[AOA, Worksheet]*/ {
 		switch(opts.type) {
-			case 'base64': return sylk_to_aoa_str(Base64.decode(d), opts);
+			case 'base64': return sylk_to_aoa_str(Base64_decode(d), opts);
 			case 'binary': return sylk_to_aoa_str(d, opts);
 			case 'buffer': return sylk_to_aoa_str(has_buf && Buffer.isBuffer(d) ? d.toString('binary') : a2s(d), opts);
 			case 'array': return sylk_to_aoa_str(cc2str(d), opts);
@@ -597,7 +597,7 @@ var SYLK = /*#__PURE__*/(function() {
 var DIF = /*#__PURE__*/(function() {
 	function dif_to_aoa(d/*:RawData*/, opts)/*:AOA*/ {
 		switch(opts.type) {
-			case 'base64': return dif_to_aoa_str(Base64.decode(d), opts);
+			case 'base64': return dif_to_aoa_str(Base64_decode(d), opts);
 			case 'binary': return dif_to_aoa_str(d, opts);
 			case 'buffer': return dif_to_aoa_str(has_buf && Buffer.isBuffer(d) ? d.toString('binary') : a2s(d), opts);
 			case 'array': return dif_to_aoa_str(cc2str(d), opts);
@@ -963,7 +963,7 @@ var PRN = /*#__PURE__*/(function() {
 	function prn_to_sheet(d/*:RawData*/, opts)/*:Worksheet*/ {
 		var str = "", bytes = opts.type == 'string' ? [0,0,0,0] : firstbyte(d, opts);
 		switch(opts.type) {
-			case 'base64': str = Base64.decode(d); break;
+			case 'base64': str = Base64_decode(d); break;
 			case 'binary': str = d; break;
 			case 'buffer':
 				if(opts.codepage == 65001) str = d.toString('utf8'); // TODO: test if buf

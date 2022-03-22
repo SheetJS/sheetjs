@@ -90,6 +90,7 @@ function varint_to_i32(buf: Uint8Array): number {
 	}
 	return i32;
 }
+//<<export { varint_to_i32 };
 
 interface ProtoItem {
 	offset?: number;
@@ -128,18 +129,18 @@ function parse_shallow(buf: Uint8Array): ProtoMessage {
 	return out;
 }
 /** Serialize a shallow parse */
-/*
 function write_shallow(proto: ProtoMessage): Uint8Array {
 	var out: Uint8Array[] = [];
 	proto.forEach((field, idx) => {
 		field.forEach(item => {
 			out.push(write_varint49(idx * 8 + item.type));
+			if(item.type == 2) out.push(write_varint49(item.data.length));
 			out.push(item.data);
 		});
 	});
 	return u8concat(out);
 }
-*/
+//<<export { parse_shallow, write_shallow };
 
 /** Map over each entry in a repeated (or single-value) field */
 function mappa<U>(data: ProtoField, cb:(Uint8Array) => U): U[] {
@@ -173,6 +174,7 @@ function parse_iwa_file(buf: Uint8Array): IWAArchiveInfo[] {
 		ptr[0] += len;
 
 		var res: IWAArchiveInfo = {
+			/* TODO: technically ID is optional */
 			id: varint_to_i32(ai[1][0].data),
 			messages: []
 		};
@@ -189,6 +191,7 @@ function parse_iwa_file(buf: Uint8Array): IWAArchiveInfo[] {
 	}
 	return out;
 }
+//<<export { parse_iwa_file };
 
 /** Decompress a snappy chunk */
 function parse_snappy_chunk(type: number, buf: Uint8Array): Uint8Array {

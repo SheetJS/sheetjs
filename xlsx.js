@@ -83,53 +83,49 @@ if(typeof $cptable !== 'undefined') {
 }
 var DENSE = null;
 var DIF_XL = true;
-var Base64 = function() {
-  var map = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
-  return {
-    encode: function(input) {
-      var o = "";
-      var c1 = 0, c2 = 0, c3 = 0, e1 = 0, e2 = 0, e3 = 0, e4 = 0;
-      for (var i = 0; i < input.length; ) {
-        c1 = input.charCodeAt(i++);
-        e1 = c1 >> 2;
-        c2 = input.charCodeAt(i++);
-        e2 = (c1 & 3) << 4 | c2 >> 4;
-        c3 = input.charCodeAt(i++);
-        e3 = (c2 & 15) << 2 | c3 >> 6;
-        e4 = c3 & 63;
-        if (isNaN(c2)) {
-          e3 = e4 = 64;
-        } else if (isNaN(c3)) {
-          e4 = 64;
-        }
-        o += map.charAt(e1) + map.charAt(e2) + map.charAt(e3) + map.charAt(e4);
-      }
-      return o;
-    },
-    decode: function(input) {
-      var o = "";
-      var c1 = 0, c2 = 0, c3 = 0, e1 = 0, e2 = 0, e3 = 0, e4 = 0;
-      input = input.replace(/[^\w\+\/\=]/g, "");
-      for (var i = 0; i < input.length; ) {
-        e1 = map.indexOf(input.charAt(i++));
-        e2 = map.indexOf(input.charAt(i++));
-        c1 = e1 << 2 | e2 >> 4;
-        o += String.fromCharCode(c1);
-        e3 = map.indexOf(input.charAt(i++));
-        c2 = (e2 & 15) << 4 | e3 >> 2;
-        if (e3 !== 64) {
-          o += String.fromCharCode(c2);
-        }
-        e4 = map.indexOf(input.charAt(i++));
-        c3 = (e3 & 3) << 6 | e4;
-        if (e4 !== 64) {
-          o += String.fromCharCode(c3);
-        }
-      }
-      return o;
+var Base64_map = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
+function Base64_encode(input) {
+  var o = "";
+  var c1 = 0, c2 = 0, c3 = 0, e1 = 0, e2 = 0, e3 = 0, e4 = 0;
+  for (var i = 0; i < input.length; ) {
+    c1 = input.charCodeAt(i++);
+    e1 = c1 >> 2;
+    c2 = input.charCodeAt(i++);
+    e2 = (c1 & 3) << 4 | c2 >> 4;
+    c3 = input.charCodeAt(i++);
+    e3 = (c2 & 15) << 2 | c3 >> 6;
+    e4 = c3 & 63;
+    if (isNaN(c2)) {
+      e3 = e4 = 64;
+    } else if (isNaN(c3)) {
+      e4 = 64;
     }
-  };
-}();
+    o += Base64_map.charAt(e1) + Base64_map.charAt(e2) + Base64_map.charAt(e3) + Base64_map.charAt(e4);
+  }
+  return o;
+}
+function Base64_decode(input) {
+  var o = "";
+  var c1 = 0, c2 = 0, c3 = 0, e1 = 0, e2 = 0, e3 = 0, e4 = 0;
+  input = input.replace(/[^\w\+\/\=]/g, "");
+  for (var i = 0; i < input.length; ) {
+    e1 = Base64_map.indexOf(input.charAt(i++));
+    e2 = Base64_map.indexOf(input.charAt(i++));
+    c1 = e1 << 2 | e2 >> 4;
+    o += String.fromCharCode(c1);
+    e3 = Base64_map.indexOf(input.charAt(i++));
+    c2 = (e2 & 15) << 4 | e3 >> 2;
+    if (e3 !== 64) {
+      o += String.fromCharCode(c2);
+    }
+    e4 = Base64_map.indexOf(input.charAt(i++));
+    c3 = (e3 & 3) << 6 | e4;
+    if (e4 !== 64) {
+      o += String.fromCharCode(c3);
+    }
+  }
+  return o;
+}
 var has_buf = (function() { return typeof Buffer !== 'undefined' && typeof process !== 'undefined' && typeof process.versions !== 'undefined' && !!process.versions.node; })();
 
 var Buffer_from = (function() {
@@ -1815,7 +1811,7 @@ function read(blob, options) {
 	}
 	switch(type || "base64") {
 		case "file": return read_file(blob, options);
-		case "base64": return parse(s2a(Base64.decode(blob)), options);
+		case "base64": return parse(s2a(Base64_decode(blob)), options);
 		case "binary": return parse(s2a(blob), options);
 	}
 	return parse(blob, options);
@@ -2132,7 +2128,7 @@ function write(cfb, options) {
 	switch(options && options.type || "buffer") {
 		case "file": get_fs(); fs.writeFileSync(options.filename, (o)); return o;
 		case "binary": return typeof o == "string" ? o : a2s(o);
-		case "base64": return Base64.encode(typeof o == "string" ? o : a2s(o));
+		case "base64": return Base64_encode(typeof o == "string" ? o : a2s(o));
 		case "buffer": if(has_buf) return Buffer.isBuffer(o) ? o : Buffer_from(o);
 			/* falls through */
 		case "array": return typeof o == "string" ? s2a(o) : o;
@@ -2841,7 +2837,7 @@ function get_content_type(fi, fp) {
 
 /* 76 character chunks TODO: intertwine encoding */
 function write_base64_76(bstr) {
-	var data = Base64.encode(bstr);
+	var data = Base64_encode(bstr);
 	var o = [];
 	for(var i = 0; i < data.length; i+= 76) o.push(data.slice(i, i+76));
 	return o.join("\r\n") + "\r\n";
@@ -2922,7 +2918,7 @@ function parse_mime(cfb, data, root) {
 	}
 	++di;
 	switch(cte.toLowerCase()) {
-		case 'base64': fdata = s2a(Base64.decode(data.slice(di).join(""))); break;
+		case 'base64': fdata = s2a(Base64_decode(data.slice(di).join(""))); break;
 		case 'quoted-printable': fdata = parse_quoted_printable(data.slice(di)); break;
 		default: throw new Error("Unsupported Content-Transfer-Encoding " + cte);
 	}
@@ -4566,6 +4562,7 @@ function parse_ClipboardFormatOrAnsiString(o) { return parse_ClipboardFormatOrSt
 function parse_ClipboardFormatOrUnicodeString(o) { return parse_ClipboardFormatOrString(o, 2); }
 
 /* [MS-OLEPS] 2.2 PropertyType */
+// Note: some tree shakers cannot handle VT_VECTOR | $CONST, hence extra vars
 //var VT_EMPTY    = 0x0000;
 //var VT_NULL     = 0x0001;
 var VT_I2       = 0x0002;
@@ -4600,6 +4597,8 @@ var VT_CF       = 0x0047;
 //var VT_CLSID    = 0x0048;
 //var VT_VERSIONED_STREAM = 0x0049;
 var VT_VECTOR   = 0x1000;
+var VT_VECTOR_VARIANT = 0x100C;
+var VT_VECTOR_LPSTR   = 0x101E;
 //var VT_ARRAY    = 0x2000;
 
 var VT_STRING   = 0x0050; // 2.3.3.1.11 VtString
@@ -4619,8 +4618,8 @@ var DocSummaryPIDDSI = {
 0x09: { n: 'HiddenCount', t: VT_I4 },
 0x0a: { n: 'MultimediaClipCount', t: VT_I4 },
 0x0b: { n: 'ScaleCrop', t: VT_BOOL },
-0x0c: { n: 'HeadingPairs', t: VT_VECTOR | VT_VARIANT },
-0x0d: { n: 'TitlesOfParts', t: VT_VECTOR | VT_LPSTR },
+0x0c: { n: 'HeadingPairs', t: VT_VECTOR_VARIANT /* VT_VECTOR | VT_VARIANT */ },
+0x0d: { n: 'TitlesOfParts', t: VT_VECTOR_LPSTR /* VT_VECTOR | VT_LPSTR */ },
 0x0e: { n: 'Manager', t: VT_STRING },
 0x0f: { n: 'Company', t: VT_STRING },
 0x10: { n: 'LinksUpToDate', t: VT_BOOL },
@@ -7499,7 +7498,7 @@ function dbf_to_aoa(buf, opts) {
 	var out = [];
 	var d = (new_raw_buf(1));
 	switch(opts.type) {
-		case 'base64': d = s2a(Base64.decode(buf)); break;
+		case 'base64': d = s2a(Base64_decode(buf)); break;
 		case 'binary': d = s2a(buf); break;
 		case 'buffer':
 		case 'array': d = buf; break;
@@ -7829,7 +7828,7 @@ var SYLK = (function() {
 	/* TODO: find an actual specification */
 	function sylk_to_aoa(d, opts) {
 		switch(opts.type) {
-			case 'base64': return sylk_to_aoa_str(Base64.decode(d), opts);
+			case 'base64': return sylk_to_aoa_str(Base64_decode(d), opts);
 			case 'binary': return sylk_to_aoa_str(d, opts);
 			case 'buffer': return sylk_to_aoa_str(has_buf && Buffer.isBuffer(d) ? d.toString('binary') : a2s(d), opts);
 			case 'array': return sylk_to_aoa_str(cc2str(d), opts);
@@ -8032,7 +8031,7 @@ var SYLK = (function() {
 var DIF = (function() {
 	function dif_to_aoa(d, opts) {
 		switch(opts.type) {
-			case 'base64': return dif_to_aoa_str(Base64.decode(d), opts);
+			case 'base64': return dif_to_aoa_str(Base64_decode(d), opts);
 			case 'binary': return dif_to_aoa_str(d, opts);
 			case 'buffer': return dif_to_aoa_str(has_buf && Buffer.isBuffer(d) ? d.toString('binary') : a2s(d), opts);
 			case 'array': return dif_to_aoa_str(cc2str(d), opts);
@@ -8398,7 +8397,7 @@ var PRN = (function() {
 	function prn_to_sheet(d, opts) {
 		var str = "", bytes = opts.type == 'string' ? [0,0,0,0] : firstbyte(d, opts);
 		switch(opts.type) {
-			case 'base64': str = Base64.decode(d); break;
+			case 'base64': str = Base64_decode(d); break;
 			case 'binary': str = d; break;
 			case 'buffer':
 				if(opts.codepage == 65001) str = d.toString('utf8'); // TODO: test if buf
@@ -8476,7 +8475,7 @@ var WK_ = (function() {
 
 	function lotus_to_workbook(d, opts) {
 		switch(opts.type) {
-			case 'base64': return lotus_to_workbook_buf(s2a(Base64.decode(d)), opts);
+			case 'base64': return lotus_to_workbook_buf(s2a(Base64_decode(d)), opts);
 			case 'binary': return lotus_to_workbook_buf(s2a(d), opts);
 			case 'buffer':
 			case 'array': return lotus_to_workbook_buf(d, opts);
@@ -9887,7 +9886,7 @@ function parse_FilePass(blob, length, opts) {
 var RTF = (function() {
 	function rtf_to_sheet(d, opts) {
 		switch(opts.type) {
-			case 'base64': return rtf_to_sheet_str(Base64.decode(d), opts);
+			case 'base64': return rtf_to_sheet_str(Base64_decode(d), opts);
 			case 'binary': return rtf_to_sheet_str(d, opts);
 			case 'buffer': return rtf_to_sheet_str(has_buf && Buffer.isBuffer(d) ? d.toString('binary') : a2s(d), opts);
 			case 'array':  return rtf_to_sheet_str(cc2str(d), opts);
@@ -18029,7 +18028,7 @@ Workbook.WBProps.date1904 = true;
 function parse_xlml(data, opts) {
 	fix_read_opts(opts=opts||{});
 	switch(opts.type||"base64") {
-		case "base64": return parse_xlml_xml(Base64.decode(data), opts);
+		case "base64": return parse_xlml_xml(Base64_decode(data), opts);
 		case "binary": case "buffer": case "file": return parse_xlml_xml(data, opts);
 		case "array": return parse_xlml_xml(a2s(data), opts);
 	}
@@ -19011,7 +19010,7 @@ if(cfb.FullPaths) {
 	WB = CFB.find(cfb, '/Workbook') || CFB.find(cfb, '/Book');
 } else {
 	switch(options.type) {
-		case 'base64': cfb = s2a(Base64.decode(cfb)); break;
+		case 'base64': cfb = s2a(Base64_decode(cfb)); break;
 		case 'binary': cfb = s2a(cfb); break;
 		case 'buffer': break;
 		case 'array': if(!Array.isArray(cfb)) cfb = Array.prototype.slice.call(cfb); break;
@@ -22047,6 +22046,18 @@ function parse_shallow(buf) {
   }
   return out;
 }
+function write_shallow(proto) {
+  var out = [];
+  proto.forEach(function(field, idx) {
+    field.forEach(function(item) {
+      out.push(write_varint49(idx * 8 + item.type));
+      if (item.type == 2)
+        out.push(write_varint49(item.data.length));
+      out.push(item.data);
+    });
+  });
+  return u8concat(out);
+}
 function mappa(data, cb) {
   if (!data)
     return [];
@@ -23187,7 +23198,7 @@ function firstbyte(f,o) {
 	var x = "";
 	switch((o||{}).type || "base64") {
 		case 'buffer': return [f[0], f[1], f[2], f[3], f[4], f[5], f[6], f[7]];
-		case 'base64': x = Base64.decode(f.slice(0,12)); break;
+		case 'base64': x = Base64_decode(f.slice(0,12)); break;
 		case 'binary': x = f; break;
 		case 'array':  return [f[0], f[1], f[2], f[3], f[4], f[5], f[6], f[7]];
 		default: throw new Error("Unrecognized type " + (o && o.type || "undefined"));
@@ -23221,7 +23232,7 @@ function read_plaintext(data, o) {
 function read_plaintext_raw(data, o) {
 	var str = "", bytes = firstbyte(data, o);
 	switch(o.type) {
-		case 'base64': str = Base64.decode(data); break;
+		case 'base64': str = Base64_decode(data); break;
 		case 'binary': str = data; break;
 		case 'buffer': str = data.toString('binary'); break;
 		case 'array': str = cc2str(data); break;
@@ -23234,7 +23245,7 @@ function read_plaintext_raw(data, o) {
 
 function read_utf16(data, o) {
 	var d = data;
-	if(o.type == 'base64') d = Base64.decode(d);
+	if(o.type == 'base64') d = Base64_decode(d);
 	d = $cptable.utils.decode(1200, d.slice(2), 'str');
 	o.type = "binary";
 	return read_plaintext(d, o);
@@ -23359,7 +23370,7 @@ function write_string_type(out, opts, bom) {
 	if(!bom) bom = "";
 	var o = bom + out;
 	switch(opts.type) {
-		case "base64": return Base64.encode(utf8write(o));
+		case "base64": return Base64_encode(utf8write(o));
 		case "binary": return utf8write(o);
 		case "string": return out;
 		case "file": return write_dl(opts.file, o, 'utf8');
@@ -23374,7 +23385,7 @@ function write_string_type(out, opts, bom) {
 
 function write_stxt_type(out, opts) {
 	switch(opts.type) {
-		case "base64": return Base64.encode(out);
+		case "base64": return Base64_encode(out);
 		case "binary": return out;
 		case "string": return out; /* override in sheet_to_txt */
 		case "file": return write_dl(opts.file, out, 'binary');
@@ -23395,7 +23406,7 @@ function write_binary_type(out, opts) {
 			var bstr = "";
 			// $FlowIgnore
 			for(var i = 0; i < out.length; ++i) bstr += String.fromCharCode(out[i]);
-			return opts.type == 'base64' ? Base64.encode(bstr) : opts.type == 'string' ? utf8read(bstr) : bstr;
+			return opts.type == 'base64' ? Base64_encode(bstr) : opts.type == 'string' ? utf8read(bstr) : bstr;
 		case "file": return write_dl(opts.file, out);
 		case "buffer": return out;
 		default: throw new Error("Unrecognized type " + opts.type);

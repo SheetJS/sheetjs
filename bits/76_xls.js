@@ -669,7 +669,7 @@ if(cfb.FullPaths) {
 	WB = CFB.find(cfb, '/Workbook') || CFB.find(cfb, '/Book');
 } else {
 	switch(options.type) {
-		case 'base64': cfb = s2a(Base64.decode(cfb)); break;
+		case 'base64': cfb = s2a(Base64_decode(cfb)); break;
 		case 'binary': cfb = s2a(cfb); break;
 		case 'buffer': break;
 		case 'array': if(!Array.isArray(cfb)) cfb = Array.prototype.slice.call(cfb); break;

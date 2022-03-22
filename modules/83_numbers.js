@@ -162,6 +162,18 @@ function parse_shallow(buf) {
   }
   return out;
 }
+function write_shallow(proto) {
+  var out = [];
+  proto.forEach(function(field, idx) {
+    field.forEach(function(item) {
+      out.push(write_varint49(idx * 8 + item.type));
+      if (item.type == 2)
+        out.push(write_varint49(item.data.length));
+      out.push(item.data);
+    });
+  });
+  return u8concat(out);
+}
 function mappa(data, cb) {
   if (!data)
     return [];

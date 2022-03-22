@@ -57,7 +57,7 @@ function write_string_type(out/*:string*/, opts/*:WriteOpts*/, bom/*:?string*/)/
 	if(!bom) bom = "";
 	var o = bom + out;
 	switch(opts.type) {
-		case "base64": return Base64.encode(utf8write(o));
+		case "base64": return Base64_encode(utf8write(o));
 		case "binary": return utf8write(o);
 		case "string": return out;
 		case "file": return write_dl(opts.file, o, 'utf8');
@@ -72,7 +72,7 @@ function write_string_type(out/*:string*/, opts/*:WriteOpts*/, bom/*:?string*/)/
 
 function write_stxt_type(out/*:string*/, opts/*:WriteOpts*/)/*:any*/ {
 	switch(opts.type) {
-		case "base64": return Base64.encode(out);
+		case "base64": return Base64_encode(out);
 		case "binary": return out;
 		case "string": return out; /* override in sheet_to_txt */
 		case "file": return write_dl(opts.file, out, 'binary');
@@ -93,7 +93,7 @@ function write_binary_type(out, opts/*:WriteOpts*/)/*:any*/ {
 			var bstr = "";
 			// $FlowIgnore
 			for(var i = 0; i < out.length; ++i) bstr += String.fromCharCode(out[i]);
-			return opts.type == 'base64' ? Base64.encode(bstr) : opts.type == 'string' ? utf8read(bstr) : bstr;
+			return opts.type == 'base64' ? Base64_encode(bstr) : opts.type == 'string' ? utf8read(bstr) : bstr;
 		case "file": return write_dl(opts.file, out);
 		case "buffer": return out;
 		default: throw new Error("Unrecognized type " + opts.type);
