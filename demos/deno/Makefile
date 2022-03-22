@@ -1,4 +1,4 @@
-TESTS= x mjs jspm
+TESTS= x mjs
 UNSTABLE= node
 TEST_FILES=number_format_greek.xls
 

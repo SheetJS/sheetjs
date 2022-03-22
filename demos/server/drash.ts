@@ -1,7 +1,7 @@
 /*! sheetjs (C) 2013-present SheetJS -- http://sheetjs.com */
-// @deno-types="https://deno.land/x/sheetjs/types/index.d.ts"
-import { read, utils, set_cptable } from 'https://deno.land/x/sheetjs@v0.18.3/xlsx.mjs';
-import * as cptable from 'https://deno.land/x/sheetjs/dist/cpexcel.full.mjs';
+// @deno-types="https://unpkg.com/xlsx/types/index.d.ts"
+import { read, utils, set_cptable } from 'https://unpkg.com/xlsx/xlsx.mjs';
+import * as cptable from 'https://unpkg.com/xlsx/dist/cpexcel.full.mjs';
 set_cptable(cptable);
 
 import * as Drash from "https://deno.land/x/drash@v2.5.4/mod.ts";

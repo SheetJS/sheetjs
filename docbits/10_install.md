@@ -19,7 +19,6 @@ can be directly added to a page with a `script` tag:
 |    `unpkg` | <https://unpkg.com/xlsx/>                  |
 | `jsDelivr` | <https://jsdelivr.com/package/npm/xlsx>    |
 |    `CDNjs` | <https://cdnjs.com/libraries/xlsx>         |
-|    `packd` | <https://bundle.run/xlsx@latest?name=XLSX> |
 
 For example, `unpkg` makes the latest version available at:
 
@@ -80,14 +79,14 @@ set_cptable(cptable);
 
 **Deno**
 
-The [`sheetjs`](https://deno.land/x/sheetjs) package is hosted by Deno:
+`xlsx.mjs` can be imported in Deno.  It is available from `unpkg`:
 
 ```ts
-// @deno-types="https://deno.land/x/sheetjs/types/index.d.ts"
-import * as XLSX from 'https://deno.land/x/sheetjs/xlsx.mjs'
+// @deno-types="https://unpkg.com/xlsx/types/index.d.ts"
+import * as XLSX from 'https://unpkg.com/xlsx/xlsx.mjs';
 
 /* load the codepage support library for extended support with older formats  */
-import * as cptable from 'https://deno.land/x/sheetjs/dist/cpexcel.full.mjs';
+import * as cptable from 'https://unpkg.com/xlsx/dist/cpexcel.full.mjs';
 XLSX.set_cptable(cptable);
 ```
 

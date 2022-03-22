@@ -1,7 +1,7 @@
 /*! sheetjs (C) 2013-present SheetJS -- http://sheetjs.com */
-// @deno-types="https://deno.land/x/sheetjs/types/index.d.ts"
-import * as XLSX from 'https://deno.land/x/sheetjs/xlsx.mjs';
-import * as cptable from 'https://deno.land/x/sheetjs/dist/cpexcel.full.mjs';
+// @deno-types="https://unpkg.com/xlsx/types/index.d.ts"
+import * as XLSX from 'https://unpkg.com/xlsx/xlsx.mjs';
+import * as cptable from 'https://unpkg.com/xlsx/dist/cpexcel.full.mjs';
 XLSX.set_cptable(cptable);
 
 const filename = Deno.args[0];
