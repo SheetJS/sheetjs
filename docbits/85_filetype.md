@@ -20,7 +20,7 @@ Despite the library name `xlsx`, it supports numerous spreadsheet file formats:
 | Lotus Formatted Text (PRN)                                   |   ✔   |   ✔   |
 | UTF-16 Unicode Text (TXT)                                    |   ✔   |   ✔   |
 | **Other Workbook/Worksheet Formats**                         |:-----:|:-----:|
-| Numbers 3.0+ / iWork 2013+ Spreadsheet (NUMBERS)             |   ✔   |       |
+| Numbers 3.0+ / iWork 2013+ Spreadsheet (NUMBERS)             |   ✔   |   ✔   |
 | OpenDocument Spreadsheet (ODS)                               |   ✔   |   ✔   |
 | Flat XML ODF Spreadsheet (FODS)                              |   ✔   |   ✔   |
 | Uniform Office Format Spreadsheet (标文通 UOS1/UOS2)         |   ✔   |       |
@@ -168,6 +168,8 @@ This format has been used up through the current release (Numbers 11.2).
 The parser focuses on extracting raw data from tables.  Numbers technically
 supports multiple tables in a logical worksheet, including custom titles.  This
 parser will generate one worksheet per Numbers table.
+
+The writer currently exports a small range from the first worksheet.
 
 - **OpenDocument Spreadsheet (ODS/FODS)**
 

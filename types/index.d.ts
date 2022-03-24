@@ -260,6 +260,9 @@ export interface WritingOptions extends CommonOptions, SheetOption {
 
     /** Override workbook properties on save */
     Props?: Properties;
+
+    /** Base64 encoding of NUMBERS base for exports */
+    numbers?: string;
 }
 
 /** Workbook Object */

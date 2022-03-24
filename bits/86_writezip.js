@@ -1,5 +1,6 @@
 function write_zip(wb/*:Workbook*/, opts/*:WriteOpts*/)/*:ZIP*/ {
 	if(opts.bookType == "ods") return write_ods(wb, opts);
+	if(opts.bookType == "numbers") return write_numbers_iwa(wb, opts);
 	if(opts.bookType == "xlsb") return write_zip_xlsxb(wb, opts);
 	return write_zip_xlsx(wb, opts);
 }

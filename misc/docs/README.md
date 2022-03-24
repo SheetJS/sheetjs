@@ -1656,6 +1656,58 @@ stream.pipe(conv); conv.pipe(process.stdout);
 ```
 
 
+
+The NUMBERS writer requires a fairly large base.  The supplementary `xlsx.zahl`
+scripts provide support.  `xlsx.zahl.js` is designed for standalone and NodeJS
+use, while `xlsx.zahl.mjs` is suitable for ESM.
+
+_Browser_
+
+```html
+<meta charset="utf8">
+<script src="xlsx.full.min.js"></script>
+<script src="xlsx.zahl.js"></script>
+<script>
+var wb = XLSX.utils.book_new(); var ws = XLSX.utils.aoa_to_sheet([
+  ["SheetJS", "<3","விரிதாள்"],
+  [72,,"Arbeitsblätter"],
+  [,62,"数据"],
+  [true,false,],
+]); XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
+XLSX.writeFile(wb, "textport.numbers", {numbers: XLSX_ZAHL, compression: true});
+</script>
+```
+
+_Node_
+
+```js
+var XLSX = require("./xlsx.flow");
+var XLSX_ZAHL = require("./dist/xlsx.zahl");
+var wb = XLSX.utils.book_new(); var ws = XLSX.utils.aoa_to_sheet([
+  ["SheetJS", "<3","விரிதாள்"],
+  [72,,"Arbeitsblätter"],
+  [,62,"数据"],
+  [true,false,],
+]); XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
+XLSX.writeFile(wb, "textport.numbers", {numbers: XLSX_ZAHL, compression: true});
+```
+
+_Deno_
+
+```ts
+import * as XLSX from './xlsx.mjs';
+import XLSX_ZAHL from './dist/xlsx.zahl.mjs';
+
+var wb = XLSX.utils.book_new(); var ws = XLSX.utils.aoa_to_sheet([
+  ["SheetJS", "<3","விரிதாள்"],
+  [72,,"Arbeitsblätter"],
+  [,62,"数据"],
+  [true,false,],
+]); XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
+XLSX.writeFile(wb, "textports.numbers", {numbers: XLSX_ZAHL, compression: true});
+```
+
+
 <https://github.com/sheetjs/sheetaki> pipes write streams to nodejs response.
 
 ### Generating JSON and JS Data
@@ -3171,6 +3223,7 @@ The exported `write` and `writeFile` functions accept an options argument:
 |`Props`      |          | Override workbook properties when writing **        |
 |`themeXLSX`  |          | Override theme XML when writing XLSX/XLSB/XLSM **   |
 |`ignoreEC`   |   `true` | Suppress "number as text" errors **                 |
+|`numbers`    |          | Payload for NUMBERS export **                       |
 
 - `bookSST` is slower and more memory intensive, but has better compatibility
   with older versions of iOS Numbers
@@ -3186,6 +3239,8 @@ The exported `write` and `writeFile` functions accept an options argument:
 - Due to a bug in the program, some features like "Text to Columns" will crash
   Excel on worksheets where error conditions are ignored.  The writer will mark
   files to ignore the error by default.  Set `ignoreEC` to `false` to suppress.
+- Due to the size of the data, the NUMBERS data is not included by default. The
+  included `xlsx.zahl.js` and `xlsx.zahl.mjs` scripts include the data.
 
 ### Supported Output Formats
 
@@ -3203,6 +3258,7 @@ output formats.  The specific file type is controlled with `bookType` option:
 | `biff3`    | `.xls`   |   none    | single | Excel 3.0 Worksheet Format      |
 | `biff2`    | `.xls`   |   none    | single | Excel 2.0 Worksheet Format      |
 | `xlml`     | `.xls`   |   none    | multi  | Excel 2003-2004 (SpreadsheetML) |
+| `numbers`  |`.numbers`|    ZIP    | single | Numbers 3.0+ Spreadsheet        |
 | `ods`      | `.ods`   |    ZIP    | multi  | OpenDocument Spreadsheet        |
 | `fods`     | `.fods`  |   none    | multi  | Flat OpenDocument Spreadsheet   |
 | `wk3`      | `.wk3`   |   none    | multi  | Lotus Workbook (WK3)            |
@@ -3725,7 +3781,7 @@ Despite the library name `xlsx`, it supports numerous spreadsheet file formats:
 | Lotus Formatted Text (PRN)                                   |   ✔   |   ✔   |
 | UTF-16 Unicode Text (TXT)                                    |   ✔   |   ✔   |
 | **Other Workbook/Worksheet Formats**                         |:-----:|:-----:|
-| Numbers 3.0+ / iWork 2013+ Spreadsheet (NUMBERS)             |   ✔   |       |
+| Numbers 3.0+ / iWork 2013+ Spreadsheet (NUMBERS)             |   ✔   |   ✔   |
 | OpenDocument Spreadsheet (ODS)                               |   ✔   |   ✔   |
 | Flat XML ODF Spreadsheet (FODS)                              |   ✔   |   ✔   |
 | Uniform Office Format Spreadsheet (标文通 UOS1/UOS2)         |   ✔   |       |
@@ -3871,6 +3927,8 @@ This format has been used up through the current release (Numbers 11.2).
 The parser focuses on extracting raw data from tables.  Numbers technically
 supports multiple tables in a logical worksheet, including custom titles.  This
 parser will generate one worksheet per Numbers table.
+
+The writer currently exports a small range from the first worksheet.
 
 - **OpenDocument Spreadsheet (ODS/FODS)**
 

@@ -13,6 +13,7 @@ The exported `write` and `writeFile` functions accept an options argument:
 |`Props`      |          | Override workbook properties when writing **        |
 |`themeXLSX`  |          | Override theme XML when writing XLSX/XLSB/XLSM **   |
 |`ignoreEC`   |   `true` | Suppress "number as text" errors **                 |
+|`numbers`    |          | Payload for NUMBERS export **                       |
 
 - `bookSST` is slower and more memory intensive, but has better compatibility
   with older versions of iOS Numbers
@@ -28,6 +29,8 @@ The exported `write` and `writeFile` functions accept an options argument:
 - Due to a bug in the program, some features like "Text to Columns" will crash
   Excel on worksheets where error conditions are ignored.  The writer will mark
   files to ignore the error by default.  Set `ignoreEC` to `false` to suppress.
+- Due to the size of the data, the NUMBERS data is not included by default. The
+  included `xlsx.zahl.js` and `xlsx.zahl.mjs` scripts include the data.
 
 ### Supported Output Formats
 
@@ -45,6 +48,7 @@ output formats.  The specific file type is controlled with `bookType` option:
 | `biff3`    | `.xls`   |   none    | single | Excel 3.0 Worksheet Format      |
 | `biff2`    | `.xls`   |   none    | single | Excel 2.0 Worksheet Format      |
 | `xlml`     | `.xls`   |   none    | multi  | Excel 2003-2004 (SpreadsheetML) |
+| `numbers`  |`.numbers`|    ZIP    | single | Numbers 3.0+ Spreadsheet        |
 | `ods`      | `.ods`   |    ZIP    | multi  | OpenDocument Spreadsheet        |
 | `fods`     | `.fods`  |   none    | multi  | Flat OpenDocument Spreadsheet   |
 | `wk3`      | `.wk3`   |   none    | multi  | Lotus Workbook (WK3)            |

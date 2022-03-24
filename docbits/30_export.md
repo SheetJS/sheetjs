@@ -258,5 +258,60 @@ stream.pipe(conv); conv.pipe(process.stdout);
 
 </details>
 
+<details>
+  <summary><b>Exporting NUMBERS files</b> (click to show)</summary>
+
+The NUMBERS writer requires a fairly large base.  The supplementary `xlsx.zahl`
+scripts provide support.  `xlsx.zahl.js` is designed for standalone and NodeJS
+use, while `xlsx.zahl.mjs` is suitable for ESM.
+
+_Browser_
+
+```html
+<meta charset="utf8">
+<script src="xlsx.full.min.js"></script>
+<script src="xlsx.zahl.js"></script>
+<script>
+var wb = XLSX.utils.book_new(); var ws = XLSX.utils.aoa_to_sheet([
+  ["SheetJS", "<3","விரிதாள்"],
+  [72,,"Arbeitsblätter"],
+  [,62,"数据"],
+  [true,false,],
+]); XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
+XLSX.writeFile(wb, "textport.numbers", {numbers: XLSX_ZAHL, compression: true});
+</script>
+```
+
+_Node_
+
+```js
+var XLSX = require("./xlsx.flow");
+var XLSX_ZAHL = require("./dist/xlsx.zahl");
+var wb = XLSX.utils.book_new(); var ws = XLSX.utils.aoa_to_sheet([
+  ["SheetJS", "<3","விரிதாள்"],
+  [72,,"Arbeitsblätter"],
+  [,62,"数据"],
+  [true,false,],
+]); XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
+XLSX.writeFile(wb, "textport.numbers", {numbers: XLSX_ZAHL, compression: true});
+```
+
+_Deno_
+
+```ts
+import * as XLSX from './xlsx.mjs';
+import XLSX_ZAHL from './dist/xlsx.zahl.mjs';
+
+var wb = XLSX.utils.book_new(); var ws = XLSX.utils.aoa_to_sheet([
+  ["SheetJS", "<3","விரிதாள்"],
+  [72,,"Arbeitsblätter"],
+  [,62,"数据"],
+  [true,false,],
+]); XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
+XLSX.writeFile(wb, "textports.numbers", {numbers: XLSX_ZAHL, compression: true});
+```
+
+</details>
+
 <https://github.com/sheetjs/sheetaki> pipes write streams to nodejs response.
 

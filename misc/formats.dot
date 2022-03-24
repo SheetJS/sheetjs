@@ -65,6 +65,7 @@ digraph G {
 		123 -> csf
 		qpw -> csf
 		nums -> csf
+		csf -> nums
 	}
 	subgraph WORKSHEET {
 		edge [color=aquamarine4];

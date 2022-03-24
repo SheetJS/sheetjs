@@ -4,7 +4,20 @@ This log is intended to keep track of backwards-incompatible changes, including
 but not limited to API changes and file location changes.  Minor behavioral
 changes may not be included if they are not expected to break existing code.
 
+## v0.18.5
+
+* Enabled `sideEffects: false` in package.json
+* Basic NUMBERS write support
+
+## v0.18.4
+
 * CSV output omits trailing record separator
+* Properly terminate NodeJS Streams
+* DBF preserve column types on import and use when applicable on export
+
+## v0.18.3
+
+* Removed references to `require` and `process` in browser builds
 
 ## v0.18.2
 

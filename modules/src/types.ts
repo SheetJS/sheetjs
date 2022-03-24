@@ -42,7 +42,10 @@ declare function write_XLWideString(data: string, o?: WritableData): RawData;
 declare function writeuint16(x: number): RawData;
 
 declare function utf8read(x: string): string;
+declare function utf8write(x: string): string;
+
 declare function a2s(a: RawData): string;
+declare function s2a(s: string): RawData;
 
 interface ParseXLMetaOptions {
 	WTF?: number|boolean;

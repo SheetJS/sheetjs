@@ -5,3 +5,5 @@ test_files
 *.[Jj][Pp][Gg]
 *.[Pp][Ll][Ii][Ss][Tt]
 DocumentIdentifier
+xlsx.zahl.*
+src/numbers.ts

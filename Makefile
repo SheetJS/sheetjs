@@ -95,6 +95,8 @@ dist: dist-deps $(TARGET) bower.json ## Prepare JS files for distribution
 	misc/strip_sourcemap.sh dist/$(LIB).mini.min.js
 	@# extendscript
 	cat <(head -n 1 bits/00_header.js) shim.js $(DISTHDR) $(REQS) dist/$(TARGET) > dist/$(LIB).extendscript.js
+	@# zahl
+	cp modules/xlsx.zahl.js modules/xlsx.zahl.mjs dist/
 	@#
 	rm dist/$(TARGET) dist/$(MINITGT)
 

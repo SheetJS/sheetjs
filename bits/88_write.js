@@ -149,6 +149,7 @@ function writeSync(wb/*:Workbook*/, opts/*:?WriteOpts*/) {
 		case 'xlsm':
 		case 'xlam':
 		case 'xlsb':
+		case 'numbers':
 		case 'ods': return write_zip_type(wb, o);
 		default: throw new Error ("Unrecognized bookType |" + o.bookType + "|");
 	}

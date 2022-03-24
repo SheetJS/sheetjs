@@ -44,6 +44,7 @@ program
 	.option('-6, --xlml', 'emit SSML to <sheetname> or <file>.xls (2003 XML)')
 	.option('-T, --fods', 'emit FODS to <sheetname> or <file>.fods (Flat ODS)')
 	.option('--wk3',      'emit WK3  to <sheetname> or <file>.txt (Lotus WK3)')
+	.option('--numbers',  'emit NUMBERS to <sheetname> or <file>.numbers')
 
 	.option('-S, --formulae', 'emit list of values and formulae')
 	.option('-j, --json',     'emit formatted JSON (all fields text)')
@@ -90,6 +91,7 @@ var workbook_formats = [
 	['xls',     'xls',  'xls'],
 	['xla',     'xla',  'xla'],
 	['biff5', 'biff5',  'xls'],
+	['numbers', 'numbers', 'numbers'],
 	['ods',     'ods',  'ods'],
 	['fods',   'fods', 'fods'],
 	['wk3',     'wk3',  'wk3']
@@ -192,6 +194,10 @@ if(program.props) {
 /* full workbook formats */
 workbook_formats.forEach(function(m) { if(program[m[0]] || isfmt(m[0])) {
 		wopts.bookType = m[1];
+		if(wopts.bookType == "numbers") try {
+			var XLSX_ZAHL = require("../dist/xlsx.zahl");
+			wopts.numbers = XLSX_ZAHL;
+		} catch(e) {}
 		if(wb) X.writeFile(wb, program.output || sheetname || ((filename || "") + "." + m[2]), wopts);
 		process.exit(0);
 } });
