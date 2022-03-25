@@ -187,6 +187,8 @@ function parse_shallow(buf) {
 function write_shallow(proto) {
   var out = [];
   proto.forEach(function(field, idx) {
+    if (idx == 0)
+      return;
     field.forEach(function(item) {
       if (!item.data)
         return;
@@ -232,9 +234,11 @@ function parse_iwa_file(buf) {
 function write_iwa_file(ias) {
   var bufs = [];
   ias.forEach(function(ia) {
-    var ai = [];
-    ai[1] = [{ data: write_varint49(ia.id), type: 0 }];
-    ai[2] = [];
+    var ai = [
+      [],
+      [{ data: write_varint49(ia.id), type: 0 }],
+      []
+    ];
     if (ia.merge != null)
       ai[3] = [{ data: write_varint49(+!!ia.merge), type: 0 }];
     var midata = [];
@@ -569,9 +573,10 @@ function parse_TSP_Reference(buf) {
   return parse_varint49(pb[1][0].data);
 }
 function write_TSP_Reference(idx) {
-  var out = [];
-  out[1] = [{ type: 0, data: write_varint49(idx) }];
-  return write_shallow(out);
+  return write_shallow([
+    [],
+    [{ type: 0, data: write_varint49(idx) }]
+  ]);
 }
 function parse_TST_TableDataList(M, root) {
   var pb = parse_shallow(root.data);
@@ -832,6 +837,12 @@ function write_tile_row(tri, data, SST) {
   tri[3][0].data = u8concat(_cell_storage);
   return cnt;
 }
+function write_iwam(type, payload) {
+  return {
+    meta: [[], [{ type: 0, data: write_varint49(type) }]],
+    data: payload
+  };
+}
 function write_numbers_iwa(wb, opts) {
   if (!opts || !opts.numbers)
     throw new Error("Must pass a `numbers` option -- check the README");
@@ -905,10 +916,12 @@ function write_numbers_iwa(wb, opts) {
       });
     });
   });
-  function get_unique_msgid() {
+  function get_unique_msgid(dep) {
     for (var i = 927262; i < 2e6; ++i)
-      if (!dependents[i])
+      if (!dependents[i]) {
+        dependents[i] = dep;
         return i;
+      }
     throw new Error("Too many messages");
   }
   var entry = CFB.find(cfb, dependents[1].location);
@@ -961,18 +974,22 @@ function write_numbers_iwa(wb, opts) {
       cruids[1] = [];
       cruids[2] = [], cruids[3] = [];
       for (var C = 0; C <= range.e.c; ++C) {
-        var uuid = [];
-        uuid[1] = uuid[2] = [{ type: 0, data: write_varint49(C + 420690) }];
-        cruids[1].push({ type: 2, data: write_shallow(uuid) });
+        cruids[1].push({ type: 2, data: write_shallow([
+          [],
+          [{ type: 0, data: write_varint49(C + 420690) }],
+          [{ type: 0, data: write_varint49(C + 420690) }]
+        ]) });
         cruids[2].push({ type: 0, data: write_varint49(C) });
         cruids[3].push({ type: 0, data: write_varint49(C) });
       }
       cruids[4] = [];
       cruids[5] = [], cruids[6] = [];
       for (var R = 0; R <= range.e.r; ++R) {
-        uuid = [];
-        uuid[1] = uuid[2] = [{ type: 0, data: write_varint49(R + 726270) }];
-        cruids[4].push({ type: 2, data: write_shallow(uuid) });
+        cruids[4].push({ type: 2, data: write_shallow([
+          [],
+          [{ type: 0, data: write_varint49(R + 726270) }],
+          [{ type: 0, data: write_varint49(R + 726270) }]
+        ]) });
         cruids[5].push({ type: 0, data: write_varint49(R) });
         cruids[6].push({ type: 0, data: write_varint49(R) });
       }
@@ -1019,6 +1036,32 @@ function write_numbers_iwa(wb, opts) {
       }
       oldbucket.content = compress_iwa_file(write_iwa_file(_x));
       oldbucket.size = oldbucket.content.length;
+      if (ws["!merges"]) {
+        var mergeid = get_unique_msgid({
+          type: 6144,
+          deps: [sheetrootref],
+          location: dependents[sheetrootref].location
+        });
+        var mergedata = [[], []];
+        ws["!merges"].forEach(function(m) {
+          mergedata[1].push({ type: 2, data: write_shallow([
+            [],
+            [{ type: 2, data: write_shallow([
+              [],
+              [{ type: 5, data: new Uint8Array(new Uint16Array([m.s.r, m.s.c]).buffer) }]
+            ]) }],
+            [{ type: 2, data: write_shallow([
+              [],
+              [{ type: 5, data: new Uint8Array(new Uint16Array([m.e.r - m.s.r + 1, m.e.c - m.s.c + 1]).buffer) }]
+            ]) }]
+          ]) });
+        });
+        store[13] = [{ type: 2, data: write_TSP_Reference(mergeid) }];
+        x.push({
+          id: mergeid,
+          messages: [write_iwam(6144, write_shallow(mergedata))]
+        });
+      }
       var sstref = parse_TSP_Reference(store[4][0].data);
       (function() {
         var sentry = CFB.find(cfb, dependents[sstref].location);
@@ -1032,12 +1075,13 @@ function write_numbers_iwa(wb, opts) {
         var sstdata = parse_shallow(sstroot.messages[0].data);
         {
           sstdata[3] = [];
-          var newsst = [];
           SST.forEach(function(str, i) {
-            newsst[1] = [{ type: 0, data: write_varint49(i) }];
-            newsst[2] = [{ type: 0, data: write_varint49(1) }];
-            newsst[3] = [{ type: 2, data: stru8(str) }];
-            sstdata[3].push({ type: 2, data: write_shallow(newsst) });
+            sstdata[3].push({ type: 2, data: write_shallow([
+              [],
+              [{ type: 0, data: write_varint49(i) }],
+              [{ type: 0, data: write_varint49(1) }],
+              [{ type: 2, data: stru8(str) }]
+            ]) });
           });
         }
         sstroot.messages[0].data = write_shallow(sstdata);

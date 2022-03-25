@@ -25,11 +25,11 @@ function stru8(str: string): Uint8Array { return typeof TextEncoder != "undefine
 //<<export { u8str, stru8 };
 
 function u8contains(body: Uint8Array, search: Uint8Array): boolean {
-  outer: for(var L = 0; L <= body.length - search.length; ++L) {
-    for(var j = 0; j < search.length; ++j) if(body[L+j] != search[j]) continue outer;
-    return true;
-  }
-  return false;
+	outer: for(var L = 0; L <= body.length - search.length; ++L) {
+		for(var j = 0; j < search.length; ++j) if(body[L+j] != search[j]) continue outer;
+		return true;
+	}
+	return false;
 }
 //<<export { u8contains }
 
@@ -45,9 +45,9 @@ function u8concat(u8a: Uint8Array[]): Uint8Array {
 
 /** Count the number of bits set (assuming int32_t interpretation) */
 function popcnt(x: number): number {
-  x -= ((x >> 1) & 0x55555555);
-  x = (x & 0x33333333) + ((x >> 2) & 0x33333333);
-  return (((x + (x >> 4)) & 0x0F0F0F0F) * 0x01010101) >>> 24;
+	x -= ((x >> 1) & 0x55555555);
+	x = (x & 0x33333333) + ((x >> 2) & 0x33333333);
+	return (((x + (x >> 4)) & 0x0F0F0F0F) * 0x01010101) >>> 24;
 }
 
 /** Read a 128-bit decimal from the modern cell storage */
@@ -159,6 +159,7 @@ function parse_shallow(buf: Uint8Array): ProtoMessage {
 function write_shallow(proto: ProtoMessage): Uint8Array {
 	var out: Uint8Array[] = [];
 	proto.forEach((field, idx) => {
+		if(idx == 0) return;
 		field.forEach(item => {
 			if(!item.data) return;
 			out.push(write_varint49(idx * 8 + item.type));
@@ -217,9 +218,10 @@ function parse_iwa_file(buf: Uint8Array): IWAArchiveInfo[] {
 function write_iwa_file(ias: IWAArchiveInfo[]): Uint8Array {
 	var bufs: Uint8Array[] = [];
 	ias.forEach(ia => {
-		var ai: ProtoMessage = [];
-		ai[1] = [{data: write_varint49(ia.id), type: 0}];
-		ai[2] = [];
+		var ai: ProtoMessage = [ [],
+			[ {data: write_varint49(ia.id), type: 0} ],
+			[]
+		];
 		if(ia.merge != null) ai[3] = [ { data: write_varint49(+!!ia.merge), type: 0 } ];
 		var midata: Uint8Array[] = [];
 
@@ -333,76 +335,76 @@ function compress_iwa_file(buf: Uint8Array): Uint8Array {
 
 /** Parse "old storage" (version 0..3) */
 function parse_old_storage(buf: Uint8Array, sst: string[], rsst: string[], v: 0|1|2|3): CellObject {
-  var dv = u8_to_dataview(buf);
+	var dv = u8_to_dataview(buf);
 	var flags = dv.getUint32(4, true);
 
-  /* TODO: find the correct field position of number formats, formulae, etc */
-  var data_offset = (v > 1 ? 12 : 8) + popcnt(flags & (v > 1 ? 0x0D8E : 0x018E)) * 4;
+	/* TODO: find the correct field position of number formats, formulae, etc */
+	var data_offset = (v > 1 ? 12 : 8) + popcnt(flags & (v > 1 ? 0x0D8E : 0x018E)) * 4;
 
-  var ridx = -1, sidx = -1, ieee = NaN, dt = new Date(2001, 0, 1);
-  if(flags & 0x0200) { ridx = dv.getUint32(data_offset,  true); data_offset += 4; }
-  data_offset += popcnt(flags & (v > 1 ? 0x3000 : 0x1000)) * 4;
-  if(flags & 0x0010) { sidx = dv.getUint32(data_offset,  true); data_offset += 4; }
-  if(flags & 0x0020) { ieee = dv.getFloat64(data_offset, true); data_offset += 8; }
-  if(flags & 0x0040) { dt.setTime(dt.getTime() +  dv.getFloat64(data_offset, true) * 1000); data_offset += 8; }
+	var ridx = -1, sidx = -1, ieee = NaN, dt = new Date(2001, 0, 1);
+	if(flags & 0x0200) { ridx = dv.getUint32(data_offset,  true); data_offset += 4; }
+	data_offset += popcnt(flags & (v > 1 ? 0x3000 : 0x1000)) * 4;
+	if(flags & 0x0010) { sidx = dv.getUint32(data_offset,  true); data_offset += 4; }
+	if(flags & 0x0020) { ieee = dv.getFloat64(data_offset, true); data_offset += 8; }
+	if(flags & 0x0040) { dt.setTime(dt.getTime() +  dv.getFloat64(data_offset, true) * 1000); data_offset += 8; }
 
-  var ret: CellObject;
-  switch(buf[2]) {
-    case 0: break; // return { t: "z" }; // blank?
-    case 2: ret = { t: "n", v: ieee }; break; // number
-    case 3: ret = { t: "s", v: sst[sidx] }; break; // string
-    case 5: ret = { t: "d", v: dt }; break; // date-time
-    case 6: ret = { t: "b", v: ieee > 0 }; break; // boolean
-    case 7: ret = { t: "n", v: ieee / 86400 }; break; // duration in seconds TODO: emit [hh]:[mm] style format with adjusted value
-    case 8: ret = { t: "e", v: 0}; break; // "formula error" TODO: enumerate and map errors to csf equivalents
-    case 9: { // "automatic"?
-      if(ridx > -1) ret = { t: "s", v: rsst[ridx] };
-      else if(sidx > -1) ret = { t: "s", v: sst[sidx] };
-      else if(!isNaN(ieee)) ret = { t: "n", v: ieee };
-      else throw new Error(`Unsupported cell type ${buf.slice(0,4)}`);
-    } break;
-    default: throw new Error(`Unsupported cell type ${buf.slice(0,4)}`);
-  }
-  /* TODO: Some fields appear after the cell data */
+	var ret: CellObject;
+	switch(buf[2]) {
+		case 0: break; // return { t: "z" }; // blank?
+		case 2: ret = { t: "n", v: ieee }; break; // number
+		case 3: ret = { t: "s", v: sst[sidx] }; break; // string
+		case 5: ret = { t: "d", v: dt }; break; // date-time
+		case 6: ret = { t: "b", v: ieee > 0 }; break; // boolean
+		case 7: ret = { t: "n", v: ieee / 86400 }; break; // duration in seconds TODO: emit [hh]:[mm] style format with adjusted value
+		case 8: ret = { t: "e", v: 0}; break; // "formula error" TODO: enumerate and map errors to csf equivalents
+		case 9: { // "automatic"?
+			if(ridx > -1) ret = { t: "s", v: rsst[ridx] };
+			else if(sidx > -1) ret = { t: "s", v: sst[sidx] };
+			else if(!isNaN(ieee)) ret = { t: "n", v: ieee };
+			else throw new Error(`Unsupported cell type ${buf.slice(0,4)}`);
+		} break;
+		default: throw new Error(`Unsupported cell type ${buf.slice(0,4)}`);
+	}
+	/* TODO: Some fields appear after the cell data */
 
-  return ret;
+	return ret;
 }
 
 /** Parse "new storage" (version 5) */
 function parse_new_storage(buf: Uint8Array, sst: string[], rsst: string[]): CellObject {
-  var dv = u8_to_dataview(buf);
-  var flags = dv.getUint32(8, true);
+	var dv = u8_to_dataview(buf);
+	var flags = dv.getUint32(8, true);
 
-  /* TODO: find the correct field position of number formats, formulae, etc */
-  var data_offset = 12;
+	/* TODO: find the correct field position of number formats, formulae, etc */
+	var data_offset = 12;
 
-  var ridx = -1, sidx = -1, d128 = NaN, ieee = NaN, dt = new Date(2001, 0, 1);
+	var ridx = -1, sidx = -1, d128 = NaN, ieee = NaN, dt = new Date(2001, 0, 1);
 
-  if(flags & 0x0001) { d128 = readDecimal128LE(buf, data_offset); data_offset += 16; }
-  if(flags & 0x0002) { ieee = dv.getFloat64(data_offset, true); data_offset += 8; }
-  if(flags & 0x0004) { dt.setTime(dt.getTime() +  dv.getFloat64(data_offset, true) * 1000); data_offset += 8; }
-  if(flags & 0x0008) { sidx = dv.getUint32(data_offset,  true); data_offset += 4; }
-  if(flags & 0x0010) { ridx = dv.getUint32(data_offset,  true); data_offset += 4; }
+	if(flags & 0x0001) { d128 = readDecimal128LE(buf, data_offset); data_offset += 16; }
+	if(flags & 0x0002) { ieee = dv.getFloat64(data_offset, true); data_offset += 8; }
+	if(flags & 0x0004) { dt.setTime(dt.getTime() +  dv.getFloat64(data_offset, true) * 1000); data_offset += 8; }
+	if(flags & 0x0008) { sidx = dv.getUint32(data_offset,  true); data_offset += 4; }
+	if(flags & 0x0010) { ridx = dv.getUint32(data_offset,  true); data_offset += 4; }
 
-  var ret: CellObject;
-  switch(buf[1]) {
-    case 0: break; // return { t: "z" }; // blank?
-    case 2: ret = { t: "n", v: d128 }; break; // number
-    case 3: ret = { t: "s", v: sst[sidx] }; break; // string
-    case 5: ret = { t: "d", v: dt }; break; // date-time
-    case 6: ret = { t: "b", v: ieee > 0 }; break; // boolean
-    case 7: ret = { t: "n", v: ieee / 86400 }; break;  // duration in seconds TODO: emit [hh]:[mm] style format with adjusted value
-    case 8: ret = { t: "e", v: 0}; break; // "formula error" TODO: enumerate and map errors to csf equivalents
-    case 9: { // "automatic"?
-      if(ridx > -1) ret = { t: "s", v: rsst[ridx] };
-      else throw new Error(`Unsupported cell type ${buf[1]} : ${flags & 0x1F} : ${buf.slice(0,4)}`);
-    } break;
-    case 10: ret = { t: "n", v: d128 }; break; // currency
-    default: throw new Error(`Unsupported cell type ${buf[1]} : ${flags & 0x1F} : ${buf.slice(0,4)}`);
-  }
-  /* TODO: All styling fields appear after the cell data */
+	var ret: CellObject;
+	switch(buf[1]) {
+		case 0: break; // return { t: "z" }; // blank?
+		case 2: ret = { t: "n", v: d128 }; break; // number
+		case 3: ret = { t: "s", v: sst[sidx] }; break; // string
+		case 5: ret = { t: "d", v: dt }; break; // date-time
+		case 6: ret = { t: "b", v: ieee > 0 }; break; // boolean
+		case 7: ret = { t: "n", v: ieee / 86400 }; break;  // duration in seconds TODO: emit [hh]:[mm] style format with adjusted value
+		case 8: ret = { t: "e", v: 0}; break; // "formula error" TODO: enumerate and map errors to csf equivalents
+		case 9: { // "automatic"?
+			if(ridx > -1) ret = { t: "s", v: rsst[ridx] };
+			else throw new Error(`Unsupported cell type ${buf[1]} : ${flags & 0x1F} : ${buf.slice(0,4)}`);
+		} break;
+		case 10: ret = { t: "n", v: d128 }; break; // currency
+		default: throw new Error(`Unsupported cell type ${buf[1]} : ${flags & 0x1F} : ${buf.slice(0,4)}`);
+	}
+	/* TODO: All styling fields appear after the cell data */
 
-  return ret;
+	return ret;
 }
 function write_new_storage(cell: CellObject, sst: string[]): Uint8Array {
 	var out = new Uint8Array(32), dv = u8_to_dataview(out), l = 12, flags = 0;
@@ -434,12 +436,12 @@ function write_old_storage(cell: CellObject, sst: string[]): Uint8Array {
 }
 //<<export { write_new_storage, write_old_storage };
 function parse_cell_storage(buf: Uint8Array, sst: string[], rsst: string[]): CellObject {
-  switch(buf[0]) {
-    case 0: case 1:
-    case 2: case 3: return parse_old_storage(buf, sst, rsst, buf[0]);
-    case 5: return parse_new_storage(buf, sst, rsst);
-    default: throw new Error(`Unsupported payload version ${buf[0]}`);
-  }
+	switch(buf[0]) {
+		case 0: case 1:
+		case 2: case 3: return parse_old_storage(buf, sst, rsst, buf[0]);
+		case 5: return parse_new_storage(buf, sst, rsst);
+		default: throw new Error(`Unsupported payload version ${buf[0]}`);
+	}
 }
 
 /** .TSS.StylesheetArchive */
@@ -453,9 +455,10 @@ function parse_TSP_Reference(buf: Uint8Array): number {
 	return parse_varint49(pb[1][0].data);
 }
 function write_TSP_Reference(idx: number): Uint8Array {
-	var out: ProtoMessage = [];
-	out[1] = [ { type: 0, data: write_varint49(idx) } ];
-	return write_shallow(out)
+	return write_shallow([
+		[],
+		[ { type: 0, data: write_varint49(idx) } ]
+	]);
 }
 //<<export { parse_TSP_Reference, write_TSP_Reference };
 
@@ -682,18 +685,18 @@ function parse_numbers_iwa(cfb: CFB$Container): WorkBook {
 //<<export { parse_numbers_iwa };
 
 interface DependentInfo {
-  deps: number[];
-  location: string;
-  type: number;
+	deps: number[];
+	location: string;
+	type: number;
 }
 
 function write_tile_row(tri: ProtoMessage, data: any[], SST: string[]): number {
-  if(!tri[6]?.[0] || !tri[7]?.[0]) throw "Mutation only works on post-BNC storages!";
+	if(!tri[6]?.[0] || !tri[7]?.[0]) throw "Mutation only works on post-BNC storages!";
 	var wide_offsets = tri[8]?.[0]?.data && varint_to_i32(tri[8][0].data) > 0 || false;
-  if(wide_offsets) throw "Math only works with normal offsets";
+	if(wide_offsets) throw "Math only works with normal offsets";
 	var cnt = 0;
-  var dv = u8_to_dataview(tri[7][0].data), last_offset = 0, cell_storage: Uint8Array[] = [];
-  var _dv = u8_to_dataview(tri[4][0].data), _last_offset = 0, _cell_storage: Uint8Array[] = [];
+	var dv = u8_to_dataview(tri[7][0].data), last_offset = 0, cell_storage: Uint8Array[] = [];
+	var _dv = u8_to_dataview(tri[4][0].data), _last_offset = 0, _cell_storage: Uint8Array[] = [];
 	for(var C = 0; C < data.length; ++C) {
 		if(data[C] == null) { dv.setUint16(C*2, 0xFFFF, true); _dv.setUint16(C*2, 0xFFFF); continue; }
 		dv.setUint16(C*2, last_offset, true);
@@ -727,6 +730,13 @@ function write_tile_row(tri: ProtoMessage, data: any[], SST: string[]): number {
 	tri[6][0].data = u8concat(cell_storage);
 	tri[3][0].data = u8concat(_cell_storage);
 	return cnt;
+}
+
+function write_iwam(type: number, payload: Uint8Array): IWAMessage {
+	return {
+		meta: [ [], [ { type: 0, data: write_varint49(type) } ] ],
+		data: payload
+	};
 }
 
 function write_numbers_iwa(wb: WorkBook, opts: any): CFB$Container {
@@ -784,49 +794,52 @@ function write_numbers_iwa(wb: WorkBook, opts: any): CFB$Container {
 		});
 	});
 
-	function get_unique_msgid() {
-		for(var i = 927262; i < 2000000; ++i) if(!dependents[i]) return i;
+	function get_unique_msgid(dep: DependentInfo) {
+		for(var i = 927262; i < 2000000; ++i) if(!dependents[i]) {
+			dependents[i] = dep;
+			return i;
+		}
 		throw new Error("Too many messages");
 	}
 
 	/* .TN.DocumentArchive */
 	var entry = CFB.find(cfb, dependents[1].location);
-  var x = parse_iwa_file(decompress_iwa_file(entry.content as Uint8Array));
-  var docroot: IWAArchiveInfo;
-  for(var xi = 0; xi < x.length; ++xi) {
-    var packet = x[xi];
-    if(packet.id == 1) docroot = packet;
-  }
+	var x = parse_iwa_file(decompress_iwa_file(entry.content as Uint8Array));
+	var docroot: IWAArchiveInfo;
+	for(var xi = 0; xi < x.length; ++xi) {
+		var packet = x[xi];
+		if(packet.id == 1) docroot = packet;
+	}
 
 	/* .TN.SheetArchive */
-  var sheetrootref = parse_TSP_Reference(parse_shallow(docroot.messages[0].data)[1][0].data);
-  entry = CFB.find(cfb, dependents[sheetrootref].location);
-  x = parse_iwa_file(decompress_iwa_file(entry.content as Uint8Array));
-  for(xi = 0; xi < x.length; ++xi) {
-    packet = x[xi];
-    if(packet.id == sheetrootref) docroot = packet;
-  }
+	var sheetrootref = parse_TSP_Reference(parse_shallow(docroot.messages[0].data)[1][0].data);
+	entry = CFB.find(cfb, dependents[sheetrootref].location);
+	x = parse_iwa_file(decompress_iwa_file(entry.content as Uint8Array));
+	for(xi = 0; xi < x.length; ++xi) {
+		packet = x[xi];
+		if(packet.id == sheetrootref) docroot = packet;
+	}
 
 	/* .TST.TableInfoArchive */
-  sheetrootref = parse_TSP_Reference(parse_shallow(docroot.messages[0].data)[2][0].data);
-  entry = CFB.find(cfb, dependents[sheetrootref].location);
-  x = parse_iwa_file(decompress_iwa_file(entry.content as Uint8Array));
-  for(xi = 0; xi < x.length; ++xi) {
-    packet = x[xi];
-    if(packet.id == sheetrootref) docroot = packet;
-  }
+	sheetrootref = parse_TSP_Reference(parse_shallow(docroot.messages[0].data)[2][0].data);
+	entry = CFB.find(cfb, dependents[sheetrootref].location);
+	x = parse_iwa_file(decompress_iwa_file(entry.content as Uint8Array));
+	for(xi = 0; xi < x.length; ++xi) {
+		packet = x[xi];
+		if(packet.id == sheetrootref) docroot = packet;
+	}
 
 	/* .TST.TableModelArchive */
-  sheetrootref = parse_TSP_Reference(parse_shallow(docroot.messages[0].data)[2][0].data);
-  entry = CFB.find(cfb, dependents[sheetrootref].location);
-  x = parse_iwa_file(decompress_iwa_file(entry.content as Uint8Array));
-  for(xi = 0; xi < x.length; ++xi) {
-    packet = x[xi];
-    if(packet.id == sheetrootref) docroot = packet;
-  }
+	sheetrootref = parse_TSP_Reference(parse_shallow(docroot.messages[0].data)[2][0].data);
+	entry = CFB.find(cfb, dependents[sheetrootref].location);
+	x = parse_iwa_file(decompress_iwa_file(entry.content as Uint8Array));
+	for(xi = 0; xi < x.length; ++xi) {
+		packet = x[xi];
+		if(packet.id == sheetrootref) docroot = packet;
+	}
 
-  var pb = parse_shallow(docroot.messages[0].data);
-  {
+	var pb = parse_shallow(docroot.messages[0].data);
+	{
 		pb[6][0].data = write_varint49(range.e.r + 1);
 		pb[7][0].data = write_varint49(range.e.c + 1);
 		// pb[22] = [ { type: 0, data: write_varint49(1) } ]; // enables table display
@@ -842,17 +855,19 @@ function write_numbers_iwa(wb: WorkBook, opts: any): CFB$Container {
 			var cruids = parse_shallow(_x[j].messages[0].data);
 			cruids[1] = []; cruids[2] = [], cruids[3] = [];
 			for(var C = 0; C <= range.e.c; ++C) {
-				var uuid: ProtoMessage = [];
-				uuid[1] = uuid[2] = [ { type: 0, data: write_varint49(C + 420690) } ]
-				cruids[1].push({type: 2, data: write_shallow(uuid)})
+				cruids[1].push({type: 2, data: write_shallow([ [],
+					[ { type: 0, data: write_varint49(C + 420690) } ],
+					[ { type: 0, data: write_varint49(C + 420690) } ]
+				])});
 				cruids[2].push({type: 0, data: write_varint49(C)});
 				cruids[3].push({type: 0, data: write_varint49(C)});
 			}
 			cruids[4] = []; cruids[5] = [], cruids[6] = [];
 			for(var R = 0; R <= range.e.r; ++R) {
-				uuid = [];
-				uuid[1] = uuid[2] = [ { type: 0, data: write_varint49(R + 726270)} ];
-				cruids[4].push({type: 2, data: write_shallow(uuid)})
+				cruids[4].push({type: 2, data: write_shallow([ [],
+					[ { type: 0, data: write_varint49(R + 726270)} ],
+					[ { type: 0, data: write_varint49(R + 726270)} ]			
+				])});
 				cruids[5].push({type: 0, data: write_varint49(R)});
 				cruids[6].push({type: 0, data: write_varint49(R)});
 			}
@@ -861,8 +876,8 @@ function write_numbers_iwa(wb: WorkBook, opts: any): CFB$Container {
 		oldbucket.content = compress_iwa_file(write_iwa_file(_x)); oldbucket.size = oldbucket.content.length;
 		delete pb[46];
 
-    var store = parse_shallow(pb[4][0].data);
-    {
+		var store = parse_shallow(pb[4][0].data);
+		{
 			store[7][0].data = write_varint49(range.e.r + 1);
 			var row_headers = parse_shallow(store[1][0].data);
 			var row_header_ref = parse_TSP_Reference(row_headers[2][0].data);
@@ -897,55 +912,76 @@ function write_numbers_iwa(wb: WorkBook, opts: any): CFB$Container {
 			}
 			oldbucket.content = compress_iwa_file(write_iwa_file(_x)); oldbucket.size = oldbucket.content.length;
 
+			if(ws["!merges"]) {
+				var mergeid = get_unique_msgid({
+					type: 6144,
+					deps: [sheetrootref],
+					location: dependents[sheetrootref].location
+				});
+				var mergedata: ProtoMessage = [ [], [] ];
+				ws["!merges"].forEach(m => { mergedata[1].push({ type: 2, data: write_shallow([ [],
+					[{ type: 2, data: write_shallow([ [],
+						[{ type: 5, data: new Uint8Array(new Uint16Array([m.s.r, m.s.c]).buffer) }],
+					])}],
+					[{ type: 2, data: write_shallow([ [],
+						[{ type: 5, data: new Uint8Array(new Uint16Array([m.e.r - m.s.r + 1, m.e.c - m.s.c + 1]).buffer) }],
+					]) }]
+				]) }); });
+				store[13] = [ { type: 2, data: write_TSP_Reference(mergeid) } ];
+				x.push({
+					id: mergeid,
+					messages: [ write_iwam(6144, write_shallow(mergedata)) ]
+				});
+			}
 
-      /* ref to string table */
-      var sstref = parse_TSP_Reference(store[4][0].data);
-      (() => {
-        var sentry = CFB.find(cfb, dependents[sstref].location);
-        var sx = parse_iwa_file(decompress_iwa_file(sentry.content as Uint8Array));
-        var sstroot: IWAArchiveInfo;
-        for(var sxi = 0; sxi < sx.length; ++sxi) {
-          var packet = sx[sxi];
-          if(packet.id == sstref) sstroot = packet;
-        }
+			/* ref to string table */
+			var sstref = parse_TSP_Reference(store[4][0].data);
+			(() => {
+				var sentry = CFB.find(cfb, dependents[sstref].location);
+				var sx = parse_iwa_file(decompress_iwa_file(sentry.content as Uint8Array));
+				var sstroot: IWAArchiveInfo;
+				for(var sxi = 0; sxi < sx.length; ++sxi) {
+					var packet = sx[sxi];
+					if(packet.id == sstref) sstroot = packet;
+				}
 
-        var sstdata = parse_shallow(sstroot.messages[0].data);
-        {
-          sstdata[3] = [];
-          var newsst: ProtoMessage = [];
+				var sstdata = parse_shallow(sstroot.messages[0].data);
+				{
+					sstdata[3] = [];
 					SST.forEach((str, i) => {
-						newsst[1] = [ { type: 0, data: write_varint49(i) } ];
-						newsst[2] = [ { type: 0, data: write_varint49(1) } ];
-						newsst[3] = [ { type: 2, data: stru8(str) } ];
-						sstdata[3].push({type: 2, data: write_shallow(newsst)});
+						sstdata[3].push({type: 2, data: write_shallow([ [], 
+							[ { type: 0, data: write_varint49(i) } ],
+							[ { type: 0, data: write_varint49(1) } ],
+							[ { type: 2, data: stru8(str) } ]
+						])});
 					});
-        }
-        sstroot.messages[0].data = write_shallow(sstdata);
+				}
+				sstroot.messages[0].data = write_shallow(sstdata);
 
-        var sy = write_iwa_file(sx);
-        var raw3 = compress_iwa_file(sy);
-        sentry.content = raw3; sentry.size = sentry.content.length;
-      })();
+				var sy = write_iwa_file(sx);
+				var raw3 = compress_iwa_file(sy);
+				sentry.content = raw3; sentry.size = sentry.content.length;
+			})();
 
-      var tile = parse_shallow(store[3][0].data); // TileStorage
-      {
-        var t = tile[1][0];
-        delete tile[2];
-        var tl = parse_shallow(t.data); // first Tile
-        {
-          var tileref = parse_TSP_Reference(tl[2][0].data);
-          (() => {
-            var tentry = CFB.find(cfb, dependents[tileref].location);
-            var tx = parse_iwa_file(decompress_iwa_file(tentry.content as Uint8Array));
-            var tileroot: IWAArchiveInfo;
-            for(var sxi = 0; sxi < tx.length; ++sxi) {
-              var packet = tx[sxi];
-              if(packet.id == tileref) tileroot = packet;
-            }
+			var tile = parse_shallow(store[3][0].data); // TileStorage
+			{
+				var t = tile[1][0];
+				delete tile[2];
+				var tl = parse_shallow(t.data); // first Tile
+				{
+					var tileref = parse_TSP_Reference(tl[2][0].data);
+					(() => {
+						var tentry = CFB.find(cfb, dependents[tileref].location);
+						var tx = parse_iwa_file(decompress_iwa_file(tentry.content as Uint8Array));
+						var tileroot: IWAArchiveInfo;
+						for(var sxi = 0; sxi < tx.length; ++sxi) {
+							var packet = tx[sxi];
+							if(packet.id == tileref) tileroot = packet;
+						}
 
-            // .TST.Tile
-            var tiledata = parse_shallow(tileroot.messages[0].data);
-            {
+						// .TST.Tile
+						var tiledata = parse_shallow(tileroot.messages[0].data);
+						{
 							delete tiledata[6]; delete tile[7];
 							var rowload = new Uint8Array(tiledata[5][0].data);
 							tiledata[5] = [];
@@ -960,26 +996,26 @@ function write_numbers_iwa(wb: WorkBook, opts: any): CFB$Container {
 							tiledata[2] = [{type: 0, data: write_varint49(range.e.r + 1)}];
 							tiledata[3] = [{type: 0, data: write_varint49(cnt)}];
 							tiledata[4] = [{type: 0, data: write_varint49(range.e.r + 1)}];
-            }
-            tileroot.messages[0].data = write_shallow(tiledata);
+						}
+						tileroot.messages[0].data = write_shallow(tiledata);
 
-            var ty = write_iwa_file(tx);
-            var raw3 = compress_iwa_file(ty);
-            tentry.content = raw3; tentry.size = tentry.content.length;
-            //throw dependents[tileref];
-          })();
-        }
-        t.data = write_shallow(tl);
-      }
-      store[3][0].data = write_shallow(tile);
-    }
-    pb[4][0].data = write_shallow(store);
-  }
-  docroot.messages[0].data = write_shallow(pb);
+						var ty = write_iwa_file(tx);
+						var raw3 = compress_iwa_file(ty);
+						tentry.content = raw3; tentry.size = tentry.content.length;
+						//throw dependents[tileref];
+					})();
+				}
+				t.data = write_shallow(tl);
+			}
+			store[3][0].data = write_shallow(tile);
+		}
+		pb[4][0].data = write_shallow(store);
+	}
+	docroot.messages[0].data = write_shallow(pb);
 
-  var y = write_iwa_file(x);
-  var raw3 = compress_iwa_file(y);
-  entry.content = raw3; entry.size = entry.content.length;
+	var y = write_iwa_file(x);
+	var raw3 = compress_iwa_file(y);
+	entry.content = raw3; entry.size = entry.content.length;
 
 	return cfb;
 }
