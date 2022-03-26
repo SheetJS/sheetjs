@@ -13,7 +13,7 @@ declare var before:(test:EmptyFunc)=>void;
 declare var afterEach:(test:EmptyFunc)=>void;
 declare var cptable: any;
 */
-var X;
+var X, XLSX_ZAHL = XLSX_ZAHL_PAYLOAD;
 var modp = './';
 var fs = require('fs'), assert = require('assert');
 describe('source',function(){it('should load',function(){X=require(modp);});});
@@ -1544,9 +1544,9 @@ describe('roundtrip features', function() {
 	}); });
 
 	describe('should preserve merge cells', function() {
-		["xlsx", "xlsb", "xlml", "ods", "biff8"].forEach(function(f) { it(f, function() {
+		["xlsx", "xlsb", "xlml", "ods", "biff8", "numbers"].forEach(function(f) { it(f, function() {
 			var wb1 = X.read(fs.readFileSync(paths.mcxlsx), {type:TYPE});
-			var wb2 = X.read(X.write(wb1,{bookType:f,type:'binary'}),{type:'binary'});
+			var wb2 = X.read(X.write(wb1,{bookType:f,type:'binary',numbers:XLSX_ZAHL}),{type:'binary'});
 			var m1 = wb1.Sheets.Merge['!merges'].map(X.utils.encode_range);
 			var m2 = wb2.Sheets.Merge['!merges'].map(X.utils.encode_range);
 			assert.equal(m1.length, m2.length);
@@ -1741,6 +1741,8 @@ var password_files = [
 ];
 describe('invalid files', function() {
 	describe('parse', function() { [
+		['KEY files', 'numbers/Untitled.key'],
+		['PAGES files', 'numbers/Untitled.pages'],
 		['password', 'apachepoi_password.xls'],
 		['passwords', 'apachepoi_xor-encryption-abc.xls'],
 		['DOC files', 'word_doc.doc']

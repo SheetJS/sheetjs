@@ -60,7 +60,7 @@ function readDecimal128LE(buf: Uint8Array, offset: number): number {
 /** Write a 128-bit decimal to the modern cell storage */
 function writeDecimal128LE(buf: Uint8Array, offset: number, value: number): void {
 	// TODO: something more correct than this
-	var exp = Math.floor(value == 0 ? 0 : /*Math.log10*/Math.LOG10E * Math.log(Math.abs(value))) + 0x1820 - 20;
+	var exp = Math.floor(value == 0 ? 0 : /*Math.log10*/Math.LOG10E * Math.log(Math.abs(value))) + 0x1820 - 16;
 	var mantissa = (value / Math.pow(10, exp - 0x1820));
 	buf[offset+15] |= exp >> 7;
 	buf[offset+14] |= (exp & 0x7F) << 1;
@@ -590,6 +590,23 @@ function parse_TST_TableModelArchive(M: MessageSpace, root: IWAMessage, ws: Work
 		});
 		_R += _tile.nrows;
 	});
+
+	if(store[13]?.[0]) {
+		var ref = M[parse_TSP_Reference(store[13][0].data)][0];
+		var mtype = varint_to_i32(ref.meta[1][0].data);
+		if(mtype != 6144) throw new Error(`Expected merge type 6144, found ${mtype}`);
+		ws["!merges"] = parse_shallow(ref.data)?.[1].map(pi => {
+			var merge = parse_shallow(pi.data);
+			var origin = u8_to_dataview(parse_shallow(merge[1][0].data)[1][0].data), size = u8_to_dataview(parse_shallow(merge[2][0].data)[1][0].data);
+			return {
+				s: { r: origin.getUint16(0, true), c: origin.getUint16(2, true) },
+				e: {
+					r: origin.getUint16(0, true) + size.getUint16(0, true) - 1,
+					c: origin.getUint16(2, true) + size.getUint16(2, true) - 1
+				}
+			};
+		});
+	}
 }
 
 /** .TST.TableInfoArchive (6000) */
@@ -628,6 +645,7 @@ function parse_TN_SheetArchive(M: MessageSpace, root: IWAMessage): NSheet {
 function parse_TN_DocumentArchive(M: MessageSpace, root: IWAMessage): WorkBook {
 	var out = book_new();
 	var pb = parse_shallow(root.data);
+	if(pb[2]?.[0]) throw new Error("Keynote presentations are not supported");
 
 	// var stylesheet = mappa(pb[4], parse_TSP_Reference)[0];
 	// if(varint_to_i32(M[stylesheet][0].meta[1][0].data) == 401) parse_TSS_StylesheetArchive(M, M[stylesheet][0]);
@@ -668,6 +686,7 @@ function parse_numbers_iwa(cfb: CFB$Container): WorkBook {
 	if(!indices.length) throw new Error("File has no messages");
 
 	/* find document root */
+	if(M?.[1]?.[0]?.meta?.[1]?.[0].data && varint_to_i32(M[1][0].meta[1][0].data) == 10000) throw new Error("Pages documents are not supported");
 	var docroot: IWAMessage = M?.[1]?.[0]?.meta?.[1]?.[0].data && varint_to_i32(M[1][0].meta[1][0].data) == 1 && M[1][0];
 	if(!docroot) indices.forEach((idx) => {
 		M[idx].forEach((iwam) => {
@@ -820,8 +839,16 @@ function write_numbers_iwa(wb: WorkBook, opts: any): CFB$Container {
 		if(packet.id == sheetrootref) docroot = packet;
 	}
 
+	/* write worksheet name */
+	var sheetref = parse_shallow(docroot.messages[0].data);
+	{
+		sheetref[1] = [ { type: 2, data: stru8(wb.SheetNames[0]) }];
+	}
+	docroot.messages[0].data = write_shallow(sheetref);
+	entry.content = compress_iwa_file(write_iwa_file(x)); entry.size = entry.content.length;
+
 	/* .TST.TableInfoArchive */
-	sheetrootref = parse_TSP_Reference(parse_shallow(docroot.messages[0].data)[2][0].data);
+	sheetrootref = parse_TSP_Reference(sheetref[2][0].data);
 	entry = CFB.find(cfb, dependents[sheetrootref].location);
 	x = parse_iwa_file(decompress_iwa_file(entry.content as Uint8Array));
 	for(xi = 0; xi < x.length; ++xi) {
@@ -958,9 +985,7 @@ function write_numbers_iwa(wb: WorkBook, opts: any): CFB$Container {
 				}
 				sstroot.messages[0].data = write_shallow(sstdata);
 
-				var sy = write_iwa_file(sx);
-				var raw3 = compress_iwa_file(sy);
-				sentry.content = raw3; sentry.size = sentry.content.length;
+				sentry.content = compress_iwa_file(write_iwa_file(sx)); sentry.size = sentry.content.length;
 			})();
 
 			var tile = parse_shallow(store[3][0].data); // TileStorage
@@ -999,10 +1024,7 @@ function write_numbers_iwa(wb: WorkBook, opts: any): CFB$Container {
 						}
 						tileroot.messages[0].data = write_shallow(tiledata);
 
-						var ty = write_iwa_file(tx);
-						var raw3 = compress_iwa_file(ty);
-						tentry.content = raw3; tentry.size = tentry.content.length;
-						//throw dependents[tileref];
+						tentry.content = compress_iwa_file(write_iwa_file(tx)); tentry.size = tentry.content.length;
 					})();
 				}
 				t.data = write_shallow(tl);
@@ -1013,9 +1035,7 @@ function write_numbers_iwa(wb: WorkBook, opts: any): CFB$Container {
 	}
 	docroot.messages[0].data = write_shallow(pb);
 
-	var y = write_iwa_file(x);
-	var raw3 = compress_iwa_file(y);
-	entry.content = raw3; entry.size = entry.content.length;
+	entry.content = compress_iwa_file(write_iwa_file(x)); entry.size = entry.content.length;
 
 	return cfb;
 }

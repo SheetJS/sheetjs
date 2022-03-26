@@ -22038,7 +22038,7 @@ function readDecimal128LE(buf, offset) {
   return (buf[offset + 15] & 128 ? -mantissa : mantissa) * Math.pow(10, exp - 6176);
 }
 function writeDecimal128LE(buf, offset, value) {
-  var exp = Math.floor(value == 0 ? 0 : Math.LOG10E * Math.log(Math.abs(value))) + 6176 - 20;
+  var exp = Math.floor(value == 0 ? 0 : Math.LOG10E * Math.log(Math.abs(value))) + 6176 - 16;
   var mantissa = value / Math.pow(10, exp - 6176);
   buf[offset + 15] |= exp >> 7;
   buf[offset + 14] |= (exp & 127) << 1;
@@ -22182,6 +22182,8 @@ function parse_shallow(buf) {
 function write_shallow(proto) {
   var out = [];
   proto.forEach(function(field, idx) {
+    if (idx == 0)
+      return;
     field.forEach(function(item) {
       if (!item.data)
         return;
@@ -22227,9 +22229,11 @@ function parse_iwa_file(buf) {
 function write_iwa_file(ias) {
   var bufs = [];
   ias.forEach(function(ia) {
-    var ai = [];
-    ai[1] = [{ data: write_varint49(ia.id), type: 0 }];
-    ai[2] = [];
+    var ai = [
+      [],
+      [{ data: write_varint49(ia.id), type: 0 }],
+      []
+    ];
     if (ia.merge != null)
       ai[3] = [{ data: write_varint49(+!!ia.merge), type: 0 }];
     var midata = [];
@@ -22564,9 +22568,10 @@ function parse_TSP_Reference(buf) {
   return parse_varint49(pb[1][0].data);
 }
 function write_TSP_Reference(idx) {
-  var out = [];
-  out[1] = [{ type: 0, data: write_varint49(idx) }];
-  return write_shallow(out);
+  return write_shallow([
+    [],
+    [{ type: 0, data: write_varint49(idx) }]
+  ]);
 }
 function parse_TST_TableDataList(M, root) {
   var pb = parse_shallow(root.data);
@@ -22652,7 +22657,7 @@ function parse_TST_Tile(M, root) {
   };
 }
 function parse_TST_TableModelArchive(M, root, ws) {
-  var _a;
+  var _a, _b, _c;
   var pb = parse_shallow(root.data);
   var range = { s: { r: 0, c: 0 }, e: { r: 0, c: 0 } };
   range.e.r = (varint_to_i32(pb[6][0].data) >>> 0) - 1;
@@ -22669,11 +22674,11 @@ function parse_TST_TableModelArchive(M, root, ws) {
   var _R = 0;
   tile[1].forEach(function(t) {
     var tl = parse_shallow(t.data);
-    var ref = M[parse_TSP_Reference(tl[2][0].data)][0];
-    var mtype = varint_to_i32(ref.meta[1][0].data);
-    if (mtype != 6002)
-      throw new Error("6001 unexpected reference to ".concat(mtype));
-    var _tile = parse_TST_Tile(M, ref);
+    var ref2 = M[parse_TSP_Reference(tl[2][0].data)][0];
+    var mtype2 = varint_to_i32(ref2.meta[1][0].data);
+    if (mtype2 != 6002)
+      throw new Error("6001 unexpected reference to ".concat(mtype2));
+    var _tile = parse_TST_Tile(M, ref2);
     _tile.data.forEach(function(row, R) {
       row.forEach(function(buf, C) {
         var addr = encode_cell({ r: _R + R, c: C });
@@ -22684,6 +22689,23 @@ function parse_TST_TableModelArchive(M, root, ws) {
     });
     _R += _tile.nrows;
   });
+  if ((_b = store[13]) == null ? void 0 : _b[0]) {
+    var ref = M[parse_TSP_Reference(store[13][0].data)][0];
+    var mtype = varint_to_i32(ref.meta[1][0].data);
+    if (mtype != 6144)
+      throw new Error("Expected merge type 6144, found ".concat(mtype));
+    ws["!merges"] = (_c = parse_shallow(ref.data)) == null ? void 0 : _c[1].map(function(pi) {
+      var merge = parse_shallow(pi.data);
+      var origin = u8_to_dataview(parse_shallow(merge[1][0].data)[1][0].data), size = u8_to_dataview(parse_shallow(merge[2][0].data)[1][0].data);
+      return {
+        s: { r: origin.getUint16(0, true), c: origin.getUint16(2, true) },
+        e: {
+          r: origin.getUint16(0, true) + size.getUint16(0, true) - 1,
+          c: origin.getUint16(2, true) + size.getUint16(2, true) - 1
+        }
+      };
+    });
+  }
 }
 function parse_TST_TableInfoArchive(M, root) {
   var pb = parse_shallow(root.data);
@@ -22713,8 +22735,11 @@ function parse_TN_SheetArchive(M, root) {
   return out;
 }
 function parse_TN_DocumentArchive(M, root) {
+  var _a;
   var out = book_new();
   var pb = parse_shallow(root.data);
+  if ((_a = pb[2]) == null ? void 0 : _a[0])
+    throw new Error("Keynote presentations are not supported");
   var sheetoffs = mappa(pb[1], parse_TSP_Reference);
   sheetoffs.forEach(function(off) {
     M[off].forEach(function(m) {
@@ -22732,7 +22757,7 @@ function parse_TN_DocumentArchive(M, root) {
   return out;
 }
 function parse_numbers_iwa(cfb) {
-  var _a, _b, _c, _d;
+  var _a, _b, _c, _d, _e, _f, _g, _h;
   var M = {}, indices = [];
   cfb.FullPaths.forEach(function(p) {
     if (p.match(/\.iwpv2/))
@@ -22760,7 +22785,9 @@ function parse_numbers_iwa(cfb) {
   });
   if (!indices.length)
     throw new Error("File has no messages");
-  var docroot = ((_d = (_c = (_b = (_a = M == null ? void 0 : M[1]) == null ? void 0 : _a[0]) == null ? void 0 : _b.meta) == null ? void 0 : _c[1]) == null ? void 0 : _d[0].data) && varint_to_i32(M[1][0].meta[1][0].data) == 1 && M[1][0];
+  if (((_d = (_c = (_b = (_a = M == null ? void 0 : M[1]) == null ? void 0 : _a[0]) == null ? void 0 : _b.meta) == null ? void 0 : _c[1]) == null ? void 0 : _d[0].data) && varint_to_i32(M[1][0].meta[1][0].data) == 1e4)
+    throw new Error("Pages documents are not supported");
+  var docroot = ((_h = (_g = (_f = (_e = M == null ? void 0 : M[1]) == null ? void 0 : _e[0]) == null ? void 0 : _f.meta) == null ? void 0 : _g[1]) == null ? void 0 : _h[0].data) && varint_to_i32(M[1][0].meta[1][0].data) == 1 && M[1][0];
   if (!docroot)
     indices.forEach(function(idx) {
       M[idx].forEach(function(iwam) {
@@ -22827,6 +22854,12 @@ function write_tile_row(tri, data, SST) {
   tri[3][0].data = u8concat(_cell_storage);
   return cnt;
 }
+function write_iwam(type, payload) {
+  return {
+    meta: [[], [{ type: 0, data: write_varint49(type) }]],
+    data: payload
+  };
+}
 function write_numbers_iwa(wb, opts) {
   if (!opts || !opts.numbers)
     throw new Error("Must pass a `numbers` option -- check the README");
@@ -22873,8 +22906,8 @@ function write_numbers_iwa(wb, opts) {
       dependents[packet2.id] = { deps: [], location: fp, type: varint_to_i32(packet2.messages[0].meta[1][0].data) };
     });
   });
-  indices.sort(function(x2, y2) {
-    return x2 - y2;
+  indices.sort(function(x2, y) {
+    return x2 - y;
   });
   var indices_varint = indices.filter(function(x2) {
     return x2 > 1;
@@ -22900,10 +22933,12 @@ function write_numbers_iwa(wb, opts) {
       });
     });
   });
-  function get_unique_msgid() {
+  function get_unique_msgid(dep) {
     for (var i = 927262; i < 2e6; ++i)
-      if (!dependents[i])
+      if (!dependents[i]) {
+        dependents[i] = dep;
         return i;
+      }
     throw new Error("Too many messages");
   }
   var entry = CFB.find(cfb, dependents[1].location);
@@ -22922,7 +22957,14 @@ function write_numbers_iwa(wb, opts) {
     if (packet.id == sheetrootref)
       docroot = packet;
   }
-  sheetrootref = parse_TSP_Reference(parse_shallow(docroot.messages[0].data)[2][0].data);
+  var sheetref = parse_shallow(docroot.messages[0].data);
+  {
+    sheetref[1] = [{ type: 2, data: stru8(wb.SheetNames[0]) }];
+  }
+  docroot.messages[0].data = write_shallow(sheetref);
+  entry.content = compress_iwa_file(write_iwa_file(x));
+  entry.size = entry.content.length;
+  sheetrootref = parse_TSP_Reference(sheetref[2][0].data);
   entry = CFB.find(cfb, dependents[sheetrootref].location);
   x = parse_iwa_file(decompress_iwa_file(entry.content));
   for (xi = 0; xi < x.length; ++xi) {
@@ -22956,18 +22998,22 @@ function write_numbers_iwa(wb, opts) {
       cruids[1] = [];
       cruids[2] = [], cruids[3] = [];
       for (var C = 0; C <= range.e.c; ++C) {
-        var uuid = [];
-        uuid[1] = uuid[2] = [{ type: 0, data: write_varint49(C + 420690) }];
-        cruids[1].push({ type: 2, data: write_shallow(uuid) });
+        cruids[1].push({ type: 2, data: write_shallow([
+          [],
+          [{ type: 0, data: write_varint49(C + 420690) }],
+          [{ type: 0, data: write_varint49(C + 420690) }]
+        ]) });
         cruids[2].push({ type: 0, data: write_varint49(C) });
         cruids[3].push({ type: 0, data: write_varint49(C) });
       }
       cruids[4] = [];
       cruids[5] = [], cruids[6] = [];
       for (var R = 0; R <= range.e.r; ++R) {
-        uuid = [];
-        uuid[1] = uuid[2] = [{ type: 0, data: write_varint49(R + 726270) }];
-        cruids[4].push({ type: 2, data: write_shallow(uuid) });
+        cruids[4].push({ type: 2, data: write_shallow([
+          [],
+          [{ type: 0, data: write_varint49(R + 726270) }],
+          [{ type: 0, data: write_varint49(R + 726270) }]
+        ]) });
         cruids[5].push({ type: 0, data: write_varint49(R) });
         cruids[6].push({ type: 0, data: write_varint49(R) });
       }
@@ -23014,6 +23060,32 @@ function write_numbers_iwa(wb, opts) {
       }
       oldbucket.content = compress_iwa_file(write_iwa_file(_x));
       oldbucket.size = oldbucket.content.length;
+      if (ws["!merges"]) {
+        var mergeid = get_unique_msgid({
+          type: 6144,
+          deps: [sheetrootref],
+          location: dependents[sheetrootref].location
+        });
+        var mergedata = [[], []];
+        ws["!merges"].forEach(function(m) {
+          mergedata[1].push({ type: 2, data: write_shallow([
+            [],
+            [{ type: 2, data: write_shallow([
+              [],
+              [{ type: 5, data: new Uint8Array(new Uint16Array([m.s.r, m.s.c]).buffer) }]
+            ]) }],
+            [{ type: 2, data: write_shallow([
+              [],
+              [{ type: 5, data: new Uint8Array(new Uint16Array([m.e.r - m.s.r + 1, m.e.c - m.s.c + 1]).buffer) }]
+            ]) }]
+          ]) });
+        });
+        store[13] = [{ type: 2, data: write_TSP_Reference(mergeid) }];
+        x.push({
+          id: mergeid,
+          messages: [write_iwam(6144, write_shallow(mergedata))]
+        });
+      }
       var sstref = parse_TSP_Reference(store[4][0].data);
       (function() {
         var sentry = CFB.find(cfb, dependents[sstref].location);
@@ -23027,18 +23099,17 @@ function write_numbers_iwa(wb, opts) {
         var sstdata = parse_shallow(sstroot.messages[0].data);
         {
           sstdata[3] = [];
-          var newsst = [];
           SST.forEach(function(str, i) {
-            newsst[1] = [{ type: 0, data: write_varint49(i) }];
-            newsst[2] = [{ type: 0, data: write_varint49(1) }];
-            newsst[3] = [{ type: 2, data: stru8(str) }];
-            sstdata[3].push({ type: 2, data: write_shallow(newsst) });
+            sstdata[3].push({ type: 2, data: write_shallow([
+              [],
+              [{ type: 0, data: write_varint49(i) }],
+              [{ type: 0, data: write_varint49(1) }],
+              [{ type: 2, data: stru8(str) }]
+            ]) });
           });
         }
         sstroot.messages[0].data = write_shallow(sstdata);
-        var sy = write_iwa_file(sx);
-        var raw32 = compress_iwa_file(sy);
-        sentry.content = raw32;
+        sentry.content = compress_iwa_file(write_iwa_file(sx));
         sentry.size = sentry.content.length;
       })();
       var tile = parse_shallow(store[3][0].data);
@@ -23076,9 +23147,7 @@ function write_numbers_iwa(wb, opts) {
               tiledata[4] = [{ type: 0, data: write_varint49(range.e.r + 1) }];
             }
             tileroot.messages[0].data = write_shallow(tiledata);
-            var ty = write_iwa_file(tx);
-            var raw32 = compress_iwa_file(ty);
-            tentry.content = raw32;
+            tentry.content = compress_iwa_file(write_iwa_file(tx));
             tentry.size = tentry.content.length;
           })();
         }
@@ -23089,9 +23158,7 @@ function write_numbers_iwa(wb, opts) {
     pb[4][0].data = write_shallow(store);
   }
   docroot.messages[0].data = write_shallow(pb);
-  var y = write_iwa_file(x);
-  var raw3 = compress_iwa_file(y);
-  entry.content = raw3;
+  entry.content = compress_iwa_file(write_iwa_file(x));
   entry.size = entry.content.length;
   return cfb;
 }

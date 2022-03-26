@@ -22,6 +22,7 @@ assert.deepEqual = (x: any,y: any, z?: string) => assert.equal(JSON.stringify(x)
 import * as X from './xlsx.mjs';
 import * as cptable from './dist/cpexcel.full.mjs';
 X.set_cptable(cptable);
+import XLSX_ZAHL from './dist/xlsx.zahl.mjs';
 var DIF_XL = true;
 
 type BSEncoding = 'utf-8' | 'binary' | 'base64';
@@ -1489,9 +1490,9 @@ Deno.test('roundtrip features', async function(t) {
 	} });
 
 	await t.step('should preserve merge cells', async function(t) {
-		var mcf = ["xlsx", "xlsb", "xlml", "ods", "biff8"] as Array<X.BookType>; for(let mci = 0; mci < mcf.length; ++mci) { let f = mcf[mci]; await t.step(f, async function(t) {
+		var mcf = ["xlsx", "xlsb", "xlml", "ods", "biff8", "numbers"] as Array<X.BookType>; for(let mci = 0; mci < mcf.length; ++mci) { let f = mcf[mci]; await t.step(f, async function(t) {
 			var wb1 = X.read(fs.readFileSync(paths.mcxlsx), {type:TYPE});
-			var wb2 = X.read(X.write(wb1,{bookType:f,type:'binary'}),{type:'binary'});
+			var wb2 = X.read(X.write(wb1,{bookType:f,type:'binary',numbers:XLSX_ZAHL}),{type:'binary'});
 			var m1 = wb1.Sheets.Merge?.['!merges']?.map(X.utils.encode_range);
 			var m2 = wb2.Sheets.Merge?.['!merges']?.map(X.utils.encode_range);
 			assert.equal(m1?.length, m2?.length);
@@ -1686,6 +1687,8 @@ var password_files = [
 ];
 Deno.test('invalid files', async function(t) {
 	await t.step('parse', async function(t) { var fl = [
+		['KEY files', 'numbers/Untitled.key'],
+		['PAGES files', 'numbers/Untitled.pages'],
 		['password', 'apachepoi_password.xls'],
 		['passwords', 'apachepoi_xor-encryption-abc.xls'],
 		['DOC files', 'word_doc.doc']
