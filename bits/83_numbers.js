@@ -643,7 +643,13 @@ function parse_TST_TileRowInfo(u8, type) {
 function parse_TST_Tile(M, root) {
   var _a;
   var pb = parse_shallow(root.data);
-  var storage = ((_a = pb == null ? void 0 : pb[7]) == null ? void 0 : _a[0]) ? varint_to_i32(pb[7][0].data) >>> 0 > 0 ? 1 : 0 : -1;
+  var storage = -1;
+  if ((_a = pb == null ? void 0 : pb[7]) == null ? void 0 : _a[0]) {
+    if (varint_to_i32(pb[7][0].data) >>> 0)
+      storage = 1;
+    else
+      storage = 0;
+  }
   var ri = mappa(pb[5], function(u8) {
     return parse_TST_TileRowInfo(u8, storage);
   });

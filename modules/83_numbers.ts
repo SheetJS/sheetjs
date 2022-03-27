@@ -540,7 +540,10 @@ interface TileInfo {
 /** .TST.Tile */
 function parse_TST_Tile(M: MessageSpace, root: IWAMessage): TileInfo {
 	var pb = parse_shallow(root.data);
-	var storage: TileStorageType = (pb?.[7]?.[0]) ? ((varint_to_i32(pb[7][0].data)>>>0) > 0 ? 1 : 0 ) : -1;
+	// ESBuild issue 2136
+	// 	var storage: TileStorageType = (pb?.[7]?.[0]) ? ((varint_to_i32(pb[7][0].data)>>>0) > 0 ? 1 : 0 ) : -1;
+	var storage: TileStorageType = -1;
+	if(pb?.[7]?.[0]) { if(varint_to_i32(pb[7][0].data)>>>0) storage = 1; else storage = 0; }
 	var ri = mappa(pb[5], (u8: Uint8Array) => parse_TST_TileRowInfo(u8, storage));
 	return {
 		nrows: varint_to_i32(pb[4][0].data)>>>0,
