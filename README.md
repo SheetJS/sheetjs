@@ -45,68 +45,69 @@ ws["A1"].s = {
 
 ### Cell Style Properties
 
-Cell styles are specified by a style object that roughly parallels the OpenXML structure. The style object has five
-top-level attributes: `fill`, `font`, `numFmt`, `alignment`, and `border`.
+-   Cell styles are specified by a style object that roughly parallels the OpenXML structure.
+-   Style properties currently supported are: `alignment`, `border`, `fill`, `font`, `numFmt`.
 
-| Style Attribute | Sub Attributes | Values                                                                                        |
-| :-------------- | :------------- | :-------------------------------------------------------------------------------------------- |
-| fill            | patternType    | `"solid"` or `"none"`                                                                         |
-|                 | fgColor        | `COLOR_SPEC`                                                                                  |
-|                 | bgColor        | `COLOR_SPEC`                                                                                  |
-| font            | name           | `"Calibri"` // default                                                                        |
-|                 | sz             | `"11"` // font size in points                                                                 |
-|                 | color          | `COLOR_SPEC`                                                                                  |
-|                 | bold           | `true` or `false`                                                                             |
-|                 | underline      | `true` or `false`                                                                             |
-|                 | italic         | `true` or `false`                                                                             |
-|                 | strike         | `true` or `false`                                                                             |
-|                 | outline        | `true` or `false`                                                                             |
-|                 | shadow         | `true` or `false`                                                                             |
-|                 | vertAlign      | `true` or `false`                                                                             |
-| numFmt          |                | `"0"` // integer index to built in formats, see StyleBuilder.SSF property                     |
-|                 |                | `"0.00%"` // string matching a built-in format, see StyleBuilder.SSF                          |
-|                 |                | `"0.0%"` // string specifying a custom format                                                 |
-|                 |                | `"0.00%;\\(0.00%\\);\\-;@"` // string specifying a custom format, escaping special characters |
-|                 |                | `"m/dd/yy"` // string a date format using Excel's format notation                             |
-| alignment       | vertical       | `"bottom"` or `"center"` or `"top"`                                                           |
-|                 | horizontal     | `"left"` or `"center"` or `"right"`                                                           |
-|                 | wrapText       | `true ` or ` false`                                                                           |
-|                 | readingOrder   | `2` // for right-to-left                                                                      |
-|                 | textRotation   | Number from `0` to `180` or `255` (default is `0`)                                            |
-|                 |                | `90` is rotated up 90 degrees                                                                 |
-|                 |                | `45` is rotated up 45 degrees                                                                 |
-|                 |                | `135` is rotated down 45 degrees                                                              |
-|                 |                | `180` is rotated down 180 degrees                                                             |
-|                 |                | `255` is special, aligned vertically                                                          |
-| border          | top            | `{ style: BORDER_STYLE, color: COLOR_SPEC }`                                                  |
-|                 | bottom         | `{ style: BORDER_STYLE, color: COLOR_SPEC }`                                                  |
-|                 | left           | `{ style: BORDER_STYLE, color: COLOR_SPEC }`                                                  |
-|                 | right          | `{ style: BORDER_STYLE, color: COLOR_SPEC }`                                                  |
-|                 | diagonal       | `{ style: BORDER_STYLE, color: COLOR_SPEC }`                                                  |
-|                 | diagonalUp     | `true` or `false`                                                                             |
-|                 | diagonalDown   | `true` or `false`                                                                             |
+| Style Prop  | Sub Prop       | Default                    | Description/Values                                                                                |
+| :---------- | :------------- | :------------------------- | ------------------------------------------------------------------------------------------------- |
+| `alignment` | `vertical`     | TODO:                      | `"bottom"` or `"center"` or `"top"`                                                               |
+|             | `horizontal`   | TODO:                      | `"left"` or `"center"` or `"right"`                                                               |
+|             | `wrapText`     | TODO:                      | `true ` or ` false`                                                                               |
+|             | `readingOrder` | `1`                        | text direction: `1` (LTR) or `2` (RTL)                                                            |
+|             | `textRotation` | `0`                        | `0` to `180`, or `255` // `180` is rotated down 180 degrees, `255` is special, aligned vertically |
+| `border`    | `top`          | TODO:                      | `{ style: BORDER_STYLE, color: COLOR_SPEC }`                                                      |
+|             | `bottom`       |                            | `{ style: BORDER_STYLE, color: COLOR_SPEC }`                                                      |
+|             | `left`         |                            | `{ style: BORDER_STYLE, color: COLOR_SPEC }`                                                      |
+|             | `right`        |                            | `{ style: BORDER_STYLE, color: COLOR_SPEC }`                                                      |
+|             | `diagonal`     |                            | `{ style: BORDER_STYLE, color: COLOR_SPEC }`                                                      |
+|             | `diagonalUp`   | `false`                    | `true` or `false`                                                                                 |
+|             | `diagonalDown` | `false`                    | `true` or `false`                                                                                 |
+| `fill`      | `patternType`  | `"solid"`                  | `"solid"` or `"none"`                                                                             |
+|             | `fgColor`      | TODO: (`{ indexed: 64 }`?) | foreground color: see `COLOR_SPEC`                                                                |
+|             | `bgColor`      | TODO:                      | background color: see `COLOR_SPEC`                                                                |
+| `font`      | `name`         | `"Calibri"`                |                                                                                                   |
+|             | `sz`           | `"11"`                     | font size in points                                                                               |
+|             | `bold`         | `false`                    | `true` or `false`                                                                                 |
+|             | `color`        | TODO:                      | `COLOR_SPEC`                                                                                      |
+|             | `italic`       | `false`                    | `true` or `false`                                                                                 |
+|             | `outline`      | `false`                    | `true` or `false`                                                                                 |
+|             | `shadow`       | `false`                    | `true` or `false`                                                                                 |
+|             | `strike`       | `false`                    | `true` or `false`                                                                                 |
+|             | `underline`    | `false`                    | `true` or `false`                                                                                 |
+|             | `vertAlign`    | `false`                    | `true` or `false` (TODO:WTF is this)                                                              |
+| `numFmt`    |                |                            | Ex: `"0"` // integer index to built in formats, see StyleBuilder.SSF property                     |
+|             |                |                            | Ex: `"0.00%"` // string matching a built-in format, see StyleBuilder.SSF                          |
+|             |                |                            | Ex: `"0.0%"` // string specifying a custom format                                                 |
+|             |                |                            | Ex: `"0.00%;\\(0.00%\\);\\-;@"` // string specifying a custom format, escaping special characters |
+|             |                |                            | Ex: `"m/dd/yy"` // string a date format using Excel's format notation                             |
 
-**COLOR_SPEC**: Colors for `fill`, `font`, and `border` are specified as objects, either:
+#### `COLOR_STYLE` (object)
 
--   `{ auto: 1}` specifying automatic values
--   `{ rgb: "FFFFAA00" }` specifying a hex ARGB value
--   `{ theme: "1", tint: "-0.25"}` specifying an integer index to a theme color and a tint value (default 0)
--   `{ indexed: 64}` default value for `fill.bgColor`
+Colors for `border`, `fill`, `font` are specified as an name/value object - use one of the following:
 
-**BORDER_STYLE**: Border style is a string value which may take on one of the following values:
+| Color Prop | Description                                                      | Example                   |
+| :--------- | ---------------------------------------------------------------- | ------------------------- |
+| `auto`     | use automatic values                                             | `{auto: 1}`               |
+| `indexed`  | use indexed value                                                | `{indexed: 64}`           |
+| `rgb`      | use hex ARGB value                                               | `{rgb: "FFFFAA00"}`       |
+| `theme`    | use theme color index (int) and a tint value (float) (default 0) | `{theme: 1, tint: -0.25}` |
 
--   `thin`
--   `medium`
--   `thick`
+#### `BORDER_STYLE` (string)
+
+Border style is a string value which may take on one of the following values:
+
+-   `dashDotDot`
+-   `dashDot`
+-   `dashed`
 -   `dotted`
 -   `hair`
--   `dashed`
--   `mediumDashed`
--   `dashDot`
--   `mediumDashDot`
--   `dashDotDot`
 -   `mediumDashDotDot`
+-   `mediumDashDot`
+-   `mediumDashed`
+-   `medium`
 -   `slantDashDot`
+-   `thick`
+-   `thin`
 
 Borders for merged areas are specified for each cell within the merged area. So to apply a box border to a merged area of 3x3 cells, border styles would need to be specified for eight different cells:
 
