@@ -62,16 +62,27 @@
 
 		function doDemo() {
 			const wb = XLSX.utils.book_new();
-			let row1 = ["a", "b", "c"];
-			let row2 = [1, 2, 3];
+			let row1 = [
+				{ v: 'align: top   ', t: 's', s: { alignment: { vertical: 'top' } } },
+				{ v: 'align: center', t: 's', s: { alignment: { vertical: 'center' } } },
+				{ v: 'align: bottom', t: 's', s: { alignment: { vertical: 'bottom' } } },
+			];
 			let row3 = [
 				{ v: 'Courier: 24', t: 's', s: { font: { name: 'Courier', sz: 24 } } },
 				{ v: 'bold & color', t: 's', s: { font: { bold: true, color: { rgb: 'FFFF0000' } } } },
 				{ v: 'fill: color', t: 's', s: { fill: { fgColor: { rgb: 'FFE9E9E9' } } } },
-				{ v: 'line\nbreak', t: 's', s: { alignment: { wrapText: true } } },
+				{ v: 'line\nbreak', t: 's', s: { alignment: { wrapText: true, vertAlign: 'subscript' } } },
+				/* TODO: add `border`
+				 { patternType: 'solid',
+					fgColor: { theme: 8, tint: 0.3999755851924192 },
+					bgColor: { indexed: 64 } } }
+				*/
 			]
-			const ws = XLSX.utils.aoa_to_sheet([row1, row2, row3]);
-			ws['!cols'] = [{ width: 30 }, { width: 20 }, { width: 20 }]
+			let row4 = ["a", "b", "c"];
+			let row5 = [1, 2, 3];
+			const ws = XLSX.utils.aoa_to_sheet([row1, row2, row3, row4, row5]);
+			ws['!cols'] = [{ width: 30 }, { width: 20 }, { width: 20 }];
+			ws['!rows'] = [{ 'hpt': 50 }];
 			XLSX.utils.book_append_sheet(wb, ws, 'browser-demo');
 			XLSX.writeFile(wb, "xlsx-js-style-demo.xlsx");
 		}
@@ -79,7 +90,7 @@
 		// ==================================================================================================================
 		window.onload = () => {
 			popDemoCode();
-			console.log('Version: '+XLSX.version);
+			console.log('Version: ' + XLSX.version);
 		};
 	</script>
 </head>
