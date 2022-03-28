@@ -1,6 +1,6 @@
 {
 	"name": "xlsx-js-style",
-	"version": "1.0.0",
+	"version": "1.1.0-beta",
 	"author": "gitbrent",
 	"description": "SheetJS Spreadsheet Community Edition plus Basic Cell Styles",
 	"homepage": "https://github.com/gitbrent/xlsx-js-style/",
