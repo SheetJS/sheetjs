@@ -48,35 +48,35 @@ ws["A1"].s = {
 -   Cell styles are specified by a style object that roughly parallels the OpenXML structure.
 -   Style properties currently supported are: `alignment`, `border`, `fill`, `font`, `numFmt`.
 
-| Style Prop  | Sub Prop       | Default     | Description/Values                                                                                     |
-| :---------- | :------------- | :---------- | ------------------------------------------------------------------------------------------------------ |
-| `alignment` | `vertical`     | `bottom`    | `"top"` or `"center"` or `"bottom"`                                                                    |
-|             | `horizontal`   | `left`      | `"left"` or `"center"` or `"right"`                                                                    |
-|             | `wrapText`     | `false`     | `true` or `false`                                                                                      |
-|             | `textRotation` | `0`         | `0` to `180`, or `255` // `180` is rotated down 180 degrees, `255` is special, aligned vertically      |
-| `border`    | `top`          | TODO:       | `{ style: BORDER_STYLE, color: COLOR_SPEC }`                                                           |
-|             | `bottom`       |             | `{ style: BORDER_STYLE, color: COLOR_SPEC }`                                                           |
-|             | `left`         |             | `{ style: BORDER_STYLE, color: COLOR_SPEC }`                                                           |
-|             | `right`        |             | `{ style: BORDER_STYLE, color: COLOR_SPEC }`                                                           |
-|             | `diagonal`     |             | `{ style: BORDER_STYLE, color: COLOR_SPEC, diagonalUp:`true`or`false`, diagonalDown:`true`or`false` }` |
-| `fill`      | `patternType`  | `"none"`    | `"solid"` or `"none"`                                                                                  |
-|             | `fgColor`      |             | foreground color: see `COLOR_SPEC`                                                                     |
-|             | `bgColor`      |             | background color: see `COLOR_SPEC`                                                                     |
-| `font`      | `name`         | `"Calibri"` | font name                                                                                              |
-|             | `sz`           | `"11"`      | font size in points                                                                                    |
-|             | `bold`         | `false`     | `true` or `false`                                                                                      |
-|             | `color`        | TODO:       | `COLOR_SPEC`                                                                                           |
-|             | `italic`       | `false`     | `true` or `false`                                                                                      |
-|             | `outline`      | `false`     | `true` or `false`                                                                                      |
-|             | `shadow`       | `false`     | `true` or `false`                                                                                      |
-|             | `strike`       | `false`     | `true` or `false`                                                                                      |
-|             | `underline`    | `false`     | `true` or `false`                                                                                      |
-|             | `vertAlign`    | `false`     | `"superscript"` or `"subscript"` (TODO:does this work)                                                 |
-| `numFmt`    |                | `0`         | Ex: `"0"` // integer index to built in formats, see StyleBuilder.SSF property                          |
-|             |                |             | Ex: `"0.00%"` // string matching a built-in format, see StyleBuilder.SSF                               |
-|             |                |             | Ex: `"0.0%"` // string specifying a custom format                                                      |
-|             |                |             | Ex: `"0.00%;\\(0.00%\\);\\-;@"` // string specifying a custom format, escaping special characters      |
-|             |                |             | Ex: `"m/dd/yy"` // string a date format using Excel's format notation                                  |
+| Style Prop  | Sub Prop       | Default     | Description/Values                                                                                |
+| :---------- | :------------- | :---------- | ------------------------------------------------------------------------------------------------- |
+| `alignment` | `vertical`     | `bottom`    | `"top"` or `"center"` or `"bottom"`                                                               |
+|             | `horizontal`   | `left`      | `"left"` or `"center"` or `"right"`                                                               |
+|             | `wrapText`     | `false`     | `true` or `false`                                                                                 |
+|             | `textRotation` | `0`         | `0` to `180`, or `255` // `180` is rotated down 180 degrees, `255` is special, aligned vertically |
+| `border`    | `top`          | TODO:       | `{ style: BORDER_STYLE, color: COLOR_SPEC }`                                                      |
+|             | `bottom`       |             | `{ style: BORDER_STYLE, color: COLOR_SPEC }`                                                      |
+|             | `left`         |             | `{ style: BORDER_STYLE, color: COLOR_SPEC }`                                                      |
+|             | `right`        |             | `{ style: BORDER_STYLE, color: COLOR_SPEC }`                                                      |
+|             | `diagonal`     |             | `{ style: BORDER_STYLE, color: COLOR_SPEC, diagonalUp: true/false, diagonalDown: true/false }`    |
+| `fill`      | `patternType`  | `"none"`    | `"solid"` or `"none"`                                                                             |
+|             | `fgColor`      |             | foreground color: see `COLOR_SPEC`                                                                |
+|             | `bgColor`      |             | background color: see `COLOR_SPEC`                                                                |
+| `font`      | `name`         | `"Calibri"` | font name                                                                                         |
+|             | `sz`           | `"11"`      | font size in points                                                                               |
+|             | `bold`         | `false`     | `true` or `false`                                                                                 |
+|             | `color`        | TODO:       | `COLOR_SPEC`                                                                                      |
+|             | `italic`       | `false`     | `true` or `false`                                                                                 |
+|             | `outline`      | `false`     | `true` or `false`                                                                                 |
+|             | `shadow`       | `false`     | `true` or `false`                                                                                 |
+|             | `strike`       | `false`     | `true` or `false`                                                                                 |
+|             | `underline`    | `false`     | `true` or `false`                                                                                 |
+|             | `vertAlign`    | `false`     | `"superscript"` or `"subscript"` (TODO:does this work)                                            |
+| `numFmt`    |                | `0`         | Ex: `"0"` // integer index to built in formats, see StyleBuilder.SSF property                     |
+|             |                |             | Ex: `"0.00%"` // string matching a built-in format, see StyleBuilder.SSF                          |
+|             |                |             | Ex: `"0.0%"` // string specifying a custom format                                                 |
+|             |                |             | Ex: `"0.00%;\\(0.00%\\);\\-;@"` // string specifying a custom format, escaping special characters |
+|             |                |             | Ex: `"m/dd/yy"` // string a date format using Excel's format notation                             |
 
 #### `COLOR_STYLE` (object)
 
