@@ -1,7 +1,0 @@
-{
-	"env": { "shared-node-browser":true },
-	"parserOptions": {
-		"ecmaVersion": 8
-	},
-	"plugins": [ "html", "json" ]
-}

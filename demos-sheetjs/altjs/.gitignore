@@ -1,9 +1,0 @@
-sheetjs.*
-SheetJSSwift
-duk*
-*.class
-*.jar
-rhino
-shim.min.js
-xlsx.*.js
-payload.js
