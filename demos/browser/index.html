@@ -63,11 +63,30 @@
 		function doDemo() {
 			const wb = XLSX.utils.book_new();
 			let row1 = [
-				{ v: 'align: top   ', t: 's', s: { alignment: { vertical: 'top' } } },
-				{ v: 'align: center', t: 's', s: { alignment: { vertical: 'center' } } },
-				{ v: 'align: bottom', t: 's', s: { alignment: { vertical: 'bottom' } } },
+				{ v: 'align: v: top   ', t: 's', s: { font: { sz: 16 }, alignment: { vertical: 'top' } } },
+				{ v: 'align: v: center', t: 's', s: { font: { sz: 16 }, alignment: { vertical: 'center' } } },
+				{ v: 'align: v: bottom', t: 's', s: { font: { sz: 16 }, alignment: { vertical: 'bottom' } } },
+			];
+			let row2 = [
+				{ v: 'align: h: left  ', t: 's', s: { font: { sz: 16 }, alignment: { horizontal: 'left' } } },
+				{ v: 'align: h: center', t: 's', s: { font: { sz: 16 }, alignment: { horizontal: 'center' } } },
+				{ v: 'align: h: right ', t: 's', s: { font: { sz: 16 }, alignment: { horizontal: 'right' } } },
 			];
 			let row3 = [
+				{ v: 'textRotation: 15', t: 's', s: { alignment: { textRotation: 15 } } },
+				{ v: 'textRotation: 30', t: 's', s: { alignment: { textRotation: 30 } } },
+				{ v: 'textRotation: 45', t: 's', s: { alignment: { textRotation: 45 } } },
+				{ v: 'textRotation: 90', t: 's', s: { alignment: { textRotation: 90 } } },
+			];
+			let row4 = [
+				{ v: 'border: top         ', t: 's', s: { alignment: { vertical: 'center' }, border: { top: { style: 'thin', color: { rgba: 'FF0000' } } } } },
+				{ v: 'border: left        ', t: 's', s: { alignment: { vertical: 'center' }, border: { left: { style: 'thin', color: { rgba: 'FF0000' } } } } },
+				{ v: 'border: right       ', t: 's', s: { alignment: { vertical: 'center' }, border: { right: { style: 'thin', color: { rgba: 'FF0000' } } } } },
+				{ v: 'border: bottom      ', t: 's', s: { alignment: { vertical: 'center' }, border: { bottom: { style: 'thin', color: { rgba: 'FF0000' } } } } },
+				{ v: 'border: diagonalUp  ', t: 's', s: { alignment: { vertical: 'center' }, border: { diagonal: { style: 'thin', color: { rgba: 'FF0000' } }, diagonalUp: true } } },
+				{ v: 'border: diagonalDown', t: 's', s: { alignment: { vertical: 'center' }, border: { diagonal: { style: 'thin', color: { rgba: 'FF0000' } }, diagonalDown: true } } },
+			];
+			let row5 = [
 				{ v: 'Courier: 24', t: 's', s: { font: { name: 'Courier', sz: 24 } } },
 				{ v: 'bold & color', t: 's', s: { font: { bold: true, color: { rgb: 'FFFF0000' } } } },
 				{ v: 'fill: color', t: 's', s: { fill: { fgColor: { rgb: 'FFE9E9E9' } } } },
@@ -78,11 +97,11 @@
 					bgColor: { indexed: 64 } } }
 				*/
 			]
-			let row4 = ["a", "b", "c"];
-			let row5 = [1, 2, 3];
-			const ws = XLSX.utils.aoa_to_sheet([row1, row2, row3, row4, row5]);
-			ws['!cols'] = [{ width: 30 }, { width: 20 }, { width: 20 }];
-			ws['!rows'] = [{ 'hpt': 50 }];
+			let row6 = ["a", "b", "c", "d"];
+			let row7 = [1, 2, 3, 4];
+			const ws = XLSX.utils.aoa_to_sheet([row1, row2, row3, row4, row5, row6, row7]);
+			ws['!cols'] = [{ width: 25 }, { width: 25 }, { width: 25 }, { width: 25 }, { width: 25 }, { width: 25 }];
+			ws['!rows'] = [{ 'hpt': 50 }, null, null, { 'hpt': 50 }];
 			XLSX.utils.book_append_sheet(wb, ws, 'browser-demo');
 			XLSX.writeFile(wb, "xlsx-js-style-demo.xlsx");
 		}
