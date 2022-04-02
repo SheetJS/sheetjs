@@ -6,7 +6,7 @@
 	<meta name="author" content="https://github.com/gitbrent">
 	<meta name="website" content="https://github.com/gitbrent/xlsx-js-style/">
 	<meta name="version" content="1.1.0-beta">
-	<meta name="updated" content="2022-01-04">
+	<meta name="updated" content="2022-04-02">
 	<title>xlsx-js-style browser demo</title>
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/5.1.3/darkly/bootstrap.min.css"
 		integrity="sha512-ZdxIsDOtKj2Xmr/av3D/uo1g15yxNFjkhrcfLooZV5fW0TT7aF7Z3wY1LOA16h0VgFLwteg14lWqlYUQK3to/w==" crossorigin="anonymous" referrerpolicy="no-referrer" />
@@ -41,15 +41,15 @@
 				+ 'let row1 = ["a", "b", "c"];\n'
 				+ 'let row2 = [1, 2, 3];\n'
 				+ 'let row3 = [\n'
-				+ "    { v: 'Courier: 24', t: 's', s: { font: { name: 'Courier', sz: 24 } } },\n"
-				+ "    { v: 'bold & color', t: 's', s: { font: { bold: true, color: { rgb: 'FFFF0000' } } } },\n"
-				+ "    { v: 'fill: color', t: 's', s: { fill: { fgColor: { rgb: 'FFE9E9' } } } },\n"
-				+ "    { v: 'line\\nbreak', t: 's', s: { alignment: { wrapText: true } } },\n"
+				+ "    {v: 'Courier sz24', t: 's', s: {font: {name: 'Courier', sz: 24}}},\n"
+				+ "    {v: 'bold + color', t: 's', s: {font: {bold: true, color: {rgb: 'FF0000'}}}},\n"
+				+ "    {v: 'fill fgColor', t: 's', s: {fill: {fgColor: {rgb: 'FFE9E9'}}}},\n"
+				+ "    {v: 'line\\nbreak!', t: 's', s: {alignment: {wrapText: true}}},\n"
 				+ ']\n'
 				+ '\n'
 				+ '// STEP 3: Create Worksheet, add data, set cols widths\n'
 				+ "const ws = XLSX.utils.aoa_to_sheet([row1, row2, row3]);\n"
-				+ "ws['!cols'] = [{ width: 30 }, { width: 20 }, { width: 20 }]\n"
+				+ "ws['!cols'] = [{width: 30}, {width: 20}, {width: 20}]\n"
 				+ "XLSX.utils.book_append_sheet(wb, ws, 'browser-demo');\n"
 				+ '\n'
 				+ '// STEP 4: Write Excel file to browser\n'
@@ -60,25 +60,61 @@
 
 		// ==================================================================================================================
 
-		function doDemo() {
+		function doDemoBrowser() {
 			const wb = XLSX.utils.book_new();
-			let row1 = [
-				{ v: 'align: v: top   ', t: 's', s: { font: { sz: 16 }, alignment: { vertical: 'top' } } },
-				{ v: 'align: v: center', t: 's', s: { font: { sz: 16 }, alignment: { vertical: 'center' } } },
-				{ v: 'align: v: bottom', t: 's', s: { font: { sz: 16 }, alignment: { vertical: 'bottom' } } },
-			];
-			let row2 = [
-				{ v: 'align: h: left  ', t: 's', s: { font: { sz: 16 }, alignment: { horizontal: 'left' } } },
-				{ v: 'align: h: center', t: 's', s: { font: { sz: 16 }, alignment: { horizontal: 'center' } } },
-				{ v: 'align: h: right ', t: 's', s: { font: { sz: 16 }, alignment: { horizontal: 'right' } } },
-			];
+			let row1 = ["a", "b", "c"];
+			let row2 = [1, 2, 3];
 			let row3 = [
+				{ v: 'Courier: 24', t: 's', s: { font: { name: 'Courier', sz: 24 } } },
+				{ v: 'bold & color', t: 's', s: { font: { bold: true, color: { rgb: 'FF0000' } } } },
+				{ v: 'fill: color', t: 's', s: { fill: { fgColor: { rgb: 'FFE9E9E9' } } } },
+				{ v: 'line\nbreak', t: 's', s: { alignment: { wrapText: true } } },
+			]
+			const ws = XLSX.utils.aoa_to_sheet([row1, row2, row3]);
+			ws['!cols'] = [{ width: 30 }, { width: 20 }, { width: 20 }]
+			XLSX.utils.book_append_sheet(wb, ws, 'browser-demo');
+			XLSX.writeFile(wb, "xlsx-js-style-demo.xlsx");
+		}
+
+		function doDemoAll() {
+			const BORDERS = ['dashDotDot', 'dashDot', 'dashed', 'dotted', 'hair', 'mediumDashDotDot', 'mediumDashDot', 'mediumDashed', 'medium', 'slantDashDot', 'thick', 'thin'];
+			const DEF_ColW = 35;
+			const DEF_RowH = 50;
+			const DEF_Size14Vert = { font: { sz: 14 }, alignment: { vertical: 'center' } };
+			const DEF_FixedSize14 = { font: { name: 'Courier New', sz: 14 } };
+			const DEF_FixedSize14Vert = { font: { name: 'Courier New', sz: 14 }, alignment: { vertical: 'center', wrapText: true } };
+
+			const wb = XLSX.utils.book_new();
+			let rowFill = [
+				{ v: "fill\n{rgb: 'e6e6e6'}", t: 's', s: { ...DEF_FixedSize14Vert, fill: { fgColor: { rgb: 'e6e6e6' } } } },
+				{ v: 'fill\n{theme: 4}       ', t: 's', s: { ...DEF_FixedSize14Vert, fill: { fgColor: { theme: 4 } } } },
+				{ v: 'fill\n{theme: 4, tint: 0.4}', t: 's', s: { ...DEF_FixedSize14Vert, fill: { fgColor: { theme: 4, tint: 0.4 } } } },
+				{ v: 'fill\n{theme: 4, tint: -0.5}', t: 's', s: { ...DEF_FixedSize14Vert, fill: { fgColor: { theme: 4, tint: -0.5 } } } },
+			]
+			let rowFont = [
+				{ v: 'Courier: 24', t: 's', s: { font: { name: 'Courier', sz: 24, vertAlign: 'subscript' } } },
+				{ v: 'bold & color', t: 's', s: { font: { bold: true, color: { rgb: 'FFFF0000' } } } },
+				{ v: 'fill: color', t: 's', s: { fill: { fgColor: { rgb: 'FFE9E9E9' } } } },
+				{ v: 'line\nbreak', t: 's', s: { alignment: { wrapText: true } } },
+				/* TODO: add , vertAlign: 'superscript' */
+			]
+			let rowAliV = [
+				{ v: "align\n{vertical: 'top'}   ", t: 's', s: { ...DEF_FixedSize14, alignment: { wrapText: true, vertical: 'top' } } },
+				{ v: "align\n{vertical: 'center'}", t: 's', s: { ...DEF_FixedSize14, alignment: { wrapText: true, vertical: 'center' } } },
+				{ v: "align\n{vertical: 'bottom'}", t: 's', s: { ...DEF_FixedSize14, alignment: { wrapText: true, vertical: 'bottom' } } },
+			];
+			let rowAliH = [
+				{ v: "align\n{horizontal: 'left'}  ", t: 's', s: { ...DEF_FixedSize14, alignment: { wrapText: true, horizontal: 'left' } } },
+				{ v: "align\n{horizontal: 'center'}", t: 's', s: { ...DEF_FixedSize14, alignment: { wrapText: true, horizontal: 'center' } } },
+				{ v: "align\n{horizontal: 'right'} ", t: 's', s: { ...DEF_FixedSize14, alignment: { wrapText: true, horizontal: 'right' } } },
+			];
+			let rowRota = [
 				{ v: 'textRotation: 15', t: 's', s: { alignment: { textRotation: 15 } } },
 				{ v: 'textRotation: 30', t: 's', s: { alignment: { textRotation: 30 } } },
 				{ v: 'textRotation: 45', t: 's', s: { alignment: { textRotation: 45 } } },
 				{ v: 'textRotation: 90', t: 's', s: { alignment: { textRotation: 90 } } },
 			];
-			let row4 = [
+			let rowBdr0 = [
 				{ v: 'border: top         ', t: 's', s: { alignment: { vertical: 'center' }, border: { top: { style: 'thin', color: { rgba: 'FF0000' } } } } },
 				{ v: 'border: left        ', t: 's', s: { alignment: { vertical: 'center' }, border: { left: { style: 'thin', color: { rgba: 'FF0000' } } } } },
 				{ v: 'border: right       ', t: 's', s: { alignment: { vertical: 'center' }, border: { right: { style: 'thin', color: { rgba: 'FF0000' } } } } },
@@ -86,24 +122,48 @@
 				{ v: 'border: diagonalUp  ', t: 's', s: { alignment: { vertical: 'center' }, border: { diagonal: { style: 'thin', color: { rgba: 'FF0000' } }, diagonalUp: true } } },
 				{ v: 'border: diagonalDown', t: 's', s: { alignment: { vertical: 'center' }, border: { diagonal: { style: 'thin', color: { rgba: 'FF0000' } }, diagonalDown: true } } },
 			];
-			let row5 = [
-				{ v: 'Courier: 24', t: 's', s: { font: { name: 'Courier', sz: 24 } } },
-				{ v: 'bold & color', t: 's', s: { font: { bold: true, color: { rgb: 'FFFF0000' } } } },
-				{ v: 'fill: color', t: 's', s: { fill: { fgColor: { rgb: 'FFE9E9E9' } } } },
-				{ v: 'line\nbreak', t: 's', s: { alignment: { wrapText: true, vertAlign: 'subscript' } } },
-				/* TODO: add `border`
-				 { patternType: 'solid',
-					fgColor: { theme: 8, tint: 0.3999755851924192 },
-					bgColor: { indexed: 64 } } }
-				*/
-			]
-			let row6 = ["a", "b", "c", "d"];
-			let row7 = [1, 2, 3, 4];
-			const ws = XLSX.utils.aoa_to_sheet([row1, row2, row3, row4, row5, row6, row7]);
-			ws['!cols'] = [{ width: 25 }, { width: 25 }, { width: 25 }, { width: 25 }, { width: 25 }, { width: 25 }];
-			ws['!rows'] = [{ 'hpt': 50 }, null, null, { 'hpt': 50 }];
+			let rowBdr1 = [];
+			let rowBdr2 = [];
+			BORDERS.filter((_, idx) => idx < 6).forEach(item => {
+				rowBdr1.push({
+					v: `border: style:\n'${item}'`, t: 's',
+					s: { ...DEF_FixedSize14Vert, border: { right: { style: item, color: { rgba: '0000FF' } } } }
+				});
+			});
+			BORDERS.filter((_, idx) => idx >= 6).forEach(item => {
+				rowBdr2.push({
+					v: `border: style:\n'${item}'`, t: 's',
+					s: { ...DEF_FixedSize14Vert, border: { right: { style: item, color: { rgba: '0000FF' } } } }
+				});
+			});
+
+			const ws = XLSX.utils.aoa_to_sheet([rowFill, rowFont, rowAliV, rowAliH, rowBdr0, rowBdr1, rowBdr2, rowRota]);
+			ws['!cols'] = [{ width: DEF_ColW }, { width: DEF_ColW }, { width: DEF_ColW }, { width: DEF_ColW }, { width: DEF_ColW }, { width: DEF_ColW }];
+			ws['!rows'] = [{ 'hpt': DEF_RowH }, { 'hpt': DEF_RowH }, null, { 'hpt': DEF_RowH }, { 'hpt': DEF_RowH }, { 'hpt': DEF_RowH }];
 			XLSX.utils.book_append_sheet(wb, ws, 'browser-demo');
-			XLSX.writeFile(wb, "xlsx-js-style-demo.xlsx");
+			XLSX.writeFile(wb, "xlsx-js-style-demo-all.xlsx");
+		}
+
+		/** FUTURE:
+		 * setting style via `ws` prop: https://github.com/gitbrent/xlsx-js-style/issues/2
+		 * - the code just does not work this way, if anyone can provide a pull request, I'd be happy to merge it
+		 */
+		function doIssue() {
+			let wb = XLSX.utils.book_new();
+			let ws_data = [['hello', 'world']];
+			let ws = XLSX.utils.aoa_to_sheet(ws_data);
+			ws["A1"].s = {
+				font: {
+					name: "Calibri",
+					sz: 24,
+					bold: true,
+					color: { rgb: "FFFFAA00" },
+				},
+			};
+			console.log(ws["A1"]);
+			console.log(ws["A1"].s);
+			XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
+			XLSX.writeFile(wb, "file.xls");
 		}
 
 		// ==================================================================================================================
@@ -165,7 +225,10 @@
 		</div>
 		<div class="row">
 			<div class="col-auto">
-				<button class="btn btn-lg btn-success px-5" onclick="doDemo()">Generate Demo Workbook</button>
+				<button class="btn btn-lg btn-success px-5" onclick="doDemoBrowser()">Browser Demo</button>
+			</div>
+			<div class="col-auto">
+				<button class="btn btn-lg btn-success px-5" onclick="doDemoAll()">Full Feature Demo</button>
 			</div>
 		</div>
 	</main>
