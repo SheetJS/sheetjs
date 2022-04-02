@@ -924,40 +924,66 @@ export interface StreamUtils {
 /** Style-Color object [xlsx-js-style] */
 export interface CellStyleColor {
 	/**
-	 * ARGB color value
-	 * - 'FF' + RGB Hex Code
-	 * @example 'FFFFAA00'
+	 * RGB color value
+	 * @example 'FF0000' // 100% red
 	 */
-	rgb: string;
+	rgb?: string;
+	/**
+	 * Theme color index
+	 * - optinally, include a `tint` value
+	 * - range 0-n
+	 * @example 4 // Theme color index 4 ("Blue, Accent 1")
+	 */
+	theme?: number;
+	/**
+	 * Theme color tint percent
+	 * - only works when used with `theme`
+	 * - range: -1.0 to 1.0
+	 * @example 0.4 // tint lighter by 40% ("Blue, Accent 1, Lighter 40%")
+	 * @example -0.5 // tint darker by 50% ("Blue, Accent 1, Darker 50%")
+	 */
+	tint?: number;
 }
 
 /** Style-border object [xlsx-js-style] */
 export type BORDER_STYLE =
-	| "thin"
-	| "medium"
-	| "thick"
+	| "dashDot"
+	| "dashDotDot"
+	| "dashed"
 	| "dotted"
 	| "hair"
-	| "dashed"
-	| "mediumDashed"
-	| "dashDot"
+	| "medium"
 	| "mediumDashDot"
-	| "dashDotDot"
 	| "mediumDashDotDot"
-	| "slantDashDot";
-
-export type AlignH = "left" | "center" | "right";
-export type AlignV = "top" | "center" | "bottom";
+	| "mediumDashed"
+	| "slantDashDot"
+	| "thick"
+	| "thin";
 
 /** Style object [xlsx-js-style] */
 export interface CellStyle {
 	alignment?: {
-		horizontal?: AlignH;
-		vertical?: AlignV;
 		/**
-		 * `0` to `180`, or `255` // `180` is rotated down 180 degrees, `255` is special, aligned vertically |
+		 * Horizontal alignment
+		 * @default 'left'
+		 */
+		horizontal?: "left" | "center" | "right";
+		/**
+		 * Vertical alignment
+		 * @default 'bottom'
+		 */
+		vertical?: "top" | "center" | "bottom";
+		/**
+		 * Rotate text
+		 * - range `0` to `180`
+		 * - or `255` // `255` is a special value that aligns vertically
+		 * @example 180 // rotated down 180 degrees
 		 */
 		textRotation?: number;
+		/**
+		 * Wrap text
+		 * @default false
+		 */
 		wrapText?: boolean;
 	};
 	border?: {
@@ -968,29 +994,72 @@ export interface CellStyle {
 		diagonal?: { style: BORDER_STYLE; color: CellStyleColor; diagonalUp?: boolean; diagonalDown?: boolean };
 	};
 	fill?: {
-		fgColor?: CellStyleColor;
+		/**
+		 * background color
+		 */
 		bgColor?: CellStyleColor;
 		/**
-		 * @default 'none'
+		 * foreground color
+		 */
+		fgColor?: CellStyleColor;
+		/**
+		 * Fill pattern
+		 * - `"none"` prevents fill regardless of color selection
+		 * @default 'solid'
 		 */
 		patternType?: "solid" | "none";
 	};
 	font?: {
+		/**
+		 * bold font?
+		 * @default false
+		 */
 		bold?: boolean;
+		/**
+		 * font color
+		 * @example {rgb: 'FF0000'} // red color
+		 */
 		color?: CellStyleColor;
+		/**
+		 * italic font?
+		 * @default false
+		 */
 		italic?: boolean;
 		/**
+		 * font face
 		 * @default 'Calibri'
 		 */
 		name?: string;
+		/**
+		 * apply outline?
+		 * @default false
+		 */
 		outline?: boolean;
+		/**
+		 * apply shadow?
+		 * @default false
+		 */
 		shadow?: boolean;
 		/**
+		 * font size (points)
 		 * @default 11
 		 */
 		sz?: number;
+		/**
+		 * strike through font?
+		 * @default false
+		 */
 		strike?: boolean;
+		/**
+		 * underline font?
+		 * @default false
+		 */
 		underline?: boolean;
+		/**
+		 * vertical align
+		 * - values: "superscript" | "subscript"
+		 * @default null
+		 */
 		vertAlign?: "superscript" | "subscript";
 	};
 	/**
