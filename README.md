@@ -2,7 +2,10 @@
 
 ## ℹ️ About
 
-SheetJS with Style! Create Excel spreadsheets with basic styling options.
+SheetJS with Style! Create Excel spreadsheets with basic styling options using JavaScript.
+
+[![Known Vulnerabilities](https://snyk.io/test/npm/xlsx-js-style/badge.svg)](https://snyk.io/test/npm/xlsx-js-style) [![npm downloads](https://img.shields.io/npm/dm/xlsx-js-style.svg)](https://www.npmjs.com/package/xlsx-js-style)
+[![typescripts definitions](https://img.shields.io/npm/types/xlsx-js-style)](https://img.shields.io/npm/types/xlsx-js-style)
 
 This project is a fork of [SheetJS/sheetjs](https://github.com/sheetjs/sheetjs) combined with code from
 [sheetjs-style](https://www.npmjs.com/package/sheetjs-style) (by [ShanaMaid](https://github.com/ShanaMaid/))
@@ -21,7 +24,7 @@ npm install xlsx-js-style --save
 Install browser:
 
 ```html
-<script lang="javascript" src="dist/xlsx.bundle.js"></script>
+<script src="dist/xlsx.bundle.js"></script>
 ```
 
 ## 🗒 Core API
@@ -31,6 +34,8 @@ Please refer to the [SheetJS](https://sheetjs.com/) documentation for core API r
 ## 🗒 Style API
 
 ### Cell Style Example
+
+// TODO: NOPE!!
 
 ```js
 ws["A1"].s = {
@@ -54,7 +59,7 @@ ws["A1"].s = {
 |             | `horizontal`   | `left`      | `"left"` or `"center"` or `"right"`                                                               |
 |             | `wrapText`     | `false`     | `true` or `false`                                                                                 |
 |             | `textRotation` | `0`         | `0` to `180`, or `255` // `180` is rotated down 180 degrees, `255` is special, aligned vertically |
-| `border`    | `top`          | TODO:       | `{ style: BORDER_STYLE, color: COLOR_SPEC }`                                                      |
+| `border`    | `top`          |             | `{ style: BORDER_STYLE, color: COLOR_SPEC }`                                                      |
 |             | `bottom`       |             | `{ style: BORDER_STYLE, color: COLOR_SPEC }`                                                      |
 |             | `left`         |             | `{ style: BORDER_STYLE, color: COLOR_SPEC }`                                                      |
 |             | `right`        |             | `{ style: BORDER_STYLE, color: COLOR_SPEC }`                                                      |
@@ -62,36 +67,35 @@ ws["A1"].s = {
 | `fill`      | `patternType`  | `"none"`    | `"solid"` or `"none"`                                                                             |
 |             | `fgColor`      |             | foreground color: see `COLOR_SPEC`                                                                |
 |             | `bgColor`      |             | background color: see `COLOR_SPEC`                                                                |
-| `font`      | `name`         | `"Calibri"` | font name                                                                                         |
-|             | `sz`           | `"11"`      | font size in points                                                                               |
-|             | `bold`         | `false`     | `true` or `false`                                                                                 |
-|             | `color`        | TODO:       | `COLOR_SPEC`                                                                                      |
-|             | `italic`       | `false`     | `true` or `false`                                                                                 |
-|             | `outline`      | `false`     | `true` or `false`                                                                                 |
-|             | `shadow`       | `false`     | `true` or `false`                                                                                 |
-|             | `strike`       | `false`     | `true` or `false`                                                                                 |
-|             | `underline`    | `false`     | `true` or `false`                                                                                 |
-|             | `vertAlign`    | `false`     | `"superscript"` or `"subscript"` (TODO:does this work)                                            |
+| `font`      | `bold`         | `false`     | font bold `true` or `false`                                                                       |
+|             | `color`        |             | font color `COLOR_SPEC`                                                                           |
+|             | `italic`       | `false`     | font italic `true` or `false`                                                                     |
+|             | `name`         | `"Calibri"` | font name                                                                                         |
+|             | `outline`      | `false`     | font outline `true` or `false`                                                                    |
+|             | `shadow`       | `false`     | font shadow `true` or `false`                                                                     |
+|             | `strike`       | `false`     | font strikethrough `true` or `false`                                                              |
+|             | `sz`           | `"11"`      | font size (points)                                                                                |
+|             | `underline`    | `false`     | font underline `true` or `false`                                                                  |
+|             | `vertAlign`    |             | `"superscript"` or `"subscript"` (TODO:does this work?)                                           |
 | `numFmt`    |                | `0`         | Ex: `"0"` // integer index to built in formats, see StyleBuilder.SSF property                     |
 |             |                |             | Ex: `"0.00%"` // string matching a built-in format, see StyleBuilder.SSF                          |
 |             |                |             | Ex: `"0.0%"` // string specifying a custom format                                                 |
 |             |                |             | Ex: `"0.00%;\\(0.00%\\);\\-;@"` // string specifying a custom format, escaping special characters |
 |             |                |             | Ex: `"m/dd/yy"` // string a date format using Excel's format notation                             |
 
-#### `COLOR_STYLE` (object)
+### `COLOR_STYLE` {object} Properties
 
 Colors for `border`, `fill`, `font` are specified as an name/value object - use one of the following:
 
-| Color Prop | Description                                                      | Example                   |
-| :--------- | ---------------------------------------------------------------- | ------------------------- |
-| `auto`     | use automatic values                                             | `{auto: 1}`               |
-| `indexed`  | use indexed value                                                | `{indexed: 64}`           |
-| `rgb`      | use hex ARGB value                                               | `{rgb: "FFFFAA00"}`       |
-| `theme`    | use theme color index (int) and a tint value (float) (default 0) | `{theme: 1, tint: -0.25}` |
+| Color Prop | Description       | Example                                                         |
+| :--------- | ----------------- | --------------------------------------------------------------- |
+| `rgb`      | hex RGB value     | `{rgb: "FFCC00"}`                                               |
+| `theme`    | theme color index | `{theme: 4}` // (0-n) // Theme color index 4 ("Blue, Accent 1") |
+| `tint`     | tint by percent   | `{theme: 1, tint: 0.4}` // ("Blue, Accent 1, Lighter 40%")      |
 
-#### `BORDER_STYLE` (string)
+### `BORDER_STYLE` {string} Properties
 
-Border style is a string value which may take on one of the following values:
+Border style property is one of the following values:
 
 -   `dashDotDot`
 -   `dashDot`
@@ -106,12 +110,14 @@ Border style is a string value which may take on one of the following values:
 -   `thick`
 -   `thin`
 
-Borders for merged areas are specified for each cell within the merged area. So to apply a box border to a merged area of 3x3 cells, border styles would need to be specified for eight different cells:
+**Border Notes**
 
--   left borders for the three cells on the left,
--   right borders for the cells on the right
--   top borders for the cells on the top
--   bottom borders for the cells on the left
+Borders for merged areas are specified for each cell within the merged area. For example, to apply a box border to a merged area of 3x3 cells, border styles would need to be specified for eight different cells:
+
+-   left borders (for the three cells on the left)
+-   right borders (for the cells on the right)
+-   top borders (for the cells on the top)
+-   bottom borders (for the cells on the left)
 
 ## 🙏 Thanks
 
@@ -122,5 +128,5 @@ Borders for merged areas are specified for each cell within the merged area. So 
 
 ## 🔖 License
 
-Please consult the attached LICENSE file for details. All rights not explicitly
+Please consult the attached [LICENSE](https://github.com/gitbrent/xlsx-js-style/blob/master/LICENSE) file for details. All rights not explicitly
 granted by the Apache 2.0 License are reserved by the Original Author.
