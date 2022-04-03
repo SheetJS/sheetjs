@@ -71,8 +71,6 @@ ws["A1"].s = {
 |             | `color`        |             | font color `COLOR_SPEC`                                                                           |
 |             | `italic`       | `false`     | font italic `true` or `false`                                                                     |
 |             | `name`         | `"Calibri"` | font name                                                                                         |
-|             | `outline`      | `false`     | font outline `true` or `false`                                                                    |
-|             | `shadow`       | `false`     | font shadow `true` or `false`                                                                     |
 |             | `strike`       | `false`     | font strikethrough `true` or `false`                                                              |
 |             | `sz`           | `"11"`      | font size (points)                                                                                |
 |             | `underline`    | `false`     | font underline `true` or `false`                                                                  |
