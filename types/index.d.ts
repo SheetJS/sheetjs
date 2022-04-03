@@ -946,7 +946,7 @@ export interface CellStyleColor {
 }
 
 /** Style-border object [xlsx-js-style] */
-export type BORDER_STYLE =
+export type BorderType =
 	| "dashDot"
 	| "dashDotDot"
 	| "dashed"
@@ -987,11 +987,11 @@ export interface CellStyle {
 		wrapText?: boolean;
 	};
 	border?: {
-		top?: { style: BORDER_STYLE; color: CellStyleColor };
-		bottom?: { style: BORDER_STYLE; color: CellStyleColor };
-		left?: { style: BORDER_STYLE; color: CellStyleColor };
-		right?: { style: BORDER_STYLE; color: CellStyleColor };
-		diagonal?: { style: BORDER_STYLE; color: CellStyleColor; diagonalUp?: boolean; diagonalDown?: boolean };
+		top?: { style: BorderType; color: CellStyleColor };
+		bottom?: { style: BorderType; color: CellStyleColor };
+		left?: { style: BorderType; color: CellStyleColor };
+		right?: { style: BorderType; color: CellStyleColor };
+		diagonal?: { style: BorderType; color: CellStyleColor; diagonalUp?: boolean; diagonalDown?: boolean };
 	};
 	fill?: {
 		/**
@@ -1031,22 +1031,12 @@ export interface CellStyle {
 		 */
 		name?: string;
 		/**
-		 * apply outline?
-		 * @default false
-		 */
-		outline?: boolean;
-		/**
-		 * apply shadow?
-		 * @default false
-		 */
-		shadow?: boolean;
-		/**
 		 * font size (points)
 		 * @default 11
 		 */
 		sz?: number;
 		/**
-		 * strike through font?
+		 * font > effect > strikethrough
 		 * @default false
 		 */
 		strike?: boolean;
@@ -1056,8 +1046,8 @@ export interface CellStyle {
 		 */
 		underline?: boolean;
 		/**
-		 * vertical align
-		 * - values: "superscript" | "subscript"
+		 * font > effect > subscript/subscript
+		 * - values: "subscript" | "superscript"
 		 * @default null
 		 */
 		vertAlign?: "superscript" | "subscript";
