@@ -987,11 +987,11 @@ export interface CellStyle {
 		wrapText?: boolean;
 	};
 	border?: {
-		top?: { style: BorderType; color: CellStyleColor };
-		bottom?: { style: BorderType; color: CellStyleColor };
-		left?: { style: BorderType; color: CellStyleColor };
-		right?: { style: BorderType; color: CellStyleColor };
-		diagonal?: { style: BorderType; color: CellStyleColor; diagonalUp?: boolean; diagonalDown?: boolean };
+		top?: { color: CellStyleColor; style?: BorderType };
+		bottom?: { color: CellStyleColor; style?: BorderType };
+		left?: { color: CellStyleColor; style?: BorderType };
+		right?: { color: CellStyleColor; style?: BorderType };
+		diagonal?: { color: CellStyleColor; style?: BorderType; diagonalUp?: boolean; diagonalDown?: boolean };
 	};
 	fill?: {
 		/**
