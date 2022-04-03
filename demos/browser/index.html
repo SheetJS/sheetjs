@@ -41,15 +41,15 @@
 				+ 'let row1 = ["a", "b", "c"];\n'
 				+ 'let row2 = [1, 2, 3];\n'
 				+ 'let row3 = [\n'
-				+ "    {v: 'Courier sz24', t: 's', s: {font: {name: 'Courier', sz: 24}}},\n"
-				+ "    {v: 'bold + color', t: 's', s: {font: {bold: true, color: {rgb: 'FF0000'}}}},\n"
-				+ "    {v: 'fill fgColor', t: 's', s: {fill: {fgColor: {rgb: 'FFE9E9'}}}},\n"
+				+ "    {v: 'Courier: 24', t: 's', s: {font: {name: 'Courier', sz: 24}}},\n"
+				+ "    {v: 'bold & color', t: 's', s: {font: {bold: true, color: {rgb: 'FF0000'}}}},\n"
+				+ "    {v: 'fill: color', t: 's', s: {fill: {fgColor: {rgb: 'E9E9E9'}}}},\n"
 				+ "    {v: 'line\\nbreak!', t: 's', s: {alignment: {wrapText: true}}},\n"
-				+ ']\n'
+				+ '];\n'
 				+ '\n'
 				+ '// STEP 3: Create Worksheet, add data, set cols widths\n'
 				+ "const ws = XLSX.utils.aoa_to_sheet([row1, row2, row3]);\n"
-				+ "ws['!cols'] = [{width: 30}, {width: 20}, {width: 20}]\n"
+				+ "ws['!cols'] = [{width: 30}, {width: 20}, {width: 20}];\n"
 				+ "XLSX.utils.book_append_sheet(wb, ws, 'browser-demo');\n"
 				+ '\n'
 				+ '// STEP 4: Write Excel file to browser\n'
@@ -67,7 +67,7 @@
 			let row3 = [
 				{ v: 'Courier: 24', t: 's', s: { font: { name: 'Courier', sz: 24 } } },
 				{ v: 'bold & color', t: 's', s: { font: { bold: true, color: { rgb: 'FF0000' } } } },
-				{ v: 'fill: color', t: 's', s: { fill: { fgColor: { rgb: 'FFE9E9E9' } } } },
+				{ v: 'fill: color', t: 's', s: { fill: { fgColor: { rgb: 'E9E9E9' } } } },
 				{ v: 'line\nbreak', t: 's', s: { alignment: { wrapText: true } } },
 			]
 			const ws = XLSX.utils.aoa_to_sheet([row1, row2, row3]);
