@@ -53,6 +53,7 @@ let row = [
 	{ v: "fill: color", t: "s", s: { fill: { fgColor: { rgb: "E9E9E9" } } } },
 	{ v: "line\nbreak", t: "s", s: { alignment: { wrapText: true } } },
 ];
+
 // STEP 3: Create worksheet with rows; Add worksheet to workbook
 const ws = XLSX.utils.aoa_to_sheet([row]);
 XLSX.utils.book_append_sheet(wb, ws, "readme demo");
