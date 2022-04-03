@@ -14,18 +14,12 @@ SheetJS with Style! Create Excel spreadsheets with basic styling options using J
 [![Known Vulnerabilities](https://snyk.io/test/npm/xlsx-js-style/badge.svg)](https://snyk.io/test/npm/xlsx-js-style) [![npm downloads](https://img.shields.io/npm/dm/xlsx-js-style.svg)](https://www.npmjs.com/package/xlsx-js-style)
 [![typescripts definitions](https://img.shields.io/npm/types/xlsx-js-style)](https://img.shields.io/npm/types/xlsx-js-style)
 
-This project is a fork of [SheetJS/sheetjs](https://github.com/sheetjs/sheetjs) combined with code from
-[sheetjs-style](https://www.npmjs.com/package/sheetjs-style) (by [ShanaMaid](https://github.com/ShanaMaid/))
-and [sheetjs-style-v2](https://www.npmjs.com/package/sheetjs-style-v2) (by [Raul Gonzalez](https://www.npmjs.com/~armandourbina)).
-
-All projects are under the Apache 2.0 License
-
 ## 🔌 Installation
 
 Install [npm](https://www.npmjs.org/package/xlsx-js-style):
 
 ```sh
-npm install xlsx-js-style --save
+npm install xlsx-js-style
 ```
 
 Install browser:
@@ -36,7 +30,8 @@ Install browser:
 
 ## 🗒 Core API
 
-Please refer to the [SheetJS](https://sheetjs.com/) documentation for core API reference.
+-   Refer to the [SheetJS](https://sheetjs.com/) documentation for core API reference
+-   Current version of sheetjs used: **0.18.5**
 
 ## 🗒 Style API
 
@@ -132,6 +127,12 @@ Borders for merged areas are specified for each cell within the merged area. For
 -   bottom borders (for the cells on the left)
 
 ## 🙏 Thanks
+
+This project is a fork of [SheetJS/sheetjs](https://github.com/sheetjs/sheetjs) combined with code from
+[sheetjs-style](https://www.npmjs.com/package/sheetjs-style) (by [ShanaMaid](https://github.com/ShanaMaid/))
+and [sheetjs-style-v2](https://www.npmjs.com/package/sheetjs-style-v2) (by [Raul Gonzalez](https://www.npmjs.com/~armandourbina)).
+
+All projects are under the Apache 2.0 License
 
 -   [sheetjs](https://github.com/SheetJS/sheetjs)
 -   [js-xlsx](https://github.com/protobi/js-xlsx)
