@@ -42,8 +42,6 @@ Please refer to the [SheetJS](https://sheetjs.com/) documentation for core API r
 
 ### Cell Style Example
 
-// TODO: NOPE!!
-
 ```js
 // STEP 1: Create a new workbook
 const wb = XLSX.utils.book_new();
