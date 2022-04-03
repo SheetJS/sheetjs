@@ -78,69 +78,90 @@
 
 		function doDemoAll() {
 			const BORDERS = ['dashDotDot', 'dashDot', 'dashed', 'dotted', 'hair', 'mediumDashDotDot', 'mediumDashDot', 'mediumDashed', 'medium', 'slantDashDot', 'thick', 'thin'];
-			const DEF_ColW = 35;
-			const DEF_RowH = 50;
-			const DEF_Size14Vert = { font: { sz: 14 }, alignment: { vertical: 'center' } };
-			const DEF_FixedSize14 = { font: { name: 'Courier New', sz: 14 } };
-			const DEF_FixedSize14Vert = { font: { name: 'Courier New', sz: 14 }, alignment: { vertical: 'center', wrapText: true } };
+			const DEF_ColW = 30;
+			const DEF_RowH = 60;
+			const BORDER_ALL = { border: { top: { style: 'thick', color: { rgb: '4b0082' } }, right: { style: 'thick', color: { rgb: '4b0082' } }, bottom: { style: 'thick', color: { rgb: '4b0082' } }, left: { style: 'thick', color: { rgb: '4b0082' } } } };
+			const DEF_Size14Vert = { font: { sz: 14 }, alignment: { vertical: 'center', horizontal: 'center' } };
+			const DEF_FixedSize14 = { font: { name: 'Courier New', sz: 14, color: { rgb: '9e9e9e' } } };
+			const DEF_FixedSize14Wht = { font: { name: 'Courier New', sz: 12, color: { rgb: 'f1f1f1' } } };
+			const DEF_FixedSize14Vert = { font: { name: 'Courier New', sz: 12 }, alignment: { horizontal: 'center', vertical: 'center', wrapText: true } };
+			const DEF_FxSz14RgbVert = { font: { name: 'Courier New', sz: 12, color: { rgb: '9e9e9e' } }, alignment: { vertical: 'center', horizontal: 'center', wrapText: true } };
 
 			const wb = XLSX.utils.book_new();
+
+			let rowDEMO = [
+				{ v: 'xlsx-js-style', t: 's', s: { ...DEF_Size14Vert, fill: { fgColor: { rgb: '5ebd3e' } }, font: { sz: 16, name: 'Courier', bold: true } } },
+				{ v: 'javascript', t: 's', s: { ...DEF_Size14Vert, fill: { fgColor: { rgb: 'ff5900' } }, font: { sz: 18, color: { rgb: 'f1f1f1' } } } },
+				{ v: 'library is', t: 's', s: { ...DEF_Size14Vert, fill: { fgColor: { rgb: 'f78200' } }, font: { sz: 18, name: 'Courier' } } },
+				{ v: 'sheetjs', t: 's', s: { ...DEF_Size14Vert, fill: { fgColor: { rgb: 'e23838' } }, font: { sz: 28 } } },
+				{ v: ' plus ', t: 's', s: { ...DEF_Size14Vert, fill: { fgColor: { rgb: '973999' } }, font: { sz: 22, name: 'Helvetica Neue', color: { rgb: 'f1f1f1' } } } },
+				{ v: 'STYLE!', t: 's', s: { ...DEF_Size14Vert, fill: { fgColor: { rgb: '009cdf' } }, ...BORDER_ALL, font: { sz: 18, name: 'Helvetica Neue' } } },
+			];
+
 			let rowFill = [
-				{ v: "fill\n{rgb: 'e6e6e6'}", t: 's', s: { ...DEF_FixedSize14Vert, fill: { fgColor: { rgb: 'e6e6e6' } } } },
-				{ v: 'fill\n{theme: 4}       ', t: 's', s: { ...DEF_FixedSize14Vert, fill: { fgColor: { theme: 4 } } } },
-				{ v: 'fill\n{theme: 4, tint: 0.4}', t: 's', s: { ...DEF_FixedSize14Vert, fill: { fgColor: { theme: 4, tint: 0.4 } } } },
-				{ v: 'fill\n{theme: 4, tint: -0.5}', t: 's', s: { ...DEF_FixedSize14Vert, fill: { fgColor: { theme: 4, tint: -0.5 } } } },
-			]
+				{ v: "fill\n{rgb: 'e6e6e6'}       ", t: 's', s: { ...DEF_FixedSize14Vert, fill: { fgColor: { rgb: 'e6e6e6' } } } },
+				{ v: 'fill\n{theme: 4}            ', t: 's', s: { ...DEF_FixedSize14Vert, fill: { fgColor: { theme: 4 } } } },
+				{ v: 'fill\n{theme: 4, tint: 0.4} ', t: 's', s: { ...DEF_FixedSize14Vert, fill: { fgColor: { theme: 4, tint: 0.4 } } } },
+				{ v: 'fill\n{theme: 4, tint: 0.6} ', t: 's', s: { ...DEF_FixedSize14Vert, fill: { fgColor: { theme: 4, tint: 0.6 } } } },
+				{ v: 'fill\n{theme: 4, tint: 0.8} ', t: 's', s: { ...DEF_FixedSize14Vert, fill: { fgColor: { theme: 4, tint: 0.8 } } } },
+				{ v: 'fill\n{theme: 4, tint: -0.5}', t: 's', s: { ...DEF_FixedSize14Vert, fill: { fgColor: { theme: 4, tint: -0.5 } }, ...DEF_FixedSize14Wht } },
+			];
+
 			let rowFont = [
-				{ v: 'Courier: 24', t: 's', s: { font: { name: 'Courier', sz: 24, vertAlign: 'subscript' } } },
-				{ v: 'bold & color', t: 's', s: { font: { bold: true, color: { rgb: 'FFFF0000' } } } },
-				{ v: 'fill: color', t: 's', s: { fill: { fgColor: { rgb: 'FFE9E9E9' } } } },
-				{ v: 'line\nbreak', t: 's', s: { alignment: { wrapText: true } } },
-				/* TODO: add , vertAlign: 'superscript' */
-			]
-			let rowAliV = [
+				{ v: 'bold: true', t: 's', s: { ...DEF_Size14Vert, font: { sz: 14, bold: true } } },
+				{ v: 'color: "00cc00"', t: 's', s: { ...DEF_Size14Vert, font: { sz: 14, color: { rgb: '00cc00' } } } },
+				{ v: 'name: "Courier"', t: 's', s: { ...DEF_Size14Vert, font: { sz: 14, name: 'Courier' } } },
+				{ v: 'italic: true', t: 's', s: { ...DEF_Size14Vert, font: { sz: 14, italic: true } } },
+				//{ v: 'size: 28', t: 's', s: { ...DEF_Size14Vert, font: { sz: 28 } } },
+				{ v: 'strike: true', t: 's', s: { ...DEF_Size14Vert, font: { sz: 14, strike: true } } },
+				{ v: 'underline: true', t: 's', s: { ...DEF_Size14Vert, font: { sz: 14, underline: true } } },
+			];
+
+			let rowAlig = [
 				{ v: "align\n{vertical: 'top'}   ", t: 's', s: { ...DEF_FixedSize14, alignment: { wrapText: true, vertical: 'top' } } },
 				{ v: "align\n{vertical: 'center'}", t: 's', s: { ...DEF_FixedSize14, alignment: { wrapText: true, vertical: 'center' } } },
 				{ v: "align\n{vertical: 'bottom'}", t: 's', s: { ...DEF_FixedSize14, alignment: { wrapText: true, vertical: 'bottom' } } },
-			];
-			let rowAliH = [
 				{ v: "align\n{horizontal: 'left'}  ", t: 's', s: { ...DEF_FixedSize14, alignment: { wrapText: true, horizontal: 'left' } } },
 				{ v: "align\n{horizontal: 'center'}", t: 's', s: { ...DEF_FixedSize14, alignment: { wrapText: true, horizontal: 'center' } } },
 				{ v: "align\n{horizontal: 'right'} ", t: 's', s: { ...DEF_FixedSize14, alignment: { wrapText: true, horizontal: 'right' } } },
 			];
+
 			let rowRota = [
-				{ v: 'textRotation: 15', t: 's', s: { alignment: { textRotation: 15 } } },
-				{ v: 'textRotation: 30', t: 's', s: { alignment: { textRotation: 30 } } },
-				{ v: 'textRotation: 45', t: 's', s: { alignment: { textRotation: 45 } } },
-				{ v: 'textRotation: 90', t: 's', s: { alignment: { textRotation: 90 } } },
+				{ v: 'textRotation: 15', t: 's', s: { alignment: { horizontal: 'center', textRotation: 15 } } },
+				{ v: 'textRotation: 30', t: 's', s: { alignment: { horizontal: 'center', textRotation: 30 } } },
+				{ v: 'textRotation: 45', t: 's', s: { alignment: { horizontal: 'center', textRotation: 45 } } },
+				{ v: 'textRotation: 90', t: 's', s: { alignment: { horizontal: 'center', textRotation: 90 } } },
+				{ v: 'textRotation: 145', t: 's', s: { alignment: { horizontal: 'center', textRotation: 145 } } },
+				{ v: 'textRotation: 160', t: 's', s: { alignment: { horizontal: 'center', textRotation: 160 } } },
 			];
+
 			let rowBdr0 = [
-				{ v: 'border: top         ', t: 's', s: { alignment: { vertical: 'center' }, border: { top: { style: 'thin', color: { rgba: 'FF0000' } } } } },
-				{ v: 'border: left        ', t: 's', s: { alignment: { vertical: 'center' }, border: { left: { style: 'thin', color: { rgba: 'FF0000' } } } } },
-				{ v: 'border: right       ', t: 's', s: { alignment: { vertical: 'center' }, border: { right: { style: 'thin', color: { rgba: 'FF0000' } } } } },
-				{ v: 'border: bottom      ', t: 's', s: { alignment: { vertical: 'center' }, border: { bottom: { style: 'thin', color: { rgba: 'FF0000' } } } } },
-				{ v: 'border: diagonalUp  ', t: 's', s: { alignment: { vertical: 'center' }, border: { diagonal: { style: 'thin', color: { rgba: 'FF0000' } }, diagonalUp: true } } },
-				{ v: 'border: diagonalDown', t: 's', s: { alignment: { vertical: 'center' }, border: { diagonal: { style: 'thin', color: { rgba: 'FF0000' } }, diagonalDown: true } } },
+				{ v: 'border: right       ', t: 's', s: { ...DEF_FxSz14RgbVert, border: { right: { style: 'thick', color: { rgb: 'FF0000' } } } } },
+				{ v: 'border: bottom      ', t: 's', s: { ...DEF_FxSz14RgbVert, border: { bottom: { style: 'thick', color: { rgb: 'FF0000' } } } } },
+				{ v: 'border: diagonalUp  ', t: 's', s: { ...DEF_FxSz14RgbVert, border: { diagonal: { style: 'thick', color: { rgb: 'FF0000' } }, diagonalUp: true } } },
+				{ v: 'border: top         ', t: 's', s: { ...DEF_FxSz14RgbVert, border: { top: { style: 'thick', color: { rgb: 'FF0000' } } } } },
+				{ v: 'border: diagonalDown', t: 's', s: { ...DEF_FxSz14RgbVert, border: { diagonal: { style: 'thick', color: { rgb: 'FF0000' } }, diagonalDown: true } } },
+				{ v: 'border: left        ', t: 's', s: { ...DEF_FxSz14RgbVert, border: { left: { style: 'thick', color: { rgb: 'FF0000' } } } } },
 			];
 			let rowBdr1 = [];
 			let rowBdr2 = [];
 			BORDERS.filter((_, idx) => idx < 6).forEach(item => {
 				rowBdr1.push({
 					v: `border: style:\n'${item}'`, t: 's',
-					s: { ...DEF_FixedSize14Vert, border: { right: { style: item, color: { rgba: '0000FF' } } } }
+					s: { ...DEF_FxSz14RgbVert, border: { right: { style: item, color: { rgb: '0000FF' } } } }
 				});
 			});
 			BORDERS.filter((_, idx) => idx >= 6).forEach(item => {
 				rowBdr2.push({
 					v: `border: style:\n'${item}'`, t: 's',
-					s: { ...DEF_FixedSize14Vert, border: { right: { style: item, color: { rgba: '0000FF' } } } }
+					s: { ...DEF_FxSz14RgbVert, border: { right: { style: item, color: { rgb: '0000FF' } } } }
 				});
 			});
 
-			const ws = XLSX.utils.aoa_to_sheet([rowFill, rowFont, rowAliV, rowAliH, rowBdr0, rowBdr1, rowBdr2, rowRota]);
-			ws['!cols'] = [{ width: DEF_ColW }, { width: DEF_ColW }, { width: DEF_ColW }, { width: DEF_ColW }, { width: DEF_ColW }, { width: DEF_ColW }];
-			ws['!rows'] = [{ 'hpt': DEF_RowH }, { 'hpt': DEF_RowH }, null, { 'hpt': DEF_RowH }, { 'hpt': DEF_RowH }, { 'hpt': DEF_RowH }];
-			XLSX.utils.book_append_sheet(wb, ws, 'browser-demo');
+			const ws = XLSX.utils.aoa_to_sheet([rowDEMO, rowFont, rowFill, rowAlig, rowBdr0, rowBdr1, rowBdr2, rowRota]);
+			ws['!cols'] = [{ width: DEF_ColW }, { width: DEF_ColW }, { width: DEF_ColW }, { width: DEF_ColW }, { width: DEF_ColW }, { width: DEF_ColW }, { width: DEF_ColW }];
+			ws['!rows'] = [{ 'hpt': 100 }, { 'hpt': 40 }, { 'hpt': DEF_RowH }, { 'hpt': DEF_RowH }, { 'hpt': DEF_RowH }, { 'hpt': DEF_RowH }];
+			XLSX.utils.book_append_sheet(wb, ws, 'full-demo');
 			XLSX.writeFile(wb, "xlsx-js-style-demo-all.xlsx");
 		}
 
