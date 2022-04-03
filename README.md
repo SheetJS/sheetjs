@@ -4,6 +4,13 @@
 
 SheetJS with Style! Create Excel spreadsheets with basic styling options using JavaScript.
 
+<p align="center">
+  <a href="https://github.com/gitbrent/xlsx-js-style/">
+    <img alt="xlsx-js-style sheetjs styles" title="xlsx-js-style sheetjs styles" src="https://raw.githubusercontent.com/gitbrent/xlsx-js-style/demos/browser/images/readme_banner.png"/>
+  </a>
+</p>
+<br/>
+
 [![Known Vulnerabilities](https://snyk.io/test/npm/xlsx-js-style/badge.svg)](https://snyk.io/test/npm/xlsx-js-style) [![npm downloads](https://img.shields.io/npm/dm/xlsx-js-style.svg)](https://www.npmjs.com/package/xlsx-js-style)
 [![typescripts definitions](https://img.shields.io/npm/types/xlsx-js-style)](https://img.shields.io/npm/types/xlsx-js-style)
 
@@ -59,22 +66,22 @@ ws["A1"].s = {
 |             | `horizontal`   | `left`      | `"left"` or `"center"` or `"right"`                                                               |
 |             | `wrapText`     | `false`     | `true` or `false`                                                                                 |
 |             | `textRotation` | `0`         | `0` to `180`, or `255` // `180` is rotated down 180 degrees, `255` is special, aligned vertically |
-| `border`    | `top`          |             | `{ style: BORDER_STYLE, color: COLOR_SPEC }`                                                      |
-|             | `bottom`       |             | `{ style: BORDER_STYLE, color: COLOR_SPEC }`                                                      |
-|             | `left`         |             | `{ style: BORDER_STYLE, color: COLOR_SPEC }`                                                      |
-|             | `right`        |             | `{ style: BORDER_STYLE, color: COLOR_SPEC }`                                                      |
-|             | `diagonal`     |             | `{ style: BORDER_STYLE, color: COLOR_SPEC, diagonalUp: true/false, diagonalDown: true/false }`    |
+| `border`    | `top`          |             | `{ style: BORDER_STYLE, color: COLOR_STYLE }`                                                     |
+|             | `bottom`       |             | `{ style: BORDER_STYLE, color: COLOR_STYLE }`                                                     |
+|             | `left`         |             | `{ style: BORDER_STYLE, color: COLOR_STYLE }`                                                     |
+|             | `right`        |             | `{ style: BORDER_STYLE, color: COLOR_STYLE }`                                                     |
+|             | `diagonal`     |             | `{ style: BORDER_STYLE, color: COLOR_STYLE, diagonalUp: true/false, diagonalDown: true/false }`   |
 | `fill`      | `patternType`  | `"none"`    | `"solid"` or `"none"`                                                                             |
-|             | `fgColor`      |             | foreground color: see `COLOR_SPEC`                                                                |
-|             | `bgColor`      |             | background color: see `COLOR_SPEC`                                                                |
+|             | `fgColor`      |             | foreground color: see `COLOR_STYLE`                                                               |
+|             | `bgColor`      |             | background color: see `COLOR_STYLE`                                                               |
 | `font`      | `bold`         | `false`     | font bold `true` or `false`                                                                       |
-|             | `color`        |             | font color `COLOR_SPEC`                                                                           |
+|             | `color`        |             | font color `COLOR_STYLE`                                                                          |
 |             | `italic`       | `false`     | font italic `true` or `false`                                                                     |
 |             | `name`         | `"Calibri"` | font name                                                                                         |
 |             | `strike`       | `false`     | font strikethrough `true` or `false`                                                              |
 |             | `sz`           | `"11"`      | font size (points)                                                                                |
 |             | `underline`    | `false`     | font underline `true` or `false`                                                                  |
-|             | `vertAlign`    |             | `"superscript"` or `"subscript"` (TODO:does this work?)                                           |
+|             | `vertAlign`    |             | `"superscript"` or `"subscript"`                                                                  |
 | `numFmt`    |                | `0`         | Ex: `"0"` // integer index to built in formats, see StyleBuilder.SSF property                     |
 |             |                |             | Ex: `"0.00%"` // string matching a built-in format, see StyleBuilder.SSF                          |
 |             |                |             | Ex: `"0.0%"` // string specifying a custom format                                                 |
