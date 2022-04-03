@@ -24939,7 +24939,7 @@ var XmlNode = (function () {
 		_getSubBorder: function (direction, spec) {
 			var $direction = XmlNode(direction);
 			if (spec) {
-				if (spec.style) $direction.attr("style", spec.style);
+				$direction.attr("style", spec.style||'medium');
 				if (spec.color) {
 					var $color = XmlNode("color");
 					if (spec.color.auto) {
