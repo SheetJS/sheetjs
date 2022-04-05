@@ -51,7 +51,7 @@ generating a worksheet object.  By default, it will generate a header row and
 one row per object in the array.  The optional `opts` argument has settings to
 control the column order and header output.
 
-["Array of Objects Input"](#array-of-arrays-input) describes the function and
+["Array of Objects Input"](#array-of-objects-input) describes the function and
 the optional `opts` argument in more detail.
 
 **Examples**
