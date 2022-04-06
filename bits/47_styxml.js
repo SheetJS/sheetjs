@@ -278,7 +278,7 @@ function parse_numFmts(t, styles, opts) {
 						for(j = 0x188; j > 0x3c; --j) if(styles.NumberFmt[j] == null) break;
 						styles.NumberFmt[j] = f;
 					}
-					SSF_load(f,j);
+					SSF__load(f,j);
 				}
 			} break;
 			case '</numFmt>': break;

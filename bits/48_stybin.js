@@ -215,7 +215,7 @@ function parse_sty_bin(data, themes, opts) {
 	recordhopper(data, function hopper_sty(val, R, RT) {
 		switch(RT) {
 			case 0x002C: /* BrtFmt */
-				styles.NumberFmt[val[0]] = val[1]; SSF_load(val[1], val[0]);
+				styles.NumberFmt[val[0]] = val[1]; SSF__load(val[1], val[0]);
 				break;
 			case 0x002B: /* BrtFont */
 				styles.Fonts.push(val);

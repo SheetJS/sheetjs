@@ -65,3 +65,12 @@ function dateNF_fix(str/*:string*/, dateNF/*:string*/, match/*:Array<string>*/)/
 	return datestr + "T" + timestr;
 }
 
+/* table of bad formats written by third-party tools */
+var bad_formats = {
+	"d.m": "d\\.m" // Issue #2571 Google Sheets writes invalid format 'd.m', correct format is 'd"."m' or 'd\\.m'
+};
+
+function SSF__load(fmt, idx) {
+	return SSF_load(bad_formats[fmt] || fmt, idx);
+}
+
