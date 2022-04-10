@@ -34,7 +34,7 @@ describe('asian formats', function() {
 				//[ 'ปปปป',   '๒๔๗๖'],
 				[ 'b2yyyy', '1352'],
 				[ 'b2eeee', '1352'],
-				[ 'b2bbbb', '1895'],
+				[ 'b2bbbb', '1895']
 				//[ 'b2ปปปป', '๑๘๙๕']
 			]
 		].forEach(function(row) {
@@ -46,5 +46,26 @@ describe('asian formats', function() {
 	it.skip('thai fields', function() {
 		SSF.format('\u0E27/\u0E14/\u0E1B\u0E1B\u0E1B\u0E1B \u0E0A\u0E0A:\u0E19\u0E19:\u0E17\u0E17', 12345.67);
 		assert.equal(SSF.format('\u0E27/\u0E14/\u0E1B\u0E1B\u0E1B\u0E1B \u0E0A\u0E0A:\u0E19\u0E19:\u0E17\u0E17', 12345.67), "๑๘/๑๐/๒๔๗๖ ๑๖:๐๔:๔๘");
+	});
+});
+describe('meridiem', function() {
+	it('should force am/pm uppercase', function() {
+		for(var i = 0; i < 16; ++i) {
+			var a = ((i & 8) ? "A" : "a") + ((i & 4) ? "M" : "m");
+			var p = ((i & 2) ? "P" : "p") + ((i & 1) ? "M" : "m");
+			var fmt = a + "/" + p;
+			assert.equal(SSF.format(fmt, 0.25), "AM");
+			assert.equal(SSF.format(fmt, 0.75), "PM");
+		}
+	});
+	it('should use actual case for a/p', function() {
+		for(var i = 0; i < 12; ++i) {
+			var a = ((i & 2) ? "A" : "a");
+			var p = ((i & 1) ? "P" : "p");
+			var w = ["", 'm', 'M'][i>>2];
+			var fmt = a + "/" + p + ["", '"m"', '"M"'][i>>2];
+			assert.equal(SSF.format(fmt, 0.25), a + w);
+			assert.equal(SSF.format(fmt, 0.75), p + w);
+		}
 	});
 });
