@@ -9,6 +9,15 @@ function write_cfb_ctr(cfb/*:CFBContainer*/, o/*:WriteOpts*/)/*:any*/ {
 	return CFB.write(cfb, o);
 }
 
+function write_zip(wb/*:Workbook*/, opts/*:WriteOpts*/)/*:ZIP*/ {
+	switch(opts.bookType) {
+		case "ods": return write_ods(wb, opts);
+		case "numbers": return write_numbers_iwa(wb, opts);
+		case "xlsb": return write_zip_xlsb(wb, opts);
+		default: return write_zip_xlsx(wb, opts);
+	}
+}
+
 /*:: declare var encrypt_agile:any; */
 function write_zip_type(wb/*:Workbook*/, opts/*:?WriteOpts*/)/*:any*/ {
 	var o = dup(opts||{});

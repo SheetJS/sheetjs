@@ -1,15 +1,8 @@
-function write_zip(wb/*:Workbook*/, opts/*:WriteOpts*/)/*:ZIP*/ {
-	if(opts.bookType == "ods") return write_ods(wb, opts);
-	if(opts.bookType == "numbers") return write_numbers_iwa(wb, opts);
-	if(opts.bookType == "xlsb") return write_zip_xlsxb(wb, opts);
-	return write_zip_xlsx(wb, opts);
-}
-
 /* XLSX and XLSB writing are very similar.  Originally they were unified in one
    export function.  This is horrible for tree shaking in the common case (most
    applications need to export files in one format) so this function supports
    both formats while write_zip_xlsx only handles XLSX */
-function write_zip_xlsxb(wb/*:Workbook*/, opts/*:WriteOpts*/)/*:ZIP*/ {
+function write_zip_xlsb(wb/*:Workbook*/, opts/*:WriteOpts*/)/*:ZIP*/ {
 	_shapeid = 1024;
 	if(wb && !wb.SSF) {
 		wb.SSF = dup(table_fmt);

@@ -2179,6 +2179,16 @@ describe('sylk', function() {
 		assert.equal(get_cell(ws, "B11").v, true);
 		assert.equal(get_cell(ws, "B13").v, 50);
 	});
+	it('should cap cols at 1000 (ALL)', function() {
+		var aoa = [[1], [], []]; aoa[1][999] = 2; aoa[2][1000] = 3;
+		var ws1 = X.utils.aoa_to_sheet(aoa);
+		var wb1 = X.utils.book_new(); X.utils.book_append_sheet(wb1, ws1, "Sheet1");
+		var wb2 = X.read(X.write(wb1,{bookType:"numbers",type:'binary',numbers:XLSX_ZAHL}),{type:'binary'});
+		var ws2 = wb2.Sheets.Sheet1;
+		assert.equal(ws2["!ref"], "A1:ALL3");
+		assert.equal(get_cell(ws2, "A1").v, 1);
+		assert.equal(get_cell(ws2, "ALL2").v, 2);
+	});
 });
 
 if(fs.existsSync(dir + 'dbf/d11.dbf')) describe('dbf', function() {

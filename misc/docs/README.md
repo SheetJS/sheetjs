@@ -1031,7 +1031,7 @@ generating a worksheet object.  By default, it will generate a header row and
 one row per object in the array.  The optional `opts` argument has settings to
 control the column order and header output.
 
-["Array of Objects Input"](#array-of-arrays-input) describes the function and
+["Array of Objects Input"](#array-of-objects-input) describes the function and
 the optional `opts` argument in more detail.
 
 **Examples**
@@ -3803,6 +3803,7 @@ range limits will be silently truncated:
 |:------------------------------------------|:-----------|---------:|---------:|
 | Excel 2007+ XML Formats (XLSX/XLSM)       | XFD1048576 |    16384 |  1048576 |
 | Excel 2007+ Binary Format (XLSB BIFF12)   | XFD1048576 |    16384 |  1048576 |
+| Numbers 12.0 (NUMBERS)                    | ALL1000000 |     1000 |  1000000 |
 | Excel 97-2004 (XLS BIFF8)                 | IV65536    |      256 |    65536 |
 | Excel 5.0/95 (XLS BIFF5)                  | IV16384    |      256 |    16384 |
 | Excel 4.0 (XLS BIFF4)                     | IV16384    |      256 |    16384 |

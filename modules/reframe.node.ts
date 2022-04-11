@@ -186,8 +186,8 @@ shake();
 
 function mutate_row(tri: ReturnType<typeof parse_shallow>) {
   if(!tri[6]?.[0] || !tri[7]?.[0]) throw "Mutation only works on post-BNC storages!";
-	var wide_offsets = tri[8]?.[0]?.data && varint_to_i32(tri[8][0].data) > 0 || false;
-  if(wide_offsets) throw "Math only works with normal offsets";
+  var wide_offsets = tri[8]?.[0]?.data && varint_to_i32(tri[8][0].data) > 0 || false;
+  var width = wide_offsets ? 4 : 1;
   var dv = u8_to_dataview(tri[7][0].data);
   var old_sz = 0, sz = 0;
   for(var i = 0; i < tri[7][0].data.length / 2; ++i) {
@@ -198,14 +198,14 @@ function mutate_row(tri: ReturnType<typeof parse_shallow>) {
   if(!old_sz) old_sz = sz = tri[6][0].data.length;
   var start = 0,
     preamble = tri[6][0].data.slice(0, start),
-    intramble = tri[6][0].data.slice(start, old_sz),
-    postamble = tri[6][0].data.slice(old_sz);
+    intramble = tri[6][0].data.slice(start, old_sz * width),
+    postamble = tri[6][0].data.slice(old_sz * width);
   var sst = []; sst[69] = "SheetJS";
   //intramble = write_new_storage({t:"n", v:12345}, sst);
   //intramble = write_new_storage({t:"b", v:false}, sst);
   intramble = write_new_storage({t:"s", v:"SheetJS"}, sst);
   tri[6][0].data = u8concat([preamble, intramble, postamble]);
-  var delta = intramble.length - old_sz;
+  var delta = intramble.length / width - old_sz;
   for(var i = 0; i < tri[7][0].data.length / 2; ++i) {
     sz = dv.getUint16(i*2, true);
     if(sz < 65535 && sz > start) dv.setUint16(i*2, sz + delta, true);
@@ -332,9 +332,9 @@ cfb.FileIndex.map((fi, idx): [CFB$Entry, string] => ([fi, cfb.FullPaths[idx]])).
   var x = parse_iwa_file(decompress_iwa_file(fi.content as Uint8Array));
 
   if(fi.name.match(/^Metadata.iwa$/)) {
-		x.forEach((w: IWAArchiveInfo) => {
-			var type = varint_to_i32(w.messages[0].meta[1][0].data);
-			if(type != 11006) return;
+    x.forEach((w: IWAArchiveInfo) => {
+      var type = varint_to_i32(w.messages[0].meta[1][0].data);
+      if(type != 11006) return;
       var package_metadata = parse_shallow(w.messages[0].data);
       [3,11].forEach(x => {
         if(!package_metadata[x]) return;
@@ -353,8 +353,8 @@ cfb.FileIndex.map((fi, idx): [CFB$Entry, string] => ([fi, cfb.FullPaths[idx]])).
       });
       [2, 4, 6, 8, 9].forEach(j => delete package_metadata[j]);
       w.messages[0].data = write_shallow(package_metadata);
-		});
-	}
+    });
+  }
 
   var y = write_iwa_file(x);
   var raw3 = compress_iwa_file(y);

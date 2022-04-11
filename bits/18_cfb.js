@@ -133,7 +133,7 @@ return CRC32;
 /* [MS-CFB] v20171201 */
 var CFB = /*#__PURE__*/(function _CFB(){
 var exports/*:CFBModule*/ = /*::(*/{}/*:: :any)*/;
-exports.version = '1.2.1';
+exports.version = '1.2.2';
 /* [MS-CFB] 2.6.4 */
 function namecmp(l/*:string*/, r/*:string*/)/*:number*/ {
 	var L = l.split("/"), R = r.split("/");
@@ -433,7 +433,7 @@ function sleuth_fat(idx/*:number*/, cnt/*:number*/, sectors/*:Array<RawBytes>*/,
 			if((q = __readInt32LE(sector,i*4)) === ENDOFCHAIN) break;
 			fat_addrs.push(q);
 		}
-		sleuth_fat(__readInt32LE(sector,ssz-4),cnt - 1, sectors, ssz, fat_addrs);
+		if(cnt >= 1) sleuth_fat(__readInt32LE(sector,ssz-4),cnt - 1, sectors, ssz, fat_addrs);
 	}
 }
 
@@ -609,7 +609,9 @@ function rebuild_cfb(cfb/*:CFBContainer*/, f/*:?boolean*/)/*:void*/ {
 	for(i = 0; i < data.length; ++i) {
 		var dad = dirname(data[i][0]);
 		s = fullPaths[dad];
-		if(!s) {
+		while(!s) {
+			while(dirname(dad) && !fullPaths[dirname(dad)]) dad = dirname(dad);
+
 			data.push([dad, ({
 				name: filename(dad).replace("/",""),
 				type: 1,
@@ -617,8 +619,12 @@ function rebuild_cfb(cfb/*:CFBContainer*/, f/*:?boolean*/)/*:void*/ {
 				ct: now, mt: now,
 				content: null
 			}/*:any*/)]);
+
 			// Add name to set
 			fullPaths[dad] = true;
+
+			dad = dirname(data[i][0]);
+			s = fullPaths[dad];
 		}
 	}
 
@@ -666,7 +672,6 @@ function _write(cfb/*:CFBContainer*/, options/*:CFBWriteOpts*/)/*:RawBytes|strin
 		for(var i = 0; i < cfb.FileIndex.length; ++i) {
 			var file = cfb.FileIndex[i];
 			if(!file.content) continue;
-			/*:: if(file.content == null) throw new Error("unreachable"); */
 			var flen = file.content.length;
 			if(flen > 0){
 				if(flen < 0x1000) mini_size += (flen + 0x3F) >> 6;
@@ -757,6 +762,10 @@ function _write(cfb/*:CFBContainer*/, options/*:CFBWriteOpts*/)/*:RawBytes|strin
 		file = cfb.FileIndex[i];
 		if(i === 0) file.start = file.size ? file.start - 1 : ENDOFCHAIN;
 		var _nm/*:string*/ = (i === 0 && _opts.root) || file.name;
+		if(_nm.length > 32) {
+			console.error("Name " + _nm + " will be truncated to " + _nm.slice(0,32));
+			_nm = _nm.slice(0, 32);
+		}
 		flen = 2*(_nm.length+1);
 		o.write_shift(64, _nm, "utf16le");
 		o.write_shift(2, flen);
@@ -1395,6 +1404,7 @@ function parse_zip(file/*:RawBytes*/, options/*:CFBReadOpts*/)/*:CFBContainer*/ 
 		parse_local_file(blob, csz, usz, o, EF);
 		blob.l = L;
 	}
+
 	return o;
 }
 

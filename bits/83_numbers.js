@@ -419,10 +419,6 @@ function parse_old_storage(buf, sst, rsst, v) {
       {
         if (ridx > -1)
           ret = { t: "s", v: rsst[ridx] };
-        else if (sidx > -1)
-          ret = { t: "s", v: sst[sidx] };
-        else if (!isNaN(ieee))
-          ret = { t: "n", v: ieee };
         else
           throw new Error("Unsupported cell type ".concat(buf.slice(0, 4)));
       }
@@ -815,24 +811,32 @@ function parse_numbers_iwa(cfb) {
     throw new Error("Cannot find Document root");
   return parse_TN_DocumentArchive(M, docroot);
 }
-function write_tile_row(tri, data, SST) {
-  var _a, _b, _c, _d;
+function write_tile_row(tri, data, SST, wide) {
+  var _a, _b;
   if (!((_a = tri[6]) == null ? void 0 : _a[0]) || !((_b = tri[7]) == null ? void 0 : _b[0]))
     throw "Mutation only works on post-BNC storages!";
-  var wide_offsets = ((_d = (_c = tri[8]) == null ? void 0 : _c[0]) == null ? void 0 : _d.data) && varint_to_i32(tri[8][0].data) > 0 || false;
-  if (wide_offsets)
-    throw "Math only works with normal offsets";
   var cnt = 0;
+  if (tri[7][0].data.length < 2 * data.length) {
+    var new_7 = new Uint8Array(2 * data.length);
+    new_7.set(tri[7][0].data);
+    tri[7][0].data = new_7;
+  }
+  if (tri[4][0].data.length < 2 * data.length) {
+    var new_4 = new Uint8Array(2 * data.length);
+    new_4.set(tri[4][0].data);
+    tri[4][0].data = new_4;
+  }
   var dv = u8_to_dataview(tri[7][0].data), last_offset = 0, cell_storage = [];
   var _dv = u8_to_dataview(tri[4][0].data), _last_offset = 0, _cell_storage = [];
+  var width = wide ? 4 : 1;
   for (var C = 0; C < data.length; ++C) {
     if (data[C] == null) {
       dv.setUint16(C * 2, 65535, true);
       _dv.setUint16(C * 2, 65535);
       continue;
     }
-    dv.setUint16(C * 2, last_offset, true);
-    _dv.setUint16(C * 2, _last_offset, true);
+    dv.setUint16(C * 2, last_offset / width, true);
+    _dv.setUint16(C * 2, _last_offset / width, true);
     var celload, _celload;
     switch (typeof data[C]) {
       case "string":
@@ -852,17 +856,21 @@ function write_tile_row(tri, data, SST) {
     }
     cell_storage.push(celload);
     last_offset += celload.length;
-    _cell_storage.push(_celload);
-    _last_offset += _celload.length;
+    {
+      _cell_storage.push(_celload);
+      _last_offset += _celload.length;
+    }
     ++cnt;
   }
   tri[2][0].data = write_varint49(cnt);
+  tri[5][0].data = write_varint49(5);
   for (; C < tri[7][0].data.length / 2; ++C) {
     dv.setUint16(C * 2, 65535, true);
     _dv.setUint16(C * 2, 65535, true);
   }
   tri[6][0].data = u8concat(cell_storage);
   tri[3][0].data = u8concat(_cell_storage);
+  tri[8] = [{ type: 0, data: write_varint49(wide ? 1 : 0) }];
   return cnt;
 }
 function write_iwam(type, payload) {
@@ -871,7 +879,9 @@ function write_iwam(type, payload) {
     data: payload
   };
 }
+var USE_WIDE_ROWS = true;
 function write_numbers_iwa(wb, opts) {
+  var _a;
   if (!opts || !opts.numbers)
     throw new Error("Must pass a `numbers` option -- check the README");
   var ws = wb.Sheets[wb.SheetNames[0]];
@@ -880,13 +890,13 @@ function write_numbers_iwa(wb, opts) {
   var range = decode_range(ws["!ref"]);
   range.s.r = range.s.c = 0;
   var trunc = false;
-  if (range.e.c > 9) {
+  if (range.e.c > 999) {
     trunc = true;
-    range.e.c = 9;
+    range.e.c = 999;
   }
-  if (range.e.r > 49) {
+  if (range.e.r > 254) {
     trunc = true;
-    range.e.r = 49;
+    range.e.r = 254;
   }
   if (trunc)
     console.error("The Numbers writer is currently limited to ".concat(encode_range(range)));
@@ -1044,12 +1054,13 @@ function write_numbers_iwa(wb, opts) {
         if (_x[0].id != row_header_ref)
           throw "Bad HeaderStorageBucket";
         var base_bucket = parse_shallow(_x[0].messages[0].data);
-        for (R = 0; R < data.length; ++R) {
-          var _bucket = parse_shallow(base_bucket[2][0].data);
-          _bucket[1][0].data = write_varint49(R);
-          _bucket[4][0].data = write_varint49(data[R].length);
-          base_bucket[2][R] = { type: base_bucket[2][0].type, data: write_shallow(_bucket) };
-        }
+        if ((_a = base_bucket == null ? void 0 : base_bucket[2]) == null ? void 0 : _a[0])
+          for (R = 0; R < data.length; ++R) {
+            var _bucket = parse_shallow(base_bucket[2][0].data);
+            _bucket[1][0].data = write_varint49(R);
+            _bucket[4][0].data = write_varint49(data[R].length);
+            base_bucket[2][R] = { type: base_bucket[2][0].type, data: write_shallow(_bucket) };
+          }
         _x[0].messages[0].data = write_shallow(base_bucket);
       }
       oldbucket.content = compress_iwa_file(write_iwa_file(_x));
@@ -1126,7 +1137,7 @@ function write_numbers_iwa(wb, opts) {
       var tile = parse_shallow(store[3][0].data);
       {
         var t = tile[1][0];
-        delete tile[2];
+        tile[3] = [{ type: 0, data: write_varint49(USE_WIDE_ROWS ? 1 : 0) }];
         var tl = parse_shallow(t.data);
         {
           var tileref = parse_TSP_Reference(tl[2][0].data);
@@ -1148,14 +1159,17 @@ function write_numbers_iwa(wb, opts) {
               var cnt = 0;
               for (var R2 = 0; R2 <= range.e.r; ++R2) {
                 var tilerow = parse_shallow(rowload);
-                cnt += write_tile_row(tilerow, data[R2], SST);
+                cnt += write_tile_row(tilerow, data[R2], SST, USE_WIDE_ROWS);
                 tilerow[1][0].data = write_varint49(R2);
                 tiledata[5].push({ data: write_shallow(tilerow), type: 2 });
               }
-              tiledata[1] = [{ type: 0, data: write_varint49(range.e.c + 1) }];
-              tiledata[2] = [{ type: 0, data: write_varint49(range.e.r + 1) }];
-              tiledata[3] = [{ type: 0, data: write_varint49(cnt) }];
+              tiledata[1] = [{ type: 0, data: write_varint49(0) }];
+              tiledata[2] = [{ type: 0, data: write_varint49(0) }];
+              tiledata[3] = [{ type: 0, data: write_varint49(0) }];
               tiledata[4] = [{ type: 0, data: write_varint49(range.e.r + 1) }];
+              tiledata[6] = [{ type: 0, data: write_varint49(5) }];
+              tiledata[7] = [{ type: 0, data: write_varint49(1) }];
+              tiledata[8] = [{ type: 0, data: write_varint49(USE_WIDE_ROWS ? 1 : 0) }];
             }
             tileroot.messages[0].data = write_shallow(tiledata);
             tentry.content = compress_iwa_file(write_iwa_file(tx));

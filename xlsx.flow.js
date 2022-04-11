@@ -988,7 +988,7 @@ function eval_fmt(fmt/*:string*/, v/*:any*/, opts/*:any*/, flen/*:number*/) {
 			case 'A': case 'a': case '上':
 				var q={t:c, v:c};
 				if(dt==null) dt=SSF_parse_date_code(v, opts);
-				if(fmt.substr(i, 3).toUpperCase() === "A/P") { if(dt!=null) q.v = dt.H >= 12 ? "P" : "A"; q.t = 'T'; hr='h';i+=3;}
+				if(fmt.substr(i, 3).toUpperCase() === "A/P") { if(dt!=null) q.v = dt.H >= 12 ? fmt.charAt(i+2) : c; q.t = 'T'; hr='h';i+=3;}
 				else if(fmt.substr(i,5).toUpperCase() === "AM/PM") { if(dt!=null) q.v = dt.H >= 12 ? "PM" : "AM"; q.t = 'T'; i+=5; hr='h'; }
 				else if(fmt.substr(i,5).toUpperCase() === "上午/下午") { if(dt!=null) q.v = dt.H >= 12 ? "下午" : "上午"; q.t = 'T'; i+=5; hr='h'; }
 				else { q.t = "t"; ++i; }
@@ -1320,6 +1320,15 @@ function dateNF_fix(str/*:string*/, dateNF/*:string*/, match/*:Array<string>*/)/
 	return datestr + "T" + timestr;
 }
 
+/* table of bad formats written by third-party tools */
+var bad_formats = {
+	"d.m": "d\\.m" // Issue #2571 Google Sheets writes invalid format 'd.m', correct format is 'd"."m' or 'd\\.m'
+};
+
+function SSF__load(fmt, idx) {
+	return SSF_load(bad_formats[fmt] || fmt, idx);
+}
+
 /*::
 declare var ReadShift:any;
 declare var CheckField:any;
@@ -1455,7 +1464,7 @@ return CRC32;
 /* [MS-CFB] v20171201 */
 var CFB = /*#__PURE__*/(function _CFB(){
 var exports/*:CFBModule*/ = /*::(*/{}/*:: :any)*/;
-exports.version = '1.2.1';
+exports.version = '1.2.2';
 /* [MS-CFB] 2.6.4 */
 function namecmp(l/*:string*/, r/*:string*/)/*:number*/ {
 	var L = l.split("/"), R = r.split("/");
@@ -1755,7 +1764,7 @@ function sleuth_fat(idx/*:number*/, cnt/*:number*/, sectors/*:Array<RawBytes>*/,
 			if((q = __readInt32LE(sector,i*4)) === ENDOFCHAIN) break;
 			fat_addrs.push(q);
 		}
-		sleuth_fat(__readInt32LE(sector,ssz-4),cnt - 1, sectors, ssz, fat_addrs);
+		if(cnt >= 1) sleuth_fat(__readInt32LE(sector,ssz-4),cnt - 1, sectors, ssz, fat_addrs);
 	}
 }
 
@@ -1931,7 +1940,9 @@ function rebuild_cfb(cfb/*:CFBContainer*/, f/*:?boolean*/)/*:void*/ {
 	for(i = 0; i < data.length; ++i) {
 		var dad = dirname(data[i][0]);
 		s = fullPaths[dad];
-		if(!s) {
+		while(!s) {
+			while(dirname(dad) && !fullPaths[dirname(dad)]) dad = dirname(dad);
+
 			data.push([dad, ({
 				name: filename(dad).replace("/",""),
 				type: 1,
@@ -1939,8 +1950,12 @@ function rebuild_cfb(cfb/*:CFBContainer*/, f/*:?boolean*/)/*:void*/ {
 				ct: now, mt: now,
 				content: null
 			}/*:any*/)]);
+
 			// Add name to set
 			fullPaths[dad] = true;
+
+			dad = dirname(data[i][0]);
+			s = fullPaths[dad];
 		}
 	}
 
@@ -1988,7 +2003,6 @@ function _write(cfb/*:CFBContainer*/, options/*:CFBWriteOpts*/)/*:RawBytes|strin
 		for(var i = 0; i < cfb.FileIndex.length; ++i) {
 			var file = cfb.FileIndex[i];
 			if(!file.content) continue;
-			/*:: if(file.content == null) throw new Error("unreachable"); */
 			var flen = file.content.length;
 			if(flen > 0){
 				if(flen < 0x1000) mini_size += (flen + 0x3F) >> 6;
@@ -2079,6 +2093,10 @@ function _write(cfb/*:CFBContainer*/, options/*:CFBWriteOpts*/)/*:RawBytes|strin
 		file = cfb.FileIndex[i];
 		if(i === 0) file.start = file.size ? file.start - 1 : ENDOFCHAIN;
 		var _nm/*:string*/ = (i === 0 && _opts.root) || file.name;
+		if(_nm.length > 32) {
+			console.error("Name " + _nm + " will be truncated to " + _nm.slice(0,32));
+			_nm = _nm.slice(0, 32);
+		}
 		flen = 2*(_nm.length+1);
 		o.write_shift(64, _nm, "utf16le");
 		o.write_shift(2, flen);
@@ -2717,6 +2735,7 @@ function parse_zip(file/*:RawBytes*/, options/*:CFBReadOpts*/)/*:CFBContainer*/ 
 		parse_local_file(blob, csz, usz, o, EF);
 		blob.l = L;
 	}
+
 	return o;
 }
 
@@ -10449,7 +10468,7 @@ function parse_numFmts(t, styles, opts) {
 						for(j = 0x188; j > 0x3c; --j) if(styles.NumberFmt[j] == null) break;
 						styles.NumberFmt[j] = f;
 					}
-					SSF_load(f,j);
+					SSF__load(f,j);
 				}
 			} break;
 			case '</numFmt>': break;
@@ -10816,7 +10835,7 @@ function parse_sty_bin(data, themes, opts) {
 	recordhopper(data, function hopper_sty(val, R, RT) {
 		switch(RT) {
 			case 0x002C: /* BrtFmt */
-				styles.NumberFmt[val[0]] = val[1]; SSF_load(val[1], val[0]);
+				styles.NumberFmt[val[0]] = val[1]; SSF__load(val[1], val[0]);
 				break;
 			case 0x002B: /* BrtFont */
 				styles.Fonts.push(val);
@@ -14530,7 +14549,7 @@ function get_cell_style(styles/*:Array<any>*/, cell/*:Cell*/, opts) {
 	var i = 0x3c, len = styles.length;
 	if(z == null && opts.ssf) {
 		for(; i < 0x188; ++i) if(opts.ssf[i] == null) {
-			SSF_load(cell.z, i);
+			SSF__load(cell.z, i);
 			// $FlowIgnore
 			opts.ssf[i] = cell.z;
 			opts.revssf[cell.z] = z = i;
@@ -14556,7 +14575,7 @@ function safe_format(p/*:Cell*/, fmtid/*:number*/, fillid/*:?number*/, opts, the
 	if(p.t === 'z' && !opts.cellStyles) return;
 	if(p.t === 'd' && typeof p.v === 'string') p.v = parseDate(p.v);
 	if((!opts || opts.cellText !== false) && p.t !== 'z') try {
-		if(table_fmt[fmtid] == null) SSF_load(SSFImplicit[fmtid] || "General", fmtid);
+		if(table_fmt[fmtid] == null) SSF__load(SSFImplicit[fmtid] || "General", fmtid);
 		if(p.t === 'e') p.w = p.w || BErr[p.v];
 		else if(fmtid === 0) {
 			if(p.t === 'n') {
@@ -17553,7 +17572,7 @@ function parse_xlml_xml(d, _opts)/*:Workbook*/ {
 			stag.nf = unescapexml(xlml_parsexmltag(Rn[0]).Format || "General");
 			if(XLMLFormatMap[stag.nf]) stag.nf = XLMLFormatMap[stag.nf];
 			for(var ssfidx = 0; ssfidx != 0x188; ++ssfidx) if(table_fmt[ssfidx] == stag.nf) break;
-			if(ssfidx == 0x188) for(ssfidx = 0x39; ssfidx != 0x188; ++ssfidx) if(table_fmt[ssfidx] == null) { SSF_load(stag.nf, ssfidx); break; }
+			if(ssfidx == 0x188) for(ssfidx = 0x39; ssfidx != 0x188; ++ssfidx) if(table_fmt[ssfidx] == null) { SSF__load(stag.nf, ssfidx); break; }
 			break;
 
 		case 'column' /*case 'Column'*/:
@@ -18939,14 +18958,14 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 					if(opts.biff == 4) {
 						BIFF2FmtTable[BIFF2Fmt++] = val[1];
 						for(var b4idx = 0; b4idx < BIFF2Fmt + 163; ++b4idx) if(table_fmt[b4idx] == val[1]) break;
-						if(b4idx >= 163) SSF_load(val[1], BIFF2Fmt + 163);
+						if(b4idx >= 163) SSF__load(val[1], BIFF2Fmt + 163);
 					}
-					else SSF_load(val[1], val[0]);
+					else SSF__load(val[1], val[0]);
 				} break;
 				case 0x001e /* BIFF2FORMAT */: {
 					BIFF2FmtTable[BIFF2Fmt++] = val;
 					for(var b2idx = 0; b2idx < BIFF2Fmt + 163; ++b2idx) if(table_fmt[b2idx] == val) break;
-					if(b2idx >= 163) SSF_load(val, BIFF2Fmt + 163);
+					if(b2idx >= 163) SSF__load(val, BIFF2Fmt + 163);
 				} break;
 
 				case 0x00e5 /* MergeCells */: merges = merges.concat(val); break;
@@ -22414,10 +22433,6 @@ function parse_old_storage(buf, sst, rsst, v) {
       {
         if (ridx > -1)
           ret = { t: "s", v: rsst[ridx] };
-        else if (sidx > -1)
-          ret = { t: "s", v: sst[sidx] };
-        else if (!isNaN(ieee))
-          ret = { t: "n", v: ieee };
         else
           throw new Error("Unsupported cell type ".concat(buf.slice(0, 4)));
       }
@@ -22638,7 +22653,13 @@ function parse_TST_TileRowInfo(u8, type) {
 function parse_TST_Tile(M, root) {
   var _a;
   var pb = parse_shallow(root.data);
-  var storage = ((_a = pb == null ? void 0 : pb[7]) == null ? void 0 : _a[0]) ? varint_to_i32(pb[7][0].data) >>> 0 > 0 ? 1 : 0 : -1;
+  var storage = -1;
+  if ((_a = pb == null ? void 0 : pb[7]) == null ? void 0 : _a[0]) {
+    if (varint_to_i32(pb[7][0].data) >>> 0)
+      storage = 1;
+    else
+      storage = 0;
+  }
   var ri = mappa(pb[5], function(u8) {
     return parse_TST_TileRowInfo(u8, storage);
   });
@@ -22804,24 +22825,32 @@ function parse_numbers_iwa(cfb) {
     throw new Error("Cannot find Document root");
   return parse_TN_DocumentArchive(M, docroot);
 }
-function write_tile_row(tri, data, SST) {
-  var _a, _b, _c, _d;
+function write_tile_row(tri, data, SST, wide) {
+  var _a, _b;
   if (!((_a = tri[6]) == null ? void 0 : _a[0]) || !((_b = tri[7]) == null ? void 0 : _b[0]))
     throw "Mutation only works on post-BNC storages!";
-  var wide_offsets = ((_d = (_c = tri[8]) == null ? void 0 : _c[0]) == null ? void 0 : _d.data) && varint_to_i32(tri[8][0].data) > 0 || false;
-  if (wide_offsets)
-    throw "Math only works with normal offsets";
   var cnt = 0;
+  if (tri[7][0].data.length < 2 * data.length) {
+    var new_7 = new Uint8Array(2 * data.length);
+    new_7.set(tri[7][0].data);
+    tri[7][0].data = new_7;
+  }
+  if (tri[4][0].data.length < 2 * data.length) {
+    var new_4 = new Uint8Array(2 * data.length);
+    new_4.set(tri[4][0].data);
+    tri[4][0].data = new_4;
+  }
   var dv = u8_to_dataview(tri[7][0].data), last_offset = 0, cell_storage = [];
   var _dv = u8_to_dataview(tri[4][0].data), _last_offset = 0, _cell_storage = [];
+  var width = wide ? 4 : 1;
   for (var C = 0; C < data.length; ++C) {
     if (data[C] == null) {
       dv.setUint16(C * 2, 65535, true);
       _dv.setUint16(C * 2, 65535);
       continue;
     }
-    dv.setUint16(C * 2, last_offset, true);
-    _dv.setUint16(C * 2, _last_offset, true);
+    dv.setUint16(C * 2, last_offset / width, true);
+    _dv.setUint16(C * 2, _last_offset / width, true);
     var celload, _celload;
     switch (typeof data[C]) {
       case "string":
@@ -22841,17 +22870,21 @@ function write_tile_row(tri, data, SST) {
     }
     cell_storage.push(celload);
     last_offset += celload.length;
-    _cell_storage.push(_celload);
-    _last_offset += _celload.length;
+    {
+      _cell_storage.push(_celload);
+      _last_offset += _celload.length;
+    }
     ++cnt;
   }
   tri[2][0].data = write_varint49(cnt);
+  tri[5][0].data = write_varint49(5);
   for (; C < tri[7][0].data.length / 2; ++C) {
     dv.setUint16(C * 2, 65535, true);
     _dv.setUint16(C * 2, 65535, true);
   }
   tri[6][0].data = u8concat(cell_storage);
   tri[3][0].data = u8concat(_cell_storage);
+  tri[8] = [{ type: 0, data: write_varint49(wide ? 1 : 0) }];
   return cnt;
 }
 function write_iwam(type, payload) {
@@ -22860,7 +22893,9 @@ function write_iwam(type, payload) {
     data: payload
   };
 }
+var USE_WIDE_ROWS = true;
 function write_numbers_iwa(wb, opts) {
+  var _a;
   if (!opts || !opts.numbers)
     throw new Error("Must pass a `numbers` option -- check the README");
   var ws = wb.Sheets[wb.SheetNames[0]];
@@ -22869,13 +22904,13 @@ function write_numbers_iwa(wb, opts) {
   var range = decode_range(ws["!ref"]);
   range.s.r = range.s.c = 0;
   var trunc = false;
-  if (range.e.c > 9) {
+  if (range.e.c > 999) {
     trunc = true;
-    range.e.c = 9;
+    range.e.c = 999;
   }
-  if (range.e.r > 49) {
+  if (range.e.r > 254) {
     trunc = true;
-    range.e.r = 49;
+    range.e.r = 254;
   }
   if (trunc)
     console.error("The Numbers writer is currently limited to ".concat(encode_range(range)));
@@ -23033,12 +23068,13 @@ function write_numbers_iwa(wb, opts) {
         if (_x[0].id != row_header_ref)
           throw "Bad HeaderStorageBucket";
         var base_bucket = parse_shallow(_x[0].messages[0].data);
-        for (R = 0; R < data.length; ++R) {
-          var _bucket = parse_shallow(base_bucket[2][0].data);
-          _bucket[1][0].data = write_varint49(R);
-          _bucket[4][0].data = write_varint49(data[R].length);
-          base_bucket[2][R] = { type: base_bucket[2][0].type, data: write_shallow(_bucket) };
-        }
+        if ((_a = base_bucket == null ? void 0 : base_bucket[2]) == null ? void 0 : _a[0])
+          for (R = 0; R < data.length; ++R) {
+            var _bucket = parse_shallow(base_bucket[2][0].data);
+            _bucket[1][0].data = write_varint49(R);
+            _bucket[4][0].data = write_varint49(data[R].length);
+            base_bucket[2][R] = { type: base_bucket[2][0].type, data: write_shallow(_bucket) };
+          }
         _x[0].messages[0].data = write_shallow(base_bucket);
       }
       oldbucket.content = compress_iwa_file(write_iwa_file(_x));
@@ -23115,7 +23151,7 @@ function write_numbers_iwa(wb, opts) {
       var tile = parse_shallow(store[3][0].data);
       {
         var t = tile[1][0];
-        delete tile[2];
+        tile[3] = [{ type: 0, data: write_varint49(USE_WIDE_ROWS ? 1 : 0) }];
         var tl = parse_shallow(t.data);
         {
           var tileref = parse_TSP_Reference(tl[2][0].data);
@@ -23137,14 +23173,17 @@ function write_numbers_iwa(wb, opts) {
               var cnt = 0;
               for (var R2 = 0; R2 <= range.e.r; ++R2) {
                 var tilerow = parse_shallow(rowload);
-                cnt += write_tile_row(tilerow, data[R2], SST);
+                cnt += write_tile_row(tilerow, data[R2], SST, USE_WIDE_ROWS);
                 tilerow[1][0].data = write_varint49(R2);
                 tiledata[5].push({ data: write_shallow(tilerow), type: 2 });
               }
-              tiledata[1] = [{ type: 0, data: write_varint49(range.e.c + 1) }];
-              tiledata[2] = [{ type: 0, data: write_varint49(range.e.r + 1) }];
-              tiledata[3] = [{ type: 0, data: write_varint49(cnt) }];
+              tiledata[1] = [{ type: 0, data: write_varint49(0) }];
+              tiledata[2] = [{ type: 0, data: write_varint49(0) }];
+              tiledata[3] = [{ type: 0, data: write_varint49(0) }];
               tiledata[4] = [{ type: 0, data: write_varint49(range.e.r + 1) }];
+              tiledata[6] = [{ type: 0, data: write_varint49(5) }];
+              tiledata[7] = [{ type: 0, data: write_varint49(1) }];
+              tiledata[8] = [{ type: 0, data: write_varint49(USE_WIDE_ROWS ? 1 : 0) }];
             }
             tileroot.messages[0].data = write_shallow(tiledata);
             tentry.content = compress_iwa_file(write_iwa_file(tx));
@@ -23499,18 +23538,11 @@ function parse_xlsxcfb(cfb, _opts/*:?ParseOpts*/)/*:Workbook*/ {
 	throw new Error("File is password-protected");
 }
 
-function write_zip(wb/*:Workbook*/, opts/*:WriteOpts*/)/*:ZIP*/ {
-	if(opts.bookType == "ods") return write_ods(wb, opts);
-	if(opts.bookType == "numbers") return write_numbers_iwa(wb, opts);
-	if(opts.bookType == "xlsb") return write_zip_xlsxb(wb, opts);
-	return write_zip_xlsx(wb, opts);
-}
-
 /* XLSX and XLSB writing are very similar.  Originally they were unified in one
    export function.  This is horrible for tree shaking in the common case (most
    applications need to export files in one format) so this function supports
    both formats while write_zip_xlsx only handles XLSX */
-function write_zip_xlsxb(wb/*:Workbook*/, opts/*:WriteOpts*/)/*:ZIP*/ {
+function write_zip_xlsb(wb/*:Workbook*/, opts/*:WriteOpts*/)/*:ZIP*/ {
 	_shapeid = 1024;
 	if(wb && !wb.SSF) {
 		wb.SSF = dup(table_fmt);
@@ -23928,6 +23960,15 @@ function write_cfb_ctr(cfb/*:CFBContainer*/, o/*:WriteOpts*/)/*:any*/ {
 		default: throw new Error("Unrecognized type " + o.type);
 	}
 	return CFB.write(cfb, o);
+}
+
+function write_zip(wb/*:Workbook*/, opts/*:WriteOpts*/)/*:ZIP*/ {
+	switch(opts.bookType) {
+		case "ods": return write_ods(wb, opts);
+		case "numbers": return write_numbers_iwa(wb, opts);
+		case "xlsb": return write_zip_xlsb(wb, opts);
+		default: return write_zip_xlsx(wb, opts);
+	}
 }
 
 /*:: declare var encrypt_agile:any; */

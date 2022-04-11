@@ -86,6 +86,7 @@ function parse_varint49(buf: Uint8Array, ptr?: Ptr): number {
 	if(ptr) ptr[0] = l;
 	return usz;
 }
+/** Write a varint up to 7 bytes / 49 bits */
 function write_varint49(v: number): Uint8Array {
 	var usz = new Uint8Array(7);
 	usz[0] = (v & 0x7F);
@@ -215,6 +216,7 @@ function parse_iwa_file(buf: Uint8Array): IWAArchiveInfo[] {
 	}
 	return out;
 }
+/** Generate an IWA file from a parsed structure */
 function write_iwa_file(ias: IWAArchiveInfo[]): Uint8Array {
 	var bufs: Uint8Array[] = [];
 	ias.forEach(ia => {
@@ -357,10 +359,8 @@ function parse_old_storage(buf: Uint8Array, sst: string[], rsst: string[], v: 0|
 		case 6: ret = { t: "b", v: ieee > 0 }; break; // boolean
 		case 7: ret = { t: "n", v: ieee / 86400 }; break; // duration in seconds TODO: emit [hh]:[mm] style format with adjusted value
 		case 8: ret = { t: "e", v: 0}; break; // "formula error" TODO: enumerate and map errors to csf equivalents
-		case 9: { // "automatic"?
+		case 9: { // "rich text"
 			if(ridx > -1) ret = { t: "s", v: rsst[ridx] };
-			else if(sidx > -1) ret = { t: "s", v: sst[sidx] };
-			else if(!isNaN(ieee)) ret = { t: "n", v: ieee };
 			else throw new Error(`Unsupported cell type ${buf.slice(0,4)}`);
 		} break;
 		default: throw new Error(`Unsupported cell type ${buf.slice(0,4)}`);
@@ -395,7 +395,7 @@ function parse_new_storage(buf: Uint8Array, sst: string[], rsst: string[]): Cell
 		case 6: ret = { t: "b", v: ieee > 0 }; break; // boolean
 		case 7: ret = { t: "n", v: ieee / 86400 }; break;  // duration in seconds TODO: emit [hh]:[mm] style format with adjusted value
 		case 8: ret = { t: "e", v: 0}; break; // "formula error" TODO: enumerate and map errors to csf equivalents
-		case 9: { // "automatic"?
+		case 9: { // "rich text"
 			if(ridx > -1) ret = { t: "s", v: rsst[ridx] };
 			else throw new Error(`Unsupported cell type ${buf[1]} : ${flags & 0x1F} : ${buf.slice(0,4)}`);
 		} break;
@@ -406,6 +406,8 @@ function parse_new_storage(buf: Uint8Array, sst: string[], rsst: string[]): Cell
 
 	return ret;
 }
+
+/** Write a cell "new storage" (version 5) */
 function write_new_storage(cell: CellObject, sst: string[]): Uint8Array {
 	var out = new Uint8Array(32), dv = u8_to_dataview(out), l = 12, flags = 0;
 	out[0] = 5;
@@ -420,6 +422,7 @@ function write_new_storage(cell: CellObject, sst: string[]): Uint8Array {
 	dv.setUint32(8, flags, true);
 	return out.slice(0, l);
 }
+/** Write a cell "old storage" (version 3) */
 function write_old_storage(cell: CellObject, sst: string[]): Uint8Array {
 	var out = new Uint8Array(32), dv = u8_to_dataview(out), l = 12, flags = 0;
 	out[0] = 3;
@@ -449,11 +452,12 @@ function parse_cell_storage(buf: Uint8Array, sst: string[], rsst: string[]): Cel
 //	var pb = parse_shallow(root.data);
 //}
 
-/** .TSP.Reference */
+/** Parse .TSP.Reference */
 function parse_TSP_Reference(buf: Uint8Array): number {
 	var pb = parse_shallow(buf);
 	return parse_varint49(pb[1][0].data);
 }
+/** Write .TSP.Reference */
 function write_TSP_Reference(idx: number): Uint8Array {
 	return write_shallow([
 		[],
@@ -464,7 +468,7 @@ function write_TSP_Reference(idx: number): Uint8Array {
 
 type MessageSpace = {[id: number]: IWAMessage[]};
 
-/** .TST.TableDataList */
+/** Parse .TST.TableDataList */
 function parse_TST_TableDataList(M: MessageSpace, root: IWAMessage): string[] {
 	var pb = parse_shallow(root.data);
 	// .TST.TableDataList.ListType
@@ -503,7 +507,7 @@ interface TileRowInfo {
 	/** Cell Storage */
 	cells?: Uint8Array[];
 }
-/** .TSP.TileRowInfo */
+/** Parse .TSP.TileRowInfo */
 function parse_TST_TileRowInfo(u8: Uint8Array, type: TileStorageType): TileRowInfo {
 	var pb = parse_shallow(u8);
 	var R = varint_to_i32(pb[1][0].data) >>> 0;
@@ -537,7 +541,7 @@ interface TileInfo {
 	data: Uint8Array[][];
 	nrows: number;
 }
-/** .TST.Tile */
+/** Parse .TST.Tile */
 function parse_TST_Tile(M: MessageSpace, root: IWAMessage): TileInfo {
 	var pb = parse_shallow(root.data);
 	// ESBuild issue 2136
@@ -558,7 +562,7 @@ function parse_TST_Tile(M: MessageSpace, root: IWAMessage): TileInfo {
 	};
 }
 
-/** .TST.TableModelArchive (6001) */
+/** Parse .TST.TableModelArchive (6001) */
 function parse_TST_TableModelArchive(M: MessageSpace, root: IWAMessage, ws: WorkSheet) {
 	var pb = parse_shallow(root.data);
 	var range: Range = { s: {r:0, c:0}, e: {r:0, c:0} };
@@ -612,7 +616,7 @@ function parse_TST_TableModelArchive(M: MessageSpace, root: IWAMessage, ws: Work
 	}
 }
 
-/** .TST.TableInfoArchive (6000) */
+/** Parse .TST.TableInfoArchive (6000) */
 function parse_TST_TableInfoArchive(M: MessageSpace, root: IWAMessage): WorkSheet {
 	var pb = parse_shallow(root.data);
 	var out: WorkSheet = { "!ref": "A1" };
@@ -627,7 +631,7 @@ interface NSheet {
 	name: string;
 	sheets: WorkSheet[];
 }
-/** .TN.SheetArchive (2) */
+/** Parse .TN.SheetArchive (2) */
 function parse_TN_SheetArchive(M: MessageSpace, root: IWAMessage): NSheet {
 	var pb = parse_shallow(root.data);
 	var out: NSheet = {
@@ -644,7 +648,7 @@ function parse_TN_SheetArchive(M: MessageSpace, root: IWAMessage): NSheet {
 	return out;
 }
 
-/** .TN.DocumentArchive */
+/** Parse .TN.DocumentArchive */
 function parse_TN_DocumentArchive(M: MessageSpace, root: IWAMessage): WorkBook {
 	var out = book_new();
 	var pb = parse_shallow(root.data);
@@ -711,49 +715,65 @@ interface DependentInfo {
 	location: string;
 	type: number;
 }
-
-function write_tile_row(tri: ProtoMessage, data: any[], SST: string[]): number {
+/** Write .TST.TileRowInfo */
+function write_tile_row(tri: ProtoMessage, data: any[], SST: string[], wide: boolean): number {
 	if(!tri[6]?.[0] || !tri[7]?.[0]) throw "Mutation only works on post-BNC storages!";
-	var wide_offsets = tri[8]?.[0]?.data && varint_to_i32(tri[8][0].data) > 0 || false;
-	if(wide_offsets) throw "Math only works with normal offsets";
+	//var wide_offsets = tri[8]?.[0]?.data && varint_to_i32(tri[8][0].data) > 0 || false;
 	var cnt = 0;
+	if(tri[7][0].data.length < 2 * data.length) {
+		var new_7 = new Uint8Array(2 * data.length);
+		new_7.set(tri[7][0].data);
+		tri[7][0].data = new_7;
+	}
+	//if(wide) {
+	//	tri[3] = [{type: 2, data: new Uint8Array([240, 159, 164, 160]) }];
+	//	tri[4] = [{type: 2, data: new Uint8Array([240, 159, 164, 160]) }];
+	/* } else*/ if(tri[4][0].data.length < 2 * data.length) {
+		var new_4 = new Uint8Array(2 * data.length);
+		new_4.set(tri[4][0].data);
+		tri[4][0].data = new_4;
+	}
 	var dv = u8_to_dataview(tri[7][0].data), last_offset = 0, cell_storage: Uint8Array[] = [];
 	var _dv = u8_to_dataview(tri[4][0].data), _last_offset = 0, _cell_storage: Uint8Array[] = [];
+	var width = wide ? 4 : 1;
 	for(var C = 0; C < data.length; ++C) {
 		if(data[C] == null) { dv.setUint16(C*2, 0xFFFF, true); _dv.setUint16(C*2, 0xFFFF); continue; }
-		dv.setUint16(C*2, last_offset, true);
-		_dv.setUint16(C*2, _last_offset, true);
+		dv.setUint16(C*2, last_offset / width, true);
+		/*if(!wide)*/ _dv.setUint16(C*2, _last_offset / width, true);
 		var celload: Uint8Array, _celload: Uint8Array;
 		switch(typeof data[C]) {
 			case "string":
 				celload = write_new_storage({t: "s", v: data[C]}, SST);
-				_celload = write_old_storage({t: "s", v: data[C]}, SST);
+				/*if(!wide)*/ _celload = write_old_storage({t: "s", v: data[C]}, SST);
 				break;
 			case "number":
 				celload = write_new_storage({t: "n", v: data[C]}, SST);
-				_celload = write_old_storage({t: "n", v: data[C]}, SST);
+				/*if(!wide)*/ _celload = write_old_storage({t: "n", v: data[C]}, SST);
 				break;
 			case "boolean":
 				celload = write_new_storage({t: "b", v: data[C]}, SST);
-				_celload = write_old_storage({t: "b", v: data[C]}, SST);
+				/*if(!wide)*/ _celload = write_old_storage({t: "b", v: data[C]}, SST);
 				break;
 			default: throw new Error("Unsupported value " + data[C]);
 		}
 		cell_storage.push(celload); last_offset += celload.length;
-		_cell_storage.push(_celload); _last_offset += _celload.length;
+		/*if(!wide)*/ { _cell_storage.push(_celload); _last_offset += _celload.length; }
 		++cnt;
 	}
 	tri[2][0].data = write_varint49(cnt);
+	tri[5][0].data = write_varint49(5);
 
 	for(; C < tri[7][0].data.length/2; ++C) {
 		dv.setUint16(C*2, 0xFFFF, true);
-		_dv.setUint16(C*2, 0xFFFF, true);
+		/*if(!wide)*/ _dv.setUint16(C*2, 0xFFFF, true);
 	}
 	tri[6][0].data = u8concat(cell_storage);
-	tri[3][0].data = u8concat(_cell_storage);
+	/*if(!wide)*/ tri[3][0].data = u8concat(_cell_storage);
+	tri[8] = [{type: 0, data: write_varint49(wide ? 1 : 0)}];
 	return cnt;
 }
 
+/** Write IWA Message */
 function write_iwam(type: number, payload: Uint8Array): IWAMessage {
 	return {
 		meta: [ [], [ { type: 0, data: write_varint49(type) } ] ],
@@ -761,17 +781,23 @@ function write_iwam(type: number, payload: Uint8Array): IWAMessage {
 	};
 }
 
+var USE_WIDE_ROWS = true;
+/** Write NUMBERS workbook */
 function write_numbers_iwa(wb: WorkBook, opts: any): CFB$Container {
 	if(!opts || !opts.numbers) throw new Error("Must pass a `numbers` option -- check the README");
+
 	/* TODO: support multiple worksheets, larger ranges, more data types, etc */
 	var ws = wb.Sheets[wb.SheetNames[0]];
 	if(wb.SheetNames.length > 1) console.error("The Numbers writer currently writes only the first table");
 	var range = decode_range(ws["!ref"]);
 	range.s.r = range.s.c = 0;
+
+	/* Actual NUMBERS 12.0 limit ALL1000000 */
 	var trunc = false;
-	if(range.e.c > 9) { trunc = true; range.e.c = 9; }
-	if(range.e.r > 49) { trunc = true; range.e.r = 49; }
+	if(range.e.c > 999) { trunc = true; range.e.c = 999; }
+	if(range.e.r > 254 /* 1000000 */) { trunc = true; range.e.r = 254 /* 1000000 */; }
 	if(trunc) console.error(`The Numbers writer is currently limited to ${encode_range(range)}`);
+
 	var data = sheet_to_json<any>(ws, { range, header: 1 });
 	var SST = ["~Sh33tJ5~"];
 	data.forEach(row => row.forEach(cell => { if(typeof cell == "string") SST.push(cell); }))
@@ -779,6 +805,7 @@ function write_numbers_iwa(wb: WorkBook, opts: any): CFB$Container {
 	var dependents: {[x:number]: DependentInfo} = {};
 	var indices: number[] = [];
 
+	/* read template and build packet metadata */
 	var cfb: CFB$Container = CFB.read(opts.numbers, { type: "base64" });
 	cfb.FileIndex.map((fi, idx): [CFB$Entry, string] => ([fi, cfb.FullPaths[idx]])).forEach(row => {
 		var fi = row[0], fp = row[1];
@@ -797,9 +824,11 @@ function write_numbers_iwa(wb: WorkBook, opts: any): CFB$Container {
 		});
 	});
 
+	/* precompute a varint for each id */
 	indices.sort((x,y) => x-y);
 	var indices_varint: Array<[number, Uint8Array]> = indices.filter(x => x > 1).map(x => [x, write_varint49(x)] );
 
+	/* build dependent tree */
 	cfb.FileIndex.map((fi, idx): [CFB$Entry, string] => ([fi, cfb.FullPaths[idx]])).forEach(row => {
 		var fi = row[0], fp = row[1];
 		if(!fi.name.match(/\.iwa/)) return;
@@ -882,6 +911,7 @@ function write_numbers_iwa(wb: WorkBook, opts: any): CFB$Container {
 				if(_x[j].id == cruidsref) break;
 			}
 			if(_x[j].id != cruidsref) throw "Bad ColumnRowUIDMapArchive";
+			/* .TST.ColumnRowUIDMapArchive */
 			var cruids = parse_shallow(_x[j].messages[0].data);
 			cruids[1] = []; cruids[2] = [], cruids[3] = [];
 			for(var C = 0; C <= range.e.c; ++C) {
@@ -904,7 +934,7 @@ function write_numbers_iwa(wb: WorkBook, opts: any): CFB$Container {
 			_x[j].messages[0].data = write_shallow(cruids);
 		}
 		oldbucket.content = compress_iwa_file(write_iwa_file(_x)); oldbucket.size = oldbucket.content.length;
-		delete pb[46];
+		delete pb[46]; // forces Numbers to refresh cell table
 
 		var store = parse_shallow(pb[4][0].data);
 		{
@@ -916,7 +946,7 @@ function write_numbers_iwa(wb: WorkBook, opts: any): CFB$Container {
 			{
 				if(_x[0].id != row_header_ref) throw "Bad HeaderStorageBucket";
 				var base_bucket = parse_shallow(_x[0].messages[0].data);
-				for(R = 0; R < data.length; ++R) {
+				if(base_bucket?.[2]?.[0]) for(R = 0; R < data.length; ++R) {
 					var _bucket = parse_shallow(base_bucket[2][0].data);
 					_bucket[1][0].data = write_varint49(R);
 					_bucket[4][0].data = write_varint49(data[R].length);
@@ -994,7 +1024,7 @@ function write_numbers_iwa(wb: WorkBook, opts: any): CFB$Container {
 			var tile = parse_shallow(store[3][0].data); // TileStorage
 			{
 				var t = tile[1][0];
-				delete tile[2];
+				tile[3] = [{type: 0, data: write_varint49(USE_WIDE_ROWS ? 1 : 0)}];
 				var tl = parse_shallow(t.data); // first Tile
 				{
 					var tileref = parse_TSP_Reference(tl[2][0].data);
@@ -1016,14 +1046,17 @@ function write_numbers_iwa(wb: WorkBook, opts: any): CFB$Container {
 							var cnt = 0;
 							for(var R = 0; R <= range.e.r; ++R) {
 								var tilerow = parse_shallow(rowload);
-								cnt += write_tile_row(tilerow, data[R], SST);
+								cnt += write_tile_row(tilerow, data[R], SST, USE_WIDE_ROWS);
 								tilerow[1][0].data = write_varint49(R);
 								tiledata[5].push({data: write_shallow(tilerow), type: 2});
 							}
-							tiledata[1] = [{type: 0, data: write_varint49(range.e.c + 1)}];
-							tiledata[2] = [{type: 0, data: write_varint49(range.e.r + 1)}];
-							tiledata[3] = [{type: 0, data: write_varint49(cnt)}];
+							tiledata[1] = [{type: 0, data: write_varint49(0 /*range.e.c + 1*/)}];
+							tiledata[2] = [{type: 0, data: write_varint49(0 /*range.e.r + 1*/)}];
+							tiledata[3] = [{type: 0, data: write_varint49(0 /*cnt*/)}];
 							tiledata[4] = [{type: 0, data: write_varint49(range.e.r + 1)}];
+							tiledata[6] = [{type: 0, data: write_varint49(5)}];
+							tiledata[7] = [{type: 0, data: write_varint49(1)}];
+							tiledata[8] = [{type: 0, data: write_varint49(USE_WIDE_ROWS ? 1 : 0)}];
 						}
 						tileroot.messages[0].data = write_shallow(tiledata);
 
