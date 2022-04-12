@@ -248,7 +248,7 @@ For use in the web browser, assuming the snippet is saved to `snippet.js`,
 script tags should be used to include the `axios` and `xlsx` standalone builds:
 
 ```html
-<script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
 <script src="snippet.js"></script>
 ```

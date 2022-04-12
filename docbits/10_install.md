@@ -11,19 +11,19 @@ can be directly added to a page with a `script` tag:
 <script lang="javascript" src="dist/xlsx.full.min.js"></script>
 ```
 
-<details>
-  <summary><b>CDN Availability</b> (click to show)</summary>
-
-|    CDN     | URL                                        |
-|-----------:|:-------------------------------------------|
-|    `unpkg` | <https://unpkg.com/xlsx/>                  |
-| `jsDelivr` | <https://jsdelivr.com/package/npm/xlsx>    |
-|    `CDNjs` | <https://cdnjs.com/libraries/xlsx>         |
-
-For example, `unpkg` makes the latest version available at:
+Each standalone release script is available at <https://cdn.sheetjs.com/>.  The
+latest version uses the `latest` tag:
 
 ```html
-<script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+<!-- use the latest version -->
+<script lang="javascript" src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+```
+
+A specific release can be referenced by version:
+
+```html
+<!-- use version 0.18.5 -->
+<script lang="javascript" src="https://cdn.sheetjs.com/xlsx-0.18.5/package/dist/xlsx.full.min.js"></script>
 ```
 
 </details>
@@ -39,6 +39,13 @@ A slimmer build is generated at `dist/xlsx.mini.min.js`. Compared to full build:
 - codepage library skipped (no support for XLS encodings)
 - no support for XLSB / XLS / Lotus 1-2-3 / SpreadsheetML 2003 / Numbers
 - node stream utils removed
+
+These scripts are also available on the CDN:
+
+```html
+<!-- use xlsx.core.min.js from the latest version -->
+<script lang="javascript" src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.core.min.js"></script>
+```
 
 </details>
 
@@ -79,23 +86,31 @@ set_cptable(cptable);
 
 **Deno**
 
-`xlsx.mjs` can be imported in Deno.  It is available from `unpkg`:
+`xlsx.mjs` can be imported in Deno:
 
 ```ts
-// @deno-types="https://unpkg.com/xlsx/types/index.d.ts"
-import * as XLSX from 'https://unpkg.com/xlsx/xlsx.mjs';
+// @deno-types="https://cdn.sheetjs.com/xlsx-latest/package/types/index.d.ts"
+import * as XLSX from 'https://cdn.sheetjs.com/xlsx-latest/package/xlsx.mjs';
 
 /* load the codepage support library for extended support with older formats  */
-import * as cptable from 'https://unpkg.com/xlsx/dist/cpexcel.full.mjs';
+import * as cptable from 'https://cdn.sheetjs.com/xlsx-latest/package/dist/cpexcel.full.mjs';
 XLSX.set_cptable(cptable);
 ```
 
 **NodeJS**
 
-With [npm](https://www.npmjs.org/package/xlsx):
+Modules are available on [the public npm registry](https://www.npmjs.org/package/xlsx):
 
 ```bash
-$ npm install xlsx
+$ pnpm install xlsx  # using pnpm
+$ yarn add xlsx      # using yarn
+$ npm install xlsx   # using npm
+```
+
+Tarballs are also available on <https://cdn.sheetjs.com>:
+
+```bash
+$ npm install https://cdn.sheetjs.com/xlsx-latest/xlsx-latest.tgz
 ```
 
 By default, the module supports `require`:

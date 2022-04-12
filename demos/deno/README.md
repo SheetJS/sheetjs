@@ -4,14 +4,14 @@ Deno is a runtime capable of running JS code including this library.  There are
 a few different builds and recommended use cases as covered in this demo.
 
 Due to ongoing stability and sync issues with the Deno registry, scripts should
-use [the `unpkg` CDN build](https://unpkg.com/xlsx/xlsx.mjs):
+use [the CDN build](https://cdn.sheetjs.com/xlsx-latest/package/xlsx.mjs):
 
 ```js
-// @deno-types="https://unpkg.com/xlsx/types/index.d.ts"
-import * as XLSX from 'https://unpkg.com/xlsx/xlsx.mjs';
+// @deno-types="https://cdn.sheetjs.com/xlsx-latest/package/types/index.d.ts"
+import * as XLSX from 'https://cdn.sheetjs.com/xlsx-latest/package/xlsx.mjs';
 
 /* load the codepage support library for extended support with older formats  */
-import * as cptable from 'https://unpkg.com/xlsx/dist/cpexcel.full.mjs';
+import * as cptable from 'https://cdn.sheetjs.com/xlsx-latest/package/dist/cpexcel.full.mjs';
 XLSX.set_cptable(cptable);
 ```
 
@@ -62,8 +62,8 @@ accepts the `XLSX` module as an argument.
 - `x` imports the ESM build without the codepage library:
 
 ```ts
-// @deno-types="https://unpkg.com/xlsx/types/index.d.ts"
-import * as XLSX from 'https://unpkg.com/xlsx/xlsx.mjs';
+// @deno-types="https://cdn.sheetjs.com/xlsx-latest/package/types/index.d.ts"
+import * as XLSX from 'https://cdn.sheetjs.com/xlsx-latest/package/xlsx.mjs';
 ```
 
 - `mjs` imports the ESM build and the associated codepage library:

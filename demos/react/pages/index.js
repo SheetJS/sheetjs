@@ -1,23 +1,24 @@
-import Head from 'next/head'
-import SheetJSApp from './sheetjs'
-const Index = () => (
+import Head from 'next/head';
+
+export default function Index() { return (
 <div>
-	<Head>
-		<meta httpEquiv="Content-Type" content="text/html; charset=UTF-8" />
-		<title>SheetJS React Demo</title>
-		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" />
-		<script src="/shim.js"></script>
-		<style jsx>{`
-			body, #app { height: 100%; };
-		`}</style>
-	</Head>
-	<div className="container-fluid">
-		<h1><a href="http://sheetjs.com">SheetJS React Demo</a></h1>
-		<br />
-		<a href="https://github.com/SheetJS/js-xlsx">Source Code Repo</a><br />
-		<a href="https://github.com/SheetJS/js-xlsx/issues">Issues?  Something look weird?  Click here and report an issue</a><br /><br />
-	</div>
-	<SheetJSApp />
+  <Head>
+    <meta httpEquiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>SheetJS Next.JS Demo</title>
+    <script src="/shim.js"></script>
+    <style jsx>{`
+      body, #app { height: 100%; };
+    `}</style>
+  </Head>
+  <pre>
+<h3>SheetJS Next.JS Demos</h3>
+All demos read from /public/sheetjs.xlsx.<br/>
+<br/>
+- <a href="/getStaticProps">getStaticProps</a><br/>
+<br/>
+- <a href="/getServerSideProps">getServerSideProps</a><br/>
+<br/>
+- <a href="/getStaticPaths">getStaticPaths</a><br/>
+  </pre>
 </div>
-);
-export default Index;
+); }

@@ -1,3 +1,3 @@
 /* xlsx.js (C) 2013-present  SheetJS -- http://sheetjs.com */
-import XLSX from 'xlsx';
+import * as XLSX from 'xlsx';
 import React from 'react';

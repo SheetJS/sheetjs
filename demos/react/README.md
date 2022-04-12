@@ -96,20 +96,84 @@ Components used in the demo:
 - [`react-native-file-access`](https://npm.im/react-native-file-access)
 
 React Native does not provide a native component for reading and writing files.
-The sample script <`react-native.js`> uses `react-native-file-access` and has
+The sample script `react-native.js` uses `react-native-file-access` and has
 notes for integrations with `react-native-fetch-blob` and `react-native-fs`.
 
 Note: for real app deployments, the `UIFileSharingEnabled` flag must be manually
 set in the iOS project `Info.plist` file.
 
-#### Server-Rendered React Components with Next.js
+## Server-Rendered React Components with Next.js
 
-The demo uses the same component code as the in-browser version, but the build
-step adds a small header that imports the library.  The import is not needed in
-deployments that use script tags to include the library.
+The demo reads from `public/sheetjs.xlsx`.  HTML output is generated using
+`XLSX.utils.sheet_to_html` and inserted with `dangerouslySetInnerHTML`:
 
-[![Analytics](https://ga-beacon.appspot.com/UA-36810333-1/SheetJS/js-xlsx?pixel)](https://github.com/SheetJS/js-xlsx)
+```jsx
+export default function Index({html, type}) { return (
+  // ...
+  <div dangerouslySetInnerHTML={{ __html: html }} />
+  // ...
+); }
+```
+
+Next currently offers 3 general strategies for server-side data fetching:
+
+#### "Server-Side Rendering" using `getServerSideProps`
+
+`/getServerSideProps` reads the file on each request.  The first worksheet is
+converted to HTML:
+
+```js
+export async function getServerSideProps() {
+  const wb = XLSX.readFile(path);
+  return { props: {
+    html: utils.sheet_to_html(wb.Sheets[wb.SheetNames[0]])
+  }};
+}
+```
+
+#### "Static Site Generation" using `getStaticProps`
+
+`/getServerSideProps` reads the file at build time.  The first worksheet is
+converted to HTML:
+
+```js
+export async function getStaticProps() {
+  const wb = XLSX.readFile(path);
+  return { props: {
+    html: utils.sheet_to_html(wb.Sheets[wb.SheetNames[0]])
+  }};
+}
+```
+
+#### "Static Site Generation with Dynamic Routes" using `getStaticPaths`
+
+`/getStaticPaths` reads the file at build time and generates a list of sheets.
+
+`/sheets/[id]` uses `getStaticPaths` to generate a path per sheet index:
+
+```js
+export async function getStaticPaths() {
+  const wb = XLSX.readFile(path);
+  return {
+    paths: wb.SheetNames.map((name, idx) => ({ params: { id: idx.toString()  } })),
+    fallback: false
+  };
+}
+```
+
+It also uses `getStaticProps` for the actual HTML generation:
+
+```js
+export async function getStaticProps(ctx) {
+  const wb = XLSX.readFile(path);
+  return { props: {
+    html: utils.sheet_to_html(wb.Sheets[wb.SheetNames[ctx.params.id]]),
+  }};
+}
+```
 
 ## Additional Notes
 
 Some additional notes can be found in [`NOTES.md`](NOTES.md).
+
+[![Analytics](https://ga-beacon.appspot.com/UA-36810333-1/SheetJS/js-xlsx?pixel)](https://github.com/SheetJS/js-xlsx)

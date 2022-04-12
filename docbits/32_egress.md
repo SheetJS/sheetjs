@@ -169,7 +169,7 @@ Combining with `fetch`, constructing a site from a workbook is straightforward:
 <body>
   <style>TABLE { border-collapse: collapse; } TD { border: 1px solid; }</style>
   <div id="tavolo"></div>
-  <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
   <script type="text/javascript">
 (async() => {
   /* fetch and parse workbook -- see the fetch example for details */

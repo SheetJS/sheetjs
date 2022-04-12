@@ -17,7 +17,7 @@ var code = [ "function(){",
 page.open('https://sheetjs.com/demos/table', function() {
   console.log("Page Loaded");
   /* Load the browser script from the UNPKG CDN */
-  page.includeJs("https://unpkg.com/xlsx/dist/xlsx.full.min.js", function() {
+  page.includeJs("https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js", function() {
     /* Verify the page is loaded by logging the version number */
     var version = "function(){ console.log('Library Version:' + window.XLSX.version); }";
     page.evaluateJavaScript(version);

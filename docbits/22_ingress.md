@@ -152,8 +152,8 @@ Here are a few common scenarios (click on each subtitle to see the code):
 
 ```html
 <!-- include the standalone script and shim.  this uses the UNPKG CDN -->
-<script src="https://unpkg.com/xlsx/dist/shim.min.js"></script>
-<script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/shim.min.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 
 <!-- example table with id attribute -->
 <table id="tableau">
@@ -299,7 +299,7 @@ var code = [ "function(){",
 
 page.open('https://sheetjs.com/demos/table', function() {
   /* Load the browser script from the UNPKG CDN */
-  page.includeJs("https://unpkg.com/xlsx/dist/xlsx.full.min.js", function() {
+  page.includeJs("https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js", function() {
     /* The code will return an XLSB file encoded as binary string */
     var bin = page.evaluateJavaScript(code);
 
