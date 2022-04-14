@@ -8,7 +8,7 @@ meteor out of the box.
 Using the npm module, the library can be imported from client or server side:
 
 ```js
-import XLSX from 'xlsx'
+import * as XLSX from 'xlsx'
 ```
 
 All of the functions and utilities are available in both realms. Since the core
@@ -71,7 +71,7 @@ This tree does not include the `.meteor` structure.  Rebuild the project with:
 
 ```bash
 meteor create .
-npm install babel-runtime meteor-node-stubs xlsx
+npm install babel-runtime meteor-node-stubs https://cdn.sheetjs.com/xlsx-latest/xlsx-latest.tgz
 meteor
 ```
 

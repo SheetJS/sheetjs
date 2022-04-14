@@ -119,6 +119,7 @@ utils
 commonjs
 async
 uncheck
+vendoring
 
  - demos/altjs/README.md
 ChakraCore

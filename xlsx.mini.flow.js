@@ -4,7 +4,7 @@
 /*global exports, module, require:false, process:false, Buffer:false, ArrayBuffer:false, DataView:false, Deno:false */
 var XLSX = {};
 function make_xlsx_lib(XLSX){
-XLSX.version = '0.18.5';
+XLSX.version = '0.18.6';
 var current_codepage = 1200, current_ansi = 1252;
 
 var VALID_ANSI = [ 874, 932, 936, 949, 950, 1250, 1251, 1252, 1253, 1254, 1255, 1256, 1257, 1258, 10000 ];
@@ -967,7 +967,7 @@ function eval_fmt(fmt/*:string*/, v/*:any*/, opts/*:any*/, flen/*:number*/) {
 			case 'A': case 'a': case '上':
 				var q={t:c, v:c};
 				if(dt==null) dt=SSF_parse_date_code(v, opts);
-				if(fmt.substr(i, 3).toUpperCase() === "A/P") { if(dt!=null) q.v = dt.H >= 12 ? "P" : "A"; q.t = 'T'; hr='h';i+=3;}
+				if(fmt.substr(i, 3).toUpperCase() === "A/P") { if(dt!=null) q.v = dt.H >= 12 ? fmt.charAt(i+2) : c; q.t = 'T'; hr='h';i+=3;}
 				else if(fmt.substr(i,5).toUpperCase() === "AM/PM") { if(dt!=null) q.v = dt.H >= 12 ? "PM" : "AM"; q.t = 'T'; i+=5; hr='h'; }
 				else if(fmt.substr(i,5).toUpperCase() === "上午/下午") { if(dt!=null) q.v = dt.H >= 12 ? "下午" : "上午"; q.t = 'T'; i+=5; hr='h'; }
 				else { q.t = "t"; ++i; }
@@ -1299,6 +1299,15 @@ function dateNF_fix(str/*:string*/, dateNF/*:string*/, match/*:Array<string>*/)/
 	return datestr + "T" + timestr;
 }
 
+/* table of bad formats written by third-party tools */
+var bad_formats = {
+	"d.m": "d\\.m" // Issue #2571 Google Sheets writes invalid format 'd.m', correct format is 'd"."m' or 'd\\.m'
+};
+
+function SSF__load(fmt, idx) {
+	return SSF_load(bad_formats[fmt] || fmt, idx);
+}
+
 /*::
 declare var ReadShift:any;
 declare var CheckField:any;
@@ -1434,7 +1443,7 @@ return CRC32;
 /* [MS-CFB] v20171201 */
 var CFB = /*#__PURE__*/(function _CFB(){
 var exports/*:CFBModule*/ = /*::(*/{}/*:: :any)*/;
-exports.version = '1.2.1';
+exports.version = '1.2.2';
 /* [MS-CFB] 2.6.4 */
 function namecmp(l/*:string*/, r/*:string*/)/*:number*/ {
 	var L = l.split("/"), R = r.split("/");
@@ -1734,7 +1743,7 @@ function sleuth_fat(idx/*:number*/, cnt/*:number*/, sectors/*:Array<RawBytes>*/,
 			if((q = __readInt32LE(sector,i*4)) === ENDOFCHAIN) break;
 			fat_addrs.push(q);
 		}
-		sleuth_fat(__readInt32LE(sector,ssz-4),cnt - 1, sectors, ssz, fat_addrs);
+		if(cnt >= 1) sleuth_fat(__readInt32LE(sector,ssz-4),cnt - 1, sectors, ssz, fat_addrs);
 	}
 }
 
@@ -1910,7 +1919,9 @@ function rebuild_cfb(cfb/*:CFBContainer*/, f/*:?boolean*/)/*:void*/ {
 	for(i = 0; i < data.length; ++i) {
 		var dad = dirname(data[i][0]);
 		s = fullPaths[dad];
-		if(!s) {
+		while(!s) {
+			while(dirname(dad) && !fullPaths[dirname(dad)]) dad = dirname(dad);
+
 			data.push([dad, ({
 				name: filename(dad).replace("/",""),
 				type: 1,
@@ -1918,8 +1929,12 @@ function rebuild_cfb(cfb/*:CFBContainer*/, f/*:?boolean*/)/*:void*/ {
 				ct: now, mt: now,
 				content: null
 			}/*:any*/)]);
+
 			// Add name to set
 			fullPaths[dad] = true;
+
+			dad = dirname(data[i][0]);
+			s = fullPaths[dad];
 		}
 	}
 
@@ -1967,7 +1982,6 @@ function _write(cfb/*:CFBContainer*/, options/*:CFBWriteOpts*/)/*:RawBytes|strin
 		for(var i = 0; i < cfb.FileIndex.length; ++i) {
 			var file = cfb.FileIndex[i];
 			if(!file.content) continue;
-			/*:: if(file.content == null) throw new Error("unreachable"); */
 			var flen = file.content.length;
 			if(flen > 0){
 				if(flen < 0x1000) mini_size += (flen + 0x3F) >> 6;
@@ -2058,6 +2072,10 @@ function _write(cfb/*:CFBContainer*/, options/*:CFBWriteOpts*/)/*:RawBytes|strin
 		file = cfb.FileIndex[i];
 		if(i === 0) file.start = file.size ? file.start - 1 : ENDOFCHAIN;
 		var _nm/*:string*/ = (i === 0 && _opts.root) || file.name;
+		if(_nm.length > 32) {
+			console.error("Name " + _nm + " will be truncated to " + _nm.slice(0,32));
+			_nm = _nm.slice(0, 32);
+		}
 		flen = 2*(_nm.length+1);
 		o.write_shift(64, _nm, "utf16le");
 		o.write_shift(2, flen);
@@ -2696,6 +2714,7 @@ function parse_zip(file/*:RawBytes*/, options/*:CFBReadOpts*/)/*:CFBContainer*/ 
 		parse_local_file(blob, csz, usz, o, EF);
 		blob.l = L;
 	}
+
 	return o;
 }
 
@@ -4338,7 +4357,7 @@ var VT_UI4      = 0x0013;
 //var VT_UI8      = 0x0015;
 //var VT_INT      = 0x0016;
 //var VT_UINT     = 0x0017;
-var VT_LPSTR    = 0x001E;
+//var VT_LPSTR    = 0x001E;
 //var VT_LPWSTR   = 0x001F;
 var VT_FILETIME = 0x0040;
 var VT_BLOB     = 0x0041;
@@ -4350,7 +4369,7 @@ var VT_BLOB     = 0x0041;
 var VT_CF       = 0x0047;
 //var VT_CLSID    = 0x0048;
 //var VT_VERSIONED_STREAM = 0x0049;
-var VT_VECTOR   = 0x1000;
+//var VT_VECTOR   = 0x1000;
 var VT_VECTOR_VARIANT = 0x100C;
 var VT_VECTOR_LPSTR   = 0x101E;
 //var VT_ARRAY    = 0x2000;
@@ -7025,7 +7044,7 @@ function parse_numFmts(t, styles, opts) {
 						for(j = 0x188; j > 0x3c; --j) if(styles.NumberFmt[j] == null) break;
 						styles.NumberFmt[j] = f;
 					}
-					SSF_load(f,j);
+					SSF__load(f,j);
 				}
 			} break;
 			case '</numFmt>': break;
@@ -8061,7 +8080,7 @@ function get_cell_style(styles/*:Array<any>*/, cell/*:Cell*/, opts) {
 	var i = 0x3c, len = styles.length;
 	if(z == null && opts.ssf) {
 		for(; i < 0x188; ++i) if(opts.ssf[i] == null) {
-			SSF_load(cell.z, i);
+			SSF__load(cell.z, i);
 			// $FlowIgnore
 			opts.ssf[i] = cell.z;
 			opts.revssf[cell.z] = z = i;
@@ -8087,7 +8106,7 @@ function safe_format(p/*:Cell*/, fmtid/*:number*/, fillid/*:?number*/, opts, the
 	if(p.t === 'z' && !opts.cellStyles) return;
 	if(p.t === 'd' && typeof p.v === 'string') p.v = parseDate(p.v);
 	if((!opts || opts.cellText !== false) && p.t !== 'z') try {
-		if(table_fmt[fmtid] == null) SSF_load(SSFImplicit[fmtid] || "General", fmtid);
+		if(table_fmt[fmtid] == null) SSF__load(SSFImplicit[fmtid] || "General", fmtid);
 		if(p.t === 'e') p.w = p.w || BErr[p.v];
 		else if(fmtid === 0) {
 			if(p.t === 'n') {
@@ -9276,10 +9295,6 @@ function parse_sty(data, name/*:string*/, themes, opts) {
 	return parse_sty_xml((data/*:any*/), themes, opts);
 }
 
-function parse_theme(data/*:string*/, name/*:string*/, opts) {
-	return parse_theme_xml(data, opts);
-}
-
 function parse_sst(data, name/*:string*/, opts)/*:SST*/ {
 	if(name.slice(-4)===".bin") return parse_sst_bin((data/*:any*/), opts);
 	return parse_sst_xml((data/*:any*/), opts);
@@ -9303,40 +9318,6 @@ function parse_xlink(data, rel, name/*:string*/, opts) {
 function parse_xlmeta(data, name/*:string*/, opts) {
 	if(name.slice(-4)===".bin") return parse_xlmeta_bin((data/*:any*/), name, opts);
 	return parse_xlmeta_xml((data/*:any*/), name, opts);
-}
-
-function write_wb(wb, name/*:string*/, opts) {
-	return (name.slice(-4)===".bin" ? write_wb_bin : write_wb_xml)(wb, opts);
-}
-
-function write_ws(data/*:number*/, name/*:string*/, opts, wb/*:Workbook*/, rels) {
-	return (name.slice(-4)===".bin" ? write_ws_bin : write_ws_xml)(data, opts, wb, rels);
-}
-
-// eslint-disable-next-line no-unused-vars
-function write_cs(data/*:number*/, name/*:string*/, opts, wb/*:Workbook*/, rels) {
-	return (name.slice(-4)===".bin" ? write_cs_bin : write_cs_xml)(data, opts, wb, rels);
-}
-
-function write_sty(data, name/*:string*/, opts) {
-	return (name.slice(-4)===".bin" ? write_sty_bin : write_sty_xml)(data, opts);
-}
-
-function write_sst(data/*:SST*/, name/*:string*/, opts) {
-	return (name.slice(-4)===".bin" ? write_sst_bin : write_sst_xml)(data, opts);
-}
-
-function write_cmnt(data/*:Array<any>*/, name/*:string*/, opts) {
-	return (name.slice(-4)===".bin" ? write_comments_bin : write_comments_xml)(data, opts);
-}
-/*
-function write_cc(data, name:string, opts) {
-	return (name.slice(-4)===".bin" ? write_cc_bin : write_cc_xml)(data, opts);
-}
-*/
-
-function write_xlmeta(name/*:string*/) {
-	return (name.slice(-4)===".bin" ? write_xlmeta_bin : write_xlmeta_xml)();
 }
 /* note: browser DOM element cannot see mso- style attrs, must parse */
 function html_to_sheet(str/*:string*/, _opts)/*:Workbook*/ {
@@ -10584,7 +10565,7 @@ function parse_zip(zip/*:ZIP*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
 		strs = [];
 		if(dir.sst) try { strs=parse_sst(getzipdata(zip, strip_front_slash(dir.sst)), dir.sst, opts); } catch(e) { if(opts.WTF) throw e; }
 
-		if(opts.cellStyles && dir.themes.length) themes = parse_theme(getzipstr(zip, dir.themes[0].replace(/^\//,''), true)||"",dir.themes[0], opts);
+		if(opts.cellStyles && dir.themes.length) themes = parse_theme_xml(getzipstr(zip, dir.themes[0].replace(/^\//,''), true)||"", opts);
 
 		if(dir.style) styles = parse_sty(getzipdata(zip, strip_front_slash(dir.style)), dir.style, themes, opts);
 	}
@@ -10769,18 +10750,7 @@ function parse_xlsxcfb(cfb, _opts/*:?ParseOpts*/)/*:Workbook*/ {
 	throw new Error("File is password-protected");
 }
 
-function write_zip(wb/*:Workbook*/, opts/*:WriteOpts*/)/*:ZIP*/ {
-	if(opts.bookType == "ods") return write_ods(wb, opts);
-	if(opts.bookType == "numbers") return write_numbers_iwa(wb, opts);
-	if(opts.bookType == "xlsb") return write_zip_xlsxb(wb, opts);
-	return write_zip_xlsx(wb, opts);
-}
-
-/* XLSX and XLSB writing are very similar.  Originally they were unified in one
-   export function.  This is horrible for tree shaking in the common case (most
-   applications need to export files in one format) so this function supports
-   both formats while write_zip_xlsx only handles XLSX */
-function write_zip_xlsxb(wb/*:Workbook*/, opts/*:WriteOpts*/)/*:ZIP*/ {
+function write_zip_xlsb(wb/*:Workbook*/, opts/*:WriteOpts*/)/*:ZIP*/ {
 	_shapeid = 1024;
 	if(wb && !wb.SSF) {
 		wb.SSF = dup(table_fmt);
@@ -10843,7 +10813,7 @@ function write_zip_xlsxb(wb/*:Workbook*/, opts/*:WriteOpts*/)/*:ZIP*/ {
 			/* falls through */
 		default:
 			f = "xl/worksheets/sheet" + rId + "." + wbext;
-			zip_add_file(zip, f, write_ws(rId-1, f, opts, wb, wsrels));
+			zip_add_file(zip, f, write_ws_bin(rId-1, opts, wb, wsrels));
 			ct.sheets.push(f);
 			add_rels(opts.wbrels, -1, "worksheets/sheet" + rId + "." + wbext, RELS.WS[0]);
 		}
@@ -10854,7 +10824,7 @@ function write_zip_xlsxb(wb/*:Workbook*/, opts/*:WriteOpts*/)/*:ZIP*/ {
 			var cf = "";
 			if(comments && comments.length > 0) {
 				cf = "xl/comments" + rId + "." + wbext;
-				zip_add_file(zip, cf, write_cmnt(comments, cf, opts));
+				zip_add_file(zip, cf, write_comments_bin(comments, opts));
 				ct.comments.push(cf);
 				add_rels(wsrels, -1, "../comments" + rId + "." + wbext, RELS.CMNT);
 				need_vml = true;
@@ -10871,13 +10841,13 @@ function write_zip_xlsxb(wb/*:Workbook*/, opts/*:WriteOpts*/)/*:ZIP*/ {
 
 	if(opts.Strings != null && opts.Strings.length > 0) {
 		f = "xl/sharedStrings." + wbext;
-		zip_add_file(zip, f, write_sst(opts.Strings, f, opts));
+		zip_add_file(zip, f, write_sst_bin(opts.Strings, opts));
 		ct.strs.push(f);
 		add_rels(opts.wbrels, -1, "sharedStrings." + wbext, RELS.SST);
 	}
 
 	f = "xl/workbook." + wbext;
-	zip_add_file(zip, f, write_wb(wb, f, opts));
+	zip_add_file(zip, f, write_wb_bin(wb, opts));
 	ct.workbooks.push(f);
 	add_rels(opts.rels, 1, f, RELS.WB);
 
@@ -10891,7 +10861,7 @@ function write_zip_xlsxb(wb/*:Workbook*/, opts/*:WriteOpts*/)/*:ZIP*/ {
 	/* TODO: something more intelligent with styles */
 
 	f = "xl/styles." + wbext;
-	zip_add_file(zip, f, write_sty(wb, f, opts));
+	zip_add_file(zip, f, write_sty_bin(wb, opts));
 	ct.styles.push(f);
 	add_rels(opts.wbrels, -1, "styles." + wbext, RELS.STY);
 
@@ -10903,7 +10873,7 @@ function write_zip_xlsxb(wb/*:Workbook*/, opts/*:WriteOpts*/)/*:ZIP*/ {
 	}
 
 	f = "xl/metadata." + wbext;
-	zip_add_file(zip, f, write_xlmeta(f));
+	zip_add_file(zip, f, write_xlmeta_bin());
 	ct.metadata.push(f);
 	add_rels(opts.wbrels, -1, "metadata." + wbext, RELS.XLMETA);
 
@@ -11198,6 +11168,15 @@ function write_cfb_ctr(cfb/*:CFBContainer*/, o/*:WriteOpts*/)/*:any*/ {
 		default: throw new Error("Unrecognized type " + o.type);
 	}
 	return CFB.write(cfb, o);
+}
+
+function write_zip(wb/*:Workbook*/, opts/*:WriteOpts*/)/*:ZIP*/ {
+	switch(opts.bookType) {
+		case "ods": return write_ods(wb, opts);
+		case "numbers": return write_numbers_iwa(wb, opts);
+		case "xlsb": return write_zip_xlsb(wb, opts);
+		default: return write_zip_xlsx(wb, opts);
+	}
 }
 
 /*:: declare var encrypt_agile:any; */

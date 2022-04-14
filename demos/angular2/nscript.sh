@@ -2,7 +2,7 @@
 if [ ! -e SheetJSNS ]; then
 	ns create SheetJSNS --ng
 	cd SheetJSNS
-	npm install xlsx
+	npm install --save https://cdn.sheetjs.com/xlsx-latest/xlsx-latest.tgz
 	cd ..
 fi
 

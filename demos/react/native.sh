@@ -5,7 +5,7 @@
 if [ ! -e SheetJS ]; then react-native init SheetJS --version="0.67.2"; fi
 
 # Install dependencies
-cd SheetJS; npm i -S xlsx react-native-table-component; cd -
+cd SheetJS; npm i -S https://cdn.sheetjs.com/xlsx-latest/xlsx-latest.tgz react-native-table-component; cd -
 
 cd SheetJS; npm i -S react-native-file-access@2.x; cd -
 # cd SheetJS; npm i -S react-native-fs; cd -

@@ -1,7 +1,7 @@
 # NW.js
 
 This library is compatible with NW.js and should just work out of the box.
-The demonstration uses NW.js 0.24 with the dist script.
+The demonstration uses NW.js 0.63.0 with the dist script.
 
 ## Reading data
 

@@ -30,7 +30,7 @@ utility can stream rows to a standard HTTP response.  `XLSX.utils.sheet_to_json`
 can generate an array of objects that can be fed to another service.
 
 At the simplest level, a file on the filesystem can be converted using the bin
-script that ships with the `npm` module:
+script that ships with the NodeJS package:
 
 ```bash
 $ xlsx /path/to/uploads/file > /tmp/new_csv_file

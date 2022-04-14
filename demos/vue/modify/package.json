@@ -10,7 +10,7 @@
   "dependencies": {
     "vue": "^3.2.25",
     "vue3-table-lite": "^1.1.7-1",
-    "xlsx": "^0.18.3"
+    "xlsx": "https://cdn.sheetjs.com/xlsx-latest/xlsx-latest.tgz"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^2.2.0",

@@ -5,7 +5,7 @@
 **Standalone Browser Scripts**
 
 The complete browser standalone build is saved to `dist/xlsx.full.min.js` and
-can be directly added to a page with a `script` tag:
+can be directly added to a page with a `<script>` tag:
 
 ```html
 <script lang="javascript" src="dist/xlsx.full.min.js"></script>
@@ -26,6 +26,9 @@ A specific release can be referenced by version:
 <script lang="javascript" src="https://cdn.sheetjs.com/xlsx-0.18.5/package/dist/xlsx.full.min.js"></script>
 ```
 
+For production use, scripts should be downloaded and added to a public folder
+alongside other scripts.
+
 </details>
 
 <details>
@@ -43,8 +46,8 @@ A slimmer build is generated at `dist/xlsx.mini.min.js`. Compared to full build:
 These scripts are also available on the CDN:
 
 ```html
-<!-- use xlsx.core.min.js from the latest version -->
-<script lang="javascript" src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.core.min.js"></script>
+<!-- use xlsx.mini.min.js from the latest version -->
+<script lang="javascript" src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.mini.min.js"></script>
 ```
 
 </details>
@@ -59,21 +62,21 @@ $ bower install js-xlsx
 **ECMAScript Modules**
 
 The ECMAScript Module build is saved to `xlsx.mjs` and can be directly added to
-a page with a `script` tag using `type=module`:
+a page with a `script` tag using `type="module"`:
 
 ```html
 <script type="module">
-import { read, writeFileXLSX } from "./xlsx.mjs";
+import { read, writeFileXLSX } from "https://cdn.sheetjs.com/xlsx-latest/package/xlsx.mjs";
 
 /* load the codepage support library for extended support with older formats  */
-import { set_cptable } from "./xlsx.mjs";
-import * as cptable from './dist/cpexcel.full.mjs';
+import { set_cptable } from "https://cdn.sheetjs.com/xlsx-latest/package/xlsx.mjs";
+import * as cptable from 'https://cdn.sheetjs.com/xlsx-latest/package/dist/cpexcel.full.mjs';
 set_cptable(cptable);
 </script>
 ```
 
-The [npm package](https://www.npmjs.org/package/xlsx) also exposes the module
-with the `module` parameter, supported in Angular and other projects:
+The NodeJS package also exposes the module with the `module` parameter, which is
+supported in Angular and other projects:
 
 ```ts
 import { read, writeFileXLSX } from "xlsx";
@@ -99,19 +102,31 @@ XLSX.set_cptable(cptable);
 
 **NodeJS**
 
-Modules are available on [the public npm registry](https://www.npmjs.org/package/xlsx):
+Tarballs are available on <https://cdn.sheetjs.com>.
+
+<https://cdn.sheetjs.com/xlsx-latest/xlsx-latest.tgz> is a link to the latest
+version and will refresh on each release.
+
+Each individual version can be referenced using a similar URL pattern.
+<https://cdn.sheetjs.com/xlsx-0.18.6/xlsx-0.18.6.tgz> is the URL for `0.18.6`
+
+For general stability, "vendoring" modules is the recommended approach:
+
+1) Download the tarball (`xlsx-<version>.tgz`) for the desired version.
+
+2) Create a `vendor` subdirectory at the root of your project and move the
+   tarball to that folder.  Add it to your project repository.
+
+3) Install the tarball using a package manager:
 
 ```bash
-$ pnpm install xlsx  # using pnpm
-$ yarn add xlsx      # using yarn
-$ npm install xlsx   # using npm
+# note : replace $VERSION with the actual version (e.g. latest or 0.18.6)
+$ npm  install --save file:vendor/xlsx-$VERSION.tgz # npm
+$ pnpm install --save file:vendor/xlsx-$VERSION.tgz # pnpm
+$ yarn add            file:vendor/xlsx-$VERSION.tgz # yarn
 ```
 
-Tarballs are also available on <https://cdn.sheetjs.com>:
-
-```bash
-$ npm install https://cdn.sheetjs.com/xlsx-latest/xlsx-latest.tgz
-```
+The package will be installed and accessible as `xlsx`.
 
 By default, the module supports `require`:
 
@@ -139,9 +154,9 @@ XLSX.set_cptable(cpexcel);
 
 **Photoshop and InDesign**
 
-`dist/xlsx.extendscript.js` is an ExtendScript build for Photoshop and InDesign
-that is included in the `npm` package.  It can be directly referenced with a
-`#include` directive:
+`dist/xlsx.extendscript.js` is an ExtendScript build for Photoshop and InDesign.
+<https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.extendscript.js> is the
+latest build.  It can be directly referenced with a `#include` directive:
 
 ```extendscript
 #include "xlsx.extendscript.js"

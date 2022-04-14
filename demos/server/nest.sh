@@ -7,7 +7,7 @@ if [ ! -e xlsx-demo ]; then
 fi
 
 cd xlsx-demo
-npm i --save xlsx
+npm i --save https://cdn.sheetjs.com/xlsx-latest/xlsx-latest.tgz
 npm i --save-dev @types/multer
 
 if [ ! -e src/sheetjs/sheetjs.module.ts ]; then

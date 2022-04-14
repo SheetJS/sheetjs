@@ -7,11 +7,11 @@ aws: lambda-proxy
 
 .PHONY: lambda-proxy
 lambda-proxy:
-	cd LambdaProxy; mkdir -p node_modules; npm install xlsx busboy; sam local start-api; cd -
+	cd LambdaProxy; mkdir -p node_modules; npm install https://cdn.sheetjs.com/xlsx-latest/xlsx-latest.tgz busboy; sam local start-api; cd -
 
 .PHONY: init-azure
 init-azure:
-	cd AzureHTTPTrigger; mkdir -p node_modules; npm install xlsx formidable fs
+	cd AzureHTTPTrigger; mkdir -p node_modules; npm install https://cdn.sheetjs.com/xlsx-latest/xlsx-latest.tgz formidable fs
 
 .PHONY: azure
 azure: init-azure

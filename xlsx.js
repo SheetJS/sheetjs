@@ -4,7 +4,7 @@
 /*global exports, module, require:false, process:false, Buffer:false, ArrayBuffer:false, DataView:false, Deno:false */
 var XLSX = {};
 function make_xlsx_lib(XLSX){
-XLSX.version = '0.18.5';
+XLSX.version = '0.18.6';
 var current_codepage = 1200, current_ansi = 1252;
 /*global cptable:true, window */
 var $cptable;
@@ -4604,7 +4604,7 @@ var VT_UI4      = 0x0013;
 //var VT_UI8      = 0x0015;
 //var VT_INT      = 0x0016;
 //var VT_UINT     = 0x0017;
-var VT_LPSTR    = 0x001E;
+//var VT_LPSTR    = 0x001E;
 //var VT_LPWSTR   = 0x001F;
 var VT_FILETIME = 0x0040;
 var VT_BLOB     = 0x0041;
@@ -4616,7 +4616,7 @@ var VT_BLOB     = 0x0041;
 var VT_CF       = 0x0047;
 //var VT_CLSID    = 0x0048;
 //var VT_VERSIONED_STREAM = 0x0049;
-var VT_VECTOR   = 0x1000;
+//var VT_VECTOR   = 0x1000;
 var VT_VECTOR_VARIANT = 0x100C;
 var VT_VECTOR_LPSTR   = 0x101E;
 //var VT_ARRAY    = 0x2000;
@@ -16268,16 +16268,16 @@ function parse_cs_xml(data, opts, idx, rels, wb) {
 	if(rels['!id'][s['!rel']]) s['!drawel'] = rels['!id'][s['!rel']];
 	return s;
 }
-function write_cs_xml(idx, opts, wb, rels) {
-	var o = [XML_HEADER, writextag('chartsheet', null, {
-		'xmlns': XMLNS_main[0],
-		'xmlns:r': XMLNS.r
-	})];
-	o[o.length] = writextag("drawing", null, {"r:id": "rId1"});
-	add_rels(rels, -1, "../drawings/drawing" + (idx+1) + ".xml", RELS.DRAW);
-	if(o.length>2) { o[o.length] = ('</chartsheet>'); o[1]=o[1].replace("/>",">"); }
-	return o.join("");
-}
+//function write_cs_xml(idx, opts, wb, rels) {
+//	var o = [XML_HEADER, writextag('chartsheet', null, {
+//		'xmlns': XMLNS_main[0],
+//		'xmlns:r': XMLNS.r
+//	})];
+//	o[o.length] = writextag("drawing", null, {"r:id": "rId1"});
+//	add_rels(rels, -1, "../drawings/drawing" + (idx+1) + ".xml", RELS.DRAW);
+//	if(o.length>2) { o[o.length] = ('</chartsheet>'); o[1]=o[1].replace("/>",">"); }
+//	return o.join("");
+//}
 
 /* [MS-XLSB] 2.4.331 BrtCsProp */
 function parse_BrtCsProp(data, length) {
@@ -16333,25 +16333,25 @@ function parse_cs_bin(data, opts, idx, rels, wb) {
 	if(rels['!id'][s['!rel']]) s['!drawel'] = rels['!id'][s['!rel']];
 	return s;
 }
-function write_cs_bin() {
-	var ba = buf_array();
-	write_record(ba, 0x0081 /* BrtBeginSheet */);
-	/* [BrtCsProp] */
-	/* CSVIEWS */
-	/* [[BrtCsProtectionIso] BrtCsProtection] */
-	/* [USERCSVIEWS] */
-	/* [BrtMargins] */
-	/* [BrtCsPageSetup] */
-	/* [HEADERFOOTER] */
-	/* BrtDrawing */
-	/* [BrtLegacyDrawing] */
-	/* [BrtLegacyDrawingHF] */
-	/* [BrtBkHim] */
-	/* [WEBPUBITEMS] */
-	/* FRTCHARTSHEET */
-	write_record(ba, 0x0082 /* BrtEndSheet */);
-	return ba.end();
-}
+//function write_cs_bin() {
+//	var ba = buf_array();
+//	write_record(ba, 0x0081 /* BrtBeginSheet */);
+//	/* [BrtCsProp] */
+//	/* CSVIEWS */
+//	/* [[BrtCsProtectionIso] BrtCsProtection] */
+//	/* [USERCSVIEWS] */
+//	/* [BrtMargins] */
+//	/* [BrtCsPageSetup] */
+//	/* [HEADERFOOTER] */
+//	/* BrtDrawing */
+//	/* [BrtLegacyDrawing] */
+//	/* [BrtLegacyDrawingHF] */
+//	/* [BrtBkHim] */
+//	/* [WEBPUBITEMS] */
+//	/* FRTCHARTSHEET */
+//	write_record(ba, 0x0082 /* BrtEndSheet */);
+//	return ba.end();
+//}
 /* 18.2.28 (CT_WorkbookProtection) Defaults */
 var WBPropsDef = [
 	['allowRefreshQuery',           false, "bool"],
@@ -17068,10 +17068,6 @@ function parse_sty(data, name, themes, opts) {
 	return parse_sty_xml((data), themes, opts);
 }
 
-function parse_theme(data, name, opts) {
-	return parse_theme_xml(data, opts);
-}
-
 function parse_sst(data, name, opts) {
 	if(name.slice(-4)===".bin") return parse_sst_bin((data), opts);
 	return parse_sst_xml((data), opts);
@@ -17095,40 +17091,6 @@ function parse_xlink(data, rel, name, opts) {
 function parse_xlmeta(data, name, opts) {
 	if(name.slice(-4)===".bin") return parse_xlmeta_bin((data), name, opts);
 	return parse_xlmeta_xml((data), name, opts);
-}
-
-function write_wb(wb, name, opts) {
-	return (name.slice(-4)===".bin" ? write_wb_bin : write_wb_xml)(wb, opts);
-}
-
-function write_ws(data, name, opts, wb, rels) {
-	return (name.slice(-4)===".bin" ? write_ws_bin : write_ws_xml)(data, opts, wb, rels);
-}
-
-// eslint-disable-next-line no-unused-vars
-function write_cs(data, name, opts, wb, rels) {
-	return (name.slice(-4)===".bin" ? write_cs_bin : write_cs_xml)(data, opts, wb, rels);
-}
-
-function write_sty(data, name, opts) {
-	return (name.slice(-4)===".bin" ? write_sty_bin : write_sty_xml)(data, opts);
-}
-
-function write_sst(data, name, opts) {
-	return (name.slice(-4)===".bin" ? write_sst_bin : write_sst_xml)(data, opts);
-}
-
-function write_cmnt(data, name, opts) {
-	return (name.slice(-4)===".bin" ? write_comments_bin : write_comments_xml)(data, opts);
-}
-/*
-function write_cc(data, name:string, opts) {
-	return (name.slice(-4)===".bin" ? write_cc_bin : write_cc_xml)(data, opts);
-}
-*/
-
-function write_xlmeta(name) {
-	return (name.slice(-4)===".bin" ? write_xlmeta_bin : write_xlmeta_xml)();
 }
 var attregexg2=/([\w:]+)=((?:")([^"]*)(?:")|(?:')([^']*)(?:'))/g;
 var attregex2=/([\w:]+)=((?:")(?:[^"]*)(?:")|(?:')(?:[^']*)(?:'))/;
@@ -22842,19 +22804,17 @@ function write_numbers_iwa(wb, opts) {
   cfb.FileIndex.map(function(fi, idx) {
     return [fi, cfb.FullPaths[idx]];
   }).forEach(function(row) {
-    var fi = row[0], fp = row[1];
+    var fi = row[0];
     if (!fi.name.match(/\.iwa/))
       return;
     var x2 = parse_iwa_file(decompress_iwa_file(fi.content));
     x2.forEach(function(ia) {
-      ia.messages.forEach(function(m) {
-        indices_varint.forEach(function(ivi) {
-          if (ia.messages.some(function(mess) {
-            return varint_to_i32(mess.meta[1][0].data) != 11006 && u8contains(mess.data, ivi[1]);
-          })) {
-            dependents[ivi[0]].deps.push(ia.id);
-          }
-        });
+      indices_varint.forEach(function(ivi) {
+        if (ia.messages.some(function(mess) {
+          return varint_to_i32(mess.meta[1][0].data) != 11006 && u8contains(mess.data, ivi[1]);
+        })) {
+          dependents[ivi[0]].deps.push(ia.id);
+        }
       });
     });
   });
@@ -23060,10 +23020,9 @@ function write_numbers_iwa(wb, opts) {
               delete tile[7];
               var rowload = new Uint8Array(tiledata[5][0].data);
               tiledata[5] = [];
-              var cnt = 0;
               for (var R2 = 0; R2 <= range.e.r; ++R2) {
                 var tilerow = parse_shallow(rowload);
-                cnt += write_tile_row(tilerow, data[R2], SST, USE_WIDE_ROWS);
+                write_tile_row(tilerow, data[R2], SST, USE_WIDE_ROWS);
                 tilerow[1][0].data = write_varint49(R2);
                 tiledata[5].push({ data: write_shallow(tilerow), type: 2 });
               }
@@ -23243,7 +23202,7 @@ function parse_zip(zip, opts) {
 		strs = [];
 		if(dir.sst) try { strs=parse_sst(getzipdata(zip, strip_front_slash(dir.sst)), dir.sst, opts); } catch(e) { if(opts.WTF) throw e; }
 
-		if(opts.cellStyles && dir.themes.length) themes = parse_theme(getzipstr(zip, dir.themes[0].replace(/^\//,''), true)||"",dir.themes[0], opts);
+		if(opts.cellStyles && dir.themes.length) themes = parse_theme_xml(getzipstr(zip, dir.themes[0].replace(/^\//,''), true)||"", opts);
 
 		if(dir.style) styles = parse_sty(getzipdata(zip, strip_front_slash(dir.style)), dir.style, themes, opts);
 	}
@@ -23426,10 +23385,6 @@ if(einfo[0] == 0x02 && typeof decrypt_std76 !== 'undefined') return decrypt_std7
 	throw new Error("File is password-protected");
 }
 
-/* XLSX and XLSB writing are very similar.  Originally they were unified in one
-   export function.  This is horrible for tree shaking in the common case (most
-   applications need to export files in one format) so this function supports
-   both formats while write_zip_xlsx only handles XLSX */
 function write_zip_xlsb(wb, opts) {
 	_shapeid = 1024;
 	if(wb && !wb.SSF) {
@@ -23492,7 +23447,7 @@ f = "docProps/app.xml";
 			/* falls through */
 		default:
 			f = "xl/worksheets/sheet" + rId + "." + wbext;
-			zip_add_file(zip, f, write_ws(rId-1, f, opts, wb, wsrels));
+			zip_add_file(zip, f, write_ws_bin(rId-1, opts, wb, wsrels));
 			ct.sheets.push(f);
 			add_rels(opts.wbrels, -1, "worksheets/sheet" + rId + "." + wbext, RELS.WS[0]);
 		}
@@ -23503,7 +23458,7 @@ f = "docProps/app.xml";
 			var cf = "";
 			if(comments && comments.length > 0) {
 				cf = "xl/comments" + rId + "." + wbext;
-				zip_add_file(zip, cf, write_cmnt(comments, cf, opts));
+				zip_add_file(zip, cf, write_comments_bin(comments, opts));
 				ct.comments.push(cf);
 				add_rels(wsrels, -1, "../comments" + rId + "." + wbext, RELS.CMNT);
 				need_vml = true;
@@ -23520,13 +23475,13 @@ f = "docProps/app.xml";
 
 	if(opts.Strings != null && opts.Strings.length > 0) {
 		f = "xl/sharedStrings." + wbext;
-		zip_add_file(zip, f, write_sst(opts.Strings, f, opts));
+		zip_add_file(zip, f, write_sst_bin(opts.Strings, opts));
 		ct.strs.push(f);
 		add_rels(opts.wbrels, -1, "sharedStrings." + wbext, RELS.SST);
 	}
 
 	f = "xl/workbook." + wbext;
-	zip_add_file(zip, f, write_wb(wb, f, opts));
+	zip_add_file(zip, f, write_wb_bin(wb, opts));
 	ct.workbooks.push(f);
 	add_rels(opts.rels, 1, f, RELS.WB);
 
@@ -23540,7 +23495,7 @@ f = "docProps/app.xml";
 	/* TODO: something more intelligent with styles */
 
 	f = "xl/styles." + wbext;
-	zip_add_file(zip, f, write_sty(wb, f, opts));
+	zip_add_file(zip, f, write_sty_bin(wb, opts));
 	ct.styles.push(f);
 	add_rels(opts.wbrels, -1, "styles." + wbext, RELS.STY);
 
@@ -23552,7 +23507,7 @@ f = "docProps/app.xml";
 	}
 
 	f = "xl/metadata." + wbext;
-	zip_add_file(zip, f, write_xlmeta(f));
+	zip_add_file(zip, f, write_xlmeta_bin());
 	ct.metadata.push(f);
 	add_rels(opts.wbrels, -1, "metadata." + wbext, RELS.XLMETA);
 

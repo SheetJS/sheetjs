@@ -94,7 +94,7 @@ enables testing the development version of the library.  In order to use this
 demo in other applications, add the `xlsx` dependency:
 
 ```bash
-$ npm install --save xlsx
+$ npm install --save https://cdn.sheetjs.com/xlsx-latest/xlsx-latest.tgz
 ```
 
 ## SystemJS Configuration

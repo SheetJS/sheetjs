@@ -938,19 +938,17 @@ function write_numbers_iwa(wb, opts) {
   cfb.FileIndex.map(function(fi, idx) {
     return [fi, cfb.FullPaths[idx]];
   }).forEach(function(row) {
-    var fi = row[0], fp = row[1];
+    var fi = row[0];
     if (!fi.name.match(/\.iwa/))
       return;
     var x2 = parse_iwa_file(decompress_iwa_file(fi.content));
     x2.forEach(function(ia) {
-      ia.messages.forEach(function(m) {
-        indices_varint.forEach(function(ivi) {
-          if (ia.messages.some(function(mess) {
-            return varint_to_i32(mess.meta[1][0].data) != 11006 && u8contains(mess.data, ivi[1]);
-          })) {
-            dependents[ivi[0]].deps.push(ia.id);
-          }
-        });
+      indices_varint.forEach(function(ivi) {
+        if (ia.messages.some(function(mess) {
+          return varint_to_i32(mess.meta[1][0].data) != 11006 && u8contains(mess.data, ivi[1]);
+        })) {
+          dependents[ivi[0]].deps.push(ia.id);
+        }
       });
     });
   });
@@ -1156,10 +1154,9 @@ function write_numbers_iwa(wb, opts) {
               delete tile[7];
               var rowload = new Uint8Array(tiledata[5][0].data);
               tiledata[5] = [];
-              var cnt = 0;
               for (var R2 = 0; R2 <= range.e.r; ++R2) {
                 var tilerow = parse_shallow(rowload);
-                cnt += write_tile_row(tilerow, data[R2], SST, USE_WIDE_ROWS);
+                write_tile_row(tilerow, data[R2], SST, USE_WIDE_ROWS);
                 tilerow[1][0].data = write_varint49(R2);
                 tiledata[5].push({ data: write_shallow(tilerow), type: 2 });
               }

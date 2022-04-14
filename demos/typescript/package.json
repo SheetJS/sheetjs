@@ -10,7 +10,7 @@
   },
   "private": true,
   "dependencies": {
-		"xlsx": "*"
+    "xlsx": "https://cdn.sheetjs.com/xlsx-latest/xlsx-latest.tgz"
   },
   "devDependencies": {
     "typescript": "~2.6.1",

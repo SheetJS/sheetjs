@@ -14,7 +14,7 @@ appropriate error checking or other production-level features.
 The following commands are required in order to test the [Express](https://github.com/expressjs/express) demo:
 
 ```bash
-npm install express printj xlsx express-formidable
+npm install express printj express-formidable https://cdn.sheetjs.com/xlsx-latest/xlsx-latest.tgz
 node express.js
 ```
 
@@ -23,7 +23,7 @@ node express.js
 The following commands are required in order to test the [Koa](https://github.com/koajs/koa) demo:
 
 ```bash
-npm install koa printj formidable xlsx
+npm install koa printj formidable https://cdn.sheetjs.com/xlsx-latest/xlsx-latest.tgz
 node koa.js
 ```
 
@@ -34,7 +34,7 @@ node koa.js
 The following commands are required in order to test the [Hapi](https://github.com/hapijs/hapi) demo:
 
 ```bash
-npm install hapi@16.x printj tiny-worker xlsx
+npm install hapi@16.x printj tiny-worker https://cdn.sheetjs.com/xlsx-latest/xlsx-latest.tgz
 node hapi.js
 ```
 

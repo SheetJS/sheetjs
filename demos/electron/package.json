@@ -6,7 +6,7 @@
 	"dependencies": {
 		"@electron/remote": "^2.0.5",
 		"electron": "^17.1.0",
-		"xlsx": "^0.18.3"
+		"xlsx": "https://cdn.sheetjs.com/xlsx-latest/xlsx-latest.tgz"
 	},
 	"scripts": {
 		"start": "electron ."

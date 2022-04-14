@@ -8,7 +8,7 @@ if [ ! -e SheetJSIonic ]; then
 	ionic cordova plugin add cordova-plugin-file </dev/null
 	npm install --save @ionic-native/core
 	npm install --save @ionic-native/file
-	npm install --save xlsx
+	npm install --save https://cdn.sheetjs.com/xlsx-latest/xlsx-latest.tgz
 	cp ../ionic-app.module.ts src/app/app.module.ts
 	cd -
 fi

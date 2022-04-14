@@ -4,4 +4,4 @@ init:
 
 .PHONY: run
 run:
-	nw .
+	npx nw .

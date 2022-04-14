@@ -8,4 +8,5 @@ lint:
 	eslint *.js
 .PHONY: run
 run:
-	electron .
+	npm i
+	npx electron .

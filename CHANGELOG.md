@@ -4,6 +4,12 @@ This log is intended to keep track of backwards-incompatible changes, including
 but not limited to API changes and file location changes.  Minor behavioral
 changes may not be included if they are not expected to break existing code.
 
+## v0.18.6
+
+* Removed all npm dependencies
+* Auto-correct bad Google Sheets format `d.m`
+* NUMBERS write merge cells, cells up to column "ALL"
+
 ## v0.18.5
 
 * Enabled `sideEffects: false` in package.json

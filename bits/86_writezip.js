@@ -1,7 +1,3 @@
-/* XLSX and XLSB writing are very similar.  Originally they were unified in one
-   export function.  This is horrible for tree shaking in the common case (most
-   applications need to export files in one format) so this function supports
-   both formats while write_zip_xlsx only handles XLSX */
 function write_zip_xlsb(wb/*:Workbook*/, opts/*:WriteOpts*/)/*:ZIP*/ {
 	_shapeid = 1024;
 	if(wb && !wb.SSF) {
@@ -65,7 +61,7 @@ function write_zip_xlsb(wb/*:Workbook*/, opts/*:WriteOpts*/)/*:ZIP*/ {
 			/* falls through */
 		default:
 			f = "xl/worksheets/sheet" + rId + "." + wbext;
-			zip_add_file(zip, f, write_ws(rId-1, f, opts, wb, wsrels));
+			zip_add_file(zip, f, write_ws_bin(rId-1, opts, wb, wsrels));
 			ct.sheets.push(f);
 			add_rels(opts.wbrels, -1, "worksheets/sheet" + rId + "." + wbext, RELS.WS[0]);
 		}
@@ -76,7 +72,7 @@ function write_zip_xlsb(wb/*:Workbook*/, opts/*:WriteOpts*/)/*:ZIP*/ {
 			var cf = "";
 			if(comments && comments.length > 0) {
 				cf = "xl/comments" + rId + "." + wbext;
-				zip_add_file(zip, cf, write_cmnt(comments, cf, opts));
+				zip_add_file(zip, cf, write_comments_bin(comments, opts));
 				ct.comments.push(cf);
 				add_rels(wsrels, -1, "../comments" + rId + "." + wbext, RELS.CMNT);
 				need_vml = true;
@@ -93,13 +89,13 @@ function write_zip_xlsb(wb/*:Workbook*/, opts/*:WriteOpts*/)/*:ZIP*/ {
 
 	if(opts.Strings != null && opts.Strings.length > 0) {
 		f = "xl/sharedStrings." + wbext;
-		zip_add_file(zip, f, write_sst(opts.Strings, f, opts));
+		zip_add_file(zip, f, write_sst_bin(opts.Strings, opts));
 		ct.strs.push(f);
 		add_rels(opts.wbrels, -1, "sharedStrings." + wbext, RELS.SST);
 	}
 
 	f = "xl/workbook." + wbext;
-	zip_add_file(zip, f, write_wb(wb, f, opts));
+	zip_add_file(zip, f, write_wb_bin(wb, opts));
 	ct.workbooks.push(f);
 	add_rels(opts.rels, 1, f, RELS.WB);
 
@@ -113,7 +109,7 @@ function write_zip_xlsb(wb/*:Workbook*/, opts/*:WriteOpts*/)/*:ZIP*/ {
 	/* TODO: something more intelligent with styles */
 
 	f = "xl/styles." + wbext;
-	zip_add_file(zip, f, write_sty(wb, f, opts));
+	zip_add_file(zip, f, write_sty_bin(wb, opts));
 	ct.styles.push(f);
 	add_rels(opts.wbrels, -1, "styles." + wbext, RELS.STY);
 
@@ -125,7 +121,7 @@ function write_zip_xlsb(wb/*:Workbook*/, opts/*:WriteOpts*/)/*:ZIP*/ {
 	}
 
 	f = "xl/metadata." + wbext;
-	zip_add_file(zip, f, write_xlmeta(f));
+	zip_add_file(zip, f, write_xlmeta_bin());
 	ct.metadata.push(f);
 	add_rels(opts.wbrels, -1, "metadata." + wbext, RELS.XLMETA);
 

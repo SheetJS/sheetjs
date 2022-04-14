@@ -4,7 +4,7 @@ vue: ## Simple server for vue
 
 .PHONY: nuxt
 nuxt: ## nuxt.js demo
-	npm i xlsx @nuxt/content
+	npm i https://cdn.sheetjs.com/xlsx-latest/xlsx-latest.tgz @nuxt/content
 	npx nuxt
 
 .PHONY: weex
