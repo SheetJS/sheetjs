@@ -74,28 +74,18 @@ function xtos(sdata) {
   sdata.forEach(function (xws) {
     var ws = {};
     var rowobj = xws.rows;
+    var minCoord = { r: 0, c: 0 }, maxCoord = { r: 0, c: 0 };
     for (var ri = 0; ri < rowobj.len; ++ri) {
       var row = rowobj[ri];
       if (!row) continue;
 
-      var minCoord, maxCoord;
       Object.keys(row.cells).forEach(function (k) {
         var idx = +k;
         if (isNaN(idx)) return;
 
         var lastRef = XLSX.utils.encode_cell({ r: ri, c: idx });
-        if (minCoord == null) {
-          minCoord = { r: ri, c: idx };
-        } else {
-          if (ri < minCoord.r) minCoord.r = ri;
-          if (idx < minCoord.c) minCoord.c = idx;
-        }
-        if (maxCoord == undefined) {
-          maxCoord = { r: ri, c: idx };
-        } else {
-          if (ri > maxCoord.r) maxCoord.r = ri;
-          if (idx > maxCoord.c) maxCoord.c = idx;
-        }
+        if (ri > maxCoord.r) maxCoord.r = ri;
+        if (idx > maxCoord.c) maxCoord.c = idx;
 
         var cellText = row.cells[k].text, type = "s";
         if (!cellText) {
@@ -127,12 +117,11 @@ function xtos(sdata) {
           });
         }
       });
-
-      ws["!ref"] = XLSX.utils.encode_range({
-        s: { r: minCoord.r, c: minCoord.c },
-        e: { r: maxCoord.r, c: maxCoord.c }
-      });
     }
+    ws["!ref"] = minCoord ? XLSX.utils.encode_range({
+      s: minCoord,
+      e: maxCoord
+    }) : "A1";
 
     XLSX.utils.book_append_sheet(out, ws, xws.name);
   });

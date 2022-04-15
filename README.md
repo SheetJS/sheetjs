@@ -224,6 +224,14 @@ version and will refresh on each release.
 Each individual version can be referenced using a similar URL pattern.
 <https://cdn.sheetjs.com/xlsx-0.18.6/xlsx-0.18.6.tgz> is the URL for `0.18.6`
 
+Tarballs can be directly installed using a package manager:
+
+```bash
+$ npm  install https://cdn.sheetjs.com/xlsx-latest/xlsx-latest.tgz # npm
+$ pnpm install https://cdn.sheetjs.com/xlsx-latest/xlsx-latest.tgz # pnpm
+$ yarn add     https://cdn.sheetjs.com/xlsx-latest/xlsx-latest.tgz # yarn
+```
+
 For general stability, "vendoring" modules is the recommended approach:
 
 1) Download the tarball (`xlsx-<version>.tgz`) for the desired version.
