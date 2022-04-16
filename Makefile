@@ -1,11 +1,16 @@
 .PHONY: update
 update:
+	git show master:index.html > index.html
 	git show master:dist/cpexcel.js > dist/cpexcel.js
+	git show master:dist/shim.min.js > dist/shim.min.js
+	git show master:dist/xlsx.core.min.js > dist/xlsx.core.min.js
+	git show master:dist/xlsx.full.min.js > dist/xlsx.full.min.js
 	git show master:dist/xlsx.core.min.js > xlsx.core.min.js
 	git show master:dist/xlsx.full.min.js > xlsx.full.min.js
 	git show master:xlsx.js > xlsx.js
 	git show master:shim.js > shim.js
 	git show master:shim.js > tests/shim.js
+	git show master:xlsxworker.js > xlsxworker.js
 	git show master:tests/base64.js > tests/base64.js
 	git show master:dist/xlsx.zahl.js > tests/xlsx.zahl.js
 	git show master:tests/core.js > tests/core.js
