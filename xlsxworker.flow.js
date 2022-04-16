@@ -10,7 +10,7 @@ importScripts('xlsx.js');
 onmessage = function (evt) {
   var v;
   try {
-    v = XLSX.read(evt.data.d, {type: evt.data.b});
+    v = XLSX.read(evt.data.d, {type: evt.data.b, codepage: evt.data.c});
     /*::self.*/postMessage({t:"xlsx", d:JSON.stringify(v)});
   } catch(e) { /*::self.*/postMessage({t:"e",d:e.stack||e}); }
 };

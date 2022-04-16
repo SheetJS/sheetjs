@@ -6,19 +6,25 @@
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 <title>SheetJS Live Demo</title>
 <style>
-#drop{
-	border:2px dashed #bbb;
-	-moz-border-radius:5px;
-	-webkit-border-radius:5px;
-	border-radius:5px;
-	padding:25px;
-	text-align:center;
-	font:20pt bold,"Vollkorn";color:#bbb
-}
 #b64data{
 	width:100%;
 }
 a { text-decoration: none }
+#drop-zone{
+	background: white;
+	position: fixed;
+	top: 0px;
+	left: 0px;
+	width: 100vw;
+	height: 100vh;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	opacity: 0;
+	z-index: -1;
+}
+#drop-zone p, #drop-zone svg { pointer-events: none }
+#drop-zone svg { margin-right: 5px }
 </style>
 </head>
 <body>
@@ -33,28 +39,32 @@ Output Format: <select name="format" onchange="setfmt()">
 <option value="json"> JSON</option>
 <option value="form"> FORMULAE</option>
 <option value="html"> HTML</option>
+<option value="xlsx"> XLSX</option>
 </select><br />
-<div id="drop">Drop a spreadsheet file here to see sheet data</div>
-<input type="file" name="xlfile" id="xlf" /> ... or click here to select a file
+<input type="file" name="xlfile" id="xlf" />
+
+<b> Drop a spreadsheet file anywhere in the page to see sheet data </b>
 
 <textarea id="b64data">... or paste a base64-encoding here</textarea>
 <input type="button" id="dotext" value="Click here to process the base64 text" onclick="b64it();"/><br />
 <b>Advanced Demo Options:</b>
-Use Web Workers: (when available) <input type="checkbox" name="useworker" checked>
+Use Web Workers when available: <input type="checkbox" name="useworker" checked>
+Always use UTF8 for CSV / text: <input type="checkbox" name="useutf8" checked>
 </pre>
 <pre id="out"></pre>
 <div id="htmlout"></div>
+<div id="drop-zone">
+	<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M17 13h-10v-1h10v1zm0-4h-10v1h10v-1zm0-3h-10v1h10v-1zm-15-1v-5h6v2h-4v3h-2zm8-5v2h4v-2h-4zm6 2h4v3h2v-5h-6v2zm6 5h-2v4h2v-4zm-20 10h2v-4h-2v4zm18-4v.543c0 4.107-6 2.457-6 2.457s1.518 6-2.638 6h-1.362v2h2.189c3.163 0 9.811-7.223 9.811-9.614v-1.386h-2zm-18-2h2v-4h-2v4zm2 11v-3h-2v5h6v-2h-4z"/></svg>
+	<p>Drop a spreadsheet file here to see sheet data</p>
+</div>
 <br />
-<!-- uncomment the next line here and in xlsxworker.js for encoding support -->
-<script src="dist/cpexcel.js"></script>
-<script src="shim.js"></script>
-<script src="xlsx.js"></script>
+<script src="dist/shim.min.js"></script>
+<script src="dist/xlsx.full.min.js"></script>
 <script>
 /*jshint browser:true */
 /* eslint-env browser */
-/*global Uint8Array */
+/*global Uint8Array, Uint16Array, ArrayBuffer */
 /*global XLSX */
-/* exported b64it, setfmt */
 /* eslint no-use-before-define:0 */
 
 var global_wb;
@@ -114,6 +124,12 @@ var process_wb = (function() {
 		return "";
 	};
 
+	var to_xlsx = function to_xlsx(workbook) {
+		HTMLOUT.innerHTML = "";
+		XLSX.writeFile(workbook, "SheetJSTest.xlsx");
+		return "";
+	};
+
 	return function process_wb(wb) {
 		global_wb = wb;
 		var output = "";
@@ -121,6 +137,7 @@ var process_wb = (function() {
 			case "form": output = to_fmla(wb); break;
 			case "html": output = to_html(wb); break;
 			case "json": output = to_json(wb); break;
+			case "xlsx": output = to_xlsx(wb); break;
 			default: output = to_csv(wb);
 		}
 		if(OUT.innerText === undefined) OUT.textContent = output;
@@ -145,6 +162,8 @@ var do_file = (function() {
 	var domwork = document.getElementsByName("useworker")[0];
 	if(!use_worker) domwork.disabled = !(domwork.checked = false);
 
+	var use_utf8 = false;
+
 	var xw = function xw(data, cb) {
 		var worker = new Worker('./xlsxworker.js');
 		worker.onmessage = function(e) {
@@ -154,30 +173,30 @@ var do_file = (function() {
 				case 'xlsx': cb(JSON.parse(e.data.d)); break;
 			}
 		};
-		worker.postMessage({d:data,b:'array'});
+		worker.postMessage({d:data,b:'array',c:use_utf8 ? 65001 : void 0});
 	};
 
 	return function do_file(files) {
 		use_worker = domwork.checked;
+		use_utf8 = document.getElementsByName("useutf8")[0].checked;
 		var f = files[0];
 		var reader = new FileReader();
 		reader.onload = function(e) {
 			if(typeof console !== 'undefined') console.log("onload", new Date(), use_worker);
 			var data = new Uint8Array(e.target.result);
 			if(use_worker) xw(data, process_wb);
-			else process_wb(XLSX.read(data, {type: 'array'}));
+			else process_wb(XLSX.read(data, {type: 'array', codepage: use_utf8 ? 65001 : void 0}));
 		};
 		reader.readAsArrayBuffer(f);
 	};
 })();
 
 (function() {
-	var drop = document.getElementById('drop');
-	if(!drop.addEventListener) return;
+	var dropZone = document.getElementById('drop-zone')
+	if(!dropZone.addEventListener && !window.addEventListener) return;
 
 	function handleDrop(e) {
-		e.stopPropagation();
-		e.preventDefault();
+		dropZoneDisplay(e, false);
 		do_file(e.dataTransfer.files);
 	}
 
@@ -187,9 +206,26 @@ var do_file = (function() {
 		e.dataTransfer.dropEffect = 'copy';
 	}
 
-	drop.addEventListener('dragenter', handleDragover, false);
-	drop.addEventListener('dragover', handleDragover, false);
-	drop.addEventListener('drop', handleDrop, false);
+	function dropZoneDisplay(e, show){
+		e.stopPropagation();
+		e.preventDefault();
+
+		var opacity = show ? '1' : '0';
+		var zIndex  = show ? '1' : '-1';
+
+		dropZone.style.opacity = opacity;
+		dropZone.style.zIndex = zIndex;
+	}
+
+	window.addEventListener('drop' , handleDrop)
+	window.addEventListener('dragover' , handleDragover)
+	window.addEventListener('dragenter' , function(e){
+		dropZoneDisplay(e, true);
+	})
+
+	dropZone.addEventListener('dragleave' , function(e){
+		dropZoneDisplay(e, false);
+	})
 })();
 
 (function() {
