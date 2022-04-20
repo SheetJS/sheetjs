@@ -47,12 +47,17 @@ var WK_ = /*#__PURE__*/(function() {
 					o.vers = val;
 					if(val >= 0x1000) o.qpro = true;
 					break;
+				case 0xFF: /* BOF (works 3+) */
+					o.vers = val;
+					o.works = true;
+					break;
 				case 0x06: refguess = val; break; /* RANGE */
 				case 0xCC: if(val) next_n = val; break; /* SHEETNAMECS */
 				case 0xDE: next_n = val; break; /* SHEETNAMELP */
 				case 0x0F: /* LABEL */
 				case 0x33: /* STRING */
-					if(!o.qpro) val[1].v = val[1].v.slice(1);
+					if((!o.qpro && !o.works || RT == 0x33) && val[1].v.charCodeAt(0) < 0x30) val[1].v = val[1].v.slice(1);
+					if(o.works || o.works2) val[1].v = val[1].v.replace(/\r\n/g, "\n");
 					/* falls through */
 				case 0x0D: /* INTEGER */
 				case 0x0E: /* NUMBER */
@@ -86,6 +91,7 @@ var WK_ = /*#__PURE__*/(function() {
 						s[val[0].r][val[0].c] = val[1];
 					} else s[encode_cell(val[0])] = val[1];
 					break;
+				case 0x5405: o.works2 = true; break;
 				default:
 			}}, o);
 		} else if(d[2] == 0x1A || d[2] == 0x0E) {
@@ -94,7 +100,9 @@ var WK_ = /*#__PURE__*/(function() {
 			lotushopper(d, function(val, R, RT) { switch(RT) {
 				case 0xCC: n = val; break; /* SHEETNAMECS */
 				case 0x16: /* LABEL16 */
-					val[1].v = val[1].v.slice(1);
+					if(val[1].v.charCodeAt(0) < 0x30) val[1].v = val[1].v.slice(1);
+					// TODO: R9 appears to encode control codes this way -- verify against other versions
+					val[1].v = val[1].v.replace(/\x0F./g, function($$) { return String.fromCharCode($$.charCodeAt(1) - 0x20); }).replace(/\r\n/g, "\n");
 					/* falls through */
 				case 0x17: /* NUMBER17 */
 				case 0x18: /* NUMBER18 */
@@ -289,6 +297,9 @@ var WK_ = /*#__PURE__*/(function() {
 			o[3] = blob.read_shift(1);
 			o[0].r = blob.read_shift(2);
 			blob.l+=2;
+		} else if(opts.works) { // TODO: verify with more complex works3-4 examples
+			o[0].c = blob.read_shift(2); o[0].r = blob.read_shift(2);
+			o[2] = blob.read_shift(2);
 		} else {
 			o[2] = blob.read_shift(1);
 			o[0].c = blob.read_shift(2); o[0].r = blob.read_shift(2);
@@ -322,6 +333,18 @@ var WK_ = /*#__PURE__*/(function() {
 			o.write_shift(1, cc >= 0x80 ? 0x5F : cc);
 		}
 		o.write_shift(1, 0);
+		return o;
+	}
+	function parse_STRING(blob, length, opts) {
+		var tgt = blob.l + length;
+		var o = parse_cell(blob, length, opts);
+		o[1].t = 's';
+		if(opts.vers == 0x5120) {
+			var len = blob.read_shift(1);
+			o[1].v = blob.read_shift(len, 'utf8');
+			return o;
+		}
+		o[1].v = blob.read_shift(tgt - blob.l, 'cstr');
 		return o;
 	}
 
@@ -382,6 +405,7 @@ var WK_ = /*#__PURE__*/(function() {
 		0x33: ["FALSE", 0],
 		0x34: ["TRUE", 0],
 		0x46: ["LEN", 1],
+		0x4A: ["CHAR", 1],
 		0x50: ["SUM", 69],
 		0x51: ["AVERAGEA", 69],
 		0x52: ["COUNTA", 69],
@@ -572,8 +596,8 @@ var WK_ = /*#__PURE__*/(function() {
 	}
 
 	function parse_FORMULA_28(blob, length) {
-		var o = parse_NUMBER_27(blob, 14);
-		blob.l += length - 10; /* TODO: formula */
+		var o = parse_NUMBER_27(blob, 12);
+		blob.l += length - 12; /* TODO: formula */
 		return o;
 	}
 
@@ -663,7 +687,7 @@ var WK_ = /*#__PURE__*/(function() {
 		/*::[*/0x0030/*::]*/: { n:"UNFORMATTED" },
 		/*::[*/0x0031/*::]*/: { n:"CURSORW12" },
 		/*::[*/0x0032/*::]*/: { n:"WINDOW" },
-		/*::[*/0x0033/*::]*/: { n:"STRING", f:parse_LABEL },
+		/*::[*/0x0033/*::]*/: { n:"STRING", f:parse_STRING },
 		/*::[*/0x0037/*::]*/: { n:"PASSWORD" },
 		/*::[*/0x0038/*::]*/: { n:"LOCKED" },
 		/*::[*/0x003C/*::]*/: { n:"QUERY" },
@@ -687,6 +711,7 @@ var WK_ = /*#__PURE__*/(function() {
 		/*::[*/0x0069/*::]*/: { n:"MRANGES??" },
 		/*::[*/0x00CC/*::]*/: { n:"SHEETNAMECS", f:parse_SHEETNAMECS },
 		/*::[*/0x00DE/*::]*/: { n:"SHEETNAMELP", f:parse_SHEETNAMELP },
+		/*::[*/0x00FF/*::]*/: { n:"BOF", f:parseuint16 },
 		/*::[*/0xFFFF/*::]*/: { n:"" }
 	};
 

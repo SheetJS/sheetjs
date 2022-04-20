@@ -14,27 +14,33 @@ var RTF = /*#__PURE__*/(function() {
 		var o = opts || {};
 		var ws/*:Worksheet*/ = o.dense ? ([]/*:any*/) : ({}/*:any*/);
 
-		var rows = str.match(/\\trowd.*?\\row\b/g);
+		var rows = str.match(/\\trowd[\s\S]*?\\row\b/g);
 		if(!rows.length) throw new Error("RTF missing table");
 		var range/*:Range*/ = ({s: {c:0, r:0}, e: {c:0, r:rows.length - 1}}/*:any*/);
 		rows.forEach(function(rowtf, R) {
 			if(Array.isArray(ws)) ws[R] = [];
-			var rtfre = /\\\w+\b/g;
+			var rtfre = /\\[\w\-]+\b/g;
 			var last_index = 0;
 			var res;
 			var C = -1;
+			var payload = [];
 			while((res = rtfre.exec(rowtf))) {
+				var data = rowtf.slice(last_index, rtfre.lastIndex - res[0].length);
+				if(data.charCodeAt(0) == 0x20) data = data.slice(1);
+				if(data.length) payload.push(data);
 				switch(res[0]) {
 					case "\\cell":
-						var data = rowtf.slice(last_index, rtfre.lastIndex - res[0].length);
-						if(data[0] == " ") data = data.slice(1);
 						++C;
-						if(data.length) {
+						if(payload.length) {
 							// TODO: value parsing, including codepage adjustments
-							var cell = {v: data, t:"s"};
+							var cell = {v: payload.join(""), t:"s"};
 							if(Array.isArray(ws)) ws[R][C] = cell;
 							else ws[encode_cell({r:R, c:C})] = cell;
 						}
+						payload = [];
+						break;
+					case "\\par": // NOTE: Excel serializes both "\r" and "\n" as "\\par"
+						payload.push("\n");
 						break;
 				}
 				last_index = rtfre.lastIndex;
@@ -60,7 +66,7 @@ var RTF = /*#__PURE__*/(function() {
 				var coord = encode_cell({r:R,c:C});
 				cell = dense ? (ws[R]||[])[C]: ws[coord];
 				if(!cell || cell.v == null && (!cell.f || cell.F)) continue;
-				o.push(" " + (cell.w || (format_cell(cell), cell.w)));
+				o.push(" " + (cell.w || (format_cell(cell), cell.w)).replace(/[\r\n]/g, "\\par "));
 				o.push("\\cell");
 			}
 			o.push("\\pard\\intbl\\row");

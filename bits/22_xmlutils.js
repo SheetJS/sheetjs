@@ -48,11 +48,15 @@ var rencoding = /*#__PURE__*/evert(encodings);
 var unescapexml/*:StringConv*/ = /*#__PURE__*/(function() {
 	/* 22.4.2.4 bstr (Basic String) */
 	var encregex = /&(?:quot|apos|gt|lt|amp|#x?([\da-fA-F]+));/ig, coderegex = /_x([\da-fA-F]{4})_/ig;
-	return function unescapexml(text/*:string*/)/*:string*/ {
+	function raw_unescapexml(text/*:string*/)/*:string*/ {
 		var s = text + '', i = s.indexOf("<![CDATA[");
 		if(i == -1) return s.replace(encregex, function($$, $1) { return encodings[$$]||String.fromCharCode(parseInt($1,$$.indexOf("x")>-1?16:10))||$$; }).replace(coderegex,function(m,c) {return String.fromCharCode(parseInt(c,16));});
 		var j = s.indexOf("]]>");
-		return unescapexml(s.slice(0, i)) + s.slice(i+9,j) + unescapexml(s.slice(j+3));
+		return raw_unescapexml(s.slice(0, i)) + s.slice(i+9,j) + raw_unescapexml(s.slice(j+3));
+	}
+	return function unescapexml(text/*:string*/, xlsx/*:boolean*/) {
+		var out = raw_unescapexml(text);
+		return xlsx ? out.replace(/\r\n/g, "\n") : out;
 	};
 })();
 

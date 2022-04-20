@@ -185,6 +185,7 @@ function parse_PropertySet(blob, PIDSI) {
 			if(fail) throw new Error("Read Error: Expected address " + Props[i][1] + ' at ' + blob.l + ' :' + i);
 		}
 		if(PIDSI) {
+			if(Props[i][0] == 0 && Props.length > i+1 && Props[i][1] == Props[i+1][1]) continue; // R9
 			var piddsi = PIDSI[Props[i][0]];
 			PropH[piddsi.n] = parse_TypedPropertyValue(blob, piddsi.t, {raw:true});
 			if(piddsi.p === 'version') PropH[piddsi.n] = String(PropH[piddsi.n] >> 16) + "." + ("0000" + String(PropH[piddsi.n] & 0xFFFF)).slice(-4);

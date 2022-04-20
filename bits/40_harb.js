@@ -905,10 +905,9 @@ var PRN = /*#__PURE__*/(function() {
 		else sep = guess_sep(str.slice(0,1024));
 		var R = 0, C = 0, v = 0;
 		var start = 0, end = 0, sepcc = sep.charCodeAt(0), instr = false, cc=0, startcc=str.charCodeAt(0);
-		str = str.replace(/\r\n/mg, "\n");
 		var _re/*:?RegExp*/ = o.dateNF != null ? dateNF_regex(o.dateNF) : null;
 		function finish_cell() {
-			var s = str.slice(start, end);
+			var s = str.slice(start, end); if(s.slice(-1) == "\r") s = s.slice(0, -1);
 			var cell = ({}/*:any*/);
 			if(s.charAt(0) == '"' && s.charAt(s.length - 1) == '"') s = s.slice(1,-1).replace(/""/g,'"');
 			if(s.length === 0) cell.t = 'z';
@@ -943,7 +942,11 @@ var PRN = /*#__PURE__*/(function() {
 		}
 		outer: for(;end < str.length;++end) switch((cc=str.charCodeAt(end))) {
 			case 0x22: if(startcc === 0x22) instr = !instr; break;
-			case sepcc: case 0x0a: case 0x0d: if(!instr && finish_cell()) break outer; break;
+			case 0x0d:
+				if(instr) break;
+				if(str.charCodeAt(end+1) == 0x0a) ++end;
+				/* falls through */
+			case sepcc: case 0x0a: if(!instr && finish_cell()) break outer; break;
 			default: break;
 		}
 		if(end - start > 0) finish_cell();

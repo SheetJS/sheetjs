@@ -13,8 +13,8 @@ function write_zip_xlsb(wb/*:Workbook*/, opts/*:WriteOpts*/)/*:ZIP*/ {
 	opts.Strings = /*::((*/[]/*:: :any):SST)*/; opts.Strings.Count = 0; opts.Strings.Unique = 0;
 	if(browser_has_Map) opts.revStrings = new Map();
 	else { opts.revStrings = {}; opts.revStrings.foo = []; delete opts.revStrings.foo; }
-	var wbext = opts.bookType == "xlsb" ? "bin" : "xml";
-	var vbafmt = VBAFMTS.indexOf(opts.bookType) > -1;
+	var wbext = "bin";
+	var vbafmt = true;
 	var ct = new_ct();
 	fix_write_opts(opts = opts || {});
 	var zip = zip_new();
@@ -214,10 +214,10 @@ function write_zip_xlsx(wb/*:Workbook*/, opts/*:WriteOpts*/)/*:ZIP*/ {
 					carr[1].forEach(function(c) { if(c.T == true) needtc = true; });
 				});
 				if(needtc) {
-					cf = "xl/threadedComments/threadedComment" + rId + "." + wbext;
+					cf = "xl/threadedComments/threadedComment" + rId + ".xml";
 					zip_add_file(zip, cf, write_tcmnt_xml(comments, people, opts));
 					ct.threadedcomments.push(cf);
-					add_rels(wsrels, -1, "../threadedComments/threadedComment" + rId + "." + wbext, RELS.TCMNT);
+					add_rels(wsrels, -1, "../threadedComments/threadedComment" + rId + ".xml", RELS.TCMNT);
 				}
 
 				cf = "xl/comments" + rId + "." + wbext;

@@ -192,7 +192,7 @@ var do_file = (function() {
 })();
 
 (function() {
-	var dropZone = document.getElementById('drop-zone')
+	var dropZone = document.getElementById('drop-zone');
 	if(!dropZone.addEventListener && !window.addEventListener) return;
 
 	function handleDrop(e) {
@@ -217,15 +217,15 @@ var do_file = (function() {
 		dropZone.style.zIndex = zIndex;
 	}
 
-	window.addEventListener('drop' , handleDrop)
-	window.addEventListener('dragover' , handleDragover)
+	window.addEventListener('drop' , handleDrop);
+	window.addEventListener('dragover' , handleDragover);
 	window.addEventListener('dragenter' , function(e){
 		dropZoneDisplay(e, true);
-	})
+	});
 
 	dropZone.addEventListener('dragleave' , function(e){
 		dropZoneDisplay(e, false);
-	})
+	});
 })();
 
 (function() {

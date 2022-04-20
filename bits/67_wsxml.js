@@ -388,7 +388,7 @@ return function parse_ws_xml_data(sdata/*:string*/, s, opts, guess/*:Range*/, th
 			if(opts.cellFormula) {
 				if((cref=d.match(match_f))!= null && /*::cref != null && */cref[1] !== '') {
 					/* TODO: match against XLSXFutureFunctions */
-					p.f=unescapexml(utf8read(cref[1])).replace(/\r\n/g, "\n");
+					p.f=unescapexml(utf8read(cref[1]), true);
 					if(!opts.xlfn) p.f = _xlfn(p.f);
 					if(/*::cref != null && cref[0] != null && */cref[0].indexOf('t="array"') > -1) {
 						p.F = (d.match(refregex)||[])[1];
@@ -442,7 +442,7 @@ return function parse_ws_xml_data(sdata/*:string*/, s, opts, guess/*:Range*/, th
 					break;
 				case 'str':
 					p.t = "s";
-					p.v = (p.v!=null) ? utf8read(p.v) : '';
+					p.v = (p.v!=null) ? unescapexml(utf8read(p.v), true) : '';
 					if(opts.cellHTML) p.h = escapehtml(p.v);
 					break;
 				case 'inlineStr':

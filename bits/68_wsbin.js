@@ -803,6 +803,8 @@ function parse_ws_bin(data, _opts, idx, rels, wb/*:WBWBProps*/, themes, styles)/
 
 /* TODO: something useful -- this is a stub */
 function write_ws_bin_cell(ba/*:BufArray*/, cell/*:Cell*/, R/*:number*/, C/*:number*/, opts, ws/*:Worksheet*/, last_seen/*:boolean*/)/*:boolean*/ {
+	var o/*:any*/ = ({r:R, c:C}/*:any*/);
+	if(cell.c) ws['!comments'].push([encode_cell(o), cell.c]);
 	if(cell.v === undefined) return false;
 	var vv = "";
 	switch(cell.t) {
@@ -816,11 +818,9 @@ function write_ws_bin_cell(ba/*:BufArray*/, cell/*:Cell*/, R/*:number*/, C/*:num
 		case 'n': case 'e': vv = ''+cell.v; break;
 		default: vv = cell.v; break;
 	}
-	var o/*:any*/ = ({r:R, c:C}/*:any*/);
 	/* TODO: cell style */
 	o.s = get_cell_style(opts.cellXfs, cell, opts);
 	if(cell.l) ws['!links'].push([encode_cell(o), cell.l]);
-	if(cell.c) ws['!comments'].push([encode_cell(o), cell.c]);
 	switch(cell.t) {
 		case 's': case 'str':
 			if(opts.bookSST) {
