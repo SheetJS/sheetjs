@@ -6,11 +6,11 @@
 
 Each standalone release script is available at <https://cdn.sheetjs.com/>.
 
-The current version is `0.18.6` and can be referenced as follows:
+The current version is `0.18.7` and can be referenced as follows:
 
 ```html
-<!-- use version 0.18.6 -->
-<script lang="javascript" src="https://cdn.sheetjs.com/xlsx-0.18.6/package/dist/xlsx.full.min.js"></script>
+<!-- use version 0.18.7 -->
+<script lang="javascript" src="https://cdn.sheetjs.com/xlsx-0.18.7/package/dist/xlsx.full.min.js"></script>
 ```
 
 The `latest` tag references the latest version and updates with each release:
@@ -38,8 +38,8 @@ A slimmer build is generated at `dist/xlsx.mini.min.js`. Compared to full build:
 These scripts are also available on the CDN:
 
 ```html
-<!-- use xlsx.mini.min.js from version 0.18.6 -->
-<script lang="javascript" src="https://cdn.sheetjs.com/xlsx-0.18.6/package/dist/xlsx.mini.min.js"></script>
+<!-- use xlsx.mini.min.js from version 0.18.7 -->
+<script lang="javascript" src="https://cdn.sheetjs.com/xlsx-0.18.7/package/dist/xlsx.mini.min.js"></script>
 ```
 
 </details>
@@ -89,11 +89,11 @@ a page with a `script` tag using `type="module"`:
 
 ```html
 <script type="module">
-import { read, writeFileXLSX } from "https://cdn.sheetjs.com/xlsx-0.18.6/package/xlsx.mjs";
+import { read, writeFileXLSX } from "https://cdn.sheetjs.com/xlsx-0.18.7/package/xlsx.mjs";
 
 /* load the codepage support library for extended support with older formats  */
-import { set_cptable } from "https://cdn.sheetjs.com/xlsx-0.18.6/package/xlsx.mjs";
-import * as cptable from 'https://cdn.sheetjs.com/xlsx-0.18.6/package/dist/cpexcel.full.mjs';
+import { set_cptable } from "https://cdn.sheetjs.com/xlsx-0.18.7/package/xlsx.mjs";
+import * as cptable from 'https://cdn.sheetjs.com/xlsx-0.18.7/package/dist/cpexcel.full.mjs';
 set_cptable(cptable);
 </script>
 ```
@@ -103,9 +103,9 @@ _Frameworks (Angular, VueJS, React) and Bundlers (webpack, etc)_
 The NodeJS package is readily installed from the tarballs:
 
 ```bash
-$ npm  install --save https://cdn.sheetjs.com/xlsx-0.18.6/xlsx-0.18.6.tgz # npm
-$ pnpm install --save https://cdn.sheetjs.com/xlsx-0.18.6/xlsx-0.18.6.tgz # pnpm
-$ yarn add     --save https://cdn.sheetjs.com/xlsx-0.18.6/xlsx-0.18.6.tgz # yarn
+$ npm  install --save https://cdn.sheetjs.com/xlsx-0.18.7/xlsx-0.18.7.tgz # npm
+$ pnpm install --save https://cdn.sheetjs.com/xlsx-0.18.7/xlsx-0.18.7.tgz # pnpm
+$ yarn add     --save https://cdn.sheetjs.com/xlsx-0.18.7/xlsx-0.18.7.tgz # yarn
 ```
 
 Once installed, the library can be imported under the name `xlsx`:
@@ -124,11 +124,11 @@ set_cptable(cptable);
 `xlsx.mjs` can be imported in Deno:
 
 ```ts
-// @deno-types="https://cdn.sheetjs.com/xlsx-0.18.6/package/types/index.d.ts"
-import * as XLSX from 'https://cdn.sheetjs.com/xlsx-0.18.6/package/xlsx.mjs';
+// @deno-types="https://cdn.sheetjs.com/xlsx-0.18.7/package/types/index.d.ts"
+import * as XLSX from 'https://cdn.sheetjs.com/xlsx-0.18.7/package/xlsx.mjs';
 
 /* load the codepage support library for extended support with older formats  */
-import * as cptable from 'https://cdn.sheetjs.com/xlsx-0.18.6/package/dist/cpexcel.full.mjs';
+import * as cptable from 'https://cdn.sheetjs.com/xlsx-0.18.7/package/dist/cpexcel.full.mjs';
 XLSX.set_cptable(cptable);
 ```
 
@@ -137,7 +137,7 @@ XLSX.set_cptable(cptable);
 Tarballs are available on <https://cdn.sheetjs.com>.
 
 Each individual version can be referenced using a similar URL pattern.
-<https://cdn.sheetjs.com/xlsx-0.18.6/xlsx-0.18.6.tgz> is the URL for `0.18.6`
+<https://cdn.sheetjs.com/xlsx-0.18.7/xlsx-0.18.7.tgz> is the URL for `0.18.7`
 
 <https://cdn.sheetjs.com/xlsx-latest/xlsx-latest.tgz> is a link to the latest
 version and will refresh on each release.
@@ -147,15 +147,15 @@ _Installation_
 Tarballs can be directly installed using a package manager:
 
 ```bash
-$ npm  install https://cdn.sheetjs.com/xlsx-0.18.6/xlsx-0.18.6.tgz # npm
-$ pnpm install https://cdn.sheetjs.com/xlsx-0.18.6/xlsx-0.18.6.tgz # pnpm
-$ yarn add     https://cdn.sheetjs.com/xlsx-0.18.6/xlsx-0.18.6.tgz # yarn
+$ npm  install https://cdn.sheetjs.com/xlsx-0.18.7/xlsx-0.18.7.tgz # npm
+$ pnpm install https://cdn.sheetjs.com/xlsx-0.18.7/xlsx-0.18.7.tgz # pnpm
+$ yarn add     https://cdn.sheetjs.com/xlsx-0.18.7/xlsx-0.18.7.tgz # yarn
 ```
 
 For general stability, "vendoring" modules is the recommended approach:
 
-1) Download the tarball (`xlsx-0.18.6.tgz`) for the desired version. The current
-   version is available at <https://cdn.sheetjs.com/xlsx-0.18.6/xlsx-0.18.6.tgz>
+1) Download the tarball (`xlsx-0.18.7.tgz`) for the desired version. The current
+   version is available at <https://cdn.sheetjs.com/xlsx-0.18.7/xlsx-0.18.7.tgz>
 
 2) Create a `vendor` subdirectory at the root of your project and move the
    tarball to that folder.  Add it to your project repository.
@@ -163,9 +163,9 @@ For general stability, "vendoring" modules is the recommended approach:
 3) Install the tarball using a package manager:
 
 ```bash
-$ npm  install --save file:vendor/xlsx-0.18.6.tgz # npm
-$ pnpm install --save file:vendor/xlsx-0.18.6.tgz # pnpm
-$ yarn add            file:vendor/xlsx-0.18.6.tgz # yarn
+$ npm  install --save file:vendor/xlsx-0.18.7.tgz # npm
+$ pnpm install --save file:vendor/xlsx-0.18.7.tgz # pnpm
+$ yarn add            file:vendor/xlsx-0.18.7.tgz # yarn
 ```
 
 The package will be installed and accessible as `xlsx`.
@@ -201,7 +201,7 @@ XLSX.set_cptable(cpexcel);
 #### Photoshop and InDesign
 
 `dist/xlsx.extendscript.js` is an ExtendScript build for Photoshop and InDesign.
-<https://cdn.sheetjs.com/xlsx-0.18.6/package/dist/xlsx.extendscript.js> is the
+<https://cdn.sheetjs.com/xlsx-0.18.7/package/dist/xlsx.extendscript.js> is the
 current version.  After downloading the script, it can be directly referenced
 with a `#include` directive:
 

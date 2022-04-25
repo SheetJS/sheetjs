@@ -4,7 +4,7 @@
 /*global exports, module, require:false, process:false, Buffer:false, ArrayBuffer:false, DataView:false, Deno:false */
 var XLSX = {};
 function make_xlsx_lib(XLSX){
-XLSX.version = '0.18.6';
+XLSX.version = '0.18.7';
 var current_codepage = 1200, current_ansi = 1252;
 
 var VALID_ANSI = [ 874, 932, 936, 949, 950, 1250, 1251, 1252, 1253, 1254, 1255, 1256, 1257, 1258, 10000 ];
@@ -3571,15 +3571,19 @@ var rencoding = /*#__PURE__*/evert(encodings);
 var unescapexml/*:StringConv*/ = /*#__PURE__*/(function() {
 	/* 22.4.2.4 bstr (Basic String) */
 	var encregex = /&(?:quot|apos|gt|lt|amp|#x?([\da-fA-F]+));/ig, coderegex = /_x([\da-fA-F]{4})_/ig;
-	return function unescapexml(text/*:string*/)/*:string*/ {
+	function raw_unescapexml(text/*:string*/)/*:string*/ {
 		var s = text + '', i = s.indexOf("<![CDATA[");
 		if(i == -1) return s.replace(encregex, function($$, $1) { return encodings[$$]||String.fromCharCode(parseInt($1,$$.indexOf("x")>-1?16:10))||$$; }).replace(coderegex,function(m,c) {return String.fromCharCode(parseInt(c,16));});
 		var j = s.indexOf("]]>");
-		return unescapexml(s.slice(0, i)) + s.slice(i+9,j) + unescapexml(s.slice(j+3));
+		return raw_unescapexml(s.slice(0, i)) + s.slice(i+9,j) + raw_unescapexml(s.slice(j+3));
+	}
+	return function unescapexml(text/*:string*/, xlsx/*:boolean*/) {
+		var out = raw_unescapexml(text);
+		return xlsx ? out.replace(/\r\n/g, "\n") : out;
 	};
 })();
 
-var decregex=/[&<>'"]/g, charegex = /[\u0000-\u0008\u000b-\u001f]/g;
+var decregex=/[&<>'"]/g, charegex = /[\u0000-\u0008\u000b-\u001f\uFFFE-\uFFFF]/g;
 function escapexml(text/*:string*/)/*:string*/{
 	var s = text + '';
 	return s.replace(decregex, function(y) { return rencoding[y]; }).replace(charegex,function(s) { return "_x" + ("000"+s.charCodeAt(0).toString(16)).slice(-4) + "_";});
@@ -3605,12 +3609,14 @@ var xlml_fixstr/*:StringConv*/ = /*#__PURE__*/(function() {
 })();
 function xlml_unfixstr(str/*:string*/)/*:string*/ { return str.replace(/(\r\n|[\r\n])/g,"\&#10;"); }
 
+/* note: xsd:boolean valid values: true / 1 / false / 0 */
 function parsexmlbool(value/*:any*/)/*:boolean*/ {
 	switch(value) {
-		case 1: case true: case '1': case 'true': case 'TRUE': return true;
-		/* case '0': case 'false': case 'FALSE':*/
-		default: return false;
+		case 1: case true:  case '1': case 'true':  return true;
+		case 0: case false: case '0': case 'false': return false;
+		//default: throw new Error("Invalid xsd:boolean " + value);
 	}
+	return false;
 }
 
 function utf8reada(orig/*:string*/)/*:string*/ {
@@ -6288,10 +6294,9 @@ var PRN = /*#__PURE__*/(function() {
 		else sep = guess_sep(str.slice(0,1024));
 		var R = 0, C = 0, v = 0;
 		var start = 0, end = 0, sepcc = sep.charCodeAt(0), instr = false, cc=0, startcc=str.charCodeAt(0);
-		str = str.replace(/\r\n/mg, "\n");
 		var _re/*:?RegExp*/ = o.dateNF != null ? dateNF_regex(o.dateNF) : null;
 		function finish_cell() {
-			var s = str.slice(start, end);
+			var s = str.slice(start, end); if(s.slice(-1) == "\r") s = s.slice(0, -1);
 			var cell = ({}/*:any*/);
 			if(s.charAt(0) == '"' && s.charAt(s.length - 1) == '"') s = s.slice(1,-1).replace(/""/g,'"');
 			if(s.length === 0) cell.t = 'z';
@@ -6326,7 +6331,11 @@ var PRN = /*#__PURE__*/(function() {
 		}
 		outer: for(;end < str.length;++end) switch((cc=str.charCodeAt(end))) {
 			case 0x22: if(startcc === 0x22) instr = !instr; break;
-			case sepcc: case 0x0a: case 0x0d: if(!instr && finish_cell()) break outer; break;
+			case 0x0d:
+				if(instr) break;
+				if(str.charCodeAt(end+1) == 0x0a) ++end;
+				/* falls through */
+			case sepcc: case 0x0a: if(!instr && finish_cell()) break outer; break;
 			default: break;
 		}
 		if(end - start > 0) finish_cell();
@@ -6586,14 +6595,14 @@ function parse_si(x, opts) {
 	/* 18.4.12 t ST_Xstring (Plaintext String) */
 	// TODO: is whitespace actually valid here?
 	if(x.match(/^\s*<(?:\w+:)?t[^>]*>/)) {
-		z.t = unescapexml(utf8read(x.slice(x.indexOf(">")+1).split(/<\/(?:\w+:)?t>/)[0]||""));
+		z.t = unescapexml(utf8read(x.slice(x.indexOf(">")+1).split(/<\/(?:\w+:)?t>/)[0]||""), true);
 		z.r = utf8read(x);
 		if(html) z.h = escapehtml(z.t);
 	}
 	/* 18.4.4 r CT_RElt (Rich Text Run) */
 	else if((/*y = */x.match(sirregex))) {
 		z.r = utf8read(x);
-		z.t = unescapexml(utf8read((x.replace(sirphregex, '').match(sitregex)||[]).join("").replace(tagregex,"")));
+		z.t = unescapexml(utf8read((x.replace(sirphregex, '').match(sitregex)||[]).join("").replace(tagregex,"")), true);
 		if(html) z.h = rs_to_html(parse_rs(z.r));
 	}
 	/* 18.4.3 phoneticPr CT_PhoneticPr (TODO: needed for Asian support) */
@@ -8392,7 +8401,7 @@ function parse_ws_xml_sheetviews(data, wb/*:WBWBProps*/) {
 		// $FlowIgnore
 		if(+tag.zoomScale) wb.Views[i].zoom = +tag.zoomScale;
 		// $FlowIgnore
-		if(parsexmlbool(tag.rightToLeft)) wb.Views[i].RTL = true;
+		if(tag.rightToLeft && parsexmlbool(tag.rightToLeft)) wb.Views[i].RTL = true;
 	});
 }
 function write_ws_xml_sheetviews(ws, opts, idx, wb)/*:string*/ {
@@ -8484,7 +8493,7 @@ return function parse_ws_xml_data(sdata/*:string*/, s, opts, guess/*:Range*/, th
 					if(opts.sheetRows && opts.sheetRows < tagr) continue;
 					rowobj = {}; rowrite = false;
 					if(tag.ht) { rowrite = true; rowobj.hpt = parseFloat(tag.ht); rowobj.hpx = pt2px(rowobj.hpt); }
-					if(tag.hidden == "1") { rowrite = true; rowobj.hidden = true; }
+					if(tag.hidden && parsexmlbool(tag.hidden)) { rowrite = true; rowobj.hidden = true; }
 					if(tag.outlineLevel != null) { rowrite = true; rowobj.level = +tag.outlineLevel; }
 					if(rowrite) rows[tagr-1] = rowobj;
 				}
@@ -8501,7 +8510,7 @@ return function parse_ws_xml_data(sdata/*:string*/, s, opts, guess/*:Range*/, th
 		if(opts && opts.cellStyles) {
 			rowobj = {}; rowrite = false;
 			if(tag.ht) { rowrite = true; rowobj.hpt = parseFloat(tag.ht); rowobj.hpx = pt2px(rowobj.hpt); }
-			if(tag.hidden == "1") { rowrite = true; rowobj.hidden = true; }
+			if(tag.hidden && parsexmlbool(tag.hidden)) { rowrite = true; rowobj.hidden = true; }
 			if(tag.outlineLevel != null) { rowrite = true; rowobj.level = +tag.outlineLevel; }
 			if(rowrite) rows[tagr-1] = rowobj;
 		}
@@ -8534,7 +8543,7 @@ return function parse_ws_xml_data(sdata/*:string*/, s, opts, guess/*:Range*/, th
 			if(opts.cellFormula) {
 				if((cref=d.match(match_f))!= null && /*::cref != null && */cref[1] !== '') {
 					/* TODO: match against XLSXFutureFunctions */
-					p.f=unescapexml(utf8read(cref[1])).replace(/\r\n/g, "\n");
+					p.f=unescapexml(utf8read(cref[1]), true);
 					if(!opts.xlfn) p.f = _xlfn(p.f);
 					if(/*::cref != null && cref[0] != null && */cref[0].indexOf('t="array"') > -1) {
 						p.F = (d.match(refregex)||[])[1];
@@ -8588,7 +8597,7 @@ return function parse_ws_xml_data(sdata/*:string*/, s, opts, guess/*:Range*/, th
 					break;
 				case 'str':
 					p.t = "s";
-					p.v = (p.v!=null) ? utf8read(p.v) : '';
+					p.v = (p.v!=null) ? unescapexml(utf8read(p.v), true) : '';
 					if(opts.cellHTML) p.h = escapehtml(p.v);
 					break;
 				case 'inlineStr':
@@ -10765,8 +10774,8 @@ function write_zip_xlsb(wb/*:Workbook*/, opts/*:WriteOpts*/)/*:ZIP*/ {
 	opts.Strings = /*::((*/[]/*:: :any):SST)*/; opts.Strings.Count = 0; opts.Strings.Unique = 0;
 	if(browser_has_Map) opts.revStrings = new Map();
 	else { opts.revStrings = {}; opts.revStrings.foo = []; delete opts.revStrings.foo; }
-	var wbext = opts.bookType == "xlsb" ? "bin" : "xml";
-	var vbafmt = VBAFMTS.indexOf(opts.bookType) > -1;
+	var wbext = "bin";
+	var vbafmt = true;
 	var ct = new_ct();
 	fix_write_opts(opts = opts || {});
 	var zip = zip_new();
@@ -10966,10 +10975,10 @@ function write_zip_xlsx(wb/*:Workbook*/, opts/*:WriteOpts*/)/*:ZIP*/ {
 					carr[1].forEach(function(c) { if(c.T == true) needtc = true; });
 				});
 				if(needtc) {
-					cf = "xl/threadedComments/threadedComment" + rId + "." + wbext;
+					cf = "xl/threadedComments/threadedComment" + rId + ".xml";
 					zip_add_file(zip, cf, write_tcmnt_xml(comments, people, opts));
 					ct.threadedcomments.push(cf);
-					add_rels(wsrels, -1, "../threadedComments/threadedComment" + rId + "." + wbext, RELS.TCMNT);
+					add_rels(wsrels, -1, "../threadedComments/threadedComment" + rId + ".xml", RELS.TCMNT);
 				}
 
 				cf = "xl/comments" + rId + "." + wbext;
