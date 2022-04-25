@@ -424,7 +424,7 @@ async function process_RS(stream) {
   const out = new Uint8Array(buffers.reduce((acc, v) => acc + v.length, 0));
 
   let off = 0;
-  for(const u8 of arr) {
+  for(const u8 of buffers) {
     out.set(u8, off);
     off += u8.length;
   }
@@ -434,7 +434,7 @@ async function process_RS(stream) {
 
 const data = await process_RS(stream);
 /* data is Uint8Array */
-const workbook = XLSX.read(data);
+const workbook = XLSX.read(data, {type: 'array'});
 ```
 
 </details>

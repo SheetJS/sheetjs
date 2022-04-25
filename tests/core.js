@@ -2522,6 +2522,118 @@ describe('corner cases', function() {
 			});
 		});
 	});
+	it('should handle \\r and \\n', function() {
+		var base = "./test_files/crlf/";
+		[
+			"CRLFR9.123",
+			"CRLFR9.WK1",
+			"CRLFR9.WK3",
+			"CRLFR9.WK4",
+			"CRLFR9.XLS",
+			"CRLFR9_4.XLS",
+			"CRLFR9_5.XLS",
+			"CRLFX5_2.XLS",
+			"CRLFX5_3.XLS",
+			"CRLFX5_4.XLS",
+			"CRLFX5_5.XLS",
+			"crlf.csv",
+			"crlf.fods",
+			"crlf.htm",
+			"crlf.numbers",
+			"crlf.ods",
+			"crlf.rtf",
+			"crlf.slk",
+			"crlf.xls",
+			"crlf.xlsb",
+			"crlf.xlsx",
+			"crlf.xml",
+			"crlf5.xls",
+			"crlfq9.qpw",
+			"crlfq9.wb1",
+			"crlfq9.wb2",
+			"crlfq9.wb3",
+			"crlfq9.wk1",
+			"crlfq9.wk3",
+			"crlfq9.wk4",
+			"crlfq9.wks",
+			"crlfq9.wq1",
+			"crlfw4_2.wks",
+			"crlfw4_3.wks",
+			"crlfw4_4.wks"
+		].map(function(path) { return base + path; }).forEach(function(w) {
+			var wb = X.read(fs.readFileSync(w), {type:TYPE});
+			var ws = wb.Sheets[wb.SheetNames[0]];
+			var B1 = get_cell(ws, "B1"), B2 = get_cell(ws, "B2");
+			var lio = w.match(/\.[^\.]*$/).index, stem = w.slice(0, lio).toLowerCase(), ext = w.slice(lio + 1).toLowerCase()
+			switch(ext) {
+				case 'fm3': break;
+
+				case '123':
+					assert.equal(B1.v, "abc\ndef");
+					// TODO: parse formula // assert.equal(B1.v, "abc\r\ndef");
+					break;
+				case 'qpw':
+				case 'wb1':
+				case 'wb2':
+				case 'wb3':
+				case 'wk1':
+				case 'wk3':
+				case 'wk4':
+				case 'wq1':
+					assert(B1.v == "abcdef" || B1.v == "abc\ndef");
+					// TODO: formula -> string values
+					if(B2 && B2.t != "e" && B2.v != "") assert(B2.v == "abcdef" || B2.v == "abc\r\ndef");
+					break;
+
+				case 'wks':
+					if(stem.match(/w4/)) {
+						assert.equal(B1.v, "abc\ndef");
+						assert(!B2 || B2.t == "z"); // Works4 did not support CODE / CHAR
+					} else if(stem.match(/q9/)) {
+						assert.equal(B1.v, "abcdef");
+						assert.equal(B2.v, "abc\r\ndef");
+					} else {
+						assert.equal(B1.v, "abc\ndef");
+						assert.equal(B2.v, "abc\r\ndef");
+					}
+					break;
+
+				case 'xls':
+					if(stem.match(/CRLFR9/i)) {
+						assert.equal(B1.v, "abc\r\ndef");
+					} else {
+						assert.equal(B1.v, "abc\ndef");
+					}
+					assert.equal(B2.v, "abc\r\ndef");
+					break;
+
+				case 'rtf':
+				case 'htm':
+					assert.equal(B1.v, "abc\ndef");
+					assert.equal(B2.v, "abc\n\ndef");
+					break;
+
+				case 'xlsx':
+				case 'xlsb':
+				case 'xml':
+				case 'slk':
+				case 'csv':
+					assert.equal(B1.v, "abc\ndef");
+					assert.equal(B2.v, "abc\r\ndef");
+					break;
+				case 'fods':
+				case 'ods':
+					assert.equal(B1.v, "abc\nDef");
+					assert.equal(B2.v, "abc\r\ndef");
+					break;
+				case 'numbers':
+					assert.equal(B1.v, "abc\ndef");
+					// TODO: B2 should be a formula error
+					break;
+				default: throw ext;
+			}
+		});
+	});
 });
 
 describe('encryption', function() {

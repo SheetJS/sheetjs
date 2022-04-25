@@ -1025,7 +1025,7 @@ async function process_RS(stream) {
   const out = new Uint8Array(buffers.reduce((acc, v) => acc + v.length, 0));
 
   let off = 0;
-  for(const u8 of arr) {
+  for(const u8 of buffers) {
     out.set(u8, off);
     off += u8.length;
   }
@@ -1035,7 +1035,7 @@ async function process_RS(stream) {
 
 const data = await process_RS(stream);
 /* data is Uint8Array */
-const workbook = XLSX.read(data);
+const workbook = XLSX.read(data, {type: 'array'});
 ```
 
 
@@ -2079,7 +2079,7 @@ Parse options are described in the [Parsing Options](#parsing-options) section.
 `XLSX.writeFile(wb, filename, write_opts)` attempts to write `wb` to `filename`.
 In browser-based environments, it will attempt to force a client-side download.
 
-`XLSX.writeFileAsync(wb, filename, o, cb)` attempts to write `wb` to `filename`.
+`XLSX.writeFileAsync(filename, wb, o, cb)` attempts to write `wb` to `filename`.
 If `o` is omitted, the writer will use the third argument as the callback.
 
 `XLSX.stream` contains a set of streaming write functions.
@@ -3867,6 +3867,7 @@ range limits will be silently truncated:
 | Excel 2007+ XML Formats (XLSX/XLSM)       | XFD1048576 |    16384 |  1048576 |
 | Excel 2007+ Binary Format (XLSB BIFF12)   | XFD1048576 |    16384 |  1048576 |
 | Numbers 12.0 (NUMBERS)                    | ALL1000000 |     1000 |  1000000 |
+| Quattro Pro 9+ (QPW)                      | IV1000000  |      256 |  1000000 |
 | Excel 97-2004 (XLS BIFF8)                 | IV65536    |      256 |    65536 |
 | Excel 5.0/95 (XLS BIFF5)                  | IV16384    |      256 |    16384 |
 | Excel 4.0 (XLS BIFF4)                     | IV16384    |      256 |    16384 |

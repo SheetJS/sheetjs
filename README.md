@@ -1085,7 +1085,7 @@ async function process_RS(stream) {
 
 const data = await process_RS(stream);
 /* data is Uint8Array */
-const workbook = XLSX.read(data, {type: "array"});
+const workbook = XLSX.read(data, {type: 'array'});
 ```
 
 </details>
@@ -4092,6 +4092,7 @@ range limits will be silently truncated:
 | Excel 2007+ XML Formats (XLSX/XLSM)       | XFD1048576 |    16384 |  1048576 |
 | Excel 2007+ Binary Format (XLSB BIFF12)   | XFD1048576 |    16384 |  1048576 |
 | Numbers 12.0 (NUMBERS)                    | ALL1000000 |     1000 |  1000000 |
+| Quattro Pro 9+ (QPW)                      | IV1000000  |      256 |  1000000 |
 | Excel 97-2004 (XLS BIFF8)                 | IV65536    |      256 |    65536 |
 | Excel 5.0/95 (XLS BIFF5)                  | IV16384    |      256 |    16384 |
 | Excel 4.0 (XLS BIFF4)                     | IV16384    |      256 |    16384 |
