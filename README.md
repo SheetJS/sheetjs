@@ -2191,7 +2191,7 @@ an apostrophe `'`, consistent with Excel's formula bar display.
 
 `XLSX.version` is the version of the library (added by the build script).
 
-`XLSX.SSF` is an embedded version of the [format library](https://git.io/ssf).
+`XLSX.SSF` is an embedded version of the [format library](https://github.com/SheetJS/ssf).
 
 ### Parsing functions
 
