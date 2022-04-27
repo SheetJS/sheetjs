@@ -7868,6 +7868,7 @@ var SYLK = (function() {
 		var next_cell_format = null;
 		var sht = {}, rowinfo = [], colinfo = [], cw = [];
 		var Mval = 0, j;
+		var wb = { Workbook: { WBProps: {} } };
 		if(+opts.codepage >= 0) set_cp(+opts.codepage);
 		for (; ri !== records.length; ++ri) {
 			Mval = 0;
@@ -7878,7 +7879,14 @@ var SYLK = (function() {
 			case 'ID': break; /* header */
 			case 'E': break; /* EOF */
 			case 'B': break; /* dimensions */
-			case 'O': break; /* options? */
+			case 'O': /* workbook options */
+			for(rj=1; rj<record.length; ++rj) switch(record[rj].charAt(0)) {
+				case 'V': {
+					var d1904 = parseInt(record[rj].slice(1), 10);
+					// NOTE: it is technically an error if d1904 >= 5 or < 0
+					if(d1904 >= 1 && d1904 <= 4) wb.Workbook.WBProps.date1904 = true;
+				} break;
+			} break;
 			case 'W': break; /* window? */
 			case 'P':
 				if(record[1].charAt(0) == 'P')
@@ -7888,9 +7896,9 @@ var SYLK = (function() {
 			var C_seen_K = false, C_seen_X = false, C_seen_S = false, C_seen_E = false, _R = -1, _C = -1;
 			for(rj=1; rj<record.length; ++rj) switch(record[rj].charAt(0)) {
 				case 'A': break; // TODO: comment
-				case 'X': C = parseInt(record[rj].slice(1))-1; C_seen_X = true; break;
+				case 'X': C = parseInt(record[rj].slice(1), 10)-1; C_seen_X = true; break;
 				case 'Y':
-					R = parseInt(record[rj].slice(1))-1; if(!C_seen_X) C = 0;
+					R = parseInt(record[rj].slice(1), 10)-1; if(!C_seen_X) C = 0;
 					for(j = arr.length; j <= R; ++j) arr[j] = [];
 					break;
 				case 'K':
@@ -7900,7 +7908,7 @@ var SYLK = (function() {
 					else if(val === 'FALSE') val = false;
 					else if(!isNaN(fuzzynum(val))) {
 						val = fuzzynum(val);
-						if(next_cell_format !== null && fmt_is_date(next_cell_format)) val = numdate(val);
+						if(next_cell_format !== null && fmt_is_date(next_cell_format)) val = numdate(wb.Workbook.WBProps.date1904 ? val + 1462 : val);
 					} else if(!isNaN(fuzzydate(val).getDate())) {
 						val = parseDate(val);
 					}
@@ -7917,8 +7925,8 @@ var SYLK = (function() {
 					arr[R][C] = [arr[R][C], "S5S"];
 					break;
 				case 'G': break; // unknown
-				case 'R': _R = parseInt(record[rj].slice(1))-1; break;
-				case 'C': _C = parseInt(record[rj].slice(1))-1; break;
+				case 'R': _R = parseInt(record[rj].slice(1), 10)-1; break;
+				case 'C': _C = parseInt(record[rj].slice(1), 10)-1; break;
 				default: if(opts && opts.WTF) throw new Error("SYLK bad record " + rstr);
 			}
 			if(C_seen_K) {
@@ -7936,16 +7944,16 @@ var SYLK = (function() {
 			case 'F':
 			var F_seen = 0;
 			for(rj=1; rj<record.length; ++rj) switch(record[rj].charAt(0)) {
-				case 'X': C = parseInt(record[rj].slice(1))-1; ++F_seen; break;
+				case 'X': C = parseInt(record[rj].slice(1), 10)-1; ++F_seen; break;
 				case 'Y':
-					R = parseInt(record[rj].slice(1))-1; /*C = 0;*/
+					R = parseInt(record[rj].slice(1), 10)-1; /*C = 0;*/
 					for(j = arr.length; j <= R; ++j) arr[j] = [];
 					break;
-				case 'M': Mval = parseInt(record[rj].slice(1)) / 20; break;
+				case 'M': Mval = parseInt(record[rj].slice(1), 10) / 20; break;
 				case 'F': break; /* ??? */
 				case 'G': break; /* hide grid */
 				case 'P':
-					next_cell_format = formats[parseInt(record[rj].slice(1))];
+					next_cell_format = formats[parseInt(record[rj].slice(1), 10)];
 					break;
 				case 'S': break; /* cell style */
 				case 'D': break; /* column */
@@ -7957,11 +7965,11 @@ var SYLK = (function() {
 						colinfo[j-1] = Mval === 0 ? {hidden:true}: {wch:Mval}; process_col(colinfo[j-1]);
 					} break;
 				case 'C': /* default column format */
-					C = parseInt(record[rj].slice(1))-1;
+					C = parseInt(record[rj].slice(1), 10)-1;
 					if(!colinfo[C]) colinfo[C] = {};
 					break;
 				case 'R': /* row properties */
-					R = parseInt(record[rj].slice(1))-1;
+					R = parseInt(record[rj].slice(1), 10)-1;
 					if(!rowinfo[R]) rowinfo[R] = {};
 					if(Mval > 0) { rowinfo[R].hpt = Mval; rowinfo[R].hpx = pt2px(Mval); }
 					else if(Mval === 0) rowinfo[R].hidden = true;
@@ -7975,18 +7983,18 @@ var SYLK = (function() {
 		if(rowinfo.length > 0) sht['!rows'] = rowinfo;
 		if(colinfo.length > 0) sht['!cols'] = colinfo;
 		if(opts && opts.sheetRows) arr = arr.slice(0, opts.sheetRows);
-		return [arr, sht];
+		return [arr, sht, wb];
 	}
 
-	function sylk_to_sheet(d, opts) {
+	function sylk_to_workbook(d, opts) {
 		var aoasht = sylk_to_aoa(d, opts);
-		var aoa = aoasht[0], ws = aoasht[1];
+		var aoa = aoasht[0], ws = aoasht[1], wb = aoasht[2];
 		var o = aoa_to_sheet(aoa, opts);
 		keys(ws).forEach(function(k) { o[k] = ws[k]; });
-		return o;
+		var outwb = sheet_to_workbook(o, opts);
+		keys(wb).forEach(function(k) { outwb[k] = wb[k]; });
+		return outwb;
 	}
-
-	function sylk_to_workbook(d, opts) { return sheet_to_workbook(sylk_to_sheet(d, opts), opts); }
 
 	function write_ws_cell_sylk(cell, ws, R, C) {
 		var o = "C;Y" + (R+1) + ";X" + (C+1) + ";K";
@@ -8026,7 +8034,7 @@ var SYLK = (function() {
 	}
 
 	function sheet_to_sylk(ws, opts) {
-		var preamble = ["ID;PWXL;N;E"], o = [];
+		var preamble = ["ID;PSheetJS;N;E"], o = [];
 		var r = safe_decode_range(ws['!ref']), cell;
 		var dense = Array.isArray(ws);
 		var RS = "\r\n";
@@ -8050,7 +8058,6 @@ var SYLK = (function() {
 
 	return {
 		to_workbook: sylk_to_workbook,
-		to_sheet: sylk_to_sheet,
 		from_sheet: sheet_to_sylk
 	};
 })();
@@ -9384,7 +9391,7 @@ var WK_ = (function() {
 						type = p.read_shift(1);
 						sname = cnt == 0 ? "" : p.read_shift(cnt, 'cstr');
 					}
-					if(!sname) sname = XLSX.utils.encode_col(sidx);
+					if(!sname) sname = encode_col(sidx);
 					/* TODO: backfill empty sheets */
 				} break;
 				case 0x0602: { /* EOS */

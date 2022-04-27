@@ -2183,6 +2183,19 @@ describe('sylk', function() {
 			}
 		} : null);
 	});
+	describe('date system', function() {
+		function make_slk(d1904) { return "ID;PSheetJS\nP;Pd\\/m\\/yy\nP;Pd\\/m\\/yyyy\n" + (d1904 != null ? "O;D;V" + d1904 : "") + "\nF;P0;FG0G;X1;Y1\nC;K1\nE"; }
+		it('should default to 1900', function() {
+			assert.equal(get_cell(X.read(make_slk(), {type: "binary"}).Sheets.Sheet1, "A1").v, 1);
+			assert(get_cell(X.read(make_slk(), {type: "binary", cellDates: true}).Sheets.Sheet1, "A1").v.getFullYear() < 1902);
+			assert.equal(get_cell(X.read(make_slk(5), {type: "binary"}).Sheets.Sheet1, "A1").v, 1);
+			assert(get_cell(X.read(make_slk(5), {type: "binary", cellDates: true}).Sheets.Sheet1, "A1").v.getFullYear() < 1902);
+		});
+		it('should use 1904 when specified', function() {
+			assert(get_cell(X.read(make_slk(1), {type: "binary", cellDates: true}).Sheets.Sheet1, "A1").v.getFullYear() > 1902);
+			assert(get_cell(X.read(make_slk(4), {type: "binary", cellDates: true}).Sheets.Sheet1, "A1").v.getFullYear() > 1902);
+		});
+	});
 });
 
 (typeof Uint8Array !== "undefined" ? describe : describe.skip)('numbers', function() {

@@ -2115,6 +2115,19 @@ Deno.test('sylk', async function(t) {
 			}
 		});
 	});
+	await t.step('date system', async function(t){
+		function make_slk(d1904?: number) { return "ID;PSheetJS\nP;Pd\\/m\\/yy\nP;Pd\\/m\\/yyyy\n" + (d1904 != null ? "O;D;V" + d1904 : "") + "\nF;P0;FG0G;X1;Y1\nC;K1\nE"; }
+		await t.step('should default to 1900', async function(t) {
+			assert.equal(get_cell(X.read(make_slk(), {type: "binary"}).Sheets["Sheet1"], "A1").v, 1);
+			assert.assert(get_cell(X.read(make_slk(), {type: "binary", cellDates: true}).Sheets["Sheet1"], "A1").v.getFullYear() < 1902);
+			assert.equal(get_cell(X.read(make_slk(5), {type: "binary"}).Sheets["Sheet1"], "A1").v, 1);
+			assert.assert(get_cell(X.read(make_slk(5), {type: "binary", cellDates: true}).Sheets["Sheet1"], "A1").v.getFullYear() < 1902);
+		});
+		await t.step('should use 1904 when specified', async function(t) {
+			assert.assert(get_cell(X.read(make_slk(1), {type: "binary", cellDates: true}).Sheets["Sheet1"], "A1").v.getFullYear() > 1902);
+			assert.assert(get_cell(X.read(make_slk(4), {type: "binary", cellDates: true}).Sheets["Sheet1"], "A1").v.getFullYear() > 1902);
+		});
+	});
 });
 
 Deno.test('numbers', async function(t) {

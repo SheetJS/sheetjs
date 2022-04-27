@@ -895,7 +895,7 @@ var WK_ = /*#__PURE__*/(function() {
 						type = p.read_shift(1);
 						sname = cnt == 0 ? "" : p.read_shift(cnt, 'cstr');
 					}
-					if(!sname) sname = XLSX.utils.encode_col(sidx);
+					if(!sname) sname = encode_col(sidx);
 					/* TODO: backfill empty sheets */
 				} break;
 				case 0x0602: { /* EOS */
