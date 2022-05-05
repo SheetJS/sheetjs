@@ -1319,6 +1319,16 @@ var XLSRecordEnum = {
 	/*::[*/0x08cb/*::]*/: { /* n:"CrtCoopt", */ },
 	/*::[*/0x08d6/*::]*/: { /* n:"FRTArchId$", */ r:12 },
 
+	/* --- multiplan 4 records --- */
+	/*::[*/0x0065/*::]*/: { /* n:"", */ }, // one per window
+	/*::[*/0x0066/*::]*/: { /* n:"", */ }, // calc settings
+	/*::[*/0x0069/*::]*/: { /* n:"", */ }, // print header
+	/*::[*/0x006a/*::]*/: { /* n:"", */ }, // print footer
+	/*::[*/0x006b/*::]*/: { /* n:"", */ }, // print settings
+	/*::[*/0x006d/*::]*/: { /* n:"", */ }, // one per window
+	/*::[*/0x0070/*::]*/: { /* n:"", */ }, // includes default col width
+	/*::[*/0x0072/*::]*/: { /* n:"", */ }, // includes selected cell
+
 	/*::[*/0x7262/*::]*/: {}
 };
 

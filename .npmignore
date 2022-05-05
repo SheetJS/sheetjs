@@ -19,11 +19,12 @@ tmp
 *.[pP][dD][fF]
 *.[sS][lL][kK]
 *.socialcalc
-*.[xX][lL][sSwWcCaAtTmM]
+*.[xX][lL][sSwWcCaAtTmMrR]
 *.[xX][lL][sSaAtT][xXmMbB]
 *.[oO][dD][sS]
 *.[fF][oO][dD][sS]
 *.[xX][mM][lL]
+*.[xX][lL][mM][lL]
 *.[uU][oO][sS]
 *.[wW][kKqQbB][S1234567890]
 *.[qQ][pP][wW]
@@ -32,6 +33,7 @@ tmp
 *.[rR][tT][fF]
 *.[eE][tT][hH]
 *.[nN][uU][mM][bB][eE][rR][sS]
+*.[mM][oO][dD]
 *.123
 *.htm
 *.html

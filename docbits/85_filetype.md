@@ -12,7 +12,7 @@ Despite the library name `xlsx`, it supports numerous spreadsheet file formats:
 | Excel 5.0/95 (XLS BIFF5)                                     |   ✔   |   ✔   |
 | Excel 4.0 (XLS/XLW BIFF4)                                    |   ✔   |   ✔   |
 | Excel 3.0 (XLS BIFF3)                                        |   ✔   |   ✔   |
-| Excel 2.0/2.1 (XLS BIFF2)                                    |   ✔   |   ✔   |
+| Excel 2.0/2.1 / Multiplan 4.x DOS (XLS BIFF2)                |   ✔   |   ✔   |
 | **Excel Supported Text Formats**                             |:-----:|:-----:|
 | Delimiter-Separated Values (CSV/TXT)                         |   ✔   |   ✔   |
 | Data Interchange Format (DIF)                                |   ✔   |   ✔   |
@@ -76,6 +76,11 @@ BIFF 2/3 XLS are single-sheet streams of binary records.  Excel 4 introduced
 the concept of a workbook (`XLW` files) but also had single-sheet `XLS` format.
 The structure is largely similar to the Lotus 1-2-3 file formats.  BIFF5/8/12
 extended the format in various ways but largely stuck to the same record format.
+
+Multiplan 4 "Normal" files are identical in structure to BIFF2 and use the same
+cell value records.  There are some different record types for more advanced
+features like Print Settings.  The BIFF2 writer generates files that can be read
+in Multiplan 4 and the parser can extract values from "Normal" files.
 
 There is no official specification for any of these formats.  Excel 95 can write
 files in these formats, so record lengths and fields were determined by writing
@@ -203,11 +208,8 @@ reader understands DBF Level 7 extensions like DATETIME.
 
 - **Symbolic Link (SYLK)**
 
-There is no real documentation.  All knowledge was gathered by saving files in
-various versions of Excel to deduce the meaning of fields.  Notes:
-
-- Plain formulae are stored in the RC form.
-- Column widths are rounded to integral characters.
+<https://oss.sheetjs.com/notes/sylk/> is an informal specification based on our
+experimentation and previous documentation efforts.
 
 - **Lotus Formatted Text (PRN)**
 
