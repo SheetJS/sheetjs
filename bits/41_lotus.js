@@ -862,7 +862,7 @@ var WK_ = /*#__PURE__*/(function() {
 					break;
 				case 0x02: /* EOF */ break outer;
 
-				/* TODO: The behavior here should be consistent with Numbers: QP Notebook ~ .TN.SheetArchive, QP Sheet ~ .TST.TSTable */
+				/* TODO: The behavior here should be consistent with Numbers: QP Notebook ~ .TN.SheetArchive, QP Sheet ~ .TST.TableModelArchive */
 				case 0x0401: /* BON */ break;
 				case 0x0402: /* EON */ /* TODO: backfill missing sheets based on BON cnt */ break;
 

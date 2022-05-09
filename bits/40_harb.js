@@ -391,7 +391,7 @@ var SYLK = /*#__PURE__*/(function() {
 	var sylk_char_fn = function(_, $1){ var o = sylk_escapes[$1]; return typeof o == "number" ? _getansi(o) : o; };
 	var decode_sylk_char = function($$, $1, $2) { var newcc = (($1.charCodeAt(0) - 0x20)<<4) | ($2.charCodeAt(0) - 0x30); return newcc == 59 ? $$ : _getansi(newcc); };
 	sylk_escapes["|"] = 254;
-	/* TODO: find an actual specification */
+	/* https://oss.sheetjs.com/notes/sylk/ for more details */
 	function sylk_to_aoa(d/*:RawData*/, opts)/*:[AOA, Worksheet]*/ {
 		switch(opts.type) {
 			case 'base64': return sylk_to_aoa_str(Base64_decode(d), opts);
@@ -407,7 +407,7 @@ var SYLK = /*#__PURE__*/(function() {
 		var next_cell_format/*:string|null*/ = null;
 		var sht = {}, rowinfo/*:Array<RowInfo>*/ = [], colinfo/*:Array<ColInfo>*/ = [], cw/*:Array<string>*/ = [];
 		var Mval = 0, j;
-		var wb = { Workbook: { WBProps: {} } };
+		var wb = { Workbook: { WBProps: {}, Names: [] } };
 		if(+opts.codepage >= 0) set_cp(+opts.codepage);
 		for (; ri !== records.length; ++ri) {
 			Mval = 0;
@@ -426,12 +426,20 @@ var SYLK = /*#__PURE__*/(function() {
 					if(d1904 >= 1 && d1904 <= 4) wb.Workbook.WBProps.date1904 = true;
 				} break;
 			} break;
-			case 'W': break; /* window? */
+			case 'W': break; /* window */
 			case 'P':
 				if(record[1].charAt(0) == 'P')
 					formats.push(rstr.slice(3).replace(/;;/g, ";"));
 				break;
-			case 'C':
+			case 'NN': { /* defined name */
+				var nn = {Sheet: 0};
+				for(rj=1; rj<record.length; ++rj) switch(record[rj].charAt(0)) {
+					case 'N': nn.Name = record[rj].slice(1); break;
+					case 'E': nn.Ref = (opts && opts.sheet || "Sheet1") + "!" + rc_to_a1(record[rj].slice(1)); break;
+				}
+				wb.Workbook.Names.push(nn);
+			} break;
+			case 'C': /* cell */
 			var C_seen_K = false, C_seen_X = false, C_seen_S = false, C_seen_E = false, _R = -1, _C = -1;
 			for(rj=1; rj<record.length; ++rj) switch(record[rj].charAt(0)) {
 				case 'A': break; // TODO: comment
@@ -480,7 +488,7 @@ var SYLK = /*#__PURE__*/(function() {
 				arr[R][C][1] = shift_formula_str(shrbase[1], {r: R - _R, c: C - _C});
 			}
 			break;
-			case 'F':
+			case 'F': /* Format */
 			var F_seen = 0;
 			for(rj=1; rj<record.length; ++rj) switch(record[rj].charAt(0)) {
 				case 'X': C = parseInt(record[rj].slice(1), 10)-1; ++F_seen; break;

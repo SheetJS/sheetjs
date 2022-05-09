@@ -132,6 +132,7 @@ var paths = {
 	dnsxml: dir + 'defined_names_simple.xml',
 	dnsxlsx: dir + 'defined_names_simple.xlsx',
 	dnsxlsb: dir + 'defined_names_simple.xlsb',
+	dnsslk: dir + 'defined_names_simple.slk',
 
 	dnuxls: dir + 'defined_names_unicode.xls',
 	dnuxml: dir + 'defined_names_unicode.xml',
@@ -1183,15 +1184,19 @@ describe('parse features', function() {
 		['xlsx', paths.dnsxlsx,  true],
 		['xlsb', paths.dnsxlsb,  true],
 		['xls',  paths.dnsxls,   true],
-		['xlml', paths.dnsxml,  false]
+		['xlml', paths.dnsxml,  false],
+		['slk',  paths.dnsslk,  false]
 	].forEach(function(m) { it(m[0], function() {
 		var wb = X.read(fs.readFileSync(m[1]), {type:TYPE});
 		var names = wb.Workbook.Names;
+
+		if(m[0] != 'slk') {
 		for(var i = 0; i < names.length; ++i) if(names[i].Name == "SheetJS") break;
 		assert(i < names.length, "Missing name");
 		assert.equal(names[i].Sheet, null);
 		assert.equal(names[i].Ref, "Sheet1!$A$1");
 		if(m[2]) assert.equal(names[i].Comment, "defined names just suck  excel formulae are bad  MS should feel bad");
+		}
 
 		for(i = 0; i < names.length; ++i) if(names[i].Name == "SHEETjs") break;
 		assert(i < names.length, "Missing name");

@@ -62,6 +62,7 @@
 ./test_files/defined_names_simple.xml
 ./test_files/defined_names_simple.xlsx
 ./test_files/defined_names_simple.xlsb
+./test_files/defined_names_simple.slk
 ./test_files/defined_names_unicode.xls
 ./test_files/defined_names_unicode.xml
 ./test_files/defined_names_unicode.ods

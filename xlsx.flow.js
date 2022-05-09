@@ -7942,7 +7942,7 @@ var SYLK = /*#__PURE__*/(function() {
 	var sylk_char_fn = function(_, $1){ var o = sylk_escapes[$1]; return typeof o == "number" ? _getansi(o) : o; };
 	var decode_sylk_char = function($$, $1, $2) { var newcc = (($1.charCodeAt(0) - 0x20)<<4) | ($2.charCodeAt(0) - 0x30); return newcc == 59 ? $$ : _getansi(newcc); };
 	sylk_escapes["|"] = 254;
-	/* TODO: find an actual specification */
+	/* https://oss.sheetjs.com/notes/sylk/ for more details */
 	function sylk_to_aoa(d/*:RawData*/, opts)/*:[AOA, Worksheet]*/ {
 		switch(opts.type) {
 			case 'base64': return sylk_to_aoa_str(Base64_decode(d), opts);
@@ -7958,7 +7958,7 @@ var SYLK = /*#__PURE__*/(function() {
 		var next_cell_format/*:string|null*/ = null;
 		var sht = {}, rowinfo/*:Array<RowInfo>*/ = [], colinfo/*:Array<ColInfo>*/ = [], cw/*:Array<string>*/ = [];
 		var Mval = 0, j;
-		var wb = { Workbook: { WBProps: {} } };
+		var wb = { Workbook: { WBProps: {}, Names: [] } };
 		if(+opts.codepage >= 0) set_cp(+opts.codepage);
 		for (; ri !== records.length; ++ri) {
 			Mval = 0;
@@ -7977,12 +7977,20 @@ var SYLK = /*#__PURE__*/(function() {
 					if(d1904 >= 1 && d1904 <= 4) wb.Workbook.WBProps.date1904 = true;
 				} break;
 			} break;
-			case 'W': break; /* window? */
+			case 'W': break; /* window */
 			case 'P':
 				if(record[1].charAt(0) == 'P')
 					formats.push(rstr.slice(3).replace(/;;/g, ";"));
 				break;
-			case 'C':
+			case 'NN': { /* defined name */
+				var nn = {Sheet: 0};
+				for(rj=1; rj<record.length; ++rj) switch(record[rj].charAt(0)) {
+					case 'N': nn.Name = record[rj].slice(1); break;
+					case 'E': nn.Ref = (opts && opts.sheet || "Sheet1") + "!" + rc_to_a1(record[rj].slice(1)); break;
+				}
+				wb.Workbook.Names.push(nn);
+			} break;
+			case 'C': /* cell */
 			var C_seen_K = false, C_seen_X = false, C_seen_S = false, C_seen_E = false, _R = -1, _C = -1;
 			for(rj=1; rj<record.length; ++rj) switch(record[rj].charAt(0)) {
 				case 'A': break; // TODO: comment
@@ -8031,7 +8039,7 @@ var SYLK = /*#__PURE__*/(function() {
 				arr[R][C][1] = shift_formula_str(shrbase[1], {r: R - _R, c: C - _C});
 			}
 			break;
-			case 'F':
+			case 'F': /* Format */
 			var F_seen = 0;
 			for(rj=1; rj<record.length; ++rj) switch(record[rj].charAt(0)) {
 				case 'X': C = parseInt(record[rj].slice(1), 10)-1; ++F_seen; break;
@@ -9448,7 +9456,7 @@ var WK_ = /*#__PURE__*/(function() {
 					break;
 				case 0x02: /* EOF */ break outer;
 
-				/* TODO: The behavior here should be consistent with Numbers: QP Notebook ~ .TN.SheetArchive, QP Sheet ~ .TST.TSTable */
+				/* TODO: The behavior here should be consistent with Numbers: QP Notebook ~ .TN.SheetArchive, QP Sheet ~ .TST.TableModelArchive */
 				case 0x0401: /* BON */ break;
 				case 0x0402: /* EON */ /* TODO: backfill missing sheets based on BON cnt */ break;
 
@@ -20664,6 +20672,16 @@ var XLSRecordEnum = {
 	/*::[*/0x08cb/*::]*/: { /* n:"CrtCoopt", */ },
 	/*::[*/0x08d6/*::]*/: { /* n:"FRTArchId$", */ r:12 },
 
+	/* --- multiplan 4 records --- */
+	/*::[*/0x0065/*::]*/: { /* n:"", */ }, // one per window
+	/*::[*/0x0066/*::]*/: { /* n:"", */ }, // calc settings
+	/*::[*/0x0069/*::]*/: { /* n:"", */ }, // print header
+	/*::[*/0x006a/*::]*/: { /* n:"", */ }, // print footer
+	/*::[*/0x006b/*::]*/: { /* n:"", */ }, // print settings
+	/*::[*/0x006d/*::]*/: { /* n:"", */ }, // one per window
+	/*::[*/0x0070/*::]*/: { /* n:"", */ }, // includes default col width
+	/*::[*/0x0072/*::]*/: { /* n:"", */ }, // includes selected cell
+
 	/*::[*/0x7262/*::]*/: {}
 };
 
@@ -21256,7 +21274,7 @@ function sheet_add_dom(ws/*:Worksheet*/, table/*:HTMLElement*/, _opts/*:?any*/)/
 			if(Aelts && Aelts.length) for(var Aelti = 0; Aelti < Aelts.length; ++Aelti)	if(Aelts[Aelti].hasAttribute("href")) {
 				l = Aelts[Aelti].getAttribute("href"); if(l.charAt(0) != "#") break;
 			}
-			if(l && l.charAt(0) != "#") o.l = ({ Target: l });
+			if(l && l.charAt(0) != "#" &&	l.slice(0, 11).toLowerCase() != 'javascript:') o.l = ({ Target: l });
 			if(opts.dense) { if(!ws[R + or_R]) ws[R + or_R] = []; ws[R + or_R][C + or_C] = o; }
 			else ws[encode_cell({c:C + or_C, r:R + or_R})] = o;
 			if(range.e.c < C + or_C) range.e.c = C + or_C;
@@ -21296,8 +21314,7 @@ function get_get_computed_style_function(element/*:HTMLElement*/)/*:?function*/ 
 	// If it is not available, try to get one from the global namespace
 	if(typeof getComputedStyle === 'function') return getComputedStyle;
 	return null;
-}
-/* OpenDocument */
+}/* OpenDocument */
 function parse_text_p(text/*:string*//*::, tag*/)/*:Array<any>*/ {
 	/* 6.1.2 White Space Characters */
 	var fixed = text
@@ -24084,6 +24101,11 @@ function readSync(data/*:RawData*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
 		case 0x7B: if(n[1] === 0x5C && n[2] === 0x72 && n[3] === 0x74) return RTF.to_workbook(d, o); break;
 		case 0x0A: case 0x0D: case 0x20: return read_plaintext_raw(d, o);
 		case 0x89: if(n[1] === 0x50 && n[2] === 0x4E && n[3] === 0x47) throw new Error("PNG Image File is not a spreadsheet"); break;
+		case 0x08: if(n[1] === 0xE7) throw new Error("Unsupported Multiplan 1.x file!"); break;
+		case 0x0C:
+			if(n[1] === 0xEC) throw new Error("Unsupported Multiplan 2.x file!");
+			if(n[1] === 0xED) throw new Error("Unsupported Multiplan 3.x file!");
+			break;
 	}
 	if(DBF_SUPPORTED_VERSIONS.indexOf(n[0]) > -1 && n[2] <= 12 && n[3] <= 31) return DBF.to_workbook(d, o);
 	return read_prn(data, d, o, str);

@@ -154,6 +154,7 @@ var paths: any = {
 	dnsxml: dir + 'defined_names_simple.xml',
 	dnsxlsx: dir + 'defined_names_simple.xlsx',
 	dnsxlsb: dir + 'defined_names_simple.xlsb',
+	dnsslk: dir + 'defined_names_simple.slk',
 
 	dnuxls: dir + 'defined_names_unicode.xls',
 	dnuxml: dir + 'defined_names_unicode.xml',
@@ -1158,15 +1159,20 @@ Deno.test('parse features', async function(t) {
 		['xlsx', paths.dnsxlsx,  true],
 		['xlsb', paths.dnsxlsb,  true],
 		['xls',  paths.dnsxls,   true],
-		['xlml', paths.dnsxml,  false]
+		['xlml', paths.dnsxml,  false],
+		['slk',  paths.dnsslk,  false]
 	] as Array<[string, string, boolean]>; for(var i = 0; i < dnp.length; ++i) { let m: [string, string, boolean] = dnp[i]; await t.step(m[0], async function(t) {
 		var wb = X.read(fs.readFileSync(m[1]), {type:TYPE});
 		var names = wb?.Workbook?.Names;
-		if(names) {for(var i = 0; i < names?.length; ++i) if(names[i].Name == "SheetJS") break;
+
+		if(names) {
+		if(m[0] != 'slk') {
+		for(var i = 0; i < names?.length; ++i) if(names[i].Name == "SheetJS") break;
 		assert.assert(i < names?.length, "Missing name");
 		assert.equal(names[i].Sheet, void 0);
 		assert.equal(names[i].Ref, "Sheet1!$A$1");
 		if(m[2]) assert.equal(names[i].Comment, "defined names just suck  excel formulae are bad  MS should feel bad");
+		}
 
 		for(i = 0; i < names.length; ++i) if(names[i].Name == "SHEETjs") break;
 		assert.assert(i < names.length, "Missing name");

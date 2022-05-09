@@ -2438,6 +2438,14 @@ XLSX.write(wb, {Props:{Author:"SheetJS"}});
 
 #### Defined Names
 
+
+**Defined Names**: XLSX/M, XLSB, BIFF8 XLS, XLML, SYLK 
+
+**Unicode Defined Names**: XLSX/M, XLSB, BIFF8 XLS, XLML
+
+**Defined Name Comment**: XLSX/M, XLSB, BIFF8 XLS
+
+
 `wb.Workbook.Names` is an array of defined name objects which have the keys:
 
 
