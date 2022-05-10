@@ -30,9 +30,9 @@ var RELS = ({
 	XLMETA: "http://schemas.openxmlformats.org/officeDocument/2006/relationships/sheetMetadata",
 	TCMNT: "http://schemas.microsoft.com/office/2017/10/relationships/threadedComment",
 	PEOPLE: "http://schemas.microsoft.com/office/2017/10/relationships/person",
+	CONN: "http://schemas.openxmlformats.org/officeDocument/2006/relationships/connections",
 	VBA: "http://schemas.microsoft.com/office/2006/relationships/vbaProject"
 }/*:any*/);
-
 
 /* 9.3.3 Representing Relationships */
 function get_rels_path(file/*:string*/)/*:string*/ {

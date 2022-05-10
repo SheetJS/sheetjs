@@ -1,7 +1,7 @@
 # Electron
 
 This library is compatible with Electron and should just work out of the box.
-The demonstration uses Electron 17.1.0.  The library is added via `require` from
+The demonstration uses Electron 18.2.0.  The library is added via `require` from
 the renderer process.
 
 The library can also be required from the main process, as shown in this demo

@@ -1,8 +1,7 @@
-.PHONY: tfjs
-tfjs:
-	npm install @tensorflow/tfjs
-	node tf.js
+.PHONY: init
+init:
+	npm i
 
-.PHONY: propel
-propel:
-	node propel.js
+.PHONY: tfjs
+tfjs: init
+	node tf.js

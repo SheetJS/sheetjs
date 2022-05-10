@@ -104,30 +104,6 @@ function array_to_sheet(farray, shape, headers) {
 }
 ```
 
-#### Tensor Operations with Propel ML
-
-[Propel ML](http://propelml.org/) `tensor` objects can be transposed:
-
-```js
-var tensor = pr.tensor(aoa).transpose();
-var col1 = tensor.slice(0, 1);
-var col2 = tensor.slice(1, 1);
-```
-
-To export to a worksheet, `dataSync` generates a `Float32Array` that can be
-re-shaped in JS:
-
-```js
-/* extract shape and float array */
-var tensor = pr.concat([col1, col2]).transpose();
-var shape = tensor.shape;
-var farray = tensor.dataSync();
-var ws = array_to_sheet(farray, shape, ["header1", "header2"]);
-```
-
-The demo generates a sample dataset and uses Propel to calculate the OLS linear
-regression coefficients.  Afterwards, the tensors are exported to a new file.
-
 #### TensorFlow
 
 [TensorFlow](https://js.tensorflow.org/) `tensor` objects can be created from

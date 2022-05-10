@@ -158,10 +158,10 @@ These scripts are also available on the CDN:
 
 
 
-[Bower](https://bower.io/search/?q=js-xlsx) will pull the entire repo:
+[Bower](https://bower.io/) plays nice with the CDN tarballs:
 
 ```bash
-$ bower install js-xlsx
+$ npx bower install https://cdn.sheetjs.com/xlsx-0.18.7/xlsx-0.18.7.tgz
 ```
 
 Bower will place the standalone scripts in `bower_components/js-xlsx/dist/`
@@ -2439,7 +2439,7 @@ XLSX.write(wb, {Props:{Author:"SheetJS"}});
 #### Defined Names
 
 
-**Defined Names**: XLSX/M, XLSB, BIFF8 XLS, XLML, SYLK 
+**Defined Names**: XLSX/M, XLSB, BIFF8 XLS, XLML, SYLK
 
 **Unicode Defined Names**: XLSX/M, XLSB, BIFF8 XLS, XLML
 
