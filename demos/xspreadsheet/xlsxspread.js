@@ -91,8 +91,8 @@ function xtos(sdata) {
         if (!cellText) {
           cellText = "";
           type = "z";
-        } else if (!isNaN(parseFloat(cellText))) {
-          cellText = parseFloat(cellText);
+        } else if (!isNaN(Number(cellText))) {
+          cellText = Number(cellText);
           type = "n";
         } else if (cellText.toLowerCase() === "true" || cellText.toLowerCase() === "false") {
           cellText = Boolean(cellText);
