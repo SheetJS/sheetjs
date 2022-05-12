@@ -385,7 +385,7 @@ solutions for common data import scenarios.
 ["Packaging and Releasing Data"](#packaging-and-releasing-data) describes
 solutions for common data export scenarios.
 
-["Processing Data"](#packaging-and-releasing-data) describes solutions for
+["Processing Data"](#processing-data) describes solutions for
 common workbook processing and manipulation scenarios.
 
 ["Utility Functions"](#utility-functions) details utility functions for
