@@ -3213,16 +3213,19 @@ function evert_arr(obj) {
 	return o;
 }
 
-var basedate = new Date(1899, 11, 30, 0, 0, 0); // 2209161600000
+var basedate = new Date(); // 2209161600000
+basedate.setUTCFullYear(1899, 11, 30);
+basedate.setUTCHours(0, 0, 0);
+
 function datenum(v, date1904) {
 	var epoch = v.getTime();
 	if(date1904) epoch -= 1462*24*60*60*1000;
-	var dnthresh = basedate.getTime() + (v.getTimezoneOffset() - basedate.getTimezoneOffset()) * 60000;
+	var dnthresh = basedate.getTime() + v.getTimezoneOffset() * 60000;
 	return (epoch - dnthresh) / (24 * 60 * 60 * 1000);
 }
 var refdate = new Date();
-var dnthresh = basedate.getTime() + (refdate.getTimezoneOffset() - basedate.getTimezoneOffset()) * 60000;
 var refoffset = refdate.getTimezoneOffset();
+var dnthresh = basedate.getTime() + refoffset * 60000;
 function numdate(v) {
 	var out = new Date();
 	out.setTime(v * 24 * 60 * 60 * 1000 + dnthresh);
