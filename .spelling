@@ -39,12 +39,15 @@ CommonJS
 Deno
 Ethercalc
 ExtendScript
+InDesign
 IndexedDB
 JavaScriptCore
 LocalStorage
 NestJS
 NPM
 Nuxt
+PhantomJS
+Photoshop
 Redis
 RequireJS
 Rollup
@@ -95,6 +98,7 @@ codepage
 config
 customizable
 datagrid
+dataset
 deduplication
 destructuring
 embeddable

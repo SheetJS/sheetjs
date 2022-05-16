@@ -115,16 +115,6 @@ bytes: ## Display minified and gzipped file sizes
 	@for i in $(BYTEFILEC); do npx printj "%-30s %7d %10d" $$i $$(wc -c < $$i) $$(gzip --best --stdout $$i | wc -c); done
 	@for i in $(BYTEFILER); do npx printj "%-30s %7d" $$i $$(wc -c < $$i); done
 
-.PHONY: graph
-graph: formats.png legend.png ## Rebuild format conversion graph
-misc/formats.svg: misc/formats.dot
-	circo -Tsvg -o$@ $<
-misc/legend.svg: misc/legend.dot
-	dot -Tsvg -o$@ $<
-formats.png legend.png: %.png: misc/%.svg
-	node misc/coarsify.js misc/$*.svg misc/$*.svg.svg
-	npx svgexport misc/$*.svg.svg $@ 0.5x
-
 
 .PHONY: nexe
 nexe: xlsx.exe ## Build nexe standalone executable
@@ -230,22 +220,8 @@ misc/coverage.html: $(TARGET) test.js
 coveralls: ## Coverage Test + Send to coveralls.io
 	mocha --require blanket --reporter mocha-lcov-reporter -t 30000 | node ./node_modules/coveralls/bin/coveralls.js
 
-READEPS=$(sort $(wildcard docbits/*.md))
-README.md: $(READEPS)
-	awk 'FNR==1{p=0}/#/{p=1}p' $^ | tr -d '\15\32' > $@
-
-.PHONY: readme
-readme: README.md ## Update README Table of Contents
-	markdown-toc -i README.md
-
-.PHONY: book
-book: readme graph ## Update summary for documentation
-	printf "# Summary\n\n- [xlsx](README.md#sheetjs-js-xlsx)\n" > misc/docs/SUMMARY.md
-	markdown-toc README.md | sed 's/(#/(README.md#/g'>> misc/docs/SUMMARY.md
-	<README.md grep -vE "(details|summary)>" > misc/docs/README.md
-
 DEMOMDS=$(sort $(wildcard demos/*/README.md))
-MDLINT=$(DEMOMDS) $(READEPS) demos/README.md
+MDLINT=$(DEMOMDS) README.md demos/README.md
 .PHONY: mdlint
 mdlint: $(MDLINT) ## Check markdown documents
 	./node_modules/.bin/alex $^

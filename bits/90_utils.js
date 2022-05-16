@@ -360,6 +360,12 @@ function sheet_set_array_formula(ws/*:Worksheet*/, range, formula/*:string*/, dy
 			if(dynamic) cell.D = true;
 		}
 	}
+	var wsr = decode_range(ws["!ref"]);
+	if(wsr.s.r > rng.s.r) wsr.s.r = rng.s.r;
+	if(wsr.s.c > rng.s.c) wsr.s.c = rng.s.c;
+	if(wsr.e.r < rng.e.r) wsr.e.r = rng.e.r;
+	if(wsr.e.c < rng.e.c) wsr.e.c = rng.e.c;
+	ws["!ref"] = encode_range(ws["!ref"]);
 	return ws;
 }
 
