@@ -13,3 +13,5 @@ xlsx.js           linguist-generated=true binary
 xlsxworker.js     linguist-generated=true binary
 tests/core.js     linguist-generated=true binary
 tests/fixtures.js linguist-generated=true binary
+
+test.mjs    lingust-generated=false binary=false text eol=lf

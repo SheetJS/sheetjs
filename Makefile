@@ -136,7 +136,7 @@ test mocha: test.js ## Run test suite
 
 .PHONY: test-esm
 test-esm: test.mjs ## Run Node ESM test suite
-	npx mocha -r esm -R spec -t 30000 $<
+	npx -y mocha@9 -R spec -t 30000 $<
 
 .PHONY: test-deno
 test-deno: test.ts ## Run Deno test suite

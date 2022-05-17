@@ -5327,9 +5327,9 @@ var RELS = ({
 	XLMETA: "http://schemas.openxmlformats.org/officeDocument/2006/relationships/sheetMetadata",
 	TCMNT: "http://schemas.microsoft.com/office/2017/10/relationships/threadedComment",
 	PEOPLE: "http://schemas.microsoft.com/office/2017/10/relationships/person",
+	CONN: "http://schemas.openxmlformats.org/officeDocument/2006/relationships/connections",
 	VBA: "http://schemas.microsoft.com/office/2006/relationships/vbaProject"
 }/*:any*/);
-
 
 /* 9.3.3 Representing Relationships */
 function get_rels_path(file/*:string*/)/*:string*/ {
@@ -8985,16 +8985,88 @@ var WK_ = /*#__PURE__*/(function() {
 	]; */
 	/* TODO: flesh out */
 	var FuncTab = {
+		0x1F: ["NA", 0],
+		// 0x20: ["ERR", 0],
+		0x21: ["ABS", 1],
+		0x22: ["TRUNC", 1],
+		0x23: ["SQRT", 1],
+		0x24: ["LOG", 1],
+		0x25: ["LN", 1],
+		0x26: ["PI", 0],
+		0x27: ["SIN", 1],
+		0x28: ["COS", 1],
+		0x29: ["TAN", 1],
+		0x2A: ["ATAN2", 2],
+		0x2B: ["ATAN", 1],
+		0x2C: ["ASIN", 1],
+		0x2D: ["ACOS", 1],
+		0x2E: ["EXP", 1],
+		0x2F: ["MOD", 2],
+		// 0x30
+		0x31: ["ISNA", 1],
+		0x32: ["ISERR", 1],
 		0x33: ["FALSE", 0],
 		0x34: ["TRUE", 0],
+		0x35: ["RAND", 0],
+		// 0x36 DATE
+		// 0x37 NOW
+		// 0x38 PMT
+		// 0x39 PV
+		// 0x3A FV
+		// 0x3B IF
+		// 0x3C DAY
+		// 0x3D MONTH
+		// 0x3E YEAR
+		0x3F: ["ROUND", 2],
+		// 0x40 TIME
+		// 0x41 HOUR
+		// 0x42 MINUTE
+		// 0x43 SECOND
+		0x44: ["ISNUMBER", 1],
+		0x45: ["ISTEXT", 1],
 		0x46: ["LEN", 1],
+		0x47: ["VALUE", 1],
+		// 0x48: ["FIXED", ?? 1],
+		0x49: ["MID", 3],
 		0x4A: ["CHAR", 1],
+		// 0x4B
+		// 0x4C FIND
+		// 0x4D DATEVALUE
+		// 0x4E TIMEVALUE
+		// 0x4F CELL
 		0x50: ["SUM", 69],
 		0x51: ["AVERAGEA", 69],
 		0x52: ["COUNTA", 69],
 		0x53: ["MINA", 69],
 		0x54: ["MAXA", 69],
+		// 0x55 VLOOKUP
+		// 0x56 NPV
+		// 0x57 VAR
+		// 0x58 STD
+		// 0x59 IRR
+		// 0x5A HLOOKUP
+		// 0x5B DSUM
+		// 0x5C DAVERAGE
+		// 0x5D DCOUNTA
+		// 0x5E DMIN
+		// 0x5F DMAX
+		// 0x60 DVARP
+		// 0x61 DSTDEVP
+		// 0x62 INDEX
+		// 0x63 COLS
+		// 0x64 ROWS
+		// 0x65 REPEAT
+		0x66: ["UPPER", 1],
+		0x67: ["LOWER", 1],
+		// 0x68 LEFT
+		// 0x69 RIGHT
+		// 0x6A REPLACE
+		0x6B: ["PROPER", 1],
+		// 0x6C CELL
+		0x6D: ["TRIM", 1],
+		// 0x6E CLEAN
 		0x6F: ["T", 1]
+		// 0x70 V
 	};
 	var BinOpTab = [
 		  "",   "",   "",   "",   "",   "",   "",   "", // eslint-disable-line no-mixed-spaces-and-tabs
@@ -24668,6 +24740,12 @@ function sheet_set_array_formula(ws/*:Worksheet*/, range, formula/*:string*/, dy
 			if(dynamic) cell.D = true;
 		}
 	}
+	var wsr = decode_range(ws["!ref"]);
+	if(wsr.s.r > rng.s.r) wsr.s.r = rng.s.r;
+	if(wsr.s.c > rng.s.c) wsr.s.c = rng.s.c;
+	if(wsr.e.r < rng.e.r) wsr.e.r = rng.e.r;
+	if(wsr.e.c < rng.e.c) wsr.e.c = rng.e.c;
+	ws["!ref"] = encode_range(ws["!ref"]);
 	return ws;
 }
 

@@ -1869,7 +1869,7 @@ describe('json output', function() {
 		var ws2 = X.utils.aoa_to_sheet(data), json = X.utils.sheet_to_json(ws2);
 		assert.equal(json[0]["1"], true);
 		assert.equal(json[2]["3"], "qux");
-		ws2["!rows"] = [null,{hidden:true},null,null]; json = X.utils.sheet_to_json(ws2, {skipHidden: 1});
+		ws2["!rows"] = [null,{hidden:true},null,null]; json = X.utils.sheet_to_json(ws2, {skipHidden: true});
 		assert.equal(json[0]["1"], "foo");
 		assert.equal(json[1]["3"], "qux");
 	});
@@ -2526,7 +2526,7 @@ describe('corner cases', function() {
 			//assert.equal(d.y, 2018);
 		}
 		[true, false].forEach(function(cD) {
-			[null, 'yyyy-mm-dd'].forEach(function(dNF) {
+			[void 0, 'yyyy-mm-dd'].forEach(function(dNF) {
 				var ws1 = X.read(
 					'7,2018-03-24',
 					{cellDates: cD, dateNF: dNF, type:'string'}

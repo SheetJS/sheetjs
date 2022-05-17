@@ -16,7 +16,7 @@ $(BAREJS): %.js: %.ts $(LIBFILES)
 
 %.node.js: %.node.ts $(LIBFILES) src/numbers.ts
 	npx esbuild $< --bundle --external:xlsx --outfile=$@ --platform=node
-	sed -i '' 's/ts-node/node/g' $@
+	sed -i '' 's/ts-node/node/g' $@ || sed -i'' 's/ts-node/node/g' $@ || { echo "sed failed"; exit 1; }
 
 %.js: %.ts $(LIBFILES)
 	npx esbuild $< --bundle --outfile=$@ --platform=browser --format=iife --global-name=$* --target=es5

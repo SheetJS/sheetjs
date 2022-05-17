@@ -132,6 +132,7 @@ var paths = {
 	dnsxml: dir + 'defined_names_simple.xml',
 	dnsxlsx: dir + 'defined_names_simple.xlsx',
 	dnsxlsb: dir + 'defined_names_simple.xlsb',
+	dnsslk: dir + 'defined_names_simple.slk',
 
 	dnuxls: dir + 'defined_names_unicode.xls',
 	dnuxml: dir + 'defined_names_unicode.xml',
@@ -1183,15 +1184,19 @@ describe('parse features', function() {
 		['xlsx', paths.dnsxlsx,  true],
 		['xlsb', paths.dnsxlsb,  true],
 		['xls',  paths.dnsxls,   true],
-		['xlml', paths.dnsxml,  false]
+		['xlml', paths.dnsxml,  false],
+		['slk',  paths.dnsslk,  false]
 	].forEach(function(m) { it(m[0], function() {
 		var wb = X.read(fs.readFileSync(m[1]), {type:TYPE});
 		var names = wb.Workbook.Names;
+
+		if(m[0] != 'slk') {
 		for(var i = 0; i < names.length; ++i) if(names[i].Name == "SheetJS") break;
 		assert(i < names.length, "Missing name");
 		assert.equal(names[i].Sheet, null);
 		assert.equal(names[i].Ref, "Sheet1!$A$1");
 		if(m[2]) assert.equal(names[i].Comment, "defined names just suck  excel formulae are bad  MS should feel bad");
+		}
 
 		for(i = 0; i < names.length; ++i) if(names[i].Name == "SHEETjs") break;
 		assert(i < names.length, "Missing name");
@@ -1512,7 +1517,7 @@ function parseDate(str/*:string|Date*/)/*:Date*/ {
 var fixdate = browser ? parseDate("2014-02-19T14:30:00.000Z") : new Date("2014-02-19T14:30Z");
 
 describe('roundtrip features', function() {
-	var bef = (function() { X = require(modp); });
+	var bef = (function() { X = require(modp); XLSX_ZAHL=require("./dist/xlsx.zahl"); });
 	if(typeof before != 'undefined') before(bef);
 	else it('before', bef);
 	describe('should preserve core properties', function() { [
@@ -1864,7 +1869,7 @@ describe('json output', function() {
 		var ws2 = X.utils.aoa_to_sheet(data), json = X.utils.sheet_to_json(ws2);
 		assert.equal(json[0]["1"], true);
 		assert.equal(json[2]["3"], "qux");
-		ws2["!rows"] = [null,{hidden:true},null,null]; json = X.utils.sheet_to_json(ws2, {skipHidden: 1});
+		ws2["!rows"] = [null,{hidden:true},null,null]; json = X.utils.sheet_to_json(ws2, {skipHidden: true});
 		assert.equal(json[0]["1"], "foo");
 		assert.equal(json[1]["3"], "qux");
 	});
@@ -2521,7 +2526,7 @@ describe('corner cases', function() {
 			//assert.equal(d.y, 2018);
 		}
 		[true, false].forEach(function(cD) {
-			[null, 'yyyy-mm-dd'].forEach(function(dNF) {
+			[void 0, 'yyyy-mm-dd'].forEach(function(dNF) {
 				var ws1 = X.read(
 					'7,2018-03-24',
 					{cellDates: cD, dateNF: dNF, type:'string'}

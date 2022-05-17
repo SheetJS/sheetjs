@@ -18,8 +18,9 @@ import * as assert from 'assert';
 
 import * as X from './xlsx.mjs';
 X.set_fs(fs);
-import * as cpexcel from './dist/cpexcel.full.mjs';
-X.set_cptable(cpexcel);
+import * as cptable from './dist/cpexcel.full.mjs';
+X.set_cptable(cptable);
+import XLSX_ZAHL from './dist/xlsx.zahl.mjs';
 var DIF_XL = true;
 
 var browser = typeof document !== 'undefined';
@@ -133,6 +134,7 @@ var paths = {
 	dnsxml: dir + 'defined_names_simple.xml',
 	dnsxlsx: dir + 'defined_names_simple.xlsx',
 	dnsxlsb: dir + 'defined_names_simple.xlsb',
+	dnsslk: dir + 'defined_names_simple.slk',
 
 	dnuxls: dir + 'defined_names_unicode.xls',
 	dnuxml: dir + 'defined_names_unicode.xml',
@@ -1173,15 +1175,19 @@ describe('parse features', function() {
 		['xlsx', paths.dnsxlsx,  true],
 		['xlsb', paths.dnsxlsb,  true],
 		['xls',  paths.dnsxls,   true],
-		['xlml', paths.dnsxml,  false]
+		['xlml', paths.dnsxml,  false],
+		['slk',  paths.dnsslk,  false]
 	].forEach(function(m) { it(m[0], function() {
 		var wb = X.read(fs.readFileSync(m[1]), {type:TYPE});
 		var names = wb.Workbook.Names;
+
+		if(m[0] != 'slk') {
 		for(var i = 0; i < names.length; ++i) if(names[i].Name == "SheetJS") break;
 		assert.ok(i < names.length, "Missing name");
 		assert.equal(names[i].Sheet, null);
 		assert.equal(names[i].Ref, "Sheet1!$A$1");
 		if(m[2]) assert.equal(names[i].Comment, "defined names just suck  excel formulae are bad  MS should feel bad");
+		}
 
 		for(i = 0; i < names.length; ++i) if(names[i].Name == "SHEETjs") break;
 		assert.ok(i < names.length, "Missing name");
@@ -1375,7 +1381,7 @@ describe('parse features', function() {
 	});
 
 	describe('data types formats', function() {[
-		['xlsx', paths.dtfxlsx]
+		['xlsx', paths.dtfxlsx],
 	].forEach(function(m) { it(m[0], function() {
 		var wb = X.read(fs.readFileSync(m[1]), {type: TYPE, cellDates: true});
 		var ws = wb.Sheets[wb.SheetNames[0]];
@@ -1530,9 +1536,9 @@ describe('roundtrip features', function() {
 	}); });
 
 	describe('should preserve merge cells', function() {
-		["xlsx", "xlsb", "xlml", "ods", "biff8"].forEach(function(f) { it(f, function() {
+		["xlsx", "xlsb", "xlml", "ods", "biff8", "numbers"].forEach(function(f) { it(f, function() {
 			var wb1 = X.read(fs.readFileSync(paths.mcxlsx), {type:TYPE});
-			var wb2 = X.read(X.write(wb1,{bookType:f,type:'binary'}),{type:'binary'});
+			var wb2 = X.read(X.write(wb1,{bookType:f,type:'binary',numbers:XLSX_ZAHL}),{type:'binary'});
 			var m1 = wb1.Sheets.Merge['!merges'].map(X.utils.encode_range);
 			var m2 = wb2.Sheets.Merge['!merges'].map(X.utils.encode_range);
 			assert.equal(m1.length, m2.length);
@@ -1727,6 +1733,8 @@ var password_files = [
 ];
 describe('invalid files', function() {
 	describe('parse', function() { [
+		['KEY files', 'numbers/Untitled.key'],
+		['PAGES files', 'numbers/Untitled.pages'],
 		['password', 'apachepoi_password.xls'],
 		['passwords', 'apachepoi_xor-encryption-abc.xls'],
 		['DOC files', 'word_doc.doc']
@@ -1781,7 +1789,7 @@ describe('json output', function() {
 	if(typeof before != 'undefined') before(bef);
 	else it('before', bef);
 	it('should use first-row headers and full sheet by default', function() {
-		var json = X.utils.sheet_to_json(ws, {raw: null});
+		var json = X.utils.sheet_to_json(ws, {raw: false});
 		assert.equal(json.length, data.length - 1);
 		assert.equal(json[0][1], "TRUE");
 		assert.equal(json[1][2], "bar");
@@ -1790,7 +1798,7 @@ describe('json output', function() {
 		assert.throws(function() { seeker(json, [1,2,3], "baz"); });
 	});
 	it('should create array of arrays if header == 1', function() {
-		var json = X.utils.sheet_to_json(ws, {header:1, raw:""});
+		var json = X.utils.sheet_to_json(ws, {header:1, raw:false});
 		assert.equal(json.length, data.length);
 		assert.equal(json[1][0], "TRUE");
 		assert.equal(json[2][1], "bar");
@@ -1848,7 +1856,7 @@ describe('json output', function() {
 		var ws2 = X.utils.aoa_to_sheet(data), json = X.utils.sheet_to_json(ws2);
 		assert.equal(json[0]["1"], true);
 		assert.equal(json[2]["3"], "qux");
-		ws2["!rows"] = []; ws2["!rows"][1] = {hidden:true}; json = X.utils.sheet_to_json(ws2, {skipHidden: true});
+		ws2["!rows"] = [null,{hidden:true},null,null]; json = X.utils.sheet_to_json(ws2, {skipHidden: true});
 		assert.equal(json[0]["1"], "foo");
 		assert.equal(json[1]["3"], "qux");
 	});
@@ -2167,6 +2175,19 @@ describe('sylk', function() {
 			}
 		} : null);
 	});
+	describe('date system', function() {
+		function make_slk(d1904) { return "ID;PSheetJS\nP;Pd\\/m\\/yy\nP;Pd\\/m\\/yyyy\n" + (d1904 != null ? "O;D;V" + d1904 : "") + "\nF;P0;FG0G;X1;Y1\nC;K1\nE"; }
+		it('should default to 1900', function() {
+			assert.equal(get_cell(X.read(make_slk(), {type: "binary"}).Sheets.Sheet1, "A1").v, 1);
+			assert.ok(get_cell(X.read(make_slk(), {type: "binary", cellDates: true}).Sheets.Sheet1, "A1").v.getFullYear() < 1902);
+			assert.equal(get_cell(X.read(make_slk(5), {type: "binary"}).Sheets.Sheet1, "A1").v, 1);
+			assert.ok(get_cell(X.read(make_slk(5), {type: "binary", cellDates: true}).Sheets.Sheet1, "A1").v.getFullYear() < 1902);
+		});
+		it('should use 1904 when specified', function() {
+			assert.ok(get_cell(X.read(make_slk(1), {type: "binary", cellDates: true}).Sheets.Sheet1, "A1").v.getFullYear() > 1902);
+			assert.ok(get_cell(X.read(make_slk(4), {type: "binary", cellDates: true}).Sheets.Sheet1, "A1").v.getFullYear() > 1902);
+		});
+	});
 });
 
 (typeof Uint8Array !== "undefined" ? describe : describe.skip)('numbers', function() {
@@ -2435,7 +2456,6 @@ describe('corner cases', function() {
 	});
 	if(typeof JSON !== 'undefined') it('SSF oddities', function() {
 		// $FlowIgnore
-		//var ssfdata = require('./misc/ssf.json');
 		var ssfdata = JSON.parse(fs.readFileSync('./misc/ssf.json', 'utf8'));
 		var cb = function(d, j) { return function() { return X.SSF.format(d[0], d[j][0]); }; };
 		ssfdata.forEach(function(d) {
@@ -2504,6 +2524,118 @@ describe('corner cases', function() {
 				).Sheets.Sheet1;
 				check_ws(ws2, dNF);
 			});
+		});
+	});
+	it('should handle \\r and \\n', function() {
+		var base = "./test_files/crlf/";
+		[
+			"CRLFR9.123",
+			"CRLFR9.WK1",
+			"CRLFR9.WK3",
+			"CRLFR9.WK4",
+			"CRLFR9.XLS",
+			"CRLFR9_4.XLS",
+			"CRLFR9_5.XLS",
+			"CRLFX5_2.XLS",
+			"CRLFX5_3.XLS",
+			"CRLFX5_4.XLS",
+			"CRLFX5_5.XLS",
+			"crlf.csv",
+			"crlf.fods",
+			"crlf.htm",
+			"crlf.numbers",
+			"crlf.ods",
+			"crlf.rtf",
+			"crlf.slk",
+			"crlf.xls",
+			"crlf.xlsb",
+			"crlf.xlsx",
+			"crlf.xml",
+			"crlf5.xls",
+			"crlfq9.qpw",
+			"crlfq9.wb1",
+			"crlfq9.wb2",
+			"crlfq9.wb3",
+			"crlfq9.wk1",
+			"crlfq9.wk3",
+			"crlfq9.wk4",
+			"crlfq9.wks",
+			"crlfq9.wq1",
+			"crlfw4_2.wks",
+			"crlfw4_3.wks",
+			"crlfw4_4.wks"
+		].map(function(path) { return base + path; }).forEach(function(w) {
+			var wb = X.read(fs.readFileSync(w), {type:TYPE});
+			var ws = wb.Sheets[wb.SheetNames[0]];
+			var B1 = get_cell(ws, "B1"), B2 = get_cell(ws, "B2");
+			var lio = w.match(/\.[^\.]*$/).index, stem = w.slice(0, lio).toLowerCase(), ext = w.slice(lio + 1).toLowerCase();
+			switch(ext) {
+				case 'fm3': break;
+
+				case '123':
+					assert.equal(B1.v, "abc\ndef");
+					// TODO: parse formula // assert.equal(B1.v, "abc\r\ndef");
+					break;
+				case 'qpw':
+				case 'wb1':
+				case 'wb2':
+				case 'wb3':
+				case 'wk1':
+				case 'wk3':
+				case 'wk4':
+				case 'wq1':
+					assert.ok(B1.v == "abcdef" || B1.v == "abc\ndef");
+					// TODO: formula -> string values
+					if(B2 && B2.t != "e" && B2.v != "") assert.ok(B2.v == "abcdef" || B2.v == "abc\r\ndef");
+					break;
+
+				case 'wks':
+					if(stem.match(/w4/)) {
+						assert.equal(B1.v, "abc\ndef");
+						assert.ok(!B2 || B2.t == "z"); // Works4 did not support CODE / CHAR
+					} else if(stem.match(/q9/)) {
+						assert.equal(B1.v, "abcdef");
+						assert.equal(B2.v, "abc\r\ndef");
+					} else {
+						assert.equal(B1.v, "abc\ndef");
+						assert.equal(B2.v, "abc\r\ndef");
+					}
+					break;
+
+				case 'xls':
+					if(stem.match(/CRLFR9/i)) {
+						assert.equal(B1.v, "abc\r\ndef");
+					} else {
+						assert.equal(B1.v, "abc\ndef");
+					}
+					assert.equal(B2.v, "abc\r\ndef");
+					break;
+
+				case 'rtf':
+				case 'htm':
+					assert.equal(B1.v, "abc\ndef");
+					assert.equal(B2.v, "abc\n\ndef");
+					break;
+
+				case 'xlsx':
+				case 'xlsb':
+				case 'xml':
+				case 'slk':
+				case 'csv':
+					assert.equal(B1.v, "abc\ndef");
+					assert.equal(B2.v, "abc\r\ndef");
+					break;
+				case 'fods':
+				case 'ods':
+					assert.equal(B1.v, "abc\nDef");
+					assert.equal(B2.v, "abc\r\ndef");
+					break;
+				case 'numbers':
+					assert.equal(B1.v, "abc\ndef");
+					// TODO: B2 should be a formula error
+					break;
+				default: throw ext;
+			}
 		});
 	});
 });
