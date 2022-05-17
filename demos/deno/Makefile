@@ -14,7 +14,7 @@ $(TESTS): %: %.ts doit.ts $(TEST_FILES)
 
 # --unstable is required, see https://github.com/denoland/deno_std/issues/1900
 $(UNSTABLE): %: %.ts doit.ts $(TEST_FILES)
-	deno run --allow-read --allow-write --unstable $<
+	deno run --allow-read --allow-write --unstable --allow-env $<
 
 .PHONY: stream
 stream: stream.ts

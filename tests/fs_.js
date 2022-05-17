@@ -19,6 +19,7 @@ function require(s) {
 	switch(s) {
 		case 'fs': return fs;
 		case 'assert': return assert;
+		case './dist/xlsx.zahl': return XLSX_ZAHL_PAYLOAD;
 		case './': return XLSX;
 	}
 	if(s.slice(-5) == ".json") return JSON.parse(fs.readFileSync(s));

@@ -8,7 +8,7 @@ headless browser is generally indistinguishable from a browser process.
 
 ## Chromium Automation with Puppeteer
 
-[Puppeteer](https://npm.im/puppeteer) enables headless Chromium automation.
+[Puppeteer](https://pptr.dev/) enables headless Chromium automation.
 
 [`html.js`](./html.js) shows a dedicated script for converting an HTML file to
 XLSB using puppeteer.  The first argument is the path to the HTML file.  The

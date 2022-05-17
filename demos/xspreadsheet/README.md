@@ -9,9 +9,8 @@ This demo is available at <https://oss.sheetjs.com/sheetjs/x-spreadsheet.html>
 
 ## Obtaining the Library
 
-The [`x-data-spreadsheet` module](http://npm.im/x-data-spreadsheet) includes a
-minified script `dist/xspreadsheet.js` that can be directly inserted as a script
-tag.  The unpkg CDN also exposes the latest version:
+The `x-data-spreadsheet` NodeJS packages include a minified script that can be
+directly inserted as a script tag.  The unpkg CDN also hosts this script:
 
 ```html
 <script src="https://unpkg.com/x-data-spreadsheet/dist/xspreadsheet.js"></script>

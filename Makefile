@@ -59,7 +59,7 @@ $(MTSBITS): misc/%: modules/%
 
 .PHONY: clean
 clean: ## Remove targets and build artifacts
-	rm -f $(TARGET) $(FLOWTARGET)
+	rm -f $(TARGET) $(FLOWTARGET) $(ESMJSTGT) $(MINITGT) $(MINIFLOW)
 
 .PHONY: clean-data
 clean-data:

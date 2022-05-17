@@ -2,16 +2,15 @@
 
 The `sheet_to_json` utility function generates output arrays suitable for use
 with other JS libraries such as data grids for previewing data.  After extensive
-testing, [`canvas-datagrid`](https://tonygermaneri.github.io/canvas-datagrid/)
-stood out as a very high-performance grid with an incredibly simple API.
+testing, [`canvas-datagrid`](https://canvas-datagrid.js.org/demo.html) stood
+out as a very high-performance grid with an incredibly simple API.
 
-This demo is available at <http://oss.sheetjs.com/sheetjs/datagrid.html>
+This demo is available at <https://oss.sheetjs.com/sheetjs/datagrid.html>
 
 ## Obtaining the Library
 
-The [`canvas-datagrid` npm nodule](http://npm.im/canvas-datagrid) includes a
-minified script `dist/canvas-datagrid.js` that can be directly inserted as a
-script tag.  The unpkg CDN also exposes the latest version:
+The `canvas-datagrid` NodeJS packages include a minified script that can be
+directly inserted as a script tag.  The unpkg CDN also hosts this script:
 
 ```html
 <script src="https://unpkg.com/canvas-datagrid/dist/canvas-datagrid.js"></script>

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>JS-XLSX Core Test Runner</title>
+    <title>SheetJS Core Test Runner</title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="mocha.css" />
@@ -13,17 +13,7 @@
     </style>
   </head>
   <body>
-    <h1 id="t"><a href="http://sheetjs.com">JS-XLSX Browser-based Parsing Tests</a></h1>
-    <table id="tt">
-      <tr>
-        <th>File Formats</th>
-        <td><a href="http://github.com/SheetJS/js-xlsx">Library Source</a></td>
-        <td><a href="http://SheetJS.github.io/js-xls">Interactive Demo</a></td>
-        <td><a href="http://npm.im/xlsx">"xlsx" on npm</a></td>
-        <td><a href="https://travis-ci.org/SheetJS/js-xlsx">node CI status</a></td>
-      </tr>
-      <tr><td colspan="5">Tests compiled from <a href="http://github.com/SheetJS/test_files">test_files repo</a> and are located at /test_files<br /></td></tr>
-    </table>
+    <h1 id="t"><a href="https://sheetjs.com">SheetJS Browser-based File Tests</a></h1>
 <script type="text/javascript">
 	var _gaq = _gaq || [];
 	_gaq.push(['_setAccount', 'UA-36810333-1']);
@@ -39,11 +29,16 @@
     <script src="base64.js"></script>
     <script src="fs_.js"></script>
     <script src="fixtures.js"></script>
-    <script src="cpexcel.js"></script>
     <script type="module">
       import * as XLSX from './xlsx.mjs';
       if(typeof XLSX !== "undefined") globalThis.XLSX = XLSX;
       else if(typeof globalThis !== "undefined" && !globalThis.XLSX) globalThis.XLSX = XLSX;
+      import * as cptable from './cpexcel.full.mjs';
+      XLSX.set_cptable(cptable);
+      import XLSX_ZAHL_PAYLOAD from './xlsx.zahl.mjs';
+      if(typeof XLSX_ZAHL_PAYLOAD !== "undefined") globalThis.XLSX_ZAHL_PAYLOAD = XLSX_ZAHL_PAYLOAD;
+      else if(typeof globalThis !== "undefined" && !globalThis.XLSX_ZAHL_PAYLOAD) globalThis.XLSX_ZAHL_PAYLOAD = XLSX_ZAHL_PAYLOAD;
+      //
     </script>
     <div id="mocha"></div>
     <script src="mocha.js"></script>
