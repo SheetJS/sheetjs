@@ -31,7 +31,6 @@ can be installed with Bash on Windows or with `cygwin`.
 
 **Bundlers and Tooling**
 - [`browserify`](browserify/)
-- [`fusebox`](fusebox/)
 - [`parcel`](parcel/)
 - [`requirejs`](requirejs/)
 - [`rollup`](rollup/)
@@ -44,7 +43,7 @@ can be installed with Bash on Windows or with `cygwin`.
 - [`electron application`](electron/)
 - [`nw.js application`](nwjs/)
 - [`Chrome / Chromium extensions`](chrome/)
-- [`Download a Google Sheet locally`](google-sheet/)
+- [`Google Sheets API`](https://docs.sheetjs.com/docs/getting-started/demos/gsheet)
 - [`Adobe ExtendScript`](extendscript/)
 - [`Headless Browsers`](headless/)
 - [`canvas-datagrid`](datagrid/)

@@ -10,7 +10,7 @@ This demo is available at <https://oss.sheetjs.com/sheetjs/datagrid.html>
 ## Obtaining the Library
 
 The `canvas-datagrid` NodeJS packages include a minified script that can be
-directly inserted as a script tag.  The unpkg CDN also hosts this script:
+directly inserted as a script tag.  The unpkg CDN also serves this script:
 
 ```html
 <script src="https://unpkg.com/canvas-datagrid/dist/canvas-datagrid.js"></script>

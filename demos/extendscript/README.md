@@ -4,7 +4,7 @@ ExtendScript adds some features to a limited form of ECMAScript version 3.  With
 the included shim, the library can run within Photoshop and other Adobe apps!
 
 The main file is `test.jsx`.  Target-specific files prepend target directives.
-Copy the `test.jsx` file as well as the `xlsx.extendscript.js` library script 
+Copy the `test.jsx` file as well as the `xlsx.extendscript.js` library script
 to wherever you want the scripts to reside.
 
 
@@ -30,6 +30,8 @@ var workbook = XLSX.readFile(filename);
 XLSX.writeFile(workbook, filename);
 ```
 
+<details><summary><b>Implementation Details</b> (click to show)</summary>
+
 The `readFile` and `writeFile` functions use `"binary"` encoding under the hood:
 
 
@@ -50,6 +52,7 @@ outFile.write(workbook);
 outFile.close();
 ```
 
+</details>
 
 ## Demo
 
