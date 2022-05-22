@@ -204,10 +204,11 @@ var paths = {
 	rhslk:  dir + 'row_height.slk',
 
 	svxls:  dir + 'sheet_visibility.xls',
-	svxls5: dir + 'sheet_visibility.xls',
+	svxls5: dir + 'sheet_visibility5.xls',
 	svxml:  dir + 'sheet_visibility.xml',
 	svxlsx: dir + 'sheet_visibility.xlsx',
 	svxlsb: dir + 'sheet_visibility.xlsb',
+	svods:  dir + 'sheet_visibility.ods',
 
 	swcxls: dir + 'apachepoi_SimpleWithComments.xls',
 	swcxml: dir + '2011/apachepoi_SimpleWithComments.xls.xml',
@@ -1642,7 +1643,10 @@ describe('roundtrip features', function() {
 	describe('should preserve sheet visibility', function() { [
 			['xlml', paths.svxml],
 			['xlsx', paths.svxlsx],
-			['xlsb', paths.svxlsb]
+			['xlsb', paths.svxlsb],
+			['xls', paths.svxls],
+			['biff5', paths.svxls5]
+			// ['ods', paths.svods]
 		].forEach(function(w) {
 			it(w[0], function() {
 				var wb1 = X.read(fs.readFileSync(w[1]), {type:TYPE});

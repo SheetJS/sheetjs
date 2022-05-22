@@ -1,14 +1,14 @@
 misc/00_esmheader.js
 bits/01_version.js
-misc/02_codepage.js
+bits/02_codepage.js
 bits/03_consts.js
 bits/04_base64.js
 bits/05_buf.js
 bits/09_types.js
 bits/10_ssf.js
 bits/11_ssfutils.js
-misc/18_esmcfb.js
-misc/19_mjsfs.js
+bits/18_cfb.js
+bits/19_fsutils.js
 bits/20_jsutils.js
 bits/21_ziputils.js
 bits/22_xmlutils.js

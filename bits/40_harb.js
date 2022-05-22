@@ -428,9 +428,9 @@ var SYLK = /*#__PURE__*/(function() {
 			} break;
 			case 'W': break; /* window */
 			case 'P':
-				if(record[1].charAt(0) == 'P')
-					formats.push(rstr.slice(3).replace(/;;/g, ";"));
-				break;
+				switch(record[1].charAt(0)){
+					case 'P': formats.push(rstr.slice(3).replace(/;;/g, ";")); break;
+				} break;
 			case 'NN': { /* defined name */
 				var nn = {Sheet: 0};
 				for(rj=1; rj<record.length; ++rj) switch(record[rj].charAt(0)) {
@@ -509,7 +509,7 @@ var SYLK = /*#__PURE__*/(function() {
 					cw = record[rj].slice(1).split(" ");
 					for(j = parseInt(cw[0], 10); j <= parseInt(cw[1], 10); ++j) {
 						Mval = parseInt(cw[2], 10);
-						colinfo[j-1] = Mval === 0 ? {hidden:true}: {wch:Mval}; process_col(colinfo[j-1]);
+						colinfo[j-1] = Mval === 0 ? {hidden:true}: {wch:Mval};
 					} break;
 				case 'C': /* default column format */
 					C = parseInt(record[rj].slice(1), 10)-1;
@@ -529,6 +529,7 @@ var SYLK = /*#__PURE__*/(function() {
 		}
 		if(rowinfo.length > 0) sht['!rows'] = rowinfo;
 		if(colinfo.length > 0) sht['!cols'] = colinfo;
+		colinfo.forEach(function(col) { process_col(col); });
 		if(opts && opts.sheetRows) arr = arr.slice(0, opts.sheetRows);
 		return [arr, sht, wb];
 	}

@@ -9,7 +9,7 @@ HTMLLINT=index.html
 
 MINITGT=xlsx.mini.js
 MINIFLOW=xlsx.mini.flow.js
-MINIDEPS=$(shell cat mini.lst)
+MINIDEPS=$(shell cat misc/mini.lst)
 
 ESMJSTGT=xlsx.mjs
 ESMJSDEPS=$(shell cat misc/mjs.lst)
@@ -70,7 +70,6 @@ init: ## Initial setup for development
 	git submodule init
 	git submodule update
 	#git submodule foreach git pull origin master
-	#git submodule foreach make
 	git submodule foreach make all
 	mkdir -p tmp
 
@@ -115,6 +114,10 @@ bytes: ## Display minified and gzipped file sizes
 	@for i in $(BYTEFILEC); do npx printj "%-30s %7d %10d" $$i $$(wc -c < $$i) $$(gzip --best --stdout $$i | wc -c); done
 	@for i in $(BYTEFILER); do npx printj "%-30s %7d" $$i $$(wc -c < $$i); done
 
+
+.PHONY: git
+git: ## show version string
+	@echo "$$(node -pe 'require("./package.json").version')"
 
 .PHONY: nexe
 nexe: xlsx.exe ## Build nexe standalone executable

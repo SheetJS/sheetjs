@@ -4,6 +4,11 @@ This log is intended to keep track of backwards-incompatible changes, including
 but not limited to API changes and file location changes.  Minor behavioral
 changes may not be included if they are not expected to break existing code.
 
+## v0.18.8
+
+* Plaintext parsing of dateless meridien time values (`1:23:45 PM`)
+* Legacy format (SYLK / WK# / Multiplan) minutiae 
+
 ## v0.18.7
 
 * Normalized handling of `\r` and `\n` newline characters

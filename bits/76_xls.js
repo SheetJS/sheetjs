@@ -40,7 +40,7 @@ function slurp(RecordType, R, blob, length/*:number*/, opts)/*:any*/ {
 	var bufs = [];
 	var d = blob.slice(blob.l,blob.l+l);
 	if(opts && opts.enc && opts.enc.insitu && d.length > 0) switch(RecordType) {
-	case 0x0009: case 0x0209: case 0x0409: case 0x0809/* BOF */: case 0x002f /* FilePass */: case 0x0195 /* FileLock */: case 0x00e1 /* InterfaceHdr */: case 0x0196 /* RRDInfo */: case 0x0138 /* RRDHead */: case 0x0194 /* UsrExcl */: case 0x000a /* EOF */:
+	case 0x0009: case 0x0209: case 0x0409: case 0x0809/* BOF */: case 0x002F /* FilePass */: case 0x0195 /* FileLock */: case 0x00E1 /* InterfaceHdr */: case 0x0196 /* RRDInfo */: case 0x0138 /* RRDHead */: case 0x0194 /* UsrExcl */: case 0x000a /* EOF */:
 		break;
 	case 0x0085 /* BoundSheet8 */:
 		break;
@@ -223,7 +223,7 @@ function parse_workbook(blob, options/*:ParseOpts*/)/*:Workbook*/ {
 			if(RecordType === 0x000a /* EOF */) val = /*::(*/R.f(blob, length, opts)/*:: :any)*/;
 			else val = /*::(*/slurp(RecordType, R, blob, length, opts)/*:: :any)*/;
 			/*:: val = (val:any); */
-			if(file_depth == 0 && [0x0009, 0x0209, 0x0409, 0x0809].indexOf(last_RT) === -1 /* 'BOF' */) continue;
+			if(file_depth == 0 && [0x0009, 0x0209, 0x0409, 0x0809].indexOf(last_RT) === -1 /* BOF */) continue;
 			switch(RecordType) {
 				case 0x0022 /* Date1904 */:
 					/*:: if(!Workbook.WBProps) Workbook.WBProps = {}; */

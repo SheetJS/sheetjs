@@ -8,6 +8,7 @@ index.html
 misc/
 node_modules
 *.tgz
+*.jsx
 _book
 book.json
 tmp

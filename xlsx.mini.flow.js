@@ -1,11 +1,14 @@
 /*! xlsx.js (C) 2013-present SheetJS -- http://sheetjs.com */
 /* vim: set ts=2: */
 /*exported XLSX */
-/*global exports, module, require:false, process:false, Buffer:false, ArrayBuffer:false, DataView:false, Deno:false */
+/*global global, exports, module, require:false, process:false, Buffer:false, ArrayBuffer:false, DataView:false, Deno:false */
 var XLSX = {};
 function make_xlsx_lib(XLSX){
-XLSX.version = '0.18.7';
+XLSX.version = '0.18.8';
 var current_codepage = 1200, current_ansi = 1252;
+/*:: declare var cptable:any; */
+/*global cptable:true, window */
+var $cptable;
 
 var VALID_ANSI = [ 874, 932, 936, 949, 950, 1250, 1251, 1252, 1253, 1254, 1255, 1256, 1257, 1258, 10000 ];
 /* ECMA-376 Part I 18.4.1 charset to codepage mapping */
@@ -61,6 +64,23 @@ var debom = function(data/*:string*/)/*:string*/ {
 
 var _getchar = function _gc1(x/*:number*/)/*:string*/ { return String.fromCharCode(x); };
 var _getansi = function _ga1(x/*:number*/)/*:string*/ { return String.fromCharCode(x); };
+
+function set_cptable(cptable) {
+	$cptable = cptable;
+	set_cp = function(cp/*:number*/) { current_codepage = cp; set_ansi(cp); };
+	debom = function(data/*:string*/) {
+		if(data.charCodeAt(0) === 0xFF && data.charCodeAt(1) === 0xFE) { return $cptable.utils.decode(1200, char_codes(data.slice(2))); }
+		return data;
+	};
+	_getchar = function _gc2(x/*:number*/)/*:string*/ {
+		if(current_codepage === 1200) return String.fromCharCode(x);
+		return $cptable.utils.decode(current_codepage, [x&255,x>>8])[0];
+	};
+	_getansi = function _ga2(x/*:number*/)/*:string*/ {
+		return $cptable.utils.decode(current_ansi, [x])[0];
+	};
+	cpdoit();
+}
 var DENSE = null;
 var DIF_XL = true;
 var Base64_map = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
@@ -1530,7 +1550,7 @@ function parse_extra_field(blob/*:CFBlob*/)/*:any*/ {
 	return o;
 }
 var fs/*:: = require('fs'); */;
-function get_fs() { return fs || (fs = require('fs')); }
+function get_fs() { return fs || (fs = _fs); }
 function parse(file/*:RawBytes*/, options/*:CFBReadOpts*/)/*:CFBContainer*/ {
 if(file[0] == 0x50 && file[1] == 0x4b) return parse_zip(file, options);
 if((file[0] | 0x20) == 0x6d && (file[1]|0x20) == 0x69) return parse_mad(file, options);
@@ -3162,7 +3182,7 @@ return exports;
 })();
 
 var _fs;
-if(typeof require !== 'undefined') try { _fs = require('fs'); } catch(e) {}
+function set_fs(fs) { _fs = fs; }
 
 /* normalize data for blob ctor */
 function blobify(data) {
@@ -3391,16 +3411,34 @@ function fuzzynum(s/*:string*/)/*:number*/ {
 	if(!isNaN(v = Number(ss))) return v / wt;
 	return v;
 }
+
+/* NOTE: Chrome rejects bare times like 1:23 PM */
+var FDRE1 = /^(0?\d|1[0-2])(?:|:([0-5]?\d)(?:|(\.\d+)(?:|:([0-5]?\d))|:([0-5]?\d)(|\.\d+)))([ap])m?/;
+
+function fuzzytime1(M) /*:Date*/ {
+    /* TODO: 1904 adjustment */
+    if(!M[2]) return new Date(1900,0,0,(+M[1]%12) + (M[7] == "p" ? 12 : 0), 0, 0, 0);
+    if(M[3]) {
+        if(M[4]) return new Date(1900,0,0,(+M[1]%12) + (M[7] == "p" ? 12 : 0), +M[2], +M[4], parseFloat(M[3])*1000);
+        else return new Date(1900,0,0,(M[7] == "p" ? 12 : 0), +M[1], +M[2], parseFloat(M[3])*1000);
+    }
+    else if(M[5]) return new Date(1900, 0, 0, (+M[1]%12) + (M[7] == "p" ? 12 : 0), +M[2], +M[5], M[6] ? parseFloat(M[6]) * 1000 : 0);
+    else return new Date(1900,0,0,(+M[1]%12) + (M[7] == "p" ? 12 : 0), +M[2], 0, 0);
+}
 var lower_months = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
 function fuzzydate(s/*:string*/)/*:Date*/ {
+	var lower = s.toLowerCase();
+	var lnos = lower.replace(/\s+/g, "");
+	var M = lnos.match(FDRE1);
+	if(M) return fuzzytime1(M);
+
 	var o = new Date(s), n = new Date(NaN);
 	var y = o.getYear(), m = o.getMonth(), d = o.getDate();
 	if(isNaN(d)) return n;
-	var lower = s.toLowerCase();
 	if(lower.match(/jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec/)) {
 		lower = lower.replace(/[^a-z]/g,"").replace(/([^a-z]|^)[ap]m?([^a-z]|$)/,"");
 		if(lower.length > 3 && lower_months.indexOf(lower) == -1) return n;
-	} else if(lower.match(/[a-z]/)) return n;
+	} else if(lower.replace(/[ap]m?/, "").match(/[a-z]/)) return n;
 	if(y < 0 || y > 8099) return n;
 	if((m > 0 || d > 1) && y != 101) return o;
 	if(s.match(/[^-0-9:,\/\\]/)) return n;
@@ -4600,8 +4638,8 @@ var _XLSIcv = /*#__PURE__*/ rgbify([
 	0x333333,
 
 	/* Other entries to appease BIFF8/12 */
-	0xFFFFFF, /* 0x40 icvForeground ?? */
-	0x000000, /* 0x41 icvBackground ?? */
+	0x000000, /* 0x40 icvForeground ?? */
+	0xFFFFFF, /* 0x41 icvBackground ?? */
 	0x000000, /* 0x42 icvFrame ?? */
 	0x000000, /* 0x43 icv3D ?? */
 	0x000000, /* 0x44 icv3DText ?? */
@@ -4825,45 +4863,45 @@ var ct2type/*{[string]:string}*/ = ({
 }/*:any*/);
 
 var CT_LIST = {
-		workbooks: {
-			xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml",
-			xlsm: "application/vnd.ms-excel.sheet.macroEnabled.main+xml",
-			xlsb: "application/vnd.ms-excel.sheet.binary.macroEnabled.main",
-			xlam: "application/vnd.ms-excel.addin.macroEnabled.main+xml",
-			xltx: "application/vnd.openxmlformats-officedocument.spreadsheetml.template.main+xml"
-		},
-		strs: { /* Shared Strings */
-			xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml",
-			xlsb: "application/vnd.ms-excel.sharedStrings"
-		},
-		comments: { /* Comments */
-			xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.comments+xml",
-			xlsb: "application/vnd.ms-excel.comments"
-		},
-		sheets: { /* Worksheet */
-			xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml",
-			xlsb: "application/vnd.ms-excel.worksheet"
-		},
-		charts: { /* Chartsheet */
-			xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.chartsheet+xml",
-			xlsb: "application/vnd.ms-excel.chartsheet"
-		},
-		dialogs: { /* Dialogsheet */
-			xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.dialogsheet+xml",
-			xlsb: "application/vnd.ms-excel.dialogsheet"
-		},
-		macros: { /* Macrosheet (Excel 4.0 Macros) */
-			xlsx: "application/vnd.ms-excel.macrosheet+xml",
-			xlsb: "application/vnd.ms-excel.macrosheet"
-		},
-		metadata: { /* Metadata (Stock/Geography and Dynamic Array) */
-			xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheetMetadata+xml",
-			xlsb: "application/vnd.ms-excel.sheetMetadata"
-		},
-		styles: { /* Styles */
-			xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml",
-			xlsb: "application/vnd.ms-excel.styles"
-		}
+	workbooks: {
+		xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml",
+		xlsm: "application/vnd.ms-excel.sheet.macroEnabled.main+xml",
+		xlsb: "application/vnd.ms-excel.sheet.binary.macroEnabled.main",
+		xlam: "application/vnd.ms-excel.addin.macroEnabled.main+xml",
+		xltx: "application/vnd.openxmlformats-officedocument.spreadsheetml.template.main+xml"
+	},
+	strs: { /* Shared Strings */
+		xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml",
+		xlsb: "application/vnd.ms-excel.sharedStrings"
+	},
+	comments: { /* Comments */
+		xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.comments+xml",
+		xlsb: "application/vnd.ms-excel.comments"
+	},
+	sheets: { /* Worksheet */
+		xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml",
+		xlsb: "application/vnd.ms-excel.worksheet"
+	},
+	charts: { /* Chartsheet */
+		xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.chartsheet+xml",
+		xlsb: "application/vnd.ms-excel.chartsheet"
+	},
+	dialogs: { /* Dialogsheet */
+		xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.dialogsheet+xml",
+		xlsb: "application/vnd.ms-excel.dialogsheet"
+	},
+	macros: { /* Macrosheet (Excel 4.0 Macros) */
+		xlsx: "application/vnd.ms-excel.macrosheet+xml",
+		xlsb: "application/vnd.ms-excel.macrosheet"
+	},
+	metadata: { /* Metadata (Stock/Geography and Dynamic Array) */
+		xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheetMetadata+xml",
+		xlsb: "application/vnd.ms-excel.sheetMetadata"
+	},
+	styles: { /* Styles */
+		xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml",
+		xlsb: "application/vnd.ms-excel.styles"
+	}
 };
 
 function new_ct()/*:any*/ {
@@ -4884,7 +4922,7 @@ function parse_ct(data/*:?string*/) {
 		switch(y[0].replace(nsregex,"<")) {
 			case '<?xml': break;
 			case '<Types': ct.xmlns = y['xmlns' + (y[0].match(/<(\w+):/)||["",""])[1] ]; break;
-			case '<Default': ctext[y.Extension] = y.ContentType; break;
+			case '<Default': ctext[y.Extension.toLowerCase()] = y.ContentType; break;
 			case '<Override':
 				if(ct[ct2type[y.ContentType]] !== undefined) ct[ct2type[y.ContentType]].push(y.PartName);
 				break;
@@ -4899,35 +4937,37 @@ function parse_ct(data/*:?string*/) {
 	return ct;
 }
 
-function write_ct(ct, opts)/*:string*/ {
+function write_ct(ct, opts, raw)/*:string*/ {
 	var type2ct/*{[string]:Array<string>}*/ = evert_arr(ct2type);
 
 	var o/*:Array<string>*/ = [], v;
-	o[o.length] = (XML_HEADER);
-	o[o.length] = writextag('Types', null, {
-		'xmlns': XMLNS.CT,
-		'xmlns:xsd': XMLNS.xsd,
-		'xmlns:xsi': XMLNS.xsi
-	});
 
-	o = o.concat([
-		['xml', 'application/xml'],
-		['bin', 'application/vnd.ms-excel.sheet.binary.macroEnabled.main'],
-		['vml', 'application/vnd.openxmlformats-officedocument.vmlDrawing'],
-		['data', 'application/vnd.openxmlformats-officedocument.model+data'],
-		/* from test files */
-		['bmp', 'image/bmp'],
-		['png', 'image/png'],
-		['gif', 'image/gif'],
-		['emf', 'image/x-emf'],
-		['wmf', 'image/x-wmf'],
-		['jpg', 'image/jpeg'], ['jpeg', 'image/jpeg'],
-		['tif', 'image/tiff'], ['tiff', 'image/tiff'],
-		['pdf', 'application/pdf'],
-		['rels', 'application/vnd.openxmlformats-package.relationships+xml']
-	].map(function(x) {
-		return writextag('Default', null, {'Extension':x[0], 'ContentType': x[1]});
-	}));
+	if(!raw) {
+		o[o.length] = (XML_HEADER);
+		o[o.length] = writextag('Types', null, {
+			'xmlns': XMLNS.CT,
+			'xmlns:xsd': XMLNS.xsd,
+			'xmlns:xsi': XMLNS.xsi
+		});
+		o = o.concat([
+			['xml', 'application/xml'],
+			['bin', 'application/vnd.ms-excel.sheet.binary.macroEnabled.main'],
+			['vml', 'application/vnd.openxmlformats-officedocument.vmlDrawing'],
+			['data', 'application/vnd.openxmlformats-officedocument.model+data'],
+			/* from test files */
+			['bmp', 'image/bmp'],
+			['png', 'image/png'],
+			['gif', 'image/gif'],
+			['emf', 'image/x-emf'],
+			['wmf', 'image/x-wmf'],
+			['jpg', 'image/jpeg'], ['jpeg', 'image/jpeg'],
+			['tif', 'image/tiff'], ['tiff', 'image/tiff'],
+			['pdf', 'application/pdf'],
+			['rels', 'application/vnd.openxmlformats-package.relationships+xml']
+		].map(function(x) {
+			return writextag('Default', null, {'Extension':x[0], 'ContentType': x[1]});
+		}));
+	}
 
 	/* only write first instance */
 	var f1 = function(w) {
@@ -4972,7 +5012,7 @@ function write_ct(ct, opts)/*:string*/ {
 	f3('drawings');
 	f2('metadata');
 	f3('people');
-	if(o.length>2){ o[o.length] = ('</Types>'); o[1]=o[1].replace("/>",">"); }
+	if(!raw && o.length>2){ o[o.length] = ('</Types>'); o[1]=o[1].replace("/>",">"); }
 	return o.join("");
 }
 /* 9.3 Relationships */
@@ -5007,9 +5047,9 @@ var RELS = ({
 	XLMETA: "http://schemas.openxmlformats.org/officeDocument/2006/relationships/sheetMetadata",
 	TCMNT: "http://schemas.microsoft.com/office/2017/10/relationships/threadedComment",
 	PEOPLE: "http://schemas.microsoft.com/office/2017/10/relationships/person",
+	CONN: "http://schemas.openxmlformats.org/officeDocument/2006/relationships/connections",
 	VBA: "http://schemas.microsoft.com/office/2006/relationships/vbaProject"
 }/*:any*/);
-
 
 /* 9.3.3 Representing Relationships */
 function get_rels_path(file/*:string*/)/*:string*/ {
@@ -5780,7 +5820,7 @@ var SYLK = /*#__PURE__*/(function() {
 	var sylk_char_fn = function(_, $1){ var o = sylk_escapes[$1]; return typeof o == "number" ? _getansi(o) : o; };
 	var decode_sylk_char = function($$, $1, $2) { var newcc = (($1.charCodeAt(0) - 0x20)<<4) | ($2.charCodeAt(0) - 0x30); return newcc == 59 ? $$ : _getansi(newcc); };
 	sylk_escapes["|"] = 254;
-	/* TODO: find an actual specification */
+	/* https://oss.sheetjs.com/notes/sylk/ for more details */
 	function sylk_to_aoa(d/*:RawData*/, opts)/*:[AOA, Worksheet]*/ {
 		switch(opts.type) {
 			case 'base64': return sylk_to_aoa_str(Base64_decode(d), opts);
@@ -5796,6 +5836,7 @@ var SYLK = /*#__PURE__*/(function() {
 		var next_cell_format/*:string|null*/ = null;
 		var sht = {}, rowinfo/*:Array<RowInfo>*/ = [], colinfo/*:Array<ColInfo>*/ = [], cw/*:Array<string>*/ = [];
 		var Mval = 0, j;
+		var wb = { Workbook: { WBProps: {}, Names: [] } };
 		if(+opts.codepage >= 0) set_cp(+opts.codepage);
 		for (; ri !== records.length; ++ri) {
 			Mval = 0;
@@ -5806,19 +5847,34 @@ var SYLK = /*#__PURE__*/(function() {
 			case 'ID': break; /* header */
 			case 'E': break; /* EOF */
 			case 'B': break; /* dimensions */
-			case 'O': break; /* options? */
-			case 'W': break; /* window? */
+			case 'O': /* workbook options */
+			for(rj=1; rj<record.length; ++rj) switch(record[rj].charAt(0)) {
+				case 'V': {
+					var d1904 = parseInt(record[rj].slice(1), 10);
+					// NOTE: it is technically an error if d1904 >= 5 or < 0
+					if(d1904 >= 1 && d1904 <= 4) wb.Workbook.WBProps.date1904 = true;
+				} break;
+			} break;
+			case 'W': break; /* window */
 			case 'P':
-				if(record[1].charAt(0) == 'P')
-					formats.push(rstr.slice(3).replace(/;;/g, ";"));
-				break;
-			case 'C':
+				switch(record[1].charAt(0)){
+					case 'P': formats.push(rstr.slice(3).replace(/;;/g, ";")); break;
+				} break;
+			case 'NN': { /* defined name */
+				var nn = {Sheet: 0};
+				for(rj=1; rj<record.length; ++rj) switch(record[rj].charAt(0)) {
+					case 'N': nn.Name = record[rj].slice(1); break;
+					case 'E': nn.Ref = (opts && opts.sheet || "Sheet1") + "!" + rc_to_a1(record[rj].slice(1)); break;
+				}
+				wb.Workbook.Names.push(nn);
+			} break;
+			case 'C': /* cell */
 			var C_seen_K = false, C_seen_X = false, C_seen_S = false, C_seen_E = false, _R = -1, _C = -1;
 			for(rj=1; rj<record.length; ++rj) switch(record[rj].charAt(0)) {
 				case 'A': break; // TODO: comment
-				case 'X': C = parseInt(record[rj].slice(1))-1; C_seen_X = true; break;
+				case 'X': C = parseInt(record[rj].slice(1), 10)-1; C_seen_X = true; break;
 				case 'Y':
-					R = parseInt(record[rj].slice(1))-1; if(!C_seen_X) C = 0;
+					R = parseInt(record[rj].slice(1), 10)-1; if(!C_seen_X) C = 0;
 					for(j = arr.length; j <= R; ++j) arr[j] = [];
 					break;
 				case 'K':
@@ -5828,7 +5884,7 @@ var SYLK = /*#__PURE__*/(function() {
 					else if(val === 'FALSE') val = false;
 					else if(!isNaN(fuzzynum(val))) {
 						val = fuzzynum(val);
-						if(next_cell_format !== null && fmt_is_date(next_cell_format)) val = numdate(val);
+						if(next_cell_format !== null && fmt_is_date(next_cell_format)) val = numdate(wb.Workbook.WBProps.date1904 ? val + 1462 : val);
 					} else if(!isNaN(fuzzydate(val).getDate())) {
 						val = parseDate(val);
 					}
@@ -5845,8 +5901,8 @@ var SYLK = /*#__PURE__*/(function() {
 					arr[R][C] = [arr[R][C], "S5S"];
 					break;
 				case 'G': break; // unknown
-				case 'R': _R = parseInt(record[rj].slice(1))-1; break;
-				case 'C': _C = parseInt(record[rj].slice(1))-1; break;
+				case 'R': _R = parseInt(record[rj].slice(1), 10)-1; break;
+				case 'C': _C = parseInt(record[rj].slice(1), 10)-1; break;
 				default: if(opts && opts.WTF) throw new Error("SYLK bad record " + rstr);
 			}
 			if(C_seen_K) {
@@ -5861,19 +5917,19 @@ var SYLK = /*#__PURE__*/(function() {
 				arr[R][C][1] = shift_formula_str(shrbase[1], {r: R - _R, c: C - _C});
 			}
 			break;
-			case 'F':
+			case 'F': /* Format */
 			var F_seen = 0;
 			for(rj=1; rj<record.length; ++rj) switch(record[rj].charAt(0)) {
-				case 'X': C = parseInt(record[rj].slice(1))-1; ++F_seen; break;
+				case 'X': C = parseInt(record[rj].slice(1), 10)-1; ++F_seen; break;
 				case 'Y':
-					R = parseInt(record[rj].slice(1))-1; /*C = 0;*/
+					R = parseInt(record[rj].slice(1), 10)-1; /*C = 0;*/
 					for(j = arr.length; j <= R; ++j) arr[j] = [];
 					break;
-				case 'M': Mval = parseInt(record[rj].slice(1)) / 20; break;
+				case 'M': Mval = parseInt(record[rj].slice(1), 10) / 20; break;
 				case 'F': break; /* ??? */
 				case 'G': break; /* hide grid */
 				case 'P':
-					next_cell_format = formats[parseInt(record[rj].slice(1))];
+					next_cell_format = formats[parseInt(record[rj].slice(1), 10)];
 					break;
 				case 'S': break; /* cell style */
 				case 'D': break; /* column */
@@ -5882,14 +5938,14 @@ var SYLK = /*#__PURE__*/(function() {
 					cw = record[rj].slice(1).split(" ");
 					for(j = parseInt(cw[0], 10); j <= parseInt(cw[1], 10); ++j) {
 						Mval = parseInt(cw[2], 10);
-						colinfo[j-1] = Mval === 0 ? {hidden:true}: {wch:Mval}; process_col(colinfo[j-1]);
+						colinfo[j-1] = Mval === 0 ? {hidden:true}: {wch:Mval};
 					} break;
 				case 'C': /* default column format */
-					C = parseInt(record[rj].slice(1))-1;
+					C = parseInt(record[rj].slice(1), 10)-1;
 					if(!colinfo[C]) colinfo[C] = {};
 					break;
 				case 'R': /* row properties */
-					R = parseInt(record[rj].slice(1))-1;
+					R = parseInt(record[rj].slice(1), 10)-1;
 					if(!rowinfo[R]) rowinfo[R] = {};
 					if(Mval > 0) { rowinfo[R].hpt = Mval; rowinfo[R].hpx = pt2px(Mval); }
 					else if(Mval === 0) rowinfo[R].hidden = true;
@@ -5902,19 +5958,20 @@ var SYLK = /*#__PURE__*/(function() {
 		}
 		if(rowinfo.length > 0) sht['!rows'] = rowinfo;
 		if(colinfo.length > 0) sht['!cols'] = colinfo;
+		colinfo.forEach(function(col) { process_col(col); });
 		if(opts && opts.sheetRows) arr = arr.slice(0, opts.sheetRows);
-		return [arr, sht];
+		return [arr, sht, wb];
 	}
 
-	function sylk_to_sheet(d/*:RawData*/, opts)/*:Worksheet*/ {
+	function sylk_to_workbook(d/*:RawData*/, opts)/*:Workbook*/ {
 		var aoasht = sylk_to_aoa(d, opts);
-		var aoa = aoasht[0], ws = aoasht[1];
+		var aoa = aoasht[0], ws = aoasht[1], wb = aoasht[2];
 		var o = aoa_to_sheet(aoa, opts);
 		keys(ws).forEach(function(k) { o[k] = ws[k]; });
-		return o;
+		var outwb = sheet_to_workbook(o, opts);
+		keys(wb).forEach(function(k) { outwb[k] = wb[k]; });
+		return outwb;
 	}
-
-	function sylk_to_workbook(d/*:RawData*/, opts)/*:Workbook*/ { return sheet_to_workbook(sylk_to_sheet(d, opts), opts); }
 
 	function write_ws_cell_sylk(cell/*:Cell*/, ws/*:Worksheet*/, R/*:number*/, C/*:number*//*::, opts*/)/*:string*/ {
 		var o = "C;Y" + (R+1) + ";X" + (C+1) + ";K";
@@ -5954,7 +6011,7 @@ var SYLK = /*#__PURE__*/(function() {
 	}
 
 	function sheet_to_sylk(ws/*:Worksheet*/, opts/*:?any*/)/*:string*/ {
-		var preamble/*:Array<string>*/ = ["ID;PWXL;N;E"], o/*:Array<string>*/ = [];
+		var preamble/*:Array<string>*/ = ["ID;PSheetJS;N;E"], o/*:Array<string>*/ = [];
 		var r = safe_decode_range(ws['!ref']), cell/*:Cell*/;
 		var dense = Array.isArray(ws);
 		var RS = "\r\n";
@@ -5978,7 +6035,6 @@ var SYLK = /*#__PURE__*/(function() {
 
 	return {
 		to_workbook: sylk_to_workbook,
-		to_sheet: sylk_to_sheet,
 		from_sheet: sheet_to_sylk
 	};
 })();
@@ -7638,22 +7694,29 @@ function parse_drawing(data, rels/*:any*/) {
 }
 
 /* L.5.5.2 SpreadsheetML Comments + VML Schema */
-var _shapeid = 1024;
-function write_comments_vml(rId/*:number*/, comments) {
+function write_vml(rId/*:number*/, comments) {
 	var csize = [21600, 21600];
 	/* L.5.2.1.2 Path Attribute */
 	var bbox = ["m0,0l0",csize[1],csize[0],csize[1],csize[0],"0xe"].join(",");
 	var o = [
 		writextag("xml", null, { 'xmlns:v': XLMLNS.v, 'xmlns:o': XLMLNS.o, 'xmlns:x': XLMLNS.x, 'xmlns:mv': XLMLNS.mv }).replace(/\/>/,">"),
-		writextag("o:shapelayout", writextag("o:idmap", null, {'v:ext':"edit", 'data':rId}), {'v:ext':"edit"}),
-		writextag("v:shapetype", [
-			writextag("v:stroke", null, {joinstyle:"miter"}),
-			writextag("v:path", null, {gradientshapeok:"t", 'o:connecttype':"rect"})
-		].join(""), {id:"_x0000_t202", 'o:spt':202, coordsize:csize.join(","),path:bbox})
+		writextag("o:shapelayout", writextag("o:idmap", null, {'v:ext':"edit", 'data':rId}), {'v:ext':"edit"})
 	];
-	while(_shapeid < rId * 1000) _shapeid += 1000;
 
-	comments.forEach(function(x) {
+	var _shapeid = 65536 * rId;
+
+	var _comments = comments || [];
+	if(_comments.length > 0) o.push(writextag("v:shapetype", [
+		writextag("v:stroke", null, {joinstyle:"miter"}),
+		writextag("v:path", null, {gradientshapeok:"t", 'o:connecttype':"rect"})
+	].join(""), {id:"_x0000_t202", coordsize:csize.join(","), 'o:spt':202, path:bbox}));
+
+	_comments.forEach(function(x) { ++_shapeid; o.push(write_vml_comment(x, _shapeid)); });
+	o.push('</xml>');
+	return o.join("");
+}
+
+function write_vml_comment(x, _shapeid)/*:string*/ {
 	var c = decode_cell(x[0]);
 	var fillopts = /*::(*/{'color2':"#BEFF82", 'type':"gradient"}/*:: :any)*/;
 	if(fillopts.type == "gradient") fillopts.angle = "-180";
@@ -7661,9 +7724,8 @@ function write_comments_vml(rId/*:number*/, comments) {
 	var fillxml = writextag('v:fill', fillparm, fillopts);
 
 	var shadata = ({on:"t", 'obscured':"t"}/*:any*/);
-	++_shapeid;
 
-	o = o.concat([
+	return [
 	'<v:shape' + wxt_helper({
 		id:'_x0000_s' + _shapeid,
 		type:"#_x0000_t202",
@@ -7686,9 +7748,7 @@ function write_comments_vml(rId/*:number*/, comments) {
 			x[1].hidden ? '' : '<x:Visible/>',
 		'</x:ClientData>',
 	'</v:shape>'
-	]); });
-	o.push('</xml>');
-	return o.join("");
+	].join("");
 }
 function sheet_insert_comments(sheet, comments/*:Array<RawComment>*/, threaded/*:boolean*/, people/*:?Array<any>*/) {
 	var dense = Array.isArray(sheet);
@@ -8853,8 +8913,6 @@ function parse_chart(data/*:?string*/, name/*:string*/, opts, rels, wb, csheet) 
 	if(C > 0) cs["!ref"] = encode_range(refguess);
 	return cs;
 }
-RELS.CS = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/chartsheet";
-
 /* 18.3 Worksheets also covers Chartsheets */
 function parse_cs_xml(data/*:?string*/, opts, idx/*:number*/, rels, wb/*::, themes, styles*/)/*:Worksheet*/ {
 	if(!data) return data;
@@ -8873,16 +8931,16 @@ function parse_cs_xml(data/*:?string*/, opts, idx/*:number*/, rels, wb/*::, them
 	if(rels['!id'][s['!rel']]) s['!drawel'] = rels['!id'][s['!rel']];
 	return s;
 }
-function write_cs_xml(idx/*:number*/, opts, wb/*:Workbook*/, rels)/*:string*/ {
-	var o = [XML_HEADER, writextag('chartsheet', null, {
-		'xmlns': XMLNS_main[0],
-		'xmlns:r': XMLNS.r
-	})];
-	o[o.length] = writextag("drawing", null, {"r:id": "rId1"});
-	add_rels(rels, -1, "../drawings/drawing" + (idx+1) + ".xml", RELS.DRAW);
-	if(o.length>2) { o[o.length] = ('</chartsheet>'); o[1]=o[1].replace("/>",">"); }
-	return o.join("");
-}
+//function write_cs_xml(idx/*:number*/, opts, wb/*:Workbook*/, rels)/*:string*/ {
+//	var o = [XML_HEADER, writextag('chartsheet', null, {
+//		'xmlns': XMLNS_main[0],
+//		'xmlns:r': XMLNS.r
+//	})];
+//	o[o.length] = writextag("drawing", null, {"r:id": "rId1"});
+//	add_rels(rels, -1, "../drawings/drawing" + (idx+1) + ".xml", RELS.DRAW);
+//	if(o.length>2) { o[o.length] = ('</chartsheet>'); o[1]=o[1].replace("/>",">"); }
+//	return o.join("");
+//}
 /* 18.2.28 (CT_WorkbookProtection) Defaults */
 var WBPropsDef = [
 	['allowRefreshQuery',           false, "bool"],
@@ -9517,7 +9575,7 @@ function sheet_add_dom(ws/*:Worksheet*/, table/*:HTMLElement*/, _opts/*:?any*/)/
 			if(Aelts && Aelts.length) for(var Aelti = 0; Aelti < Aelts.length; ++Aelti)	if(Aelts[Aelti].hasAttribute("href")) {
 				l = Aelts[Aelti].getAttribute("href"); if(l.charAt(0) != "#") break;
 			}
-			if(l && l.charAt(0) != "#") o.l = ({ Target: l });
+			if(l && l.charAt(0) != "#" &&	l.slice(0, 11).toLowerCase() != 'javascript:') o.l = ({ Target: l });
 			if(opts.dense) { if(!ws[R + or_R]) ws[R + or_R] = []; ws[R + or_R][C + or_C] = o; }
 			else ws[encode_cell({c:C + or_C, r:R + or_R})] = o;
 			if(range.e.c < C + or_C) range.e.c = C + or_C;
@@ -9557,8 +9615,7 @@ function get_get_computed_style_function(element/*:HTMLElement*/)/*:?function*/ 
 	// If it is not available, try to get one from the global namespace
 	if(typeof getComputedStyle === 'function') return getComputedStyle;
 	return null;
-}
-/* OpenDocument */
+}/* OpenDocument */
 function parse_text_p(text/*:string*//*::, tag*/)/*:Array<any>*/ {
 	/* 6.1.2 White Space Characters */
 	var fixed = text
@@ -10760,7 +10817,6 @@ function parse_xlsxcfb(cfb, _opts/*:?ParseOpts*/)/*:Workbook*/ {
 }
 
 function write_zip_xlsb(wb/*:Workbook*/, opts/*:WriteOpts*/)/*:ZIP*/ {
-	_shapeid = 1024;
 	if(wb && !wb.SSF) {
 		wb.SSF = dup(table_fmt);
 	}
@@ -10839,7 +10895,7 @@ function write_zip_xlsb(wb/*:Workbook*/, opts/*:WriteOpts*/)/*:ZIP*/ {
 				need_vml = true;
 			}
 			if(ws['!legacy']) {
-				if(need_vml) zip_add_file(zip, "xl/drawings/vmlDrawing" + (rId) + ".vml", write_comments_vml(rId, ws['!comments']));
+				if(need_vml) zip_add_file(zip, "xl/drawings/vmlDrawing" + (rId) + ".vml", write_vml(rId, ws['!comments']));
 			}
 			delete ws['!comments'];
 			delete ws['!legacy'];
@@ -10895,7 +10951,6 @@ function write_zip_xlsb(wb/*:Workbook*/, opts/*:WriteOpts*/)/*:ZIP*/ {
 }
 
 function write_zip_xlsx(wb/*:Workbook*/, opts/*:WriteOpts*/)/*:ZIP*/ {
-	_shapeid = 1024;
 	if(wb && !wb.SSF) {
 		wb.SSF = dup(table_fmt);
 	}
@@ -10988,7 +11043,7 @@ function write_zip_xlsx(wb/*:Workbook*/, opts/*:WriteOpts*/)/*:ZIP*/ {
 				need_vml = true;
 			}
 			if(ws['!legacy']) {
-				if(need_vml) zip_add_file(zip, "xl/drawings/vmlDrawing" + (rId) + ".vml", write_comments_vml(rId, ws['!comments']));
+				if(need_vml) zip_add_file(zip, "xl/drawings/vmlDrawing" + (rId) + ".vml", write_vml(rId, ws['!comments']));
 			}
 			delete ws['!comments'];
 			delete ws['!legacy'];
@@ -11159,6 +11214,11 @@ function readSync(data/*:RawData*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
 		case 0x7B: if(n[1] === 0x5C && n[2] === 0x72 && n[3] === 0x74) return RTF.to_workbook(d, o); break;
 		case 0x0A: case 0x0D: case 0x20: return read_plaintext_raw(d, o);
 		case 0x89: if(n[1] === 0x50 && n[2] === 0x4E && n[3] === 0x47) throw new Error("PNG Image File is not a spreadsheet"); break;
+		case 0x08: if(n[1] === 0xE7) throw new Error("Unsupported Multiplan 1.x file!"); break;
+		case 0x0C:
+			if(n[1] === 0xEC) throw new Error("Unsupported Multiplan 2.x file!");
+			if(n[1] === 0xED) throw new Error("Unsupported Multiplan 3.x file!");
+			break;
 	}
 	if(DBF_SUPPORTED_VERSIONS.indexOf(n[0]) > -1 && n[2] <= 12 && n[3] <= 31) return DBF.to_workbook(d, o);
 	return read_prn(data, d, o, str);
@@ -11733,6 +11793,12 @@ function sheet_set_array_formula(ws/*:Worksheet*/, range, formula/*:string*/, dy
 			if(dynamic) cell.D = true;
 		}
 	}
+	var wsr = decode_range(ws["!ref"]);
+	if(wsr.s.r > rng.s.r) wsr.s.r = rng.s.r;
+	if(wsr.s.c > rng.s.c) wsr.s.c = rng.s.c;
+	if(wsr.e.r < rng.e.r) wsr.e.r = rng.e.r;
+	if(wsr.e.c < rng.e.c) wsr.e.c = rng.e.c;
+	ws["!ref"] = encode_range(wsr);
 	return ws;
 }
 
@@ -11794,6 +11860,7 @@ if(typeof CFB !== "undefined") XLSX.CFB = CFB;
 if(typeof require !== "undefined") {
   var strmod = require('stream');
   if((strmod||{}).Readable) set_readable(strmod.Readable);
+	try { _fs = require('fs'); } catch(e) {}
 }
 }
 /*global define */

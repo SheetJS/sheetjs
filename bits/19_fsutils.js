@@ -1,5 +1,5 @@
 var _fs;
-if(typeof require !== 'undefined') try { _fs = require('fs'); } catch(e) {}
+function set_fs(fs) { _fs = fs; }
 
 /* normalize data for blob ctor */
 function blobify(data) {

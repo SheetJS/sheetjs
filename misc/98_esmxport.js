@@ -12,6 +12,8 @@ export {
 	writeSyncXLSX as writeXLSX,
 	writeFileSyncXLSX as writeFileXLSX,
 	utils,
+	set_fs,
+	set_cptable,
 	__stream as stream,
 	SSF,
 	CFB

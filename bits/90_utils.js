@@ -365,7 +365,7 @@ function sheet_set_array_formula(ws/*:Worksheet*/, range, formula/*:string*/, dy
 	if(wsr.s.c > rng.s.c) wsr.s.c = rng.s.c;
 	if(wsr.e.r < rng.e.r) wsr.e.r = rng.e.r;
 	if(wsr.e.c < rng.e.c) wsr.e.c = rng.e.c;
-	ws["!ref"] = encode_range(ws["!ref"]);
+	ws["!ref"] = encode_range(wsr);
 	return ws;
 }
 

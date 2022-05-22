@@ -124,5 +124,5 @@ var __stream = {
 	to_json: write_json_stream,
 	to_html: write_html_stream,
 	to_csv: write_csv_stream,
-  set_readable: set_readable
+	set_readable: set_readable
 };

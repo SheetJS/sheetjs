@@ -177,45 +177,45 @@ var ct2type/*{[string]:string}*/ = ({
 }/*:any*/);
 
 var CT_LIST = {
-		workbooks: {
-			xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml",
-			xlsm: "application/vnd.ms-excel.sheet.macroEnabled.main+xml",
-			xlsb: "application/vnd.ms-excel.sheet.binary.macroEnabled.main",
-			xlam: "application/vnd.ms-excel.addin.macroEnabled.main+xml",
-			xltx: "application/vnd.openxmlformats-officedocument.spreadsheetml.template.main+xml"
-		},
-		strs: { /* Shared Strings */
-			xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml",
-			xlsb: "application/vnd.ms-excel.sharedStrings"
-		},
-		comments: { /* Comments */
-			xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.comments+xml",
-			xlsb: "application/vnd.ms-excel.comments"
-		},
-		sheets: { /* Worksheet */
-			xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml",
-			xlsb: "application/vnd.ms-excel.worksheet"
-		},
-		charts: { /* Chartsheet */
-			xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.chartsheet+xml",
-			xlsb: "application/vnd.ms-excel.chartsheet"
-		},
-		dialogs: { /* Dialogsheet */
-			xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.dialogsheet+xml",
-			xlsb: "application/vnd.ms-excel.dialogsheet"
-		},
-		macros: { /* Macrosheet (Excel 4.0 Macros) */
-			xlsx: "application/vnd.ms-excel.macrosheet+xml",
-			xlsb: "application/vnd.ms-excel.macrosheet"
-		},
-		metadata: { /* Metadata (Stock/Geography and Dynamic Array) */
-			xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheetMetadata+xml",
-			xlsb: "application/vnd.ms-excel.sheetMetadata"
-		},
-		styles: { /* Styles */
-			xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml",
-			xlsb: "application/vnd.ms-excel.styles"
-		}
+	workbooks: {
+		xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml",
+		xlsm: "application/vnd.ms-excel.sheet.macroEnabled.main+xml",
+		xlsb: "application/vnd.ms-excel.sheet.binary.macroEnabled.main",
+		xlam: "application/vnd.ms-excel.addin.macroEnabled.main+xml",
+		xltx: "application/vnd.openxmlformats-officedocument.spreadsheetml.template.main+xml"
+	},
+	strs: { /* Shared Strings */
+		xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml",
+		xlsb: "application/vnd.ms-excel.sharedStrings"
+	},
+	comments: { /* Comments */
+		xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.comments+xml",
+		xlsb: "application/vnd.ms-excel.comments"
+	},
+	sheets: { /* Worksheet */
+		xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml",
+		xlsb: "application/vnd.ms-excel.worksheet"
+	},
+	charts: { /* Chartsheet */
+		xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.chartsheet+xml",
+		xlsb: "application/vnd.ms-excel.chartsheet"
+	},
+	dialogs: { /* Dialogsheet */
+		xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.dialogsheet+xml",
+		xlsb: "application/vnd.ms-excel.dialogsheet"
+	},
+	macros: { /* Macrosheet (Excel 4.0 Macros) */
+		xlsx: "application/vnd.ms-excel.macrosheet+xml",
+		xlsb: "application/vnd.ms-excel.macrosheet"
+	},
+	metadata: { /* Metadata (Stock/Geography and Dynamic Array) */
+		xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheetMetadata+xml",
+		xlsb: "application/vnd.ms-excel.sheetMetadata"
+	},
+	styles: { /* Styles */
+		xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml",
+		xlsb: "application/vnd.ms-excel.styles"
+	}
 };
 
 function new_ct()/*:any*/ {
@@ -236,7 +236,7 @@ function parse_ct(data/*:?string*/) {
 		switch(y[0].replace(nsregex,"<")) {
 			case '<?xml': break;
 			case '<Types': ct.xmlns = y['xmlns' + (y[0].match(/<(\w+):/)||["",""])[1] ]; break;
-			case '<Default': ctext[y.Extension] = y.ContentType; break;
+			case '<Default': ctext[y.Extension.toLowerCase()] = y.ContentType; break;
 			case '<Override':
 				if(ct[ct2type[y.ContentType]] !== undefined) ct[ct2type[y.ContentType]].push(y.PartName);
 				break;
@@ -251,35 +251,37 @@ function parse_ct(data/*:?string*/) {
 	return ct;
 }
 
-function write_ct(ct, opts)/*:string*/ {
+function write_ct(ct, opts, raw)/*:string*/ {
 	var type2ct/*{[string]:Array<string>}*/ = evert_arr(ct2type);
 
 	var o/*:Array<string>*/ = [], v;
-	o[o.length] = (XML_HEADER);
-	o[o.length] = writextag('Types', null, {
-		'xmlns': XMLNS.CT,
-		'xmlns:xsd': XMLNS.xsd,
-		'xmlns:xsi': XMLNS.xsi
-	});
 
-	o = o.concat([
-		['xml', 'application/xml'],
-		['bin', 'application/vnd.ms-excel.sheet.binary.macroEnabled.main'],
-		['vml', 'application/vnd.openxmlformats-officedocument.vmlDrawing'],
-		['data', 'application/vnd.openxmlformats-officedocument.model+data'],
-		/* from test files */
-		['bmp', 'image/bmp'],
-		['png', 'image/png'],
-		['gif', 'image/gif'],
-		['emf', 'image/x-emf'],
-		['wmf', 'image/x-wmf'],
-		['jpg', 'image/jpeg'], ['jpeg', 'image/jpeg'],
-		['tif', 'image/tiff'], ['tiff', 'image/tiff'],
-		['pdf', 'application/pdf'],
-		['rels', 'application/vnd.openxmlformats-package.relationships+xml']
-	].map(function(x) {
-		return writextag('Default', null, {'Extension':x[0], 'ContentType': x[1]});
-	}));
+	if(!raw) {
+		o[o.length] = (XML_HEADER);
+		o[o.length] = writextag('Types', null, {
+			'xmlns': XMLNS.CT,
+			'xmlns:xsd': XMLNS.xsd,
+			'xmlns:xsi': XMLNS.xsi
+		});
+		o = o.concat([
+			['xml', 'application/xml'],
+			['bin', 'application/vnd.ms-excel.sheet.binary.macroEnabled.main'],
+			['vml', 'application/vnd.openxmlformats-officedocument.vmlDrawing'],
+			['data', 'application/vnd.openxmlformats-officedocument.model+data'],
+			/* from test files */
+			['bmp', 'image/bmp'],
+			['png', 'image/png'],
+			['gif', 'image/gif'],
+			['emf', 'image/x-emf'],
+			['wmf', 'image/x-wmf'],
+			['jpg', 'image/jpeg'], ['jpeg', 'image/jpeg'],
+			['tif', 'image/tiff'], ['tiff', 'image/tiff'],
+			['pdf', 'application/pdf'],
+			['rels', 'application/vnd.openxmlformats-package.relationships+xml']
+		].map(function(x) {
+			return writextag('Default', null, {'Extension':x[0], 'ContentType': x[1]});
+		}));
+	}
 
 	/* only write first instance */
 	var f1 = function(w) {
@@ -324,6 +326,6 @@ function write_ct(ct, opts)/*:string*/ {
 	f3('drawings');
 	f2('metadata');
 	f3('people');
-	if(o.length>2){ o[o.length] = ('</Types>'); o[1]=o[1].replace("/>",">"); }
+	if(!raw && o.length>2){ o[o.length] = ('</Types>'); o[1]=o[1].replace("/>",">"); }
 	return o.join("");
 }

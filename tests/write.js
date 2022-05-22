@@ -205,7 +205,7 @@ filenames.forEach(function(r) {
 	var ext = r[1] && r[1].bookType || r[0].split(".")[1];
 	ext = {"htm":"html"}[ext] || ext;
 	OUT.forEach(function(type) {
-		if(type == "string" && ["xlsx", "xlsm", "xlsb", "xlam", "biff8", "biff5", "biff2", "xla", "ods", "dbf"].indexOf(ext) > -1) return;
+		if(type == "string" && ["xlsx", "xlsm", "xlsb", "xlam", "xls", "biff8", "biff5", "biff2", "xla", "ods", "dbf"].indexOf(ext) > -1) return;
 		if(type == "array" && ["xlsx", "xlsm", "xlsb", "xlam", "ods"].indexOf(ext) > -1 && typeof Uint8Array === 'undefined') return;
 		var datout = XLSX.write(wb, {type: type, bookType: ext, sheet:r[1] && r[1].sheet || null});
 		XLSX.read(datout, {type:type});

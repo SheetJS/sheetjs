@@ -224,10 +224,11 @@ var paths: any = {
 	rhslk:  dir + 'row_height.slk',
 
 	svxls:  dir + 'sheet_visibility.xls',
-	svxls5: dir + 'sheet_visibility.xls',
+	svxls5: dir + 'sheet_visibility5.xls',
 	svxml:  dir + 'sheet_visibility.xml',
 	svxlsx: dir + 'sheet_visibility.xlsx',
 	svxlsb: dir + 'sheet_visibility.xlsb',
+	svods:  dir + 'sheet_visibility.ods',
 
 	swcxls: dir + 'apachepoi_SimpleWithComments.xls',
 	swcxml: dir + '2011/apachepoi_SimpleWithComments.xls.xml',
@@ -1602,7 +1603,10 @@ Deno.test('roundtrip features', async function(t) {
 	await t.step('should preserve sheet visibility', async function(t) { var sv = [
 			['xlml', paths.svxml],
 			['xlsx', paths.svxlsx],
-			['xlsb', paths.svxlsb]
+			['xlsb', paths.svxlsb],
+			['xls', paths.svxls],
+			['biff5', paths.svxls5]
+			// ['ods', paths.svods]
 		] as Array<[X.BookType, string]>; for(var s1 = 0; s1 < sv.length; ++s1) { var w = sv[s1];
 			await t.step(w[0], async function(t) {
 				var wb1 = X.read(fs.readFileSync(w[1]), {type:TYPE});

@@ -16,4 +16,5 @@ if(typeof CFB !== "undefined") XLSX.CFB = CFB;
 if(typeof require !== "undefined") {
   var strmod = require('stream');
   if((strmod||{}).Readable) set_readable(strmod.Readable);
+	try { _fs = require('fs'); } catch(e) {}
 }

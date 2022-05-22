@@ -151,10 +151,11 @@
 ./test_files/smart_tags_2007.xlsx
 ./test_files/smart_tags_2007.xml
 ./test_files/sheet_visibility.xls
-./test_files/sheet_visibility.xls
+./test_files/sheet_visibility5.xls
 ./test_files/sheet_visibility.xml
 ./test_files/sheet_visibility.xlsx
 ./test_files/sheet_visibility.xlsb
+./test_files/sheet_visibility.ods
 ./test_files/sushi.xls
 ./test_files/sushi.xlsb
 ./test_files/sushi.xlsx

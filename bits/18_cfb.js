@@ -220,7 +220,7 @@ function parse_extra_field(blob/*:CFBlob*/)/*:any*/ {
 	return o;
 }
 var fs/*:: = require('fs'); */;
-function get_fs() { return fs || (fs = require('fs')); }
+function get_fs() { return fs || (fs = _fs); }
 function parse(file/*:RawBytes*/, options/*:CFBReadOpts*/)/*:CFBContainer*/ {
 if(file[0] == 0x50 && file[1] == 0x4b) return parse_zip(file, options);
 if((file[0] | 0x20) == 0x6d && (file[1]|0x20) == 0x69) return parse_mad(file, options);

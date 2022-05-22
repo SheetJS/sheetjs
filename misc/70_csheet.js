@@ -1,5 +1,3 @@
-RELS.CS = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/chartsheet";
-
 /* 18.3 Worksheets also covers Chartsheets */
 function parse_cs_xml(data/*:?string*/, opts, idx/*:number*/, rels, wb/*::, themes, styles*/)/*:Worksheet*/ {
 	if(!data) return data;
@@ -18,13 +16,13 @@ function parse_cs_xml(data/*:?string*/, opts, idx/*:number*/, rels, wb/*::, them
 	if(rels['!id'][s['!rel']]) s['!drawel'] = rels['!id'][s['!rel']];
 	return s;
 }
-function write_cs_xml(idx/*:number*/, opts, wb/*:Workbook*/, rels)/*:string*/ {
-	var o = [XML_HEADER, writextag('chartsheet', null, {
-		'xmlns': XMLNS_main[0],
-		'xmlns:r': XMLNS.r
-	})];
-	o[o.length] = writextag("drawing", null, {"r:id": "rId1"});
-	add_rels(rels, -1, "../drawings/drawing" + (idx+1) + ".xml", RELS.DRAW);
-	if(o.length>2) { o[o.length] = ('</chartsheet>'); o[1]=o[1].replace("/>",">"); }
-	return o.join("");
-}
+//function write_cs_xml(idx/*:number*/, opts, wb/*:Workbook*/, rels)/*:string*/ {
+//	var o = [XML_HEADER, writextag('chartsheet', null, {
+//		'xmlns': XMLNS_main[0],
+//		'xmlns:r': XMLNS.r
+//	})];
+//	o[o.length] = writextag("drawing", null, {"r:id": "rId1"});
+//	add_rels(rels, -1, "../drawings/drawing" + (idx+1) + ".xml", RELS.DRAW);
+//	if(o.length>2) { o[o.length] = ('</chartsheet>'); o[1]=o[1].replace("/>",">"); }
+//	return o.join("");
+//}
