@@ -927,6 +927,7 @@ function choose_fmt(f, v) {
 	}
 	return [l, ff];
 }
+SSF.choose_format = choose_fmt;	
 function format(fmt,v,o) {
 	if(o == null) o = {};
 	var sfmt = "";
