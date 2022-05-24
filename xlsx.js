@@ -5571,7 +5571,7 @@ function parse_ext_props(data, p, opts) {
 function write_ext_props(cp) {
 	var o = [], W = writextag;
 	if(!cp) cp = {};
-	cp.Application = "SheetJS";
+	if(!cp.Application) cp.Application = "SheetJS";
 	o[o.length] = (XML_HEADER);
 	o[o.length] = (writextag('Properties', null, {
 		'xmlns': XMLNS.EXT_PROPS,
