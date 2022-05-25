@@ -234,7 +234,7 @@ function parse_xlml_xml(d, _opts)/*:Workbook*/ {
 		case 'cell' /*case 'Cell'*/:
 			if(Rn[1]==='/'){
 				if(comments.length > 0) cell.c = comments;
-				if((!opts.sheetRows || opts.sheetRows > r) && cell.v !== undefined) {
+				if((!opts.sheetRows || opts.sheetRows > r) && cell.v !== void 0) {
 					if(opts.dense) {
 						if(!cursheet[r]) cursheet[r] = [];
 						cursheet[r][c] = cell;
@@ -248,7 +248,7 @@ function parse_xlml_xml(d, _opts)/*:Workbook*/ {
 				if(cell.MergeAcross || cell.MergeDown) {
 					cc = c + (parseInt(cell.MergeAcross,10)|0);
 					rr = r + (parseInt(cell.MergeDown,10)|0);
-					merges.push({s:{c:c,r:r},e:{c:cc,r:rr}});
+					if(cc > c || rr > r) merges.push({s:{c:c,r:r},e:{c:cc,r:rr}});
 				}
 				if(!opts.sheetStubs) { if(cell.MergeAcross) c = cc + 1; else ++c; }
 				else if(cell.MergeAcross || cell.MergeDown) {
@@ -348,6 +348,7 @@ function parse_xlml_xml(d, _opts)/*:Workbook*/ {
 
 		case 'column' /*case 'Column'*/:
 			if(state[state.length-1][0] !== /*'Table'*/'table') break;
+			if(Rn[1]==='/') break;
 			csty = xlml_parsexmltag(Rn[0]);
 			if(csty.Hidden) { csty.hidden = true; delete csty.Hidden; }
 			if(csty.Width) csty.wpx = parseInt(csty.Width, 10);

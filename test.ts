@@ -1183,14 +1183,15 @@ Deno.test('parse features', async function(t) {
 	}); } });
 
 	await t.step('defined names unicode', async function(t) {var dnu=[
-		/* desc     path      */
-		['xlsx', paths.dnuxlsx],
-		['xlsb', paths.dnuxlsb],
-		['ods',  paths.dnuods ],
-		['xls',  paths.dnuxls ],
-		['xlml', paths.dnuxml ]
+		/* desc     path          RT */
+		['xlsx', paths.dnuxlsx,  true],
+		['xlsb', paths.dnuxlsb,  true],
+		['ods',  paths.dnuods,   true],
+		['xls',  paths.dnuxls,  false],
+		['xlml', paths.dnuxml,  false]
 	]; for(var i = 0; i < dnu.length; ++i) { let m = dnu[i]; await t.step(m[0], async function(t) {
 		var wb = X.read(fs.readFileSync(m[1]), {type:TYPE});
+		var wb2 = X.read(X.write(wb, {type:TYPE, bookType: m[0]}), {type:TYPE});
 		[
 			"NoContainsJapanese",
 			"\u65E5\u672C\u8a9e\u306e\u307f",
@@ -1205,14 +1206,14 @@ Deno.test('parse features', async function(t) {
 			["sheet\u65e5\u672c\u8a9e", "sheet\u65e5\u672c\u8a9e!$A$1"],
 			["\u65e5\u672c\u8a9e", "NoContainsJapanese!$A$1"],
 			["\u65e5\u672c\u8a9ename", "\u65e5\u672c\u8a9esheet!$I$2"]
-		].forEach(function(n) {
+		].forEach(function(n) {(m[2] ? [ wb, wb2 ] : [ wb ]).forEach(function(wb) {
 			var DN = null;
 			var arr = wb?.Workbook?.Names;
 			if(arr) for(var j = 0; j < arr.length; ++j) if(arr[j]?.Name == n?.[0]) DN = arr[j];
 			assert.assert(DN);
 			// $FlowIgnore
 			assert.equal(DN?.Ref, n?.[1]);
-		});
+		}); });
 	}); } });
 
 	await t.step('workbook codename unicode', async function(t) {

@@ -30,6 +30,18 @@ var write_styles_ods/*:{(wb:any, opts:any):string}*/ = /* @__PURE__ */(function(
 		return XML_HEADER + payload;
 	};
 })();
+function write_names_ods(Names, SheetNames, idx) {
+	var scoped = Names.filter(function(name) { return name.Sheet == (idx == -1 ? null : idx); });
+	if(!scoped.length) return "";
+	return "      <table:named-expressions>\n" + scoped.map(function(name) {
+		var odsref =  csf_to_ods_3D(name.Ref);
+		return "        " + writextag("table:named-range", null, {
+			"table:name": name.Name,
+			"table:cell-range-address": odsref,
+			"table:base-cell-address": odsref.replace(/[\.]?[^\.]*$/, ".$A$1")
+		});
+	}).join("\n") + "\n      </table:named-expressions>\n";
+}
 var write_content_ods/*:{(wb:any, opts:any):string}*/ = /* @__PURE__ */(function() {
 	/* 6.1.2 White Space Characters */
 	var write_text_p = function(text/*:string*/)/*:string*/ {
@@ -122,6 +134,7 @@ var write_content_ods/*:{(wb:any, opts:any):string}*/ = /* @__PURE__ */(function
 			}
 			o.push('        </table:table-row>\n');
 		}
+		if((wb.Workbook||{}).Names) o.push(write_names_ods(wb.Workbook.Names, wb.SheetNames, i));
 		o.push('      </table:table>\n');
 		return o.join("");
 	};
@@ -243,6 +256,7 @@ var write_content_ods/*:{(wb:any, opts:any):string}*/ = /* @__PURE__ */(function
 		o.push('  <office:body>\n');
 		o.push('    <office:spreadsheet>\n');
 		for(var i = 0; i != wb.SheetNames.length; ++i) o.push(write_ws(wb.Sheets[wb.SheetNames[i]], wb, i, opts));
+		if((wb.Workbook||{}).Names) o.push(write_names_ods(wb.Workbook.Names, wb.SheetNames, -1));
 		o.push('    </office:spreadsheet>\n');
 		o.push('  </office:body>\n');
 		if(opts.bookType == "fods") o.push('</office:document>');

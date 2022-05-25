@@ -8,9 +8,9 @@ var aux = [
 ]
 var fullpaths = paths.concat(aux);
 fs.writeFileSync('tests/fixtures.js',
-  fullpaths.map(function(x) {
-    return [x, fs.existsSync(x) ? fs.readFileSync(x).toString('base64') : ""]
-  }).map(function(w) {
-    return "fs['" + w[0] + "'] = '" + w[1] + "';\n";
-  }).join("")
+	fullpaths.map(function(x) {
+		return [x, fs.existsSync(x) ? fs.readFileSync(x).toString('base64') : ""]
+	}).map(function(w) {
+		return "fs['" + w[0] + "'] = '" + w[1] + "';\n";
+	}).join("")
 );

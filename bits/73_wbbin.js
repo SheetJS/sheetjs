@@ -82,6 +82,32 @@ function parse_BrtName(data, length, opts) {
 	if(comment) out.Comment = comment;
 	return out;
 }
+function write_BrtName(name, wb) {
+	var o = new_buf(9);
+	o.write_shift(4, 0); // flags
+	o.write_shift(1, 0); // chKey
+	o.write_shift(4, name.Sheet == null ? 0xFFFFFFFF : name.Sheet);
+
+	var arr = [
+		o,
+		write_XLWideString(name.Name),
+		write_XLSBNameParsedFormula(name.Ref, wb),
+	];
+	if(name.Comment) arr.push(write_XLNullableWideString(name.Comment))
+	else {
+		var x = new_buf(4);
+		x.write_shift(4, 0xFFFFFFFF);
+		arr.push(x);
+	}
+
+	// if macro (flags & 0x0F):
+	// write_shift(4, 0xFFFFFFFF);
+	// write_XLNullableWideString(description)
+	// write_XLNullableWideString(helpTopic)
+	// write_shift(4, 0xFFFFFFFF);
+
+	return bconcat(arr); 
+}
 
 /* [MS-XLSB] 2.1.7.61 Workbook */
 function parse_wb_bin(data, opts)/*:WorkbookFile*/ {
@@ -246,6 +272,32 @@ function write_BOOKVIEWS(ba, wb/*::, opts*/) {
 	write_record(ba, 0x0088 /* BrtEndBookViews */);
 }
 
+function write_BRTNAMES(ba, wb) {
+	if(!wb.Workbook || !wb.Workbook.Names) return;
+	wb.Workbook.Names.forEach(function(name) { try {
+		write_record(ba, 0x0027 /* BrtName */, write_BrtName(name, wb));
+	} catch(e) {
+		console.error("Could not serialize defined name " + JSON.stringify(name));
+	} });
+}
+
+function write_SELF_EXTERNS_xlsb(wb) {
+	var L = wb.SheetNames.length;
+	var o = new_buf(12 * L + 16);
+	o.write_shift(4, L + 1);
+	o.write_shift(4, 0); o.write_shift(4, -2); o.write_shift(4, -2); // workbook-level reference
+	for(var i = 0; i < L; ++i) {
+		o.write_shift(4, 0); o.write_shift(4, i); o.write_shift(4, i);
+	}
+	return o;
+}
+function write_EXTERNALS_xlsb(ba, wb) {
+	write_record(ba, 0x0161 /* BrtBeginExternals */);
+	write_record(ba, 0x0165 /* BrtSupSelf */);
+	write_record(ba, 0x016A /* BrtExternSheet */, write_SELF_EXTERNS_xlsb(wb, 0));
+	write_record(ba, 0x0162 /* BrtEndExternals */);
+}
+
 /* [MS-XLSB] 2.4.305 BrtCalcProp */
 /*function write_BrtCalcProp(data, o) {
 	if(!o) o = new_buf(26);
@@ -278,8 +330,8 @@ function write_wb_bin(wb, opts) {
 	write_BOOKVIEWS(ba, wb, opts);
 	write_BUNDLESHS(ba, wb, opts);
 	/* [FNGROUP] */
-	/* [EXTERNALS] */
-	/* *BrtName */
+	write_EXTERNALS_xlsb(ba, wb);
+	if((wb.Workbook||{}).Names) write_BRTNAMES(ba, wb);
 	/* write_record(ba, 0x009D BrtCalcProp, write_BrtCalcProp()); */
 	/* [BrtOleSize] */
 	/* *(BrtUserBookView *FRT) */
