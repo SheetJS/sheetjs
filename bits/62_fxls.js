@@ -688,6 +688,15 @@ var PtgBinOp = {
 	PtgSub: "-"
 };
 
+// TODO: explore space
+function make_3d_range(start, end) {
+	var s = start.lastIndexOf("!"), e = end.lastIndexOf("!");
+	if(s == -1 && e == -1) return start + ":" + end;
+	if(s > 0 && e > 0 && start.slice(0, s).toLowerCase() == end.slice(0, e).toLowerCase()) return start + ":" + end.slice(e+1);
+	console.error("Cannot hydrate range", start, end);
+	return start + ":" + end;
+}
+
 // List of invalid characters needs to be tested further
 function formula_quote_sheet_name(sname/*:string*/, opts)/*:string*/ {
 	if(!sname && !(opts && opts.biff <= 5 && opts.biff >= 2)) throw new Error("empty sheet name");
@@ -790,7 +799,7 @@ function stringify_formula(formula/*Array<any>*/, range, cell/*:any*/, supbooks,
 				break;
 			case 'PtgRange': /* [MS-XLS] 2.5.198.83 */
 				e1 = stack.pop(); e2 = stack.pop();
-				stack.push(e2+":"+e1);
+				stack.push(make_3d_range(e2,e1));
 				break;
 
 			case 'PtgAttrChoose': /* [MS-XLS] 2.5.198.34 */

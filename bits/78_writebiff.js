@@ -242,6 +242,7 @@ function write_ws_biff8(idx/*:number*/, opts, wb/*:Workbook*/) {
 	/* ... */
 
 	if(b8) ws['!links'] = [];
+	var comments = [];
 	for(var R = range.s.r; R <= range.e.r; ++R) {
 		rr = encode_row(R);
 		for(var C = range.s.c; C <= range.e.c; ++C) {
@@ -252,9 +253,12 @@ function write_ws_biff8(idx/*:number*/, opts, wb/*:Workbook*/) {
 			/* write cell */
 			write_ws_biff8_cell(ba, cell, R, C, opts);
 			if(b8 && cell.l) ws['!links'].push([ref, cell.l]);
+			if(b8 && cell.c) comments.push([ref, cell.c]);
 		}
 	}
 	var cname/*:string*/ = _sheet.CodeName || _sheet.name || s;
+	/* ... */
+	// if(b8) comments.forEach(function(comment) { write_biff_rec(ba, 0x001c /* Note */, write_NoteSh(comment)); });
 	/* ... */
 	if(b8) write_biff_rec(ba, 0x023e /* Window2 */, write_Window2((_WB.Views||[])[0]));
 	/* ... */

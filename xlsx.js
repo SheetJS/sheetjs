@@ -13042,6 +13042,15 @@ var PtgBinOp = {
 	PtgSub: "-"
 };
 
+// TODO: explore space
+function make_3d_range(start, end) {
+	var s = start.lastIndexOf("!"), e = end.lastIndexOf("!");
+	if(s == -1 && e == -1) return start + ":" + end;
+	if(s > 0 && e > 0 && start.slice(0, s).toLowerCase() == end.slice(0, e).toLowerCase()) return start + ":" + end.slice(e+1);
+	console.error("Cannot hydrate range", start, end);
+	return start + ":" + end;
+}
+
 // List of invalid characters needs to be tested further
 function formula_quote_sheet_name(sname, opts) {
 	if(!sname && !(opts && opts.biff <= 5 && opts.biff >= 2)) throw new Error("empty sheet name");
@@ -13144,7 +13153,7 @@ function stringify_formula(formula/*Array<any>*/, range, cell, supbooks, opts) {
 				break;
 			case 'PtgRange': /* [MS-XLS] 2.5.198.83 */
 				e1 = stack.pop(); e2 = stack.pop();
-				stack.push(e2+":"+e1);
+				stack.push(make_3d_range(e2,e1));
 				break;
 
 			case 'PtgAttrChoose': /* [MS-XLS] 2.5.198.34 */
@@ -13590,7 +13599,7 @@ function write_XLSBFormulaRef3D(str, wb) {
 	var out = new_buf(17);
 	out.write_shift(4, 9);
 	out.write_shift(1, 0x1A | ((1)<<5));
-	out.write_shift(2, 1 + wb.SheetNames.map(function(n) { return n.toLowerCase(); }).indexOf(sname.toLowerCase()));
+	out.write_shift(2, 2 + wb.SheetNames.map(function(n) { return n.toLowerCase(); }).indexOf(sname.toLowerCase()));
 	out.write_shift(4, cell.r);
 	out.write_shift(2, cell.c | ((str.charAt(0) == "$" ? 0 : 1)<<14) | ((str.match(/\$\d/) ? 0 : 1)<<15)); // <== ColRelShort
 	out.write_shift(4, 0);
@@ -13598,13 +13607,121 @@ function write_XLSBFormulaRef3D(str, wb) {
 	return out;
 }
 
+/* Writes a PtgRefErr3d */
+function write_XLSBFormulaRefErr3D(str, wb) {
+	var lastbang = str.lastIndexOf("!");
+	var sname = str.slice(0, lastbang);
+	str = str.slice(lastbang+1);
+	if(sname.charAt(0) == "'") sname = sname.slice(1, -1).replace(/''/g, "'");
+
+	var out = new_buf(17);
+	out.write_shift(4, 9);
+	out.write_shift(1, 0x1C | ((1)<<5));
+	out.write_shift(2, 2 + wb.SheetNames.map(function(n) { return n.toLowerCase(); }).indexOf(sname.toLowerCase()));
+	out.write_shift(4, 0);
+	out.write_shift(2, 0); // <== ColRelShort
+	out.write_shift(4, 0);
+
+	return out;
+}
+
+/* Writes a single sheet range [PtgRef PtgRef PtgRange] */
+function write_XLSBFormulaRange(_str) {
+	var parts = _str.split(":"), str = parts[0];
+
+	var out = new_buf(23);
+	out.write_shift(4, 15);
+
+	/* start cell */
+	str = parts[0]; var cell = decode_cell(str);
+	out.write_shift(1, 0x04 | ((1)<<5));
+	out.write_shift(4, cell.r);
+	out.write_shift(2, cell.c | ((str.charAt(0) == "$" ? 0 : 1)<<14) | ((str.match(/\$\d/) ? 0 : 1)<<15)); // <== ColRelShort
+	out.write_shift(4, 0);
+
+	/* end cell */
+	str = parts[1]; cell = decode_cell(str);
+	out.write_shift(1, 0x04 | ((1)<<5));
+	out.write_shift(4, cell.r);
+	out.write_shift(2, cell.c | ((str.charAt(0) == "$" ? 0 : 1)<<14) | ((str.match(/\$\d/) ? 0 : 1)<<15)); // <== ColRelShort
+	out.write_shift(4, 0);
+
+	/* PtgRange */
+	out.write_shift(1, 0x11);
+
+	out.write_shift(4, 0);
+
+	return out;
+}
+
+/* Writes a range with explicit sheet name [PtgRef3D PtgRef3D PtgRange] */
+function write_XLSBFormulaRangeWS(_str, wb) {
+	var lastbang = _str.lastIndexOf("!");
+	var sname = _str.slice(0, lastbang);
+	_str = _str.slice(lastbang+1);
+	if(sname.charAt(0) == "'") sname = sname.slice(1, -1).replace(/''/g, "'");
+	var parts = _str.split(":"); str = parts[0];
+
+	var out = new_buf(27);
+	out.write_shift(4, 19);
+
+	/* start cell */
+	var str = parts[0], cell = decode_cell(str);
+	out.write_shift(1, 0x1A | ((1)<<5));
+	out.write_shift(2, 2 + wb.SheetNames.map(function(n) { return n.toLowerCase(); }).indexOf(sname.toLowerCase()));
+	out.write_shift(4, cell.r);
+	out.write_shift(2, cell.c | ((str.charAt(0) == "$" ? 0 : 1)<<14) | ((str.match(/\$\d/) ? 0 : 1)<<15)); // <== ColRelShort
+
+	/* end cell */
+	str = parts[1]; cell = decode_cell(str);
+	out.write_shift(1, 0x1A | ((1)<<5));
+	out.write_shift(2, 2 + wb.SheetNames.map(function(n) { return n.toLowerCase(); }).indexOf(sname.toLowerCase()));
+	out.write_shift(4, cell.r);
+	out.write_shift(2, cell.c | ((str.charAt(0) == "$" ? 0 : 1)<<14) | ((str.match(/\$\d/) ? 0 : 1)<<15)); // <== ColRelShort
+
+	/* PtgRange */
+	out.write_shift(1, 0x11);
+
+	out.write_shift(4, 0);
+
+	return out;
+}
+
+/* Writes a range with explicit sheet name [PtgArea3d] */
+function write_XLSBFormulaArea3D(_str, wb) {
+	var lastbang = _str.lastIndexOf("!");
+	var sname = _str.slice(0, lastbang);
+	_str = _str.slice(lastbang+1);
+	if(sname.charAt(0) == "'") sname = sname.slice(1, -1).replace(/''/g, "'");
+	var range = decode_range(_str);
+
+	var out = new_buf(23);
+	out.write_shift(4, 15);
+
+	out.write_shift(1, 0x1B | ((1)<<5));
+	out.write_shift(2, 2 + wb.SheetNames.map(function(n) { return n.toLowerCase(); }).indexOf(sname.toLowerCase()));
+	out.write_shift(4, range.s.r);
+	out.write_shift(4, range.e.r);
+	out.write_shift(2, range.s.c);
+	out.write_shift(2, range.e.c);
+
+	out.write_shift(4, 0);
+
+	return out;
+}
+
+
 /* General Formula */
 function write_XLSBFormula(val, wb) {
 	if(/^#(DIV\/0!|GETTING_DATA|N\/A|NAME\?|NULL!|NUM!|REF!|VALUE!)$/.test(val)) return write_XLSBFormulaErr(+RBErr[val]);
 	if(val.match(/^\$?(?:[A-W][A-Z]{2}|X[A-E][A-Z]|XF[A-D]|[A-Z]{1,2})\$?(?:10[0-3]\d{4}|104[0-7]\d{3}|1048[0-4]\d{2}|10485[0-6]\d|104857[0-6]|[1-9]\d{0,5})$/)) return write_XLSBFormulaRef(val);
-	if(val.match(/^(?:'[^\\\/?*\[\]:]*'|[^'][^\\\/?*\[\]:'`~!@#$%^()\-_=+{}|;,<.>]*)!\$?(?:[A-W][A-Z]{2}|X[A-E][A-Z]|XF[A-D]|[A-Z]{1,2})\$?(?:10[0-3]\d{4}|104[0-7]\d{3}|1048[0-4]\d{2}|10485[0-6]\d|104857[0-6]|[1-9]\d{0,5})$/)) return write_XLSBFormulaRef3D(val, wb);
-	if(val.match(/^".*"$/)) return write_XLSBFormulaStr(val);
-	if(val.match(/^\d+$/)) return write_XLSBFormulaNum(parseInt(val, 10));
+	if(val.match(/^\$?(?:[A-W][A-Z]{2}|X[A-E][A-Z]|XF[A-D]|[A-Z]{1,2})\$?(?:10[0-3]\d{4}|104[0-7]\d{3}|1048[0-4]\d{2}|10485[0-6]\d|104857[0-6]|[1-9]\d{0,5}):\$?(?:[A-W][A-Z]{2}|X[A-E][A-Z]|XF[A-D]|[A-Z]{1,2})\$?(?:10[0-3]\d{4}|104[0-7]\d{3}|1048[0-4]\d{2}|10485[0-6]\d|104857[0-6]|[1-9]\d{0,5})$/)) return write_XLSBFormulaRange(val);
+	if(val.match(/^#REF!\$?(?:[A-W][A-Z]{2}|X[A-E][A-Z]|XF[A-D]|[A-Z]{1,2})\$?(?:10[0-3]\d{4}|104[0-7]\d{3}|1048[0-4]\d{2}|10485[0-6]\d|104857[0-6]|[1-9]\d{0,5}):\$?(?:[A-W][A-Z]{2}|X[A-E][A-Z]|XF[A-D]|[A-Z]{1,2})\$?(?:10[0-3]\d{4}|104[0-7]\d{3}|1048[0-4]\d{2}|10485[0-6]\d|104857[0-6]|[1-9]\d{0,5})$/)) return write_XLSBFormulaArea3D(val, wb);
+	if(val.match(/^(?:'[^\\\/?*\[\]:]*'|[^'][^\\\/?*\[\]:'`~!@#$%^()\-=+{}|;,<.>]*)!\$?(?:[A-W][A-Z]{2}|X[A-E][A-Z]|XF[A-D]|[A-Z]{1,2})\$?(?:10[0-3]\d{4}|104[0-7]\d{3}|1048[0-4]\d{2}|10485[0-6]\d|104857[0-6]|[1-9]\d{0,5})$/)) return write_XLSBFormulaRef3D(val, wb);
+	if(val.match(/^(?:'[^\\\/?*\[\]:]*'|[^'][^\\\/?*\[\]:'`~!@#$%^()\-=+{}|;,<.>]*)!\$?(?:[A-W][A-Z]{2}|X[A-E][A-Z]|XF[A-D]|[A-Z]{1,2})\$?(?:10[0-3]\d{4}|104[0-7]\d{3}|1048[0-4]\d{2}|10485[0-6]\d|104857[0-6]|[1-9]\d{0,5}):\$?(?:[A-W][A-Z]{2}|X[A-E][A-Z]|XF[A-D]|[A-Z]{1,2})\$?(?:10[0-3]\d{4}|104[0-7]\d{3}|1048[0-4]\d{2}|10485[0-6]\d|104857[0-6]|[1-9]\d{0,5})$/)) return write_XLSBFormulaRangeWS(val, wb);
+	if(/^(?:'[^\\\/?*\[\]:]*'|[^'][^\\\/?*\[\]:'`~!@#$%^()\-=+{}|;,<.>]*)!#REF!$/.test(val)) return write_XLSBFormulaRefErr3D(val, wb);
+	if(/^".*"$/.test(val)) return write_XLSBFormulaStr(val);
+	if(/^[+-]\d+$/.test(val)) return write_XLSBFormulaNum(parseInt(val, 10));
 	throw "Formula |" + val + "| not supported for XLSB";
 }
 var write_XLSBNameParsedFormula = write_XLSBFormula;
@@ -14752,6 +14869,8 @@ function ods_to_csf_formula(f) {
 	f = f.replace(/COM\.MICROSOFT\./g, "");
 	/* Part 3 Section 5.8 References */
 	f = f.replace(/\[((?:\.[A-Z]+[0-9]+)(?::\.[A-Z]+[0-9]+)?)\]/g, function($$, $1) { return $1.replace(/\./g,""); });
+	f = f.replace(/\$'([^']|'')+'/g, function($$) { return $$.slice(1); });
+	f = f.replace(/\$([^\]\. #$]+)/g, function($$, $1) { return ($1).match(/^([A-Z]{1,2}|[A-W][A-Z]{2}|X[A-E][A-Z]|XF[A-D])?(10[0-3]\d{4}|104[0-7]\d{3}|1048[0-4]\d{2}|10485[0-6]\d|104857[0-6]|[1-9]\d{0,5})?$/) ? $$ : $1; });
 	/* TODO: something other than this */
 	f = f.replace(/\[.(#[A-Z]*[?!])\]/g, "$1");
 	return f.replace(/[;~]/g,",").replace(/\|/g,";");
@@ -14764,6 +14883,8 @@ function csf_to_ods_formula(f) {
 }
 
 function ods_to_csf_3D(r) {
+	r = r.replace(/\$'([^']|'')+'/g, function($$) { return $$.slice(1); });
+	r = r.replace(/\$([^\]\. #$]+)/g, function($$, $1) { return ($1).match(/^([A-Z]{1,2}|[A-W][A-Z]{2}|X[A-E][A-Z]|XF[A-D])?(10[0-3]\d{4}|104[0-7]\d{3}|1048[0-4]\d{2}|10485[0-6]\d|104857[0-6]|[1-9]\d{0,5})?$/) ? $$ : $1; });
 	var a = r.split(":");
 	var s = a[0].split(".")[0];
 	return [s, a[0].split(".")[1] + (a.length > 1 ? (":" + (a[1].split(".")[1] || a[1].split(".")[0])) : "")];
@@ -17189,12 +17310,13 @@ function parse_BrtFRTArchID$(data, length) {
 /* [MS-XLSB] 2.4.687 BrtName */
 function parse_BrtName(data, length, opts) {
 	var end = data.l + length;
-	data.l += 4; //var flags = data.read_shift(4);
+	var flags = data.read_shift(4);
 	data.l += 1; //var chKey = data.read_shift(1);
 	var itab = data.read_shift(4);
 	var name = parse_XLNameWideString(data);
 	var formula = parse_XLSBNameParsedFormula(data, 0, opts);
 	var comment = parse_XLNullableWideString(data);
+	if(flags & 0x20) name = "_xlnm." + name;
 	//if(0 /* fProc */) {
 		// unusedstring1: XLNullableWideString
 		// description: XLNullableWideString
@@ -17202,23 +17324,26 @@ function parse_BrtName(data, length, opts) {
 		// unusedstring2: XLNullableWideString
 	//}
 	data.l = end;
-	var out = ({Name:name, Ptg:formula});
+	var out = ({Name:name, Ptg:formula, Flags: flags});
 	if(itab < 0xFFFFFFF) out.Sheet = itab;
 	if(comment) out.Comment = comment;
 	return out;
 }
 function write_BrtName(name, wb) {
 	var o = new_buf(9);
-	o.write_shift(4, 0); // flags
+	var flags = 0;
+	var dname = name.Name;
+	if(XLSLblBuiltIn.indexOf(dname) > -1) { flags |= 0x20; dname = dname.slice(6); }
+	o.write_shift(4, flags); // flags
 	o.write_shift(1, 0); // chKey
 	o.write_shift(4, name.Sheet == null ? 0xFFFFFFFF : name.Sheet);
 
 	var arr = [
 		o,
-		write_XLWideString(name.Name),
-		write_XLSBNameParsedFormula(name.Ref, wb),
+		write_XLWideString(dname),
+		write_XLSBNameParsedFormula(name.Ref, wb)
 	];
-	if(name.Comment) arr.push(write_XLNullableWideString(name.Comment))
+	if(name.Comment) arr.push(write_XLNullableWideString(name.Comment));
 	else {
 		var x = new_buf(4);
 		x.write_shift(4, 0xFFFFFFFF);
@@ -17231,7 +17356,7 @@ function write_BrtName(name, wb) {
 	// write_XLNullableWideString(helpTopic)
 	// write_shift(4, 0xFFFFFFFF);
 
-	return bconcat(arr); 
+	return bconcat(arr);
 }
 
 /* [MS-XLSB] 2.1.7.61 Workbook */
@@ -17400,6 +17525,7 @@ function write_BOOKVIEWS(ba, wb) {
 function write_BRTNAMES(ba, wb) {
 	if(!wb.Workbook || !wb.Workbook.Names) return;
 	wb.Workbook.Names.forEach(function(name) { try {
+		if(name.Flags & 0x0e) return; // TODO: macro name write
 		write_record(ba, 0x0027 /* BrtName */, write_BrtName(name, wb));
 	} catch(e) {
 		console.error("Could not serialize defined name " + JSON.stringify(name));
@@ -17408,9 +17534,10 @@ function write_BRTNAMES(ba, wb) {
 
 function write_SELF_EXTERNS_xlsb(wb) {
 	var L = wb.SheetNames.length;
-	var o = new_buf(12 * L + 16);
-	o.write_shift(4, L + 1);
+	var o = new_buf(12 * L + 28);
+	o.write_shift(4, L + 2);
 	o.write_shift(4, 0); o.write_shift(4, -2); o.write_shift(4, -2); // workbook-level reference
+	o.write_shift(4, 0); o.write_shift(4, -1); o.write_shift(4, -1); // #REF!...
 	for(var i = 0; i < L; ++i) {
 		o.write_shift(4, 0); o.write_shift(4, i); o.write_shift(4, i);
 	}
@@ -21059,6 +21186,7 @@ function write_ws_biff8(idx, opts, wb) {
 	/* ... */
 
 	if(b8) ws['!links'] = [];
+	var comments = [];
 	for(var R = range.s.r; R <= range.e.r; ++R) {
 		rr = encode_row(R);
 		for(var C = range.s.c; C <= range.e.c; ++C) {
@@ -21069,9 +21197,12 @@ function write_ws_biff8(idx, opts, wb) {
 			/* write cell */
 			write_ws_biff8_cell(ba, cell, R, C, opts);
 			if(b8 && cell.l) ws['!links'].push([ref, cell.l]);
+			if(b8 && cell.c) comments.push([ref, cell.c]);
 		}
 	}
 	var cname = _sheet.CodeName || _sheet.name || s;
+	/* ... */
+	// if(b8) comments.forEach(function(comment) { write_biff_rec(ba, 0x001c /* Note */, write_NoteSh(comment)); });
 	/* ... */
 	if(b8) write_biff_rec(ba, 0x023e /* Window2 */, write_Window2((_WB.Views||[])[0]));
 	/* ... */

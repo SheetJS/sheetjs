@@ -26,6 +26,8 @@ export function get_table(): SSF$Table;
 /** Set format table */
 export function load_table(tbl: SSF$Table): void;
 
+/** Find the relevant sub-format for a given value*/
+export function choose_format(fmt: string, value: any): [number, string];
 
 /** Parsed date */
 export interface SSF$Date {

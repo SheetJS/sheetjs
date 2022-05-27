@@ -1716,7 +1716,7 @@ describe('roundtrip features', function() {
 	describe('should preserve cell comments', function() { [
 			['xlsx', paths.cstxlsx],
 			['xlsb', paths.cstxlsb],
-			//['xls', paths.cstxlsx],
+			//['xls', paths.cstxls],
 			['xlml', paths.cstxml]
 			//['ods', paths.cstods]
 	].forEach(function(w) {
