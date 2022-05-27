@@ -6,3 +6,4 @@ SSF.load_table = function load_table(tbl/*:SSFTable*/)/*:void*/ {
 };
 SSF.init_table = init_table;
 SSF.format = format;
+SSF.choose_format = choose_fmt;
