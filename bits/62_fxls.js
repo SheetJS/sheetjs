@@ -697,12 +697,6 @@ function make_3d_range(start, end) {
 	return start + ":" + end;
 }
 
-// List of invalid characters needs to be tested further
-function formula_quote_sheet_name(sname/*:string*/, opts)/*:string*/ {
-	if(!sname && !(opts && opts.biff <= 5 && opts.biff >= 2)) throw new Error("empty sheet name");
-	if (/[^\w\u4E00-\u9FFF\u3040-\u30FF]/.test(sname)) return "'" + sname + "'";
-	return sname;
-}
 function get_ixti_raw(supbooks, ixti/*:number*/, opts)/*:string*/ {
 	if(!supbooks) return "SH33TJSERR0";
 	if(opts.biff > 8 && (!supbooks.XTI || !supbooks.XTI[ixti])) return supbooks.SheetNames[ixti];

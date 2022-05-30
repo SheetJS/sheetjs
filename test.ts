@@ -1433,6 +1433,27 @@ Deno.test('write features', async function(t) {
 		assert.equal(X.write(wb, {type:"string", bookType:"csv", sheet:"Sheet2"}), "5,6\n7,8");
 		assert.throws(function() { X.write(wb, {type:"string", bookType:"csv", sheet:"Sheet3"}); });
 	});
+	await t.step('should create/update autofilter defined name on write', async function() {([
+		"xlsx", "xlsb", /* "xls", */ "xlml" /*, "ods" */
+	] as Array<X.BookType>).forEach(function(fmt) {
+		var wb = X.utils.book_new();
+		var ws = X.utils.aoa_to_sheet([["A","B","C"],[1,2,3]]);
+		ws["!autofilter"] = { ref: (ws["!ref"] as string) };
+		X.utils.book_append_sheet(wb, ws, "Sheet1");
+		var wb2 = X.read(X.write(wb, {bookType:fmt, type:TYPE}), {type:TYPE});
+		var Name: X.DefinedName = (null as any);
+		((wb2.Workbook||{}).Names || []).forEach(function(dn) { if(dn.Name == "_xlnm._FilterDatabase" && dn.Sheet == 0) Name = dn; });
+		assert.assert(!!Name, "Could not find _xlnm._FilterDatabases name WR");
+		assert.equal(Name.Ref, "Sheet1!$A$1:$C$2");
+		X.utils.sheet_add_aoa(wb2.Sheets.Sheet1, [[4,5,6]], { origin: -1 });
+		(wb2.Sheets.Sheet1["!autofilter"] as any).ref = wb2.Sheets.Sheet1["!ref"];
+		var wb3 = X.read(X.write(wb2, {bookType:fmt, type:TYPE}), {type:TYPE});
+		Name = (null as any);
+		((wb3.Workbook||{}).Names || []).forEach(function(dn) { if(dn.Name == "_xlnm._FilterDatabase" && dn.Sheet == 0) Name = dn; });
+		assert.assert(!!Name, "Could not find _xlnm._FilterDatabases name WRWR");
+		assert.equal(Name.Ref, "Sheet1!$A$1:$C$3");
+		assert.equal(((wb2.Workbook as any).Names as any).length, ((wb3.Workbook as any).Names as any).length);
+	}); });
 });
 
 function seq(end: number, start?: number): Array<number> {
@@ -1689,6 +1710,23 @@ Deno.test('roundtrip features', async function(t) {
 			Object.keys(row).forEach(function(k) { assert.equal(row[k], o[i][k]); });
 		});
 	});
+
+	await t.step('should preserve autofilter settings', async function() {[
+		['xlsx', paths.afxlsx],
+		['xlsb', paths.afxlsb],
+		// TODO:
+		//['xls',  paths.afxls],
+		['xlml', paths.afxml]
+		//['ods',  paths.afods]
+	].forEach(function(w) {
+		var wb = X.read(fs.readFileSync(w[1]), {type:TYPE});
+		var wb2 = X.read(X.write(wb, {bookType:w[0], type: TYPE}), {type:TYPE});
+		assert.assert(!wb2.Sheets[wb2.SheetNames[0]]['!autofilter']);
+		for(var i = 1; i < wb2.SheetNames.length; ++i) {
+			assert.assert(wb2.Sheets[wb2.SheetNames[i]]['!autofilter']);
+			assert.equal((wb2.Sheets[wb2.SheetNames[i]]['!autofilter'] as any).ref,"A1:E22");
+		}
+	});	});
 });
 
 //function password_file(x){return x.match(/^password.*\.xls$/); }
