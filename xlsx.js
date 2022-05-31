@@ -3213,9 +3213,7 @@ function evert_arr(obj) {
 	return o;
 }
 
-var basedate = new Date(); // 2209161600000
-basedate.setUTCFullYear(1899, 11, 30);
-basedate.setUTCHours(0, 0, 0);
+var basedate = new Date(Date.UTC(1899, 11, 30, 0, 0, 0)); // 2209161600000
 
 function datenum(v, date1904) {
 	var epoch = v.getTime();
