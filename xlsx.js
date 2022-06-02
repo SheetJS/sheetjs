@@ -3213,23 +3213,21 @@ function evert_arr(obj) {
 	return o;
 }
 
-var basedate = new Date(Date.UTC(1899, 11, 30, 0, 0, 0)); // 2209161600000
+var base1900 = Date.UTC(1899, 11, 30);
+var base1904 = Date.UTC(1904, 0, 1);
 
+// According to https://docs.microsoft.com/ru-ru/archive/blogs/ericlippert/erics-complete-guide-to-vt_date 
+// we must treat OLE Automation Date as it has no timezone at all.
+// So to avoid any possible TZ/DST issues do calculations in UTC
 function datenum(v, date1904) {
-	var epoch = v.getTime();
-	if(date1904) epoch -= 1462*24*60*60*1000;
-	var dnthresh = basedate.getTime() + v.getTimezoneOffset() * 60000;
-	return (epoch - dnthresh) / (24 * 60 * 60 * 1000);
+	var start = date1904 ? base1904 : base1900;
+	var vTime = Date.UTC(v.getFullYear(), v.getMonth(), v.getDate(), v.getHours(), v.getMinutes(), v.getSeconds(), v.getMilliseconds());
+	return (vTime - start) / 86400000;
 }
-var refdate = new Date();
-var refoffset = refdate.getTimezoneOffset();
-var dnthresh = basedate.getTime() + refoffset * 60000;
 function numdate(v) {
-	var out = new Date();
-	out.setTime(v * 24 * 60 * 60 * 1000 + dnthresh);
-	if (out.getTimezoneOffset() !== refoffset) {
-		out.setTime(out.getTime() + (out.getTimezoneOffset() - refoffset) * 60000);
-	}
+	var out = new Date(base1900 + v * 86400000);
+	// De-adjust timezone offset
+	out.setTime(out.getTime() + out.getTimezoneOffset() * 60000);
 	return out;
 }
 
