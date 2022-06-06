@@ -49,13 +49,14 @@ function parse_content_xml(d/*:string*/, _opts)/*:Workbook*/ {
 		var merges/*:Array<Range>*/ = [], mrange = {}, mR = 0, mC = 0;
 		var rowinfo/*:Array<RowInfo>*/ = [], rowpeat = 1, colpeat = 1;
 		var arrayf/*:Array<[Range, string]>*/ = [];
-		var WB = {Names:[]};
+		var WB = {Names:[], WBProps:{}};
 		var atag = ({}/*:any*/);
 		var _Ref/*:[string, string]*/ = ["", ""];
 		var comments/*:Array<Comment>*/ = [], comment/*:Comment*/ = ({}/*:any*/);
 		var creator = "", creatoridx = 0;
 		var isstub = false, intable = false;
 		var i = 0;
+		var baddate = 1;
 		xlmlregex.lastIndex = 0;
 		str = str.replace(/<!--([\s\S]*?)-->/mg,"").replace(/<!DOCTYPE[^\[]*\[[^\]]*\]>/gm,"");
 		while((Rn = xlmlregex.exec(str))) switch((Rn[3]=Rn[3].replace(/_.*$/,""))) {
@@ -167,7 +168,7 @@ function parse_content_xml(d/*:string*/, _opts)/*:Workbook*/ {
 						case 'percentage': q.t = 'n'; q.v = parseFloat(ctag.value); break;
 						case 'currency': q.t = 'n'; q.v = parseFloat(ctag.value); break;
 						case 'date': q.t = 'd'; q.v = parseDate(ctag['date-value']);
-							if(!opts.cellDates) { q.t = 'n'; q.v = datenum(q.v); }
+							if(!opts.cellDates) { q.t = 'n'; q.v = datenum(q.v, WB.WBProps.date1904) - baddate; }
 							q.z = 'm/d/yy'; break;
 						case 'time': q.t = 'n'; q.v = parse_isodur(ctag['time-value'])/86400;
 							if(opts.cellDates) { q.t = 'd'; q.v = numdate(q.v); }
@@ -368,7 +369,14 @@ function parse_content_xml(d/*:string*/, _opts)/*:Workbook*/ {
 			case 'table-header-columns': break; // 9.1.11 <table:table-header-columns>
 			case 'table-columns': break; // 9.1.12 <table:table-columns>
 
-			case 'null-date': break; // 9.4.2 <table:null-date> TODO: date1904
+			case 'null-date': // 9.4.2 <table:null-date>
+				tag = parsexmltag(Rn[0], false);
+				switch(tag["date-value"]) {
+					case "1904-01-01": WB.WBProps.date1904 = true;
+					/* falls through */
+					case "1900-01-01": baddate = 0;
+				}
+				break;
 
 			case 'graphic-properties': break; // 17.21 <style:graphic-properties>
 			case 'calculation-settings': break; // 9.4.1 <table:calculation-settings>

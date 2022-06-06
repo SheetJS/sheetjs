@@ -1,4 +1,5 @@
 var assert = function(bool) { if(!bool) { throw new Error("failed assert"); } };
+assert.ok = function(bool) { if(!bool) { throw new Error("failed assert"); } };
 assert.deepEqualArray = function(x,y) {
 	if(x.length != y.length) throw new Error("Length mismatch: " + x.length + " != " + y.length);
 	for(var i = 0; i < x.length; ++i) assert.deepEqual(x[i], y[i]);

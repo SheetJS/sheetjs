@@ -942,9 +942,10 @@ function write_props_xlml(wb/*:Workbook*/, opts)/*:string*/ {
 	return o.join("");
 }
 /* TODO */
-function write_wb_xlml(/*::wb, opts*/)/*:string*/ {
+function write_wb_xlml(wb/*::, opts*/)/*:string*/ {
 	/* OfficeDocumentSettings */
 	/* ExcelWorkbook */
+	if((((wb||{}).Workbook||{}).WBProps||{}).date1904) return '<ExcelWorkbook xmlns="urn:schemas-microsoft-com:office:excel"><Date1904/></ExcelWorkbook>';
 	return "";
 }
 /* TODO */

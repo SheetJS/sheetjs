@@ -141,9 +141,12 @@ test mocha: test.js ## Run test suite
 test-esm: test.mjs ## Run Node ESM test suite
 	npx -y mocha@9 -R spec -t 30000 $<
 
+test.ts: test.mts
+	node -pe 'var data = fs.readFileSync("'$<'", "utf8"); data.split("\n").map(function(l) { return l.replace(/^describe\((.*?)function\(\)/, "Deno.test($$1async function(t)").replace(/\b(?:it|describe)\((.*?)function\(\)/g, "await t.step($$1async function(t)").replace("assert.ok", "assert.assert"); }).join("\n")' > $@
+
 .PHONY: test-deno
 test-deno: test.ts ## Run Deno test suite
-	deno test --allow-env --allow-read --allow-write $<
+	deno test --allow-env --allow-read --allow-write --config misc/test.deno.jsonc $<
 
 #*                      To run tests for one format, make test_<fmt>
 #*                      To run the core test suite, make test_misc

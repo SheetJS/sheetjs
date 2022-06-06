@@ -28,22 +28,22 @@ var DIF_XL = true;
 type BSEncoding = 'utf-8' | 'binary' | 'base64';
 type BFEncoding = 'buffer';
 type ShEncoding = BSEncoding | BFEncoding;
-
+function readFileSync2(x: string): Uint8Array;
 function readFileSync2(x: string, e: BSEncoding): string;
 function readFileSync2(x: string, e: BFEncoding): Uint8Array;
-function readFileSync2(x: string, e: ShEncoding): Uint8Array | string {
-		const u8 = Deno.readFileSync(x);
-		switch(e) {
-			case 'utf-8': return new TextDecoder().decode(u8);
-			case 'base64': return base64_.encode(u8);
-			case 'buffer': return u8;
-			case 'binary': return Array.from({length: u8.length}, (_,i) => String.fromCharCode(u8[i])).join("");
-		}
-		throw new Error(`unsupported encoding ${e}`)
+function readFileSync2(x: string, e?: ShEncoding): Uint8Array | string {
+	const u8 = Deno.readFileSync(x);
+	if(!e) return u8;
+	switch(e) {
+		case 'utf-8': return new TextDecoder().decode(u8);
+		case 'base64': return base64_.encode(u8);
+		case 'buffer': return u8;
+		case 'binary': return Array.from({length: u8.length}, (_,i) => String.fromCharCode(u8[i])).join("");
 	}
+	throw new Error(`unsupported encoding ${e}`)
+}
 var fs = {
-	readFileSync: (x: string) => Deno.readFileSync(x),
-	readFileSync2,
+	readFileSync: readFileSync2,
 	existsSync: (x: string): boolean => { try { Deno.readFileSync(x); } catch(e) { return false; } return true; },
 	readdirSync: (x: string) => ([...Deno.readDirSync(x)].filter(x => x.isFile).map(x => x.name))
 };
@@ -72,9 +72,9 @@ function test_file(x: string){ return ex.indexOf(x.slice(-5))>=0||exp.indexOf(x.
 
 var files: string[]  = [], fileA: string[] = [];
 if(!browser) {
-	var _files = fs.existsSync('tests.lst') ? fs.readFileSync2('tests.lst', 'utf-8').split("\n").map(function(x) { return x.trim(); }) : fs.readdirSync('test_files');
+	var _files = fs.existsSync('tests.lst') ? fs.readFileSync('tests.lst', 'utf-8').split("\n").map(function(x) { return x.trim(); }) : fs.readdirSync('test_files');
 	for(var _filesi = 0; _filesi < _files.length; ++_filesi) if(test_file(_files[_filesi])) files.push(_files[_filesi]);
-	var _fileA = fs.existsSync('tests/testA.lst') ? fs.readFileSync2('tests/testA.lst', 'utf-8').split("\n").map(function(x) { return x.trim(); }) : [];
+	var _fileA = fs.existsSync('tests/testA.lst') ? fs.readFileSync('tests/testA.lst', 'utf-8').split("\n").map(function(x) { return x.trim(); }) : [];
 	for(var _fileAi = 0; _fileAi < _fileA.length; ++_fileAi) if(test_file(_fileA[_fileAi])) fileA.push(_fileA[_fileAi]);
 }
 
@@ -269,7 +269,7 @@ async function parsetest(x: string, wb: X.WorkBook, full: boolean, ext: string, 
 			wb.SheetNames.forEach(function(y) { assert.assert(wb.Sheets[y], 'bad sheet ' + y); });
 		});
 		if(fs.existsSync(sname)) await t.step('should have the right sheet names', async function(t) {
-			var file = fs.readFileSync2(sname, 'utf-8').replace(/\r/g,"");
+			var file = fs.readFileSync(sname, 'utf-8').replace(/\r/g,"");
 			var names = wb.SheetNames.map(fixsheetname).join("\n") + "\n";
 			if(file.length && !x.match(/artifacts/)) assert.equal(names, file);
 		});
@@ -317,7 +317,7 @@ async function parsetest(x: string, wb: X.WorkBook, full: boolean, ext: string, 
 		for(var i = 0; i < wb.SheetNames.length; ++i) { var ws = wb.SheetNames[i];
 			var name = getfile(dir, x, i, ".csv");
 			if(fs.existsSync(name)) await t.step('#' + i + ' (' + ws + ')', async function(t) {
-				var file = fs.readFileSync2(name, 'utf-8');
+				var file = fs.readFileSync(name, 'utf-8');
 				var csv = X.utils.sheet_to_csv(wb.Sheets[ws]);
 				assert.equal(fixcsv(csv), fixcsv(file), "CSV badness");
 			});
@@ -327,14 +327,14 @@ async function parsetest(x: string, wb: X.WorkBook, full: boolean, ext: string, 
 		for(var i = 0; i < wb.SheetNames.length; ++i) { var ws = wb.SheetNames[i];
 			var rawjson = getfile(dir, x, i, ".rawjson");
 			if(fs.existsSync(rawjson)) await t.step('#' + i + ' (' + ws + ')', async function(t) {
-				var file = fs.readFileSync2(rawjson, 'utf-8');
+				var file = fs.readFileSync(rawjson, 'utf-8');
 				var json: Array<any> = X.utils.sheet_to_json(wb.Sheets[ws],{raw:true});
 				assert.equal(JSON.stringify(json), fixjson(file), "JSON badness");
 			});
 
 			var jsonf = getfile(dir, x, i, ".json");
 			if(fs.existsSync(jsonf)) await t.step('#' + i + ' (' + ws + ')', async function(t) {
-				var file = fs.readFileSync2(jsonf, 'utf-8');
+				var file = fs.readFileSync(jsonf, 'utf-8');
 				var json: Array<any> = X.utils.sheet_to_json(wb.Sheets[ws], {raw:false});
 				assert.equal(JSON.stringify(json), fixjson(file), "JSON badness");
 			});
@@ -400,13 +400,13 @@ function each_sheet(wb: X.WorkBook, f: (ws: X.WorkSheet, i: number)=>any) { wb.S
 
 /* comments_stress_test family */
 function check_comments(wb: X.WorkBook) {
-	var ws0 = wb.Sheets.Sheet2;
+	var ws0 = wb.Sheets["Sheet2"];
 	assert.equal(get_cell(ws0,"A1").c[0].a, 'Author');
 	assert.equal(get_cell(ws0,"A1").c[0].t, 'Author:\nGod thinks this is good');
 	assert.equal(get_cell(ws0,"C1").c[0].a, 'Author');
 	assert.equal(get_cell(ws0,"C1").c[0].t, 'I really hope that xlsx decides not to use magic like rPr');
 
-	var ws3 = wb.Sheets.Sheet4;
+	var ws3 = wb.Sheets["Sheet4"];
 	assert.equal(get_cell(ws3,"B1").c[0].a, 'Author');
 	assert.equal(get_cell(ws3,"B1").c[0].t, 'The next comment is empty');
 	assert.equal(get_cell(ws3,"B2").c[0].a, 'Author');
@@ -556,27 +556,27 @@ Deno.test('parse options', async function(t) {
 		await t.step('should not generate sheet stubs by default', async function(t) {
 			MCPaths.forEach(function(p) {
 				var wb = X.read(fs.readFileSync(p), {type:TYPE});
-				assert.throws(function() { return get_cell(wb.Sheets.Merge, "A2").v; });
+				assert.throws(function() { return get_cell(wb.Sheets["Merge"], "A2").v; });
 			});
 		});
 		await t.step('should generate sheet stubs when requested', async function(t) {
 			MCPaths.forEach(function(p) {
 				var wb = X.read(fs.readFileSync(p), {type:TYPE, sheetStubs:true});
-				assert.assert(get_cell(wb.Sheets.Merge, "A2").t == 'z');
+				assert.assert(get_cell(wb.Sheets["Merge"], "A2").t == 'z');
 			});
 		});
 		await t.step('should handle stub cells', async function(t) {
 			MCPaths.forEach(function(p) {
 				var wb = X.read(fs.readFileSync(p), {type:TYPE, sheetStubs:true});
-				X.utils.sheet_to_csv(wb.Sheets.Merge);
-				X.utils.sheet_to_json(wb.Sheets.Merge);
-				X.utils.sheet_to_formulae(wb.Sheets.Merge);
+				X.utils.sheet_to_csv(wb.Sheets["Merge"]);
+				X.utils.sheet_to_json(wb.Sheets["Merge"]);
+				X.utils.sheet_to_formulae(wb.Sheets["Merge"]);
 				ofmt.forEach(function(f) { if(f != "dbf") X.write(wb, {type:TYPE, bookType:f}); });
 			});
 		});
 		function checkcells(wb: X.WorkBook, A46: boolean, B26: boolean, C16: boolean, D2: boolean) {
 			([ ["A46", A46], ["B26", B26], ["C16", C16], ["D2", D2] ] as Array<[string, boolean]>).forEach(function(r: [string, boolean]) {
-				assert.assert((typeof get_cell(wb.Sheets.Text, r[0]) !== 'undefined') == r[1]);
+				assert.assert((typeof get_cell(wb.Sheets["Text"], r[0]) !== 'undefined') == r[1]);
 			});
 		}
 		await t.step('should read all cells by default', async function(t) { FSTPaths.forEach(function(p) {
@@ -697,19 +697,19 @@ Deno.test('parse options', async function(t) {
 
 Deno.test('input formats', async function(t) {
 	await t.step('should read binary strings', async function(t) { artifax.forEach(function(p) {
-		X.read(fs.readFileSync2(p, 'binary'), {type: 'binary'});
+		X.read(fs.readFileSync(p, 'binary'), {type: 'binary'});
 	}); });
 	await t.step('should read base64 strings', async function(t) { artifax.forEach(function(p) {
-		X.read(fs.readFileSync2(p, 'base64'), {type: 'base64'});
+		X.read(fs.readFileSync(p, 'base64'), {type: 'base64'});
 	}); });
-	await t.step('should read array', async function(t) { artifax.forEach(function(p) {
-		X.read(fs.readFileSync2(p, 'binary').split("").map(function(x) { return x.charCodeAt(0); }), {type:'array'});
+	if(typeof Uint8Array !== 'undefined') await t.step('should read array', async function(t) { artifax.forEach(function(p) {
+		X.read(fs.readFileSync(p, 'binary').split("").map(function(x) { return x.charCodeAt(0); }), {type:'array'});
 	}); });
 	await t.step('should read Buffers', async function(t) { artifax.forEach(function(p) {
 		X.read(fs.readFileSync(p), {type: 'buffer'});
 	}); });
-	await t.step('should read ArrayBuffer / Uint8Array', async function(t) { artifax.forEach(function(p) {
-		var payload: any = fs.readFileSync2(p, "buffer");
+	if(typeof Uint8Array !== 'undefined') await t.step('should read ArrayBuffer / Uint8Array', async function(t) { artifax.forEach(function(p) {
+		var payload: any = fs.readFileSync(p, "buffer");
 		var ab = new ArrayBuffer(payload.length), vu = new Uint8Array(ab);
 		for(var i = 0; i < payload.length; ++i) vu[i] = payload[i];
 		X.read(ab, {type: 'array'});
@@ -894,7 +894,7 @@ function check_margin(margins: X.MarginInfo, exp: number[]) {
 
 Deno.test('parse features', async function(t) {
 	await t.step('sheet visibility', async function(t) {
-			var wbs = SVPaths.map(function(p) { return X.read(fs.readFileSync(p), {type:TYPE}); });
+		var wbs = SVPaths.map(function(p) { return X.read(fs.readFileSync(p), {type:TYPE}); });
 		await t.step('should detect visible sheets', async function(t) {
 			wbs.forEach(function(wb) {
 				assert.assert(!wb?.Workbook?.Sheets?.[0]?.Hidden);
@@ -940,7 +940,7 @@ Deno.test('parse features', async function(t) {
 		]; for(var ststi = 0; ststi < stst.length; ++ststi) { let m = stst[ststi]; await t.step(m[0] + ' stress test', async function(t) {
 			var wb = X.read(fs.readFileSync(m[1]), {type:TYPE});
 			check_comments(wb);
-			var ws0 = wb.Sheets.Sheet2;
+			var ws0 = wb.Sheets["Sheet2"];
 			assert.equal(get_cell(ws0,"A1").c[0].a, 'Author');
 			assert.equal(get_cell(ws0,"A1").c[0].t, 'Author:\nGod thinks this is good');
 			assert.equal(get_cell(ws0,"C1").c[0].a, 'Author');
@@ -989,7 +989,7 @@ Deno.test('parse features', async function(t) {
 		await t.step('should use original range if not set', async function(t) {
 			var opts = {type:TYPE};
 			FSTPaths.map(function(p) { return X.read(fs.readFileSync(p), opts); }).forEach(function(wb) {
-				assert.equal(wb.Sheets.Text["!ref"],"A1:F49");
+				assert.equal(wb.Sheets["Text"]["!ref"],"A1:F49");
 			});
 		});
 		await t.step('should adjust range if set', async function(t) {
@@ -997,8 +997,8 @@ Deno.test('parse features', async function(t) {
 			var wbs = FSTPaths.map(function(p) { return X.read(fs.readFileSync(p), opts); });
 			/* TODO: XLS, XML, ODS */
 			wbs.slice(0,2).forEach(function(wb) {
-				assert.equal(wb.Sheets.Text["!fullref"],"A1:F49");
-				assert.equal(wb.Sheets.Text["!ref"],"A1:F10");
+				assert.equal(wb.Sheets["Text"]["!fullref"],"A1:F49");
+				assert.equal(wb.Sheets["Text"]["!ref"],"A1:F10");
 			});
 		});
 		await t.step('should not generate comment cells', async function(t) {
@@ -1006,8 +1006,8 @@ Deno.test('parse features', async function(t) {
 			var wbs = CSTPaths.map(function(p) { return X.read(fs.readFileSync(p), opts); });
 			/* TODO: XLS, XML, ODS */
 			wbs.slice(0,2).forEach(function(wb) {
-				assert.equal(wb.Sheets.Sheet7["!fullref"],"A1:N34");
-				assert.equal(wb.Sheets.Sheet7["!ref"],"A1");
+				assert.equal(wb.Sheets["Sheet7"]["!fullref"],"A1:N34");
+				assert.equal(wb.Sheets["Sheet7"]["!ref"],"A1");
 			});
 		});
 	});
@@ -1092,9 +1092,9 @@ Deno.test('parse features', async function(t) {
 			var wbs = MCPaths.map(function(p) { return X.read(fs.readFileSync(p), {type:TYPE}); });
 		await t.step('should have !merges', async function(t) {
 			wbs.forEach(function(wb) {
-				assert.assert(wb.Sheets.Merge['!merges']);
+				assert.assert(wb.Sheets["Merge"]['!merges']);
 			});
-			var m = wbs.map(function(x) { return x.Sheets.Merge?.['!merges']?.map(function(y) { return X.utils.encode_range(y); });});
+			var m = wbs.map(function(x) { return x.Sheets["Merge"]?.['!merges']?.map(function(y) { return X.utils.encode_range(y); });});
 			m?.slice(1)?.forEach(function(x) {
 				assert.deepEqual(m?.[0]?.sort(),x?.sort());
 			});
@@ -1360,6 +1360,31 @@ Deno.test('parse features', async function(t) {
 		assert.equal(data[4][1], '456.00');
 		assert.equal(data[5][1], '7,890');
 	}); } });
+
+	await t.step('date system', async function(t) {[
+		"biff5", "ods", "slk", "xls", "xlsb", "xlsx", "xml"
+	].forEach(function(ext) {
+		// TODO: verify actual date values
+		var wb0 = X.read(fs.readFileSync("./test_files/1904/1900." + ext), {type: TYPE, cellNF: true});
+		assert.assert(!(wb0?.Workbook?.WBProps?.date1904));
+		assert.equal(X.utils.sheet_to_csv(wb0.Sheets[wb0.SheetNames[0]]), [
+"1,1900-01-01,1900-01-01,1900-01-01",
+"11,1900-01-11,1900-01-11,1900-01-11",
+"111,1900-04-20,1900-04-20,1900-04-20",
+"1111,1903-01-15,1903-01-15,1903-01-15",
+"11111,1930-06-02,1930-06-02,1930-06-02"
+		].join("\n"));
+
+		var wb4 = X.read(fs.readFileSync("./test_files/1904/1904." + ext), {type: TYPE, cellNF: true});
+		assert.assert(wb4?.Workbook?.WBProps?.date1904);
+		assert.equal(X.utils.sheet_to_csv(wb4.Sheets[wb4.SheetNames[0]]), [
+"1,1904-01-02,1904-01-02,1904-01-02",
+"11,1904-01-12,1904-01-12,1904-01-12",
+"111,1904-04-21,1904-04-21,1904-04-21",
+"1111,1907-01-16,1907-01-16,1907-01-16",
+"11111,1934-06-03,1934-06-03,1934-06-03"
+		].join("\n"));
+	}); });
 });
 
 Deno.test('write features', async function(t) {
@@ -1433,7 +1458,7 @@ Deno.test('write features', async function(t) {
 		assert.equal(X.write(wb, {type:"string", bookType:"csv", sheet:"Sheet2"}), "5,6\n7,8");
 		assert.throws(function() { X.write(wb, {type:"string", bookType:"csv", sheet:"Sheet3"}); });
 	});
-	await t.step('should create/update autofilter defined name on write', async function() {([
+	await t.step('should create/update autofilter defined name on write', async function(t) {([
 		"xlsx", "xlsb", /* "xls", */ "xlml" /*, "ods" */
 	] as Array<X.BookType>).forEach(function(fmt) {
 		var wb = X.utils.book_new();
@@ -1445,8 +1470,8 @@ Deno.test('write features', async function(t) {
 		((wb2.Workbook||{}).Names || []).forEach(function(dn) { if(dn.Name == "_xlnm._FilterDatabase" && dn.Sheet == 0) Name = dn; });
 		assert.assert(!!Name, "Could not find _xlnm._FilterDatabases name WR");
 		assert.equal(Name.Ref, "Sheet1!$A$1:$C$2");
-		X.utils.sheet_add_aoa(wb2.Sheets.Sheet1, [[4,5,6]], { origin: -1 });
-		(wb2.Sheets.Sheet1["!autofilter"] as any).ref = wb2.Sheets.Sheet1["!ref"];
+		X.utils.sheet_add_aoa(wb2.Sheets["Sheet1"], [[4,5,6]], { origin: -1 });
+		(wb2.Sheets["Sheet1"]["!autofilter"] as any).ref = wb2.Sheets["Sheet1"]["!ref"];
 		var wb3 = X.read(X.write(wb2, {bookType:fmt, type:TYPE}), {type:TYPE});
 		Name = (null as any);
 		((wb3.Workbook||{}).Names || []).forEach(function(dn) { if(dn.Name == "_xlnm._FilterDatabase" && dn.Sheet == 0) Name = dn; });
@@ -1522,8 +1547,8 @@ Deno.test('roundtrip features', async function(t) {
 		var mcf = ["xlsx", "xlsb", "xlml", "ods", "biff8", "numbers"] as Array<X.BookType>; for(let mci = 0; mci < mcf.length; ++mci) { let f = mcf[mci]; await t.step(f, async function(t) {
 			var wb1 = X.read(fs.readFileSync(paths.mcxlsx), {type:TYPE});
 			var wb2 = X.read(X.write(wb1,{bookType:f,type:'binary',numbers:XLSX_ZAHL}),{type:'binary'});
-			var m1 = wb1.Sheets.Merge?.['!merges']?.map(X.utils.encode_range);
-			var m2 = wb2.Sheets.Merge?.['!merges']?.map(X.utils.encode_range);
+			var m1 = wb1.Sheets["Merge"]?.['!merges']?.map(X.utils.encode_range);
+			var m2 = wb2.Sheets["Merge"]?.['!merges']?.map(X.utils.encode_range);
 			assert.equal(m1?.length, m2?.length);
 			if(m1 && m2) for(var i = 0; i < m1?.length; ++i) assert.assert(m1?.indexOf(m2?.[i]) > -1);
 		}); }
@@ -1572,18 +1597,18 @@ Deno.test('roundtrip features', async function(t) {
 
 	await t.step('should preserve dynamic array formulae', async function(t) { var m19 = [
 		['xlsx', paths.m19xlsx]
-	]; for(var h1 = 0; h1 < m19.length; ++h1) { var w = m19[h1]; await t.step(w[0], async function (t) {
+	]; for(var h1 = 0; h1 < m19.length; ++h1) { var w = m19[h1]; await t.step(w[0], async function(t) {
 		var wb1 = X.read(fs.readFileSync(w[1]), {xlfn: true, type:TYPE, cellFormula:true, WTF:true});
 		var wb2 = X.read(X.write(wb1, {bookType:w[0], type:TYPE}), {cellFormula:true, xlfn: true, type:TYPE, WTF:true});
-		assert.equal(!!get_cell(wb2.Sheets.Sheet1, "B3").D, true);
-		assert.equal(!!get_cell(wb2.Sheets.Sheet1, "B13").D, true);
-		assert.equal(!!get_cell(wb2.Sheets.Sheet1, "C13").D, true);
+		assert.equal(!!get_cell(wb2.Sheets["Sheet1"], "B3").D, true);
+		assert.equal(!!get_cell(wb2.Sheets["Sheet1"], "B13").D, true);
+		assert.equal(!!get_cell(wb2.Sheets["Sheet1"], "C13").D, true);
 
-		get_cell(wb2.Sheets.Sheet1, "B3").D = false;
+		get_cell(wb2.Sheets["Sheet1"], "B3").D = false;
 		var wb3 = X.read(X.write(wb2, {bookType:w[0], type:TYPE}), {cellFormula:true, xlfn: true, type:TYPE, WTF:true});
-		assert.equal(!!get_cell(wb3.Sheets.Sheet1, "B3").D, false);
-		assert.equal(!!get_cell(wb3.Sheets.Sheet1, "B13").D, true);
-		assert.equal(!!get_cell(wb3.Sheets.Sheet1, "C13").D, true);
+		assert.equal(!!get_cell(wb3.Sheets["Sheet1"], "B3").D, false);
+		assert.equal(!!get_cell(wb3.Sheets["Sheet1"], "B13").D, true);
+		assert.equal(!!get_cell(wb3.Sheets["Sheet1"], "C13").D, true);
 	}); } });
 
 	await t.step('should preserve hyperlink', async function(t) { var hl = [
@@ -1684,7 +1709,7 @@ Deno.test('roundtrip features', async function(t) {
 	await t.step('should preserve cell comments', async function(t) { var cc = [
 			['xlsx', paths.cstxlsx],
 			['xlsb', paths.cstxlsb],
-			//['xls', paths.cstxlsx],
+			//['xls', paths.cstxls],
 			['xlml', paths.cstxml]
 			//['ods', paths.cstods]
 	]; for(var cci = 0; cci < cc.length; ++cci) { let w = cc[cci];
@@ -1711,7 +1736,7 @@ Deno.test('roundtrip features', async function(t) {
 		});
 	});
 
-	await t.step('should preserve autofilter settings', async function() {[
+	await t.step('should preserve autofilter settings', async function(t) {[
 		['xlsx', paths.afxlsx],
 		['xlsb', paths.afxlsb],
 		// TODO:
@@ -1727,6 +1752,7 @@ Deno.test('roundtrip features', async function(t) {
 			assert.equal((wb2.Sheets[wb2.SheetNames[i]]['!autofilter'] as any).ref,"A1:E22");
 		}
 	});	});
+
 });
 
 //function password_file(x){return x.match(/^password.*\.xls$/); }
@@ -1742,8 +1768,8 @@ Deno.test('invalid files', async function(t) {
 		['passwords', 'apachepoi_xor-encryption-abc.xls'],
 		['DOC files', 'word_doc.doc']
 	]; for(var f1 = 0; f1 < fl.length; ++f1) { let w = fl[f1]; await t.step('should fail on ' + w[0], async function(t) {
-		assert.throws(function() { X.read(fs.readFileSync2(dir + w[1], 'binary'), {type:'binary'}); });
-		assert.throws(function() { X.read(fs.readFileSync2(dir + w[1], 'base64'), {type:'base64'}); });
+		assert.throws(function() { X.read(fs.readFileSync(dir + w[1], 'binary'), {type:'binary'}); });
+		assert.throws(function() { X.read(fs.readFileSync(dir + w[1], 'base64'), {type:'base64'}); });
 	}); } });
 	await t.step('write', async function(t) {
 		await t.step('should pass -> XLSX', async function(t) { FSTPaths.forEach(function(p) {
@@ -2159,12 +2185,12 @@ Deno.test('sylk', async function(t) {
 			assert.equal(get_cell(X.read(str, {type:"string"}).Sheets["Sheet1"], "A1").v, A1);
 			assert.equal(get_cell(X.read(str.replace(/–/, "\x96"), {type:"binary", codepage:1252}).Sheets["Sheet1"], "A1").v, A1);
 			if(true) {
-				assert.equal(get_cell(X.read(Buffer_from(str), {type:"buffer", codepage:65001}).Sheets.Sheet1, "A1").v, A1);
-				assert.equal(get_cell(X.read(Buffer_from(str.replace(/–/, "\x96"), "binary"), {type:"buffer", codepage:1252}).Sheets.Sheet1, "A1").v, A1);
+				assert.equal(get_cell(X.read(Buffer_from(str), {type:"buffer", codepage:65001}).Sheets["Sheet1"], "A1").v, A1);
+				assert.equal(get_cell(X.read(Buffer_from(str.replace(/–/, "\x96"), "binary"), {type:"buffer", codepage:1252}).Sheets["Sheet1"], "A1").v, A1);
 			}
 		});
 	});
-	await t.step('date system', async function(t){
+	await t.step('date system', async function(t) {
 		function make_slk(d1904?: number) { return "ID;PSheetJS\nP;Pd\\/m\\/yy\nP;Pd\\/m\\/yyyy\n" + (d1904 != null ? "O;D;V" + d1904 : "") + "\nF;P0;FG0G;X1;Y1\nC;K1\nE"; }
 		await t.step('should default to 1900', async function(t) {
 			assert.equal(get_cell(X.read(make_slk(), {type: "binary"}).Sheets["Sheet1"], "A1").v, 1);
@@ -2179,6 +2205,7 @@ Deno.test('sylk', async function(t) {
 	});
 });
 
+if(typeof Uint8Array !== "undefined")
 Deno.test('numbers', async function(t) {
 	await t.step('should parse files from Numbers 6.x', async function(t) {
 		var wb = X.read(fs.readFileSync(dir + 'numbers/types_61.numbers'), {type:TYPE, WTF:true});
@@ -2194,20 +2221,20 @@ Deno.test('numbers', async function(t) {
 		var ws1 = X.utils.aoa_to_sheet(aoa);
 		var wb1 = X.utils.book_new(); X.utils.book_append_sheet(wb1, ws1, "Sheet1");
 		var wb2 = X.read(X.write(wb1,{bookType:"numbers",type:'binary',numbers:XLSX_ZAHL}),{type:'binary'});
-		var ws2 = wb2.Sheets.Sheet1;
+		var ws2 = wb2.Sheets["Sheet1"];
 		assert.equal(ws2["!ref"], "A1:ALL3");
 		assert.equal(get_cell(ws2, "A1").v, 1);
 		assert.equal(get_cell(ws2, "ALL2").v, 2);
 	});
 });
 
-if(fs.existsSync(dir + 'dbf/d11.dbf')) Deno.test('dbf', async function(t) {
+Deno.test('dbf', async function(t) {
 	var wbs: Array<[string, X.WorkBook]> = ([
 		['d11',  dir + 'dbf/d11.dbf'],
 		['vfp3', dir + 'dbf/vfp3.dbf']
 	]).map(function(x) { return [x[0], X.read(fs.readFileSync(x[1]), {type:TYPE})]; });
 	await t.step(wbs[1][0], async function(t) {
-		var ws = wbs[1][1].Sheets.Sheet1;
+		var ws = wbs[1][1].Sheets["Sheet1"];
 		([
 			["A1", "v", "CHAR10"], ["A2", "v", "test1"], ["B2", "v", 123.45],
 			["C2", "v", 12.345], ["D2", "v", 1234.1], ["E2", "w", "19170219"],
@@ -2216,6 +2243,21 @@ if(fs.existsSync(dir + 'dbf/d11.dbf')) Deno.test('dbf', async function(t) {
 		] as Array<[string, string, any]>).forEach(function(r) { assert.equal(get_cell(ws, r[0])[r[1]], r[2]); });
 	});
 });
+import { JSDOM } from 'jsdom';
+var domtest = false; // error: Error: Not implemented: isContext
+var inserted_dom_elements = [];
+
+function get_dom_element(html: string) {
+	if(browser) {
+		var domelt = document.createElement('div');
+		domelt.innerHTML = html;
+		if(document.body) document.body.appendChild(domelt);
+		inserted_dom_elements.push(domelt);
+		return domelt.children[0];
+	}
+	if(!JSDOM) throw new Error("Browser test fail");
+	return new JSDOM(html).window.document.body.children[0];
+}
 
 Deno.test('HTML', async function(t) {
 	await t.step('input string', async function(t) {
@@ -2225,7 +2267,7 @@ Deno.test('HTML', async function(t) {
 		await t.step('should handle newlines correctly', async function(t) {
 			var table = "<table><tr><td>foo<br/>bar</td><td>baz</td></tr></table>";
 			var wb = X.read(table, {type:"string"});
-			assert.equal(get_cell(wb.Sheets.Sheet1, "A1").v, "foo\nbar");
+			assert.equal(get_cell(wb.Sheets["Sheet1"], "A1").v, "foo\nbar");
 		});
 		await t.step('should generate multi-sheet workbooks', async function(t) {
 			var table = "";
@@ -2240,6 +2282,64 @@ Deno.test('HTML', async function(t) {
 			}
 		});
 	});
+	if(domtest) await t.step('input DOM', async function(t) {
+		await t.step('should interpret values by default', async function(t) { plaintext_test(X.utils.table_to_book(get_dom_element(html_str)), false); });
+		await t.step('should generate strings if raw option is passed', async function(t) { plaintext_test(X.utils.table_to_book(get_dom_element(html_str), {raw:true}), true); });
+		await t.step('should handle newlines correctly', async function(t) {
+			var table = get_dom_element("<table><tr><td>foo<br/>bar</td><td>baz</td></tr></table>");
+			var ws = X.utils.table_to_sheet(table);
+			assert.equal(get_cell(ws, "A1").v, "foo\nbar");
+		});
+		await t.step('should trim whitespace', async function(t) {
+			if(get_dom_element("foo <br> bar").innerHTML != "foo <br> bar") return;
+			var table = get_dom_element("<table><tr><td>   foo  <br/>  bar   </td><td>  baz  qux  </td></tr></table>");
+			var ws = X.utils.table_to_sheet(table);
+			assert.equal(get_cell(ws, "A1").v.replace(/\n/g, "|"), "foo | bar");
+			assert.equal(get_cell(ws, "B1").v, "baz qux");
+		});
+	});
+	if(domtest) await t.step('should handle entities', async function(t) {
+		var html = "<table><tr><td>A&amp;B</td><td>A&middot;B</td></tr></table>";
+		var ws = X.utils.table_to_sheet(get_dom_element(html));
+		assert.equal(get_cell(ws, "A1").v, "A&B");
+		assert.equal(get_cell(ws, "B1").v, "A·B");
+	});
+	if(domtest) await t.step('should honor sheetRows', async function(t) {
+		var html = X.utils.sheet_to_html(X.utils.aoa_to_sheet([[1,2],[3,4],[5,6]]));
+		// $FlowIgnore
+		html = /<body[^>]*>([\s\S]*)<\/body>/i.exec(html)?.[1] || "";
+		var ws = X.utils.table_to_sheet(get_dom_element(html));
+		assert.equal(ws['!ref'], "A1:B3");
+		ws = X.utils.table_to_sheet(get_dom_element(html), {sheetRows:1});
+		assert.equal(ws['!ref'], "A1:B1");
+		assert.equal(ws['!fullref'], "A1:B3");
+		ws = X.utils.table_to_sheet(get_dom_element(html), {sheetRows:2});
+		assert.equal(ws['!ref'], "A1:B2");
+		assert.equal(ws['!fullref'], "A1:B3");
+	});
+	if(domtest) await t.step('should hide hidden rows', async function(t) {
+		var html = "<table><tr style='display: none;'><td>Foo</td></tr><tr><td style='display: none;'>Bar</td></tr><tr class='hidden'><td>Baz</td></tr></table><style>.hidden {display: none}</style>";
+		var ws = X.utils.table_to_sheet(get_dom_element(html));
+		var expected_rows = [];
+		expected_rows[0] = expected_rows[2] = {hidden: true};
+		assert.equal(ws['!ref'], "A1:A3");
+		try {
+			assert.deepEqual(ws['!rows'], expected_rows);
+		} catch(e) {
+			expected_rows[1] = {};
+			assert.deepEqual(ws['!rows'], expected_rows);
+		}
+		assert.equal(get_cell(ws, "A1").v, "Foo");
+		assert.equal(get_cell(ws, "A2").v, "Bar");
+		assert.equal(get_cell(ws, "A3").v, "Baz");
+	});
+	if(domtest) await t.step('should ignore hidden rows and cells when the `display` option is on', async function(t) {
+		var html = "<table><tr style='display: none;'><td>1</td><td>2</td><td>3</td></tr><tr><td class='hidden'>Foo</td><td>Bar</td><td style='display: none;'>Baz</td></tr></table><style>.hidden {display: none}</style>";
+		var ws = X.utils.table_to_sheet(get_dom_element(html), {display: true});
+		assert.equal(ws['!ref'], "A1");
+		assert.assert(ws.hasOwnProperty('!rows') == false || !ws["!rows"]?.[0] || !ws["!rows"]?.[0]?.hidden);
+		assert.equal(get_cell(ws, "A1").v, "Bar");
+	});
 	await t.step('type override', async function(t) {
 		function chk(ws: X.WorkSheet) {
 			assert.equal(get_cell(ws, "A1").t, "s");
@@ -2249,24 +2349,34 @@ Deno.test('HTML', async function(t) {
 		}
 		var html = "<table><tr><td t=\"s\">1234567890</td><td>1234567890</td></tr></table>";
 		await t.step('HTML string', async function(t) {
-			var ws = X.read(html, {type:'string'}).Sheets.Sheet1; chk(ws);
-			chk(X.read(X.utils.sheet_to_html(ws), {type:'string'}).Sheets.Sheet1);
+			var ws = X.read(html, {type:'string'}).Sheets["Sheet1"]; chk(ws);
+			chk(X.read(X.utils.sheet_to_html(ws), {type:'string'}).Sheets["Sheet1"]);
 		});
+		if(domtest) await t.step('DOM', async function(t) { chk(X.utils.table_to_sheet(get_dom_element(html))); });
 	});
 	await t.step('TH/THEAD/TBODY/TFOOT elements', async function(t) {
 		var html = "<table><thead><tr><th>A</th><th>B</th></tr></thead><tbody><tr><td>1</td><td>2</td></tr><tr><td>3</td><td>4</td></tr></tbody><tfoot><tr><th>4</th><th>6</th></tr></tfoot></table>";
 		await t.step('HTML string', async function(t) {
-			var ws = X.read(html, {type:'string'}).Sheets.Sheet1;
+			var ws = X.read(html, {type:'string'}).Sheets["Sheet1"];
+			assert.equal(X.utils.sheet_to_csv(ws),  "A,B\n1,2\n3,4\n4,6");
+		});
+		if(domtest) await t.step('DOM', async function(t) {
+			var ws = X.utils.table_to_sheet(get_dom_element(html));
 			assert.equal(X.utils.sheet_to_csv(ws),  "A,B\n1,2\n3,4\n4,6");
 		});
 	});
 	await t.step('empty cell containing html element should increment cell index', async function(t) {
 		var html = "<table><tr><td>abc</td><td><b> </b></td><td>def</td></tr></table>";
 		var expectedCellCount = 3;
-		await t.step('HTML string', async function() {
-			var ws = X.read(html, {type:'string'}).Sheets.Sheet1;
+		await t.step('HTML string', async function(t) {
+			var ws = X.read(html, {type:'string'}).Sheets["Sheet1"];
 			var range = X.utils.decode_range(ws['!ref']||"A1");
 			assert.equal(range.e.c,expectedCellCount - 1);
+		});
+		if(domtest) await t.step('DOM', async function(t) {
+			var ws = X.utils.table_to_sheet(get_dom_element(html));
+			var range = X.utils.decode_range(ws['!ref']||"A1");
+			assert.equal(range.e.c, expectedCellCount - 1);
 		});
 	});
 });
@@ -2346,7 +2456,7 @@ Deno.test('corner cases', async function(t) {
 	});
 	if(typeof JSON !== 'undefined') await t.step('SSF oddities', async function(t) {
 		// $FlowIgnore
-		var ssfdata: Array<any> = JSON.parse(fs.readFileSync2('./misc/ssf.json', 'utf-8'));
+		var ssfdata: Array<any> = JSON.parse(fs.readFileSync('./misc/ssf.json', 'utf-8'));
 		var cb = function(d: any, j: any) { return function() { return X.SSF.format(d[0], d[j][0]); }; };
 		ssfdata.forEach(function(d) {
 			for(var j=1;j<d.length;++j) {
@@ -2381,17 +2491,17 @@ Deno.test('corner cases', async function(t) {
 	});
 	await t.step("should quote unicode sheet names in formulae", async function(t) {
 		var wb = X.read(fs.readFileSync(dir + "cross-sheet_formula_names.xlsb"), {WTF:true, type:TYPE});
-		assert.equal(wb.Sheets.Sheet1.A1.f, "'a-b'!A1");
-		assert.equal(wb.Sheets.Sheet1.A2.f, "'a#b'!A1");
-		assert.equal(wb.Sheets.Sheet1.A3.f, "'a^b'!A1");
-		assert.equal(wb.Sheets.Sheet1.A4.f, "'a%b'!A1");
-		assert.equal(wb.Sheets.Sheet1.A5.f, "'a\u066ab'!A1");
-		assert.equal(wb.Sheets.Sheet1.A6.f, "'☃️'!A1");
-		assert.equal(wb.Sheets.Sheet1.A7.f, "'\ud83c\udf63'!A1");
-		assert.equal(wb.Sheets.Sheet1.A8.f, "'a!!b'!A1");
-		assert.equal(wb.Sheets.Sheet1.A9.f, "'a$b'!A1");
-		assert.equal(wb.Sheets.Sheet1.A10.f, "'a!b'!A1");
-		assert.equal(wb.Sheets.Sheet1.A11.f, "'a b'!A1");
+		assert.equal(wb.Sheets["Sheet1"].A1.f, "'a-b'!A1");
+		assert.equal(wb.Sheets["Sheet1"].A2.f, "'a#b'!A1");
+		assert.equal(wb.Sheets["Sheet1"].A3.f, "'a^b'!A1");
+		assert.equal(wb.Sheets["Sheet1"].A4.f, "'a%b'!A1");
+		assert.equal(wb.Sheets["Sheet1"].A5.f, "'a\u066ab'!A1");
+		assert.equal(wb.Sheets["Sheet1"].A6.f, "'☃️'!A1");
+		assert.equal(wb.Sheets["Sheet1"].A7.f, "'\ud83c\udf63'!A1");
+		assert.equal(wb.Sheets["Sheet1"].A8.f, "'a!!b'!A1");
+		assert.equal(wb.Sheets["Sheet1"].A9.f, "'a$b'!A1");
+		assert.equal(wb.Sheets["Sheet1"].A10.f, "'a!b'!A1");
+		assert.equal(wb.Sheets["Sheet1"].A11.f, "'a b'!A1");
 	});
 	if(false) await t.step('should parse CSV date values with preceding space', async function(t) {
 		function check_ws(ws: X.WorkSheet, dNF?: any) {
@@ -2406,12 +2516,12 @@ Deno.test('corner cases', async function(t) {
 				var ws1 = X.read(
 					'7,2018-03-24',
 					{cellDates: cD, dateNF: dNF, type:'string'}
-				).Sheets.Sheet1;
+				).Sheets["Sheet1"];
 				check_ws(ws1, dNF);
 				var ws2 = X.read(
 					'7,  2018-03-24',
 					{cellDates: cD, dateNF: dNF, type:'string'}
-				).Sheets.Sheet1;
+				).Sheets["Sheet1"];
 				check_ws(ws2, dNF);
 			});
 		});
@@ -2549,16 +2659,17 @@ Deno.test('encryption', async function(t) {
 					if(e.message == "Password is incorrect") throw e;
 				}
 			});
-			//it.skip('should decrypt file', async function(t) {
-			//	/*var wb = */X.read(fs.readFileSync(dir + x), {type:TYPE,password:'password',WTF:opts.WTF});
-			//});
+			if(false) await t.step('should decrypt file', async function(t) {
+				/*var wb = */X.read(fs.readFileSync(dir + x), {type:TYPE,password:'password',WTF:opts.WTF});
+			});
 		});
 	};
 });
 
+if(!browser || typeof cptable !== 'undefined')
 Deno.test('multiformat tests', async function(t) {
 var mfopts = opts;
-var mft = fs.readFileSync2('multiformat.lst','utf-8').replace(/\r/g,"").split("\n").map(function(x) { return x.trim(); });
+var mft = fs.readFileSync('multiformat.lst','utf-8').replace(/\r/g,"").split("\n").map(function(x) { return x.trim(); });
 var csv = true, formulae = false;
 for(var mfti = 0; mfti < mft.length; ++mfti) { var x = mft[mfti];
 	if(x.charAt(0)!="#") await t.step('MFT ' + x, async function(t) {
@@ -2603,3 +2714,4 @@ for(var mfti = 0; mfti < mft.length; ++mfti) { var x = mft[mfti];
 		case "yes-formula": formulae = true; break;
 	}});
 } });
+

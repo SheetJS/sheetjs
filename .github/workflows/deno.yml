@@ -20,7 +20,7 @@ jobs:
       - run: sudo chmod a+x /usr/bin/rooster
       - run: make init
       - run: 'cd test_files; make all; cd -'
-      - run: deno test --allow-env --allow-read --allow-write test.ts
+      - run: deno test --allow-env --allow-read --allow-write --config misc/test.deno.jsonc test.ts
   # full test
   full:
     runs-on: ubuntu-latest
@@ -36,4 +36,4 @@ jobs:
       - run: sudo chmod a+x /usr/bin/rooster
       - run: make init
       - run: 'cd test_files; make all; cd -'
-      - run: deno test --allow-env --allow-read --allow-write test.ts
+      - run: deno test --allow-env --allow-read --allow-write --config misc/test.deno.jsonc test.ts

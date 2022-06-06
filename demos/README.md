@@ -45,6 +45,7 @@ can be installed with Bash on Windows or with `cygwin`.
 - [`Chrome / Chromium extensions`](chrome/)
 - [`Google Sheets API`](https://docs.sheetjs.com/docs/getting-started/demos/gsheet)
 - [`Adobe Apps`](https://docs.sheetjs.com/docs/getting-started/demos/extendscript)
+- [`Excel JavaScript API`](https://docs.sheetjs.com/docs/getting-started/demos/excel)
 - [`Headless Browsers`](headless/)
 - [`canvas-datagrid`](datagrid/)
 - [`x-spreadsheet`](xspreadsheet/)

@@ -45,6 +45,7 @@ function write_BrtWbProp(data/*:?WBProps*/, o) {
 	var flags = 0;
 	if(data) {
 		/* TODO: mirror parse_BrtWbProp fields */
+		if(data.date1904) flags |= 0x01;
 		if(data.filterPrivacy) flags |= 0x08;
 	}
 	o.write_shift(4, flags);

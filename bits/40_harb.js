@@ -440,7 +440,7 @@ var SYLK = /*#__PURE__*/(function() {
 				wb.Workbook.Names.push(nn);
 			} break;
 			case 'C': /* cell */
-			var C_seen_K = false, C_seen_X = false, C_seen_S = false, C_seen_E = false, _R = -1, _C = -1;
+			var C_seen_K = false, C_seen_X = false, C_seen_S = false, C_seen_E = false, _R = -1, _C = -1, formula = "", cell_t = "z";
 			for(rj=1; rj<record.length; ++rj) switch(record[rj].charAt(0)) {
 				case 'A': break; // TODO: comment
 				case 'X': C = parseInt(record[rj].slice(1), 10)-1; C_seen_X = true; break;
@@ -450,26 +450,24 @@ var SYLK = /*#__PURE__*/(function() {
 					break;
 				case 'K':
 					val = record[rj].slice(1);
-					if(val.charAt(0) === '"') val = val.slice(1,val.length - 1);
-					else if(val === 'TRUE') val = true;
-					else if(val === 'FALSE') val = false;
+					if(val.charAt(0) === '"') { val = val.slice(1,val.length - 1); cell_t = "s"; }
+					else if(val === 'TRUE' || val === 'FALSE') { val = val === 'TRUE'; cell_t = "b"; }
 					else if(!isNaN(fuzzynum(val))) {
-						val = fuzzynum(val);
-						if(next_cell_format !== null && fmt_is_date(next_cell_format)) val = numdate(wb.Workbook.WBProps.date1904 ? val + 1462 : val);
+						val = fuzzynum(val); cell_t = "n";
+						if(next_cell_format !== null && fmt_is_date(next_cell_format) && opts.cellDates) { val = numdate(wb.Workbook.WBProps.date1904 ? val + 1462 : val); cell_t = "d"; }
 					} else if(!isNaN(fuzzydate(val).getDate())) {
-						val = parseDate(val);
+						val = parseDate(val); cell_t = "d";
+						if(!opts.cellDates) { cell_t = "n"; val = datenum(val, wb.Workbook.WBProps.date1904); }
 					}
 					if(typeof $cptable !== 'undefined' && typeof val == "string" && ((opts||{}).type != "string") && (opts||{}).codepage) val = $cptable.utils.decode(opts.codepage, val);
 					C_seen_K = true;
 					break;
 				case 'E':
 					C_seen_E = true;
-					var formula = rc_to_a1(record[rj].slice(1), {r:R,c:C});
-					arr[R][C] = [arr[R][C], formula];
+					formula = rc_to_a1(record[rj].slice(1), {r:R,c:C});
 					break;
 				case 'S':
 					C_seen_S = true;
-					arr[R][C] = [arr[R][C], "S5S"];
 					break;
 				case 'G': break; // unknown
 				case 'R': _R = parseInt(record[rj].slice(1), 10)-1; break;
@@ -477,15 +475,21 @@ var SYLK = /*#__PURE__*/(function() {
 				default: if(opts && opts.WTF) throw new Error("SYLK bad record " + rstr);
 			}
 			if(C_seen_K) {
-				if(arr[R][C] && arr[R][C].length == 2) arr[R][C][0] = val;
-				else arr[R][C] = val;
+				if(!arr[R][C]) arr[R][C] = { t: cell_t, v: val };
+				else { arr[R][C].t = cell_t; arr[R][C].v = val; }
+				if(next_cell_format) arr[R][C].z = next_cell_format;
+				if(opts.cellText !== false && next_cell_format) arr[R][C].w = SSF_format(arr[R][C].z, arr[R][C].v, { date1904: wb.Workbook.WBProps.date1904 });
 				next_cell_format = null;
 			}
 			if(C_seen_S) {
 				if(C_seen_E) throw new Error("SYLK shared formula cannot have own formula");
 				var shrbase = _R > -1 && arr[_R][_C];
 				if(!shrbase || !shrbase[1]) throw new Error("SYLK shared formula cannot find base");
-				arr[R][C][1] = shift_formula_str(shrbase[1], {r: R - _R, c: C - _C});
+				formula = shift_formula_str(shrbase[1], {r: R - _R, c: C - _C});
+			}
+			if(formula) {
+				if(!arr[R][C]) arr[R][C] = { t: 'n', f: formula };
+				else arr[R][C].f = formula;
 			}
 			break;
 			case 'F': /* Format */
@@ -537,7 +541,8 @@ var SYLK = /*#__PURE__*/(function() {
 	function sylk_to_workbook(d/*:RawData*/, opts)/*:Workbook*/ {
 		var aoasht = sylk_to_aoa(d, opts);
 		var aoa = aoasht[0], ws = aoasht[1], wb = aoasht[2];
-		var o = aoa_to_sheet(aoa, opts);
+		var _opts = dup(opts); _opts.date1904 = (((wb||{}).Workbook || {}).WBProps || {}).date1904;
+		var o = aoa_to_sheet(aoa, _opts);
 		keys(ws).forEach(function(k) { o[k] = ws[k]; });
 		var outwb = sheet_to_workbook(o, opts);
 		keys(wb).forEach(function(k) { outwb[k] = wb[k]; });
@@ -581,11 +586,12 @@ var SYLK = /*#__PURE__*/(function() {
 		});
 	}
 
-	function sheet_to_sylk(ws/*:Worksheet*/, opts/*:?any*/)/*:string*/ {
+	function sheet_to_sylk(ws/*:Worksheet*/, opts/*:?any*/, wb/*:?WorkBook*/)/*:string*/ {
 		var preamble/*:Array<string>*/ = ["ID;PSheetJS;N;E"], o/*:Array<string>*/ = [];
 		var r = safe_decode_range(ws['!ref']), cell/*:Cell*/;
 		var dense = Array.isArray(ws);
 		var RS = "\r\n";
+		var d1904 = (((wb||{}).Workbook||{}).WBProps||{}).date1904;
 
 		preamble.push("P;PGeneral");
 		preamble.push("F;P0;DG0G8;M255");
@@ -593,12 +599,13 @@ var SYLK = /*#__PURE__*/(function() {
 		if(ws['!rows']) write_ws_rows_sylk(preamble, ws['!rows']);
 
 		preamble.push("B;Y" + (r.e.r - r.s.r + 1) + ";X" + (r.e.c - r.s.c + 1) + ";D" + [r.s.c,r.s.r,r.e.c,r.e.r].join(" "));
+		preamble.push("O;L;D;B" + (d1904 ? ";V4" : "") + ";K47;G100 0.001");
 		for(var R = r.s.r; R <= r.e.r; ++R) {
 			for(var C = r.s.c; C <= r.e.c; ++C) {
 				var coord = encode_cell({r:R,c:C});
 				cell = dense ? (ws[R]||[])[C]: ws[coord];
 				if(!cell || (cell.v == null && (!cell.f || cell.F))) continue;
-				o.push(write_ws_cell_sylk(cell, ws, R, C, opts));
+				o.push(write_ws_cell_sylk(cell, ws, R, C, opts)); // TODO: pass date1904 info
 			}
 		}
 		return preamble.join(RS) + RS + o.join(RS) + RS + "E" + RS;

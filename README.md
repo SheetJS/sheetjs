@@ -12,7 +12,9 @@ port calculations to web apps; automate common spreadsheet tasks, and much more!
 ![License](https://img.shields.io/github/license/SheetJS/sheetjs)
 [![Build Status](https://img.shields.io/github/workflow/status/sheetjs/sheetjs/Tests:%20node.js)](https://github.com/SheetJS/sheetjs/actions)
 [![Snyk Vulnerabilities](https://img.shields.io/snyk/vulnerabilities/github/SheetJS/sheetjs)](https://snyk.io/test/github/SheetJS/sheetjs)
-[![npm Downloads](https://img.shields.io/npm/dm/xlsx.svg)](https://npmjs.org/package/xlsx)
+[![npm Downloads](https://img.shields.io/npm/dm/xlsx.svg)](https://cdn.sheetjs.com/)
+[![GitHub Repo stars](https://img.shields.io/github/stars/SheetJS/sheetjs?style=social)](https://github.com/SheetJS/sheetjs)
+
 [![Analytics](https://ga-beacon.appspot.com/UA-36810333-1/SheetJS/sheetjs?pixel)](https://github.com/SheetJS/sheetjs)
 
 [![Build Status](https://saucelabs.com/browser-matrix/sheetjs.svg)](https://saucelabs.com/u/sheetjs)
@@ -25,13 +27,13 @@ port calculations to web apps; automate common spreadsheet tasks, and much more!
 
 ## Related Projects
 
-- <https://oss.sheetjs.com/notes/> file format notes
+- <https://oss.sheetjs.com/notes/>: File Format Notes
 
 - [`ssf`](packages/ssf): Format data using ECMA-376 spreadsheet format codes
 
 - [`xlsx-cli`](packages/xlsx-cli/): NodeJS command-line tool for processing files
 
-- [`test_files`](https://github.com/SheetJS/test_files): test files repo
+- [`test_files`](https://github.com/SheetJS/test_files): Sample spreadsheets
 
 - [`cfb`](https://github.com/SheetJS/js-cfb): Container (OLE/ZIP) format library
 
