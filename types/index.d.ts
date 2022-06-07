@@ -518,6 +518,7 @@ export interface Sheet {
      * Special keys start with '!'
      */
     [cell: string]: CellObject | SheetKeys | any;
+    [cell: `${string}${number}`]: CellObject;
 
     /** Sheet type */
     '!type'?: SheetType;
