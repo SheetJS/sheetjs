@@ -27,14 +27,236 @@ var number_formats_ods = {
 	quarter:       ["\\Qm", "m\\\"th quarter\""]
 };
 
+/* Note: ODS can stick styles in content.xml or styles.xml, FODS blurs lines */
+function parse_ods_styles(d/*:string*/, _opts, _nfm) {
+	var number_format_map = _nfm || {};
+	var str = xlml_normalize(d);
+	xlmlregex.lastIndex = 0;
+	str = str.replace(/<!--([\s\S]*?)-->/mg,"").replace(/<!DOCTYPE[^\[]*\[[^\]]*\]>/gm,"");
+	var Rn, NFtag, NF = "", tNF = "", y, etpos = 0, tidx = -1, infmt = false, payload = "";
+	while((Rn = xlmlregex.exec(str))) {
+		switch((Rn[3]=Rn[3].replace(/_.*$/,""))) {
+		/* Number Format Definitions */
+		case 'number-style': // <number:number-style> 16.29.2
+		case 'currency-style': // <number:currency-style> 16.29.8
+		case 'percentage-style': // <number:percentage-style> 16.29.10
+		case 'date-style': // <number:date-style> 16.29.11
+		case 'time-style': // <number:time-style> 16.29.19
+		case 'text-style': // <number:text-style> 16.29.26
+			if(Rn[1]==='/') {
+				infmt = false;
+				if(NFtag['truncate-on-overflow'] == "false") {
+					if(NF.match(/h/)) NF = NF.replace(/h+/, "[$&]");
+					else if(NF.match(/m/)) NF = NF.replace(/m+/, "[$&]");
+					else if(NF.match(/s/)) NF = NF.replace(/s+/, "[$&]");
+				}
+				number_format_map[NFtag.name] = NF;
+				NF = "";
+			} else if(Rn[0].charAt(Rn[0].length-2) !== '/') {
+				infmt = true;
+				NF = "";
+				NFtag = parsexmltag(Rn[0], false);
+			} break;
 
-function parse_content_xml(d/*:string*/, _opts)/*:Workbook*/ {
+		// LibreOffice bug https://bugs.documentfoundation.org/show_bug.cgi?id=149484
+		case 'boolean-style': // <number:boolean-style> 16.29.24
+			if(Rn[1]==='/') {
+				infmt = false;
+				number_format_map[NFtag.name] = "General";
+				NF = "";
+			} else if(Rn[0].charAt(Rn[0].length-2) !== '/') {
+				infmt = true;
+				NF = "";
+				NFtag = parsexmltag(Rn[0], false);
+			} break;
+
+		/* Number Format Elements */
+		case 'boolean': // <number:boolean> 16.29.25
+			NF += "General"; // ODF spec is unfortunately underspecified here
+			break;
+
+		case 'text': // <number:text> 16.29.27
+			if(Rn[1]==='/') {
+				payload = str.slice(tidx, xlmlregex.lastIndex - Rn[0].length);
+				// NOTE: Excel has a different interpretation of "%%" and friends
+				if(payload == "%" && NFtag[0] == '<number:percentage-style') NF += "%";
+				else NF += '"' + payload.replace(/"/g, '""') + '"';
+			} else if(Rn[0].charAt(Rn[0].length-2) !== '/') {
+				tidx = xlmlregex.lastIndex;
+			} break;
+
+
+		case 'day': { // <number:day> 16.29.12
+			y = parsexmltag(Rn[0], false);
+			switch(y["style"]) {
+				case "short": NF += "d"; break;
+				case "long": NF += "dd"; break;
+				default: NF += "dd"; break; // TODO: error condition
+			}
+		} break;
+
+		case 'day-of-week': { // <number:day-of-week> 16.29.16
+			y = parsexmltag(Rn[0], false);
+			switch(y["style"]) {
+				case "short": NF += "ddd"; break;
+				case "long": NF += "dddd"; break;
+				default: NF += "ddd"; break;
+			}
+		} break;
+
+		case 'era': { // <number:era> 16.29.15 TODO: proper mapping
+			y = parsexmltag(Rn[0], false);
+			switch(y["style"]) {
+				case "short": NF += "ee"; break;
+				case "long": NF += "eeee"; break;
+				default: NF += "eeee"; break; // TODO: error condition
+			}
+		} break;
+
+		case 'hours': { // <number:hours> 16.29.20
+			y = parsexmltag(Rn[0], false);
+			switch(y["style"]) {
+				case "short": NF += "h"; break;
+				case "long": NF += "hh"; break;
+				default: NF += "hh"; break; // TODO: error condition
+			}
+		} break;
+
+		case 'minutes': { // <number:minutes> 16.29.21
+			y = parsexmltag(Rn[0], false);
+			switch(y["style"]) {
+				case "short": NF += "m"; break;
+				case "long": NF += "mm"; break;
+				default: NF += "mm"; break; // TODO: error condition
+			}
+		} break;
+
+		case 'month': { // <number:month> 16.29.13
+			y = parsexmltag(Rn[0], false);
+			if(y["textual"]) NF += "mm";
+			switch(y["style"]) {
+				case "short": NF += "m"; break;
+				case "long": NF += "mm"; break;
+				default: NF += "m"; break;
+			}
+		} break;
+
+		case 'seconds': { // <number:seconds> 16.29.22
+			y = parsexmltag(Rn[0], false);
+			switch(y["style"]) {
+				case "short": NF += "s"; break;
+				case "long": NF += "ss"; break;
+				default: NF += "ss"; break; // TODO: error condition
+			}
+			if(y["decimal-places"]) NF += "." + fill("0", +y["decimal-places"]);
+		} break;
+
+		case 'year': { // <number:year> 16.29.14
+			y = parsexmltag(Rn[0], false);
+			switch(y["style"]) {
+				case "short": NF += "yy"; break;
+				case "long": NF += "yyyy"; break;
+				default: NF += "yy"; break; // TODO: error condition
+			}
+		} break;
+
+		case 'am-pm': // <number:am-pm> 16.29.23
+			NF += "AM/PM"; // LO autocorrects A/P -> AM/PM
+			break;
+
+		case 'week-of-year': // <number:week-of-year> 16.29.17
+		case 'quarter': // <number:quarter> 16.29.18
+			console.error("Excel does not support ODS format token " + Rn[3]);
+			break;
+
+		case 'fill-character': // <number:fill-character> 16.29.5
+			if(Rn[1]==='/') {
+				payload = str.slice(tidx, xlmlregex.lastIndex - Rn[0].length);
+				// NOTE: Excel has a different interpretation of "%%" and friends
+				NF += '"' + payload.replace(/"/g, '""') + '"*';
+			} else if(Rn[0].charAt(Rn[0].length-2) !== '/') {
+				tidx = xlmlregex.lastIndex;
+			} break;
+
+		case 'scientific-number': // <number:scientific-number> 16.29.6
+			// TODO: find a mapping for all parameters
+			y = parsexmltag(Rn[0], false);
+			NF += "0." + fill("0", +y["min-decimal-places"] || +y["decimal-places"] || 2) + fill("?", +y["decimal-places"] - +y["min-decimal-places"] || 0) + "E" + (parsexmlbool(y["forced-exponent-sign"]) ? "+" : "") + fill("0", +y["min-exponent-digits"] || 2);
+			break;
+
+		case 'fraction': // <number:fraction> 16.29.7
+			// TODO: find a mapping for all parameters
+			y = parsexmltag(Rn[0], false);
+			if(!+y["min-integer-digits"]) NF += "#";
+			else NF += fill("0", +y["min-integer-digits"]);
+			NF += " ";
+			NF += fill("?", +y["min-numerator-digits"] || 1);
+			NF += "/";
+			if(+y["denominator-value"]) NF += y["denominator-value"];
+			else NF += fill("?", +y["min-denominator-digits"] || 1);
+			break;
+
+		case 'currency-symbol': // <number:currency-symbol> 16.29.9
+			// TODO: localization with [$-...]
+			if(Rn[1]==='/') {
+				NF += '"' + str.slice(tidx, xlmlregex.lastIndex - Rn[0].length).replace(/"/g, '""') + '"';
+			} else if(Rn[0].charAt(Rn[0].length-2) !== '/') {
+				tidx = xlmlregex.lastIndex;
+			} else NF += "$";
+			break;
+
+		case 'text-properties': // <style:text-properties> 16.29.29
+			y = parsexmltag(Rn[0], false);
+			switch((y["color"]||"").toLowerCase().replace("#", "")) {
+				case "ff0000": case "red": NF = "[Red]" + NF; break;
+			}
+			break;
+
+		case 'text-content': // <number:text-content> 16.29.28
+			NF += "@";
+			break;
+
+		case 'map': // <style:map> 16.3
+			// TODO: handle more complex maps
+			y = parsexmltag(Rn[0], false);
+			if(unescapexml(y["condition"]) == "value()>=0") NF = number_format_map[y["apply-style-name"]] + ";" + NF;
+			else console.error("ODS number format may be incorrect: " + y["condition"]);
+			break;
+
+		case 'number': // <number:number> 16.29.3
+			// TODO: handle all the attributes
+			if(Rn[1]==='/') break;
+			y = parsexmltag(Rn[0], false);
+			tNF = "";
+			tNF += fill("0", +y["min-integer-digits"] || 1);
+			if(parsexmlbool(y["grouping"])) tNF = commaify(fill("#", Math.max(0, 4 - tNF.length)) + tNF);
+			if(+y["min-decimal-places"] || +y["decimal-places"]) tNF += ".";
+			if(+y["min-decimal-places"]) tNF += fill("0", +y["min-decimal-places"] || 1);
+			if(+y["decimal-places"] - (+y["min-decimal-places"]||0)) tNF += fill("#", +y["decimal-places"] - (+y["min-decimal-places"]||0));
+			NF += tNF;
+			break;
+
+		case 'embedded-text': // <number:embedded-text> 16.29.4
+			// TODO: verify interplay with grouping et al
+			if(Rn[1]==='/') {
+				if(etpos == 0) NF += '"' + str.slice(tidx, xlmlregex.lastIndex - Rn[0].length).replace(/"/g, '""') + '"';
+				else NF = NF.slice(0, etpos) + '"' + str.slice(tidx, xlmlregex.lastIndex - Rn[0].length).replace(/"/g, '""') + '"' + NF.slice(etpos);
+			} else if(Rn[0].charAt(Rn[0].length-2) !== '/') {
+				tidx = xlmlregex.lastIndex;
+				etpos = -+parsexmltag(Rn[0], false)["position"] || 0;
+			} break;
+
+	}}
+	return number_format_map;
+}
+
+function parse_content_xml(d/*:string*/, _opts, _nfm)/*:Workbook*/ {
 		var opts = _opts || {};
 		if(DENSE != null && opts.dense == null) opts.dense = DENSE;
 		var str = xlml_normalize(d);
 		var state/*:Array<any>*/ = [], tmp;
 		var tag/*:: = {}*/;
-		var NFtag = {name:""}, NF = "", pidx = 0;
+		var nfidx, NF = "", pidx = 0;
 		var sheetag/*:: = {name:"", '名称':""}*/;
 		var rowtag/*:: = {'行号':""}*/;
 		var Sheets = {}, SheetNames/*:Array<string>*/ = [];
@@ -45,7 +267,7 @@ function parse_content_xml(d/*:string*/, _opts)/*:Workbook*/ {
 		var textR = [];
 		var R = -1, C = -1, range = {s: {r:1000000,c:10000000}, e: {r:0, c:0}};
 		var row_ol = 0;
-		var number_format_map = {};
+		var number_format_map = _nfm || {}, styles = {};
 		var merges/*:Array<Range>*/ = [], mrange = {}, mR = 0, mC = 0;
 		var rowinfo/*:Array<RowInfo>*/ = [], rowpeat = 1, colpeat = 1;
 		var arrayf/*:Array<[Range, string]>*/ = [];
@@ -56,7 +278,7 @@ function parse_content_xml(d/*:string*/, _opts)/*:Workbook*/ {
 		var creator = "", creatoridx = 0;
 		var isstub = false, intable = false;
 		var i = 0;
-		var baddate = 1;
+		var baddate = 0;
 		xlmlregex.lastIndex = 0;
 		str = str.replace(/<!--([\s\S]*?)-->/mg,"").replace(/<!DOCTYPE[^\[]*\[[^\]]*\]>/gm,"");
 		while((Rn = xlmlregex.exec(str))) switch((Rn[3]=Rn[3].replace(/_.*$/,""))) {
@@ -114,6 +336,7 @@ function parse_content_xml(d/*:string*/, _opts)/*:Workbook*/ {
 					colpeat = parseInt(ctag['number-columns-repeated']||"1", 10);
 					q = ({t:'z', v:null/*:: , z:null, w:"",c:[]*/}/*:any*/);
 					if(ctag.formula && opts.cellFormula != false) q.f = ods_to_csf_formula(unescapexml(ctag.formula));
+					if(ctag["style-name"] && styles[ctag["style-name"]]) q.z = styles[ctag["style-name"]];
 					if((ctag['数据类型'] || ctag['value-type']) == "string") {
 						q.t = "s"; q.v = unescapexml(ctag['string-value'] || "");
 						if(opts.dense) {
@@ -136,6 +359,7 @@ function parse_content_xml(d/*:string*/, _opts)/*:Workbook*/ {
 					ctag = parsexmltag(Rn[0], false);
 					comments = []; comment = ({}/*:any*/);
 					q = ({t:ctag['数据类型'] || ctag['value-type'], v:null/*:: , z:null, w:"",c:[]*/}/*:any*/);
+					if(ctag["style-name"] && styles[ctag["style-name"]]) q.z = styles[ctag["style-name"]];
 					if(opts.cellFormula) {
 						if(ctag.formula) ctag.formula = unescapexml(ctag.formula);
 						if(ctag['number-matrix-columns-spanned'] && ctag['number-matrix-rows-spanned']) {
@@ -163,16 +387,16 @@ function parse_content_xml(d/*:string*/, _opts)/*:Workbook*/ {
 
 					/* 19.385 office:value-type */
 					switch(q.t) {
-						case 'boolean': q.t = 'b'; q.v = parsexmlbool(ctag['boolean-value']); break;
+						case 'boolean': q.t = 'b'; q.v = parsexmlbool(ctag['boolean-value']) || (+ctag['boolean-value'] >= 1); break;
 						case 'float': q.t = 'n'; q.v = parseFloat(ctag.value); break;
 						case 'percentage': q.t = 'n'; q.v = parseFloat(ctag.value); break;
 						case 'currency': q.t = 'n'; q.v = parseFloat(ctag.value); break;
 						case 'date': q.t = 'd'; q.v = parseDate(ctag['date-value']);
 							if(!opts.cellDates) { q.t = 'n'; q.v = datenum(q.v, WB.WBProps.date1904) - baddate; }
-							q.z = 'm/d/yy'; break;
+							if(!q.z) q.z = 'm/d/yy'; break;
 						case 'time': q.t = 'n'; q.v = parse_isodur(ctag['time-value'])/86400;
 							if(opts.cellDates) { q.t = 'd'; q.v = numdate(q.v); }
-							q.z = 'HH:MM:SS'; break;
+							if(!q.z) q.z = 'HH:MM:SS'; break;
 						case 'number': q.t = 'n'; q.v = parseFloat(ctag['数据数值']); break;
 						default:
 							if(q.t === 'string' || q.t === 'text' || !q.t) {
@@ -267,23 +491,24 @@ function parse_content_xml(d/*:string*/, _opts)/*:Workbook*/ {
 				textp = ""; textpidx = 0; textR = [];
 				break;
 
-			case 'scientific-number': // TODO: <number:scientific-number>
+			case 'scientific-number': // <number:scientific-number>
+			case 'currency-symbol': // <number:currency-symbol>
+			case 'fill-character': // 16.29.5 <number:fill-character>
 				break;
-			case 'currency-symbol': // TODO: <number:currency-symbol>
-				break;
-			case 'currency-style': // TODO: <number:currency-style>
-				break;
+
+			case 'text-style': // 16.27.25 <number:text-style>
+			case 'boolean-style': // 16.27.23 <number:boolean-style>
 			case 'number-style': // 16.27.2 <number:number-style>
+			case 'currency-style': // 16.29.8 <number:currency-style>
 			case 'percentage-style': // 16.27.9 <number:percentage-style>
 			case 'date-style': // 16.27.10 <number:date-style>
 			case 'time-style': // 16.27.18 <number:time-style>
 				if(Rn[1]==='/'){
-					number_format_map[NFtag.name] = NF;
-					if((tmp=state.pop())[0]!==Rn[3]) throw "Bad state: "+tmp;
+					var xlmlidx = xlmlregex.lastIndex;
+					parse_ods_styles(str.slice(nfidx, xlmlregex.lastIndex), _opts, number_format_map);
+					xlmlregex.lastIndex = xlmlidx;
 				} else if(Rn[0].charAt(Rn[0].length-2) !== '/') {
-					NF = "";
-					NFtag = parsexmltag(Rn[0], false);
-					state.push([Rn[3], true]);
+					nfidx = xlmlregex.lastIndex - Rn[0].length;
 				} break;
 
 			case 'script': break; // 3.13 <office:script>
@@ -292,8 +517,10 @@ function parse_content_xml(d/*:string*/, _opts)/*:Workbook*/ {
 
 			case 'default-style': // TODO: <style:default-style>
 			case 'page-layout': break; // TODO: <style:page-layout>
-			case 'style': // 16.2 <style:style>
-				break;
+			case 'style': { // 16.2 <style:style>
+				var styletag = parsexmltag(Rn[0], false);
+				if(styletag["family"] == "table-cell" && number_format_map[styletag["data-style-name"]]) styles[styletag["name"]] = number_format_map[styletag["data-style-name"]];
+			} break;
 			case 'map': break; // 16.3 <style:map>
 			case 'font-face': break; // 16.21 <style:font-face>
 
@@ -331,9 +558,7 @@ function parse_content_xml(d/*:string*/, _opts)/*:Workbook*/ {
 						NF += number_formats_ods[Rn[3]][tag.style==='long'?1:0]; break;
 				} break;
 
-			case 'boolean-style': break; // 16.27.23 <number:boolean-style>
 			case 'boolean': break; // 16.27.24 <number:boolean>
-			case 'text-style': break; // 16.27.25 <number:text-style>
 			case 'text': // 16.27.26 <number:text>
 				if(Rn[0].slice(-2) === "/>") break;
 				else if(Rn[1]==="/") switch(state[state.length-1][0]) {
@@ -564,9 +789,11 @@ function parse_content_xml(d/*:string*/, _opts)/*:Workbook*/ {
 function parse_ods(zip/*:ZIPFile*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
 	opts = opts || ({}/*:any*/);
 	if(safegetzipfile(zip, 'META-INF/manifest.xml')) parse_manifest(getzipdata(zip, 'META-INF/manifest.xml'), opts);
+	var styles = getzipstr(zip, 'styles.xml');
+	var Styles = styles && parse_ods_styles(utf8read(styles), opts);
 	var content = getzipstr(zip, 'content.xml');
 	if(!content) throw new Error("Missing content.xml in ODS / UOF file");
-	var wb = parse_content_xml(utf8read(content), opts);
+	var wb = parse_content_xml(utf8read(content), opts, Styles);
 	if(safegetzipfile(zip, 'meta.xml')) wb.Props = parse_core_props(getzipdata(zip, 'meta.xml'));
 	return wb;
 }
