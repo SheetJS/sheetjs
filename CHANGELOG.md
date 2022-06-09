@@ -4,6 +4,13 @@ This log is intended to keep track of backwards-incompatible changes, including
 but not limited to API changes and file location changes.  Minor behavioral
 changes may not be included if they are not expected to break existing code.
 
+## v0.18.9
+
+* XLSX / ODS write defined names
+* sync defined names to AutoFilter setting on export
+* 1904 date system setting properly roundtripped
+* ODS read/write number formats
+
 ## v0.18.8
 
 * Plaintext parsing of dateless meridien time values (`1:23:45 PM`)

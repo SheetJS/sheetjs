@@ -1041,6 +1041,7 @@ function stringify_formula(formula/*Array<any>*/, range, cell/*:any*/, supbooks,
 		}
 	}
 	if(stack.length > 1 && opts.WTF) throw new Error("bad formula stack");
+	if(stack[0] == "TRUE") return true; if(stack[0] == "FALSE") return false;
 	return stack[0];
 }
 

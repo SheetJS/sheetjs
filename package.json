@@ -1,6 +1,6 @@
 {
 	"name": "xlsx",
-	"version": "0.18.8",
+	"version": "0.18.9",
 	"author": "sheetjs",
 	"description": "SheetJS Spreadsheet data parser and writer",
 	"keywords": [

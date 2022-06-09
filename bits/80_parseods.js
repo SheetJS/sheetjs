@@ -12,21 +12,6 @@ function parse_text_p(text/*:string*//*::, tag*/)/*:Array<any>*/ {
 	return [v];
 }
 
-var number_formats_ods = {
-	/* ods name: [short ssf fmt, long ssf fmt] */
-	day:           ["d",   "dd"],
-	month:         ["m",   "mm"],
-	year:          ["y",   "yy"],
-	hours:         ["h",   "hh"],
-	minutes:       ["m",   "mm"],
-	seconds:       ["s",   "ss"],
-	"am-pm":       ["A/P", "AM/PM"],
-	"day-of-week": ["ddd", "dddd"],
-	era:           ["e",   "ee"],
-	/* there is no native representation of LO "Q" format */
-	quarter:       ["\\Qm", "m\\\"th quarter\""]
-};
-
 /* Note: ODS can stick styles in content.xml or styles.xml, FODS blurs lines */
 function parse_ods_styles(d/*:string*/, _opts, _nfm) {
 	var number_format_map = _nfm || {};
@@ -232,7 +217,7 @@ function parse_ods_styles(d/*:string*/, _opts, _nfm) {
 			if(parsexmlbool(y["grouping"])) tNF = commaify(fill("#", Math.max(0, 4 - tNF.length)) + tNF);
 			if(+y["min-decimal-places"] || +y["decimal-places"]) tNF += ".";
 			if(+y["min-decimal-places"]) tNF += fill("0", +y["min-decimal-places"] || 1);
-			if(+y["decimal-places"] - (+y["min-decimal-places"]||0)) tNF += fill("#", +y["decimal-places"] - (+y["min-decimal-places"]||0));
+			if(+y["decimal-places"] - (+y["min-decimal-places"]||0)) tNF += fill("0", +y["decimal-places"] - (+y["min-decimal-places"]||0)); // TODO: should this be "#" ?
 			NF += tNF;
 			break;
 
@@ -531,12 +516,7 @@ function parse_content_xml(d/*:string*/, _opts, _nfm)/*:Workbook*/ {
 			case 'table-cell-properties': break; // 17.18 <style:table-cell-properties>
 
 			case 'number': // 16.27.3 <number:number>
-				switch(state[state.length-1][0]) {
-					case 'time-style':
-					case 'date-style':
-						tag = parsexmltag(Rn[0], false);
-						NF += number_formats_ods[Rn[3]][tag.style==='long'?1:0]; break;
-				} break;
+				break;
 
 			case 'fraction': break; // TODO 16.27.6 <number:fraction>
 
@@ -551,12 +531,7 @@ function parse_content_xml(d/*:string*/, _opts, _nfm)/*:Workbook*/ {
 			case 'minutes': // 16.27.20 <number:minutes>
 			case 'seconds': // 16.27.21 <number:seconds>
 			case 'am-pm': // 16.27.22 <number:am-pm>
-				switch(state[state.length-1][0]) {
-					case 'time-style':
-					case 'date-style':
-						tag = parsexmltag(Rn[0], false);
-						NF += number_formats_ods[Rn[3]][tag.style==='long'?1:0]; break;
-				} break;
+				break;
 
 			case 'boolean': break; // 16.27.24 <number:boolean>
 			case 'text': // 16.27.26 <number:text>

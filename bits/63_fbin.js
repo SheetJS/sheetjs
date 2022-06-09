@@ -152,6 +152,15 @@ function write_XLSBFormulaErr(val/*:number*/) {
 	oint.write_shift(4, 0);
 	return oint;
 }
+/* Writes a PtgBool */
+function write_XLSBFormulaBool(val/*:boolean*/) {
+	var oint = new_buf(10);
+	oint.write_shift(4, 2);
+	oint.write_shift(1, 0x1D);
+	oint.write_shift(1, val?1:0);
+	oint.write_shift(4, 0);
+	return oint;
+}
 
 /* Writes a PtgStr */
 function write_XLSBFormulaStr(val/*:string*/) {
@@ -306,7 +315,9 @@ function write_XLSBFormulaArea3D(_str, wb) {
 
 
 /* General Formula */
-function write_XLSBFormula(val/*:string*/, wb) {
+function write_XLSBFormula(val/*:string|number*/, wb) {
+	if(typeof val == "number") return write_XLSBFormulaNum(val);
+	if(typeof val == "boolean") return write_XLSBFormulaBool(val);
 	if(/^#(DIV\/0!|GETTING_DATA|N\/A|NAME\?|NULL!|NUM!|REF!|VALUE!)$/.test(val)) return write_XLSBFormulaErr(+RBErr[val]);
 	if(val.match(/^\$?(?:[A-W][A-Z]{2}|X[A-E][A-Z]|XF[A-D]|[A-Z]{1,2})\$?(?:10[0-3]\d{4}|104[0-7]\d{3}|1048[0-4]\d{2}|10485[0-6]\d|104857[0-6]|[1-9]\d{0,5})$/)) return write_XLSBFormulaRef(val);
 	if(val.match(/^\$?(?:[A-W][A-Z]{2}|X[A-E][A-Z]|XF[A-D]|[A-Z]{1,2})\$?(?:10[0-3]\d{4}|104[0-7]\d{3}|1048[0-4]\d{2}|10485[0-6]\d|104857[0-6]|[1-9]\d{0,5}):\$?(?:[A-W][A-Z]{2}|X[A-E][A-Z]|XF[A-D]|[A-Z]{1,2})\$?(?:10[0-3]\d{4}|104[0-7]\d{3}|1048[0-4]\d{2}|10485[0-6]\d|104857[0-6]|[1-9]\d{0,5})$/)) return write_XLSBFormulaRange(val);
