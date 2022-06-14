@@ -12,21 +12,48 @@ function doit(data) {
   for(var j = 0; j <= 100; ++j) it(String(j), function() {
     for(var k = 0; k <= step; ++k,++i) {
       if(data[i] == null || data[i].length < 3) return;
-      var d = data[i].replace(/#{255}/g,"").split("\t");
-      for(var w = 1; w < headers.length; ++w) {
-        var expected = d[w], actual = SSF.format(headers[w], parseFloat(d[0]), {});
-        if(actual != expected) throw new Error([actual, expected, w, headers[w],d[0],d,i].join("|"));
-        actual = SSF.format(headers[w].toUpperCase(), parseFloat(d[0]), {});
-        if(actual != expected) throw new Error([actual, expected, w, headers[w].toUpperCase(),d[0],d,i].join("|"));
-      }
+      var row = data[i].replace(/#{255}/g,"").split("\t");
+      testRow(row, headers, {})
     }
   });
 }
-
+  
+function testRow(row, headers, opts) {
+  for(var w = 1; w < headers.length; ++w) {
+    var expected = row[w], actual = SSF.format(headers[w], parseFloat(row[0]), opts);
+    if(actual != expected) throw new Error([actual, expected, w, headers[w],row[0],row].join("|"));
+    actual = SSF.format(headers[w].toUpperCase(), parseFloat(row[0]), opts);
+    if(actual != expected) throw new Error([actual, expected, w, headers[w].toUpperCase(),row[0],row].join("|"));
+  }
+}
+  
 describe('time formats', function() {
   doit(process.env.MINTEST ? times.slice(0,4000) : times);
 });
 
+describe('time format rounding', function() {
+  var headers=['value', 'yyyy mmm ddd dd hh:mm:ss'];
+  var testCases = [
+    {desc: "rounds up to 1 minute", value: "0.00069", date1904: {"false": "1900 Jan Sat 00 00:01:00", "true": "1904 Jan Fri 01 00:01:00"}},
+    {desc: "rounds up to 2 munutes", value: "0.001388", date1904: {"false": "1900 Jan Sat 00 00:02:00", "true": "1904 Jan Fri 01 00:02:00"}},
+    {desc: "rounds up to 10 minutes", value: "0.00694", date1904: {"false": "1900 Jan Sat 00 00:10:00", "true": "1904 Jan Fri 01 00:10:00"}},
+    {desc: "rounds up to 2 hours", value: "0.08333", date1904: {"false": "1900 Jan Sat 00 02:00:00", "true": "1904 Jan Fri 01 02:00:00"}},
+    {desc: "rounds up day", value: "0.999999", date1904: {"false": "1900 Jan Sun 01 00:00:00", "true": "1904 Jan Sat 02 00:00:00"}},
+    {desc: "rounds up month", value: "31.999999", date1904: {"false": "1900 Feb Wed 01 00:00:00", "true": "1904 Feb Tue 02 00:00:00"}},
+    {desc: "rounds up to 1900 leap day", value: "59.999999", date1904: {"false": "1900 Feb Wed 29 00:00:00", "true": "1904 Mar Tue 01 00:00:00"}},
+    {desc: "rounds 1900 leap day up", value: "60.999999", date1904: {"false": "1900 Mar Thu 01 00:00:00", "true": "1904 Mar Wed 02 00:00:00"}},
+    {desc: "rounds up day in March", value: "77.999999", date1904: {"false": "1900 Mar Sun 18 00:00:00", "true": "1904 Mar Sat 19 00:00:00"}},
+    {desc: "rounds up leap year 1900", value: "366.999999", date1904: {"false": "1901 Jan Tue 01 00:00:00", "true": "1905 Jan Mon 02 00:00:00"}},
+    {desc: "rounds up leap year 1904", value: "365.999999", date1904: {"false": "1900 Dec Mon 31 00:00:00", "true": "1905 Jan Sun 01 00:00:00"}},
+  ];
+  [{date1904: true}, {date1904: false}].forEach(opts => {
+    testCases.forEach(testCase => {
+      it(testCase.desc + ` (1904: ${opts.date1904})`, 
+        () => testRow([testCase.value, testCase.date1904[`${opts.date1904}`]], headers, opts))
+    })
+  })
+})
+ 
 describe('date formats', function() {
   doit(process.env.MINTEST ? dates.slice(0,4000) : dates);
   if(0) doit(process.env.MINTEST ? date2.slice(0,1000) : date2);

@@ -1,4 +1,5 @@
 /*jshint -W086 */
+var ROUNDING_FLAG = "rounding is necessary"
 function write_date(type/*:number*/, fmt/*:string*/, val, ss0/*:?number*/)/*:string*/ {
 	var o="", ss=0, tt=0, y = val.y, out, outl = 0;
 	switch(type) {
@@ -45,7 +46,7 @@ function write_date(type/*:number*/, fmt/*:string*/, val, ss0/*:?number*/)/*:str
 			if(ss0 >= 2) tt = ss0 === 3 ? 1000 : 100;
 			else tt = ss0 === 1 ? 10 : 1;
 			ss = Math.round((tt)*(val.S + val.u));
-			if(ss >= 60*tt) ss = 0;
+			if(ss >= 60*tt) throw ROUNDING_FLAG;
 			if(fmt === 's') return ss === 0 ? "0" : ""+ss/tt;
 			o = pad0(ss,2 + ss0);
 			if(fmt === 'ss') return o.substr(0,2);
