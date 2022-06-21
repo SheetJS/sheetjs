@@ -99,23 +99,14 @@ function eval_fmt(fmt/*:string*/, v/*:any*/, opts/*:any*/, flen/*:number*/) {
 		}
 	}
 	/* time rounding depends on presence of minute / second / usec fields */
-	switch(bt) {
-		case 0: break;
-		case 1:
-			/*::if(!dt) break;*/
-			if(dt.u >= 0.5) { dt.u = 0; ++dt.S; }
-			if(dt.S >=  60) { dt.S = 0; ++dt.M; }
-			if(dt.M >=  60) { dt.M = 0; ++dt.H; }
-			break;
-		case 2:
-			/*::if(!dt) break;*/
-			if(dt.u >= 0.5) { dt.u = 0; ++dt.S; }
-			if(dt.S >=  60) { dt.S = 0; ++dt.M; }
-			break;
+	if (bt > 0 && bt < 3 && dt.u >= 0.5) {
+	 	round_up_date(dt, opts);
 	}
 
 	/* replace fields */
-	var {nstr,out} = replace_fields(out, dt, ss0, v, opts);
+	var replaced = replace_fields(out, dt, ss0, v, opts);
+	var nstr = replaced.nstr;
+	out = replaced.out;
 	var vv = "", myv, ostr;
 	if(nstr.length > 0) {
 		if(nstr.charCodeAt(0) == 40) /* '(' */ {
@@ -183,7 +174,7 @@ function eval_fmt(fmt/*:string*/, v/*:any*/, opts/*:any*/, flen/*:number*/) {
 }
 function replace_fields(fields, dt, ss0, v, opts) {
 	var out = [];
-	for (var i = 0; i < fields.length; i++) {out[i] = {t: fields[i].t, v: fields[i].v}}
+	for (var i = 0; i < fields.length; i++) {out[i] = {t: fields[i].t, v: fields[i].v};}
 	var nstr = "", jj;
 	for(i=0; i < out.length; ++i) {
 		switch(out[i].t) {

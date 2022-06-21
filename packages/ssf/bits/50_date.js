@@ -55,7 +55,7 @@ function write_date(type/*:number*/, fmt/*:string*/, val, ss0/*:?number*/)/*:str
 		switch(fmt) {
 			case '[h]': case '[hh]': out = val.D*24+val.H; break;
 			case '[m]': case '[mm]': out = (val.D*24+val.H)*60+val.M; break;
-			case '[s]': case '[ss]': out = ((val.D*24+val.H)*60+val.M)*60+Math.round(val.S+val.u); break;
+			case '[s]': case '[ss]': out = ((val.D*24+val.H)*60+val.M)*60+(ss0 < 1 ? Math.round(val.S+val.u) : val.S); break;
 			default: throw 'bad abstime format: ' + fmt;
 		} outl = fmt.length === 3 ? 1 : 2; break;
 		case 101: /* 'e' era */

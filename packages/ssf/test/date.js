@@ -49,10 +49,34 @@ describe('time format rounding', function() {
   [{date1904: true}, {date1904: false}].forEach(opts => {
     testCases.forEach(testCase => {
       it(testCase.desc + ` (1904: ${opts.date1904})`, 
-        () => testRow([testCase.value, testCase.date1904[`${opts.date1904}`]], headers, opts))
-    })
-  })
-})
+        () => testRow([testCase.value, testCase.date1904[`${opts.date1904}`]], headers, opts));
+    });
+  });
+});
+
+describe('time format precision rounding', function() {
+  var value = "4018.99999998843";
+  var testCases = [
+    {desc: "end-of-year thousandths rounding", format: "mm/dd/yyyy hh:mm:ss.000", expected: "12/31/1910 23:59:59.999"},
+    {desc: "end-of-year hundredths round up", format: "mm/dd/yyyy hh:mm:ss.00", expected: "01/01/1911 00:00:00.00"},
+    {desc: "end-of-year minutes round up", format: "mm/dd/yyyy hh:mm", expected: "01/01/1911 00:00"},
+    {desc: "hour duration thousandths rounding", format: "[hh]:mm:ss.000", expected: "96455:59:59.999"},
+    {desc: "hour duration hundredths round up", format: "[hh]:mm:ss.00", expected: "96456:00:00.00"},
+    {desc: "hour duration minute round up (w/ ss)", format: "[hh]:mm:ss", expected: "96456:00:00"},
+    {desc: "hour duration minute round up", format: "[hh]:mm", expected: "96456:00"},
+    {desc: "hour duration round up", format: "[hh]", expected: "96456"},
+    {desc: "minute duration thousandths rounding", format: "[mm]:ss.000", expected: "5787359:59.999"},
+    {desc: "minute duration hundredths round up", format: "[mm]:ss.00", expected: "5787360:00.00"},
+    {desc: "minute duration round up", format: "[mm]:ss", expected: "5787360:00"},
+    {desc: "second duration thousandths rounding", format: "[ss].000", expected: "347241599.999"},
+    {desc: "second duration hundredths round up", format: "[ss].00", expected: "347241600.00"},
+    {desc: "second duration round up", format: "[ss]", expected: "347241600"},
+  ];
+  testCases.forEach(testCase => {
+    var headers = ["value", testCase.format];
+    it(testCase.desc, () => {testRow([value, testCase.expected], headers, {})});
+  });
+});
  
 describe('date formats', function() {
   doit(process.env.MINTEST ? dates.slice(0,4000) : dates);
