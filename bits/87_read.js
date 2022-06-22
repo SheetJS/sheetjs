@@ -50,7 +50,7 @@ function read_plaintext_raw(data/*:RawData*/, o/*:ParseOpts*/)/*:Workbook*/ {
 function read_utf16(data/*:RawData*/, o/*:ParseOpts*/)/*:Workbook*/ {
 	var d = data;
 	if(o.type == 'base64') d = Base64_decode(d);
-	d = $cptable.utils.decode(1200, d.slice(2), 'str');
+	d = typeof $cptable !== "undefined" ? $cptable.utils.decode(1200, d.slice(2), 'str') : utf16leread(d.slice(2));
 	o.type = "binary";
 	return read_plaintext(d, o);
 }
@@ -67,6 +67,7 @@ function read_prn(data, d, o, str) {
 function readSync(data/*:RawData*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
 	reset_cp();
 	var o = opts||{};
+	if(o.codepage && typeof $cptable === "undefined") console.error("Codepage tables are not loaded.  Non-ASCII characters may not give expected results");
 	if(typeof ArrayBuffer !== 'undefined' && data instanceof ArrayBuffer) return readSync(new Uint8Array(data), (o = dup(o), o.type = "array", o));
 	if(typeof Uint8Array !== 'undefined' && data instanceof Uint8Array && !o.type) o.type = typeof Deno !== "undefined" ? "buffer" : "array";
 	var d = data, n = [0,0,0,0], str = false;

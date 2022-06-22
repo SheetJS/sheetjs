@@ -119,7 +119,7 @@ function dbf_to_aoa(buf, opts)/*:AOA*/ {
 	var ww = l7 ? 32 : 11;
 	while(d.l < hend && d[d.l] != 0x0d) {
 		field = ({}/*:any*/);
-		field.name = $cptable.utils.decode(current_cp, d.slice(d.l, d.l+ww)).replace(/[\u0000\r\n].*$/g,"");
+		field.name = (typeof $cptable !== "undefined" ? $cptable.utils.decode(current_cp, d.slice(d.l, d.l+ww)) : a2s(d.slice(d.l, d.l + ww))).replace(/[\u0000\r\n].*$/g,"");
 		d.l += ww;
 		field.type = String.fromCharCode(d.read_shift(1));
 		if(ft != 0x02 && !l7) field.offset = d.read_shift(4);
@@ -173,7 +173,7 @@ function dbf_to_aoa(buf, opts)/*:AOA*/ {
 		for(C = 0; C != fields.length; ++C) {
 			var dd = d.slice(d.l, d.l+fields[C].len); d.l+=fields[C].len;
 			prep_blob(dd, 0);
-			var s = $cptable.utils.decode(current_cp, dd);
+			var s = typeof $cptable !== "undefined" ? $cptable.utils.decode(current_cp, dd) : a2s(dd);
 			switch(fields[C].type) {
 				case 'C':
 					// NOTE: it is conventional to write '  /  /  ' for empty dates
