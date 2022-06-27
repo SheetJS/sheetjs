@@ -40,7 +40,7 @@ const handleReadBtn = async function() {
 
 const exportXlsx = async function() {
 	const HTMLOUT = document.getElementById('htmlout');
-	const wb = XLSX.utils.table_to_book(HTMLOUT);
+	const wb = XLSX.utils.table_to_book(HTMLOUT.getElementsByTagName("TABLE")[0]);
 	const o = await electron.dialog.showSaveDialog({
 		title: 'Save file as',
 		filters: [{

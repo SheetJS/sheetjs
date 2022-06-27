@@ -15,6 +15,12 @@ The core data in this demo is an editable HTML table.  The readers build up the
 table using `sheet_to_html` (with `editable:true` option) and the writers scrape
 the table using `table_to_book`.
 
+The demo project is structured for `electron-forge`:
+- `npm start` will start the app.
+- `npm run make` will build a standalone app.
+
+The standalone app was tested on an Intel Mac (`darwin-x64`).
+
 ## Reading and Writing Files
 
 Since electron provides an `fs` implementation, `readFile` and `writeFile` can

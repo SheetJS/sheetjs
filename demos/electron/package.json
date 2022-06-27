@@ -1,14 +1,51 @@
 {
-	"name": "sheetjs-electron",
-	"author": "sheetjs",
-	"version": "0.0.0",
-	"main": "main.js",
-	"dependencies": {
-		"@electron/remote": "^2.0.8",
-		"electron": "^18.2.0",
-		"xlsx": "https://cdn.sheetjs.com/xlsx-latest/xlsx-latest.tgz"
-	},
-	"scripts": {
-		"start": "electron ."
-	}
+  "name": "sheetjs-electron",
+  "author": "sheetjs",
+  "version": "0.0.0",
+  "main": "main.js",
+  "dependencies": {
+    "@electron/remote": "2.0.8",
+    "electron-squirrel-startup": "^1.0.0",
+    "xlsx": "https://cdn.sheetjs.com/xlsx-latest/xlsx-latest.tgz"
+  },
+  "scripts": {
+    "start": "electron-forge start",
+    "package": "electron-forge package",
+    "make": "electron-forge make"
+  },
+  "devDependencies": {
+    "@electron-forge/cli": "^6.0.0-beta.64",
+    "@electron-forge/maker-deb": "^6.0.0-beta.64",
+    "@electron-forge/maker-rpm": "^6.0.0-beta.64",
+    "@electron-forge/maker-squirrel": "^6.0.0-beta.64",
+    "@electron-forge/maker-zip": "^6.0.0-beta.64",
+    "electron": "19.0.5"
+  },
+  "config": {
+    "forge": {
+      "packagerConfig": {},
+      "makers": [
+        {
+          "name": "@electron-forge/maker-squirrel",
+          "config": {
+            "name": "sheetjs_electron"
+          }
+        },
+        {
+          "name": "@electron-forge/maker-zip",
+          "platforms": [
+            "darwin"
+          ]
+        },
+        {
+          "name": "@electron-forge/maker-deb",
+          "config": {}
+        },
+        {
+          "name": "@electron-forge/maker-rpm",
+          "config": {}
+        }
+      ]
+    }
+  }
 }

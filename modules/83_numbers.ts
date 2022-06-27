@@ -924,7 +924,7 @@ function write_numbers_iwa(wb: WorkBook, opts: any): CFB$Container {
 			for(var R = 0; R <= range.e.r; ++R) {
 				cruids[4].push({type: 2, data: write_shallow([ [],
 					[ { type: 0, data: write_varint49(R + 726270)} ],
-					[ { type: 0, data: write_varint49(R + 726270)} ]			
+					[ { type: 0, data: write_varint49(R + 726270)} ]
 				])});
 				cruids[5].push({type: 0, data: write_varint49(R)});
 				cruids[6].push({type: 0, data: write_varint49(R)});
@@ -1007,7 +1007,7 @@ function write_numbers_iwa(wb: WorkBook, opts: any): CFB$Container {
 				{
 					sstdata[3] = [];
 					SST.forEach((str, i) => {
-						sstdata[3].push({type: 2, data: write_shallow([ [], 
+						sstdata[3].push({type: 2, data: write_shallow([ [],
 							[ { type: 0, data: write_varint49(i) } ],
 							[ { type: 0, data: write_varint49(1) } ],
 							[ { type: 2, data: stru8(str) } ]

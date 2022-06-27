@@ -29,6 +29,27 @@ can be installed with Bash on Windows or with `cygwin`.
 - [`databases and key/value stores`](database/)
 - [`typed arrays and math`](array/)
 
+**Front-End UI Components**
+- [`canvas-datagrid`](datagrid/)
+- [`x-spreadsheet`](xspreadsheet/)
+- [`react-data-grid`](react/modify/)
+- [`vue3-table-light`](/vue/modify/)
+
+**Platforms and Integrations**
+- [`deno`](deno/)
+- [`electron application`](electron/)
+- [`nw.js application`](nwjs/)
+- [`Chrome / Chromium extensions`](chrome/)
+- [`Google Sheets API`](https://docs.sheetjs.com/docs/getting-started/demos/gsheet)
+- [`ExtendScript for Adobe Apps`](https://docs.sheetjs.com/docs/getting-started/demos/extendscript)
+- [`NetSuite SuiteScript`](https://docs.sheetjs.com/docs/getting-started/demos/netsuite)
+- [`SalesForce Lightning Web Components`](https://docs.sheetjs.com/docs/getting-started/demos/salesforce)
+- [`Excel JavaScript API`](https://docs.sheetjs.com/docs/getting-started/demos/excel)
+- [`Headless Browsers`](headless/)
+- [`Swift JSC and other engines`](altjs/)
+- [`"serverless" functions`](function/)
+- [`internet explorer`](oldie/)
+
 **Bundlers and Tooling**
 - [`browserify`](browserify/)
 - [`parcel`](parcel/)
@@ -37,23 +58,6 @@ can be installed with Bash on Windows or with `cygwin`.
 - [`systemjs`](systemjs/)
 - [`typescript`](typescript/)
 - [`webpack 2.x`](webpack/)
-
-**Platforms and Integrations**
-- [`deno`](deno/)
-- [`electron application`](electron/)
-- [`nw.js application`](nwjs/)
-- [`Chrome / Chromium extensions`](chrome/)
-- [`Google Sheets API`](https://docs.sheetjs.com/docs/getting-started/demos/gsheet)
-- [`Adobe Apps`](https://docs.sheetjs.com/docs/getting-started/demos/extendscript)
-- [`Excel JavaScript API`](https://docs.sheetjs.com/docs/getting-started/demos/excel)
-- [`Headless Browsers`](headless/)
-- [`canvas-datagrid`](datagrid/)
-- [`x-spreadsheet`](xspreadsheet/)
-- [`react-data-grid`](react/modify/)
-- [`vue3-table-light`](/vue/modify/)
-- [`Swift JSC and other engines`](altjs/)
-- [`"serverless" functions`](function/)
-- [`internet explorer`](oldie/)
 
 Other examples are included in the [showcase](demos/showcase/).
 

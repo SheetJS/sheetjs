@@ -10,3 +10,6 @@ lint:
 run:
 	npm i
 	npx electron .
+.PHONY: build
+build:
+	npm run make

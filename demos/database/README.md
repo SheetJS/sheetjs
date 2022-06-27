@@ -48,13 +48,13 @@ The `sheet_to_json` helper function generates arrays of JS objects that can be
 scanned to determine the column "types", and there are third-party connectors
 that can push arrays of JS objects to database tables.
 
-The [`sexql`](http://sheetjs.com/sexql) browser demo uses WebSQL, which is
+The [`sql`](http://sheetjs.com/sql) browser demo uses WebSQL, which is
 limited to the SQLite fundamental types.
 
 <details>
 	<summary><b>Implementation details</b> (click to show)</summary>
 
-The `sexql` schema builder scans the first row to find headers:
+The `sql` schema builder scans the first row to find headers:
 
 ```js
   if(!ws || !ws['!ref']) return;
@@ -202,11 +202,11 @@ function object_to_workbook(obj) {
 
 #### WebSQL
 
-WebSQL is a popular SQL-based in-browser database available on Chrome / Safari.
-In practice, it is powered by SQLite, and most simple SQLite-compatible queries
+WebSQL is a popular SQL-based in-browser database available on Chrome.  In
+practice, it is powered by SQLite, and most simple SQLite-compatible queries
 work as-is in WebSQL.
 
-The public demo <http://sheetjs.com/sexql> generates a database from workbook.
+The public demo <http://sheetjs.com/sql> generates a database from workbook.
 
 #### LocalStorage and SessionStorage
 
@@ -259,9 +259,9 @@ the `sheetj5` database and verifies the tables are preserved.
 
 #### PostgreSQL
 
-[The `pg` module](https://www.npmjs.com/package/pg) supplies a Promise wrapper.
-Like with `mysql2`, `Client#query` runs a statement and returns a result object.
-The `rows` key of the object is an array of JS objects.
+[The `pg` module](https://node-postgres.com/) supplies a Promise wrapper.
+`Client#query` runs a statement and returns a result object.  The `rows` key of
+the object is an array of JS objects.
 
 `PgSQLTest.js` connects to the PostgreSQL server on `localhost`, builds two
 tables in the `sheetjs` database, exports to XLSX, imports the new XLSX file to

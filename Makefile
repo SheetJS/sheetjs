@@ -148,6 +148,10 @@ test.ts: test.mts
 test-deno: test.ts ## Run Deno test suite
 	deno test --allow-env --allow-read --allow-write --config misc/test.deno.jsonc $<
 
+.PHONY: test-denocp
+test-denocp: testnocp.ts ## Run Deno test suite (without codepage)
+	deno test --allow-env --allow-read --allow-write --config misc/test.deno.jsonc $<
+
 #*                      To run tests for one format, make test_<fmt>
 #*                      To run the core test suite, make test_misc
 TESTFMT=$(patsubst %,test_%,$(FMT))
