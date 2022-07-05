@@ -1793,6 +1793,33 @@ describe('roundtrip features', function() {
 		}
 	});	});
 
+	it('should preserve date system', function() {[
+		"biff5", "ods", "slk", "xls", "xlsb", "xlsx", "xml"
+	].forEach(function(ext) {
+		// TODO: check actual date codes and actual date values
+		var wb0 = X.read(fs.readFileSync("./test_files/1904/1900." + ext), {type: TYPE});
+		assert.ok(!wb0.Workbook || !wb0.Workbook.WBProps || !wb0.Workbook.WBProps.date1904);
+		var wb1 = X.read(X.write(wb0, {type: TYPE, bookType: ext}), {type: TYPE});
+		assert.ok(!wb1.Workbook || !wb1.Workbook.WBProps || !wb1.Workbook.WBProps.date1904);
+
+		var wb2 = X.utils.book_new(); X.utils.book_append_sheet(wb2, X.utils.aoa_to_sheet([[1]]), "Sheet1");
+		wb2.Workbook = { WBProps: { date1904: false } };
+		assert.ok(!wb2.Workbook || !wb2.Workbook.WBProps || !wb2.Workbook.WBProps.date1904);
+		var wb3 = X.read(X.write(wb2, {type: TYPE, bookType: ext}), {type: TYPE});
+		assert.ok(!wb3.Workbook || !wb3.Workbook.WBProps || !wb3.Workbook.WBProps.date1904);
+
+		var wb4 = X.read(fs.readFileSync("./test_files/1904/1904." + ext), {type: TYPE});
+		assert.ok(wb4.Workbook.WBProps.date1904);
+		var wb5 = X.read(X.write(wb4, {type: TYPE, bookType: ext}), {type: TYPE});
+		assert.ok(wb5.Workbook.WBProps.date1904); // xlsb, xml
+
+		var wb6 = X.utils.book_new(); X.utils.book_append_sheet(wb6, X.utils.aoa_to_sheet([[1]]), "Sheet1");
+		wb6.Workbook = { WBProps: { date1904: true } };
+		assert.ok(wb6.Workbook.WBProps.date1904);
+		var wb7 = X.read(X.write(wb6, {type: TYPE, bookType: ext}), {type: TYPE});
+		assert.ok(wb7.Workbook.WBProps.date1904);
+	}); });
+
 });
 
 //function password_file(x){return x.match(/^password.*\.xls$/); }
@@ -2279,6 +2306,11 @@ describe('numbers', function() {
 		assert.equal(ws2["!ref"], "A1:ALL3");
 		assert.equal(get_cell(ws2, "A1").v, 1);
 		assert.equal(get_cell(ws2, "ALL2").v, 2);
+	});
+	it('should support icloud.com files', function() {
+		var wb = X.read(fs.readFileSync(dir + 'Attendance.numbers'), {type:TYPE, WTF:true});
+		var ws = wb.Sheets["Attendance"];
+		assert.equal(get_cell(ws, "A1").v, "Date");
 	});
 });
 

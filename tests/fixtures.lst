@@ -1,3 +1,17 @@
+./test_files/1904/1900.biff5
+./test_files/1904/1900.ods
+./test_files/1904/1900.slk
+./test_files/1904/1900.xls
+./test_files/1904/1900.xlsb
+./test_files/1904/1900.xlsx
+./test_files/1904/1900.xml
+./test_files/1904/1904.biff5
+./test_files/1904/1904.ods
+./test_files/1904/1904.slk
+./test_files/1904/1904.xls
+./test_files/1904/1904.xlsb
+./test_files/1904/1904.xlsx
+./test_files/1904/1904.xml
 ./test_files/artifacts/quattro/write_.csv
 ./test_files/artifacts/quattro/write_.dif
 ./test_files/artifacts/quattro/write_.slk
@@ -22,6 +36,7 @@
 ./test_files/artifacts/wps/write.xls
 ./test_files/artifacts/wps/write.xlsx
 ./test_files/artifacts/wps/write.xml
+./test_files/Attendance.numbers
 ./test_files/author_snowman.xls
 ./test_files/author_snowman.xls5
 ./test_files/author_snowman.xlsb

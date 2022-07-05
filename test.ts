@@ -2226,6 +2226,11 @@ Deno.test('numbers', async function(t) {
 		assert.equal(get_cell(ws2, "A1").v, 1);
 		assert.equal(get_cell(ws2, "ALL2").v, 2);
 	});
+	await t.step('should support icloud.com files', async function(t) {
+		var wb = X.read(fs.readFileSync(dir + 'Attendance.numbers'), {type:TYPE, WTF:true});
+		var ws = wb.Sheets["Attendance"];
+		assert.equal(get_cell(ws, "A1").v, "Date");
+	});
 });
 
 Deno.test('dbf', async function(t) {

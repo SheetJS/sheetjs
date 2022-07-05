@@ -79,6 +79,13 @@ function parse_zip(zip/*:ZIP*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
 	if(!safegetzipfile(zip, '[Content_Types].xml')) {
 		if(safegetzipfile(zip, 'index.xml.gz')) throw new Error('Unsupported NUMBERS 08 file');
 		if(safegetzipfile(zip, 'index.xml')) throw new Error('Unsupported NUMBERS 09 file');
+		var index_zip = CFB.find(zip, 'Index.zip');
+		if(index_zip) {
+			opts = dup(opts);
+			delete opts.type;
+			if(typeof index_zip.content == "string") opts.type = "binary";
+			return readSync(index_zip.content, opts);
+		}
 		throw new Error('Unsupported ZIP file');
 	}
 

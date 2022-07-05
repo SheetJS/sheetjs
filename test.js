@@ -2320,6 +2320,11 @@ describe('numbers', function() {
 		assert.equal(get_cell(ws2, "A1").v, 1);
 		assert.equal(get_cell(ws2, "ALL2").v, 2);
 	});
+	it('should support icloud.com files', function() {
+		var wb = X.read(fs.readFileSync(dir + 'Attendance.numbers'), {type:TYPE, WTF:true});
+		var ws = wb.Sheets["Attendance"];
+		assert.equal(get_cell(ws, "A1").v, "Date");
+	});
 });
 
 describe('dbf', function() {
@@ -2679,7 +2684,7 @@ describe('corner cases', function() {
 			var wb = X.read(fs.readFileSync(w), {type:TYPE});
 			var ws = wb.Sheets[wb.SheetNames[0]];
 			var B1 = get_cell(ws, "B1"), B2 = get_cell(ws, "B2");
-			var lio = w.match(/\.[^\.]*$/).index, stem = w.slice(0, lio).toLowerCase(), ext = w.slice(lio + 1).toLowerCase()
+			var lio = w.match(/\.[^\.]*$/).index, stem = w.slice(0, lio).toLowerCase(), ext = w.slice(lio + 1).toLowerCase();
 			switch(ext) {
 				case 'fm3': break;
 
