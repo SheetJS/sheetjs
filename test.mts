@@ -737,6 +737,7 @@ describe('output formats', function() {
 		["fods",   true,   true],
 		["csv",    true,   true],
 		["txt",    true,   true],
+		["rtf",   false,   true],
 		["sylk",  false,   true],
 		["eth",   false,   true],
 		["html",   true,   true],
@@ -2226,6 +2227,11 @@ describe('numbers', function() {
 		assert.equal(get_cell(ws2, "A1").v, 1);
 		assert.equal(get_cell(ws2, "ALL2").v, 2);
 	});
+	it('should support icloud.com files', function() {
+		var wb = X.read(fs.readFileSync(dir + 'Attendance.numbers'), {type:TYPE, WTF:true});
+		var ws = wb.Sheets["Attendance"];
+		assert.equal(get_cell(ws, "A1").v, "Date");
+	});
 });
 
 describe('dbf', function() {
@@ -2412,6 +2418,23 @@ describe('js -> file -> js', function() {
 		var wb2 = X.read(X.write(wb1, {type:BIN, bookType: 'dif'}), {type:BIN});
 		eqcell(wb, wb1, 'Sheet1', 'C5');
 		eqcell(wb, wb2, 'Sheet1', 'C5');
+	});
+});
+
+describe('rtf', function() {
+	it('roundtrip should be idempotent', function() {
+		var ws = X.utils.aoa_to_sheet([
+			[1,2,3],
+			[true, false, null, "sheetjs"],
+			["foo", "bar", fixdate, "0.3"],
+			["baz", null, "q\"ux"]
+		]);
+		var wb1 = X.utils.book_new();
+		X.utils.book_append_sheet(wb1, ws, "Sheet1");
+		var rtf1 = X.write(wb1, {bookType: "rtf", type: "string"});
+		var wb2 = X.read(rtf1, {type: "string"});
+		var rtf2 = X.write(wb2, {bookType: "rtf", type: "string"});
+		assert.equal(rtf1, rtf2);
 	});
 });
 

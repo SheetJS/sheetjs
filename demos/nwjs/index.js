@@ -68,13 +68,13 @@ var export_xlsx = (function() {
 	var HTMLOUT = document.getElementById('htmlout');
 	var input = document.createElement('input');
 	input.style.display = 'none';
-	input.setAttribute('nwsaveas', 'sheetjs.xlsx');
+	input.setAttribute('nwsaveas', 'SheetJSNWDemo.xlsx');
 	input.setAttribute('type', 'file');
 	document.body.appendChild(input);
 	input.addEventListener('cancel',function(){ alert("Save was canceled!"); });
 	input.addEventListener('change',function(e){
 		var filename=this.value, bookType=(filename.match(/[^\.]*$/)||["xlsx"])[0];
-		var wb = XLSX.utils.table_to_book(HTMLOUT);
+		var wb = XLSX.utils.table_to_book(HTMLOUT.getElementsByTagName("TABLE")[0]);
 		var wbout = XLSX.write(wb, {type:'buffer', bookType:bookType});
 		fs.writeFile(filename, wbout, function(err) {
 			if(!err) return alert("Saved to " + filename);

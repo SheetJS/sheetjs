@@ -17,37 +17,40 @@ can be installed with Bash on Windows or with `cygwin`.
 
 ### Included Demos
 
-**Frameworks and APIs**
+**JavaScript APIs**
+- [`XMLHttpRequest and fetch`](xhr/)
+- [`Clipboard Data`](https://docs.sheetjs.com/docs/getting-started/demos/clipboard)
+- [`Typed Arrays and Math`](array/)
+
+**Frameworks**
 - [`angularjs`](angular/)
 - [`angular and ionic`](angular2/)
 - [`knockout`](knockout/)
 - [`meteor`](meteor/)
 - [`react, react-native, next`](react/)
 - [`vue 2.x, weex, nuxt`](vue/)
-- [`XMLHttpRequest and fetch`](xhr/)
-- [`nodejs server`](server/)
-- [`databases and key/value stores`](database/)
-- [`typed arrays and math`](array/)
 
 **Front-End UI Components**
 - [`canvas-datagrid`](datagrid/)
 - [`x-spreadsheet`](xspreadsheet/)
 - [`react-data-grid`](react/modify/)
-- [`vue3-table-light`](/vue/modify/)
+- [`vue3-table-light`](vue/modify/)
 
 **Platforms and Integrations**
-- [`deno`](deno/)
+- [`NodeJS Server-Side Processing`](server/)
+- [`Deno`](deno/)
 - [`electron application`](electron/)
-- [`nw.js application`](nwjs/)
+- [`NW.js`](nwjs/)
 - [`Chrome / Chromium extensions`](chrome/)
 - [`Google Sheets API`](https://docs.sheetjs.com/docs/getting-started/demos/gsheet)
 - [`ExtendScript for Adobe Apps`](https://docs.sheetjs.com/docs/getting-started/demos/extendscript)
 - [`NetSuite SuiteScript`](https://docs.sheetjs.com/docs/getting-started/demos/netsuite)
 - [`SalesForce Lightning Web Components`](https://docs.sheetjs.com/docs/getting-started/demos/salesforce)
 - [`Excel JavaScript API`](https://docs.sheetjs.com/docs/getting-started/demos/excel)
-- [`Headless Browsers`](headless/)
+- [`Headless Automation`](https://docs.sheetjs.com/docs/getting-started/demos/headless)
 - [`Swift JSC and other engines`](altjs/)
 - [`"serverless" functions`](function/)
+- [`databases and key/value stores`](database/)
 - [`internet explorer`](oldie/)
 
 **Bundlers and Tooling**

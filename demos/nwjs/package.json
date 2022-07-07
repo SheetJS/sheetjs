@@ -4,7 +4,7 @@
 	"version": "0.0.0",
 	"main": "index.html",
 	"dependencies": {
-		"nw": "~0.63.0",
+		"nw": "~0.66.0",
 		"xlsx": "https://cdn.sheetjs.com/xlsx-latest/xlsx-latest.tgz"
 	}
 }

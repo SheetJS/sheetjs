@@ -165,9 +165,14 @@ $(TESTESMFMT): test-esm_%:
 	FMTS=$* make test-esm
 
 TESTDENOFMT=$(patsubst %,test-deno_%,$(FMT))
-.PHONY: $(TESTESMFMT)
+.PHONY: $(TESTDENOFMT)
 $(TESTDENOFMT): test-deno_%:
 	FMTS=$* make test-deno
+
+TESTDENOCPFMT=$(patsubst %,test-denocp_%,$(FMT))
+.PHONY: $(TESTDENOCPFMT)
+$(TESTDENOCPFMT): test-denocp_%:
+	FMTS=$* make test-denocp
 
 .PHONY: travis
 travis: ## Run test suite with minimal output

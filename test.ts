@@ -737,6 +737,7 @@ Deno.test('output formats', async function(t) {
 		["fods",   true,   true],
 		["csv",    true,   true],
 		["txt",    true,   true],
+		["rtf",   false,   true],
 		["sylk",  false,   true],
 		["eth",   false,   true],
 		["html",   true,   true],
@@ -2417,6 +2418,23 @@ Deno.test('js -> file -> js', async function(t) {
 		var wb2 = X.read(X.write(wb1, {type:BIN, bookType: 'dif'}), {type:BIN});
 		eqcell(wb, wb1, 'Sheet1', 'C5');
 		eqcell(wb, wb2, 'Sheet1', 'C5');
+	});
+});
+
+Deno.test('rtf', async function(t) {
+	await t.step('roundtrip should be idempotent', async function(t) {
+		var ws = X.utils.aoa_to_sheet([
+			[1,2,3],
+			[true, false, null, "sheetjs"],
+			["foo", "bar", fixdate, "0.3"],
+			["baz", null, "q\"ux"]
+		]);
+		var wb1 = X.utils.book_new();
+		X.utils.book_append_sheet(wb1, ws, "Sheet1");
+		var rtf1 = X.write(wb1, {bookType: "rtf", type: "string"});
+		var wb2 = X.read(rtf1, {type: "string"});
+		var rtf2 = X.write(wb2, {bookType: "rtf", type: "string"});
+		assert.equal(rtf1, rtf2);
 	});
 });
 
