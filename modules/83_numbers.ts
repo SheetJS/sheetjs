@@ -184,9 +184,9 @@ interface IWAMessage {
 	data: Uint8Array;
 }
 interface IWAArchiveInfo {
-	id?: number;
+	id: number;
 	merge?: boolean;
-	messages?: IWAMessage[];
+	messages: IWAMessage[];
 }
 /** Extract all messages from a IWA file */
 function parse_iwa_file(buf: Uint8Array): IWAArchiveInfo[] {
@@ -248,7 +248,7 @@ function parse_snappy_chunk(type: number, buf: Uint8Array): Uint8Array {
 	var ptr: Ptr = [0];
 
 	var usz = parse_varint49(buf, ptr);
-	var chunks = [];
+	var chunks: Uint8Array[] = [];
 	while(ptr[0] < buf.length) {
 		var tag = buf[ptr[0]] & 0x3;
 		if(tag == 0) {
@@ -295,7 +295,7 @@ function parse_snappy_chunk(type: number, buf: Uint8Array): Uint8Array {
 
 /** Decompress IWA file */
 function decompress_iwa_file(buf: Uint8Array): Uint8Array {
-	var out = [];
+	var out: Uint8Array[] = [];
 	var l = 0;
 	while(l < buf.length) {
 		var t = buf[l++];
@@ -336,7 +336,7 @@ function compress_iwa_file(buf: Uint8Array): Uint8Array {
 //<<export { decompress_iwa_file, compress_iwa_file };
 
 /** Parse "old storage" (version 0..3) */
-function parse_old_storage(buf: Uint8Array, sst: string[], rsst: string[], v: 0|1|2|3): CellObject {
+function parse_old_storage(buf: Uint8Array, sst: string[], rsst: string[], v: 0|1|2|3): CellObject | void {
 	var dv = u8_to_dataview(buf);
 	var flags = dv.getUint32(4, true);
 
@@ -352,7 +352,7 @@ function parse_old_storage(buf: Uint8Array, sst: string[], rsst: string[], v: 0|
 
 	var ret: CellObject;
 	switch(buf[2]) {
-		case 0: break; // return { t: "z" }; // blank?
+		case 0: return void 0; // return { t: "z" }; // blank?
 		case 2: ret = { t: "n", v: ieee }; break; // number
 		case 3: ret = { t: "s", v: sst[sidx] }; break; // string
 		case 5: ret = { t: "d", v: dt }; break; // date-time
@@ -371,7 +371,7 @@ function parse_old_storage(buf: Uint8Array, sst: string[], rsst: string[], v: 0|
 }
 
 /** Parse "new storage" (version 5) */
-function parse_new_storage(buf: Uint8Array, sst: string[], rsst: string[]): CellObject {
+function parse_new_storage(buf: Uint8Array, sst: string[], rsst: string[]): CellObject | void {
 	var dv = u8_to_dataview(buf);
 	var flags = dv.getUint32(8, true);
 
@@ -388,7 +388,7 @@ function parse_new_storage(buf: Uint8Array, sst: string[], rsst: string[]): Cell
 
 	var ret: CellObject;
 	switch(buf[1]) {
-		case 0: break; // return { t: "z" }; // blank?
+		case 0: return void 0; // return { t: "z" }; // blank?
 		case 2: ret = { t: "n", v: d128 }; break; // number
 		case 3: ret = { t: "s", v: sst[sidx] }; break; // string
 		case 5: ret = { t: "d", v: dt }; break; // date-time
@@ -438,7 +438,7 @@ function write_old_storage(cell: CellObject, sst: string[]): Uint8Array {
 	return out.slice(0, l);
 }
 //<<export { write_new_storage, write_old_storage };
-function parse_cell_storage(buf: Uint8Array, sst: string[], rsst: string[]): CellObject {
+function parse_cell_storage(buf: Uint8Array, sst: string[], rsst: string[]): CellObject | void {
 	switch(buf[0]) {
 		case 0: case 1:
 		case 2: case 3: return parse_old_storage(buf, sst, rsst, buf[0]);
@@ -475,7 +475,7 @@ function parse_TST_TableDataList(M: MessageSpace, root: IWAMessage): string[] {
 	var type = varint_to_i32(pb[1][0].data);
 
 	var entries = pb[3];
-	var data = [];
+	var data: Array<string> = [];
 	(entries||[]).forEach(entry => {
 		// .TST.TableDataList.ListEntry
 		var le = parse_shallow(entry.data);
@@ -505,7 +505,7 @@ interface TileRowInfo {
 	/** Row Index */
 	R: number;
 	/** Cell Storage */
-	cells?: Uint8Array[];
+	cells: Uint8Array[];
 }
 /** Parse .TSP.TileRowInfo */
 function parse_TST_TileRowInfo(u8: Uint8Array, type: TileStorageType): TileRowInfo {
@@ -673,6 +673,7 @@ function parse_TN_DocumentArchive(M: MessageSpace, root: IWAMessage): WorkBook {
 		});
 	});
 	if(out.SheetNames.length == 0) throw new Error("Empty NUMBERS file");
+	out.bookType = "numbers";
 	return out;
 }
 
@@ -694,7 +695,7 @@ function parse_numbers_iwa(cfb: CFB$Container): WorkBook {
 
 	/* find document root */
 	if(M?.[1]?.[0]?.meta?.[1]?.[0].data && varint_to_i32(M[1][0].meta[1][0].data) == 10000) throw new Error("Pages documents are not supported");
-	var docroot: IWAMessage = M?.[1]?.[0]?.meta?.[1]?.[0].data && varint_to_i32(M[1][0].meta[1][0].data) == 1 && M[1][0];
+	var docroot: IWAMessage | false = M?.[1]?.[0]?.meta?.[1]?.[0].data && varint_to_i32(M[1][0].meta[1][0].data) == 1 && M[1][0];
 	if(!docroot) indices.forEach((idx) => {
 		M[idx].forEach((iwam) => {
 			var mtype = varint_to_i32(iwam.meta[1][0].data) >>> 0;
@@ -789,7 +790,7 @@ function write_numbers_iwa(wb: WorkBook, opts: any): CFB$Container {
 	/* TODO: support multiple worksheets, larger ranges, more data types, etc */
 	var ws = wb.Sheets[wb.SheetNames[0]];
 	if(wb.SheetNames.length > 1) console.error("The Numbers writer currently writes only the first table");
-	var range = decode_range(ws["!ref"]);
+	var range = decode_range(ws["!ref"] as string);
 	range.s.r = range.s.c = 0;
 
 	/* Actual NUMBERS 12.0 limit ALL1000000 */
@@ -853,16 +854,19 @@ function write_numbers_iwa(wb: WorkBook, opts: any): CFB$Container {
 
 	/* .TN.DocumentArchive */
 	var entry = CFB.find(cfb, dependents[1].location);
+	if(!entry) throw `Could not find ${dependents[1].location} in Numbers template`;
 	var x = parse_iwa_file(decompress_iwa_file(entry.content as Uint8Array));
-	var docroot: IWAArchiveInfo;
+	var docroot!: IWAArchiveInfo;
 	for(var xi = 0; xi < x.length; ++xi) {
 		var packet = x[xi];
 		if(packet.id == 1) docroot = packet;
 	}
+	if(docroot == null) throw `Could not find message ${1} in Numbers template`;
 
 	/* .TN.SheetArchive */
 	var sheetrootref = parse_TSP_Reference(parse_shallow(docroot.messages[0].data)[1][0].data);
 	entry = CFB.find(cfb, dependents[sheetrootref].location);
+	if(!entry) throw `Could not find ${dependents[sheetrootref].location} in Numbers template`;
 	x = parse_iwa_file(decompress_iwa_file(entry.content as Uint8Array));
 	for(xi = 0; xi < x.length; ++xi) {
 		packet = x[xi];
@@ -880,6 +884,7 @@ function write_numbers_iwa(wb: WorkBook, opts: any): CFB$Container {
 	/* .TST.TableInfoArchive */
 	sheetrootref = parse_TSP_Reference(sheetref[2][0].data);
 	entry = CFB.find(cfb, dependents[sheetrootref].location);
+	if(!entry) throw `Could not find ${dependents[sheetrootref].location} in Numbers template`;
 	x = parse_iwa_file(decompress_iwa_file(entry.content as Uint8Array));
 	for(xi = 0; xi < x.length; ++xi) {
 		packet = x[xi];
@@ -889,6 +894,7 @@ function write_numbers_iwa(wb: WorkBook, opts: any): CFB$Container {
 	/* .TST.TableModelArchive */
 	sheetrootref = parse_TSP_Reference(parse_shallow(docroot.messages[0].data)[2][0].data);
 	entry = CFB.find(cfb, dependents[sheetrootref].location);
+	if(!entry) throw `Could not find ${dependents[sheetrootref].location} in Numbers template`;
 	x = parse_iwa_file(decompress_iwa_file(entry.content as Uint8Array));
 	for(xi = 0; xi < x.length; ++xi) {
 		packet = x[xi];
@@ -903,6 +909,7 @@ function write_numbers_iwa(wb: WorkBook, opts: any): CFB$Container {
 
 		var cruidsref = parse_TSP_Reference(pb[46][0].data);
 		var oldbucket = CFB.find(cfb, dependents[cruidsref].location);
+		if(!oldbucket) throw `Could not find ${dependents[cruidsref].location} in Numbers template`;
 		var _x = parse_iwa_file(decompress_iwa_file(oldbucket.content as Uint8Array));
 		{
 			for(var j = 0; j < _x.length; ++j) {
@@ -940,6 +947,7 @@ function write_numbers_iwa(wb: WorkBook, opts: any): CFB$Container {
 			var row_headers = parse_shallow(store[1][0].data);
 			var row_header_ref = parse_TSP_Reference(row_headers[2][0].data);
 			oldbucket = CFB.find(cfb, dependents[row_header_ref].location);
+			if(!oldbucket) throw `Could not find ${dependents[cruidsref].location} in Numbers template`;
 			_x = parse_iwa_file(decompress_iwa_file(oldbucket.content as Uint8Array));
 			{
 				if(_x[0].id != row_header_ref) throw "Bad HeaderStorageBucket";
@@ -956,6 +964,7 @@ function write_numbers_iwa(wb: WorkBook, opts: any): CFB$Container {
 
 			var col_header_ref = parse_TSP_Reference(store[2][0].data);
 			oldbucket = CFB.find(cfb, dependents[col_header_ref].location);
+			if(!oldbucket) throw `Could not find ${dependents[cruidsref].location} in Numbers template`;
 			_x = parse_iwa_file(decompress_iwa_file(oldbucket.content as Uint8Array));
 			{
 				if(_x[0].id != col_header_ref) throw "Bad HeaderStorageBucket";
@@ -996,12 +1005,14 @@ function write_numbers_iwa(wb: WorkBook, opts: any): CFB$Container {
 			var sstref = parse_TSP_Reference(store[4][0].data);
 			(() => {
 				var sentry = CFB.find(cfb, dependents[sstref].location);
+				if(!sentry) throw `Could not find ${dependents[sstref].location} in Numbers template`;
 				var sx = parse_iwa_file(decompress_iwa_file(sentry.content as Uint8Array));
-				var sstroot: IWAArchiveInfo;
+				var sstroot!: IWAArchiveInfo;
 				for(var sxi = 0; sxi < sx.length; ++sxi) {
 					var packet = sx[sxi];
 					if(packet.id == sstref) sstroot = packet;
 				}
+				if(sstroot == null) throw `Could not find message ${sstref} in Numbers template`;
 
 				var sstdata = parse_shallow(sstroot.messages[0].data);
 				{
@@ -1028,8 +1039,9 @@ function write_numbers_iwa(wb: WorkBook, opts: any): CFB$Container {
 					var tileref = parse_TSP_Reference(tl[2][0].data);
 					(() => {
 						var tentry = CFB.find(cfb, dependents[tileref].location);
+						if(!tentry) throw `Could not find ${dependents[tileref].location} in Numbers template`;
 						var tx = parse_iwa_file(decompress_iwa_file(tentry.content as Uint8Array));
-						var tileroot: IWAArchiveInfo;
+						var tileroot!: IWAArchiveInfo;
 						for(var sxi = 0; sxi < tx.length; ++sxi) {
 							var packet = tx[sxi];
 							if(packet.id == tileref) tileroot = packet;

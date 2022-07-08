@@ -396,7 +396,7 @@ function parse_old_storage(buf, sst, rsst, v) {
   var ret;
   switch (buf[2]) {
     case 0:
-      break;
+      return void 0;
     case 2:
       ret = { t: "n", v: ieee };
       break;
@@ -456,7 +456,7 @@ function parse_new_storage(buf, sst, rsst) {
   var ret;
   switch (buf[1]) {
     case 0:
-      break;
+      return void 0;
     case 2:
       ret = { t: "n", v: d128 };
       break;
@@ -761,6 +761,7 @@ function parse_TN_DocumentArchive(M, root) {
   });
   if (out.SheetNames.length == 0)
     throw new Error("Empty NUMBERS file");
+  out.bookType = "numbers";
   return out;
 }
 function parse_numbers_iwa(cfb) {
@@ -961,6 +962,8 @@ function write_numbers_iwa(wb, opts) {
     throw new Error("Too many messages");
   }
   var entry = CFB.find(cfb, dependents[1].location);
+  if (!entry)
+    throw "Could not find ".concat(dependents[1].location, " in Numbers template");
   var x = parse_iwa_file(decompress_iwa_file(entry.content));
   var docroot;
   for (var xi = 0; xi < x.length; ++xi) {
@@ -968,8 +971,12 @@ function write_numbers_iwa(wb, opts) {
     if (packet.id == 1)
       docroot = packet;
   }
+  if (docroot == null)
+    throw "Could not find message ".concat(1, " in Numbers template");
   var sheetrootref = parse_TSP_Reference(parse_shallow(docroot.messages[0].data)[1][0].data);
   entry = CFB.find(cfb, dependents[sheetrootref].location);
+  if (!entry)
+    throw "Could not find ".concat(dependents[sheetrootref].location, " in Numbers template");
   x = parse_iwa_file(decompress_iwa_file(entry.content));
   for (xi = 0; xi < x.length; ++xi) {
     packet = x[xi];
@@ -985,6 +992,8 @@ function write_numbers_iwa(wb, opts) {
   entry.size = entry.content.length;
   sheetrootref = parse_TSP_Reference(sheetref[2][0].data);
   entry = CFB.find(cfb, dependents[sheetrootref].location);
+  if (!entry)
+    throw "Could not find ".concat(dependents[sheetrootref].location, " in Numbers template");
   x = parse_iwa_file(decompress_iwa_file(entry.content));
   for (xi = 0; xi < x.length; ++xi) {
     packet = x[xi];
@@ -993,6 +1002,8 @@ function write_numbers_iwa(wb, opts) {
   }
   sheetrootref = parse_TSP_Reference(parse_shallow(docroot.messages[0].data)[2][0].data);
   entry = CFB.find(cfb, dependents[sheetrootref].location);
+  if (!entry)
+    throw "Could not find ".concat(dependents[sheetrootref].location, " in Numbers template");
   x = parse_iwa_file(decompress_iwa_file(entry.content));
   for (xi = 0; xi < x.length; ++xi) {
     packet = x[xi];
@@ -1005,6 +1016,8 @@ function write_numbers_iwa(wb, opts) {
     pb[7][0].data = write_varint49(range.e.c + 1);
     var cruidsref = parse_TSP_Reference(pb[46][0].data);
     var oldbucket = CFB.find(cfb, dependents[cruidsref].location);
+    if (!oldbucket)
+      throw "Could not find ".concat(dependents[cruidsref].location, " in Numbers template");
     var _x = parse_iwa_file(decompress_iwa_file(oldbucket.content));
     {
       for (var j = 0; j < _x.length; ++j) {
@@ -1047,6 +1060,8 @@ function write_numbers_iwa(wb, opts) {
       var row_headers = parse_shallow(store[1][0].data);
       var row_header_ref = parse_TSP_Reference(row_headers[2][0].data);
       oldbucket = CFB.find(cfb, dependents[row_header_ref].location);
+      if (!oldbucket)
+        throw "Could not find ".concat(dependents[cruidsref].location, " in Numbers template");
       _x = parse_iwa_file(decompress_iwa_file(oldbucket.content));
       {
         if (_x[0].id != row_header_ref)
@@ -1065,6 +1080,8 @@ function write_numbers_iwa(wb, opts) {
       oldbucket.size = oldbucket.content.length;
       var col_header_ref = parse_TSP_Reference(store[2][0].data);
       oldbucket = CFB.find(cfb, dependents[col_header_ref].location);
+      if (!oldbucket)
+        throw "Could not find ".concat(dependents[cruidsref].location, " in Numbers template");
       _x = parse_iwa_file(decompress_iwa_file(oldbucket.content));
       {
         if (_x[0].id != col_header_ref)
@@ -1109,6 +1126,8 @@ function write_numbers_iwa(wb, opts) {
       var sstref = parse_TSP_Reference(store[4][0].data);
       (function() {
         var sentry = CFB.find(cfb, dependents[sstref].location);
+        if (!sentry)
+          throw "Could not find ".concat(dependents[sstref].location, " in Numbers template");
         var sx = parse_iwa_file(decompress_iwa_file(sentry.content));
         var sstroot;
         for (var sxi = 0; sxi < sx.length; ++sxi) {
@@ -1116,6 +1135,8 @@ function write_numbers_iwa(wb, opts) {
           if (packet2.id == sstref)
             sstroot = packet2;
         }
+        if (sstroot == null)
+          throw "Could not find message ".concat(sstref, " in Numbers template");
         var sstdata = parse_shallow(sstroot.messages[0].data);
         {
           sstdata[3] = [];
@@ -1141,6 +1162,8 @@ function write_numbers_iwa(wb, opts) {
           var tileref = parse_TSP_Reference(tl[2][0].data);
           (function() {
             var tentry = CFB.find(cfb, dependents[tileref].location);
+            if (!tentry)
+              throw "Could not find ".concat(dependents[tileref].location, " in Numbers template");
             var tx = parse_iwa_file(decompress_iwa_file(tentry.content));
             var tileroot;
             for (var sxi = 0; sxi < tx.length; ++sxi) {

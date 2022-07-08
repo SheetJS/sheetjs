@@ -20,7 +20,7 @@ can be installed with Bash on Windows or with `cygwin`.
 **JavaScript APIs**
 - [`XMLHttpRequest and fetch`](xhr/)
 - [`Clipboard Data`](https://docs.sheetjs.com/docs/getting-started/demos/clipboard)
-- [`Typed Arrays and Math`](array/)
+- [`Typed Arrays for Machine Learning`](https://docs.sheetjs.com/docs/getting-started/demos/ml)
 
 **Frameworks**
 - [`angularjs`](angular/)

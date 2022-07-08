@@ -770,9 +770,12 @@ function parse_ods(zip/*:ZIPFile*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
 	if(!content) throw new Error("Missing content.xml in ODS / UOF file");
 	var wb = parse_content_xml(utf8read(content), opts, Styles);
 	if(safegetzipfile(zip, 'meta.xml')) wb.Props = parse_core_props(getzipdata(zip, 'meta.xml'));
+	wb.bookType = "ods";
 	return wb;
 }
 function parse_fods(data/*:string*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
-	return parse_content_xml(data, opts);
+	var wb = parse_content_xml(data, opts);
+	wb.bookType = "fods";
+	return wb;
 }
 

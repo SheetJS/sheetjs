@@ -1386,6 +1386,17 @@ Deno.test('parse features', async function(t) {
 "11111,1934-06-03,1934-06-03,1934-06-03"
 		].join("\n"));
 	}); });
+
+	await t.step('bookType metadata', async function(t) {
+	([
+		// TODO: keep in sync with BookType, support other formats
+		"xlsx"/*, "xlsm" */, "xlsb"/* xls / xla / biff# */, "xlml", "ods", "fods"/*, "csv", "txt", */, "sylk", "html", "dif", "rtf"/*, "prn", "eth"*/, "dbf", "numbers"
+	] as X.BookType[]).forEach(function(r: X.BookType) {
+		var ws = X.utils.aoa_to_sheet([ ["a", "b", "c"], [1, 2, 3] ]);
+		var wb = X.utils.book_new(); X.utils.book_append_sheet(wb, ws, "Sheet1");
+		var data = X.write(wb, {type: TYPE, bookType: r, WTF: true, numbers:XLSX_ZAHL });
+		assert.equal(X.read(data, {type: TYPE, WTF: true}).bookType, r);
+	}); });
 });
 
 Deno.test('write features', async function(t) {
@@ -1753,6 +1764,33 @@ Deno.test('roundtrip features', async function(t) {
 			assert.equal((wb2.Sheets[wb2.SheetNames[i]]['!autofilter'] as any).ref,"A1:E22");
 		}
 	});	});
+
+	await t.step('should preserve date system', async function(t) {([
+		"biff5", "ods", "slk", "xls", "xlsb", "xlsx", "xml"
+	] as X.BookType[]).forEach(function(ext) {
+		// TODO: check actual date codes and actual date values
+		var wb0 = X.read(fs.readFileSync("./test_files/1904/1900." + ext), {type: TYPE});
+		assert.assert(!wb0.Workbook?.WBProps?.date1904);
+		var wb1 = X.read(X.write(wb0, {type: TYPE, bookType: ext}), {type: TYPE});
+		assert.assert(!wb1.Workbook?.WBProps?.date1904);
+
+		var wb2 = X.utils.book_new(); X.utils.book_append_sheet(wb2, X.utils.aoa_to_sheet([[1]]), "Sheet1");
+		wb2.Workbook = { WBProps: { date1904: false } };
+		assert.assert(!wb2.Workbook?.WBProps?.date1904);
+		var wb3 = X.read(X.write(wb2, {type: TYPE, bookType: ext}), {type: TYPE});
+		assert.assert(!wb3.Workbook?.WBProps?.date1904);
+
+		var wb4 = X.read(fs.readFileSync("./test_files/1904/1904." + ext), {type: TYPE});
+		assert.assert(wb4.Workbook?.WBProps?.date1904);
+		var wb5 = X.read(X.write(wb4, {type: TYPE, bookType: ext}), {type: TYPE});
+		assert.assert(wb5.Workbook?.WBProps?.date1904); // xlsb, xml
+
+		var wb6 = X.utils.book_new(); X.utils.book_append_sheet(wb6, X.utils.aoa_to_sheet([[1]]), "Sheet1");
+		wb6.Workbook = { WBProps: { date1904: true } };
+		assert.assert(wb6.Workbook?.WBProps?.date1904);
+		var wb7 = X.read(X.write(wb6, {type: TYPE, bookType: ext}), {type: TYPE});
+		assert.assert(wb7.Workbook?.WBProps?.date1904);
+	}); });
 
 });
 

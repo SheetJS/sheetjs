@@ -723,6 +723,7 @@ describe('output formats', function() {
 		["fods",   true,   true],
 		["csv",    true,   true],
 		["txt",    true,   true],
+		["rtf",   false,   true],
 		["sylk",  false,   true],
 		["eth",   false,   true],
 		["html",   true,   true],
@@ -1428,6 +1429,17 @@ describe('parse features', function() {
 "1111,1907-01-16,1907-01-16,1907-01-16",
 "11111,1934-06-03,1934-06-03,1934-06-03"
 		].join("\n"));
+	}); });
+
+	it('bookType metadata', function() {
+	[
+		// TODO: keep in sync with BookType, support other formats
+		"xlsx"/*, "xlsm" */, "xlsb"/* xls / xla / biff# */, "xlml", "ods", "fods"/*, "csv", "txt", */, "sylk", "html", "dif", "rtf"/*, "prn", "eth"*/, "dbf", "numbers"
+	].forEach(function(r) {
+		var ws = X.utils.aoa_to_sheet([ ["a", "b", "c"], [1, 2, 3] ]);
+		var wb = X.utils.book_new(); X.utils.book_append_sheet(wb, ws, "Sheet1");
+		var data = X.write(wb, {type: TYPE, bookType: r, WTF: true, numbers:XLSX_ZAHL });
+		assert.equal(X.read(data, {type: TYPE, WTF: true}).bookType, r);
 	}); });
 });
 
@@ -2528,6 +2540,23 @@ describe('js -> file -> js', function() {
 		var wb2 = X.read(X.write(wb1, {type:BIN, bookType: 'dif'}), {type:BIN});
 		eqcell(wb, wb1, 'Sheet1', 'C5');
 		eqcell(wb, wb2, 'Sheet1', 'C5');
+	});
+});
+
+describe('rtf', function() {
+	it('roundtrip should be idempotent', function() {
+		var ws = X.utils.aoa_to_sheet([
+			[1,2,3],
+			[true, false, null, "sheetjs"],
+			["foo", "bar", fixdate, "0.3"],
+			["baz", null, "q\"ux"]
+		]);
+		var wb1 = X.utils.book_new();
+		X.utils.book_append_sheet(wb1, ws, "Sheet1");
+		var rtf1 = X.write(wb1, {bookType: "rtf", type: "string"});
+		var wb2 = X.read(rtf1, {type: "string"});
+		var rtf2 = X.write(wb2, {bookType: "rtf", type: "string"});
+		assert.equal(rtf1, rtf2);
 	});
 });
 

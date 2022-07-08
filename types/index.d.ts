@@ -285,6 +285,9 @@ export interface WorkBook {
     Workbook?: WBProps;
 
     vbaraw?: any;
+
+    /** Original file type (when parsed with `read` or `readFile`) */
+    bookType?: BookType;
 }
 
 export interface SheetProps {

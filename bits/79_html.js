@@ -97,9 +97,14 @@ var HTML_END = '</body></html>';
 function html_to_workbook(str/*:string*/, opts)/*:Workbook*/ {
 	var mtch = str.match(/<table[\s\S]*?>[\s\S]*?<\/table>/gi);
 	if(!mtch || mtch.length == 0) throw new Error("Invalid HTML: could not find <table>");
-	if(mtch.length == 1) return sheet_to_workbook(html_to_sheet(mtch[0], opts), opts);
+	if(mtch.length == 1) {
+		var w = sheet_to_workbook(html_to_sheet(mtch[0], opts), opts);
+		w.bookType = "html";
+		return w;
+	}
 	var wb = book_new();
 	mtch.forEach(function(s, idx) { book_append_sheet(wb, html_to_sheet(s, opts), "Sheet" + (idx+1)); });
+	wb.bookType = "html";
 	return wb;
 }
 
@@ -215,7 +220,9 @@ function parse_dom_table(table/*:HTMLElement*/, _opts/*:?any*/)/*:Worksheet*/ {
 }
 
 function table_to_book(table/*:HTMLElement*/, opts/*:?any*/)/*:Workbook*/ {
-	return sheet_to_workbook(parse_dom_table(table, opts), opts);
+	var o = sheet_to_workbook(parse_dom_table(table, opts), opts);
+	//o.bookType = "dom"; // TODO: define a type for this
+	return o;
 }
 
 function is_dom_element_hidden(element/*:HTMLElement*/)/*:boolean*/ {

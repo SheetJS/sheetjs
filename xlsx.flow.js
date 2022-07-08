@@ -7845,7 +7845,11 @@ function dbf_to_sheet(buf, opts)/*:Worksheet*/ {
 }
 
 function dbf_to_workbook(buf, opts)/*:Workbook*/ {
-	try { return sheet_to_workbook(dbf_to_sheet(buf, opts), opts); }
+	try {
+		var o = sheet_to_workbook(dbf_to_sheet(buf, opts), opts);
+		o.bookType = "dbf";
+		return o;
+	}
 	catch(e) { if(opts && opts.WTF) throw e; }
 	return ({SheetNames:[],Sheets:{}});
 }
@@ -8156,6 +8160,7 @@ var SYLK = /*#__PURE__*/(function() {
 		keys(ws).forEach(function(k) { o[k] = ws[k]; });
 		var outwb = sheet_to_workbook(o, opts);
 		keys(wb).forEach(function(k) { outwb[k] = wb[k]; });
+		outwb.bookType = "sylk";
 		return outwb;
 	}
 
@@ -8274,7 +8279,11 @@ var DIF = /*#__PURE__*/(function() {
 	}
 
 	function dif_to_sheet(str/*:string*/, opts)/*:Worksheet*/ { return aoa_to_sheet(dif_to_aoa(str, opts), opts); }
-	function dif_to_workbook(str/*:string*/, opts)/*:Workbook*/ { return sheet_to_workbook(dif_to_sheet(str, opts), opts); }
+	function dif_to_workbook(str/*:string*/, opts)/*:Workbook*/ {
+		var o = sheet_to_workbook(dif_to_sheet(str, opts), opts);
+		o.bookType = "dif";
+		return o;
+	}
 
 	var sheet_to_dif = /*#__PURE__*/(function() {
 		var push_field = function pf(o/*:Array<string>*/, topic/*:string*/, v/*:number*/, n/*:number*/, s/*:string*/) {
@@ -10322,83 +10331,102 @@ function parse_FilePass(blob, length/*:number*/, opts) {
 }
 
 
-function rtf_to_workbook(d/*:RawData*/, opts)/*:Workbook*/ {
-	switch(opts.type) {
-		case 'base64': return rtf_to_book_str(Base64_decode(d), opts);
-		case 'binary': return rtf_to_book_str(d, opts);
-		case 'buffer': return rtf_to_book_str(has_buf && Buffer.isBuffer(d) ? d.toString('binary') : a2s(d), opts);
-		case 'array':  return rtf_to_book_str(cc2str(d), opts);
-	}
-	throw new Error("Unrecognized type " + opts.type);
+function rtf_to_sheet(d, opts) {
+  switch (opts.type) {
+    case "base64":
+      return rtf_to_sheet_str(Base64_decode(d), opts);
+    case "binary":
+      return rtf_to_sheet_str(d, opts);
+    case "buffer":
+      return rtf_to_sheet_str(has_buf && Buffer.isBuffer(d) ? d.toString("binary") : a2s(d), opts);
+    case "array":
+      return rtf_to_sheet_str(cc2str(d), opts);
+  }
+  throw new Error("Unrecognized type " + opts.type);
 }
-
-/* TODO: RTF technically can store multiple tables, even if Excel does not */
-function rtf_to_book_str(str/*:string*/, opts)/*:Workbook*/ {
-	var o = opts || {};
-	var sname = o.sheet || "Sheet1";
-	var ws/*:Worksheet*/ = o.dense ? ([]/*:any*/) : ({}/*:any*/);
-	var wb/*:Workbook*/ = { SheetNames: [ sname ], Sheets: {} };
-	wb.Sheets[sname] = ws;
-
-	var rows = str.match(/\\trowd[\s\S]*?\\row\b/g);
-	if(!rows.length) throw new Error("RTF missing table");
-	var range/*:Range*/ = ({s: {c:0, r:0}, e: {c:0, r:rows.length - 1}}/*:any*/);
-	rows.forEach(function(rowtf, R) {
-		if(Array.isArray(ws)) ws[R] = [];
-		var rtfre = /\\[\w\-]+\b/g;
-		var last_index = 0;
-		var res;
-		var C = -1;
-		var payload = [];
-		while((res = rtfre.exec(rowtf))) {
-			var data = rowtf.slice(last_index, rtfre.lastIndex - res[0].length);
-			if(data.charCodeAt(0) == 0x20) data = data.slice(1);
-			if(data.length) payload.push(data);
-			switch(res[0]) {
-				case "\\cell":
-					++C;
-					if(payload.length) {
-						// TODO: value parsing, including codepage adjustments
-						var cell = {v: payload.join(""), t:"s"};
-						if(cell.v == "TRUE" || cell.v == "FALSE") { cell.v = cell.v == "TRUE"; cell.t = "b"; }
-						else if(!isNaN(fuzzynum(cell.v))) { cell.t = 'n'; if(o.cellText !== false) cell.w = cell.v; cell.v = fuzzynum(cell.v); }
-
-						if(Array.isArray(ws)) ws[R][C] = cell;
-						else ws[encode_cell({r:R, c:C})] = cell;
-					}
-					payload = [];
-					break;
-				case "\\par": // NOTE: Excel serializes both "\r" and "\n" as "\\par"
-					payload.push("\n");
-					break;
-			}
-			last_index = rtfre.lastIndex;
-		}
-		if(C > range.e.c) range.e.c = C;
-	});
-	ws['!ref'] = encode_range(range);
-	return wb;
+function rtf_to_sheet_str(str, opts) {
+  var o = opts || {};
+  var ws = o.dense ? [] : {};
+  var rows = str.match(/\\trowd[\s\S]*?\\row\b/g);
+  if (!rows)
+    throw new Error("RTF missing table");
+  var range = { s: { c: 0, r: 0 }, e: { c: 0, r: rows.length - 1 } };
+  rows.forEach(function(rowtf, R) {
+    if (Array.isArray(ws))
+      ws[R] = [];
+    var rtfre = /\\[\w\-]+\b/g;
+    var last_index = 0;
+    var res;
+    var C = -1;
+    var payload = [];
+    while ((res = rtfre.exec(rowtf)) != null) {
+      var data = rowtf.slice(last_index, rtfre.lastIndex - res[0].length);
+      if (data.charCodeAt(0) == 32)
+        data = data.slice(1);
+      if (data.length)
+        payload.push(data);
+      switch (res[0]) {
+        case "\\cell":
+          ++C;
+          if (payload.length) {
+            var cell = { v: payload.join(""), t: "s" };
+            if (cell.v == "TRUE" || cell.v == "FALSE") {
+              cell.v = cell.v == "TRUE";
+              cell.t = "b";
+            } else if (!isNaN(fuzzynum(cell.v))) {
+              cell.t = "n";
+              if (o.cellText !== false)
+                cell.w = cell.v;
+              cell.v = fuzzynum(cell.v);
+            }
+            if (Array.isArray(ws))
+              ws[R][C] = cell;
+            else
+              ws[encode_cell({ r: R, c: C })] = cell;
+          }
+          payload = [];
+          break;
+        case "\\par":
+          payload.push("\n");
+          break;
+      }
+      last_index = rtfre.lastIndex;
+    }
+    if (C > range.e.c)
+      range.e.c = C;
+  });
+  ws["!ref"] = encode_range(range);
+  return ws;
 }
-
-/* TODO: standardize sheet names as titles for tables */
-function sheet_to_rtf(ws/*:Worksheet*//*::, opts*/)/*:string*/ {
-	var o = ["{\\rtf1\\ansi"];
-	var r = safe_decode_range(ws['!ref']), cell/*:Cell*/;
-	var dense = Array.isArray(ws);
-	for(var R = r.s.r; R <= r.e.r; ++R) {
-		o.push("\\trowd\\trautofit1");
-		for(var C = r.s.c; C <= r.e.c; ++C) o.push("\\cellx" + (C+1));
-		o.push("\\pard\\intbl");
-		for(C = r.s.c; C <= r.e.c; ++C) {
-			var coord = encode_cell({r:R,c:C});
-			cell = dense ? (ws[R]||[])[C]: ws[coord];
-			if(!cell || cell.v == null && (!cell.f || cell.F)) continue;
-			o.push(" " + (cell.w || (format_cell(cell), cell.w)).replace(/[\r\n]/g, "\\par "));
-			o.push("\\cell");
-		}
-		o.push("\\pard\\intbl\\row");
-	}
-	return o.join("") + "}";
+function rtf_to_workbook(d, opts) {
+  var wb = sheet_to_workbook(rtf_to_sheet(d, opts), opts);
+  wb.bookType = "rtf";
+  return wb;
+}
+function sheet_to_rtf(ws, opts) {
+  var o = ["{\\rtf1\\ansi"];
+  if (!ws["!ref"])
+    return o[0] + "}";
+  var r = safe_decode_range(ws["!ref"]), cell;
+  var dense = Array.isArray(ws);
+  for (var R = r.s.r; R <= r.e.r; ++R) {
+    o.push("\\trowd\\trautofit1");
+    for (var C = r.s.c; C <= r.e.c; ++C)
+      o.push("\\cellx" + (C + 1));
+    o.push("\\pard\\intbl");
+    for (C = r.s.c; C <= r.e.c; ++C) {
+      var coord = encode_cell({ r: R, c: C });
+      cell = dense ? (ws[R] || [])[C] : ws[coord];
+      if (!cell || cell.v == null && (!cell.f || cell.F)) {
+        o.push(" \\cell");
+        continue;
+      }
+      o.push(" " + (cell.w || (format_cell(cell), cell.w) || "").replace(/[\r\n]/g, "\\par "));
+      o.push("\\cell");
+    }
+    o.push("\\pard\\intbl\\row");
+  }
+  return o.join("") + "}";
 }
 function hex2RGB(h) {
 	var o = h.slice(h[0]==="#"?1:0).slice(0,6);
@@ -18728,6 +18756,7 @@ function parse_xlml_xml(d, _opts)/*:Workbook*/ {
 	out.SSF = dup(table_fmt);
 	out.Props = Props;
 	out.Custprops = Custprops;
+	out.bookType = "xlml";
 	return out;
 }
 
@@ -21619,9 +21648,14 @@ var HTML_END = '</body></html>';
 function html_to_workbook(str/*:string*/, opts)/*:Workbook*/ {
 	var mtch = str.match(/<table[\s\S]*?>[\s\S]*?<\/table>/gi);
 	if(!mtch || mtch.length == 0) throw new Error("Invalid HTML: could not find <table>");
-	if(mtch.length == 1) return sheet_to_workbook(html_to_sheet(mtch[0], opts), opts);
+	if(mtch.length == 1) {
+		var w = sheet_to_workbook(html_to_sheet(mtch[0], opts), opts);
+		w.bookType = "html";
+		return w;
+	}
 	var wb = book_new();
 	mtch.forEach(function(s, idx) { book_append_sheet(wb, html_to_sheet(s, opts), "Sheet" + (idx+1)); });
+	wb.bookType = "html";
 	return wb;
 }
 
@@ -21737,7 +21771,9 @@ function parse_dom_table(table/*:HTMLElement*/, _opts/*:?any*/)/*:Worksheet*/ {
 }
 
 function table_to_book(table/*:HTMLElement*/, opts/*:?any*/)/*:Workbook*/ {
-	return sheet_to_workbook(parse_dom_table(table, opts), opts);
+	var o = sheet_to_workbook(parse_dom_table(table, opts), opts);
+	//o.bookType = "dom"; // TODO: define a type for this
+	return o;
 }
 
 function is_dom_element_hidden(element/*:HTMLElement*/)/*:boolean*/ {
@@ -22528,10 +22564,13 @@ function parse_ods(zip/*:ZIPFile*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
 	if(!content) throw new Error("Missing content.xml in ODS / UOF file");
 	var wb = parse_content_xml(utf8read(content), opts, Styles);
 	if(safegetzipfile(zip, 'meta.xml')) wb.Props = parse_core_props(getzipdata(zip, 'meta.xml'));
+	wb.bookType = "ods";
 	return wb;
 }
 function parse_fods(data/*:string*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
-	return parse_content_xml(data, opts);
+	var wb = parse_content_xml(data, opts);
+	wb.bookType = "fods";
+	return wb;
 }
 
 /* OpenDocument */
@@ -23413,7 +23452,7 @@ function parse_old_storage(buf, sst, rsst, v) {
   var ret;
   switch (buf[2]) {
     case 0:
-      break;
+      return void 0;
     case 2:
       ret = { t: "n", v: ieee };
       break;
@@ -23473,7 +23512,7 @@ function parse_new_storage(buf, sst, rsst) {
   var ret;
   switch (buf[1]) {
     case 0:
-      break;
+      return void 0;
     case 2:
       ret = { t: "n", v: d128 };
       break;
@@ -23778,6 +23817,7 @@ function parse_TN_DocumentArchive(M, root) {
   });
   if (out.SheetNames.length == 0)
     throw new Error("Empty NUMBERS file");
+  out.bookType = "numbers";
   return out;
 }
 function parse_numbers_iwa(cfb) {
@@ -23978,6 +24018,8 @@ function write_numbers_iwa(wb, opts) {
     throw new Error("Too many messages");
   }
   var entry = CFB.find(cfb, dependents[1].location);
+  if (!entry)
+    throw "Could not find ".concat(dependents[1].location, " in Numbers template");
   var x = parse_iwa_file(decompress_iwa_file(entry.content));
   var docroot;
   for (var xi = 0; xi < x.length; ++xi) {
@@ -23985,8 +24027,12 @@ function write_numbers_iwa(wb, opts) {
     if (packet.id == 1)
       docroot = packet;
   }
+  if (docroot == null)
+    throw "Could not find message ".concat(1, " in Numbers template");
   var sheetrootref = parse_TSP_Reference(parse_shallow(docroot.messages[0].data)[1][0].data);
   entry = CFB.find(cfb, dependents[sheetrootref].location);
+  if (!entry)
+    throw "Could not find ".concat(dependents[sheetrootref].location, " in Numbers template");
   x = parse_iwa_file(decompress_iwa_file(entry.content));
   for (xi = 0; xi < x.length; ++xi) {
     packet = x[xi];
@@ -24002,6 +24048,8 @@ function write_numbers_iwa(wb, opts) {
   entry.size = entry.content.length;
   sheetrootref = parse_TSP_Reference(sheetref[2][0].data);
   entry = CFB.find(cfb, dependents[sheetrootref].location);
+  if (!entry)
+    throw "Could not find ".concat(dependents[sheetrootref].location, " in Numbers template");
   x = parse_iwa_file(decompress_iwa_file(entry.content));
   for (xi = 0; xi < x.length; ++xi) {
     packet = x[xi];
@@ -24010,6 +24058,8 @@ function write_numbers_iwa(wb, opts) {
   }
   sheetrootref = parse_TSP_Reference(parse_shallow(docroot.messages[0].data)[2][0].data);
   entry = CFB.find(cfb, dependents[sheetrootref].location);
+  if (!entry)
+    throw "Could not find ".concat(dependents[sheetrootref].location, " in Numbers template");
   x = parse_iwa_file(decompress_iwa_file(entry.content));
   for (xi = 0; xi < x.length; ++xi) {
     packet = x[xi];
@@ -24022,6 +24072,8 @@ function write_numbers_iwa(wb, opts) {
     pb[7][0].data = write_varint49(range.e.c + 1);
     var cruidsref = parse_TSP_Reference(pb[46][0].data);
     var oldbucket = CFB.find(cfb, dependents[cruidsref].location);
+    if (!oldbucket)
+      throw "Could not find ".concat(dependents[cruidsref].location, " in Numbers template");
     var _x = parse_iwa_file(decompress_iwa_file(oldbucket.content));
     {
       for (var j = 0; j < _x.length; ++j) {
@@ -24064,6 +24116,8 @@ function write_numbers_iwa(wb, opts) {
       var row_headers = parse_shallow(store[1][0].data);
       var row_header_ref = parse_TSP_Reference(row_headers[2][0].data);
       oldbucket = CFB.find(cfb, dependents[row_header_ref].location);
+      if (!oldbucket)
+        throw "Could not find ".concat(dependents[cruidsref].location, " in Numbers template");
       _x = parse_iwa_file(decompress_iwa_file(oldbucket.content));
       {
         if (_x[0].id != row_header_ref)
@@ -24082,6 +24136,8 @@ function write_numbers_iwa(wb, opts) {
       oldbucket.size = oldbucket.content.length;
       var col_header_ref = parse_TSP_Reference(store[2][0].data);
       oldbucket = CFB.find(cfb, dependents[col_header_ref].location);
+      if (!oldbucket)
+        throw "Could not find ".concat(dependents[cruidsref].location, " in Numbers template");
       _x = parse_iwa_file(decompress_iwa_file(oldbucket.content));
       {
         if (_x[0].id != col_header_ref)
@@ -24126,6 +24182,8 @@ function write_numbers_iwa(wb, opts) {
       var sstref = parse_TSP_Reference(store[4][0].data);
       (function() {
         var sentry = CFB.find(cfb, dependents[sstref].location);
+        if (!sentry)
+          throw "Could not find ".concat(dependents[sstref].location, " in Numbers template");
         var sx = parse_iwa_file(decompress_iwa_file(sentry.content));
         var sstroot;
         for (var sxi = 0; sxi < sx.length; ++sxi) {
@@ -24133,6 +24191,8 @@ function write_numbers_iwa(wb, opts) {
           if (packet2.id == sstref)
             sstroot = packet2;
         }
+        if (sstroot == null)
+          throw "Could not find message ".concat(sstref, " in Numbers template");
         var sstdata = parse_shallow(sstroot.messages[0].data);
         {
           sstdata[3] = [];
@@ -24158,6 +24218,8 @@ function write_numbers_iwa(wb, opts) {
           var tileref = parse_TSP_Reference(tl[2][0].data);
           (function() {
             var tentry = CFB.find(cfb, dependents[tileref].location);
+            if (!tentry)
+              throw "Could not find ".concat(dependents[tileref].location, " in Numbers template");
             var tx = parse_iwa_file(decompress_iwa_file(tentry.content));
             var tileroot;
             for (var sxi = 0; sxi < tx.length; ++sxi) {
@@ -24496,6 +24558,8 @@ function parse_zip(zip/*:ZIP*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
 		if(dir.vba.length > 0) out.vbaraw = getzipdata(zip,strip_front_slash(dir.vba[0]),true);
 		else if(dir.defaults && dir.defaults.bin === CT_VBA) out.vbaraw = getzipdata(zip, 'xl/vbaProject.bin',true);
 	}
+	// TODO: pass back content types metdata for xlsm/xlsx resolution
+	out.bookType = xlsb ? "xlsb" : "xlsx";
 	return out;
 }
 

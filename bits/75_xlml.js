@@ -919,6 +919,7 @@ function parse_xlml_xml(d, _opts)/*:Workbook*/ {
 	out.SSF = dup(table_fmt);
 	out.Props = Props;
 	out.Custprops = Custprops;
+	out.bookType = "xlml";
 	return out;
 }
 

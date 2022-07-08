@@ -235,7 +235,11 @@ function dbf_to_sheet(buf, opts)/*:Worksheet*/ {
 }
 
 function dbf_to_workbook(buf, opts)/*:Workbook*/ {
-	try { return sheet_to_workbook(dbf_to_sheet(buf, opts), opts); }
+	try {
+		var o = sheet_to_workbook(dbf_to_sheet(buf, opts), opts);
+		o.bookType = "dbf";
+		return o;
+	}
 	catch(e) { if(opts && opts.WTF) throw e; }
 	return ({SheetNames:[],Sheets:{}});
 }
@@ -546,6 +550,7 @@ var SYLK = /*#__PURE__*/(function() {
 		keys(ws).forEach(function(k) { o[k] = ws[k]; });
 		var outwb = sheet_to_workbook(o, opts);
 		keys(wb).forEach(function(k) { outwb[k] = wb[k]; });
+		outwb.bookType = "sylk";
 		return outwb;
 	}
 
@@ -664,7 +669,11 @@ var DIF = /*#__PURE__*/(function() {
 	}
 
 	function dif_to_sheet(str/*:string*/, opts)/*:Worksheet*/ { return aoa_to_sheet(dif_to_aoa(str, opts), opts); }
-	function dif_to_workbook(str/*:string*/, opts)/*:Workbook*/ { return sheet_to_workbook(dif_to_sheet(str, opts), opts); }
+	function dif_to_workbook(str/*:string*/, opts)/*:Workbook*/ {
+		var o = sheet_to_workbook(dif_to_sheet(str, opts), opts);
+		o.bookType = "dif";
+		return o;
+	}
 
 	var sheet_to_dif = /*#__PURE__*/(function() {
 		var push_field = function pf(o/*:Array<string>*/, topic/*:string*/, v/*:number*/, n/*:number*/, s/*:string*/) {

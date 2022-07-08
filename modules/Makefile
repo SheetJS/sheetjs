@@ -3,7 +3,7 @@ LIBFILES=src/types.ts
 TSFILES=$(wildcard *.ts)
 ENTRIES=$(subst .ts,.js,$(TSFILES))
 
-BAREJS=04_base64.js 51_xlsxmeta.js 51_xlsbmeta.js 59_vba.js 64_ftab.js 83_numbers.js
+BAREJS=04_base64.js 45_rtf.js 51_xlsxmeta.js 51_xlsbmeta.js 59_vba.js 64_ftab.js 83_numbers.js
 
 .PHONY: all
 all: $(ENTRIES) xlsx.zahl.js

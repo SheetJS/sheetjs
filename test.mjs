@@ -1421,6 +1421,17 @@ describe('parse features', function() {
 "11111,1934-06-03,1934-06-03,1934-06-03"
 		].join("\n"));
 	}); });
+
+	it('bookType metadata', function() {
+	[
+		// TODO: keep in sync with BookType, support other formats
+		"xlsx"/*, "xlsm" */, "xlsb"/* xls / xla / biff# */, "xlml", "ods", "fods"/*, "csv", "txt", */, "sylk", "html", "dif", "rtf"/*, "prn", "eth"*/, "dbf", "numbers"
+	].forEach(function(r) {
+		var ws = X.utils.aoa_to_sheet([ ["a", "b", "c"], [1, 2, 3] ]);
+		var wb = X.utils.book_new(); X.utils.book_append_sheet(wb, ws, "Sheet1");
+		var data = X.write(wb, {type: TYPE, bookType: r, WTF: true, numbers:XLSX_ZAHL });
+		assert.equal(X.read(data, {type: TYPE, WTF: true}).bookType, r);
+	}); });
 });
 
 describe('write features', function() {
