@@ -103,7 +103,8 @@ function parseDate(str/*:string|Date*/, fixdate/*:?number*/)/*:Date*/ {
 
 function cc2str(arr/*:Array<number>*/, debomit)/*:string*/ {
 	if(has_buf && Buffer.isBuffer(arr)) {
-		if(debomit) {
+		if(debomit && buf_utf16le) {
+			// TODO: temporary patch
 			if(arr[0] == 0xFF && arr[1] == 0xFE) return utf8write(arr.slice(2).toString("utf16le"));
 			if(arr[1] == 0xFE && arr[2] == 0xFF) return utf8write(utf16beread(arr.slice(2).toString("binary")));
 		}

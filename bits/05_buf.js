@@ -8,6 +8,13 @@ var Buffer_from = /*#__PURE__*/(function() {
 	}
 	return function() {};
 })();
+var buf_utf16le = /*#__PURE__*/(function() {
+	if(typeof Buffer === 'undefined') return false;
+	var x = Buffer_from([65,0]);
+	if(!x) return false;
+	var o = x.toString("utf16le");
+	return o.length == 1;
+})();
 
 
 function new_raw_buf(len/*:number*/) {
