@@ -1,0 +1,20 @@
+name: 'Tests: Bun'
+
+on: [pull_request, push]
+
+jobs:
+  # misc test
+  misc:
+    name: 'misc (with codepage)'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: antongolub/action-setup-bun@v1
+      - uses: ljharb/actions/node/install@main
+        with:
+          node-version: '16.'
+      - run: sudo curl -Lo /usr/bin/rooster https://github.com/SheetJS/rooster/releases/download/v0.2.0/rooster-v0.2.0-linux-amd64
+      - run: sudo chmod a+x /usr/bin/rooster
+      - run: make init
+      - run: 'cd test_files; make all; cd -'
+      - run: 'env FMTS=misc bun hotcross.mjs'

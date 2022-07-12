@@ -31,8 +31,11 @@ function buf_array()/*:BufArray*/ {
 
 	var endbuf = function ba_endbuf() {
 		if(!curbuf) return;
-		if(curbuf.length > curbuf.l) { curbuf = curbuf.slice(0, curbuf.l); curbuf.l = curbuf.length; }
-		if(curbuf.length > 0) bufs.push(curbuf);
+		// workaround for new Buffer(3).slice(0,0) bug in bun 0.1.3
+		if(curbuf.l) {
+			if(curbuf.length > curbuf.l) { curbuf = curbuf.slice(0, curbuf.l); curbuf.l = curbuf.length; }
+			if(curbuf.length > 0) bufs.push(curbuf);
+		}
 		curbuf = null;
 	};
 

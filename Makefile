@@ -144,6 +144,10 @@ test-esm: test.mjs ## Run Node ESM test suite
 test.ts: test.mts
 	node -pe 'var data = fs.readFileSync("'$<'", "utf8"); data.split("\n").map(function(l) { return l.replace(/^describe\((.*?)function\(\)/, "Deno.test($$1async function(t)").replace(/\b(?:it|describe)\((.*?)function\(\)/g, "await t.step($$1async function(t)").replace("assert.ok", "assert.assert"); }).join("\n")' > $@
 
+.PHONY: test-bun
+test-bun: hotcross.mjs ## Run Bun test suite
+	bun $<
+
 .PHONY: test-deno
 test-deno: test.ts ## Run Deno test suite
 	deno test --allow-env --allow-read --allow-write --config misc/test.deno.jsonc $<
@@ -173,6 +177,11 @@ TESTDENOCPFMT=$(patsubst %,test-denocp_%,$(FMT))
 .PHONY: $(TESTDENOCPFMT)
 $(TESTDENOCPFMT): test-denocp_%:
 	FMTS=$* make test-denocp
+
+TESTBUNFMT=$(patsubst %,test-bun_%,$(FMT))
+.PHONY: $(TESTBUNFMT)
+$(TESTBUNFMT): test-bun_%:
+	FMTS=$* make test-bun
 
 .PHONY: travis
 travis: ## Run test suite with minimal output
