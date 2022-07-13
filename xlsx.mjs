@@ -23061,6 +23061,9 @@ function write_ods(wb/*:any*/, opts/*:any*/) {
 }
 
 /*! sheetjs (C) 2013-present SheetJS -- http://sheetjs.com */
+var subarray = typeof Uint8Array !== "undefined" && typeof Uint8Array.prototype.subarray != "undefined" ? "subarray" : "slice";
+if (typeof Buffer !== "undefined" && typeof Buffer.prototype.subarray == "undefined")
+  subarray = "slice";
 function u8_to_dataview(array) {
   return new DataView(array.buffer, array.byteOffset, array.byteLength);
 }
@@ -23179,7 +23182,7 @@ function write_varint49(v) {
       usz[L] = v / 16777216 >>> 21 & 127;
       ++L;
     }
-  return usz.slice(0, L);
+  return usz[subarray](0, L);
 }
 function varint_to_i32(buf) {
   var l = 0, i32 = buf[l] & 127;
@@ -23215,22 +23218,22 @@ function parse_shallow(buf) {
           var l = ptr[0];
           while (buf[ptr[0]++] >= 128)
             ;
-          res = buf.slice(l, ptr[0]);
+          res = buf[subarray](l, ptr[0]);
         }
         break;
       case 5:
         len = 4;
-        res = buf.slice(ptr[0], ptr[0] + len);
+        res = buf[subarray](ptr[0], ptr[0] + len);
         ptr[0] += len;
         break;
       case 1:
         len = 8;
-        res = buf.slice(ptr[0], ptr[0] + len);
+        res = buf[subarray](ptr[0], ptr[0] + len);
         ptr[0] += len;
         break;
       case 2:
         len = parse_varint49(buf, ptr);
-        res = buf.slice(ptr[0], ptr[0] + len);
+        res = buf[subarray](ptr[0], ptr[0] + len);
         ptr[0] += len;
         break;
       case 3:
@@ -23272,7 +23275,7 @@ function parse_iwa_file(buf) {
   var out = [], ptr = [0];
   while (ptr[0] < buf.length) {
     var len = parse_varint49(buf, ptr);
-    var ai = parse_shallow(buf.slice(ptr[0], ptr[0] + len));
+    var ai = parse_shallow(buf[subarray](ptr[0], ptr[0] + len));
     ptr[0] += len;
     var res = {
       id: varint_to_i32(ai[1][0].data),
@@ -23283,7 +23286,7 @@ function parse_iwa_file(buf) {
       var fl = varint_to_i32(mi[3][0].data);
       res.messages.push({
         meta: mi,
-        data: buf.slice(ptr[0], ptr[0] + fl)
+        data: buf[subarray](ptr[0], ptr[0] + fl)
       });
       ptr[0] += fl;
     });
@@ -23343,7 +23346,7 @@ function parse_snappy_chunk(type, buf) {
         len++;
         ptr[0] += c;
       }
-      chunks.push(buf.slice(ptr[0], ptr[0] + len));
+      chunks.push(buf[subarray](ptr[0], ptr[0] + len));
       ptr[0] += len;
       continue;
     } else {
@@ -23362,35 +23365,57 @@ function parse_snappy_chunk(type, buf) {
           ptr[0] += 4;
         }
       }
-      chunks = [u8concat(chunks)];
       if (offset == 0)
         throw new Error("Invalid offset 0");
-      if (offset > chunks[0].length)
-        throw new Error("Invalid offset beyond length");
-      if (length >= offset) {
-        chunks.push(chunks[0].slice(-offset));
-        length -= offset;
-        while (length >= chunks[chunks.length - 1].length) {
-          chunks.push(chunks[chunks.length - 1]);
-          length -= chunks[chunks.length - 1].length;
-        }
+      var j = chunks.length - 1, off = offset;
+      while (j >= 0 && off >= chunks[j].length) {
+        off -= chunks[j].length;
+        --j;
       }
-      chunks.push(chunks[0].slice(-offset, -offset + length));
+      if (j < 0) {
+        if (off == 0)
+          off = chunks[j = 0].length;
+        else
+          throw new Error("Invalid offset beyond length");
+      }
+      if (length < off)
+        chunks.push(chunks[j][subarray](-off, -off + length));
+      else {
+        if (off > 0) {
+          chunks.push(chunks[j][subarray](-off));
+          length -= off;
+        }
+        ++j;
+        while (length >= chunks[j].length) {
+          chunks.push(chunks[j]);
+          length -= chunks[j].length;
+          ++j;
+        }
+        if (length)
+          chunks.push(chunks[j][subarray](0, length));
+      }
+      if (chunks.length > 100)
+        chunks = [u8concat(chunks)];
     }
   }
-  var o = u8concat(chunks);
-  if (o.length != usz)
-    throw new Error("Unexpected length: ".concat(o.length, " != ").concat(usz));
-  return o;
+  if (chunks.reduce(function(acc, u8) {
+    return acc + u8.length;
+  }, 0) != usz)
+    throw new Error("Unexpected length: ".concat(chunks.reduce(function(acc, u8) {
+      return acc + u8.length;
+    }, 0), " != ").concat(usz));
+  return chunks;
 }
 function decompress_iwa_file(buf) {
+  if (Array.isArray(buf))
+    buf = new Uint8Array(buf);
   var out = [];
   var l = 0;
   while (l < buf.length) {
     var t = buf[l++];
     var len = buf[l] | buf[l + 1] << 8 | buf[l + 2] << 16;
     l += 3;
-    out.push(parse_snappy_chunk(t, buf.slice(l, l + len)));
+    out.push.apply(out, parse_snappy_chunk(t, buf[subarray](l, l + len)));
     l += len;
   }
   if (l !== buf.length)
@@ -23423,7 +23448,7 @@ function compress_iwa_file(buf) {
       L += 5;
       out.push(new Uint8Array([252, c - 1 & 255, c - 1 >> 8 & 255, c - 1 >> 16 & 255, c - 1 >>> 24 & 255]));
     }
-    out.push(buf.slice(l, l + c));
+    out.push(buf[subarray](l, l + c));
     L += c;
     frame[0] = 0;
     frame[1] = L & 255;
@@ -23482,11 +23507,11 @@ function parse_old_storage(buf, sst, rsst, v) {
         if (ridx > -1)
           ret = { t: "s", v: rsst[ridx] };
         else
-          throw new Error("Unsupported cell type ".concat(buf.slice(0, 4)));
+          throw new Error("Unsupported cell type ".concat(buf[subarray](0, 4)));
       }
       break;
     default:
-      throw new Error("Unsupported cell type ".concat(buf.slice(0, 4)));
+      throw new Error("Unsupported cell type ".concat(buf[subarray](0, 4)));
   }
   return ret;
 }
@@ -23542,14 +23567,14 @@ function parse_new_storage(buf, sst, rsst) {
         if (ridx > -1)
           ret = { t: "s", v: rsst[ridx] };
         else
-          throw new Error("Unsupported cell type ".concat(buf[1], " : ").concat(flags & 31, " : ").concat(buf.slice(0, 4)));
+          throw new Error("Unsupported cell type ".concat(buf[1], " : ").concat(flags & 31, " : ").concat(buf[subarray](0, 4)));
       }
       break;
     case 10:
       ret = { t: "n", v: d128 };
       break;
     default:
-      throw new Error("Unsupported cell type ".concat(buf[1], " : ").concat(flags & 31, " : ").concat(buf.slice(0, 4)));
+      throw new Error("Unsupported cell type ".concat(buf[1], " : ").concat(flags & 31, " : ").concat(buf[subarray](0, 4)));
   }
   return ret;
 }
@@ -23581,7 +23606,7 @@ function write_new_storage(cell, sst) {
       throw "unsupported cell type " + cell.t;
   }
   dv.setUint32(8, flags, true);
-  return out.slice(0, l);
+  return out[subarray](0, l);
 }
 function write_old_storage(cell, sst) {
   var out = new Uint8Array(32), dv = u8_to_dataview(out), l = 12, flags = 0;
@@ -23611,7 +23636,7 @@ function write_old_storage(cell, sst) {
       throw "unsupported cell type " + cell.t;
   }
   dv.setUint32(4, flags, true);
-  return out.slice(0, l);
+  return out[subarray](0, l);
 }
 function parse_cell_storage(buf, sst, rsst) {
   switch (buf[0]) {
@@ -23693,9 +23718,9 @@ function parse_TST_TileRowInfo(u8, type) {
     throw "Expected ".concat(cnt, " cells, found ").concat(offsets.length);
   var cells = [];
   for (C = 0; C < offsets.length - 1; ++C)
-    cells[offsets[C][0]] = used_storage.subarray(offsets[C][1] * width, offsets[C + 1][1] * width);
+    cells[offsets[C][0]] = used_storage[subarray](offsets[C][1] * width, offsets[C + 1][1] * width);
   if (offsets.length >= 1)
-    cells[offsets[offsets.length - 1][0]] = used_storage.subarray(offsets[offsets.length - 1][1] * width);
+    cells[offsets[offsets.length - 1][0]] = used_storage[subarray](offsets[offsets.length - 1][1] * width);
   return { R: R, cells: cells };
 }
 function parse_TST_Tile(M, root) {
@@ -23736,6 +23761,7 @@ function parse_TST_TableModelArchive(M, root, ws) {
   if (range.e.c < 0)
     throw new Error("Invalid col varint ".concat(pb[7][0].data));
   ws["!ref"] = encode_range(range);
+  var dense = Array.isArray(ws);
   var store = parse_shallow(pb[4][0].data);
   var sst = parse_TST_TableDataList(M, M[parse_TSP_Reference(store[4][0].data)][0]);
   var rsst = ((_a = store[17]) == null ? void 0 : _a[0]) ? parse_TST_TableDataList(M, M[parse_TSP_Reference(store[17][0].data)][0]) : [];
@@ -23750,10 +23776,17 @@ function parse_TST_TableModelArchive(M, root, ws) {
     var _tile = parse_TST_Tile(M, ref2);
     _tile.data.forEach(function(row, R) {
       row.forEach(function(buf, C) {
-        var addr = encode_cell({ r: _R + R, c: C });
         var res = parse_cell_storage(buf, sst, rsst);
-        if (res)
-          ws[addr] = res;
+        if (res) {
+          if (dense) {
+            if (!ws[_R + R])
+              ws[_R + R] = [];
+            ws[_R + R][C] = res;
+          } else {
+            var addr = encode_cell({ r: _R + R, c: C });
+            ws[addr] = res;
+          }
+        }
       });
     });
     _R += _tile.nrows;
@@ -23776,9 +23809,14 @@ function parse_TST_TableModelArchive(M, root, ws) {
     });
   }
 }
-function parse_TST_TableInfoArchive(M, root) {
+function parse_TST_TableInfoArchive(M, root, opts) {
   var pb = parse_shallow(root.data);
-  var out = { "!ref": "A1" };
+  var out;
+  if (!(opts == null ? void 0 : opts.dense))
+    out = { "!ref": "A1" };
+  else
+    out = [];
+  out["!ref"] = "A1";
   var tableref = M[parse_TSP_Reference(pb[2][0].data)];
   var mtype = varint_to_i32(tableref[0].meta[1][0].data);
   if (mtype != 6001)
@@ -23786,7 +23824,7 @@ function parse_TST_TableInfoArchive(M, root) {
   parse_TST_TableModelArchive(M, tableref[0], out);
   return out;
 }
-function parse_TN_SheetArchive(M, root) {
+function parse_TN_SheetArchive(M, root, opts) {
   var _a;
   var pb = parse_shallow(root.data);
   var out = {
@@ -23798,12 +23836,12 @@ function parse_TN_SheetArchive(M, root) {
     M[off].forEach(function(m) {
       var mtype = varint_to_i32(m.meta[1][0].data);
       if (mtype == 6e3)
-        out.sheets.push(parse_TST_TableInfoArchive(M, m));
+        out.sheets.push(parse_TST_TableInfoArchive(M, m, opts));
     });
   });
   return out;
 }
-function parse_TN_DocumentArchive(M, root) {
+function parse_TN_DocumentArchive(M, root, opts) {
   var _a;
   var out = book_new();
   var pb = parse_shallow(root.data);
@@ -23814,7 +23852,7 @@ function parse_TN_DocumentArchive(M, root) {
     M[off].forEach(function(m) {
       var mtype = varint_to_i32(m.meta[1][0].data);
       if (mtype == 2) {
-        var root2 = parse_TN_SheetArchive(M, m);
+        var root2 = parse_TN_SheetArchive(M, m, opts);
         root2.sheets.forEach(function(sheet, idx) {
           book_append_sheet(out, sheet, idx == 0 ? root2.name : root2.name + "_" + idx, true);
         });
@@ -23826,7 +23864,7 @@ function parse_TN_DocumentArchive(M, root) {
   out.bookType = "numbers";
   return out;
 }
-function parse_numbers_iwa(cfb) {
+function parse_numbers_iwa(cfb, opts) {
   var _a, _b, _c, _d, _e, _f, _g, _h;
   var M = {}, indices = [];
   cfb.FullPaths.forEach(function(p) {
@@ -23872,7 +23910,7 @@ function parse_numbers_iwa(cfb) {
     });
   if (!docroot)
     throw new Error("Cannot find Document root");
-  return parse_TN_DocumentArchive(M, docroot);
+  return parse_TN_DocumentArchive(M, docroot, opts);
 }
 function write_tile_row(tri, data, SST, wide) {
   var _a, _b;
@@ -24386,10 +24424,10 @@ function parse_zip(zip/*:ZIP*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
 	if(safegetzipfile(zip, 'Index/Document.iwa')) {
 		if(typeof Uint8Array == "undefined") throw new Error('NUMBERS file parsing requires Uint8Array support');
 		if(typeof parse_numbers_iwa != "undefined") {
-			if(zip.FileIndex) return parse_numbers_iwa(zip);
+			if(zip.FileIndex) return parse_numbers_iwa(zip, opts);
 			var _zip = CFB.utils.cfb_new();
 			zipentries(zip).forEach(function(e) { zip_add_file(_zip, e, getzipbin(zip, e)); });
-			return parse_numbers_iwa(_zip);
+			return parse_numbers_iwa(_zip, opts);
 		}
 		throw new Error('Unsupported NUMBERS file');
 	}

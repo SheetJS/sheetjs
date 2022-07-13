@@ -193,7 +193,7 @@ ctest: ## Build browser test fixtures
 
 .PHONY: ctestserv
 ctestserv: ## Start a test server on port 8000
-	@cd tests && python -mSimpleHTTPServer
+	@cd tests && python -mSimpleHTTPServer || python3 -mhttp.server || npx -y http-server -p 8000 .
 
 ## Code Checking
 
