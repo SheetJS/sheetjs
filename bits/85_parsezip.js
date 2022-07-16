@@ -84,6 +84,8 @@ function parse_zip(zip/*:ZIP*/, opts/*:?ParseOpts*/)/*:Workbook*/ {
 			opts = dup(opts);
 			delete opts.type;
 			if(typeof index_zip.content == "string") opts.type = "binary";
+			// TODO: Bun buffer bug
+			if(typeof Bun !== "undefined" && Buffer.isBuffer(index_zip.content)) return readSync(new Uint8Array(index_zip.content), opts);
 			return readSync(index_zip.content, opts);
 		}
 		throw new Error('Unsupported ZIP file');

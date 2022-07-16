@@ -1,7 +1,22 @@
 /*! sheetjs (C) 2013-present SheetJS -- http://sheetjs.com */
-var subarray = typeof Uint8Array !== "undefined" && typeof Uint8Array.prototype.subarray != "undefined" ? "subarray" : "slice";
-if (typeof Buffer !== "undefined" && typeof Buffer.prototype.subarray == "undefined")
-  subarray = "slice";
+var subarray = function() {
+  try {
+    if (typeof Uint8Array == "undefined")
+      return "slice";
+    if (typeof Uint8Array.prototype.subarray == "undefined")
+      return "slice";
+    if (typeof Buffer !== "undefined") {
+      if (typeof Buffer.prototype.subarray == "undefined")
+        return "slice";
+      if ((typeof Buffer.from == "function" ? Buffer.from([72, 62]) : new Buffer([72, 62])) instanceof Uint8Array)
+        return "subarray";
+      return "slice";
+    }
+    return "subarray";
+  } catch (e) {
+    return "slice";
+  }
+}();
 function u8_to_dataview(array) {
   return new DataView(array.buffer, array.byteOffset, array.byteLength);
 }
@@ -317,10 +332,10 @@ function parse_snappy_chunk(type, buf) {
           throw new Error("Invalid offset beyond length");
       }
       if (length < off)
-        chunks.push(chunks[j][subarray](-off, -off + length));
+        chunks.push(chunks[j][subarray](chunks[j].length - off, chunks[j].length - off + length));
       else {
         if (off > 0) {
-          chunks.push(chunks[j][subarray](-off));
+          chunks.push(chunks[j][subarray](chunks[j].length - off));
           length -= off;
         }
         ++j;

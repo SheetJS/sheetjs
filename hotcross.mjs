@@ -1,7 +1,7 @@
-var pdizzle = 0, fails = 0;
+var pdizzle = 0, fails = 0, passes = 0;
 var describe = function(m,cb){console.log(" ".repeat(pdizzle) + m); ++pdizzle; if(cb) cb(); --pdizzle; };
 describe.skip = function(m,cb){};
-var it = function(m,cb){console.log(" ".repeat(pdizzle) + m); ++pdizzle; if(cb) try { cb(); } catch(e) { ++fails, console.log("FAILED: " + (e.message || e)); } --pdizzle;};
+var it = function(m,cb){console.log(" ".repeat(pdizzle) + m); ++pdizzle; if(cb) try { cb(); ++passes } catch(e) { ++fails, console.log("\x1b[31mFAILED: " + (e.message || e) + "\x1b[0m"); } --pdizzle;};
 it.skip = function(m,cb){};
 var before = function(cb){if(cb) cb();};
 var afterEach = function(cb){if(cb) cb();};
@@ -691,22 +691,20 @@ describe('parse options', function() {
 		}); });
 	});
 });
-console.log(`${fails} FAILED`);
-process.exit(fails > 0);
 describe('input formats', function() {
-	it('should read binary strings', function() { artifax.forEach(function(p) {
+	if(false) it('should read binary strings', function() { artifax.forEach(function(p) {
 		X.read(fs.readFileSync(p, 'binary'), {type: 'binary'});
 	}); });
-	it('should read base64 strings', function() { artifax.forEach(function(p) {
+	if(false) it('should read base64 strings', function() { artifax.forEach(function(p) {
 		X.read(fs.readFileSync(p, 'base64'), {type: 'base64'});
 	}); });
-	if(typeof Uint8Array !== 'undefined') it('should read array', function() { artifax.forEach(function(p) {
+	if(false) if(typeof Uint8Array !== 'undefined') it('should read array', function() { artifax.forEach(function(p) {
 		X.read(fs.readFileSync(p, 'binary').split("").map(function(x) { return x.charCodeAt(0); }), {type:'array'});
 	}); });
 	((browser || typeof Buffer === 'undefined') ? it.skip : it)('should read Buffers', function() { artifax.forEach(function(p) {
 		X.read(fs.readFileSync(p), {type: 'buffer'});
 	}); });
-	if(typeof Uint8Array !== 'undefined') it('should read ArrayBuffer / Uint8Array', function() { artifax.forEach(function(p) {
+	if(false) if(typeof Uint8Array !== 'undefined') it('should read ArrayBuffer / Uint8Array', function() { artifax.forEach(function(p) {
 		var payload = fs.readFileSync(p, browser ? 'buffer' : null);
 		var ab = new ArrayBuffer(payload.length), vu = new Uint8Array(ab);
 		for(var i = 0; i < payload.length; ++i) vu[i] = payload[i];
@@ -718,13 +716,13 @@ describe('input formats', function() {
 	}); });
 
 	var T = browser ? 'base64' : 'buffer';
-	it('should default to "' + T + '" type', function() { artifax.forEach(function(p) {
+	if(false) it('should default to "' + T + '" type', function() { artifax.forEach(function(p) {
 		X.read(fs.readFileSync.apply(fs, browser ? [p, 'base64'] : [p]));
 	}); });
 	if(!browser) it('should read files', function() { artifax.forEach(function(p) { X.readFile(p); }); });
 });
 
-describe('output formats', function() {
+if(false) describe('output formats', function() {
 	var fmts = [
 		/* fmt   unicode   str */
 		["xlsx",   true,  false],
@@ -954,7 +952,7 @@ describe('parse features', function() {
 		}); });
 	});
 
-	describe('should parse core properties and custom properties', function() {
+	if(false) describe('should parse core properties and custom properties', function() {
 		var wbs=[];
 		var bef = (function() {
 			wbs = [
@@ -1023,7 +1021,7 @@ describe('parse features', function() {
 		});
 	});
 
-	describe('column properties', function() {
+	if(false) describe('column properties', function() {
 		var wbs = [], wbs_no_slk = [];
 		var bef = (function() {
 			wbs = CWPaths.map(function(n) { return X.read(fs.readFileSync(n), {type:TYPE, cellStyles:true}); });
@@ -1064,7 +1062,7 @@ describe('parse features', function() {
 		});
 	});
 
-	describe('row properties', function() {
+	if(false) describe('row properties', function() {
 		var wbs = [], ols = [];
 		var ol = fs.existsSync(paths.olxls);
 		var bef = (function() {
@@ -1137,15 +1135,15 @@ describe('parse features', function() {
 		if(typeof before != 'undefined') before(bef);
 		else it('before', bef);
 
-		['xlsx', 'xlsb', 'xls', 'xml'].forEach(function(x, i) {
+		['xlsx', 'xlsb', /* 'xls', 'xml'*/].forEach(function(x, i) {
 			it(x + " external", function() { hlink1(wb1[i].Sheets["Sheet1"]); });
 		});
-		['xlsx', 'xlsb', 'xls', 'xml', 'ods'].forEach(function(x, i) {
+		['xlsx', 'xlsb', /* 'xls', 'xml', 'ods'*/].forEach(function(x, i) {
 			it(x + " internal", function() { hlink2(wb2[i].Sheets["Sheet1"]); });
 		});
 	});
 
-	describe('should parse cells with date type (XLSX/XLSM)', function() {
+	if(false) describe('should parse cells with date type (XLSX/XLSM)', function() {
 		it('Must have read the date', function() {
 			var wb, ws;
 			var sheetName = 'Sheet1';
@@ -1212,7 +1210,7 @@ describe('parse features', function() {
 		assert.equal(names[i].Ref, "Sheet1!$A$2");
 	}); }); });
 
-	describe('defined names unicode', function() {[
+	if(false) describe('defined names unicode', function() {[
 		/* desc     path          RT */
 		['xlsx', paths.dnuxlsx,  true],
 		['xlsb', paths.dnuxlsb,  true],
@@ -1246,7 +1244,7 @@ describe('parse features', function() {
 		}); });
 	}); }); });
 
-	describe('workbook codename unicode', function() {
+	if(false) describe('workbook codename unicode', function() {
 		var ws, wb;
 		var bef = (function() {
 			wb = X.utils.book_new();
@@ -1299,7 +1297,7 @@ describe('parse features', function() {
 		}); });
 	});
 
-	describe('page margins', function() {
+	if(false) describe('page margins', function() {
 		var wbs=[];
 		var bef = (function() {
 			if(!fs.existsSync(paths.pmxls)) return;
@@ -1412,7 +1410,7 @@ describe('parse features', function() {
 		assert.equal(data[5][1], '7,890');
 	}); }); });
 
-	it('date system', function() {[
+	if(false) it('date system', function() {[
 		"biff5", "ods", "slk", "xls", "xlsb", "xlsx", "xml"
 	].forEach(function(ext) {
 		// TODO: verify actual date values
@@ -1437,7 +1435,7 @@ describe('parse features', function() {
 		].join("\n"));
 	}); });
 
-	it('bookType metadata', function() {
+	if(false) it('bookType metadata', function() {
 	[
 		// TODO: keep in sync with BookType, support other formats
 		"xlsx"/*, "xlsm" */, "xlsb"/* xls / xla / biff# */, "xlml", "ods", "fods"/*, "csv", "txt", */, "sylk", "html", "dif", "rtf"/*, "prn", "eth"*/, "dbf", "numbers"
@@ -1448,6 +1446,7 @@ describe('parse features', function() {
 		assert.equal(X.read(data, {type: TYPE, WTF: true}).bookType, r);
 	}); });
 });
+console.log(`${fails} FAILED ${passes} PASSED`); process.exit(fails > 0);
 
 describe('write features', function() {
 	describe('props', function() {

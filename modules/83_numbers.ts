@@ -17,8 +17,19 @@ declare var CFB: typeof _CFB;
 //<<import { utils } from "../../";
 //<<const { encode_cell, encode_range, book_new, book_append_sheet } = utils;
 
-var subarray = typeof Uint8Array !== "undefined" && typeof Uint8Array.prototype.subarray != "undefined" ? "subarray" : "slice";
-if(typeof Buffer !== "undefined" && typeof Buffer.prototype.subarray == "undefined") subarray = "slice";
+var subarray: "subarray" | "slice" = (() => {
+	try {
+	if(typeof Uint8Array == "undefined") return "slice";
+	if(typeof Uint8Array.prototype.subarray == "undefined") return "slice";
+	// NOTE: feature tests are for node < 6.x
+	if(typeof Buffer !== "undefined") {
+		if(typeof Buffer.prototype.subarray == "undefined") return "slice";
+		if((typeof Buffer.from == "function" ? Buffer.from([72,62]) : new Buffer([72,62])) instanceof Uint8Array) return "subarray";
+		return "slice";
+	}
+	return "subarray";
+	} catch(e) { return "slice"; }
+})();
 
 function u8_to_dataview(array: Uint8Array): DataView { return new DataView(array.buffer, array.byteOffset, array.byteLength); }
 //<<export { u8_to_dataview };
@@ -285,9 +296,10 @@ function parse_snappy_chunk(type: number, buf: Uint8Array): Uint8Array[] {
 				if(off == 0) off = chunks[(j = 0)].length;
 				else throw new Error("Invalid offset beyond length");
 			}
-			if(length < off) chunks.push(chunks[j][subarray](-off, -off + length));
+			// Node 0.8 Buffer slice does not support negative indices
+			if(length < off) chunks.push(chunks[j][subarray](chunks[j].length-off, chunks[j].length-off + length));
 			else {
-				if(off > 0) { chunks.push(chunks[j][subarray](-off)); length -= off; } ++j;
+				if(off > 0) { chunks.push(chunks[j][subarray](chunks[j].length-off)); length -= off; } ++j;
 				while(length >= chunks[j].length) { chunks.push(chunks[j]); length -= chunks[j].length; ++j; }
 				if(length) chunks.push(chunks[j][subarray](0, length));
 			}
