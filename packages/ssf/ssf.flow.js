@@ -3,7 +3,7 @@
 /*jshint -W041 */
 /*:: declare var DO_NOT_EXPORT_SSF: any; */
 var SSF/*:SSFModule*/ = ({}/*:any*/);
-var make_ssf = function make_ssf(SSF/*:SSFModule*/){
+function make_ssf(SSF/*:SSFModule*/){
 SSF.version = '0.11.2';
 function _strrev(x/*:string*/)/*:string*/ { var o = "", i = x.length-1; while(i>=0) o += x.charAt(i--); return o; }
 function fill(c/*:string*/,l/*:number*/)/*:string*/ { var o = ""; while(o.length < l) o+=c; return o; }
@@ -163,6 +163,7 @@ function frac(x/*:number*/, D/*:number*/, mixed/*:?boolean*/)/*:Array<number>*/ 
 }
 function parse_date_code(v/*:number*/,opts/*:?any*/,b2/*:?boolean*/) {
 	if(v > 2958465 || v < 0) return null;
+	opts.b2 = b2 || false;
 	var date = (v|0), time = Math.floor(86400 * (v - date)), dow=0;
 	var dout=[];
 	var out={D:date, T:time, u:86400*(v-date)-time,y:0,m:0,d:0,H:0,M:0,S:0,q:0};
@@ -201,10 +202,6 @@ function datenum_local(v/*:Date*/, date1904/*:?boolean*/)/*:number*/ {
 	else if(v >= base1904) epoch += 24*60*60*1000;
 	return (epoch - (dnthresh + (v.getTimezoneOffset() - basedate.getTimezoneOffset()) * 60000)) / (24 * 60 * 60 * 1000);
 }
-/* The longest 32-bit integer text is "-4294967296", exactly 11 chars */
-function general_fmt_int(v/*:number*/)/*:string*/ { return v.toString(10); }
-SSF._general_int = general_fmt_int;
-
 /* ECMA-376 18.8.30 numFmt*/
 /* Note: `toPrecision` uses standard form when prec > E and E >= -6 */
 var general_fmt_num = (function make_general_fmt_num() {
@@ -257,6 +254,7 @@ SSF._general_num = general_fmt_num;
 	- "up to 11 characters" displayed for numbers
 	- Default date format (code 14) used for Dates
 
+	The longest 32-bit integer text is "-2147483648", exactly 11 chars
 	TODO: technically the display depends on the width of the cell
 */
 function general_fmt(v/*:any*/, opts/*:any*/) {
@@ -281,6 +279,7 @@ function fix_hijri(date/*:Date*/, o/*:[number, number, number]*/) {
 }
 var THAI_DIGITS = "\u0E50\u0E51\u0E52\u0E53\u0E54\u0E55\u0E56\u0E57\u0E58\u0E59".split("");
 /*jshint -W086 */
+var ROUNDING_FLAG = "rounding is necessary"
 function write_date(type/*:number*/, fmt/*:string*/, val, ss0/*:?number*/)/*:string*/ {
 	var o="", ss=0, tt=0, y = val.y, out, outl = 0;
 	switch(type) {
@@ -327,7 +326,7 @@ function write_date(type/*:number*/, fmt/*:string*/, val, ss0/*:?number*/)/*:str
 			if(ss0 >= 2) tt = ss0 === 3 ? 1000 : 100;
 			else tt = ss0 === 1 ? 10 : 1;
 			ss = Math.round((tt)*(val.S + val.u));
-			if(ss >= 60*tt) ss = 0;
+			if(ss >= 60*tt) throw ROUNDING_FLAG;
 			if(fmt === 's') return ss === 0 ? "0" : ""+ss/tt;
 			o = pad0(ss,2 + ss0);
 			if(fmt === 'ss') return o.substr(0,2);
@@ -336,7 +335,7 @@ function write_date(type/*:number*/, fmt/*:string*/, val, ss0/*:?number*/)/*:str
 		switch(fmt) {
 			case '[h]': case '[hh]': out = val.D*24+val.H; break;
 			case '[m]': case '[mm]': out = (val.D*24+val.H)*60+val.M; break;
-			case '[s]': case '[ss]': out = ((val.D*24+val.H)*60+val.M)*60+Math.round(val.S+val.u); break;
+			case '[s]': case '[ss]': out = ((val.D*24+val.H)*60+val.M)*60+(ss0 < 1 ? Math.round(val.S+val.u) : val.S); break;
 			default: throw 'bad abstime format: ' + fmt;
 		} outl = fmt.length === 3 ? 1 : 2; break;
 		case 101: /* 'e' era */
@@ -794,47 +793,14 @@ function eval_fmt(fmt/*:string*/, v/*:any*/, opts/*:any*/, flen/*:number*/) {
 		}
 	}
 	/* time rounding depends on presence of minute / second / usec fields */
-	switch(bt) {
-		case 0: break;
-		case 1:
-			/*::if(!dt) break;*/
-			if(dt.u >= 0.5) { dt.u = 0; ++dt.S; }
-			if(dt.S >=  60) { dt.S = 0; ++dt.M; }
-			if(dt.M >=  60) { dt.M = 0; ++dt.H; }
-			break;
-		case 2:
-			/*::if(!dt) break;*/
-			if(dt.u >= 0.5) { dt.u = 0; ++dt.S; }
-			if(dt.S >=  60) { dt.S = 0; ++dt.M; }
-			break;
+	if (bt > 0 && bt < 3 && dt.u >= 0.5) {
+	 	round_up_date(dt, opts);
 	}
 
 	/* replace fields */
-	var nstr = "", jj;
-	for(i=0; i < out.length; ++i) {
-		switch(out[i].t) {
-			case 't': case 'T': case ' ': case 'D': break;
-			case 'X': out[i].v = ""; out[i].t = ";"; break;
-			case 'd': case 'm': case 'y': case 'h': case 'H': case 'M': case 's': case 'e': case 'b': case 'Z':
-				/*::if(!dt) throw "unreachable"; */
-				out[i].v = write_date(out[i].t.charCodeAt(0), out[i].v, dt, ss0);
-				out[i].t = 't'; break;
-			case 'n': case '?':
-				jj = i+1;
-				while(out[jj] != null && (
-					(c=out[jj].t) === "?" || c === "D" ||
-					((c === " " || c === "t") && out[jj+1] != null && (out[jj+1].t === '?' || out[jj+1].t === "t" && out[jj+1].v === '/')) ||
-					(out[i].t === '(' && (c === ' ' || c === 'n' || c === ')')) ||
-					(c === 't' && (out[jj].v === '/' || out[jj].v === ' ' && out[jj+1] != null && out[jj+1].t == '?'))
-				)) {
-					out[i].v += out[jj].v;
-					out[jj] = {v:"", t:";"}; ++jj;
-				}
-				nstr += out[i].v;
-				i = jj-1; break;
-			case 'G': out[i].t = 't'; out[i].v = general_fmt(v,opts); break;
-		}
-	}
+	var replaced = replace_fields(out, dt, ss0, v, opts);
+	var nstr = replaced.nstr;
+	out = replaced.out;
 	var vv = "", myv, ostr;
 	if(nstr.length > 0) {
 		if(nstr.charCodeAt(0) == 40) /* '(' */ {
@@ -848,7 +814,7 @@ function eval_fmt(fmt/*:string*/, v/*:any*/, opts/*:any*/, flen/*:number*/) {
 				out[0].v = "-" + out[0].v;
 			}
 		}
-		jj=ostr.length-1;
+		var jj=ostr.length-1;
 		var decpt = out.length;
 		for(i=0; i < out.length; ++i) if(out[i] != null && out[i].t != 't' && out[i].v.indexOf(".") > -1) { decpt = i; break; }
 		var lasti=out.length;
@@ -899,6 +865,85 @@ function eval_fmt(fmt/*:string*/, v/*:any*/, opts/*:any*/, flen/*:number*/) {
 	var retval = "";
 	for(i=0; i !== out.length; ++i) if(out[i] != null) retval += out[i].v;
 	return retval;
+}
+function replace_fields(fields, dt, ss0, v, opts) {
+	var out = [];
+	for (var i = 0; i < fields.length; i++) {out[i] = {t: fields[i].t, v: fields[i].v};}
+	var nstr = "", jj;
+	for(i=0; i < out.length; ++i) {
+		switch(out[i].t) {
+			case 't': case 'T': case ' ': case 'D': break;
+			case 'X': out[i].v = ""; out[i].t = ";"; break;
+			case 'd': case 'm': case 'y': case 'h': case 'H': case 'M': case 's': case 'e': case 'b': case 'Z':
+				/*::if(!dt) throw "unreachable"; */
+				try {
+					out[i].v = write_date(out[i].t.charCodeAt(0), out[i].v, dt, ss0);
+				} catch (e) {
+					if (e === ROUNDING_FLAG) {
+						round_up_date(dt, opts);
+						return replace_fields(fields, dt, ss0, v, opts);
+					}
+					throw e;
+				}
+				out[i].t = 't'; break;
+			case 'n': case '?':
+				jj = i+1;
+				while(out[jj] != null && (
+					(c=out[jj].t) === "?" || c === "D" ||
+					((c === " " || c === "t") && out[jj+1] != null && (out[jj+1].t === '?' || out[jj+1].t === "t" && out[jj+1].v === '/')) ||
+					(out[i].t === '(' && (c === ' ' || c === 'n' || c === ')')) ||
+					(c === 't' && (out[jj].v === '/' || out[jj].v === ' ' && out[jj+1] != null && out[jj+1].t == '?'))
+				)) {
+					out[i].v += out[jj].v;
+					out[jj] = {v:"", t:";"}; ++jj;
+				}
+				nstr += out[i].v;
+				i = jj-1; break;
+			case 'G': out[i].t = 't'; out[i].v = general_fmt(v,opts); break;
+		}
+	}
+	return {nstr: nstr, out: out};
+}
+function round_up_date(out, opts) {
+	if (!opts) opts = {};
+	var tmp = new Date(out.y, out.m - 1, out.d, out.H, out.M, out.S);
+	var oldDate = tmp.getDate();
+	tmp.setSeconds(out.S + 1);
+	var use1900 = !opts.date1904 && !opts.b2;
+	if (tmp.getDate() !== oldDate) {
+		if (out.D === 0 && use1900) {
+			// 0 corresponds with Jan 0th, 1900
+			out.y = 1900;
+			out.m = 1;
+			out.d = 1;
+			out.q = (tmp.getDay() + 6) % 7;
+		} else if (out.D === 60 && use1900) {
+			// Excel & SSF have an intentional bug where they treat 1900 as a leap year
+			// The 60th day (Feb 29) rounds up to Mar 1
+			out.y = 1900;
+			out.m = 3;
+			out.d = 1;
+			out.q = 4;
+		} else if (out.D == 59 && use1900) {
+			// Excel & SSF have an intentional bug where they treat 1900 as a leap year
+			// The 59th day (Feb 28) rounds up to Feb 29
+			out.y = 1900;
+			out.m = 2;
+			out.d = 29;
+			out.q = 3;
+		} else {
+			out.y = tmp.getFullYear();
+			out.m = tmp.getMonth() + 1;
+			out.d = tmp.getDate();
+			out.q = out.D < 60 && use1900 ? (tmp.getDay() + 6) % 7 : tmp.getDay();
+		}
+		out.D += 1;
+	}
+	out.H = tmp.getHours();
+	out.M = tmp.getMinutes();
+	out.S = tmp.getSeconds();
+	out.u = 0;
+	out.T += 1;
 }
 SSF._eval = eval_fmt;
 var cfregex = /\[[=<>]/;
@@ -985,7 +1030,8 @@ SSF.load_table = function load_table(tbl/*:SSFTable*/)/*:void*/ {
 };
 SSF.init_table = init_table;
 SSF.format = format;
-};
+SSF.choose_format = choose_fmt;
+}
 make_ssf(SSF);
 /*global module */
 if(typeof module !== 'undefined' && typeof DO_NOT_EXPORT_SSF === 'undefined') module.exports = SSF;
