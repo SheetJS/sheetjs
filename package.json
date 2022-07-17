@@ -25,6 +25,12 @@
 	"unpkg": "dist/xlsx.full.min.js",
 	"jsdelivr": "dist/xlsx.full.min.js",
 	"types": "types/index.d.ts",
+	"exports": {
+		".": {
+			"import": "./xlsx.mjs",
+			"require": "./xlsx.js"
+		}
+	},
 	"browser": {
 		"buffer": false,
 		"crypto": false,
