@@ -29,6 +29,21 @@
 		".": {
 			"import": "./xlsx.mjs",
 			"require": "./xlsx.js"
+		},
+		"./xlsx.mjs": {
+			"import": "./xlsx.mjs"
+		},
+		"./dist/xlsx.zahl": {
+			"import": "./dist/xlsx.zahl.mjs",
+			"require": "./dist/xlsx.zahl.js"
+		},
+		"./dist/cpexcel": {
+			"import": "./dist/cpexcel.full.mjs",
+			"require": "./dist/cpexcel.js"
+		},
+		"./dist/cpexcel.full": {
+			"import": "./dist/cpexcel.full.mjs",
+			"require": "./dist/cpexcel.js"
 		}
 	},
 	"browser": {

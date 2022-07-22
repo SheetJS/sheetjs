@@ -54,8 +54,10 @@ can be installed with Bash on Windows or with `cygwin`.
 - [`internet explorer`](oldie/)
 
 **Bundlers and Tooling**
-- [`browserify`](browserify/)
-- [`parcel`](parcel/)
+- [`browserify`](https://docs.sheetjs.com/docs/getting-started/demos/bundler#browserify)
+- [`bun`](https://docs.sheetjs.com/docs/getting-started/demos/bundler#bun)
+- [`esbuild`](https://docs.sheetjs.com/docs/getting-started/demos/bundler#esbuild)
+- [`parcel`](https://docs.sheetjs.com/docs/getting-started/demos/bundler#parcel)
 - [`requirejs`](requirejs/)
 - [`rollup`](rollup/)
 - [`systemjs`](systemjs/)
