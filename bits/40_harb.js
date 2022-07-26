@@ -606,12 +606,14 @@ var SYLK = /*#__PURE__*/(function() {
 		preamble.push("B;Y" + (r.e.r - r.s.r + 1) + ";X" + (r.e.c - r.s.c + 1) + ";D" + [r.s.c,r.s.r,r.e.c,r.e.r].join(" "));
 		preamble.push("O;L;D;B" + (d1904 ? ";V4" : "") + ";K47;G100 0.001");
 		for(var R = r.s.r; R <= r.e.r; ++R) {
+			var p = [];
 			for(var C = r.s.c; C <= r.e.c; ++C) {
 				var coord = encode_cell({r:R,c:C});
 				cell = dense ? (ws[R]||[])[C]: ws[coord];
 				if(!cell || (cell.v == null && (!cell.f || cell.F))) continue;
-				o.push(write_ws_cell_sylk(cell, ws, R, C, opts)); // TODO: pass date1904 info
+				p.push(write_ws_cell_sylk(cell, ws, R, C, opts)); // TODO: pass date1904 info
 			}
+			o.push(p.join(RS));
 		}
 		return preamble.join(RS) + RS + o.join(RS) + RS + "E" + RS;
 	}

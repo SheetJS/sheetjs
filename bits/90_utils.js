@@ -203,7 +203,6 @@ function sheet_add_json(_ws/*:?Worksheet*/, js/*:Array<any>*/, opts)/*:Worksheet
 			_R = _origin.r; _C = _origin.c;
 		}
 	}
-	var cell/*:Cell*/;
 	var range/*:Range*/ = ({s: {c:0, r:0}, e: {c:_C, r:_R + js.length - 1 + offset}}/*:any*/);
 	if(ws['!ref']) {
 		var _range = safe_decode_range(ws['!ref']);
@@ -216,13 +215,15 @@ function sheet_add_json(_ws/*:?Worksheet*/, js/*:Array<any>*/, opts)/*:Worksheet
 	var hdr/*:Array<string>*/ = o.header || [], C = 0;
 
 	js.forEach(function (JS, R/*:number*/) {
+		if(!ws[_R + R + offset]) ws[_R + R + offset] = [];
+		var ROW = ws[_R + R + offset];
 		keys(JS).forEach(function(k) {
 			if((C=hdr.indexOf(k)) == -1) hdr[C=hdr.length] = k;
 			var v = JS[k];
 			var t = 'z';
 			var z = "";
-			var ref = encode_cell({c:_C + C,r:_R + R + offset});
-			cell = ws_get_cell_stub(ws, ref);
+			var ref = dense ? "" : encode_cell({c:_C + C,r:_R + R + offset});
+			var cell/*:Cell*/ = dense ? ROW[_C + C] : ws[ref];
 			if(v && typeof v === 'object' && !(v instanceof Date)){
 				ws[ref] = v;
 			} else {
@@ -232,15 +233,12 @@ function sheet_add_json(_ws/*:?Worksheet*/, js/*:Array<any>*/, opts)/*:Worksheet
 				else if(v instanceof Date) {
 					t = 'd';
 					if(!o.cellDates) { t = 'n'; v = datenum(v); }
-					z = (cell.z && fmt_is_date(cell.z)) ? cell.z : (o.dateNF || table_fmt[14]);
+					z = (cell != null && cell.z && fmt_is_date(cell.z)) ? cell.z : (o.dateNF || table_fmt[14]);
 				}
 				else if(v === null && o.nullError) { t = 'e'; v = 0; }
 				if(!cell) {
 					if(!dense) ws[ref] = cell = ({t:t, v:v}/*:any*/);
-					else {
-						if(!ws[_R + R + offset]) ws[_R + R + offset] = [];
-						ws[_R + R + offset][_C + C] = cell = ({t:t, v:v}/*:any*/);
-					}
+					else ROW[_C + C] = cell = ({t:t, v:v}/*:any*/);
 				}
 				else {
 					cell.t = t; cell.v = v;

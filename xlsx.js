@@ -4,7 +4,7 @@
 /*global global, exports, module, require:false, process:false, Buffer:false, ArrayBuffer:false, DataView:false, Deno:false */
 var XLSX = {};
 function make_xlsx_lib(XLSX){
-XLSX.version = '0.18.9';
+XLSX.version = '0.18.10';
 var current_codepage = 1200, current_ansi = 1252;
 /*global cptable:true, window */
 var $cptable;
@@ -8137,12 +8137,14 @@ var SYLK = (function() {
 		preamble.push("B;Y" + (r.e.r - r.s.r + 1) + ";X" + (r.e.c - r.s.c + 1) + ";D" + [r.s.c,r.s.r,r.e.c,r.e.r].join(" "));
 		preamble.push("O;L;D;B" + (d1904 ? ";V4" : "") + ";K47;G100 0.001");
 		for(var R = r.s.r; R <= r.e.r; ++R) {
+			var p = [];
 			for(var C = r.s.c; C <= r.e.c; ++C) {
 				var coord = encode_cell({r:R,c:C});
 				cell = dense ? (ws[R]||[])[C]: ws[coord];
 				if(!cell || (cell.v == null && (!cell.f || cell.F))) continue;
-				o.push(write_ws_cell_sylk(cell, ws, R, C, opts)); // TODO: pass date1904 info
+				p.push(write_ws_cell_sylk(cell, ws, R, C, opts)); // TODO: pass date1904 info
 			}
+			o.push(p.join(RS));
 		}
 		return preamble.join(RS) + RS + o.join(RS) + RS + "E" + RS;
 	}
@@ -25363,8 +25365,10 @@ function sheet_to_formulae(sheet) {
 
 function sheet_add_json(_ws, js, opts) {
 	var o = opts || {};
+	var dense = _ws ? Array.isArray(_ws) : o.dense;
+	if(DENSE != null && dense == null) dense = DENSE;
 	var offset = +!o.skipHeader;
-	var ws = _ws || ({});
+	var ws = _ws || (dense ? ([]) : ({}));
 	var _R = 0, _C = 0;
 	if(ws && o.origin != null) {
 		if(typeof o.origin == 'number') _R = o.origin;
@@ -25373,7 +25377,6 @@ function sheet_add_json(_ws, js, opts) {
 			_R = _origin.r; _C = _origin.c;
 		}
 	}
-	var cell;
 	var range = ({s: {c:0, r:0}, e: {c:_C, r:_R + js.length - 1 + offset}});
 	if(ws['!ref']) {
 		var _range = safe_decode_range(ws['!ref']);
@@ -25386,13 +25389,15 @@ function sheet_add_json(_ws, js, opts) {
 	var hdr = o.header || [], C = 0;
 
 	js.forEach(function (JS, R) {
+		if(!ws[_R + R + offset]) ws[_R + R + offset] = [];
+		var ROW = ws[_R + R + offset];
 		keys(JS).forEach(function(k) {
 			if((C=hdr.indexOf(k)) == -1) hdr[C=hdr.length] = k;
 			var v = JS[k];
 			var t = 'z';
 			var z = "";
-			var ref = encode_cell({c:_C + C,r:_R + R + offset});
-			cell = ws_get_cell_stub(ws, ref);
+			var ref = dense ? "" : encode_cell({c:_C + C,r:_R + R + offset});
+			var cell = dense ? ROW[_C + C] : ws[ref];
 			if(v && typeof v === 'object' && !(v instanceof Date)){
 				ws[ref] = v;
 			} else {
@@ -25402,10 +25407,13 @@ function sheet_add_json(_ws, js, opts) {
 				else if(v instanceof Date) {
 					t = 'd';
 					if(!o.cellDates) { t = 'n'; v = datenum(v); }
-					z = (cell.z && fmt_is_date(cell.z)) ? cell.z : (o.dateNF || table_fmt[14]);
+					z = (cell != null && cell.z && fmt_is_date(cell.z)) ? cell.z : (o.dateNF || table_fmt[14]);
 				}
 				else if(v === null && o.nullError) { t = 'e'; v = 0; }
-				if(!cell) ws[ref] = cell = ({t:t, v:v});
+				if(!cell) {
+					if(!dense) ws[ref] = cell = ({t:t, v:v});
+					else ROW[_C + C] = cell = ({t:t, v:v});
+				}
 				else {
 					cell.t = t; cell.v = v;
 					delete cell.w; delete cell.R;
@@ -25417,7 +25425,11 @@ function sheet_add_json(_ws, js, opts) {
 	});
 	range.e.c = Math.max(range.e.c, _C + hdr.length - 1);
 	var __R = encode_row(_R);
-	if(offset) for(C = 0; C < hdr.length; ++C) ws[encode_col(C + _C) + __R] = {t:'s', v:hdr[C]};
+	if(dense && !ws[_R]) ws[_R] = [];
+	if(offset) for(C = 0; C < hdr.length; ++C) {
+		if(dense) ws[_R][C + _C] = {t:'s', v:hdr[C]};
+		else ws[encode_col(C + _C) + __R] = {t:'s', v:hdr[C]};
+	}
 	ws['!ref'] = encode_range(range);
 	return ws;
 }

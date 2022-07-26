@@ -4,7 +4,6 @@ INF=${1:-test.numbers}
 OUTF=${2:-reframed.numbers}
 make reframe.node.js
 node reframe.node.js "$INF" "$OUTF"
-# cat-numbers "$OUTF"
 chmod a+w "$OUTF"
 sleep 0.1
 # open "$OUTF"

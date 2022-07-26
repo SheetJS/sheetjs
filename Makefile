@@ -137,6 +137,9 @@ pkg: bin/xlsx.njs xlsx.js ## Build pkg standalone executable
 test mocha: test.js ## Run test suite
 	mocha -R spec -t 30000
 
+#*                      To run tests for one format, make test_<fmt>
+#*                      To run the core test suite, make test_misc
+
 .PHONY: test-esm
 test-esm: test.mjs ## Run Node ESM test suite
 	npx -y mocha@9 -R spec -t 30000 $<
@@ -156,8 +159,6 @@ test-deno: test.ts ## Run Deno test suite
 test-denocp: testnocp.ts ## Run Deno test suite (without codepage)
 	deno test --allow-env --allow-read --allow-write --config misc/test.deno.jsonc $<
 
-#*                      To run tests for one format, make test_<fmt>
-#*                      To run the core test suite, make test_misc
 TESTFMT=$(patsubst %,test_%,$(FMT))
 .PHONY: $(TESTFMT)
 $(TESTFMT): test_%:

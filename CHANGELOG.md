@@ -4,6 +4,13 @@ This log is intended to keep track of backwards-incompatible changes, including
 but not limited to API changes and file location changes.  Minor behavioral
 changes may not be included if they are not expected to break existing code.
 
+## v0.18.10
+
+* `exports` field in package.json to satiate ViteJS and newer tooling
+* JSC (Safari / Bun) perf, see <https://bugs.webkit.org/show_bug.cgi?id=243148>
+* workbook `bookType` property to denote the origin format when parsed from file
+* XLSX force export of stub cells with number formats when `sheetStubs` is set
+
 ## v0.18.9
 
 * XLSX / ODS write defined names

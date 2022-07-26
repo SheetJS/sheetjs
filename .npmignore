@@ -58,8 +58,11 @@ make.cmd
 xlsworker.js
 shim.js
 test.js
+hotcross.mjs
 test.mjs
 test.ts
+test.mts
+testnocp.ts
 .jscs.json
 .gitmodules
 .travis.yml

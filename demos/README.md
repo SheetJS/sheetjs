@@ -21,6 +21,9 @@ can be installed with Bash on Windows or with `cygwin`.
 - [`XMLHttpRequest and fetch`](xhr/)
 - [`Clipboard Data`](https://docs.sheetjs.com/docs/getting-started/demos/clipboard)
 - [`Typed Arrays for Machine Learning`](https://docs.sheetjs.com/docs/getting-started/demos/ml)
+- [`LocalStorage and SessionStorage`](https://docs.sheetjs.com/docs/getting-started/demos/database#localstorage-and-sessionstorage)
+- [`Web SQL Database`](https://docs.sheetjs.com/docs/getting-started/demos/database#websql)
+- [`IndexedDB`](https://docs.sheetjs.com/docs/getting-started/demos/database#indexeddb)
 
 **Frameworks**
 - [`angularjs`](angular/)
@@ -51,6 +54,8 @@ can be installed with Bash on Windows or with `cygwin`.
 - [`Swift JSC and other engines`](altjs/)
 - [`"serverless" functions`](function/)
 - [`databases and key/value stores`](database/)
+- [`Databases and Structured Data Stores`](https://docs.sheetjs.com/docs/getting-started/demos/database)
+- [`NoSQL, K/V, and Unstructured Data Stores`](https://docs.sheetjs.com/docs/getting-started/demos/nosql)
 - [`internet explorer`](oldie/)
 
 **Bundlers and Tooling**
@@ -60,6 +65,7 @@ can be installed with Bash on Windows or with `cygwin`.
 - [`parcel`](https://docs.sheetjs.com/docs/getting-started/demos/bundler#parcel)
 - [`requirejs`](requirejs/)
 - [`rollup`](rollup/)
+- [`snowpack`](https://docs.sheetjs.com/docs/getting-started/demos/bundler#snowpack)
 - [`systemjs`](systemjs/)
 - [`typescript`](typescript/)
 - [`webpack 2.x`](webpack/)
