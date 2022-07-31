@@ -443,6 +443,8 @@ var SYLK = /*#__PURE__*/(function() {
 				}
 				wb.Workbook.Names.push(nn);
 			} break;
+			// case 'NE': // ??
+			// case 'NU': // ??
 			case 'C': /* cell */
 			var C_seen_K = false, C_seen_X = false, C_seen_S = false, C_seen_E = false, _R = -1, _C = -1, formula = "", cell_t = "z";
 			for(rj=1; rj<record.length; ++rj) switch(record[rj].charAt(0)) {
@@ -476,6 +478,8 @@ var SYLK = /*#__PURE__*/(function() {
 				case 'G': break; // unknown
 				case 'R': _R = parseInt(record[rj].slice(1), 10)-1; break;
 				case 'C': _C = parseInt(record[rj].slice(1), 10)-1; break;
+				// case 'P': // ??
+				// case 'D': // ??
 				default: if(opts && opts.WTF) throw new Error("SYLK bad record " + rstr);
 			}
 			if(C_seen_K) {
@@ -529,6 +533,8 @@ var SYLK = /*#__PURE__*/(function() {
 					if(Mval > 0) { rowinfo[R].hpt = Mval; rowinfo[R].hpx = pt2px(Mval); }
 					else if(Mval === 0) rowinfo[R].hidden = true;
 					break;
+				// case 'K': // ??
+				// case 'E': // ??
 				default: if(opts && opts.WTF) throw new Error("SYLK bad record " + rstr);
 			}
 			if(F_seen < 1) next_cell_format = null; break;

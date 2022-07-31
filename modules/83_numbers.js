@@ -827,6 +827,8 @@ function parse_numbers_iwa(cfb, opts) {
   cfb.FileIndex.forEach(function(s) {
     if (!s.name.match(/\.iwa$/))
       return;
+    if (s.content[0] == 98)
+      return;
     var o;
     try {
       o = decompress_iwa_file(s.content);

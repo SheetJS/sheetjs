@@ -26,12 +26,12 @@ can be installed with Bash on Windows or with `cygwin`.
 - [`IndexedDB`](https://docs.sheetjs.com/docs/getting-started/demos/database#indexeddb)
 
 **Frameworks**
-- [`angularjs`](angular/)
-- [`angular and ionic`](angular2/)
-- [`knockout`](knockout/)
-- [`meteor`](meteor/)
-- [`react, react-native, next`](react/)
-- [`vue 2.x, weex, nuxt`](vue/)
+- [`Angular.JS`](angular/)
+- [`Angular 2+ and Ionic`](angular2/)
+- [`Knockout`](https://docs.sheetjs.com/docs/getting-started/demos/legacy#knockoutjs)
+- [`Meteor`](meteor/)
+- [`React, React Native and NextJS`](react/)
+- [`VueJS, WeeX and NuxtJS`](vue/)
 
 **Front-End UI Components**
 - [`canvas-datagrid`](datagrid/)
@@ -42,16 +42,16 @@ can be installed with Bash on Windows or with `cygwin`.
 **Platforms and Integrations**
 - [`NodeJS Server-Side Processing`](server/)
 - [`Deno`](deno/)
-- [`electron application`](electron/)
+- [`Electron`](electron/)
 - [`NW.js`](nwjs/)
-- [`Chrome / Chromium extensions`](chrome/)
+- [`Chrome / Chromium Extension`](chrome/)
 - [`Google Sheets API`](https://docs.sheetjs.com/docs/getting-started/demos/gsheet)
 - [`ExtendScript for Adobe Apps`](https://docs.sheetjs.com/docs/getting-started/demos/extendscript)
 - [`NetSuite SuiteScript`](https://docs.sheetjs.com/docs/getting-started/demos/netsuite)
 - [`SalesForce Lightning Web Components`](https://docs.sheetjs.com/docs/getting-started/demos/salesforce)
 - [`Excel JavaScript API`](https://docs.sheetjs.com/docs/getting-started/demos/excel)
 - [`Headless Automation`](https://docs.sheetjs.com/docs/getting-started/demos/headless)
-- [`Swift JSC and other engines`](altjs/)
+- [`Swift JSC and Other JavaScript Engines`](altjs/)
 - [`"serverless" functions`](function/)
 - [`databases and key/value stores`](database/)
 - [`Databases and Structured Data Stores`](https://docs.sheetjs.com/docs/getting-started/demos/database)
@@ -63,12 +63,15 @@ can be installed with Bash on Windows or with `cygwin`.
 - [`bun`](https://docs.sheetjs.com/docs/getting-started/demos/bundler#bun)
 - [`esbuild`](https://docs.sheetjs.com/docs/getting-started/demos/bundler#esbuild)
 - [`parcel`](https://docs.sheetjs.com/docs/getting-started/demos/bundler#parcel)
-- [`requirejs`](requirejs/)
-- [`rollup`](rollup/)
+- [`requirejs`](https://docs.sheetjs.com/docs/getting-started/demos/bundler#requirejs)
+- [`rollup`](https://docs.sheetjs.com/docs/getting-started/demos/bundler#rollup)
 - [`snowpack`](https://docs.sheetjs.com/docs/getting-started/demos/bundler#snowpack)
+- [`swc`](https://docs.sheetjs.com/docs/getting-started/demos/bundler#swc)
 - [`systemjs`](systemjs/)
 - [`typescript`](typescript/)
+- [`vite`](https://docs.sheetjs.com/docs/getting-started/demos/bundler#vite)
 - [`webpack 2.x`](webpack/)
+- [`wmr`](https://docs.sheetjs.com/docs/getting-started/demos/bundler#wmr)
 
 Other examples are included in the [showcase](demos/showcase/).
 

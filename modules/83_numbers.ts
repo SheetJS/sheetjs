@@ -717,6 +717,7 @@ function parse_numbers_iwa(cfb: CFB$Container, opts?: ParsingOptions ): WorkBook
 	/* collect entire message space */
 	cfb.FileIndex.forEach(s => {
 		if(!s.name.match(/\.iwa$/)) return;
+		if(s.content[0] == 98) return; // TODO: OperationStorage.iwa
 		var o: Uint8Array;
 		try { o = decompress_iwa_file(s.content as Uint8Array); } catch(e) { return console.log("?? " + s.content.length + " " + (e.message || e)); }
 		var packets: IWAArchiveInfo[];
