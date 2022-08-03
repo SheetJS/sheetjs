@@ -26,7 +26,7 @@ can be installed with Bash on Windows or with `cygwin`.
 - [`IndexedDB`](https://docs.sheetjs.com/docs/getting-started/demos/database#indexeddb)
 
 **Frameworks**
-- [`Angular.JS`](angular/)
+- [`Angular.JS`](https://docs.sheetjs.com/docs/getting-started/demos/legacy#angularjs)
 - [`Angular 2+ and Ionic`](angular2/)
 - [`Knockout`](https://docs.sheetjs.com/docs/getting-started/demos/legacy#knockoutjs)
 - [`Meteor`](meteor/)
@@ -34,17 +34,19 @@ can be installed with Bash on Windows or with `cygwin`.
 - [`VueJS, WeeX and NuxtJS`](vue/)
 
 **Front-End UI Components**
-- [`canvas-datagrid`](datagrid/)
+- [`canvas-datagrid`](https://docs.sheetjs.com/docs/getting-started/demos/grid#canvas-datagrid)
 - [`x-spreadsheet`](xspreadsheet/)
 - [`react-data-grid`](react/modify/)
 - [`vue3-table-light`](vue/modify/)
+- [`angular-ui-grid`](https://docs.sheetjs.com/docs/getting-started/demos/grid#angular-ui-grid)
 
 **Platforms and Integrations**
+- [`Command-Line Tools`](https://docs.sheetjs.com/docs/getting-started/demos/cli)
 - [`NodeJS Server-Side Processing`](server/)
 - [`Deno`](deno/)
 - [`Electron`](electron/)
-- [`NW.js`](nwjs/)
-- [`Chrome / Chromium Extension`](chrome/)
+- [`NW.js`](https://docs.sheetjs.com/docs/getting-started/demos/desktop#nwjs)
+- [`Chrome / Chromium Extension`](https://docs.sheetjs.com/docs/getting-started/demos/chromium)
 - [`Google Sheets API`](https://docs.sheetjs.com/docs/getting-started/demos/gsheet)
 - [`ExtendScript for Adobe Apps`](https://docs.sheetjs.com/docs/getting-started/demos/extendscript)
 - [`NetSuite SuiteScript`](https://docs.sheetjs.com/docs/getting-started/demos/netsuite)
@@ -53,10 +55,9 @@ can be installed with Bash on Windows or with `cygwin`.
 - [`Headless Automation`](https://docs.sheetjs.com/docs/getting-started/demos/headless)
 - [`Swift JSC and Other JavaScript Engines`](altjs/)
 - [`"serverless" functions`](function/)
-- [`databases and key/value stores`](database/)
 - [`Databases and Structured Data Stores`](https://docs.sheetjs.com/docs/getting-started/demos/database)
 - [`NoSQL, K/V, and Unstructured Data Stores`](https://docs.sheetjs.com/docs/getting-started/demos/nosql)
-- [`internet explorer`](oldie/)
+- [`Legacy Internet Explorer`](oldie/)
 
 **Bundlers and Tooling**
 - [`browserify`](https://docs.sheetjs.com/docs/getting-started/demos/bundler#browserify)
@@ -68,7 +69,6 @@ can be installed with Bash on Windows or with `cygwin`.
 - [`snowpack`](https://docs.sheetjs.com/docs/getting-started/demos/bundler#snowpack)
 - [`swc`](https://docs.sheetjs.com/docs/getting-started/demos/bundler#swc)
 - [`systemjs`](systemjs/)
-- [`typescript`](typescript/)
 - [`vite`](https://docs.sheetjs.com/docs/getting-started/demos/bundler#vite)
 - [`webpack 2.x`](webpack/)
 - [`wmr`](https://docs.sheetjs.com/docs/getting-started/demos/bundler#wmr)
