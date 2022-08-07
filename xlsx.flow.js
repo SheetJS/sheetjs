@@ -3447,22 +3447,22 @@ function fuzzynum(s/*:string*/)/*:number*/ {
 }
 
 /* NOTE: Chrome rejects bare times like 1:23 PM */
-var FDRE1 = /^(0?\d|1[0-2])(?:|:([0-5]?\d)(?:|(\.\d+)(?:|:([0-5]?\d))|:([0-5]?\d)(|\.\d+)))([ap])m?/;
+var FDRE1 = /^(0?\d|1[0-2])(?:|:([0-5]?\d)(?:|(\.\d+)(?:|:([0-5]?\d))|:([0-5]?\d)(|\.\d+)))\s+([ap])m?$/;
 
 function fuzzytime1(M) /*:Date*/ {
-    /* TODO: 1904 adjustment */
-    if(!M[2]) return new Date(1900,0,0,(+M[1]%12) + (M[7] == "p" ? 12 : 0), 0, 0, 0);
+    /* TODO: 1904 adjustment, keep in sync with base date */
+    if(!M[2]) return new Date(1899,11,30,(+M[1]%12) + (M[7] == "p" ? 12 : 0), 0, 0, 0);
     if(M[3]) {
-        if(M[4]) return new Date(1900,0,0,(+M[1]%12) + (M[7] == "p" ? 12 : 0), +M[2], +M[4], parseFloat(M[3])*1000);
-        else return new Date(1900,0,0,(M[7] == "p" ? 12 : 0), +M[1], +M[2], parseFloat(M[3])*1000);
+        if(M[4]) return new Date(1899,11,30,(+M[1]%12) + (M[7] == "p" ? 12 : 0), +M[2], +M[4], parseFloat(M[3])*1000);
+        else return new Date(1899,11,30,(M[7] == "p" ? 12 : 0), +M[1], +M[2], parseFloat(M[3])*1000);
     }
-    else if(M[5]) return new Date(1900, 0, 0, (+M[1]%12) + (M[7] == "p" ? 12 : 0), +M[2], +M[5], M[6] ? parseFloat(M[6]) * 1000 : 0);
-    else return new Date(1900,0,0,(+M[1]%12) + (M[7] == "p" ? 12 : 0), +M[2], 0, 0);
+    else if(M[5]) return new Date(1899,11,30, (+M[1]%12) + (M[7] == "p" ? 12 : 0), +M[2], +M[5], M[6] ? parseFloat(M[6]) * 1000 : 0);
+    else return new Date(1899,11,30,(+M[1]%12) + (M[7] == "p" ? 12 : 0), +M[2], 0, 0);
 }
 var lower_months = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
 function fuzzydate(s/*:string*/)/*:Date*/ {
 	var lower = s.toLowerCase();
-	var lnos = lower.replace(/\s+/g, "");
+	var lnos = lower.replace(/\s+/g, " ").trim();
 	var M = lnos.match(FDRE1);
 	if(M) return fuzzytime1(M);
 
@@ -8064,6 +8064,8 @@ var SYLK = /*#__PURE__*/(function() {
 				}
 				wb.Workbook.Names.push(nn);
 			} break;
+			// case 'NE': // ??
+			// case 'NU': // ??
 			case 'C': /* cell */
 			var C_seen_K = false, C_seen_X = false, C_seen_S = false, C_seen_E = false, _R = -1, _C = -1, formula = "", cell_t = "z";
 			for(rj=1; rj<record.length; ++rj) switch(record[rj].charAt(0)) {
@@ -8097,6 +8099,8 @@ var SYLK = /*#__PURE__*/(function() {
 				case 'G': break; // unknown
 				case 'R': _R = parseInt(record[rj].slice(1), 10)-1; break;
 				case 'C': _C = parseInt(record[rj].slice(1), 10)-1; break;
+				// case 'P': // ??
+				// case 'D': // ??
 				default: if(opts && opts.WTF) throw new Error("SYLK bad record " + rstr);
 			}
 			if(C_seen_K) {
@@ -8150,6 +8154,8 @@ var SYLK = /*#__PURE__*/(function() {
 					if(Mval > 0) { rowinfo[R].hpt = Mval; rowinfo[R].hpx = pt2px(Mval); }
 					else if(Mval === 0) rowinfo[R].hidden = true;
 					break;
+				// case 'K': // ??
+				// case 'E': // ??
 				default: if(opts && opts.WTF) throw new Error("SYLK bad record " + rstr);
 			}
 			if(F_seen < 1) next_cell_format = null; break;
@@ -8575,12 +8581,12 @@ var PRN = /*#__PURE__*/(function() {
 			else if(s == "TRUE") { cell.t = 'b'; cell.v = true; }
 			else if(s == "FALSE") { cell.t = 'b'; cell.v = false; }
 			else if(!isNaN(v = fuzzynum(s))) { cell.t = 'n'; if(o.cellText !== false) cell.w = s; cell.v = v; }
-			else if(!isNaN(fuzzydate(s).getDate()) || _re && s.match(_re)) {
+			else if(!isNaN((v = fuzzydate(s)).getDate()) || _re && s.match(_re)) {
 				cell.z = o.dateNF || table_fmt[14];
 				var k = 0;
-				if(_re && s.match(_re)){ s=dateNF_fix(s, o.dateNF, (s.match(_re)||[])); k=1; }
-				if(o.cellDates) { cell.t = 'd'; cell.v = parseDate(s, k); }
-				else { cell.t = 'n'; cell.v = datenum(parseDate(s, k)); }
+				if(_re && s.match(_re)){ s=dateNF_fix(s, o.dateNF, (s.match(_re)||[])); k=1; v = parseDate(s, k); }
+				if(o.cellDates) { cell.t = 'd'; cell.v = v; }
+				else { cell.t = 'n'; cell.v = datenum(v); }
 				if(o.cellText !== false) cell.w = SSF_format(cell.z, cell.v instanceof Date ? datenum(cell.v):cell.v);
 				if(!o.cellNF) delete cell.z;
 			} else {
@@ -23895,6 +23901,8 @@ function parse_numbers_iwa(cfb, opts) {
   });
   cfb.FileIndex.forEach(function(s) {
     if (!s.name.match(/\.iwa$/))
+      return;
+    if (s.content[0] == 98)
       return;
     var o;
     try {

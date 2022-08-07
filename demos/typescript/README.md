@@ -2,7 +2,7 @@
 
 This demo originally covered direct use of the `tsc` TypeScript compiler.  At
 the time when the demo was first written, TypeScript 2.2 had a module system
-that was incompatibile with the pure JS ecosystem.  Since then, various
+that was incompatible with the pure JS ecosystem.  Since then, various
 language improvements and compiler changes have obviated this demo.  Uses of
 TypeScript are scattered throughout other demos.
 

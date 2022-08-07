@@ -18,7 +18,7 @@ can be installed with Bash on Windows or with `cygwin`.
 ### Included Demos
 
 **JavaScript APIs**
-- [`XMLHttpRequest and fetch`](xhr/)
+- [`XMLHttpRequest and fetch`](https://docs.sheetjs.com/docs/getting-started/demos/network)
 - [`Clipboard Data`](https://docs.sheetjs.com/docs/getting-started/demos/clipboard)
 - [`Typed Arrays for Machine Learning`](https://docs.sheetjs.com/docs/getting-started/demos/ml)
 - [`LocalStorage and SessionStorage`](https://docs.sheetjs.com/docs/getting-started/demos/database#localstorage-and-sessionstorage)
@@ -29,7 +29,6 @@ can be installed with Bash on Windows or with `cygwin`.
 - [`Angular.JS`](https://docs.sheetjs.com/docs/getting-started/demos/legacy#angularjs)
 - [`Angular 2+ and Ionic`](angular2/)
 - [`Knockout`](https://docs.sheetjs.com/docs/getting-started/demos/legacy#knockoutjs)
-- [`Meteor`](meteor/)
 - [`React, React Native and NextJS`](react/)
 - [`VueJS, WeeX and NuxtJS`](vue/)
 
@@ -43,8 +42,7 @@ can be installed with Bash on Windows or with `cygwin`.
 **Platforms and Integrations**
 - [`Command-Line Tools`](https://docs.sheetjs.com/docs/getting-started/demos/cli)
 - [`NodeJS Server-Side Processing`](server/)
-- [`Deno`](deno/)
-- [`Electron`](electron/)
+- [`Electron`](https://docs.sheetjs.com/docs/getting-started/demos/desktop#electron)
 - [`NW.js`](https://docs.sheetjs.com/docs/getting-started/demos/desktop#nwjs)
 - [`Chrome / Chromium Extension`](https://docs.sheetjs.com/docs/getting-started/demos/chromium)
 - [`Google Sheets API`](https://docs.sheetjs.com/docs/getting-started/demos/gsheet)
@@ -68,7 +66,7 @@ can be installed with Bash on Windows or with `cygwin`.
 - [`rollup`](https://docs.sheetjs.com/docs/getting-started/demos/bundler#rollup)
 - [`snowpack`](https://docs.sheetjs.com/docs/getting-started/demos/bundler#snowpack)
 - [`swc`](https://docs.sheetjs.com/docs/getting-started/demos/bundler#swc)
-- [`systemjs`](systemjs/)
+- [`systemjs`](https://docs.sheetjs.com/docs/getting-started/demos/bundler#systemjs)
 - [`vite`](https://docs.sheetjs.com/docs/getting-started/demos/bundler#vite)
 - [`webpack 2.x`](webpack/)
 - [`wmr`](https://docs.sheetjs.com/docs/getting-started/demos/bundler#wmr)

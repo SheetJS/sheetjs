@@ -960,12 +960,12 @@ var PRN = /*#__PURE__*/(function() {
 			else if(s == "TRUE") { cell.t = 'b'; cell.v = true; }
 			else if(s == "FALSE") { cell.t = 'b'; cell.v = false; }
 			else if(!isNaN(v = fuzzynum(s))) { cell.t = 'n'; if(o.cellText !== false) cell.w = s; cell.v = v; }
-			else if(!isNaN(fuzzydate(s).getDate()) || _re && s.match(_re)) {
+			else if(!isNaN((v = fuzzydate(s)).getDate()) || _re && s.match(_re)) {
 				cell.z = o.dateNF || table_fmt[14];
 				var k = 0;
-				if(_re && s.match(_re)){ s=dateNF_fix(s, o.dateNF, (s.match(_re)||[])); k=1; }
-				if(o.cellDates) { cell.t = 'd'; cell.v = parseDate(s, k); }
-				else { cell.t = 'n'; cell.v = datenum(parseDate(s, k)); }
+				if(_re && s.match(_re)){ s=dateNF_fix(s, o.dateNF, (s.match(_re)||[])); k=1; v = parseDate(s, k); }
+				if(o.cellDates) { cell.t = 'd'; cell.v = v; }
+				else { cell.t = 'n'; cell.v = datenum(v); }
 				if(o.cellText !== false) cell.w = SSF_format(cell.z, cell.v instanceof Date ? datenum(cell.v):cell.v);
 				if(!o.cellNF) delete cell.z;
 			} else {
