@@ -48,9 +48,7 @@ function Base64_encode_pass(input) {
 function Base64_decode(input) {
   var o = "";
   var c1 = 0, c2 = 0, c3 = 0, e1 = 0, e2 = 0, e3 = 0, e4 = 0;
-  input = input.replace(/^data:([^\/]+\/[^\/]+)?;base64,/, '')
-               .replace(/[^\w\+\/\=]/g, "");
-
+  input = input.replace(/^data:([^\/]+\/[^\/]+)?;base64\,/, "").replace(/[^\w\+\/\=]/g, "");
   for (var i = 0; i < input.length; ) {
     e1 = Base64_map.indexOf(input.charAt(i++));
     e2 = Base64_map.indexOf(input.charAt(i++));

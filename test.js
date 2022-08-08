@@ -688,30 +688,21 @@ describe('input formats', function() {
 	it('should read base64 strings', function() { artifax.forEach(function(p) {
 		X.read(fs.readFileSync(p, 'base64'), {type: 'base64'});
 	}); });
-
 	it('handles base64 within data URI scheme (gh-2762)', function() {
-		// Arrange
-		var fileInBase64 = 'TmFtZXMNCkhhZmV6DQpTYW0NCg==';
-		var fileInBase64WithDataURIScheme = 'data:text/csv;base64,TmFtZXMNCkhhZmV6DQpTYW0NCg==';
+		var data = 'TmFtZXMNCkhhZmV6DQpTYW0NCg==';
 
-		// Act
-		var workBookFromRawBase64 = X.read(fileInBase64, { type: 'base64' });
-		var workBookFromBase64WithinDataURI = X.read(fileInBase64WithDataURIScheme, { type: 'base64' });
+		var wb0 = X.read(data, { type: 'base64' }); // raw base64 string
+		var wb1 = X.read('data:;base64,' + data, { type: 'base64' }); // data URI, no media type
+		var wb2 = X.read('data:text/csv;base64,' + data, { type: 'base64' }); // data URI, CSV type
+		var wb3 = X.read('data:application/vnd.ms-excel;base64,' + data, { type: 'base64' }); // data URI, Excel
 
-		// Assert
-		assert.deepStrictEqual(workBookFromRawBase64, workBookFromBase64WithinDataURI);
-	});
-	it('handles base64 where data URI has no media type (gh-2762)', function() {
-		// Arrange
-		var fileInBase64 = 'TmFtZXMNCkhhZmV6DQpTYW0NCg==';
-		var fileInBase64WithDataURIScheme = 'data:;base64,TmFtZXMNCkhhZmV6DQpTYW0NCg==';
-
-		// Act
-		var workBookFromRawBase64 = X.read(fileInBase64, { type: 'base64' });
-		var workBookFromBase64WithinDataURI = X.read(fileInBase64WithDataURIScheme, { type: 'base64' });
-
-		// Assert
-		assert.deepStrictEqual(workBookFromRawBase64, workBookFromBase64WithinDataURI);
+		[wb0, wb1, wb2, wb3].forEach(function(wb) {
+			var ws = wb.Sheets.Sheet1;
+			assert.equal(ws["!ref"], "A1:A3");
+			assert.equal(get_cell(ws, "A1").v, "Names");
+			assert.equal(get_cell(ws, "A2").v, "Hafez");
+			assert.equal(get_cell(ws, "A3").v, "Sam");
+		});
 	});
 	if(typeof Uint8Array !== 'undefined') it('should read array', function() { artifax.forEach(function(p) {
 		X.read(fs.readFileSync(p, 'binary').split("").map(function(x) { return x.charCodeAt(0); }), {type:'array'});

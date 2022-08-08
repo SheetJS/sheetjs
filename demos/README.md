@@ -51,7 +51,7 @@ can be installed with Bash on Windows or with `cygwin`.
 - [`SalesForce Lightning Web Components`](https://docs.sheetjs.com/docs/getting-started/demos/salesforce)
 - [`Excel JavaScript API`](https://docs.sheetjs.com/docs/getting-started/demos/excel)
 - [`Headless Automation`](https://docs.sheetjs.com/docs/getting-started/demos/headless)
-- [`Swift JSC and Other JavaScript Engines`](altjs/)
+- [`Swift JSC and Other JavaScript Engines`](https://docs.sheetjs.com/docs/getting-started/demos/engines)
 - [`"serverless" functions`](function/)
 - [`Databases and Structured Data Stores`](https://docs.sheetjs.com/docs/getting-started/demos/database)
 - [`NoSQL, K/V, and Unstructured Data Stores`](https://docs.sheetjs.com/docs/getting-started/demos/nosql)
@@ -68,9 +68,7 @@ can be installed with Bash on Windows or with `cygwin`.
 - [`swc`](https://docs.sheetjs.com/docs/getting-started/demos/bundler#swc)
 - [`systemjs`](https://docs.sheetjs.com/docs/getting-started/demos/bundler#systemjs)
 - [`vite`](https://docs.sheetjs.com/docs/getting-started/demos/bundler#vite)
-- [`webpack 2.x`](webpack/)
+- [`webpack`](https://docs.sheetjs.com/docs/getting-started/demos/bundler#webpack)
 - [`wmr`](https://docs.sheetjs.com/docs/getting-started/demos/bundler#wmr)
-
-Other examples are included in the [showcase](demos/showcase/).
 
 [![Analytics](https://ga-beacon.appspot.com/UA-36810333-1/SheetJS/js-xlsx?pixel)](https://github.com/SheetJS/js-xlsx)

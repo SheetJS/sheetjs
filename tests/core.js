@@ -688,6 +688,22 @@ describe('input formats', function() {
 	it('should read base64 strings', function() { artifax.forEach(function(p) {
 		X.read(fs.readFileSync(p, 'base64'), {type: 'base64'});
 	}); });
+	it('handles base64 within data URI scheme (gh-2762)', function() {
+		var data = 'TmFtZXMNCkhhZmV6DQpTYW0NCg==';
+
+		var wb0 = X.read(data, { type: 'base64' }); // raw base64 string
+		var wb1 = X.read('data:;base64,' + data, { type: 'base64' }); // data URI, no media type
+		var wb2 = X.read('data:text/csv;base64,' + data, { type: 'base64' }); // data URI, CSV type
+		var wb3 = X.read('data:application/vnd.ms-excel;base64,' + data, { type: 'base64' }); // data URI, Excel
+
+		[wb0, wb1, wb2, wb3].forEach(function(wb) {
+			var ws = wb.Sheets.Sheet1;
+			assert.equal(ws["!ref"], "A1:A3");
+			assert.equal(get_cell(ws, "A1").v, "Names");
+			assert.equal(get_cell(ws, "A2").v, "Hafez");
+			assert.equal(get_cell(ws, "A3").v, "Sam");
+		});
+	});
 	if(typeof Uint8Array !== 'undefined') it('should read array', function() { artifax.forEach(function(p) {
 		X.read(fs.readFileSync(p, 'binary').split("").map(function(x) { return x.charCodeAt(0); }), {type:'array'});
 	}); });
@@ -1393,7 +1409,7 @@ describe('parse features', function() {
 	});
 
 	describe('data types formats', function() {[
-		['xlsx', paths.dtfxlsx],
+		['xlsx', paths.dtfxlsx]
 	].forEach(function(m) { it(m[0], function() {
 		var wb = X.read(fs.readFileSync(m[1]), {type: TYPE, cellDates: true});
 		var ws = wb.Sheets[wb.SheetNames[0]];
@@ -2200,7 +2216,7 @@ describe('CSV', function() {
 			var aoa = [
 				["3a", "3 a", "3 a-1"],
 				["3b", "3 b", "3 b-1"],
-				["3p", "3 P", "3 p-1"],
+				["3p", "3 P", "3 p-1"]
 			]
 			var ws = X.read(aoa.map(function(row) { return row.join(","); }).join("\n"), {type: "string", cellDates: true}).Sheets.Sheet1;
 			for(var R = 0; R < 3; ++R) {
