@@ -698,8 +698,11 @@ describe('input formats', function() {
 		var workBookFromRawBase64 = X.read(fileInBase64, { type: 'base64' });
 		var workBookFromBase64WithinDataURI = X.read(fileInBase64WithDataURIScheme, { type: 'base64' });
 
+		var jsonSheet1 = X.utils.sheet_to_json(workBookFromRawBase64.Sheets.Sheet1);
+		var jsonSheet2 = X.utils.sheet_to_json(workBookFromBase64WithinDataURI.Sheets.Sheet1);
+
 		// Assert
-		assert.deepStrictEqual(workBookFromRawBase64, workBookFromBase64WithinDataURI);
+		assert.deepStrictEqual(jsonSheet1, jsonSheet2);
 	});
 	it('handles base64 where data URI has no media type (gh-2762)', function() {
 		// Arrange
@@ -710,8 +713,11 @@ describe('input formats', function() {
 		var workBookFromRawBase64 = X.read(fileInBase64, { type: 'base64' });
 		var workBookFromBase64WithinDataURI = X.read(fileInBase64WithDataURIScheme, { type: 'base64' });
 
+		var jsonSheet1 = X.utils.sheet_to_json(workBookFromRawBase64.Sheets.Sheet1);
+		var jsonSheet2 = X.utils.sheet_to_json(workBookFromBase64WithinDataURI.Sheets.Sheet1);
+
 		// Assert
-		assert.deepStrictEqual(workBookFromRawBase64, workBookFromBase64WithinDataURI);
+		assert.deepStrictEqual(jsonSheet1, jsonSheet2);
 	});
 	if(typeof Uint8Array !== 'undefined') it('should read array', function() { artifax.forEach(function(p) {
 		X.read(fs.readFileSync(p, 'binary').split("").map(function(x) { return x.charCodeAt(0); }), {type:'array'});
