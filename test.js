@@ -702,7 +702,10 @@ describe('input formats', function() {
 		var jsonSheet2 = X.utils.sheet_to_json(workBookFromBase64WithinDataURI.Sheets.Sheet1);
 
 		// Assert
-		assert.deepStrictEqual(jsonSheet1, jsonSheet2);
+		assert.equal(
+			JSON.stringify(jsonSheet1),
+			JSON.stringify(jsonSheet2)
+		);
 	});
 	it('handles base64 where data URI has no media type (gh-2762)', function() {
 		// Arrange
@@ -717,7 +720,10 @@ describe('input formats', function() {
 		var jsonSheet2 = X.utils.sheet_to_json(workBookFromBase64WithinDataURI.Sheets.Sheet1);
 
 		// Assert
-		assert.deepStrictEqual(jsonSheet1, jsonSheet2);
+		assert.equal(
+			JSON.stringify(jsonSheet1),
+			JSON.stringify(jsonSheet2)
+		);
 	});
 	if(typeof Uint8Array !== 'undefined') it('should read array', function() { artifax.forEach(function(p) {
 		X.read(fs.readFileSync(p, 'binary').split("").map(function(x) { return x.charCodeAt(0); }), {type:'array'});
