@@ -1,6 +1,6 @@
 # canvas-datagrid
 
-[The new demo](https://docs.sheetjs.com/docs/getting-started/demos/grid#canvas-datagrid)
+[The new demo](https://docs.sheetjs.com/docs/demos/grid#canvas-datagrid)
 includes a live example and improved explanations.
 
 

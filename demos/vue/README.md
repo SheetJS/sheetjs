@@ -70,57 +70,14 @@ function make_cols(refstr/*:string*/) {
 }
 ```
 
-## WeeX
+## Mobile Apps
 
-<img src="screen.png" width="400px"/>
+[The new demo](https://docs.sheetjs.com/docs/demos/mobile#quasar) uses the
+Quasar Framework in a VueJS + Vite project to generate a native iOS app.
 
-Reproducing the full project is a little bit tricky.  The included `weex.sh`
-script performs the necessary installation steps.
+## Nuxt Content
 
-WeeX is a framework for building real mobile apps, akin to React Native.  The
-ecosystem is not quite as mature as React Native, missing basic features like
-document access.  As a result, this demo uses the `stream.fetch` API to upload
-Base64-encoded documents to <https://hastebin.com> and download a precomputed
-[Base64-encoded workbook](http://sheetjs.com/sheetjs.xlsx.b64).
-
-Using NodeJS it is straightforward to convert to/from Base64:
-
-```js
-/* convert sheetjs.xlsx -> sheetjs.xlsx.b64 */
-var buf = fs.readFileSync("sheetjs.xlsx");
-fs.writeFileSync("sheetjs.xlsx.b64", buf.toString("base64"));
-
-/* convert sheetjs.xls.b64 -> sheetjs.xls */
-var str = fs.readFileSync("sheetjs.xls.b64").toString();
-fs.writeFileSync("sheetjs.xls", new Buffer(str, "base64"));
-```
-
-## Other Demos
-
-### Nuxt Content
-
-`@nuxt/content` parser can be extended to support spreadsheet hot reload:
-
-```js
-// nuxt.config.js
-import { readFile, utils } from 'xlsx';
-
-const parseXLSX = (file, { path }) => {
-  const wb = readFile(path);
-  const o = wb.SheetNames.map(name => ({ name, data: utils.sheet_to_json(wb.Sheets[name])}));
-  return { data: o };
-}
-
-export default {
-  content: {
-    extendParser: {
-      ".numbers": parseXLSX,
-      ".xlsx": parseXLSX,
-      ".xls": parseXLSX
-      // ... other extensions
-    }
-  }
-}
-```
+[The new demo](https://docs.sheetjs.com/docs/demos/content#nuxtjs) includes a
+complete example starting from `create-nuxt-app`.
 
 [![Analytics](https://ga-beacon.appspot.com/UA-36810333-1/SheetJS/js-xlsx?pixel)](https://github.com/SheetJS/js-xlsx)

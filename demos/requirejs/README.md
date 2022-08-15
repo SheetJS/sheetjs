@@ -1,6 +1,6 @@
 # RequireJS
 
-[The new demo](https://docs.sheetjs.com/docs/getting-started/demos/bundler#requirejs)
+[The new demo](https://docs.sheetjs.com/docs/demos/bundler#requirejs)
 includes a live example and improved explanations.
 
 

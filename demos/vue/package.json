@@ -1,7 +1,0 @@
-{
-  "dependencies": {
-    "@nuxt/content": "1.15.1",
-    "nuxt": "2.15.8",
-    "xlsx": "https://cdn.sheetjs.com/xlsx-latest/xlsx-latest.tgz"
-  }
-}

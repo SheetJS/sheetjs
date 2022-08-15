@@ -5,7 +5,7 @@ function parse_cust_props(data/*:string*/, opts) {
 	var m = data.match(custregex);
 	if(m) for(var i = 0; i != m.length; ++i) {
 		var x = m[i], y = parsexmltag(x);
-		switch(y[0]) {
+		switch(strip_ns(y[0])) {
 			case '<?xml': break;
 			case '<Properties': break;
 			case '<property': name = unescapexml(y.name); break;

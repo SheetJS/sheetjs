@@ -101,24 +101,9 @@ $ npm install --save https://cdn.sheetjs.com/xlsx-latest/xlsx-latest.tgz
 
 The default angular-cli configuration requires no additional configuration.
 
-Some deployments use the SystemJS loader, which does require configuration.  The
-SystemJS example shows the required meta and map settings:
-
-```js
-SystemJS.config({
-  meta: {
-    'xlsx': {
-      exports: 'XLSX' // <-- tell SystemJS to expose the XLSX variable
-    }
-  },
-  map: {
-    'xlsx': 'xlsx.full.min.js', // <-- make sure xlsx.full.min.js is in same dir
-    'fs': '',     // <--|
-    'crypto': '', // <--| suppress native node modules
-    'stream': ''  // <--|
-  }
-});
-```
+Some deployments use the SystemJS loader, which does require configuration.
+[SystemJS](https://docs.sheetjs.com/docs/demos/bundler#systemjs)
+demo in the SheetJS CE docs describe the required settings.
 
 ## Ionic
 
@@ -157,29 +142,7 @@ this.file.writeFile(url, filename, blob, {replace: true});
 
 ## NativeScript
 
-Reproducing the full project is a little bit tricky.  The included `nscript.sh`
-script performs the necessary installation steps and adds the necessary shims
-for `async` support.  Due to incompatibilities with NativeScript and TypeScript
-definitions, apps should require the `xlsx.full.min.js` file directly:
-
-```typescript
-const XLSX = require("./xlsx.full.min.js");
-```
-
-The `ISO_8859_1` encoding from the text module specifies `"binary"` strings.
-`File#readText` and `File#writeText` reads and writes files:
-
-```typescript
-/* read a workbook */
-const bstr: string = await file.readText(encoding.ISO_8859_1);
-const wb = XLSX.read(bstr, { type: "binary" });
-
-/* write a workbook */
-const wbout: string = XLSX.write(wb, { bookType: 'xlsx', type: 'binary' });
-await file.writeText(wbout, encoding.ISO_8859_1);
-```
-
-Note: some versions of NativeScript do not properly support typed arrays or
-binary strings.  See <https://github.com/NativeScript/NativeScript/issues/9586>
+[The new demo](https://docs.sheetjs.com/docs/demos/mobile#nativescript)
+is updated for NativeScript 8 and uses more idiomatic data patterns.
 
 [![Analytics](https://ga-beacon.appspot.com/UA-36810333-1/SheetJS/js-xlsx?pixel)](https://github.com/SheetJS/js-xlsx)

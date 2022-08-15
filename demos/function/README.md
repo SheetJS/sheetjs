@@ -43,32 +43,6 @@ var workbook = XLSX.readFile("path/to/file.xlsb");
 XLSX.writeFile(workbook, "output/path/file.csv");
 ```
 
-The `mcstream.js` demo uses the `microcule` framework to show a simple body
-converter.  It accepts raw data from a POST connection, parses as a workbook,
-and streams back the first worksheet as CSV:
-
-<details>
-	<summary><b>Code Sketch</b> (click to show)</summary>
-
-```js
-const XLSX = require('xlsx');
-
-module.exports = (hook) => {
-	/* process_RS from the main README under "Streaming Read" section */
-	process_RS(hook.req, (wb) => {
-		hook.res.writeHead(200, { 'Content-Type': 'text/csv' });
-		/* get first worksheet */
-		const ws = wb.Sheets[wb.SheetNames[0]];
-		/* generate CSV stream and pipe to response */
-		const stream = XLSX.stream.to_csv(ws);
-		stream.pipe(hook.res);
-	});
-};
-```
-
-</details>
-
-
 #### Report Generation
 
 For an existing platform that already generates JSON or CSV or HTML output, the

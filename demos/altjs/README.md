@@ -1,6 +1,6 @@
 # Other JS Engines and Deployments
 
-[The new demo](https://docs.sheetjs.com/docs/getting-started/demos/engines)
+[The new demo](https://docs.sheetjs.com/docs/demos/engines)
 includes more detailed instructions and more JS engines.
 
 

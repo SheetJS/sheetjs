@@ -1,6 +1,6 @@
 # Rollup
 
-[The new demo](https://docs.sheetjs.com/docs/getting-started/demos/bundler#rollup)
+[The new demo](https://docs.sheetjs.com/docs/demos/bundler#rollup)
 includes a simple example and improved explanations.
 
 

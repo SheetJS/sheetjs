@@ -74,33 +74,8 @@ function make_cols(refstr/*:string*/) {
 
 ## React Native
 
-<img src="screen.png" width="400px"/>
-
-Reproducing the full project is straightforward:
-
-```bash
-$ make native     # build the project
-$ make ios        # build and run the iOS demo
-$ make android    # build and run the android demo
-```
-
-The app will prompt before reading and after writing data.  The printed location
-depends on the environment:
-
-- android: path in the device filesystem
-- iOS simulator: local path to file
-- iOS device: a path accessible from iTunes App Documents view
-
-Components used in the demo:
-- [`react-native-table-component`](https://npm.im/react-native-table-component)
-- [`react-native-file-access`](https://npm.im/react-native-file-access)
-
-React Native does not provide a native component for reading and writing files.
-The sample script `react-native.js` uses `react-native-file-access` and has
-notes for integrations with `react-native-fetch-blob` and `react-native-fs`.
-
-Note: for real app deployments, the `UIFileSharingEnabled` flag must be manually
-set in the iOS project `Info.plist` file.
+[The new demo](https://docs.sheetjs.com/docs/demos/mobile#react-native) uses
+up-to-date file I/O and file picker libraries.
 
 ## Server-Rendered React Components with Next.js
 

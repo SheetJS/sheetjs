@@ -1,6 +1,6 @@
 # XMLHttpRequest and fetch
 
-[The new demo](https://docs.sheetjs.com/docs/getting-started/demos/network)
+[The new demo](https://docs.sheetjs.com/docs/demos/network)
 includes interactive demos and improved explanations.
 
 

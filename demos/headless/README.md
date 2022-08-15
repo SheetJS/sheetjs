@@ -1,6 +1,6 @@
 # Headless Browsers
 
-[The new demo](https://docs.sheetjs.com/docs/getting-started/demos/headless)
+[The new demo](https://docs.sheetjs.com/docs/demos/headless)
 has a more focused table export example as well as a demo script for Chromium
 automation with Puppeteer and multi-browser automation with Playwright.
 

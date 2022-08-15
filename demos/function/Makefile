@@ -1,7 +1,3 @@
-.PHONY: microcule
-microcule: mcstream.js
-	microcule $<
-
 .PHONY: aws
 aws: lambda-proxy
 

@@ -1,6 +1,6 @@
 # Knockout
 
-[The new demo](https://docs.sheetjs.com/docs/getting-started/demos/legacy#knockoutjs)
+[The new demo](https://docs.sheetjs.com/docs/demos/legacy#knockoutjs)
 includes a live example and improved explanations.
 
 

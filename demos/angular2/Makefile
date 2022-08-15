@@ -32,14 +32,3 @@ ios browser: ionic
 android: ionic
 	cd SheetJSIonic; ionic cordova prepare $@ </dev/null; ionic cordova emulate $@ </dev/null; cd -
 
-
-.PHONY: nativescript
-nativescript:
-	bash ./nscript.sh
-
-.PHONY: ns-ios ns-android
-ns-ios: nativescript
-	cd SheetJSNS; ns run ios; cd -
-ns-android: nativescript
-	cd SheetJSNS; ns run android; cd -
-
