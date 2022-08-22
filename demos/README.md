@@ -26,23 +26,23 @@ can be installed with Bash on Windows or with `cygwin`.
 - [`IndexedDB`](https://docs.sheetjs.com/docs/demos/database#indexeddb)
 
 **Frameworks**
+- [`Angular 2+ and Ionic`](https://docs.sheetjs.com/docs/demos/angular)
+- [`React`](https://docs.sheetjs.com/docs/demos/react)
+- [`VueJS`](https://docs.sheetjs.com/docs/demos/vue)
 - [`Angular.JS`](https://docs.sheetjs.com/docs/demos/legacy#angularjs)
-- [`Angular 2+ and Ionic`](angular2/)
 - [`Knockout`](https://docs.sheetjs.com/docs/demos/legacy#knockoutjs)
-- [`React and NextJS`](react/)
-- [`VueJS`](vue/)
 
 **Front-End UI Components**
 - [`canvas-datagrid`](https://docs.sheetjs.com/docs/demos/grid#canvas-datagrid)
-- [`x-spreadsheet`](xspreadsheet/)
-- [`react-data-grid`](react/modify/)
-- [`vue3-table-light`](vue/modify/)
+- [`x-spreadsheet`](https://docs.sheetjs.com/docs/demos/grid#x-spreadsheet)
+- [`react-data-grid`](https://docs.sheetjs.com/docs/demos/grid#react-data-grid)
+- [`vue3-table-lite`](https://docs.sheetjs.com/docs/demos/grid#vue3-table-lite)
 - [`angular-ui-grid`](https://docs.sheetjs.com/docs/demos/grid#angular-ui-grid)
 
 **Platforms and Integrations**
 - [`Command-Line Tools`](https://docs.sheetjs.com/docs/demos/cli)
 - [`iOS and Android Mobile Applications`](https://docs.sheetjs.com/docs/demos/mobile)
-- [`NodeJS Server-Side Processing`](server/)
+- [`NodeJS Server-Side Processing`](https://docs.sheetjs.com/docs/demos/server#nodejs)
 - [`Content Management and Static Sites`](https://docs.sheetjs.com/docs/demos/content)
 - [`Electron`](https://docs.sheetjs.com/docs/demos/desktop#electron)
 - [`NW.js`](https://docs.sheetjs.com/docs/demos/desktop#nwjs)
@@ -54,8 +54,9 @@ can be installed with Bash on Windows or with `cygwin`.
 - [`SalesForce Lightning Web Components`](https://docs.sheetjs.com/docs/demos/salesforce)
 - [`Excel JavaScript API`](https://docs.sheetjs.com/docs/demos/excel)
 - [`Headless Automation`](https://docs.sheetjs.com/docs/demos/headless)
-- [`Swift JSC and Other JavaScript Engines`](https://docs.sheetjs.com/docs/demos/engines)
-- [`"serverless" functions`](function/)
+- [`Other JavaScript Engines`](https://docs.sheetjs.com/docs/demos/engines)
+- [`Azure Functions and Storage`](https://docs.sheetjs.com/docs/demos/azure)
+- [`Amazon Web Services`](https://docs.sheetjs.com/docs/demos/aws)
 - [`Databases and Structured Data Stores`](https://docs.sheetjs.com/docs/demos/database)
 - [`NoSQL and Unstructured Data Stores`](https://docs.sheetjs.com/docs/demos/nosql)
 - [`Legacy Internet Explorer`](https://docs.sheetjs.com/docs/demos/legacy#internet-explorer)

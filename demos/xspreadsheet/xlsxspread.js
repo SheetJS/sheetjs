@@ -2,6 +2,7 @@
 /* eslint-env browser */
 /*global XLSX */
 /*exported stox, xtos */
+console.log("The latest version of the xlsxspread.js script is at https://cdn.sheetjs.com/xspreadsheet/xlsxspread.js !")
 
 /**
  * Converts data from SheetJS to x-spreadsheet
@@ -129,3 +130,4 @@ function xtos(sdata) {
 
   return out;
 }
+
