@@ -2225,7 +2225,7 @@ describe('CSV', function() {
 				assert.equal(get_cell(ws, "C" + (R+1)).v, aoa[R][2]);
 			}
 			assert.equal(get_cell(ws, "B2").v, "3 b");
-			var B1 = get_cell(ws, "B1"); console.log(B1); assert.equal(B1.t, "d"); assert.equal(B1.v.getHours(), 3);
+			var B1 = get_cell(ws, "B1"); assert.equal(B1.t, "d"); assert.equal(B1.v.getHours(), 3);
 			var B3 = get_cell(ws, "B3"); assert.equal(B3.t, "d"); assert.equal(B3.v.getHours(), 15);
 			ws = X.read(aoa.map(function(row) { return row.join(","); }).join("\n"), {type: "string", cellDates: false}).Sheets.Sheet1;
 			for(var R = 0; R < 3; ++R) {

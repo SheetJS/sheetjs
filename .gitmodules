@@ -1,3 +1,4 @@
 [submodule "test_files"]
 	path = test_files
 	url = https://github.com/SheetJS/test_files
+	ignore = dirty

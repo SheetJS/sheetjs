@@ -683,62 +683,54 @@ var DIF = /*#__PURE__*/(function() {
 		return o;
 	}
 
-	var sheet_to_dif = /*#__PURE__*/(function() {
-		var push_field = function pf(o/*:Array<string>*/, topic/*:string*/, v/*:number*/, n/*:number*/, s/*:string*/) {
-			o.push(topic);
-			o.push(v + "," + n);
-			o.push('"' + s.replace(/"/g,'""') + '"');
-		};
-		var push_value = function po(o/*:Array<string>*/, type/*:number*/, v/*:any*/, s/*:string*/) {
-			o.push(type + "," + v);
-			o.push(type == 1 ? '"' + s.replace(/"/g,'""') + '"' : s);
-		};
-		return function sheet_to_dif(ws/*:Worksheet*//*::, opts:?any*/)/*:string*/ {
-			var o/*:Array<string>*/ = [];
-			var r = safe_decode_range(ws['!ref']), cell/*:Cell*/;
-			var dense = Array.isArray(ws);
-			push_field(o, "TABLE", 0, 1, "sheetjs");
-			push_field(o, "VECTORS", 0, r.e.r - r.s.r + 1,"");
-			push_field(o, "TUPLES", 0, r.e.c - r.s.c + 1,"");
-			push_field(o, "DATA", 0, 0,"");
-			for(var R = r.s.r; R <= r.e.r; ++R) {
-				push_value(o, -1, 0, "BOT");
-				for(var C = r.s.c; C <= r.e.c; ++C) {
-					var coord = encode_cell({r:R,c:C});
-					cell = dense ? (ws[R]||[])[C] : ws[coord];
-					if(!cell) { push_value(o, 1, 0, ""); continue;}
-					switch(cell.t) {
-						case 'n':
-							var val = DIF_XL ? cell.w : cell.v;
-							if(!val && cell.v != null) val = cell.v;
-							if(val == null) {
-								if(DIF_XL && cell.f && !cell.F) push_value(o, 1, 0, "=" + cell.f);
-								else push_value(o, 1, 0, "");
-							}
-							else push_value(o, 0, val, "V");
-							break;
-						case 'b':
-							push_value(o, 0, cell.v ? 1 : 0, cell.v ? "TRUE" : "FALSE");
-							break;
-						case 's':
-							push_value(o, 1, 0, (!DIF_XL || isNaN(cell.v)) ? cell.v : '="' + cell.v + '"');
-							break;
-						case 'd':
-							if(!cell.w) cell.w = SSF_format(cell.z || table_fmt[14], datenum(parseDate(cell.v)));
-							if(DIF_XL) push_value(o, 0, cell.w, "V");
-							else push_value(o, 1, 0, cell.w);
-							break;
-						default: push_value(o, 1, 0, "");
-					}
+	function make_value(v/*:number*/, s/*:string*/)/*:string*/ { return "0," + String(v) + "\r\n" + s; }
+	function make_value_str(s/*:string*/)/*:string*/ { return "1,0\r\n\"" + s.replace(/"/g,'""') + '"'; }
+	function sheet_to_dif(ws/*:Worksheet*//*::, opts:?any*/)/*:string*/ {
+		var _DIF_XL = DIF_XL;
+		var r = safe_decode_range(ws['!ref']);
+		var dense = Array.isArray(ws);
+		var o/*:Array<string>*/ = [
+			"TABLE\r\n0,1\r\n\"sheetjs\"\r\n",
+			"VECTORS\r\n0," + (r.e.r - r.s.r + 1) + "\r\n\"\"\r\n",
+			"TUPLES\r\n0," + (r.e.c - r.s.c + 1) + "\r\n\"\"\r\n",
+			"DATA\r\n0,0\r\n\"\"\r\n"
+		];
+		for(var R = r.s.r; R <= r.e.r; ++R) {
+			var p = "-1,0\r\nBOT\r\n";
+			for(var C = r.s.c; C <= r.e.c; ++C) {
+				var cell/*:Cell*/ = dense ? (ws[R] && ws[R][C]) : ws[encode_cell({r:R,c:C})];
+				if(cell == null) { p +=("1,0\r\n\"\"\r\n"); continue;}
+				switch(cell.t) {
+					case 'n':
+						if(_DIF_XL) {
+							if(cell.w != null) p +=("0," + cell.w + "\r\nV");
+							else if(cell.v != null) p +=(make_value(cell.v, "V")); // TODO: should this call SSF_format?
+							else if(cell.f != null && !cell.F) p +=(make_value_str("=" + cell.f));
+							else p +=("1,0\r\n\"\"");
+						} else {
+							if(cell.v == null) p +=("1,0\r\n\"\"");
+							else p +=(make_value(cell.v, "V"));
+						}
+						break;
+					case 'b':
+						p +=(cell.v ? make_value(1, "TRUE") : make_value(0, "FALSE"));
+						break;
+					case 's':
+						p +=(make_value_str((!_DIF_XL || isNaN(+cell.v)) ? cell.v : '="' + cell.v + '"'));
+						break;
+					case 'd':
+						if(!cell.w) cell.w = SSF_format(cell.z || table_fmt[14], datenum(parseDate(cell.v)));
+						if(_DIF_XL) p +=(make_value(cell.w, "V"));
+						else p +=(make_value_str(cell.w));
+						break;
+					default: p +=("1,0\r\n\"\"");
 				}
+				p += "\r\n";
 			}
-			push_value(o, -1, 0, "EOD");
-			var RS = "\r\n";
-			var oo = o.join(RS);
-			//while((oo.length & 0x7F) != 0) oo += "\0";
-			return oo;
-		};
-	})();
+			o.push(p);
+		}
+		return o.join("") + "-1,0\r\nEOD";
+	}
 	return {
 		to_workbook: dif_to_workbook,
 		to_sheet: dif_to_sheet,

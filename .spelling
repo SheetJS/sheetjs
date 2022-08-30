@@ -54,6 +54,7 @@ Rollup
 SessionStorage
 SQLite
 SystemJS
+Vite
 VueJS
 WebKit
 WebSQL
