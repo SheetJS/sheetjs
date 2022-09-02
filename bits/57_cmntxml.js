@@ -50,21 +50,27 @@ function write_comments_xml(data/*::, opts*/) {
 	o.push("<commentList>");
 	data.forEach(function(d) {
 		/* 18.7.3 CT_Comment */
-		var lastauthor = 0, ts = [];
+		var lastauthor = 0, ts = [], tcnt = 0;
 		if(d[1][0] && d[1][0].T && d[1][0].ID) lastauthor = iauthor.indexOf("tc=" + d[1][0].ID);
-		else d[1].forEach(function(c) {
+		d[1].forEach(function(c) {
 			if(c.a) lastauthor = iauthor.indexOf(escapexml(c.a));
-			ts.push(c.t||"");
+			if(c.T) ++tcnt;
+			ts.push(writetag("t", c.t == null ? "" : escapexml(c.t)));
 		});
-		o.push('<comment ref="' + d[0] + '" authorId="' + lastauthor + '"><text>');
-		if(ts.length <= 1) o.push(writetag("t", escapexml(ts[0]||"")));
-		else {
+		if(tcnt === 0) {
+			d[1].forEach(function(c) {
+				o.push('<comment ref="' + d[0] + '" authorId="' + iauthor.indexOf(escapexml(c.a)) + '"><text>');
+				o.push(writetag("t", c.t == null ? "" : escapexml(c.t)));
+				o.push('</text></comment>');
+			});
+		} else {
 			/* based on Threaded Comments -> Comments projection */
+			o.push('<comment ref="' + d[0] + '" authorId="' + lastauthor + '"><text>');
 			var t = "Comment:\n    " + (ts[0]) + "\n";
 			for(var i = 1; i < ts.length; ++i) t += "Reply:\n    " + ts[i] + "\n";
 			o.push(writetag("t", escapexml(t)));
+			o.push('</text></comment>');
 		}
-		o.push('</text></comment>');
 	});
 	o.push("</commentList>");
 	if(o.length>2) { o[o.length] = ('</comments>'); o[1]=o[1].replace("/>",">"); }
