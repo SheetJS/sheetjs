@@ -356,75 +356,174 @@ function compress_iwa_file(buf: Uint8Array): Uint8Array {
 }
 //<<export { decompress_iwa_file, compress_iwa_file };
 
-/** Parse "old storage" (version 0..3) */
-function parse_old_storage(buf: Uint8Array, sst: string[], rsst: string[], v: 0|1|2|3): CellObject | void {
+/** .TST.DataStore */
+interface DataLUT {
+	/** shared string table */
+	sst: string[];
+	/** rich string table table */
+	rsst: string[];
+	/** old format table */
+	ofmt: ProtoMessage[];
+	/** new format table */
+	nfmt: ProtoMessage[];
+}
+var numbers_lut_new = (): DataLUT => ({ sst: [], rsst: [], ofmt: [], nfmt: [] });
+
+function numbers_format_cell(cell: CellObject, t: number, flags: number, ofmt: ProtoMessage, nfmt: ProtoMessage): void {
+	var ctype = t & 0xFF, ver = t >> 8;
+	var fmt = ver >= 5 ? nfmt : ofmt;
+	dur: if((flags & (ver > 4 ? 8: 4)) && cell.t == "n" && ctype == 7) {
+		var dstyle =   (fmt[7]?.[0])  ? parse_varint49(fmt[7][0].data)  : -1;
+		if(dstyle == -1) break dur;
+		var dmin =     (fmt[15]?.[0]) ? parse_varint49(fmt[15][0].data) : -1;
+		var dmax =     (fmt[16]?.[0]) ? parse_varint49(fmt[16][0].data) : -1;
+		var auto =     (fmt[40]?.[0]) ? parse_varint49(fmt[40][0].data) : -1;
+		var d: number = cell.v as number, dd = d;
+		autodur: if(auto) { // TODO: check if numbers reformats on load
+			if(d == 0) { dmin = dmax = 2; break autodur; }
+			if(d >= 604800) dmin = 1;
+			else if(d >= 86400) dmin = 2;
+			else if(d >= 3600) dmin = 4;
+			else if(d >= 60) dmin = 8;
+			else if(d >= 1) dmin = 16;
+			else dmin = 32;
+			if(Math.floor(d) != d) dmax = 32;
+			else if(d % 60) dmax = 16;
+			else if(d % 3600) dmax = 8;
+			else if(d % 86400) dmax = 4;
+			else if(d % 604800) dmax = 2;
+			if(dmax < dmin) dmax = dmin;
+		}
+		if(dmin == -1 || dmax == -1) break dur;
+		var dstr: string[] = [], zstr: string[] = [];
+		/* TODO: plurality, SSF equivalents */
+		if(dmin == 1) {
+			dd = d / 604800;
+			if(dmax == 1) { zstr.push('d"d"'); } else { dd |= 0; d -= 604800 * dd; }
+			dstr.push(dd + (dstyle == 2 ? " week" + (dd == 1 ? "" : "s") : dstyle == 1 ? "w": ""));
+		}
+		if(dmin <= 2 && dmax >= 2) {
+			dd = d / 86400;
+			if(dmax > 2) { dd |= 0; d -= 86400 * dd; }
+			zstr.push("d" + '"d"');
+			dstr.push(dd + (dstyle == 2 ? " day" + (dd == 1 ? "" : "s") : dstyle == 1 ? "d" : ""));
+		}
+		if(dmin <= 4 && dmax >= 4) {
+			dd = d / 3600;
+			if(dmax > 4) { dd |= 0; d -= 3600 * dd; }
+			zstr.push((dmin >= 4 ? "[h]" : "h") + '"h"');
+			dstr.push(dd + (dstyle == 2 ? " hour" + (dd == 1 ? "" : "s") : dstyle == 1 ? "h" : ""));
+		}
+		if(dmin <= 8 && dmax >= 8) {
+			dd = d / 60;
+			if(dmax > 8) { dd |= 0; d -= 60 * dd; }
+			zstr.push((dmin >= 8 ? "[m]" : "m") + '"m"');
+			if(dstyle == 0) dstr.push(((dmin == 8 && dmax == 8 || dd >= 10) ? "" : "0") + dd)
+			else dstr.push(dd + (dstyle == 2 ? " minute" + (dd == 1 ? "" : "s") : dstyle == 1 ? "m" : ""));
+		}
+		if(dmin <= 16 && dmax >= 16) {
+			dd = d;
+			if(dmax > 16) { dd |= 0; d -= dd; }
+			zstr.push((dmin >= 16 ? "[s]" : "s") + '"s"');
+			if(dstyle == 0) dstr.push((dmax == 16 && dmin == 16 || dd >= 10 ? "" : "0") + dd)
+			else dstr.push(dd + (dstyle == 2 ? " second" + (dd == 1 ? "" : "s") : dstyle == 1 ? "s" : ""));
+		}
+		if(dmax >= 32) {
+			dd = Math.round(1000 * d);
+			if(dmin < 32) zstr.push(".000" + '"ms"');
+			if(dstyle == 0) dstr.push((dd >= 100 ? "" : dd >= 10 ? "0" : "00") + dd)
+			else dstr.push(dd + (dstyle == 2 ? " millisecond" + (dd == 1 ? "" : "s") : dstyle == 1 ? "ms" : ""));
+		}
+		cell.w = dstr.join(dstyle == 0 ? ":" : " "); cell.z = zstr.join(dstyle == 0 ? '":"': " ");
+		if(dstyle == 0) cell.w = cell.w.replace(/:(\d\d\d)$/, ".$1");
+	}
+}
+
+/** Parse "old storage" (version 0..4) */
+function parse_old_storage(buf: Uint8Array, lut: DataLUT, v: 0|1|2|3|4): CellObject | void {
 	var dv = u8_to_dataview(buf);
 	var flags = dv.getUint32(4, true);
 
-	/* TODO: find the correct field position of number formats, formulae, etc */
-	var data_offset = (v > 1 ? 12 : 8) + popcnt(flags & (v > 1 ? 0x0D8E : 0x018E)) * 4;
+	var ridx = -1, sidx = -1, zidx = -1, ieee = NaN, dt = new Date(2001, 0, 1);
+	var doff = (v > 1 ? 12 : 8);
+	if(flags & 0x0002) { zidx = dv.getUint32(doff,  true); doff += 4;}
+	doff += popcnt(flags & (v > 1 ? 0x0D8C : 0x018C)) * 4;
 
-	var ridx = -1, sidx = -1, ieee = NaN, dt = new Date(2001, 0, 1);
-	if(flags & 0x0200) { ridx = dv.getUint32(data_offset,  true); data_offset += 4; }
-	data_offset += popcnt(flags & (v > 1 ? 0x3000 : 0x1000)) * 4;
-	if(flags & 0x0010) { sidx = dv.getUint32(data_offset,  true); data_offset += 4; }
-	if(flags & 0x0020) { ieee = dv.getFloat64(data_offset, true); data_offset += 8; }
-	if(flags & 0x0040) { dt.setTime(dt.getTime() +  dv.getFloat64(data_offset, true) * 1000); data_offset += 8; }
+	if(flags & 0x0200) { ridx = dv.getUint32(doff,  true); doff += 4; }
+	doff += popcnt(flags & (v > 1 ? 0x3000 : 0x1000)) * 4;
+	if(flags & 0x0010) { sidx = dv.getUint32(doff,  true); doff += 4; }
+	if(flags & 0x0020) { ieee = dv.getFloat64(doff, true); doff += 8; }
+	if(flags & 0x0040) { dt.setTime(dt.getTime() +  dv.getFloat64(doff, true) * 1000); doff += 8; }
+
+	if(v > 1) {
+		flags = dv.getUint32(8, true) >>> 16;
+		/* TODO: stress test if a cell can have multiple sub-type formats */
+		if(flags & 0xFF) { if(zidx == -1) zidx = dv.getUint32(doff, true); doff += 4; }
+	}
 
 	var ret: CellObject;
-	switch(buf[2]) {
+	var t = buf[v >= 4 ? 1 : 2];
+	switch(t) {
 		case 0: return void 0; // return { t: "z" }; // blank?
 		case 2: ret = { t: "n", v: ieee }; break; // number
-		case 3: ret = { t: "s", v: sst[sidx] }; break; // string
+		case 3: ret = { t: "s", v: lut.sst[sidx] }; break; // string
 		case 5: ret = { t: "d", v: dt }; break; // date-time
 		case 6: ret = { t: "b", v: ieee > 0 }; break; // boolean
-		case 7: ret = { t: "n", v: ieee / 86400 }; break; // duration in seconds TODO: emit [hh]:[mm] style format with adjusted value
+		case 7: ret = { t: "n", v: ieee }; break; // duration in seconds
 		case 8: ret = { t: "e", v: 0}; break; // "formula error" TODO: enumerate and map errors to csf equivalents
 		case 9: { // "rich text"
-			if(ridx > -1) ret = { t: "s", v: rsst[ridx] };
+			if(ridx > -1) ret = { t: "s", v: lut.rsst[ridx] };
 			else throw new Error(`Unsupported cell type ${buf[subarray](0,4)}`);
 		} break;
 		default: throw new Error(`Unsupported cell type ${buf[subarray](0,4)}`);
 	}
-	/* TODO: Some fields appear after the cell data */
 
+	if(zidx > -1) numbers_format_cell(ret, t | (v<<8), flags, lut.ofmt[zidx], lut.nfmt[zidx]);
+	if(t == 7) (ret.v as number) /= 86400;
 	return ret;
 }
 
 /** Parse "new storage" (version 5) */
-function parse_new_storage(buf: Uint8Array, sst: string[], rsst: string[]): CellObject | void {
+function parse_new_storage(buf: Uint8Array, lut: DataLUT): CellObject | void {
 	var dv = u8_to_dataview(buf);
 	var flags = dv.getUint32(8, true);
 
 	/* TODO: find the correct field position of number formats, formulae, etc */
-	var data_offset = 12;
+	var doff = 12;
 
-	var ridx = -1, sidx = -1, d128 = NaN, ieee = NaN, dt = new Date(2001, 0, 1);
+	var ridx = -1, sidx = -1, zidx = -1, d128 = NaN, ieee = NaN, dt = new Date(2001, 0, 1);
 
-	if(flags & 0x0001) { d128 = readDecimal128LE(buf, data_offset); data_offset += 16; }
-	if(flags & 0x0002) { ieee = dv.getFloat64(data_offset, true); data_offset += 8; }
-	if(flags & 0x0004) { dt.setTime(dt.getTime() +  dv.getFloat64(data_offset, true) * 1000); data_offset += 8; }
-	if(flags & 0x0008) { sidx = dv.getUint32(data_offset,  true); data_offset += 4; }
-	if(flags & 0x0010) { ridx = dv.getUint32(data_offset,  true); data_offset += 4; }
+	if(flags & 0x0001) { d128 = readDecimal128LE(buf, doff); doff += 16; }
+	if(flags & 0x0002) { ieee = dv.getFloat64(doff, true); doff += 8; }
+	if(flags & 0x0004) { dt.setTime(dt.getTime() +  dv.getFloat64(doff, true) * 1000); doff += 8; }
+	if(flags & 0x0008) { sidx = dv.getUint32(doff,  true); doff += 4; }
+	if(flags & 0x0010) { ridx = dv.getUint32(doff,  true); doff += 4; }
+
+	doff += popcnt(flags & 0x1FE0) * 4;
+
+	/* TODO: stress test if a cell can have multiple sub-type formats */
+	if(flags & 0x7E000) { if(zidx == -1) zidx = dv.getUint32(doff, true); doff += 4; }
 
 	var ret: CellObject;
-	switch(buf[1]) {
+	var t = buf[1];
+	switch(t) {
 		case 0: return void 0; // return { t: "z" }; // blank?
 		case 2: ret = { t: "n", v: d128 }; break; // number
-		case 3: ret = { t: "s", v: sst[sidx] }; break; // string
+		case 3: ret = { t: "s", v: lut.sst[sidx] }; break; // string
 		case 5: ret = { t: "d", v: dt }; break; // date-time
 		case 6: ret = { t: "b", v: ieee > 0 }; break; // boolean
-		case 7: ret = { t: "n", v: ieee / 86400 }; break;  // duration in seconds TODO: emit [hh]:[mm] style format with adjusted value
+		case 7: ret = { t: "n", v: ieee }; break;  // duration in seconds TODO: emit [hh]:[mm] style format with adjusted value
 		case 8: ret = { t: "e", v: 0}; break; // "formula error" TODO: enumerate and map errors to csf equivalents
 		case 9: { // "rich text"
-			if(ridx > -1) ret = { t: "s", v: rsst[ridx] };
+			if(ridx > -1) ret = { t: "s", v: lut.rsst[ridx] };
 			else throw new Error(`Unsupported cell type ${buf[1]} : ${flags & 0x1F} : ${buf[subarray](0,4)}`);
 		} break;
 		case 10: ret = { t: "n", v: d128 }; break; // currency
 		default: throw new Error(`Unsupported cell type ${buf[1]} : ${flags & 0x1F} : ${buf[subarray](0,4)}`);
 	}
-	/* TODO: All styling fields appear after the cell data */
 
+	if(zidx > -1) numbers_format_cell(ret, t | (5<<8), flags >> 13, lut.ofmt[zidx], lut.nfmt[zidx] );
+	if(t == 7) (ret.v as number) /= 86400;
 	return ret;
 }
 
@@ -459,11 +558,11 @@ function write_old_storage(cell: CellObject, sst: string[]): Uint8Array {
 	return out[subarray](0, l);
 }
 //<<export { write_new_storage, write_old_storage };
-function parse_cell_storage(buf: Uint8Array, sst: string[], rsst: string[]): CellObject | void {
+function parse_cell_storage(buf: Uint8Array, lut: DataLUT): CellObject | void {
 	switch(buf[0]) {
 		case 0: case 1:
-		case 2: case 3: return parse_old_storage(buf, sst, rsst, buf[0]);
-		case 5: return parse_new_storage(buf, sst, rsst);
+		case 2: case 3: case 4: return parse_old_storage(buf, lut, buf[0]);
+		case 5: return parse_new_storage(buf, lut);
 		default: throw new Error(`Unsupported payload version ${buf[0]}`);
 	}
 }
@@ -490,13 +589,13 @@ function write_TSP_Reference(idx: number): Uint8Array {
 type MessageSpace = {[id: number]: IWAMessage[]};
 
 /** Parse .TST.TableDataList */
-function parse_TST_TableDataList(M: MessageSpace, root: IWAMessage): string[] {
+function parse_TST_TableDataList(M: MessageSpace, root: IWAMessage): any[] {
 	var pb = parse_shallow(root.data);
 	// .TST.TableDataList.ListType
 	var type = varint_to_i32(pb[1][0].data);
 
 	var entries = pb[3];
-	var data: Array<string> = [];
+	var data: any[] = [];
 	(entries||[]).forEach(entry => {
 		// .TST.TableDataList.ListEntry
 		var le = parse_shallow(entry.data);
@@ -516,6 +615,8 @@ function parse_TST_TableDataList(M: MessageSpace, root: IWAMessage): string[] {
 
 				data[key] = tswpsa[3].map(x => u8str(x.data)).join("");
 			} break;
+			case 2: data[key] = parse_shallow(le[6][0].data); break;
+			default: throw type;
 		}
 	});
 	return data;
@@ -595,8 +696,11 @@ function parse_TST_TableModelArchive(M: MessageSpace, root: IWAMessage, ws: Work
 	var dense = Array.isArray(ws);
 	// .TST.DataStore
 	var store = parse_shallow(pb[4][0].data);
-	var sst = parse_TST_TableDataList(M, M[parse_TSP_Reference(store[4][0].data)][0]);
-	var rsst: string[] = store[17]?.[0] ? parse_TST_TableDataList(M, M[parse_TSP_Reference(store[17][0].data)][0]) : [];
+	var lut: DataLUT = numbers_lut_new();
+	if(store[4]?.[0]) lut.sst = parse_TST_TableDataList(M, M[parse_TSP_Reference(store[4][0].data)][0]);
+	if(store[11]?.[0]) lut.ofmt = parse_TST_TableDataList(M, M[parse_TSP_Reference(store[11][0].data)][0]);
+	if(store[17]?.[0]) lut.rsst = parse_TST_TableDataList(M, M[parse_TSP_Reference(store[17][0].data)][0]);
+	if(store[22]?.[0]) lut.nfmt = parse_TST_TableDataList(M, M[parse_TSP_Reference(store[22][0].data)][0]);
 
 	// .TST.TileStorage
 	var tile = parse_shallow(store[3][0].data);
@@ -611,7 +715,7 @@ function parse_TST_TableModelArchive(M: MessageSpace, root: IWAMessage, ws: Work
 		var _tile = parse_TST_Tile(M, ref);
 		_tile.data.forEach((row, R) => {
 			row.forEach((buf, C) => {
-				var res = parse_cell_storage(buf, sst, rsst);
+				var res = parse_cell_storage(buf, lut);
 				if(res) {
 					if(dense) {
 						if(!ws[_R + R]) ws[_R + R] = [];

@@ -411,37 +411,168 @@ function compress_iwa_file(buf) {
   }
   return u8concat(out);
 }
-function parse_old_storage(buf, sst, rsst, v) {
+var numbers_lut_new = function() {
+  return { sst: [], rsst: [], ofmt: [], nfmt: [] };
+};
+function numbers_format_cell(cell, t, flags, ofmt, nfmt) {
+  var _a, _b, _c, _d;
+  var ctype = t & 255, ver = t >> 8;
+  var fmt = ver >= 5 ? nfmt : ofmt;
+  dur:
+    if (flags & (ver > 4 ? 8 : 4) && cell.t == "n" && ctype == 7) {
+      var dstyle = ((_a = fmt[7]) == null ? void 0 : _a[0]) ? parse_varint49(fmt[7][0].data) : -1;
+      var dmin = ((_b = fmt[15]) == null ? void 0 : _b[0]) ? parse_varint49(fmt[15][0].data) : -1;
+      var dmax = ((_c = fmt[16]) == null ? void 0 : _c[0]) ? parse_varint49(fmt[16][0].data) : -1;
+      var auto = ((_d = fmt[40]) == null ? void 0 : _d[0]) ? parse_varint49(fmt[40][0].data) : -1;
+      if (dstyle == -1)
+        break dur;
+      var d = cell.v, dd = d;
+      autodur:
+        if (auto) {
+          if (d == 0) {
+            dmin = dmax = 2;
+            break autodur;
+          }
+          if (d >= 604800)
+            dmin = 1;
+          else if (d >= 86400)
+            dmin = 2;
+          else if (d >= 3600)
+            dmin = 4;
+          else if (d >= 60)
+            dmin = 8;
+          else if (d >= 1)
+            dmin = 16;
+          else
+            dmin = 32;
+          if (Math.floor(d) != d)
+            dmax = 32;
+          else if (d % 60)
+            dmax = 16;
+          else if (d % 3600)
+            dmax = 8;
+          else if (d % 86400)
+            dmax = 4;
+          else if (d % 604800)
+            dmax = 2;
+          if (dmax < dmin)
+            dmax = dmin;
+        }
+      if (dmin == -1 || dmax == -1)
+        break dur;
+      var dstr = [], zstr = [];
+      if (dmin == 1) {
+        dd = d / 604800;
+        if (dmax == 1) {
+          zstr.push('d"d"');
+        } else {
+          dd |= 0;
+          d -= 604800 * dd;
+        }
+        dstr.push(dd + (dstyle == 2 ? " week" + (dd == 1 ? "" : "s") : dstyle == 1 ? "w" : ""));
+      }
+      if (dmin <= 2 && dmax >= 2) {
+        dd = d / 86400;
+        if (dmax > 2) {
+          dd |= 0;
+          d -= 86400 * dd;
+        }
+        zstr.push('d"d"');
+        dstr.push(dd + (dstyle == 2 ? " day" + (dd == 1 ? "" : "s") : dstyle == 1 ? "d" : ""));
+      }
+      if (dmin <= 4 && dmax >= 4) {
+        dd = d / 3600;
+        if (dmax > 4) {
+          dd |= 0;
+          d -= 3600 * dd;
+        }
+        zstr.push((dmin >= 4 ? "[h]" : "h") + '"h"');
+        dstr.push(dd + (dstyle == 2 ? " hour" + (dd == 1 ? "" : "s") : dstyle == 1 ? "h" : ""));
+      }
+      if (dmin <= 8 && dmax >= 8) {
+        dd = d / 60;
+        if (dmax > 8) {
+          dd |= 0;
+          d -= 60 * dd;
+        }
+        zstr.push((dmin >= 8 ? "[m]" : "m") + '"m"');
+        if (dstyle == 0)
+          dstr.push((dmin == 8 && dmax == 8 || dd >= 10 ? "" : "0") + dd);
+        else
+          dstr.push(dd + (dstyle == 2 ? " minute" + (dd == 1 ? "" : "s") : dstyle == 1 ? "m" : ""));
+      }
+      if (dmin <= 16 && dmax >= 16) {
+        dd = d;
+        if (dmax > 16) {
+          dd |= 0;
+          d -= dd;
+        }
+        zstr.push((dmin >= 16 ? "[s]" : "s") + '"s"');
+        if (dstyle == 0)
+          dstr.push((dmax == 16 && dmin == 16 || dd >= 10 ? "" : "0") + dd);
+        else
+          dstr.push(dd + (dstyle == 2 ? " second" + (dd == 1 ? "" : "s") : dstyle == 1 ? "s" : ""));
+      }
+      if (dmax >= 32) {
+        dd = Math.round(1e3 * d);
+        if (dmin < 32)
+          zstr.push('.000"ms"');
+        if (dstyle == 0)
+          dstr.push((dd >= 100 ? "" : dd >= 10 ? "0" : "00") + dd);
+        else
+          dstr.push(dd + (dstyle == 2 ? " millisecond" + (dd == 1 ? "" : "s") : dstyle == 1 ? "ms" : ""));
+      }
+      cell.w = dstr.join(dstyle == 0 ? ":" : " ");
+      cell.z = zstr.join(dstyle == 0 ? '":"' : " ");
+      if (dstyle == 0)
+        cell.w = cell.w.replace(/:(\d\d\d)$/, ".$1");
+    }
+}
+function parse_old_storage(buf, lut, v) {
   var dv = u8_to_dataview(buf);
   var flags = dv.getUint32(4, true);
-  var data_offset = (v > 1 ? 12 : 8) + popcnt(flags & (v > 1 ? 3470 : 398)) * 4;
-  var ridx = -1, sidx = -1, ieee = NaN, dt = new Date(2001, 0, 1);
-  if (flags & 512) {
-    ridx = dv.getUint32(data_offset, true);
-    data_offset += 4;
+  var ridx = -1, sidx = -1, zidx = -1, ieee = NaN, dt = new Date(2001, 0, 1);
+  var doff = v > 1 ? 12 : 8;
+  if (flags & 2) {
+    zidx = dv.getUint32(doff, true);
+    doff += 4;
   }
-  data_offset += popcnt(flags & (v > 1 ? 12288 : 4096)) * 4;
+  doff += popcnt(flags & (v > 1 ? 3468 : 396)) * 4;
+  if (flags & 512) {
+    ridx = dv.getUint32(doff, true);
+    doff += 4;
+  }
+  doff += popcnt(flags & (v > 1 ? 12288 : 4096)) * 4;
   if (flags & 16) {
-    sidx = dv.getUint32(data_offset, true);
-    data_offset += 4;
+    sidx = dv.getUint32(doff, true);
+    doff += 4;
   }
   if (flags & 32) {
-    ieee = dv.getFloat64(data_offset, true);
-    data_offset += 8;
+    ieee = dv.getFloat64(doff, true);
+    doff += 8;
   }
   if (flags & 64) {
-    dt.setTime(dt.getTime() + dv.getFloat64(data_offset, true) * 1e3);
-    data_offset += 8;
+    dt.setTime(dt.getTime() + dv.getFloat64(doff, true) * 1e3);
+    doff += 8;
+  }
+  if (v > 1) {
+    flags = dv.getUint32(8, true) >>> 16;
+    if (flags & 255) {
+      if (zidx == -1)
+        zidx = dv.getUint32(doff, true);
+      doff += 4;
+    }
   }
   var ret;
-  switch (buf[2]) {
+  var t = buf[v >= 4 ? 1 : 2];
+  switch (t) {
     case 0:
       return void 0;
     case 2:
       ret = { t: "n", v: ieee };
       break;
     case 3:
-      ret = { t: "s", v: sst[sidx] };
+      ret = { t: "s", v: lut.sst[sidx] };
       break;
     case 5:
       ret = { t: "d", v: dt };
@@ -450,7 +581,7 @@ function parse_old_storage(buf, sst, rsst, v) {
       ret = { t: "b", v: ieee > 0 };
       break;
     case 7:
-      ret = { t: "n", v: ieee / 86400 };
+      ret = { t: "n", v: ieee };
       break;
     case 8:
       ret = { t: "e", v: 0 };
@@ -458,7 +589,7 @@ function parse_old_storage(buf, sst, rsst, v) {
     case 9:
       {
         if (ridx > -1)
-          ret = { t: "s", v: rsst[ridx] };
+          ret = { t: "s", v: lut.rsst[ridx] };
         else
           throw new Error("Unsupported cell type ".concat(buf[subarray](0, 4)));
       }
@@ -466,42 +597,53 @@ function parse_old_storage(buf, sst, rsst, v) {
     default:
       throw new Error("Unsupported cell type ".concat(buf[subarray](0, 4)));
   }
+  if (zidx > -1)
+    numbers_format_cell(ret, t | v << 8, flags, lut.ofmt[zidx], lut.nfmt[zidx]);
+  if (t == 7)
+    ret.v /= 86400;
   return ret;
 }
-function parse_new_storage(buf, sst, rsst) {
+function parse_new_storage(buf, lut) {
   var dv = u8_to_dataview(buf);
   var flags = dv.getUint32(8, true);
-  var data_offset = 12;
-  var ridx = -1, sidx = -1, d128 = NaN, ieee = NaN, dt = new Date(2001, 0, 1);
+  var doff = 12;
+  var ridx = -1, sidx = -1, zidx = -1, d128 = NaN, ieee = NaN, dt = new Date(2001, 0, 1);
   if (flags & 1) {
-    d128 = readDecimal128LE(buf, data_offset);
-    data_offset += 16;
+    d128 = readDecimal128LE(buf, doff);
+    doff += 16;
   }
   if (flags & 2) {
-    ieee = dv.getFloat64(data_offset, true);
-    data_offset += 8;
+    ieee = dv.getFloat64(doff, true);
+    doff += 8;
   }
   if (flags & 4) {
-    dt.setTime(dt.getTime() + dv.getFloat64(data_offset, true) * 1e3);
-    data_offset += 8;
+    dt.setTime(dt.getTime() + dv.getFloat64(doff, true) * 1e3);
+    doff += 8;
   }
   if (flags & 8) {
-    sidx = dv.getUint32(data_offset, true);
-    data_offset += 4;
+    sidx = dv.getUint32(doff, true);
+    doff += 4;
   }
   if (flags & 16) {
-    ridx = dv.getUint32(data_offset, true);
-    data_offset += 4;
+    ridx = dv.getUint32(doff, true);
+    doff += 4;
+  }
+  doff += popcnt(flags & 8160) * 4;
+  if (flags & 516096) {
+    if (zidx == -1)
+      zidx = dv.getUint32(doff, true);
+    doff += 4;
   }
   var ret;
-  switch (buf[1]) {
+  var t = buf[1];
+  switch (t) {
     case 0:
       return void 0;
     case 2:
       ret = { t: "n", v: d128 };
       break;
     case 3:
-      ret = { t: "s", v: sst[sidx] };
+      ret = { t: "s", v: lut.sst[sidx] };
       break;
     case 5:
       ret = { t: "d", v: dt };
@@ -510,7 +652,7 @@ function parse_new_storage(buf, sst, rsst) {
       ret = { t: "b", v: ieee > 0 };
       break;
     case 7:
-      ret = { t: "n", v: ieee / 86400 };
+      ret = { t: "n", v: ieee };
       break;
     case 8:
       ret = { t: "e", v: 0 };
@@ -518,7 +660,7 @@ function parse_new_storage(buf, sst, rsst) {
     case 9:
       {
         if (ridx > -1)
-          ret = { t: "s", v: rsst[ridx] };
+          ret = { t: "s", v: lut.rsst[ridx] };
         else
           throw new Error("Unsupported cell type ".concat(buf[1], " : ").concat(flags & 31, " : ").concat(buf[subarray](0, 4)));
       }
@@ -529,6 +671,10 @@ function parse_new_storage(buf, sst, rsst) {
     default:
       throw new Error("Unsupported cell type ".concat(buf[1], " : ").concat(flags & 31, " : ").concat(buf[subarray](0, 4)));
   }
+  if (zidx > -1)
+    numbers_format_cell(ret, t | 5 << 8, flags >> 13, lut.ofmt[zidx], lut.nfmt[zidx]);
+  if (t == 7)
+    ret.v /= 86400;
   return ret;
 }
 function write_new_storage(cell, sst) {
@@ -591,15 +737,16 @@ function write_old_storage(cell, sst) {
   dv.setUint32(4, flags, true);
   return out[subarray](0, l);
 }
-function parse_cell_storage(buf, sst, rsst) {
+function parse_cell_storage(buf, lut) {
   switch (buf[0]) {
     case 0:
     case 1:
     case 2:
     case 3:
-      return parse_old_storage(buf, sst, rsst, buf[0]);
+    case 4:
+      return parse_old_storage(buf, lut, buf[0]);
     case 5:
-      return parse_new_storage(buf, sst, rsst);
+      return parse_new_storage(buf, lut);
     default:
       throw new Error("Unsupported payload version ".concat(buf[0]));
   }
@@ -640,6 +787,11 @@ function parse_TST_TableDataList(M, root) {
           }).join("");
         }
         break;
+      case 2:
+        data[key] = parse_shallow(le[6][0].data);
+        break;
+      default:
+        throw type;
     }
   });
   return data;
@@ -704,7 +856,7 @@ function parse_TST_Tile(M, root) {
   };
 }
 function parse_TST_TableModelArchive(M, root, ws) {
-  var _a, _b, _c;
+  var _a, _b, _c, _d, _e, _f;
   var pb = parse_shallow(root.data);
   var range = { s: { r: 0, c: 0 }, e: { r: 0, c: 0 } };
   range.e.r = (varint_to_i32(pb[6][0].data) >>> 0) - 1;
@@ -716,8 +868,15 @@ function parse_TST_TableModelArchive(M, root, ws) {
   ws["!ref"] = encode_range(range);
   var dense = Array.isArray(ws);
   var store = parse_shallow(pb[4][0].data);
-  var sst = parse_TST_TableDataList(M, M[parse_TSP_Reference(store[4][0].data)][0]);
-  var rsst = ((_a = store[17]) == null ? void 0 : _a[0]) ? parse_TST_TableDataList(M, M[parse_TSP_Reference(store[17][0].data)][0]) : [];
+  var lut = numbers_lut_new();
+  if ((_a = store[4]) == null ? void 0 : _a[0])
+    lut.sst = parse_TST_TableDataList(M, M[parse_TSP_Reference(store[4][0].data)][0]);
+  if ((_b = store[11]) == null ? void 0 : _b[0])
+    lut.ofmt = parse_TST_TableDataList(M, M[parse_TSP_Reference(store[11][0].data)][0]);
+  if ((_c = store[17]) == null ? void 0 : _c[0])
+    lut.rsst = parse_TST_TableDataList(M, M[parse_TSP_Reference(store[17][0].data)][0]);
+  if ((_d = store[22]) == null ? void 0 : _d[0])
+    lut.nfmt = parse_TST_TableDataList(M, M[parse_TSP_Reference(store[22][0].data)][0]);
   var tile = parse_shallow(store[3][0].data);
   var _R = 0;
   tile[1].forEach(function(t) {
@@ -729,7 +888,7 @@ function parse_TST_TableModelArchive(M, root, ws) {
     var _tile = parse_TST_Tile(M, ref2);
     _tile.data.forEach(function(row, R) {
       row.forEach(function(buf, C) {
-        var res = parse_cell_storage(buf, sst, rsst);
+        var res = parse_cell_storage(buf, lut);
         if (res) {
           if (dense) {
             if (!ws[_R + R])
@@ -744,12 +903,12 @@ function parse_TST_TableModelArchive(M, root, ws) {
     });
     _R += _tile.nrows;
   });
-  if ((_b = store[13]) == null ? void 0 : _b[0]) {
+  if ((_e = store[13]) == null ? void 0 : _e[0]) {
     var ref = M[parse_TSP_Reference(store[13][0].data)][0];
     var mtype = varint_to_i32(ref.meta[1][0].data);
     if (mtype != 6144)
       throw new Error("Expected merge type 6144, found ".concat(mtype));
-    ws["!merges"] = (_c = parse_shallow(ref.data)) == null ? void 0 : _c[1].map(function(pi) {
+    ws["!merges"] = (_f = parse_shallow(ref.data)) == null ? void 0 : _f[1].map(function(pi) {
       var merge = parse_shallow(pi.data);
       var origin = u8_to_dataview(parse_shallow(merge[1][0].data)[1][0].data), size = u8_to_dataview(parse_shallow(merge[2][0].data)[1][0].data);
       return {
