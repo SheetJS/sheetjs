@@ -191,7 +191,7 @@ function WriteShift(t/*:number*/, val/*:string|number*/, f/*:?string*/)/*:any*/ 
 			}
 			size = val.length;
 		} else if(typeof $cptable !== 'undefined' && f == 'cpstr') {
-			var cpp = $cptable.utils.encode(current_ansi, val);
+			cpp = $cptable.utils.encode(current_ansi, val);
 			/* replace null bytes with _ when relevant */
       if(cpp.length == val.length) for(i = 0; i < val.length; ++i) if(cpp[i] == 0 && val.charCodeAt(i) != 0) cpp[i] = 0x5F;
       if(cpp.length == 2 * val.length) for(i = 0; i < val.length; ++i) if(cpp[2*i] == 0 && cpp[2*i+1] == 0 && val.charCodeAt(i) != 0) cpp[2*i] = 0x5F;
