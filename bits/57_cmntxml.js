@@ -55,7 +55,7 @@ function write_comments_xml(data/*::, opts*/) {
 		d[1].forEach(function(c) {
 			if(c.a) lastauthor = iauthor.indexOf(escapexml(c.a));
 			if(c.T) ++tcnt;
-			ts.push(writetag("t", c.t == null ? "" : escapexml(c.t)));
+			ts.push(c.t == null ? "" : escapexml(c.t));
 		});
 		if(tcnt === 0) {
 			d[1].forEach(function(c) {

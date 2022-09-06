@@ -282,7 +282,8 @@ function sheet_to_dbf(ws/*:Worksheet*/, opts/*:WriteOpts*/) {
 				case 'object': _guess = col[j] instanceof Date ? 'D' : 'C'; break;
 				default: _guess = 'C';
 			}
-			maxlen = Math.max(maxlen, String(col[j]).length);
+			/* TODO: cache the values instead of encoding twice */
+			maxlen = Math.max(maxlen, (typeof $cptable !== "undefined" && typeof col[j] == "string" ? $cptable.utils.encode(current_ansi, col[j]): String(col[j])).length);
 			guess = guess && guess != _guess ? 'C' : _guess;
 			//if(guess == 'C') break;
 		}
@@ -352,9 +353,11 @@ function sheet_to_dbf(ws/*:Worksheet*/, opts/*:WriteOpts*/) {
 						rout.write_shift(2, ("00"+data[i][j].getDate()).slice(-2), "sbcs");
 					} break;
 				case 'C':
+					var _l = rout.l;
 					var _s = String(data[i][j] != null ? data[i][j] : "").slice(0, colwidths[j]);
-					rout.write_shift(1, _s, "sbcs");
-					for(hcnt=0; hcnt < colwidths[j]-_s.length; ++hcnt) rout.write_shift(1, 0x20); break;
+					rout.write_shift(1, _s, "cpstr");
+					_l += colwidths[j] - rout.l;
+					for(hcnt=0; hcnt < _l; ++hcnt) rout.write_shift(1, 0x20); break;
 			}
 		}
 		// data
@@ -598,6 +601,7 @@ var SYLK = /*#__PURE__*/(function() {
 	}
 
 	function sheet_to_sylk(ws/*:Worksheet*/, opts/*:?any*/, wb/*:?WorkBook*/)/*:string*/ {
+		/* TODO: codepage */
 		var preamble/*:Array<string>*/ = ["ID;PSheetJS;N;E"], o/*:Array<string>*/ = [];
 		var r = safe_decode_range(ws['!ref']), cell/*:Cell*/;
 		var dense = Array.isArray(ws);

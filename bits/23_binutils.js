@@ -181,21 +181,29 @@ function WriteShift(t/*:number*/, val/*:string|number*/, f/*:?string*/)/*:any*/ 
 		/*:: if(typeof val !== 'string') throw new Error("unreachable"); */
 		for(i = 0; i != val.length; ++i) __writeUInt16LE(this, val.charCodeAt(i), this.l + 2 * i);
 		size = 2 * val.length;
-	} else if(f === 'sbcs') {
+	} else if(f === 'sbcs' || f == 'cpstr') {
 		if(typeof $cptable !== 'undefined' && current_ansi == 874) {
 			/* TODO: use tables directly, don't encode */
 			/*:: if(typeof val !== "string") throw new Error("unreachable"); */
 			for(i = 0; i != val.length; ++i) {
-				var cppayload = $cptable.utils.encode(current_ansi, val.charAt(i));
-				this[this.l + i] = cppayload[0];
+				var cpp = $cptable.utils.encode(current_ansi, val.charAt(i));
+				this[this.l + i] = cpp[0];
 			}
+			size = val.length;
+		} else if(typeof $cptable !== 'undefined' && f == 'cpstr') {
+			var cpp = $cptable.utils.encode(current_ansi, val);
+			/* replace null bytes with _ when relevant */
+      if(cpp.length == val.length) for(i = 0; i < val.length; ++i) if(cpp[i] == 0 && val.charCodeAt(i) != 0) cpp[i] = 0x5F;
+      if(cpp.length == 2 * val.length) for(i = 0; i < val.length; ++i) if(cpp[2*i] == 0 && cpp[2*i+1] == 0 && val.charCodeAt(i) != 0) cpp[2*i] = 0x5F;
+			for(i = 0; i < cpp.length; ++i) this[this.l + i] = cpp[i];
+			size = cpp.length;
 		} else {
 			/*:: if(typeof val !== 'string') throw new Error("unreachable"); */
 			val = val.replace(/[^\x00-\x7F]/g, "_");
 			/*:: if(typeof val !== 'string') throw new Error("unreachable"); */
 			for(i = 0; i != val.length; ++i) this[this.l + i] = (val.charCodeAt(i) & 0xFF);
+			size = val.length;
 		}
-		size = val.length;
 	} else if(f === 'hex') {
 		for(; i < t; ++i) {
 			/*:: if(typeof val !== "string") throw new Error("unreachable"); */
