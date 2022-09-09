@@ -2204,14 +2204,14 @@ describe('CSV', function() {
 				["3a", "3 a", "3 a-1"],
 				["3b", "3 b", "3 b-1"],
 				["3p", "3 P", "3 p-1"]
-			]
+			];
 			var ws = X.read(aoa.map(function(row) { return row.join(","); }).join("\n"), {type: "string", cellDates: true}).Sheets.Sheet1;
 			for(var R = 0; R < 3; ++R) {
 				assert.equal(get_cell(ws, "A" + (R+1)).v, aoa[R][0]);
 				assert.equal(get_cell(ws, "C" + (R+1)).v, aoa[R][2]);
 			}
 			assert.equal(get_cell(ws, "B2").v, "3 b");
-			var B1 = get_cell(ws, "B1"); console.log(B1); assert.equal(B1.t, "d"); assert.equal(B1.v.getHours(), 3);
+			var B1 = get_cell(ws, "B1"); assert.equal(B1.t, "d"); assert.equal(B1.v.getHours(), 3);
 			var B3 = get_cell(ws, "B3"); assert.equal(B3.t, "d"); assert.equal(B3.v.getHours(), 15);
 			ws = X.read(aoa.map(function(row) { return row.join(","); }).join("\n"), {type: "string", cellDates: false}).Sheets.Sheet1;
 			for(var R = 0; R < 3; ++R) {
@@ -2384,6 +2384,16 @@ describe('dbf', function() {
 			/* [F2", "w", "19170219"], */ ["G2", "v", 1231.4], ["H2", "v", 123234],
 			["I2", "v", true], ["L2", "v", "SheetJS"]
 		].forEach(function(r) { assert.equal(get_cell(ws, r[0])[r[1]], r[2]); });
+	});
+	if(!browser || typeof cptable !== 'undefined') it("Ś╫êëτ⌡ś and Š╫ěéτ⌡š", function() {
+		[ [620, "Ś╫êëτ⌡ś"], [895, "Š╫ěéτ⌡š"] ].forEach(function(r) {
+			var book = X.utils.book_new();
+			var sheet = X.utils.aoa_to_sheet([["ASCII", "encoded"], ["Test", r[1]]]);
+			X.utils.book_append_sheet(book, sheet, "sheet1");
+			var data = X.write(book, {type: TYPE, bookType: "dbf", codepage:r[0]});
+			var wb = X.read(data, {type: TYPE});
+			assert.equal(wb.Sheets.Sheet1.B2.v, r[1]);
+		});
 	});
 });
 import { JSDOM } from 'jsdom';

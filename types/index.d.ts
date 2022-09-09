@@ -144,7 +144,15 @@ export interface ParsingOptions extends CommonOptions {
     /** Input data encoding */
     type?: 'base64' | 'binary' | 'buffer' | 'file' | 'array' | 'string';
 
-    /** Default codepage */
+    /**
+     * Default codepage for legacy files
+     *
+     * This requires encoding support to be loaded.  It is automatically loaded
+     * in `xlsx.full.min.js` and in CommonJS / Extendscript, but an extra step
+     * is required in React / Angular / Webpack ESM deployments.
+     *
+     * Check the relevant guide https://docs.sheetjs.com/docs/getting-started/
+     */
     codepage?: number;
 
     /**
@@ -260,6 +268,17 @@ export interface WritingOptions extends CommonOptions, SheetOption {
 
     /** Override workbook properties on save */
     Props?: Properties;
+
+    /**
+     * Desired codepage for legacy file formats
+     *
+     * This requires encoding support to be loaded.  It is automatically loaded
+     * in `xlsx.full.min.js` and in CommonJS / Extendscript, but an extra step
+     * is required in React / Angular / Webpack / ESM deployments.
+     *
+     * Check the relevant guide https://docs.sheetjs.com/docs/getting-started/
+     */
+    codepage?: number;
 
     /** Base64 encoding of NUMBERS base for exports */
     numbers?: string;

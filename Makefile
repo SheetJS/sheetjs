@@ -148,7 +148,7 @@ test.ts: test.mts
 	node -pe 'var data = fs.readFileSync("'$<'", "utf8"); data.split("\n").map(function(l) { return l.replace(/^describe\((.*?)function\(\)/, "Deno.test($$1async function(t)").replace(/\b(?:it|describe)\((.*?)function\(\)/g, "await t.step($$1async function(t)").replace("assert.ok", "assert.assert"); }).join("\n")' > $@
 
 .PHONY: test-bun
-test-bun: hotcross.mjs ## Run Bun test suite
+test-bun: testbun.mjs ## Run Bun test suite
 	bun $<
 
 .PHONY: test-deno

@@ -2399,6 +2399,16 @@ describe('dbf', function() {
 			["I2", "v", true], ["L2", "v", "SheetJS"]
 		].forEach(function(r) { assert.equal(get_cell(ws, r[0])[r[1]], r[2]); });
 	});
+	if(!browser || typeof cptable !== 'undefined') it("Ś╫êëτ⌡ś and Š╫ěéτ⌡š", function() {
+		[ [620, "Ś╫êëτ⌡ś"], [895, "Š╫ěéτ⌡š"] ].forEach(function(r) {
+			var book = X.utils.book_new();
+			var sheet = X.utils.aoa_to_sheet([["ASCII", "encoded"], ["Test", r[1]]]);
+			X.utils.book_append_sheet(book, sheet, "sheet1");
+			var data = X.write(book, {type: TYPE, bookType: "dbf", codepage:r[0]});
+			var wb = X.read(data, {type: TYPE});
+			assert.equal(wb.Sheets.Sheet1.B2.v, r[1]);
+		});
+	});
 });
 var JSDOM = null;
 // $FlowIgnore
