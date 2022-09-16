@@ -28,10 +28,12 @@
 	"exports": {
 		".": {
 			"import": "./xlsx.mjs",
-			"require": "./xlsx.js"
+			"require": "./xlsx.js",
+			"types": "./types/index.d.ts"
 		},
 		"./xlsx.mjs": {
-			"import": "./xlsx.mjs"
+			"import": "./xlsx.mjs",
+			"types": "./types/index.d.ts"
 		},
 		"./dist/xlsx.zahl": {
 			"import": "./dist/xlsx.zahl.mjs",
