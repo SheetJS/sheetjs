@@ -17,6 +17,8 @@ declare var CFB: typeof _CFB;
 //<<import { utils } from "../../";
 //<<const { encode_cell, encode_range, book_new, book_append_sheet } = utils;
 
+/* see https://bugs.webkit.org/show_bug.cgi?id=243148 -- affects iOS Safari */
+declare var Buffer: any; // Buffer is typeof-guarded but TS still needs this :(
 var subarray: "subarray" | "slice" = (() => {
 	try {
 	if(typeof Uint8Array == "undefined") return "slice";
@@ -39,7 +41,9 @@ function stru8(str: string): Uint8Array { return typeof TextEncoder != "undefine
 //<<export { u8str, stru8 };
 
 function u8contains(body: Uint8Array, search: Uint8Array): boolean {
-	outer: for(var L = 0; L <= body.length - search.length; ++L) {
+	var L = body.indexOf(search[0]);
+	if(L == -1) return false;
+	outer: for(; L <= body.length - search.length; ++L) {
 		for(var j = 0; j < search.length; ++j) if(body[L+j] != search[j]) continue outer;
 		return true;
 	}
@@ -119,6 +123,17 @@ function write_varint49(v: number): Uint8Array {
 		usz[L-1] |= 0x80; usz[L] = ((v/0x1000000) >>> 21) & 0x7F; ++L;
 	}
 	return usz[subarray](0, L);
+}
+/** Parse a repeated varint [packed = true] field */
+function parse_packed_varints(buf: Uint8Array): number[] {
+	var ptr: Ptr = [0];
+	var out: number[] = [];
+	while(ptr[0] < buf.length) out.push(parse_varint49(buf, ptr));
+	return out;
+}
+/** Write a repeated varint [packed = true] field */
+function write_packed_varints(nums: number[]): Uint8Array {
+	return u8concat(nums.map(x => write_varint49(x)));
 }
 //<<export { parse_varint49, write_varint49 };
 
@@ -418,20 +433,20 @@ function numbers_format_cell(cell: CellObject, t: number, flags: number, ofmt: P
 			dd = d / 60;
 			if(dmax > 8) { dd |= 0; d -= 60 * dd; }
 			zstr.push((dmin >= 8 ? "[m]" : "m") + '"m"');
-			if(dstyle == 0) dstr.push(((dmin == 8 && dmax == 8 || dd >= 10) ? "" : "0") + dd)
+			if(dstyle == 0) dstr.push(((dmin == 8 && dmax == 8 || dd >= 10) ? "" : "0") + dd);
 			else dstr.push(dd + (dstyle == 2 ? " minute" + (dd == 1 ? "" : "s") : dstyle == 1 ? "m" : ""));
 		}
 		if(dmin <= 16 && dmax >= 16) {
 			dd = d;
 			if(dmax > 16) { dd |= 0; d -= dd; }
 			zstr.push((dmin >= 16 ? "[s]" : "s") + '"s"');
-			if(dstyle == 0) dstr.push((dmax == 16 && dmin == 16 || dd >= 10 ? "" : "0") + dd)
+			if(dstyle == 0) dstr.push((dmax == 16 && dmin == 16 || dd >= 10 ? "" : "0") + dd);
 			else dstr.push(dd + (dstyle == 2 ? " second" + (dd == 1 ? "" : "s") : dstyle == 1 ? "s" : ""));
 		}
 		if(dmax >= 32) {
 			dd = Math.round(1000 * d);
 			if(dmin < 32) zstr.push(".000" + '"ms"');
-			if(dstyle == 0) dstr.push((dd >= 100 ? "" : dd >= 10 ? "0" : "00") + dd)
+			if(dstyle == 0) dstr.push((dd >= 100 ? "" : dd >= 10 ? "0" : "00") + dd);
 			else dstr.push(dd + (dstyle == 2 ? " millisecond" + (dd == 1 ? "" : "s") : dstyle == 1 ? "ms" : ""));
 		}
 		cell.w = dstr.join(dstyle == 0 ? ":" : " "); cell.z = zstr.join(dstyle == 0 ? '":"': " ");
@@ -486,44 +501,51 @@ function parse_old_storage(buf: Uint8Array, lut: DataLUT, v: 0|1|2|3|4): CellObj
 /** Parse "new storage" (version 5) */
 function parse_new_storage(buf: Uint8Array, lut: DataLUT): CellObject | void {
 	var dv = u8_to_dataview(buf);
-	var flags = dv.getUint32(8, true);
-
-	/* TODO: find the correct field position of number formats, formulae, etc */
+	// TODO: bytes 2:3 appear to be unused?
+	var flags = dv.getUint32(4, true);
+	var fields = dv.getUint32(8, true);
 	var doff = 12;
 
 	var ridx = -1, sidx = -1, zidx = -1, d128 = NaN, ieee = NaN, dt = new Date(2001, 0, 1);
 
-	if(flags & 0x0001) { d128 = readDecimal128LE(buf, doff); doff += 16; }
-	if(flags & 0x0002) { ieee = dv.getFloat64(doff, true); doff += 8; }
-	if(flags & 0x0004) { dt.setTime(dt.getTime() +  dv.getFloat64(doff, true) * 1000); doff += 8; }
-	if(flags & 0x0008) { sidx = dv.getUint32(doff,  true); doff += 4; }
-	if(flags & 0x0010) { ridx = dv.getUint32(doff,  true); doff += 4; }
-
-	doff += popcnt(flags & 0x1FE0) * 4;
-
-	/* TODO: stress test if a cell can have multiple sub-type formats */
-	if(flags & 0x7E000) { if(zidx == -1) zidx = dv.getUint32(doff, true); doff += 4; }
+	//          0x00001F data
+	if(fields & 0x000001) { d128 = readDecimal128LE(buf, doff); doff += 16; }
+	if(fields & 0x000002) { ieee = dv.getFloat64(doff, true); doff += 8; }
+	if(fields & 0x000004) { dt.setTime(dt.getTime() +  dv.getFloat64(doff, true) * 1000); doff += 8; }
+	if(fields & 0x000008) { sidx = dv.getUint32(doff,  true); doff += 4; }
+	if(fields & 0x000010) { ridx = dv.getUint32(doff,  true); doff += 4; }
 
 	var ret: CellObject;
 	var t = buf[1];
 	switch(t) {
-		case 0: return void 0; // return { t: "z" }; // blank?
-		case 2: ret = { t: "n", v: d128 }; break; // number
-		case 3: ret = { t: "s", v: lut.sst[sidx] }; break; // string
-		case 5: ret = { t: "d", v: dt }; break; // date-time
-		case 6: ret = { t: "b", v: ieee > 0 }; break; // boolean
-		case 7: ret = { t: "n", v: ieee }; break;  // duration in seconds TODO: emit [hh]:[mm] style format with adjusted value
-		case 8: ret = { t: "e", v: 0}; break; // "formula error" TODO: enumerate and map errors to csf equivalents
-		case 9: { // "rich text"
-			if(ridx > -1) ret = { t: "s", v: lut.rsst[ridx] };
-			else throw new Error(`Unsupported cell type ${buf[1]} : ${flags & 0x1F} : ${buf[subarray](0,4)}`);
-		} break;
+		case  0: return void 0; // return { t: "z" }; // blank?
+		case  2: ret = { t: "n", v: d128 }; break; // number
+		case  3: ret = { t: "s", v: lut.sst[sidx] }; break; // string
+		case  5: ret = { t: "d", v: dt }; break; // date-time
+		case  6: ret = { t: "b", v: ieee > 0 }; break; // boolean
+		case  7: ret = { t: "n", v: ieee }; break;  // duration in "s", fixed later
+		case  8: ret = { t: "e", v: 0 }; break; // "formula error" TODO: enumerate and map errors to csf equivalents
+		case  9: ret = { t: "s", v: lut.rsst[ridx] }; break;// "rich text"
 		case 10: ret = { t: "n", v: d128 }; break; // currency
-		default: throw new Error(`Unsupported cell type ${buf[1]} : ${flags & 0x1F} : ${buf[subarray](0,4)}`);
+		default: throw new Error(`Unsupported cell type ${buf[1]} : ${fields & 0x1F} : ${buf[subarray](0,4)}`);
 	}
 
-	if(zidx > -1) numbers_format_cell(ret, t | (5<<8), flags >> 13, lut.ofmt[zidx], lut.nfmt[zidx] );
-	if(t == 7) (ret.v as number) /= 86400;
+	//          0x0001E0 styling
+
+	//          0x000E00 formula
+
+	//          0x001000 something related to cell format
+	doff += popcnt(fields & 0x001FE0) * 4;
+
+	/* TODO: stress test if a cell can have multiple sub-type formats */
+	//          0x07E000 formats
+	if(fields & 0x07E000) { if(zidx == -1) zidx = dv.getUint32(doff, true); doff += 4; }
+
+	//          0x080000 comment
+	//          0x100000 warning
+
+	if(zidx > -1) numbers_format_cell(ret, t | (5<<8), fields >> 13, lut.ofmt[zidx], lut.nfmt[zidx] );
+	if(t == 7) (ret.v as number) /= 86400; // duration -> SheetJS absolute time
 	return ret;
 }
 
@@ -542,10 +564,10 @@ function write_new_storage(cell: CellObject, sst: string[]): Uint8Array {
 	dv.setUint32(8, flags, true);
 	return out[subarray](0, l);
 }
-/** Write a cell "old storage" (version 3) */
+/** Write a cell "old storage" (version 4) */
 function write_old_storage(cell: CellObject, sst: string[]): Uint8Array {
 	var out = new Uint8Array(32), dv = u8_to_dataview(out), l = 12, flags = 0;
-	out[0] = 3;
+	out[0] = 4;
 	switch(cell.t) {
 		case "n": out[2] = 2; dv.setFloat64(l, cell.v as number, true); flags |= 0x20; l += 8; break;
 		case "b": out[2] = 6; dv.setFloat64(l, cell.v ? 1 : 0, true); flags |= 0x20; l += 8; break;
@@ -554,7 +576,7 @@ function write_old_storage(cell: CellObject, sst: string[]): Uint8Array {
 			out[2] = 3; dv.setUint32(l, sst.indexOf(cell.v as string), true); flags |= 0x10; l += 4; break;
 		default: throw "unsupported cell type " + cell.t;
 	}
-	dv.setUint32(4, flags, true);
+	dv.setUint32(8, flags, true);
 	return out[subarray](0, l);
 }
 //<<export { write_new_storage, write_old_storage };
@@ -914,49 +936,37 @@ function write_tile_row(tri: ProtoMessage, data: any[], SST: string[], wide: boo
 /** Write IWA Message */
 function write_iwam(type: number, payload: Uint8Array): IWAMessage {
 	return {
-		meta: [ [], [ { type: 0, data: write_varint49(type) } ] ],
+		meta: [ [],
+			[ { type: 0, data: write_varint49(type) } ],
+			// [ { type: 2, data: new Uint8Array([1, 0, 5]) }]
+		],
 		data: payload
 	};
 }
 
-var USE_WIDE_ROWS = true;
-/** Write NUMBERS workbook */
-function write_numbers_iwa(wb: WorkBook, opts?: WritingOptions): CFB$Container {
-	if(!opts || !opts.numbers) throw new Error("Must pass a `numbers` option -- check the README");
+type Dependents = {[x:number]: DependentInfo; last?: number;};
 
-	/* TODO: support multiple worksheets, larger ranges, more data types, etc */
-	var ws = wb.Sheets[wb.SheetNames[0]];
-	if(wb.SheetNames.length > 1) console.error("The Numbers writer currently writes only the first table");
-	var range = decode_range(ws["!ref"] as string);
-	range.s.r = range.s.c = 0;
+function get_unique_msgid(dep: DependentInfo, dependents: Dependents) {
+	if(!dependents.last) dependents.last = 927262;
+	for(var i = dependents.last; i < 2000000; ++i) if(!dependents[i]) {
+		dependents[dependents.last = i] = dep;
+		return i;
+	}
+	throw new Error("Too many messages");
+}
 
-	/* Actual NUMBERS 12.0 limit ALL1000000 */
-	var trunc = false;
-	if(range.e.c > 999) { trunc = true; range.e.c = 999; }
-	if(range.e.r > 254 /* 1000000 */) { trunc = true; range.e.r = 254 /* 1000000 */; }
-	if(trunc) console.error(`The Numbers writer is currently limited to ${encode_range(range)}`);
-
-	var data = sheet_to_json<any>(ws, { range, header: 1 });
-	var SST = ["~Sh33tJ5~"];
-	data.forEach(row => row.forEach(cell => { if(typeof cell == "string") SST.push(cell); }))
-
-	var dependents: {[x:number]: DependentInfo} = {};
+/** Build an approximate dependency tree */
+function build_numbers_deps(cfb: CFB$Container): Dependents {
+	var dependents: Dependents = {};
 	var indices: number[] = [];
 
-	/* read template and build packet metadata */
-	var cfb: CFB$Container = CFB.read(opts.numbers, { type: "base64" });
 	cfb.FileIndex.map((fi, idx): [CFB$Entry, string] => ([fi, cfb.FullPaths[idx]])).forEach(row => {
 		var fi = row[0], fp = row[1];
 		if(fi.type != 2) return;
 		if(!fi.name.match(/\.iwa/)) return;
+		if(fi.name.match(/OperationStorage/)) return;
 
-		/* Reframe .iwa files */
-		var old_content = fi.content;
-		var raw1 = decompress_iwa_file(old_content as Uint8Array);
-
-		var x = parse_iwa_file(raw1);
-
-		x.forEach(packet => {
+		parse_iwa_file(decompress_iwa_file(fi.content as Uint8Array)).forEach(packet => {
 			indices.push(packet.id);
 			dependents[packet.id] = { deps: [], location: fp, type: varint_to_i32(packet.messages[0].meta[1][0].data) };
 		});
@@ -967,190 +977,153 @@ function write_numbers_iwa(wb: WorkBook, opts?: WritingOptions): CFB$Container {
 	var indices_varint: Array<[number, Uint8Array]> = indices.filter(x => x > 1).map(x => [x, write_varint49(x)] );
 
 	/* build dependent tree */
-	cfb.FileIndex.map((fi, idx): [CFB$Entry, string] => ([fi, cfb.FullPaths[idx]])).forEach(row => {
-		var fi = row[0];
+	cfb.FileIndex.forEach(fi => {
 		if(!fi.name.match(/\.iwa/)) return;
-		var x = parse_iwa_file(decompress_iwa_file(fi.content as Uint8Array));
-
-		x.forEach(ia => {
+		if(fi.name.match(/OperationStorage/)) return;
+		parse_iwa_file(decompress_iwa_file(fi.content as Uint8Array)).forEach(ia => {
+			// this is a huge hack based on the observation that most messages of interest have id > 900000
+			// TODO: use the actual references
 			indices_varint.forEach(ivi => {
 				if(ia.messages.some(mess => varint_to_i32(mess.meta[1][0].data) != 11006 && u8contains(mess.data, ivi[1]))) {
 					dependents[ivi[0]].deps.push(ia.id);
 				}
-			})
+			});
 		});
 	});
 
-	function get_unique_msgid(dep: DependentInfo) {
-		for(var i = 927262; i < 2000000; ++i) if(!dependents[i]) {
-			dependents[i] = dep;
-			return i;
-		}
-		throw new Error("Too many messages");
-	}
+	return dependents;
+}
+
+/** Write NUMBERS workbook */
+function write_numbers_iwa(wb: WorkBook, opts?: WritingOptions): CFB$Container {
+	if(!opts || !opts.numbers) throw new Error("Must pass a `numbers` option -- check the README");
+
+	/* read template and build packet metadata */
+	var cfb: CFB$Container = CFB.read(opts.numbers, { type: "base64" });
+	var dependents: Dependents = build_numbers_deps(cfb);
 
 	/* .TN.DocumentArchive */
-	var entry = CFB.find(cfb, dependents[1].location);
-	if(!entry) throw `Could not find ${dependents[1].location} in Numbers template`;
-	var x = parse_iwa_file(decompress_iwa_file(entry.content as Uint8Array));
-	var docroot!: IWAArchiveInfo;
-	for(var xi = 0; xi < x.length; ++xi) {
-		var packet = x[xi];
-		if(packet.id == 1) docroot = packet;
-	}
+	var cfb_DA = CFB.find(cfb, dependents[1].location);
+	if(!cfb_DA) throw `Could not find ${dependents[1].location} in Numbers template`;
+	var iwa_DA = parse_iwa_file(decompress_iwa_file(cfb_DA.content as Uint8Array));
+	var docroot: IWAArchiveInfo = iwa_DA.find(packet => packet.id == 1) as IWAArchiveInfo;
 	if(docroot == null) throw `Could not find message ${1} in Numbers template`;
+	var sheetrefs = mappa(parse_shallow(docroot.messages[0].data)[1], parse_TSP_Reference);
+	wb.SheetNames.forEach((name, idx) => write_numbers_ws(cfb, dependents, wb.Sheets[name], name, idx, sheetrefs[idx]));
+	return cfb;
+}
+
+/** Find a particular message by ID, perform actions and commit */
+function numbers_iwa_doit(cfb: CFB$Container, deps: Dependents, id: number, cb:(ai:IWAArchiveInfo, x:IWAArchiveInfo[])=>void) {
+	var entry = CFB.find(cfb, deps[id].location);
+	if(!entry) throw `Could not find ${deps[id].location} in Numbers template`;
+	var x = parse_iwa_file(decompress_iwa_file(entry.content as Uint8Array));
+	var ainfo: IWAArchiveInfo = x.find(packet => packet.id == id) as IWAArchiveInfo;
+	// TODO: it's assumed this exists
+	cb(ainfo, x);
+	entry.content = compress_iwa_file(write_iwa_file(x)); entry.size = entry.content.length;
+}
+
+/** Find a particular message by ID */
+function numbers_iwa_find(cfb: CFB$Container, deps: Dependents, id: number) {
+	var entry = CFB.find(cfb, deps[id].location);
+	if(!entry) throw `Could not find ${deps[id].location} in Numbers template`;
+	var x = parse_iwa_file(decompress_iwa_file(entry.content as Uint8Array));
+	var ainfo: IWAArchiveInfo = x.find(packet => packet.id == id) as IWAArchiveInfo;
+	// TODO: it's assumed this exists
+	return ainfo;
+}
+
+/** Write NUMBERS worksheet */
+function write_numbers_ws(cfb: CFB$Container, deps: Dependents, ws: WorkSheet, wsname: string, sheetidx: number, rootref: number): void {
+	/* TODO: support multiple worksheets, larger ranges, more data types, etc */
+	if(sheetidx >= 1) return console.error("The Numbers writer currently writes only the first table");
 
 	/* .TN.SheetArchive */
-	var sheetrootref = parse_TSP_Reference(parse_shallow(docroot.messages[0].data)[1][0].data);
-	entry = CFB.find(cfb, dependents[sheetrootref].location);
-	if(!entry) throw `Could not find ${dependents[sheetrootref].location} in Numbers template`;
-	x = parse_iwa_file(decompress_iwa_file(entry.content as Uint8Array));
-	for(xi = 0; xi < x.length; ++xi) {
-		packet = x[xi];
-		if(packet.id == sheetrootref) docroot = packet;
-	}
+	var drawables: number[] = [];
+	numbers_iwa_doit(cfb, deps, rootref, (docroot) => {
 
-	/* write worksheet name */
-	var sheetref = parse_shallow(docroot.messages[0].data);
-	{
-		sheetref[1] = [ { type: 2, data: stru8(wb.SheetNames[0]) }];
-	}
-	docroot.messages[0].data = write_shallow(sheetref);
-	entry.content = compress_iwa_file(write_iwa_file(x)); entry.size = entry.content.length;
+		var sheetref = parse_shallow(docroot.messages[0].data);
+		{
+			/* write worksheet name */
+			sheetref[1] = [ { type: 2, data: stru8(wsname) }];
+			drawables = mappa(sheetref[2], parse_TSP_Reference);
+		}
+		docroot.messages[0].data = write_shallow(sheetref);
+	});
 
 	/* .TST.TableInfoArchive */
-	sheetrootref = parse_TSP_Reference(sheetref[2][0].data);
-	entry = CFB.find(cfb, dependents[sheetrootref].location);
-	if(!entry) throw `Could not find ${dependents[sheetrootref].location} in Numbers template`;
-	x = parse_iwa_file(decompress_iwa_file(entry.content as Uint8Array));
-	for(xi = 0; xi < x.length; ++xi) {
-		packet = x[xi];
-		if(packet.id == sheetrootref) docroot = packet;
-	}
-
+	// TODO: verify that the first entry is actually a table
+	// TODO: eventually support multiple tables (and replicate in QPW)
+	var tia: IWAArchiveInfo = numbers_iwa_find(cfb, deps, drawables[0]);
 	/* .TST.TableModelArchive */
-	sheetrootref = parse_TSP_Reference(parse_shallow(docroot.messages[0].data)[2][0].data);
-	entry = CFB.find(cfb, dependents[sheetrootref].location);
-	if(!entry) throw `Could not find ${dependents[sheetrootref].location} in Numbers template`;
-	x = parse_iwa_file(decompress_iwa_file(entry.content as Uint8Array));
-	for(xi = 0; xi < x.length; ++xi) {
-		packet = x[xi];
-		if(packet.id == sheetrootref) docroot = packet;
-	}
+	var tmaref = parse_TSP_Reference(parse_shallow(tia.messages[0].data)[2][0].data);
+	numbers_iwa_doit(cfb, deps, tmaref, (docroot, x) => write_numbers_tma(cfb, deps, ws, docroot, x, tmaref));
+}
 
-	var pb = parse_shallow(docroot.messages[0].data);
+var USE_WIDE_ROWS = true;
+
+/** Write .TST.TableModelArchive */
+function write_numbers_tma(cfb: CFB$Container, deps: Dependents, ws, tmaroot: IWAArchiveInfo, tmafile: IWAArchiveInfo[], tmaref: number) {
+	var range = decode_range(ws["!ref"] as string);
+	range.s.r = range.s.c = 0;
+
+	var trunc = false;
+	/* Actual NUMBERS 12.0 range limit ALL1000000 */
+	if(range.e.c > 999) { trunc = true; range.e.c = 999; }
+	if(range.e.r > 999999) { trunc = true; range.e.r = 999999; }
+	if(trunc) console.error(`The Numbers writer is currently limited to ${encode_range(range)}`);
+
+	/* preprocess data and build up shared string table */
+	var data = sheet_to_json<any>(ws, { range, header: 1 });
+	var SST = ["~Sh33tJ5~"];
+	data.forEach(row => row.forEach(cell => { if(typeof cell == "string") SST.push(cell); }));
+
+	/* identifier for finding the TableModelArchive in the archive */
+	var loc = deps[tmaref].location;
+	loc = loc.replace(/^Root Entry\//,""); // NOTE: the Root Entry prefix is an artifact of the CFB container library
+	loc = loc.replace(/^Index\//, "").replace(/\.iwa$/,"");
+
+	var pb = parse_shallow(tmaroot.messages[0].data);
 	{
-		pb[6][0].data = write_varint49(range.e.r + 1);
-		pb[7][0].data = write_varint49(range.e.c + 1);
-		// pb[22] = [ { type: 0, data: write_varint49(1) } ]; // enables table display
+		pb[6][0].data = write_varint49(range.e.r + 1); // number_of_rows
+		pb[7][0].data = write_varint49(range.e.c + 1); // number_of_columns
+		// pb[22] = [ { type: 0, data: write_varint49(1) } ]; // displays table name in sheet
 
-		var cruidsref = parse_TSP_Reference(pb[46][0].data);
-		var oldbucket = CFB.find(cfb, dependents[cruidsref].location);
-		if(!oldbucket) throw `Could not find ${dependents[cruidsref].location} in Numbers template`;
-		var _x = parse_iwa_file(decompress_iwa_file(oldbucket.content as Uint8Array));
-		{
-			for(var j = 0; j < _x.length; ++j) {
-				if(_x[j].id == cruidsref) break;
-			}
-			if(_x[j].id != cruidsref) throw "Bad ColumnRowUIDMapArchive";
-			/* .TST.ColumnRowUIDMapArchive */
-			var cruids = parse_shallow(_x[j].messages[0].data);
-			cruids[1] = []; cruids[2] = [], cruids[3] = [];
-			for(var C = 0; C <= range.e.c; ++C) {
-				cruids[1].push({type: 2, data: write_shallow([ [],
-					[ { type: 0, data: write_varint49(C + 420690) } ],
-					[ { type: 0, data: write_varint49(C + 420690) } ]
-				])});
-				cruids[2].push({type: 0, data: write_varint49(C)});
-				cruids[3].push({type: 0, data: write_varint49(C)});
-			}
-			cruids[4] = []; cruids[5] = [], cruids[6] = [];
-			for(var R = 0; R <= range.e.r; ++R) {
-				cruids[4].push({type: 2, data: write_shallow([ [],
-					[ { type: 0, data: write_varint49(R + 726270)} ],
-					[ { type: 0, data: write_varint49(R + 726270)} ]
-				])});
-				cruids[5].push({type: 0, data: write_varint49(R)});
-				cruids[6].push({type: 0, data: write_varint49(R)});
-			}
-			_x[j].messages[0].data = write_shallow(cruids);
-		}
-		oldbucket.content = compress_iwa_file(write_iwa_file(_x)); oldbucket.size = oldbucket.content.length;
-		delete pb[46]; // forces Numbers to refresh cell table
+		delete pb[46]; // base_column_row_uids -- deleting forces Numbers to refresh cell table
 
+		/* .TST.DataStore */
 		var store = parse_shallow(pb[4][0].data);
 		{
-			store[7][0].data = write_varint49(range.e.r + 1);
-			var row_headers = parse_shallow(store[1][0].data);
-			var row_header_ref = parse_TSP_Reference(row_headers[2][0].data);
-			oldbucket = CFB.find(cfb, dependents[row_header_ref].location);
-			if(!oldbucket) throw `Could not find ${dependents[cruidsref].location} in Numbers template`;
-			_x = parse_iwa_file(decompress_iwa_file(oldbucket.content as Uint8Array));
-			{
-				if(_x[0].id != row_header_ref) throw "Bad HeaderStorageBucket";
-				var base_bucket = parse_shallow(_x[0].messages[0].data);
-				if(base_bucket?.[2]?.[0]) for(R = 0; R < data.length; ++R) {
+			/* rewrite row headers */
+			var row_header_ref = parse_TSP_Reference(parse_shallow(store[1][0].data)[2][0].data);
+			numbers_iwa_doit(cfb, deps, row_header_ref, (rowhead, _x) => {
+				var base_bucket = parse_shallow(rowhead.messages[0].data);
+				if(base_bucket?.[2]?.[0]) for(var R = 0; R < data.length; ++R) {
 					var _bucket = parse_shallow(base_bucket[2][0].data);
 					_bucket[1][0].data = write_varint49(R);
 					_bucket[4][0].data = write_varint49(data[R].length);
 					base_bucket[2][R] = { type: base_bucket[2][0].type, data: write_shallow(_bucket) };
 				}
-				_x[0].messages[0].data = write_shallow(base_bucket);
-			}
-			oldbucket.content = compress_iwa_file(write_iwa_file(_x)); oldbucket.size = oldbucket.content.length;
+				rowhead.messages[0].data = write_shallow(base_bucket);
+			});
 
+			/* rewrite col headers */
 			var col_header_ref = parse_TSP_Reference(store[2][0].data);
-			oldbucket = CFB.find(cfb, dependents[col_header_ref].location);
-			if(!oldbucket) throw `Could not find ${dependents[cruidsref].location} in Numbers template`;
-			_x = parse_iwa_file(decompress_iwa_file(oldbucket.content as Uint8Array));
-			{
-				if(_x[0].id != col_header_ref) throw "Bad HeaderStorageBucket";
-				base_bucket = parse_shallow(_x[0].messages[0].data);
-				for(C = 0; C <= range.e.c; ++C) {
-					_bucket = parse_shallow(base_bucket[2][0].data);
+			numbers_iwa_doit(cfb, deps, col_header_ref, (colhead, _x) => {
+				var base_bucket = parse_shallow(colhead.messages[0].data);
+				for(var C = 0; C <= range.e.c; ++C) {
+					var _bucket = parse_shallow(base_bucket[2][0].data);
 					_bucket[1][0].data = write_varint49(C);
 					_bucket[4][0].data = write_varint49(range.e.r + 1);
 					base_bucket[2][C] = { type: base_bucket[2][0].type, data: write_shallow(_bucket) };
 				}
-				_x[0].messages[0].data = write_shallow(base_bucket);
-			}
-			oldbucket.content = compress_iwa_file(write_iwa_file(_x)); oldbucket.size = oldbucket.content.length;
+				colhead.messages[0].data = write_shallow(base_bucket);
+			});
 
-			if(ws["!merges"]) {
-				var mergeid = get_unique_msgid({
-					type: 6144,
-					deps: [sheetrootref],
-					location: dependents[sheetrootref].location
-				});
-				var mergedata: ProtoMessage = [ [], [] ];
-				ws["!merges"].forEach(m => { mergedata[1].push({ type: 2, data: write_shallow([ [],
-					[{ type: 2, data: write_shallow([ [],
-						[{ type: 5, data: new Uint8Array(new Uint16Array([m.s.r, m.s.c]).buffer) }],
-					])}],
-					[{ type: 2, data: write_shallow([ [],
-						[{ type: 5, data: new Uint8Array(new Uint16Array([m.e.r - m.s.r + 1, m.e.c - m.s.c + 1]).buffer) }],
-					]) }]
-				]) }); });
-				store[13] = [ { type: 2, data: write_TSP_Reference(mergeid) } ];
-				x.push({
-					id: mergeid,
-					messages: [ write_iwam(6144, write_shallow(mergedata)) ]
-				});
-			}
-
-			/* ref to string table */
+			/* rebuild shared string table */
 			var sstref = parse_TSP_Reference(store[4][0].data);
-			(() => {
-				var sentry = CFB.find(cfb, dependents[sstref].location);
-				if(!sentry) throw `Could not find ${dependents[sstref].location} in Numbers template`;
-				var sx = parse_iwa_file(decompress_iwa_file(sentry.content as Uint8Array));
-				var sstroot!: IWAArchiveInfo;
-				for(var sxi = 0; sxi < sx.length; ++sxi) {
-					var packet = sx[sxi];
-					if(packet.id == sstref) sstroot = packet;
-				}
-				if(sstroot == null) throw `Could not find message ${sstref} in Numbers template`;
-
+			numbers_iwa_doit(cfb, deps, sstref, (sstroot) => {
 				var sstdata = parse_shallow(sstroot.messages[0].data);
 				{
 					sstdata[3] = [];
@@ -1163,62 +1136,228 @@ function write_numbers_iwa(wb: WorkBook, opts?: WritingOptions): CFB$Container {
 					});
 				}
 				sstroot.messages[0].data = write_shallow(sstdata);
+			});
 
-				sentry.content = compress_iwa_file(write_iwa_file(sx)); sentry.size = sentry.content.length;
-			})();
+			var rbtree = parse_shallow(store[9][0].data);
+			rbtree[1] = [];
 
-			var tile = parse_shallow(store[3][0].data); // TileStorage
+			/* .TST.TileStorage */
+			var tilestore = parse_shallow(store[3][0].data);
 			{
-				var t = tile[1][0];
-				tile[3] = [{type: 0, data: write_varint49(USE_WIDE_ROWS ? 1 : 0)}];
-				var tl = parse_shallow(t.data); // first Tile
+				/* number of rows per tile */
+				var tstride = 256; // NOTE: if this is not 256, Numbers will recalculate
+				tilestore[2] = [{type: 0, data: write_varint49(tstride)}];
+				//tilestore[3] = [{type: 0, data: write_varint49(USE_WIDE_ROWS ? 1 : 0)}]; // elicits a modification message
+
+				var tileref = parse_TSP_Reference(parse_shallow(tilestore[1][0].data)[2][0].data);
+				var save_token = 0;
+
+				/* remove existing tile */
 				{
-					var tileref = parse_TSP_Reference(tl[2][0].data);
-					(() => {
-						var tentry = CFB.find(cfb, dependents[tileref].location);
-						if(!tentry) throw `Could not find ${dependents[tileref].location} in Numbers template`;
-						var tx = parse_iwa_file(decompress_iwa_file(tentry.content as Uint8Array));
-						var tileroot!: IWAArchiveInfo;
-						for(var sxi = 0; sxi < tx.length; ++sxi) {
-							var packet = tx[sxi];
-							if(packet.id == tileref) tileroot = packet;
-						}
+					CFB.utils.cfb_del(cfb, deps[tileref].location);
 
-						// .TST.Tile
-						var tiledata = parse_shallow(tileroot.messages[0].data);
-						{
-							delete tiledata[6]; delete tile[7];
-							var rowload = new Uint8Array(tiledata[5][0].data);
-							tiledata[5] = [];
-							//var cnt = 0;
-							for(var R = 0; R <= range.e.r; ++R) {
-								var tilerow = parse_shallow(rowload);
-								/* cnt += */ write_tile_row(tilerow, data[R], SST, USE_WIDE_ROWS);
-								tilerow[1][0].data = write_varint49(R);
-								tiledata[5].push({data: write_shallow(tilerow), type: 2});
-							}
-							tiledata[1] = [{type: 0, data: write_varint49(0 /*range.e.c + 1*/)}];
-							tiledata[2] = [{type: 0, data: write_varint49(0 /*range.e.r + 1*/)}];
-							tiledata[3] = [{type: 0, data: write_varint49(0 /*cnt*/)}];
-							tiledata[4] = [{type: 0, data: write_varint49(range.e.r + 1)}];
-							tiledata[6] = [{type: 0, data: write_varint49(5)}];
-							tiledata[7] = [{type: 0, data: write_varint49(1)}];
-							tiledata[8] = [{type: 0, data: write_varint49(USE_WIDE_ROWS ? 1 : 0)}];
-						}
-						tileroot.messages[0].data = write_shallow(tiledata);
+					/* remove existing tile from reference -- TODO: can this have an id other than 2? */
+					numbers_iwa_doit(cfb, deps, 2, (ai => {
+						var mlist = parse_shallow(ai.messages[0].data);
 
-						tentry.content = compress_iwa_file(write_iwa_file(tx)); tentry.size = tentry.content.length;
-					})();
+						var lst = mlist[3].filter(m => parse_varint49(parse_shallow(m.data)[1][0].data) == tileref);
+						if(lst && lst.length > 0) save_token = parse_varint49(parse_shallow(lst[0].data)[12][0].data);
+						mlist[3] = mlist[3].filter(m => parse_varint49(parse_shallow(m.data)[1][0].data) != tileref);
+
+						/* remove reference from TableModelArchive file to Tile */
+						var parentidx = mlist[3].findIndex(m => {
+							var mm = parse_shallow(m.data);
+							if(mm[3]?.[0]) return u8str(mm[3][0].data) == loc;
+							if(mm[2]?.[0] && u8str(mm[2][0].data) == loc) return true;
+							return false;
+						});
+						var parent = parse_shallow(mlist[3][parentidx].data);
+						if(!parent[6]) parent[6] = [];
+						parent[6] = parent[6].filter(m => parse_varint49(parse_shallow(m.data)[1][0].data) != tileref);
+						mlist[3][parentidx].data = write_shallow(parent);
+
+						ai.messages[0].data = write_shallow(mlist);
+					}));
 				}
-				t.data = write_shallow(tl);
+
+				/* rewrite entire tile storage */
+				tilestore[1] = [] as ProtoField;
+				var ntiles = Math.ceil((range.e.r + 1)/tstride);
+
+				for(var tidx = 0; tidx < ntiles; ++tidx) {
+					var newtileid = get_unique_msgid({
+						deps: [], // TODO: probably should update this
+						location: "",
+						type: 6002
+					}, deps);
+					deps[newtileid].location = `Root Entry/Index/Tables/Tile-${newtileid}.iwa`;
+
+					/* create new tile */
+					var tiledata: ProtoMessage = [
+						[],
+						[{type: 0, data: write_varint49(0 /*range.e.c + 1*/)}],
+						[{type: 0, data: write_varint49(Math.min(range.e.r + 1, (tidx + 1) * tstride))}],
+						[{type: 0, data: write_varint49(0/*cnt*/)}],
+						[{type: 0, data: write_varint49(Math.min((tidx+1)*tstride,range.e.r+1) - tidx * tstride)}],
+						[],
+						[{type: 0, data: write_varint49(5)}],
+						[{type: 0, data: write_varint49(1)}],
+						[{type: 0, data: write_varint49(USE_WIDE_ROWS ? 1 : 0)}]
+					];
+					for(var R = tidx * tstride; R <= Math.min(range.e.r, (tidx + 1) * tstride - 1); ++R) {
+						var tilerow: ProtoMessage = [
+							[],
+							[ { type: 0, data: write_varint49(0) }],
+							[ { type: 0, data: write_varint49(0) }],
+							[ { type: 2, data: new Uint8Array([]) }],
+							[ { type: 2, data: new Uint8Array(Array.from({length:510}, () => 255)) }],
+							[ { type: 0, data: write_varint49(5) }],
+							[ { type: 2, data: new Uint8Array([]) }],
+							[ { type: 2, data: new Uint8Array(Array.from({length:510}, () => 255)) }],
+							[ { type: 0, data: write_varint49(1) }],
+						] as ProtoMessage;
+						write_tile_row(tilerow, data[R], SST, USE_WIDE_ROWS);
+						tilerow[1][0].data = write_varint49(R - tidx * tstride);
+						tiledata[5].push({data: write_shallow(tilerow), type: 2});
+					}
+
+					/* add to tiles */
+					tilestore[1].push({type: 2, data: write_shallow([
+						[],
+						[{type: 0, data: write_varint49(tidx)}],
+						[{type: 2, data: write_TSP_Reference(newtileid)}]
+					])});
+
+					/* add to file */
+					var newtile: IWAArchiveInfo = {
+						id: newtileid,
+						messages: [ write_iwam(6002, write_shallow(tiledata))]
+					};
+					var tilecontent = compress_iwa_file(write_iwa_file([newtile]));
+					CFB.utils.cfb_add(cfb, `/Index/Tables/Tile-${newtileid}.iwa`, tilecontent);
+
+					/* update metadata -- TODO: can this have an id other than 2? */
+					numbers_iwa_doit(cfb, deps, 2, (ai => {
+						var mlist = parse_shallow(ai.messages[0].data);
+						mlist[3].push({type: 2, data: write_shallow([
+							[],
+							[{type: 0, data: write_varint49(newtileid)}],
+							[{type: 2, data: stru8("Tables/Tile") }],
+							[{type: 2, data: stru8(`Tables/Tile-${newtileid}`)}],
+							[{type: 2, data: new Uint8Array([2, 0, 0])}],
+							[{type: 2, data: new Uint8Array([2, 0, 0])}],
+							[],
+							[],
+							[],
+							[],
+							[{type: 0, data: write_varint49(0)}],
+							[],
+							[{type: 0, data: write_varint49(save_token)}],
+						])});
+						mlist[1] = [{type: 0, data: write_varint49(Math.max(newtileid + 1, parse_varint49(mlist[1][0].data) ))}];
+
+						/* add reference from TableModelArchive file to Tile */
+						var parentidx = mlist[3].findIndex(m => {
+							var mm = parse_shallow(m.data);
+							if(mm[3]?.[0]) return u8str(mm[3][0].data) == loc;
+							if(mm[2]?.[0] && u8str(mm[2][0].data) == loc) return true;
+							return false;
+					 	});
+						var parent = parse_shallow(mlist[3][parentidx].data);
+						if(!parent[6]) parent[6] = [];
+						parent[6].push({
+							type: 2,
+							data: write_shallow([
+								[],
+								[{type: 0, data: write_varint49(newtileid) }]
+							])
+						});
+						mlist[3][parentidx].data = write_shallow(parent);
+
+						ai.messages[0].data = write_shallow(mlist);
+					}));
+
+					/* add to TableModelArchive object references */
+					var orefs: number[] = tmaroot.messages[0].meta[5]?.[0] ? parse_packed_varints(tmaroot.messages[0].meta[5][0].data) : [];
+					var orefidx = orefs.indexOf(newtileid);
+					if(orefidx == -1) {
+						orefs[orefidx = orefs.length] = newtileid;
+						tmaroot.messages[0].meta[5] =[ {type: 2, data: write_packed_varints(orefs) }];
+					}
+
+					/* add to row rbtree */
+					rbtree[1].push({type: 2, data: write_shallow([
+						[],
+						[{ type: 0, data: write_varint49(tidx*tstride) }],
+						[{ type: 0, data: write_varint49(tidx) }]
+					])});
+				}
 			}
-			store[3][0].data = write_shallow(tile);
+			store[3][0].data = write_shallow(tilestore);
+			store[9][0].data = write_shallow(rbtree);
+			store[10] = [ { type: 2, data: new Uint8Array([]) }];
+
+			/* write merge list */
+			if(ws["!merges"]) {
+				// TODO: writing store[13] elicits a modification assertion failure
+				var mergeid = get_unique_msgid({
+					type: 6144,
+					deps: [tmaref],
+					location: deps[tmaref].location
+				}, deps);
+
+				var mergedata: ProtoMessage = [ [], [] ];
+				ws["!merges"].forEach(m => { mergedata[1].push({ type: 2, data: write_shallow([ [],
+					[{ type: 2, data: write_shallow([ [],
+						[{ type: 5, data: new Uint8Array(new Uint16Array([m.s.r, m.s.c]).buffer) }],
+					])}],
+					[{ type: 2, data: write_shallow([ [],
+						[{ type: 5, data: new Uint8Array(new Uint16Array([m.e.r - m.s.r + 1, m.e.c - m.s.c + 1]).buffer) }],
+					]) }]
+				]) }); });
+
+				tmafile.push({
+					id: mergeid,
+					messages: [ write_iwam(6144, write_shallow(mergedata)) ]
+				});
+				store[13] = [ { type: 2, data: write_TSP_Reference(mergeid) } ];
+
+				numbers_iwa_doit(cfb, deps, 2, (ai => {
+					var mlist = parse_shallow(ai.messages[0].data);
+
+					/* add reference from TableModelArchive file to merge */
+					var parentidx = mlist[3].findIndex(m => {
+						var mm = parse_shallow(m.data);
+						if(mm[3]?.[0]) return u8str(mm[3][0].data) == loc;
+						if(mm[2]?.[0] && u8str(mm[2][0].data) == loc) return true;
+						return false;
+					});
+					var parent = parse_shallow(mlist[3][parentidx].data);
+					if(!parent[6]) parent[6] = [];
+					parent[6].push({
+						type: 2,
+						data: write_shallow([
+							[],
+							[{type: 0, data: write_varint49(mergeid) }]
+						])
+					});
+					mlist[3][parentidx].data = write_shallow(parent);
+
+					ai.messages[0].data = write_shallow(mlist);
+				}));
+
+				/* add object reference from TableModelArchive */
+				/* var*/ orefs /*: number[]*/ = tmaroot.messages[0].meta[5]?.[0] ? parse_packed_varints(tmaroot.messages[0].meta[5][0].data) : [];
+				/* var*/ orefidx = orefs.indexOf(mergeid);
+				if(orefidx == -1) {
+					orefs[orefidx = orefs.length] = mergeid;
+					tmaroot.messages[0].meta[5] =[ {type: 2, data: write_packed_varints(orefs) }];
+				}
+
+			} else delete store[13]; // TODO: delete references to merge if not needed
+
 		}
 		pb[4][0].data = write_shallow(store);
 	}
-	docroot.messages[0].data = write_shallow(pb);
-
-	entry.content = compress_iwa_file(write_iwa_file(x)); entry.size = entry.content.length;
-
-	return cfb;
+	tmaroot.messages[0].data = write_shallow(pb);
 }
