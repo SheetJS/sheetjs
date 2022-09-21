@@ -35,17 +35,40 @@
 			"import": "./xlsx.mjs",
 			"types": "./types/index.d.ts"
 		},
+		"./xlsx.js": {
+			"require": "./xlsx.js",
+			"types": "./types/index.d.ts"
+		},
 		"./dist/xlsx.zahl": {
 			"import": "./dist/xlsx.zahl.mjs",
-			"require": "./dist/xlsx.zahl.js"
+			"require": "./dist/xlsx.zahl.js",
+			"types": "./dist/zahl.d.ts"
+		},
+		"./dist/xlsx.zahl.mjs": {
+			"import": "./dist/xlsx.zahl.mjs",
+			"types": "./dist/zahl.d.ts"
+		},
+		"./dist/xlsx.zahl.js": {
+			"require": "./dist/xlsx.zahl.js",
+			"types": "./dist/zahl.d.ts"
 		},
 		"./dist/cpexcel": {
 			"import": "./dist/cpexcel.full.mjs",
-			"require": "./dist/cpexcel.js"
+			"require": "./dist/cpexcel.js",
+			"types": "./dist/cpexcel.d.ts"
+		},
+		"./dist/cpexcel.js": {
+			"require": "./dist/cpexcel.js",
+			"types": "./dist/cpexcel.d.ts"
 		},
 		"./dist/cpexcel.full": {
 			"import": "./dist/cpexcel.full.mjs",
-			"require": "./dist/cpexcel.js"
+			"require": "./dist/cpexcel.js",
+			"types": "./dist/cpexcel.d.ts"
+		},
+		"./dist/cpexcel.full.mjs": {
+			"import": "./dist/cpexcel.full.mjs",
+			"types": "./dist/cpexcel.d.ts"
 		}
 	},
 	"browser": {

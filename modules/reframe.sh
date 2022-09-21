@@ -2,10 +2,8 @@
 set -eo pipefail
 INF=${1:-test.numbers}
 OUTF=${2:-reframed.numbers}
-make reframe.node.js
-#node reframe.node.js "$INF" "$OUTF"
 cp "$INF" "$OUTF"
-chmod a+w "$OUTF"
+chmod a-w "$OUTF"
 sleep 0.1
 # open "$OUTF"
 unzip -l "$OUTF"

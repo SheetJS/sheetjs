@@ -71,7 +71,7 @@ function parse_xlmeta_xml(data, name, opts) {
         lastmeta.offsets.push(+y.i);
         break;
       default:
-        if (!pass && opts.WTF)
+        if (!pass && (opts == null ? void 0 : opts.WTF))
           throw new Error("unrecognized " + y[0] + " in metadata");
     }
     return x;

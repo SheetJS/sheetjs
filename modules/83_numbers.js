@@ -1236,13 +1236,15 @@ function write_numbers_tma(cfb, deps, ws, tmaroot, tmafile, tmaref) {
     range.e.r = 999999;
   }
   if (trunc)
-    console.error("The Numbers writer is currently limited to ".concat(encode_range(range)));
+    console.error("Truncating to ".concat(encode_range(range)));
   var data = sheet_to_json(ws, { range: range, header: 1 });
-  var SST = ["~Sh33tJ5~"];
+  var SST = ["~Sh33tJ5~"], SST_set = new Set(SST);
   data.forEach(function(row) {
     return row.forEach(function(cell) {
-      if (typeof cell == "string")
+      if (typeof cell == "string" && !SST_set.has(cell)) {
         SST.push(cell);
+        SST_set.add(cell);
+      }
     });
   });
   var loc = deps[tmaref].location;
@@ -1447,23 +1449,24 @@ function write_numbers_tma(cfb, deps, ws, tmaroot, tmafile, tmaref) {
           deps: [tmaref],
           location: deps[tmaref].location
         }, deps);
-        var mergedata = [[], []];
-        ws["!merges"].forEach(function(m) {
-          mergedata[1].push({ type: 2, data: write_shallow([
-            [],
-            [{ type: 2, data: write_shallow([
-              [],
-              [{ type: 5, data: new Uint8Array(new Uint16Array([m.s.r, m.s.c]).buffer) }]
-            ]) }],
-            [{ type: 2, data: write_shallow([
-              [],
-              [{ type: 5, data: new Uint8Array(new Uint16Array([m.e.r - m.s.r + 1, m.e.c - m.s.c + 1]).buffer) }]
-            ]) }]
-          ]) });
-        });
         tmafile.push({
           id: mergeid,
-          messages: [write_iwam(6144, write_shallow(mergedata))]
+          messages: [write_iwam(6144, write_shallow([
+            [],
+            ws["!merges"].map(function(m) {
+              return { type: 2, data: write_shallow([
+                [],
+                [{ type: 2, data: write_shallow([
+                  [],
+                  [{ type: 5, data: new Uint8Array(new Uint16Array([m.s.r, m.s.c]).buffer) }]
+                ]) }],
+                [{ type: 2, data: write_shallow([
+                  [],
+                  [{ type: 5, data: new Uint8Array(new Uint16Array([m.e.r - m.s.r + 1, m.e.c - m.s.c + 1]).buffer) }]
+                ]) }]
+              ]) };
+            })
+          ]))]
         });
         store[13] = [{ type: 2, data: write_TSP_Reference(mergeid) }];
         numbers_iwa_doit(cfb, deps, 2, function(ai) {

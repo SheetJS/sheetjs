@@ -63,7 +63,7 @@ function parse_xlmeta_xml(data: string, name: string, opts?: ParseXLMetaOptions)
 				lastmeta.offsets.push(+y.i);
 				break;
 
-			default: if(!pass && opts.WTF) throw new Error('unrecognized ' + y[0] + ' in metadata');
+			default: if(!pass && opts?.WTF) throw new Error('unrecognized ' + y[0] + ' in metadata');
 		}
 		return x;
 	});

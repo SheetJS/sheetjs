@@ -1069,15 +1069,15 @@ function write_numbers_tma(cfb: CFB$Container, deps: Dependents, ws, tmaroot: IW
 	range.s.r = range.s.c = 0;
 
 	var trunc = false;
-	/* Actual NUMBERS 12.0 range limit ALL1000000 */
+	/* Actual NUMBERS 12.1 range limit ALL1000000 */
 	if(range.e.c > 999) { trunc = true; range.e.c = 999; }
 	if(range.e.r > 999999) { trunc = true; range.e.r = 999999; }
-	if(trunc) console.error(`The Numbers writer is currently limited to ${encode_range(range)}`);
+	if(trunc) console.error(`Truncating to ${encode_range(range)}`);
 
 	/* preprocess data and build up shared string table */
 	var data = sheet_to_json<any>(ws, { range, header: 1 });
-	var SST = ["~Sh33tJ5~"];
-	data.forEach(row => row.forEach(cell => { if(typeof cell == "string") SST.push(cell); }));
+	var SST = ["~Sh33tJ5~"], SST_set = new Set(SST);
+	data.forEach(row => row.forEach(cell => { if(typeof cell == "string" && !SST_set.has(cell)) { SST.push(cell); SST_set.add(cell); } }));
 
 	/* identifier for finding the TableModelArchive in the archive */
 	var loc = deps[tmaref].location;
@@ -1262,7 +1262,7 @@ function write_numbers_tma(cfb: CFB$Container, deps: Dependents, ws, tmaroot: IW
 							if(mm[3]?.[0]) return u8str(mm[3][0].data) == loc;
 							if(mm[2]?.[0] && u8str(mm[2][0].data) == loc) return true;
 							return false;
-					 	});
+						});
 						var parent = parse_shallow(mlist[3][parentidx].data);
 						if(!parent[6]) parent[6] = [];
 						parent[6].push({
@@ -1299,27 +1299,25 @@ function write_numbers_tma(cfb: CFB$Container, deps: Dependents, ws, tmaroot: IW
 
 			/* write merge list */
 			if(ws["!merges"]) {
-				// TODO: writing store[13] elicits a modification assertion failure
 				var mergeid = get_unique_msgid({
 					type: 6144,
 					deps: [tmaref],
 					location: deps[tmaref].location
 				}, deps);
 
-				var mergedata: ProtoMessage = [ [], [] ];
-				ws["!merges"].forEach(m => { mergedata[1].push({ type: 2, data: write_shallow([ [],
-					[{ type: 2, data: write_shallow([ [],
-						[{ type: 5, data: new Uint8Array(new Uint16Array([m.s.r, m.s.c]).buffer) }],
-					])}],
-					[{ type: 2, data: write_shallow([ [],
-						[{ type: 5, data: new Uint8Array(new Uint16Array([m.e.r - m.s.r + 1, m.e.c - m.s.c + 1]).buffer) }],
-					]) }]
-				]) }); });
-
 				tmafile.push({
 					id: mergeid,
-					messages: [ write_iwam(6144, write_shallow(mergedata)) ]
-				});
+					messages: [ write_iwam(6144, write_shallow([ [],
+						ws["!merges"].map((m: Range) => ({type: 2, data: write_shallow([ [],
+							[{ type: 2, data: write_shallow([ [],
+								[{ type: 5, data: new Uint8Array(new Uint16Array([m.s.r, m.s.c]).buffer) }],
+							])}],
+							[{ type: 2, data: write_shallow([ [],
+								[{ type: 5, data: new Uint8Array(new Uint16Array([m.e.r - m.s.r + 1, m.e.c - m.s.c + 1]).buffer) }],
+							]) }]
+						])} as ProtoItem))
+					])) ]
+				} as IWAArchiveInfo);
 				store[13] = [ { type: 2, data: write_TSP_Reference(mergeid) } ];
 
 				numbers_iwa_doit(cfb, deps, 2, (ai => {

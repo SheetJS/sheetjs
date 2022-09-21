@@ -7,9 +7,12 @@ CC=esbuild@0.14.14
 BAREJS=04_base64.js 45_rtf.js 51_xlsxmeta.js 51_xlsbmeta.js 59_vba.js 64_ftab.js 83_numbers.js
 
 .PHONY: all
-all: $(ENTRIES) xlsx.zahl.js
+all: bits xlsx.zahl.js
 
-xlsx.zahl.js: test.numbers reframe.node.js
+.PHONY: bits
+bits: $(ENTRIES)
+
+xlsx.zahl.js: test.numbers
 	bash -c ./reframe.sh
 
 $(BAREJS): %.js: %.ts $(LIBFILES)
