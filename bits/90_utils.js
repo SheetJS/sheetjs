@@ -213,10 +213,10 @@ function sheet_add_json(_ws/*:?Worksheet*/, js/*:Array<any>*/, opts)/*:Worksheet
 		if(_R == -1) { _R = 0; range.e.r = js.length - 1 + offset; }
 	}
 	var hdr/*:Array<string>*/ = o.header || [], C = 0;
-
+	var ROW = [];
 	js.forEach(function (JS, R/*:number*/) {
-		if(!ws[_R + R + offset]) ws[_R + R + offset] = [];
-		var ROW = ws[_R + R + offset];
+		if(dense && !ws[_R + R + offset]) ws[_R + R + offset] = [];
+		if(dense) ROW = ws[_R + R + offset];
 		keys(JS).forEach(function(k) {
 			if((C=hdr.indexOf(k)) == -1) hdr[C=hdr.length] = k;
 			var v = JS[k];
@@ -239,8 +239,7 @@ function sheet_add_json(_ws/*:?Worksheet*/, js/*:Array<any>*/, opts)/*:Worksheet
 				if(!cell) {
 					if(!dense) ws[ref] = cell = ({t:t, v:v}/*:any*/);
 					else ROW[_C + C] = cell = ({t:t, v:v}/*:any*/);
-				}
-				else {
+				} else {
 					cell.t = t; cell.v = v;
 					delete cell.w; delete cell.R;
 					if(z) cell.z = z;

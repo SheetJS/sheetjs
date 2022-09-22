@@ -1,10 +1,10 @@
 /*! xlsx.js (C) 2013-present SheetJS -- http://sheetjs.com */
 /* vim: set ts=2: */
 /*exported XLSX */
-/*global global, exports, module, require:false, process:false, Buffer:false, ArrayBuffer:false, DataView:false, Deno:false */
+/*global global, exports, module, require:false, process:false, Buffer:false, ArrayBuffer:false, DataView:false, Deno:false, Set:false */
 var XLSX = {};
 function make_xlsx_lib(XLSX){
-XLSX.version = '0.18.11';
+XLSX.version = '0.18.12';
 var current_codepage = 1200, current_ansi = 1252;
 /*global cptable:true, window */
 var $cptable;
@@ -223,7 +223,7 @@ var bconcat = has_buf ? function(bufs) { return Buffer.concat(bufs.map(function(
 		for(i = 0, maxlen = 0; i < bufs.length; maxlen += len, ++i) {
 			len = bufs[i].length;
 			if(bufs[i] instanceof Uint8Array) o.set(bufs[i], maxlen);
-			else if(typeof bufs[i] == "string") { throw "wtf"; }
+			else if(typeof bufs[i] == "string") o.set(new Uint8Array(s2a(bufs[i])), maxlen);
 			else o.set(new Uint8Array(bufs[i]), maxlen);
 		}
 		return o;
@@ -2796,9 +2796,9 @@ function write_zip(cfb, options) {
 		var namebuf = new_buf(fp.length);
 		for(j = 0; j < fp.length; ++j) namebuf.write_shift(1, fp.charCodeAt(j) & 0x7F);
 		namebuf = namebuf.slice(0, namebuf.l);
-		crcs[fcnt] = CRC32.buf(fi.content, 0);
+		crcs[fcnt] = typeof fi.content == "string" ? CRC32.bstr(fi.content, 0) : CRC32.buf(fi.content, 0);
 
-		var outbuf = fi.content;
+		var outbuf = typeof fi.content == "string" ? s2a(fi.content) : fi.content;
 		if(method == 8) outbuf = _deflateRawSync(outbuf);
 
 		/* local file header */
@@ -4011,7 +4011,7 @@ for(i = 0; i != val.length; ++i) {
 			}
 			size = val.length;
 		} else if(typeof $cptable !== 'undefined' && f == 'cpstr') {
-			cpp = $cptable.utils.encode(current_ansi, val);
+			cpp = $cptable.utils.encode(current_codepage, val);
 			/* replace null bytes with _ when relevant */
       if(cpp.length == val.length) for(i = 0; i < val.length; ++i) if(cpp[i] == 0 && val.charCodeAt(i) != 0) cpp[i] = 0x5F;
       if(cpp.length == 2 * val.length) for(i = 0; i < val.length; ++i) if(cpp[2*i] == 0 && cpp[2*i+1] == 0 && val.charCodeAt(i) != 0) cpp[2*i] = 0x5F;
@@ -5431,7 +5431,6 @@ function write_cust_props(cp) {
 	if(o.length>2){ o[o.length] = '</Properties>'; o[1]=o[1].replace("/>",">"); }
 	return o.join("");
 }
-/* from js-harb (C) 2014-present  SheetJS */
 var DBF_SUPPORTED_VERSIONS = [0x02, 0x03, 0x30, 0x31, 0x83, 0x8B, 0x8C, 0xF5];
 var DBF = (function() {
 var dbf_codepage_map = {
@@ -5671,14 +5670,14 @@ function dbf_to_workbook(buf, opts) {
 		var o = sheet_to_workbook(dbf_to_sheet(buf, opts), opts);
 		o.bookType = "dbf";
 		return o;
-	}
-	catch(e) { if(opts && opts.WTF) throw e; }
+	} catch(e) { if(opts && opts.WTF) throw e; }
 	return ({SheetNames:[],Sheets:{}});
 }
 
 var _RLEN = { 'B': 8, 'C': 250, 'L': 1, 'D': 8, '?': 0, '': 0 };
 function sheet_to_dbf(ws, opts) {
 	var o = opts || {};
+	var old_cp = current_codepage;
 	if(+o.codepage >= 0) set_cp(+o.codepage);
 	if(o.type == "string") throw new Error("Cannot write DBF to JS string");
 	var ba = buf_array();
@@ -5741,11 +5740,17 @@ function sheet_to_dbf(ws, opts) {
 	h.write_shift(2, 296 + 32 * hcnt);
 	h.write_shift(2, rlen);
 	for(i=0; i < 4; ++i) h.write_shift(4, 0);
-	h.write_shift(4, 0x00000000 | ((+dbf_reverse_map[current_ansi] || 0x03)<<8));
+	var cp = +dbf_reverse_map[current_codepage] || 0x03;
+	h.write_shift(4, 0x00000000 | (cp<<8));
+	if(dbf_codepage_map[cp] != +o.codepage) {
+		console.error("DBF Unsupported codepage " + current_codepage + ", using 1252");
+		current_codepage = 1252;
+	}
 
 	for(i = 0, j = 0; i < headers.length; ++i) {
 		if(headers[i] == null) continue;
 		var hf = ba.next(32);
+		/* TODO: test how applications handle non-ASCII field names */
 		var _f = (headers[i].slice(-10) + "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00").slice(0, 11);
 		hf.write_shift(1, _f, "sbcs");
 		hf.write_shift(1, coltypes[i] == '?' ? 'C' : coltypes[i], "sbcs");
@@ -5794,6 +5799,7 @@ function sheet_to_dbf(ws, opts) {
 		}
 		// data
 	}
+	current_codepage = old_cp;
 	ba.next(1).write_shift(1, 0x1A);
 	return ba.end();
 }
@@ -7634,7 +7640,7 @@ function parse_xlmeta_xml(data, name, opts) {
         lastmeta.offsets.push(+y.i);
         break;
       default:
-        if (!pass && opts.WTF)
+        if (!pass && (opts == null ? void 0 : opts.WTF))
           throw new Error("unrecognized " + y[0] + " in metadata");
     }
     return x;
@@ -11017,12 +11023,12 @@ function safe_parse_sheet(zip, path, relsPath, sheet, idx, sheetRels, sheets, st
 		sheets[sheet] = _ws;
 
 		/* scan rels for comments and threaded comments */
-		var tcomments = [];
+		var comments = [], tcomments = [];
 		if(sheetRels && sheetRels[sheet]) keys(sheetRels[sheet]).forEach(function(n) {
 			var dfile = "";
 			if(sheetRels[sheet][n].Type == RELS.CMNT) {
 				dfile = resolve_path(sheetRels[sheet][n].Target, path);
-				var comments = parse_cmnt(getzipdata(zip, dfile, true), dfile, opts);
+				comments = parse_cmnt(getzipdata(zip, dfile, true), dfile, opts);
 				if(!comments || !comments.length) return;
 				sheet_insert_comments(_ws, comments, false);
 			}
@@ -11381,7 +11387,8 @@ f = "docProps/app.xml";
 	/* TODO: something more intelligent with themes */
 
 	f = "xl/theme/theme1.xml";
-	zip_add_file(zip, f, write_theme(wb.Themes, opts));
+	var ww = write_theme(wb.Themes, opts);
+	zip_add_file(zip, f, ww);
 	ct.themes.push(f);
 	add_rels(opts.wbrels, -1, "theme/theme1.xml", RELS.THEME);
 
@@ -12101,10 +12108,10 @@ function sheet_add_json(_ws, js, opts) {
 		if(_R == -1) { _R = 0; range.e.r = js.length - 1 + offset; }
 	}
 	var hdr = o.header || [], C = 0;
-
+	var ROW = [];
 	js.forEach(function (JS, R) {
-		if(!ws[_R + R + offset]) ws[_R + R + offset] = [];
-		var ROW = ws[_R + R + offset];
+		if(dense && !ws[_R + R + offset]) ws[_R + R + offset] = [];
+		if(dense) ROW = ws[_R + R + offset];
 		keys(JS).forEach(function(k) {
 			if((C=hdr.indexOf(k)) == -1) hdr[C=hdr.length] = k;
 			var v = JS[k];
@@ -12127,8 +12134,7 @@ function sheet_add_json(_ws, js, opts) {
 				if(!cell) {
 					if(!dense) ws[ref] = cell = ({t:t, v:v});
 					else ROW[_C + C] = cell = ({t:t, v:v});
-				}
-				else {
+				} else {
 					cell.t = t; cell.v = v;
 					delete cell.w; delete cell.R;
 					if(z) cell.z = z;

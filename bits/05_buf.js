@@ -71,7 +71,7 @@ var bconcat = has_buf ? function(bufs) { return Buffer.concat(bufs.map(function(
 		for(i = 0, maxlen = 0; i < bufs.length; maxlen += len, ++i) {
 			len = bufs[i].length;
 			if(bufs[i] instanceof Uint8Array) o.set(bufs[i], maxlen);
-			else if(typeof bufs[i] == "string") { throw "wtf"; }
+			else if(typeof bufs[i] == "string") o.set(new Uint8Array(s2a(bufs[i])), maxlen);
 			else o.set(new Uint8Array(bufs[i]), maxlen);
 		}
 		return o;

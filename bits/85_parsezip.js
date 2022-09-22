@@ -36,12 +36,12 @@ function safe_parse_sheet(zip, path/*:string*/, relsPath/*:string*/, sheet, idx/
 		sheets[sheet] = _ws;
 
 		/* scan rels for comments and threaded comments */
-		var tcomments = [];
+		var comments = [], tcomments = [];
 		if(sheetRels && sheetRels[sheet]) keys(sheetRels[sheet]).forEach(function(n) {
 			var dfile = "";
 			if(sheetRels[sheet][n].Type == RELS.CMNT) {
 				dfile = resolve_path(sheetRels[sheet][n].Target, path);
-				var comments = parse_cmnt(getzipdata(zip, dfile, true), dfile, opts);
+				comments = parse_cmnt(getzipdata(zip, dfile, true), dfile, opts);
 				if(!comments || !comments.length) return;
 				sheet_insert_comments(_ws, comments, false);
 			}

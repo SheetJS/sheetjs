@@ -238,8 +238,7 @@ function dbf_to_workbook(buf, opts)/*:Workbook*/ {
 		var o = sheet_to_workbook(dbf_to_sheet(buf, opts), opts);
 		o.bookType = "dbf";
 		return o;
-	}
-	catch(e) { if(opts && opts.WTF) throw e; }
+	} catch(e) { if(opts && opts.WTF) throw e; }
 	return ({SheetNames:[],Sheets:{}});
 }
 

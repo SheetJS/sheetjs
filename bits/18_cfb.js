@@ -1500,9 +1500,9 @@ function write_zip(cfb/*:CFBContainer*/, options/*:CFBWriteOpts*/)/*:RawBytes*/ 
 		var namebuf = new_buf(fp.length);
 		for(j = 0; j < fp.length; ++j) namebuf.write_shift(1, fp.charCodeAt(j) & 0x7F);
 		namebuf = namebuf.slice(0, namebuf.l);
-		crcs[fcnt] = CRC32.buf(/*::((*/fi.content/*::||[]):any)*/, 0);
+		crcs[fcnt] = typeof fi.content == "string" ? CRC32.bstr(fi.content, 0) : CRC32.buf(/*::((*/fi.content/*::||[]):any)*/, 0);
 
-		var outbuf = fi.content/*::||[]*/;
+		var outbuf = typeof fi.content == "string" ? s2a(fi.content) : fi.content/*::||[]*/;
 		if(method == 8) outbuf = _deflateRawSync(outbuf);
 
 		/* local file header */

@@ -78,6 +78,8 @@ if(!browser) {
 	for(var _fileAi = 0; _fileAi < _fileA.length; ++_fileAi) if(test_file(_fileA[_fileAi])) fileA.push(_fileA[_fileAi]);
 }
 
+var can_write_numbers = typeof Set !== "undefined" && typeof Array.prototype.findIndex == "function" && typeof Uint8Array !== "undefined" && typeof Uint8Array.prototype.indexOf == "function";
+
 /* Excel enforces 31 character sheet limit, although technical file limit is 255 */
 function fixsheetname(x: string): string { return x.substr(0,31); }
 
@@ -1408,6 +1410,7 @@ describe('parse features', function() {
 		// TODO: keep in sync with BookType, support other formats
 		"xlsx"/*, "xlsm" */, "xlsb"/* xls / xla / biff# */, "xlml", "ods", "fods"/*, "csv", "txt", */, "sylk", "html", "dif", "rtf"/*, "prn", "eth"*/, "dbf", "numbers"
 	] as X.BookType[]).forEach(function(r: X.BookType) {
+		if(r == "numbers" && !can_write_numbers) return;
 		var ws = X.utils.aoa_to_sheet([ ["a", "b", "c"], [1, 2, 3] ]);
 		var wb = X.utils.book_new(); X.utils.book_append_sheet(wb, ws, "Sheet1");
 		var data = X.write(wb, {type: TYPE, bookType: r, WTF: true, numbers:XLSX_ZAHL });
@@ -1573,6 +1576,7 @@ describe('roundtrip features', function() {
 
 	describe('should preserve merge cells', function() {
 		var mcf = ["xlsx", "xlsb", "xlml", "ods", "biff8", "numbers"] as Array<X.BookType>; for(let mci = 0; mci < mcf.length; ++mci) { let f = mcf[mci]; it(f, function() {
+			if(f == "numbers" && !can_write_numbers) return;
 			var wb1 = X.read(fs.readFileSync(paths.mcxlsx), {type:TYPE});
 			var wb2 = X.read(X.write(wb1,{bookType:f,type:'binary',numbers:XLSX_ZAHL}),{type:'binary'});
 			var m1 = wb1.Sheets["Merge"]?.['!merges']?.map(X.utils.encode_range);
@@ -2295,7 +2299,7 @@ describe('numbers', function() {
 		assert.equal(get_cell(ws, "B11").v, true);
 		assert.equal(get_cell(ws, "B13").v, 50);
 	});
-	it('should cap cols at 1000 (ALL)', function() {
+	if(can_write_numbers) it('should cap cols at 1000 (ALL)', function() {
 		var aoa = [[1], [], []]; aoa[1][999] = 2; aoa[2][1000] = 3;
 		var ws1 = X.utils.aoa_to_sheet(aoa);
 		var wb1 = X.utils.book_new(); X.utils.book_append_sheet(wb1, ws1, "Sheet1");
