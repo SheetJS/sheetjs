@@ -148,6 +148,22 @@ function varint_to_i32(buf: Uint8Array): number {
 	}
 	return i32;
 }
+/** Parse a 64-bit unsigned integer as a pair */
+function varint_to_u64(buf: Uint8Array): [number, number] {
+	var l = 0, lo = buf[l] & 0x7F, hi = 0;
+	varint: if(buf[l++] >= 0x80) {
+		lo |= (buf[l] & 0x7F) <<  7; if(buf[l++] < 0x80) break varint;
+		lo |= (buf[l] & 0x7F) << 14; if(buf[l++] < 0x80) break varint;
+		lo |= (buf[l] & 0x7F) << 21; if(buf[l++] < 0x80) break varint;
+		lo |= (buf[l] & 0x7F) << 28; hi = (buf[l] >> 4) & 0x07; if(buf[l++] < 0x80) break varint;
+		hi |= (buf[l] & 0x7F) <<  3; if(buf[l++] < 0x80) break varint;
+		hi |= (buf[l] & 0x7F) << 10; if(buf[l++] < 0x80) break varint;
+		hi |= (buf[l] & 0x7F) << 17; if(buf[l++] < 0x80) break varint;
+		hi |= (buf[l] & 0x7F) << 24; if(buf[l++] < 0x80) break varint;
+		hi |= (buf[l] & 0x7F) << 31;
+	}
+	return [lo >>> 0, hi >>> 0];
+}
 //<<export { varint_to_i32 };
 
 interface ProtoItem {
@@ -608,6 +624,21 @@ function write_TSP_Reference(idx: number): Uint8Array {
 }
 //<<export { parse_TSP_Reference, write_TSP_Reference };
 
+/** Insert Object Reference */
+function numbers_add_oref(iwa: IWAArchiveInfo, ref: number): void {
+	var orefs: number[] = iwa.messages[0].meta[5]?.[0] ? parse_packed_varints(iwa.messages[0].meta[5][0].data) : [];
+	var orefidx = orefs.indexOf(ref);
+	if(orefidx == -1) {
+		orefs.push(ref);
+		iwa.messages[0].meta[5] =[ {type: 2, data: write_packed_varints(orefs) }];
+	}
+}
+/** Delete Object Reference */
+function numbers_del_oref(iwa: IWAArchiveInfo, ref: number): void {
+	var orefs: number[] = iwa.messages[0].meta[5]?.[0] ? parse_packed_varints(iwa.messages[0].meta[5][0].data) : [];
+	iwa.messages[0].meta[5] =[ {type: 2, data: write_packed_varints(orefs.filter(r => r != ref)) }];
+}
+
 type MessageSpace = {[id: number]: IWAMessage[]};
 
 /** Parse .TST.TableDataList */
@@ -621,6 +652,7 @@ function parse_TST_TableDataList(M: MessageSpace, root: IWAMessage): any[] {
 	(entries||[]).forEach(entry => {
 		// .TST.TableDataList.ListEntry
 		var le = parse_shallow(entry.data);
+		if(!le[1]) return; // sometimes the list has a spurious entry at index 0
 		var key = varint_to_i32(le[1][0].data)>>>0;
 		switch(type) {
 			case 1: data[key] = u8str(le[3][0].data); break;
@@ -853,7 +885,7 @@ function parse_numbers_iwa(cfb: CFB$Container, opts?: ParsingOptions ): WorkBook
 	if(!indices.length) throw new Error("File has no messages");
 
 	/* find document root */
-	if(M?.[1]?.[0]?.meta?.[1]?.[0].data && varint_to_i32(M[1][0].meta[1][0].data) == 10000) throw new Error("Pages documents are not supported");
+	if(M?.[1]?.[0].meta?.[1]?.[0].data && varint_to_i32(M[1][0].meta[1][0].data) == 10000) throw new Error("Pages documents are not supported");
 	var docroot: IWAMessage | false = M?.[1]?.[0]?.meta?.[1]?.[0].data && varint_to_i32(M[1][0].meta[1][0].data) == 1 && M[1][0];
 	if(!docroot) indices.forEach((idx) => {
 		M[idx].forEach((iwam) => {
@@ -876,7 +908,18 @@ interface DependentInfo {
 	type: number;
 }
 /** Write .TST.TileRowInfo */
-function write_tile_row(tri: ProtoMessage, data: any[], SST: string[], wide: boolean): number {
+function write_TST_TileRowInfo(data: any[], SST: string[], wide: boolean): ProtoMessage {
+	var tri: ProtoMessage = [
+		[],
+		[ { type: 0, data: write_varint49(0) }],
+		[ { type: 0, data: write_varint49(0) }],
+		[ { type: 2, data: new Uint8Array([]) }],
+		[ { type: 2, data: new Uint8Array(Array.from({length:510}, () => 255)) }],
+		[ { type: 0, data: write_varint49(5) }],
+		[ { type: 2, data: new Uint8Array([]) }],
+		[ { type: 2, data: new Uint8Array(Array.from({length:510}, () => 255)) }],
+		[ { type: 0, data: write_varint49(1) }],
+	] as ProtoMessage;
 	if(!tri[6]?.[0] || !tri[7]?.[0]) throw "Mutation only works on post-BNC storages!";
 	//var wide_offsets = tri[8]?.[0]?.data && varint_to_i32(tri[8][0].data) > 0 || false;
 	var cnt = 0;
@@ -930,7 +973,7 @@ function write_tile_row(tri: ProtoMessage, data: any[], SST: string[], wide: boo
 	tri[6][0].data = u8concat(cell_storage);
 	/*if(!wide)*/ tri[3][0].data = u8concat(_cell_storage);
 	tri[8] = [{type: 0, data: write_varint49(wide ? 1 : 0)}];
-	return cnt;
+	return tri;
 }
 
 /** Write IWA Message */
@@ -1000,16 +1043,21 @@ function write_numbers_iwa(wb: WorkBook, opts?: WritingOptions): CFB$Container {
 
 	/* read template and build packet metadata */
 	var cfb: CFB$Container = CFB.read(opts.numbers, { type: "base64" });
-	var dependents: Dependents = build_numbers_deps(cfb);
+	var deps: Dependents = build_numbers_deps(cfb);
 
 	/* .TN.DocumentArchive */
-	var cfb_DA = CFB.find(cfb, dependents[1].location);
-	if(!cfb_DA) throw `Could not find ${dependents[1].location} in Numbers template`;
-	var iwa_DA = parse_iwa_file(decompress_iwa_file(cfb_DA.content as Uint8Array));
-	var docroot: IWAArchiveInfo = iwa_DA.find(packet => packet.id == 1) as IWAArchiveInfo;
+	var docroot: IWAArchiveInfo = numbers_iwa_find(cfb, deps, 1);
 	if(docroot == null) throw `Could not find message ${1} in Numbers template`;
 	var sheetrefs = mappa(parse_shallow(docroot.messages[0].data)[1], parse_TSP_Reference);
-	wb.SheetNames.forEach((name, idx) => write_numbers_ws(cfb, dependents, wb.Sheets[name], name, idx, sheetrefs[idx]));
+	if(sheetrefs.length > 1) throw new Error("Template NUMBERS file must have exactly one sheet")
+	wb.SheetNames.forEach((name, idx) => {
+		if(idx >= 1) {
+			numbers_add_ws(cfb, deps, idx + 1);
+			docroot = numbers_iwa_find(cfb, deps, 1);
+			sheetrefs = mappa(parse_shallow(docroot.messages[0].data)[1], parse_TSP_Reference);
+		}
+		write_numbers_ws(cfb, deps, wb.Sheets[name], name, idx, sheetrefs[idx])
+	});
 	return cfb;
 }
 
@@ -1034,10 +1082,377 @@ function numbers_iwa_find(cfb: CFB$Container, deps: Dependents, id: number) {
 	return ainfo;
 }
 
+/** Deep copy of the essential parts of a worksheet */
+function numbers_add_ws(cfb: CFB$Container, deps: Dependents, wsidx: number) {
+	var sheetref = -1, newsheetref = -1;
+
+	var remap: {[x: number]: number} = {};
+	/* .TN.DocumentArchive -> new .TN.SheetArchive */
+	numbers_iwa_doit(cfb, deps, 1, (docroot: IWAArchiveInfo, arch: IWAArchiveInfo[]) => {
+		var doc = parse_shallow(docroot.messages[0].data);
+
+		/* new sheet reference */
+		sheetref = parse_TSP_Reference(parse_shallow(docroot.messages[0].data)[1][0].data);
+		newsheetref = get_unique_msgid({ deps: [1], location: deps[sheetref].location, type: 2 }, deps);
+		remap[sheetref] = newsheetref;
+
+		/* connect root -> sheet */
+		numbers_add_oref(docroot, newsheetref);
+		doc[1].push({ type: 2, data: write_TSP_Reference(newsheetref) });
+
+		/* copy sheet */
+		var sheet = numbers_iwa_find(cfb, deps, sheetref);
+		sheet.id = newsheetref;
+		if(deps[1].location == deps[newsheetref].location) arch.push(sheet);
+		else numbers_iwa_doit(cfb, deps, newsheetref, (_, x) => x.push(sheet));
+
+		docroot.messages[0].data = write_shallow(doc);
+	});
+
+	/* .TN.SheetArchive -> new .TST.TableInfoArchive */
+	var tiaref = -1;
+	numbers_iwa_doit(cfb, deps, newsheetref, (sheetroot: IWAArchiveInfo, arch: IWAArchiveInfo[]) => {
+		var sa = parse_shallow(sheetroot.messages[0].data);
+
+		/* remove everything except for name and drawables */
+		for(var i = 3; i <= 69; ++i) delete sa[i];
+		/* remove all references to drawables */
+		var drawables = mappa(sa[2], parse_TSP_Reference);
+		drawables.forEach(n => numbers_del_oref(sheetroot, n));
+
+		/* add new tia reference */
+		tiaref = get_unique_msgid({ deps: [newsheetref], location: deps[drawables[0]].location, type: deps[drawables[0]].type }, deps);
+		numbers_add_oref(sheetroot, tiaref);
+		remap[drawables[0]] = tiaref;
+		sa[2] = [ { type: 2, data: write_TSP_Reference(tiaref) } ];
+
+		/* copy tia */
+		var tia = numbers_iwa_find(cfb, deps, drawables[0]);
+		tia.id = tiaref;
+		if(deps[drawables[0]].location == deps[newsheetref].location) arch.push(tia);
+		else {
+			var loc = deps[newsheetref].location;
+			loc = loc.replace(/^Root Entry\//,""); // NOTE: the Root Entry prefix is an artifact of the CFB container library
+			loc = loc.replace(/^Index\//, "").replace(/\.iwa$/,"");
+			numbers_iwa_doit(cfb, deps, 2, (ai => {
+				var mlist = parse_shallow(ai.messages[0].data);
+
+				/* add reference from SheetArchive file to TIA */
+				var parentidx = mlist[3].findIndex(m => {
+					var mm = parse_shallow(m.data);
+					if(mm[3]?.[0]) return u8str(mm[3][0].data) == loc;
+					if(mm[2]?.[0] && u8str(mm[2][0].data) == loc) return true;
+					return false;
+				});
+				var parent = parse_shallow(mlist[3][parentidx].data);
+				if(!parent[6]) parent[6] = [];
+				parent[6].push({
+					type: 2,
+					data: write_shallow([
+						[],
+						[{type: 0, data: write_varint49(tiaref) }]
+					])
+				});
+				mlist[3][parentidx].data = write_shallow(parent);
+
+				ai.messages[0].data = write_shallow(mlist);
+			}));
+			numbers_iwa_doit(cfb, deps, tiaref, (_, x) => x.push(tia));
+		}
+
+		sheetroot.messages[0].data = write_shallow(sa);
+	});
+
+	/* .TST.TableInfoArchive -> new .TST.TableModelArchive */
+	var tmaref = -1;
+	numbers_iwa_doit(cfb, deps, tiaref, (tiaroot: IWAArchiveInfo, arch: IWAArchiveInfo[]) => {
+		var tia = parse_shallow(tiaroot.messages[0].data);
+
+		/* update parent reference */
+		var da = parse_shallow(tia[1][0].data);
+		for(var i = 3; i <= 69; ++i) delete da[i];
+		var dap = parse_TSP_Reference(da[2][0].data);
+		da[2][0].data = write_TSP_Reference(remap[dap]);
+		tia[1][0].data = write_shallow(da);
+
+		/* remove old tma reference */
+		var oldtmaref = parse_TSP_Reference(tia[2][0].data);
+		numbers_del_oref(tiaroot, oldtmaref);
+
+		/* add new tma reference */
+		tmaref = get_unique_msgid({ deps: [tiaref], location: deps[oldtmaref].location, type: deps[oldtmaref].type }, deps);
+		numbers_add_oref(tiaroot, tmaref);
+		remap[oldtmaref] = tmaref;
+		tia[2][0].data = write_TSP_Reference(tmaref);
+
+		/* copy tma */
+		var tma = numbers_iwa_find(cfb, deps, oldtmaref);
+		tma.id = tmaref;
+		if(deps[tiaref].location == deps[tmaref].location) arch.push(tma);
+		else numbers_iwa_doit(cfb, deps, tmaref, (_, x) => x.push(tma));
+
+		tiaroot.messages[0].data = write_shallow(tia);
+	});
+
+	/* identifier for finding the TableModelArchive in the archive */
+	var loc = deps[tmaref].location;
+	loc = loc.replace(/^Root Entry\//,""); // NOTE: the Root Entry prefix is an artifact of the CFB container library
+	loc = loc.replace(/^Index\//, "").replace(/\.iwa$/,"");
+
+	/* .TST.TableModelArchive */
+	numbers_iwa_doit(cfb, deps, tmaref, (tmaroot: IWAArchiveInfo, arch: IWAArchiveInfo[]) => {
+		/* TODO: formulae currently break due to missing CE details */
+		var tma = parse_shallow(tmaroot.messages[0].data);
+		var uuid = u8str(tma[1][0].data), new_uuid = uuid.replace(/-[A-Z0-9]*/, `-${wsidx.toString(16).padStart(4, "0")}`);
+		tma[1][0].data = stru8(new_uuid);
+
+		/* NOTE: These lists should be revisited every time the template is changed */
+
+		/* bare fields */
+		[ 12, 13, 29, 31, 32, 33, 39, 44, 47, 81, 82, 84 ].forEach(n => delete tma[n]);
+
+		if(tma[45]) {
+			// .TST.SortRuleReferenceTrackerArchive
+			var srrta = parse_shallow(tma[45][0].data);
+			var ref = parse_TSP_Reference(srrta[1][0].data);
+			numbers_del_oref(tmaroot, ref);
+			delete tma[45];
+		}
+
+		if(tma[70]) {
+			// .TST.HiddenStatesOwnerArchive
+			var hsoa = parse_shallow(tma[70][0].data);
+			hsoa[2]?.forEach(item => {
+				// .TST.HiddenStatesArchive
+				var hsa = parse_shallow(item.data);
+				[2,3].map(n => hsa[n][0]).forEach(hseadata => {
+					// .TST.HiddenStateExtentArchive
+					var hsea = parse_shallow(hseadata.data);
+					if(!hsea[8]) return;
+					var ref = parse_TSP_Reference(hsea[8][0].data);
+					numbers_del_oref(tmaroot, ref);
+				});
+			});
+			delete tma[70];
+		}
+
+		[ 46, // deleting field 46 (base_column_row_uids) forces Numbers to refresh cell table
+			30, 34, 35, 36, 38, 48, 49, 60, 61, 62, 63, 64, 71, 72, 73, 74, 75, 85, 86, 87, 88, 89
+		].forEach(n => {
+			if(!tma[n]) return;
+			var ref = parse_TSP_Reference(tma[n][0].data);
+			delete tma[n];
+			numbers_del_oref(tmaroot, ref);
+		});
+
+		/* update .TST.DataStore */
+		var store = parse_shallow(tma[4][0].data);
+		{
+			/* TODO: actually scan through dep tree and update */
+
+			/* blind copy of single references */
+			[ 2, 4, 5, 6, 11, 12, 13, 15, 16, 17, 18, 19, 20, 21, 22 ].forEach(n => {
+				if(!store[n]?.[0]) return;
+				var oldref = parse_TSP_Reference(store[n][0].data);
+				var newref = get_unique_msgid({ deps: [tmaref], location: deps[oldref].location, type: deps[oldref].type }, deps);
+				numbers_del_oref(tmaroot, oldref);
+				numbers_add_oref(tmaroot, newref);
+				remap[oldref] = newref;
+				var msg = numbers_iwa_find(cfb, deps, oldref);
+				msg.id = newref;
+				if(deps[oldref].location == deps[tmaref].location) arch.push(msg);
+				else {
+					deps[newref].location = deps[oldref].location.replace(oldref.toString(), newref.toString());
+					if(deps[newref].location == deps[oldref].location) deps[newref].location = deps[newref].location.replace(/\.iwa/, `-${newref}.iwa`);
+					CFB.utils.cfb_add(cfb, deps[newref].location, compress_iwa_file(write_iwa_file([ msg ])));
+
+					var newloc = deps[newref].location;
+					newloc = newloc.replace(/^Root Entry\//,""); // NOTE: the Root Entry prefix is an artifact of the CFB container library
+					newloc = newloc.replace(/^Index\//, "").replace(/\.iwa$/,"");
+
+					numbers_iwa_doit(cfb, deps, 2, (ai => {
+						var mlist = parse_shallow(ai.messages[0].data);
+						mlist[3].push({type: 2, data: write_shallow([
+							[],
+							[{type: 0, data: write_varint49(newref)}],
+							[{type: 2, data: stru8(newloc.replace(/-.*$/, "")) }],
+							[{type: 2, data: stru8(newloc)}],
+							[{type: 2, data: new Uint8Array([2, 0, 0])}],
+							[{type: 2, data: new Uint8Array([2, 0, 0])}],
+							[],
+							[],
+							[],
+							[],
+							[{type: 0, data: write_varint49(0)}],
+							[],
+							[{type: 0, data: write_varint49(0 /* TODO: save_token */)}],
+						])});
+						mlist[1] = [{type: 0, data: write_varint49(Math.max(newref + 1, parse_varint49(mlist[1][0].data) ))}];
+
+						/* add reference from TableModelArchive file to Tile */
+						var parentidx = mlist[3].findIndex(m => {
+							var mm = parse_shallow(m.data);
+							if(mm[3]?.[0]) return u8str(mm[3][0].data) == loc;
+							if(mm[2]?.[0] && u8str(mm[2][0].data) == loc) return true;
+							return false;
+						});
+						var parent = parse_shallow(mlist[3][parentidx].data);
+						if(!parent[6]) parent[6] = [];
+						parent[6].push({
+							type: 2,
+							data: write_shallow([
+								[],
+								[{type: 0, data: write_varint49(newref) }]
+							])
+						});
+						mlist[3][parentidx].data = write_shallow(parent);
+
+						ai.messages[0].data = write_shallow(mlist);
+					}));
+				}
+				store[n][0].data = write_TSP_Reference(newref);
+			});
+
+			/* copy row header storage */
+			var row_headers = parse_shallow(store[1][0].data);
+			{
+				row_headers[2]?.forEach(tspref => {
+					var oldref = parse_TSP_Reference(tspref.data);
+					var newref = get_unique_msgid({ deps: [tmaref], location: deps[oldref].location, type: deps[oldref].type }, deps);
+					numbers_del_oref(tmaroot, oldref);
+					numbers_add_oref(tmaroot, newref);
+					remap[oldref] = newref;
+					var msg = numbers_iwa_find(cfb, deps, oldref);
+					msg.id = newref;
+					if(deps[oldref].location == deps[tmaref].location) {
+						arch.push(msg);
+					} else {
+						deps[newref].location = deps[oldref].location.replace(oldref.toString(), newref.toString());
+						if(deps[newref].location == deps[oldref].location) deps[newref].location = deps[newref].location.replace(/\.iwa/, `-${newref}.iwa`);
+						CFB.utils.cfb_add(cfb, deps[newref].location, compress_iwa_file(write_iwa_file([ msg ])));
+
+						var newloc = deps[newref].location;
+						newloc = newloc.replace(/^Root Entry\//,""); // NOTE: the Root Entry prefix is an artifact of the CFB container library
+						newloc = newloc.replace(/^Index\//, "").replace(/\.iwa$/,"");
+
+						numbers_iwa_doit(cfb, deps, 2, (ai => {
+							var mlist = parse_shallow(ai.messages[0].data);
+							mlist[3].push({type: 2, data: write_shallow([
+								[],
+								[{type: 0, data: write_varint49(newref)}],
+								[{type: 2, data: stru8(newloc.replace(/-.*$/, "")) }],
+								[{type: 2, data: stru8(newloc)}],
+								[{type: 2, data: new Uint8Array([2, 0, 0])}],
+								[{type: 2, data: new Uint8Array([2, 0, 0])}],
+								[],
+								[],
+								[],
+								[],
+								[{type: 0, data: write_varint49(0)}],
+								[],
+								[{type: 0, data: write_varint49(0 /* TODO: save_token */)}],
+							])});
+							mlist[1] = [{type: 0, data: write_varint49(Math.max(newref + 1, parse_varint49(mlist[1][0].data) ))}];
+
+							/* add reference from TableModelArchive file to Tile */
+							var parentidx = mlist[3].findIndex(m => {
+								var mm = parse_shallow(m.data);
+								if(mm[3]?.[0]) return u8str(mm[3][0].data) == loc;
+								if(mm[2]?.[0] && u8str(mm[2][0].data) == loc) return true;
+								return false;
+							});
+							var parent = parse_shallow(mlist[3][parentidx].data);
+							if(!parent[6]) parent[6] = [];
+							parent[6].push({
+								type: 2,
+								data: write_shallow([
+									[],
+									[{type: 0, data: write_varint49(newref) }]
+								])
+							});
+							mlist[3][parentidx].data = write_shallow(parent);
+
+							ai.messages[0].data = write_shallow(mlist);
+						}));
+					}
+					tspref.data = write_TSP_Reference(newref);
+				})
+			}
+			store[1][0].data = write_shallow(row_headers);
+
+			/* copy tiles */
+			var tiles = parse_shallow(store[3][0].data);
+			{
+				tiles[1].forEach(t => {
+					var tst = parse_shallow(t.data);
+					var oldtileref = parse_TSP_Reference(tst[2][0].data);
+					var newtileref = remap[oldtileref];
+					if(!remap[oldtileref]) {
+						newtileref = get_unique_msgid({ deps: [tmaref], location: "", type: deps[oldtileref].type }, deps);
+						deps[newtileref].location = `Root Entry/Index/Tables/Tile-${newtileref}.iwa`;
+						remap[oldtileref] = newtileref;
+
+						var oldtile = numbers_iwa_find(cfb, deps, oldtileref);
+						oldtile.id = newtileref;
+						numbers_del_oref(tmaroot, oldtileref);
+						numbers_add_oref(tmaroot, newtileref);
+
+						CFB.utils.cfb_add(cfb, `/Index/Tables/Tile-${newtileref}.iwa`, compress_iwa_file(write_iwa_file([ oldtile ])));
+
+						numbers_iwa_doit(cfb, deps, 2, (ai => {
+							var mlist = parse_shallow(ai.messages[0].data);
+							mlist[3].push({type: 2, data: write_shallow([
+								[],
+								[{type: 0, data: write_varint49(newtileref)}],
+								[{type: 2, data: stru8("Tables/Tile") }],
+								[{type: 2, data: stru8(`Tables/Tile-${newtileref}`)}],
+								[{type: 2, data: new Uint8Array([2, 0, 0])}],
+								[{type: 2, data: new Uint8Array([2, 0, 0])}],
+								[],
+								[],
+								[],
+								[],
+								[{type: 0, data: write_varint49(0)}],
+								[],
+								[{type: 0, data: write_varint49(0 /* TODO: save_token */)}],
+							])});
+							mlist[1] = [{type: 0, data: write_varint49(Math.max(newtileref + 1, parse_varint49(mlist[1][0].data) ))}];
+
+							/* add reference from TableModelArchive file to Tile */
+							var parentidx = mlist[3].findIndex(m => {
+								var mm = parse_shallow(m.data);
+								if(mm[3]?.[0]) return u8str(mm[3][0].data) == loc;
+								if(mm[2]?.[0] && u8str(mm[2][0].data) == loc) return true;
+								return false;
+							});
+							var parent = parse_shallow(mlist[3][parentidx].data);
+							if(!parent[6]) parent[6] = [];
+							parent[6].push({
+								type: 2,
+								data: write_shallow([
+									[],
+									[{type: 0, data: write_varint49(newtileref) }]
+								])
+							});
+							mlist[3][parentidx].data = write_shallow(parent);
+
+							ai.messages[0].data = write_shallow(mlist);
+						}));
+					}
+					tst[2][0].data = write_TSP_Reference(newtileref);
+					t.data = write_shallow(tst);
+				})
+			}
+			store[3][0].data = write_shallow(tiles);
+		}
+		tma[4][0].data = write_shallow(store);
+		tmaroot.messages[0].data = write_shallow(tma);
+	});
+}
+
 /** Write NUMBERS worksheet */
 function write_numbers_ws(cfb: CFB$Container, deps: Dependents, ws: WorkSheet, wsname: string, sheetidx: number, rootref: number): void {
-	/* TODO: support multiple worksheets, larger ranges, more data types, etc */
-	if(sheetidx >= 1) return console.error("The Numbers writer currently writes only the first table");
+	/* TODO: support more data types, etc */
 
 	/* .TN.SheetArchive */
 	var drawables: number[] = [];
@@ -1064,7 +1479,7 @@ function write_numbers_ws(cfb: CFB$Container, deps: Dependents, ws: WorkSheet, w
 var USE_WIDE_ROWS = true;
 
 /** Write .TST.TableModelArchive */
-function write_numbers_tma(cfb: CFB$Container, deps: Dependents, ws, tmaroot: IWAArchiveInfo, tmafile: IWAArchiveInfo[], tmaref: number) {
+function write_numbers_tma(cfb: CFB$Container, deps: Dependents, ws: WorkSheet, tmaroot: IWAArchiveInfo, tmafile: IWAArchiveInfo[], tmaref: number) {
 	var range = decode_range(ws["!ref"] as string);
 	range.s.r = range.s.c = 0;
 
@@ -1128,6 +1543,7 @@ function write_numbers_tma(cfb: CFB$Container, deps: Dependents, ws, tmaroot: IW
 				{
 					sstdata[3] = [];
 					SST.forEach((str, i) => {
+						if(i == 0) return; // Numbers will assert if index zero
 						sstdata[3].push({type: 2, data: write_shallow([ [],
 							[ { type: 0, data: write_varint49(i) } ],
 							[ { type: 0, data: write_varint49(1) } ],
@@ -1145,12 +1561,21 @@ function write_numbers_tma(cfb: CFB$Container, deps: Dependents, ws, tmaroot: IW
 			var tilestore = parse_shallow(store[3][0].data);
 			{
 				/* number of rows per tile */
-				var tstride = 256; // NOTE: if this is not 256, Numbers will recalculate
+				var tstride = 256; // NOTE: if this is not 256, Numbers will assert and recalculate
 				tilestore[2] = [{type: 0, data: write_varint49(tstride)}];
 				//tilestore[3] = [{type: 0, data: write_varint49(USE_WIDE_ROWS ? 1 : 0)}]; // elicits a modification message
 
 				var tileref = parse_TSP_Reference(parse_shallow(tilestore[1][0].data)[2][0].data);
-				var save_token = 0;
+
+				/* save the save_token from package metadata */
+				var save_token = ((): number => {
+					/* .TSP.PackageMetadata */
+					var metadata = numbers_iwa_find(cfb, deps, 2);
+					var mlist = parse_shallow(metadata.messages[0].data);
+					/* .TSP.ComponentInfo field 1 is the id, field 12 is the save token */
+					var mlst = mlist[3].filter(m => parse_varint49(parse_shallow(m.data)[1][0].data) == tileref);
+					return (mlst?.length) ? parse_varint49(parse_shallow(mlst[0].data)[12][0].data) : 0;
+				})();
 
 				/* remove existing tile */
 				{
@@ -1160,8 +1585,6 @@ function write_numbers_tma(cfb: CFB$Container, deps: Dependents, ws, tmaroot: IW
 					numbers_iwa_doit(cfb, deps, 2, (ai => {
 						var mlist = parse_shallow(ai.messages[0].data);
 
-						var lst = mlist[3].filter(m => parse_varint49(parse_shallow(m.data)[1][0].data) == tileref);
-						if(lst && lst.length > 0) save_token = parse_varint49(parse_shallow(lst[0].data)[12][0].data);
 						mlist[3] = mlist[3].filter(m => parse_varint49(parse_shallow(m.data)[1][0].data) != tileref);
 
 						/* remove reference from TableModelArchive file to Tile */
@@ -1178,6 +1601,8 @@ function write_numbers_tma(cfb: CFB$Container, deps: Dependents, ws, tmaroot: IW
 
 						ai.messages[0].data = write_shallow(mlist);
 					}));
+
+					numbers_del_oref(tmaroot, tileref);
 				}
 
 				/* rewrite entire tile storage */
@@ -1205,18 +1630,7 @@ function write_numbers_tma(cfb: CFB$Container, deps: Dependents, ws, tmaroot: IW
 						[{type: 0, data: write_varint49(USE_WIDE_ROWS ? 1 : 0)}]
 					];
 					for(var R = tidx * tstride; R <= Math.min(range.e.r, (tidx + 1) * tstride - 1); ++R) {
-						var tilerow: ProtoMessage = [
-							[],
-							[ { type: 0, data: write_varint49(0) }],
-							[ { type: 0, data: write_varint49(0) }],
-							[ { type: 2, data: new Uint8Array([]) }],
-							[ { type: 2, data: new Uint8Array(Array.from({length:510}, () => 255)) }],
-							[ { type: 0, data: write_varint49(5) }],
-							[ { type: 2, data: new Uint8Array([]) }],
-							[ { type: 2, data: new Uint8Array(Array.from({length:510}, () => 255)) }],
-							[ { type: 0, data: write_varint49(1) }],
-						] as ProtoMessage;
-						write_tile_row(tilerow, data[R], SST, USE_WIDE_ROWS);
+						var tilerow = write_TST_TileRowInfo(data[R], SST, USE_WIDE_ROWS);
 						tilerow[1][0].data = write_varint49(R - tidx * tstride);
 						tiledata[5].push({data: write_shallow(tilerow), type: 2});
 					}
@@ -1278,12 +1692,7 @@ function write_numbers_tma(cfb: CFB$Container, deps: Dependents, ws, tmaroot: IW
 					}));
 
 					/* add to TableModelArchive object references */
-					var orefs: number[] = tmaroot.messages[0].meta[5]?.[0] ? parse_packed_varints(tmaroot.messages[0].meta[5][0].data) : [];
-					var orefidx = orefs.indexOf(newtileid);
-					if(orefidx == -1) {
-						orefs[orefidx = orefs.length] = newtileid;
-						tmaroot.messages[0].meta[5] =[ {type: 2, data: write_packed_varints(orefs) }];
-					}
+					numbers_add_oref(tmaroot, newtileid);
 
 					/* add to row rbtree */
 					rbtree[1].push({type: 2, data: write_shallow([
@@ -1345,12 +1754,7 @@ function write_numbers_tma(cfb: CFB$Container, deps: Dependents, ws, tmaroot: IW
 				}));
 
 				/* add object reference from TableModelArchive */
-				/* var*/ orefs /*: number[]*/ = tmaroot.messages[0].meta[5]?.[0] ? parse_packed_varints(tmaroot.messages[0].meta[5][0].data) : [];
-				/* var*/ orefidx = orefs.indexOf(mergeid);
-				if(orefidx == -1) {
-					orefs[orefidx = orefs.length] = mergeid;
-					tmaroot.messages[0].meta[5] =[ {type: 2, data: write_packed_varints(orefs) }];
-				}
+				numbers_add_oref(tmaroot, mergeid);
 
 			} else delete store[13]; // TODO: delete references to merge if not needed
 
