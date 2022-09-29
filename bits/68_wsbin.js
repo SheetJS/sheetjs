@@ -258,9 +258,10 @@ function parse_BrtCellSt(data) {
 	return [cell, value, 'str'];
 }
 function write_BrtCellSt(cell, ncell, o) {
+	var data = cell.v == null ? "" : String(cell.v);
 	if(o == null) o = new_buf(12 + 4 * cell.v.length);
 	write_XLSBCell(ncell, o);
-	write_XLWideString(cell.v, o);
+	write_XLWideString(data, o);
 	return o.length > o.l ? o.slice(0, o.l) : o;
 }
 function parse_BrtShortSt(data) {
@@ -269,9 +270,10 @@ function parse_BrtShortSt(data) {
 	return [cell, value, 'str'];
 }
 function write_BrtShortSt(cell, ncell, o) {
-	if(o == null) o = new_buf(8 + 4 * cell.v.length);
+	var data = cell.v == null ? "" : String(cell.v);
+	if(o == null) o = new_buf(8 + 4 * data.length);
 	write_XLSBShortCell(ncell, o);
-	write_XLWideString(cell.v, o);
+	write_XLWideString(data, o);
 	return o.length > o.l ? o.slice(0, o.l) : o;
 }
 
@@ -824,7 +826,7 @@ function write_ws_bin_cell(ba/*:BufArray*/, cell/*:Cell*/, R/*:number*/, C/*:num
 	switch(cell.t) {
 		case 's': case 'str':
 			if(opts.bookSST) {
-				vv = get_sst_id(opts.Strings, (cell.v/*:any*/), opts.revStrings);
+				vv = get_sst_id(opts.Strings, (cell.v == null ? "" : String(cell.v)/*:any*/), opts.revStrings);
 				o.t = "s"; o.v = vv;
 				if(last_seen) write_record(ba, 0x0012 /* BrtShortIsst */, write_BrtShortIsst(cell, o));
 				else write_record(ba, 0x0007 /* BrtCellIsst */, write_BrtCellIsst(cell, o));

@@ -311,7 +311,7 @@ function sheet_to_dbf(ws/*:Worksheet*/, opts/*:WriteOpts*/) {
 	var cp = +dbf_reverse_map[/*::String(*/current_codepage/*::)*/] || 0x03;
 	h.write_shift(4, 0x00000000 | (cp<<8));
 	if(dbf_codepage_map[cp] != +o.codepage) {
-		console.error("DBF Unsupported codepage " + current_codepage + ", using 1252");
+		if(o.codepage) console.error("DBF Unsupported codepage " + current_codepage + ", using 1252");
 		current_codepage = 1252;
 	}
 
@@ -578,7 +578,7 @@ var SYLK = /*#__PURE__*/(function() {
 			case 'b': o += cell.v ? "TRUE" : "FALSE"; break;
 			case 'e': o += cell.w || cell.v; break;
 			case 'd': o += '"' + (cell.w || cell.v) + '"'; break;
-			case 's': o += '"' + cell.v.replace(/"/g,"").replace(/;/g, ";;") + '"'; break;
+			case 's': o += '"' + (cell.v == null ? "" : String(cell.v)).replace(/"/g,"").replace(/;/g, ";;") + '"'; break;
 		}
 		return o;
 	}

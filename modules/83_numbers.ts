@@ -573,8 +573,10 @@ function write_new_storage(cell: CellObject, sst: string[]): Uint8Array {
 		case "n": out[1] = 2; writeDecimal128LE(out, l, cell.v as number); flags |= 1; l += 16; break;
 		case "b": out[1] = 6; dv.setFloat64(l, cell.v ? 1 : 0, true); flags |= 2; l += 8; break;
 		case "s":
-			if(sst.indexOf(cell.v as string) == -1) throw new Error(`Value ${cell.v} missing from SST!`);
-			out[1] = 3; dv.setUint32(l, sst.indexOf(cell.v as string), true); flags |= 8; l += 4; break;
+			var s = cell.v == null ? "" : String(cell.v);
+			var isst = sst.indexOf(s);
+			if(isst == -1) sst[isst = sst.length] = s;
+			out[1] = 3; dv.setUint32(l, isst, true); flags |= 8; l += 4; break;
 		default: throw "unsupported cell type " + cell.t;
 	}
 	dv.setUint32(8, flags, true);
@@ -588,8 +590,10 @@ function write_old_storage(cell: CellObject, sst: string[]): Uint8Array {
 		case "n": out[2] = 2; dv.setFloat64(l, cell.v as number, true); flags |= 0x20; l += 8; break;
 		case "b": out[2] = 6; dv.setFloat64(l, cell.v ? 1 : 0, true); flags |= 0x20; l += 8; break;
 		case "s":
-			if(sst.indexOf(cell.v as string) == -1) throw new Error(`Value ${cell.v} missing from SST!`);
-			out[2] = 3; dv.setUint32(l, sst.indexOf(cell.v as string), true); flags |= 0x10; l += 4; break;
+			var s = cell.v == null ? "" : String(cell.v);
+			var isst = sst.indexOf(s);
+			if(isst == -1) sst[isst = sst.length] = s;
+			out[2] = 3; dv.setUint32(l, isst, true); flags |= 0x10; l += 4; break;
 		default: throw "unsupported cell type " + cell.t;
 	}
 	dv.setUint32(8, flags, true);
@@ -957,7 +961,14 @@ function write_TST_TileRowInfo(data: any[], SST: string[], wide: boolean): Proto
 				celload = write_new_storage({t: "b", v: data[C]}, SST);
 				/*if(!wide)*/ _celload = write_old_storage({t: "b", v: data[C]}, SST);
 				break;
-			default: throw new Error("Unsupported value " + data[C]);
+			default:
+				// TODO: write the actual date code
+				if(data[C] instanceof Date) {
+					celload = write_new_storage({t: "s", v: (data[C] as Date).toISOString()}, SST);
+					/*if(!wide)*/ _celload = write_old_storage({t: "s", v: (data[C] as Date).toISOString()}, SST);
+					break;
+				}
+				throw new Error("Unsupported value " + data[C]);
 		}
 		cell_storage.push(celload); last_offset += celload.length;
 		/*if(!wide)*/ { _cell_storage.push(_celload); _last_offset += _celload.length; }
@@ -1491,8 +1502,7 @@ function write_numbers_tma(cfb: CFB$Container, deps: Dependents, ws: WorkSheet, 
 
 	/* preprocess data and build up shared string table */
 	var data = sheet_to_json<any>(ws, { range, header: 1 });
-	var SST = ["~Sh33tJ5~"], SST_set = new Set(SST);
-	data.forEach(row => row.forEach(cell => { if(typeof cell == "string" && !SST_set.has(cell)) { SST.push(cell); SST_set.add(cell); } }));
+	var SST = ["~Sh33tJ5~"];
 
 	/* identifier for finding the TableModelArchive in the archive */
 	var loc = deps[tmaref].location;
@@ -1534,24 +1544,6 @@ function write_numbers_tma(cfb: CFB$Container, deps: Dependents, ws: WorkSheet, 
 					base_bucket[2][C] = { type: base_bucket[2][0].type, data: write_shallow(_bucket) };
 				}
 				colhead.messages[0].data = write_shallow(base_bucket);
-			});
-
-			/* rebuild shared string table */
-			var sstref = parse_TSP_Reference(store[4][0].data);
-			numbers_iwa_doit(cfb, deps, sstref, (sstroot) => {
-				var sstdata = parse_shallow(sstroot.messages[0].data);
-				{
-					sstdata[3] = [];
-					SST.forEach((str, i) => {
-						if(i == 0) return; // Numbers will assert if index zero
-						sstdata[3].push({type: 2, data: write_shallow([ [],
-							[ { type: 0, data: write_varint49(i) } ],
-							[ { type: 0, data: write_varint49(1) } ],
-							[ { type: 2, data: stru8(str) } ]
-						])});
-					});
-				}
-				sstroot.messages[0].data = write_shallow(sstdata);
 			});
 
 			var rbtree = parse_shallow(store[9][0].data);
@@ -1757,6 +1749,24 @@ function write_numbers_tma(cfb: CFB$Container, deps: Dependents, ws: WorkSheet, 
 				numbers_add_oref(tmaroot, mergeid);
 
 			} else delete store[13]; // TODO: delete references to merge if not needed
+
+			/* rebuild shared string table */
+			var sstref = parse_TSP_Reference(store[4][0].data);
+			numbers_iwa_doit(cfb, deps, sstref, (sstroot) => {
+				var sstdata = parse_shallow(sstroot.messages[0].data);
+				{
+					sstdata[3] = [];
+					SST.forEach((str, i) => {
+						if(i == 0) return; // Numbers will assert if index zero
+						sstdata[3].push({type: 2, data: write_shallow([ [],
+							[ { type: 0, data: write_varint49(i) } ],
+							[ { type: 0, data: write_varint49(1) } ],
+							[ { type: 2, data: stru8(str) } ]
+						])});
+					});
+				}
+				sstroot.messages[0].data = write_shallow(sstdata);
+			});
 
 		}
 		pb[4][0].data = write_shallow(store);

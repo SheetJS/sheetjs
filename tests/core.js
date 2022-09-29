@@ -13,10 +13,8 @@ declare var before:(test:EmptyFunc)=>void;
 declare var afterEach:(test:EmptyFunc)=>void;
 declare var cptable: any;
 */
-var X, XLSX_ZAHL = XLSX_ZAHL_PAYLOAD;
-var modp = './';
+var X = require("./"), XLSX_ZAHL = require("./dist/xlsx.zahl");
 var fs = require('fs'), assert = require('assert');
-describe('source',function(){it('should load',function(){X=require(modp);});});
 var DIF_XL = true;
 
 var browser = typeof document !== 'undefined';
@@ -27,7 +25,7 @@ var Buffer_from = /*::(*/function(){}/*:: :any)*/;
 
 if(typeof Buffer !== 'undefined') {
 	var nbfs = !Buffer.from;
-	if(!nbfs) try { Buffer.from("foo", "utf8"); } catch(e) { nbfs = true; }
+	if(!nbfs) try { Buffer.from("foo", "utf-8"); } catch(e) { nbfs = true; }
 	Buffer_from = nbfs ? function(buf, enc) { return (enc) ? new Buffer(buf, enc) : new Buffer(buf); } : Buffer.from.bind(Buffer);
 	// $FlowIgnore
 	if(!Buffer.alloc) Buffer.alloc = function(n) { return new Buffer(n); };
@@ -398,11 +396,6 @@ function check_comments(wb) {
 
 describe('parse options', function() {
 	var html_cell_types = ['s'];
-	var bef = (function() {
-		X = require(modp);
-	});
-	if(typeof before != 'undefined') before(bef);
-	else it('before', bef);
 	describe('cell', function() {
 		it('XLSX should generate HTML by default', function() {
 			var wb = X.read(fs.readFileSync(paths.cstxlsx), {type:TYPE});
@@ -750,7 +743,6 @@ describe('output formats', function() {
 		["prn",   false,   true]
 	];
 	function RT(T) {
-		if(!X) X = require(modp);
 		fmts.forEach(function(fmt) {
 			var wb = X.utils.book_new();
 			X.utils.book_append_sheet(wb, X.utils.aoa_to_sheet([['R',"\u2603"],["\u0BEE",2]]), "Sheet1");
@@ -929,7 +921,6 @@ describe('parse features', function() {
 
 	describe('comments', function() {
 		if(fs.existsSync(paths.swcxlsx)) it('should have comment as part of cell properties', function(){
-			X = require(modp);
 			var sheet = 'Sheet1';
 			var wb1=X.read(fs.readFileSync(paths.swcxlsx), {type:TYPE});
 			var wb2=X.read(fs.readFileSync(paths.swcxlsb), {type:TYPE});
@@ -1034,7 +1025,6 @@ describe('parse features', function() {
 	describe('column properties', function() {
 		var wbs = [], wbs_no_slk = [];
 		var bef = (function() {
-			X = require(modp);
 			wbs = CWPaths.map(function(n) { return X.read(fs.readFileSync(n), {type:TYPE, cellStyles:true}); });
 			wbs_no_slk = wbs.slice(0, 5);
 		});
@@ -1077,7 +1067,6 @@ describe('parse features', function() {
 		var wbs = [], ols = [];
 		var ol = fs.existsSync(paths.olxls);
 		var bef = (function() {
-			X = require(modp);
 			wbs = RHPaths.map(function(p) { return X.read(fs.readFileSync(p), {type:TYPE, cellStyles:true}); });
 			/* */
 			if(!ol) return;
@@ -1123,7 +1112,6 @@ describe('parse features', function() {
 	describe('merge cells',function() {
 		var wbs=[];
 		var bef = (function() {
-			X = require(modp);
 			wbs = MCPaths.map(function(p) { return X.read(fs.readFileSync(p), {type:TYPE}); });
 		});
 		if(typeof before != 'undefined') before(bef);
@@ -1142,7 +1130,6 @@ describe('parse features', function() {
 	describe('should find hyperlinks', function() {
 		var wb1, wb2;
 		var bef = (function() {
-			X = require(modp);
 			wb1 = HLPaths.map(function(p) { return X.read(fs.readFileSync(p), {type:TYPE, WTF:true}); });
 			wb2 = ILPaths.map(function(p) { return X.read(fs.readFileSync(p), {type:TYPE, WTF:true}); });
 		});
@@ -1482,7 +1469,6 @@ describe('write features', function() {
 			};
 			var ws;
 			var bef = (function() {
-				X = require(modp);
 				ws = X.utils.aoa_to_sheet([["a","b","c"],[1,2,3]]);
 			});
 			if(typeof before != 'undefined') before(bef);
@@ -1560,6 +1546,21 @@ describe('write features', function() {
 		assert.equal(Name.Ref, "Sheet1!$A$1:$C$3");
 		assert.equal(wb2.Workbook.Names.length, wb3.Workbook.Names.length);
 	}); });
+	it('should handle non-string values for "s" cells', function() {[
+		"xlsx", "xlsb", "xls", "biff5", "biff2", "xlml", "numbers", "ods", "fods", "wk3", "csv", "txt", "sylk", "html", "dif", "dbf", "wk1", "rtf", "prn"
+	].forEach(function(fmt) {
+		var ws = X.utils.aoa_to_sheet([
+			["String", "123"],
+			["Number", 123],
+			["Boolean", true],
+			["Date", new Date()],
+		], { cellDates: true });
+		ws["B2"].t = ws["B3"].t = ws["B4"].t = "s"
+		var wb = X.utils.book_new();
+		X.utils.book_append_sheet(wb, ws, "Sheet1");
+		X.write(wb, {type: TYPE, bookType: fmt, bookSST: false, numbers:XLSX_ZAHL});
+		X.write(wb, {type: TYPE, bookType: fmt, bookSST: true, numbers:XLSX_ZAHL});
+	}); });
 });
 
 function seq(end/*:number*/, start/*:?number*/)/*:Array<number>*/ {
@@ -1596,9 +1597,6 @@ function parseDate(str/*:string|Date*/)/*:Date*/ {
 var fixdate = browser ? parseDate("2014-02-19T14:30:00.000Z") : new Date("2014-02-19T14:30Z");
 
 describe('roundtrip features', function() {
-	var bef = (function() { X = require(modp); XLSX_ZAHL=require("./dist/xlsx.zahl"); });
-	if(typeof before != 'undefined') before(bef);
-	else it('before', bef);
 	describe('should preserve core properties', function() { [
 		['xls', paths.cpxls],
 		['xlml', paths.cpxml],
@@ -2128,7 +2126,7 @@ function plaintext_test(wb, raw) {
 	var sheet = wb.Sheets[wb.SheetNames[0]];
 	plaintext_val.forEach(function(x) {
 		var cell = get_cell(sheet, x[0]);
-		var tcval = x[2+(!!raw ? 1 : 0)];
+		var tcval = x[2+(raw ? 1 : 0)];
 		var type = raw ? 's' : x[1];
 		if(x.length == 1) { if(cell) { assert.equal(cell.t, 'z'); assert.ok(!cell.v); } return; }
 		assert.equal(cell.v, tcval); assert.equal(cell.t, type);

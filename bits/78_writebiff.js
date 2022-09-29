@@ -68,7 +68,7 @@ function write_ws_biff2_cell(ba/*:BufArray*/, cell/*:Cell*/, R/*:number*/, C/*:n
 		case 'b': case 'e': write_biff_rec(ba, 0x0005, write_BIFF2BERR(R, C, cell.v, cell.t)); return;
 		/* TODO: codepage, sst */
 		case 's': case 'str':
-			write_biff_rec(ba, 0x0004, write_BIFF2LABEL(R, C, (cell.v||"").slice(0,255)));
+			write_biff_rec(ba, 0x0004, write_BIFF2LABEL(R, C, cell.v == null ? "" : String(cell.v).slice(0,255)));
 			return;
 	}
 	write_biff_rec(ba, 0x0001, write_BIFF2Cell(null, R, C));
@@ -192,9 +192,9 @@ function write_ws_biff8_cell(ba/*:BufArray*/, cell/*:Cell*/, R/*:number*/, C/*:n
 		/* TODO: codepage, sst */
 		case 's': case 'str':
 			if(opts.bookSST) {
-				var isst = get_sst_id(opts.Strings, cell.v, opts.revStrings);
+				var isst = get_sst_id(opts.Strings, cell.v == null ? "" : String(cell.v), opts.revStrings);
 				write_biff_rec(ba, 0x00fd /* LabelSst */, write_LabelSst(R, C, isst, os, opts));
-			} else write_biff_rec(ba, 0x0204 /* Label */, write_Label(R, C, (cell.v||"").slice(0,255), os, opts));
+			} else write_biff_rec(ba, 0x0204 /* Label */, write_Label(R, C, (cell.v == null ? "" : String(cell.v)).slice(0,255), os, opts));
 			break;
 		default:
 			write_biff_rec(ba, 0x0201 /* Blank */, write_XLSCell(R, C, os));

@@ -7868,7 +7868,7 @@ function sheet_to_dbf(ws, opts) {
 	var cp = +dbf_reverse_map[current_codepage] || 0x03;
 	h.write_shift(4, 0x00000000 | (cp<<8));
 	if(dbf_codepage_map[cp] != +o.codepage) {
-		console.error("DBF Unsupported codepage " + current_codepage + ", using 1252");
+		if(o.codepage) console.error("DBF Unsupported codepage " + current_codepage + ", using 1252");
 		current_codepage = 1252;
 	}
 
@@ -8135,7 +8135,7 @@ var SYLK = (function() {
 			case 'b': o += cell.v ? "TRUE" : "FALSE"; break;
 			case 'e': o += cell.w || cell.v; break;
 			case 'd': o += '"' + (cell.w || cell.v) + '"'; break;
-			case 's': o += '"' + cell.v.replace(/"/g,"").replace(/;/g, ";;") + '"'; break;
+			case 's': o += '"' + (cell.v == null ? "" : String(cell.v)).replace(/"/g,"").replace(/;/g, ";;") + '"'; break;
 		}
 		return o;
 	}
@@ -9915,6 +9915,7 @@ function write_sst_xml(sst, opts) {
 		else {
 			sitag += "<t";
 			if(!s.t) s.t = "";
+			if(typeof s.t !== "string") s.t = String(s.t);
 			if(s.t.match(straywsregex)) sitag += ' xml:space="preserve"';
 			sitag += ">" + escapexml(s.t) + "</t>";
 		}
@@ -15449,7 +15450,10 @@ function write_ws_xml_cell(cell, ref, ws, opts) {
 		var ff = cell.F && cell.F.slice(0, ref.length) == ref ? {t:"array", ref:cell.F} : null;
 		v = writextag('f', escapexml(cell.f), ff) + (cell.v != null ? v : "");
 	}
-	if(cell.l) ws['!links'].push([ref, cell.l]);
+	if(cell.l) {
+		cell.l.display = escapexml(vv);
+		ws['!links'].push([ref, cell.l]);
+	}
 	if(cell.D) o.cm = 1;
 	return writextag('c', v, o);
 }
@@ -15759,6 +15763,7 @@ ws['!links'].forEach(function(l) {
 			}
 			if((relc = l[1].Target.indexOf("#")) > -1) rel.location = escapexml(l[1].Target.slice(relc+1));
 			if(l[1].Tooltip) rel.tooltip = escapexml(l[1].Tooltip);
+			rel.display = l[1].display;
 			o[o.length] = writextag("hyperlink",null,rel);
 		});
 		o[o.length] = "</hyperlinks>";
@@ -16063,9 +16068,10 @@ function parse_BrtCellSt(data) {
 	return [cell, value, 'str'];
 }
 function write_BrtCellSt(cell, ncell, o) {
+	var data = cell.v == null ? "" : String(cell.v);
 	if(o == null) o = new_buf(12 + 4 * cell.v.length);
 	write_XLSBCell(ncell, o);
-	write_XLWideString(cell.v, o);
+	write_XLWideString(data, o);
 	return o.length > o.l ? o.slice(0, o.l) : o;
 }
 function parse_BrtShortSt(data) {
@@ -16074,9 +16080,10 @@ function parse_BrtShortSt(data) {
 	return [cell, value, 'str'];
 }
 function write_BrtShortSt(cell, ncell, o) {
-	if(o == null) o = new_buf(8 + 4 * cell.v.length);
+	var data = cell.v == null ? "" : String(cell.v);
+	if(o == null) o = new_buf(8 + 4 * data.length);
 	write_XLSBShortCell(ncell, o);
-	write_XLWideString(cell.v, o);
+	write_XLWideString(data, o);
 	return o.length > o.l ? o.slice(0, o.l) : o;
 }
 
@@ -16628,7 +16635,7 @@ function write_ws_bin_cell(ba, cell, R, C, opts, ws, last_seen) {
 	switch(cell.t) {
 		case 's': case 'str':
 			if(opts.bookSST) {
-				vv = get_sst_id(opts.Strings, (cell.v), opts.revStrings);
+				vv = get_sst_id(opts.Strings, (cell.v == null ? "" : String(cell.v)), opts.revStrings);
 				o.t = "s"; o.v = vv;
 				if(last_seen) write_record(ba, 0x0012 /* BrtShortIsst */, write_BrtShortIsst(cell, o));
 				else write_record(ba, 0x0007 /* BrtCellIsst */, write_BrtCellIsst(cell, o));
@@ -21160,7 +21167,7 @@ function write_ws_biff2_cell(ba, cell, R, C) {
 		case 'b': case 'e': write_biff_rec(ba, 0x0005, write_BIFF2BERR(R, C, cell.v, cell.t)); return;
 		/* TODO: codepage, sst */
 		case 's': case 'str':
-			write_biff_rec(ba, 0x0004, write_BIFF2LABEL(R, C, (cell.v||"").slice(0,255)));
+			write_biff_rec(ba, 0x0004, write_BIFF2LABEL(R, C, cell.v == null ? "" : String(cell.v).slice(0,255)));
 			return;
 	}
 	write_biff_rec(ba, 0x0001, write_BIFF2Cell(null, R, C));
@@ -21283,9 +21290,9 @@ function write_ws_biff8_cell(ba, cell, R, C, opts) {
 		/* TODO: codepage, sst */
 		case 's': case 'str':
 			if(opts.bookSST) {
-				var isst = get_sst_id(opts.Strings, cell.v, opts.revStrings);
+				var isst = get_sst_id(opts.Strings, cell.v == null ? "" : String(cell.v), opts.revStrings);
 				write_biff_rec(ba, 0x00fd /* LabelSst */, write_LabelSst(R, C, isst, os, opts));
-			} else write_biff_rec(ba, 0x0204 /* Label */, write_Label(R, C, (cell.v||"").slice(0,255), os, opts));
+			} else write_biff_rec(ba, 0x0204 /* Label */, write_Label(R, C, (cell.v == null ? "" : String(cell.v)).slice(0,255), os, opts));
 			break;
 		default:
 			write_biff_rec(ba, 0x0201 /* Blank */, write_XLSCell(R, C, os));
@@ -23169,6 +23176,39 @@ function varint_to_i32(buf) {
     }
   return i32;
 }
+function varint_to_u64(buf) {
+  var l = 0, lo = buf[l] & 127, hi = 0;
+  varint:
+    if (buf[l++] >= 128) {
+      lo |= (buf[l] & 127) << 7;
+      if (buf[l++] < 128)
+        break varint;
+      lo |= (buf[l] & 127) << 14;
+      if (buf[l++] < 128)
+        break varint;
+      lo |= (buf[l] & 127) << 21;
+      if (buf[l++] < 128)
+        break varint;
+      lo |= (buf[l] & 127) << 28;
+      hi = buf[l] >> 4 & 7;
+      if (buf[l++] < 128)
+        break varint;
+      hi |= (buf[l] & 127) << 3;
+      if (buf[l++] < 128)
+        break varint;
+      hi |= (buf[l] & 127) << 10;
+      if (buf[l++] < 128)
+        break varint;
+      hi |= (buf[l] & 127) << 17;
+      if (buf[l++] < 128)
+        break varint;
+      hi |= (buf[l] & 127) << 24;
+      if (buf[l++] < 128)
+        break varint;
+      hi |= (buf[l] & 127) << 31;
+    }
+  return [lo >>> 0, hi >>> 0];
+}
 function parse_shallow(buf) {
   var out = [], ptr = [0];
   while (ptr[0] < buf.length) {
@@ -23705,10 +23745,12 @@ function write_new_storage(cell, sst) {
       l += 8;
       break;
     case "s":
-      if (sst.indexOf(cell.v) == -1)
-        throw new Error("Value ".concat(cell.v, " missing from SST!"));
+      var s = cell.v == null ? "" : String(cell.v);
+      var isst = sst.indexOf(s);
+      if (isst == -1)
+        sst[isst = sst.length] = s;
       out[1] = 3;
-      dv.setUint32(l, sst.indexOf(cell.v), true);
+      dv.setUint32(l, isst, true);
       flags |= 8;
       l += 4;
       break;
@@ -23735,10 +23777,12 @@ function write_old_storage(cell, sst) {
       l += 8;
       break;
     case "s":
-      if (sst.indexOf(cell.v) == -1)
-        throw new Error("Value ".concat(cell.v, " missing from SST!"));
+      var s = cell.v == null ? "" : String(cell.v);
+      var isst = sst.indexOf(s);
+      if (isst == -1)
+        sst[isst = sst.length] = s;
       out[2] = 3;
-      dv.setUint32(l, sst.indexOf(cell.v), true);
+      dv.setUint32(l, isst, true);
       flags |= 16;
       l += 4;
       break;
@@ -23772,6 +23816,22 @@ function write_TSP_Reference(idx) {
     [{ type: 0, data: write_varint49(idx) }]
   ]);
 }
+function numbers_add_oref(iwa, ref) {
+  var _a;
+  var orefs = ((_a = iwa.messages[0].meta[5]) == null ? void 0 : _a[0]) ? parse_packed_varints(iwa.messages[0].meta[5][0].data) : [];
+  var orefidx = orefs.indexOf(ref);
+  if (orefidx == -1) {
+    orefs.push(ref);
+    iwa.messages[0].meta[5] = [{ type: 2, data: write_packed_varints(orefs) }];
+  }
+}
+function numbers_del_oref(iwa, ref) {
+  var _a;
+  var orefs = ((_a = iwa.messages[0].meta[5]) == null ? void 0 : _a[0]) ? parse_packed_varints(iwa.messages[0].meta[5][0].data) : [];
+  iwa.messages[0].meta[5] = [{ type: 2, data: write_packed_varints(orefs.filter(function(r) {
+    return r != ref;
+  })) }];
+}
 function parse_TST_TableDataList(M, root) {
   var pb = parse_shallow(root.data);
   var type = varint_to_i32(pb[1][0].data);
@@ -23779,6 +23839,8 @@ function parse_TST_TableDataList(M, root) {
   var data = [];
   (entries || []).forEach(function(entry) {
     var le = parse_shallow(entry.data);
+    if (!le[1])
+      return;
     var key = varint_to_i32(le[1][0].data) >>> 0;
     switch (type) {
       case 1:
@@ -23988,7 +24050,7 @@ function parse_TN_DocumentArchive(M, root, opts) {
   return out;
 }
 function parse_numbers_iwa(cfb, opts) {
-  var _a, _b, _c, _d, _e, _f, _g, _h;
+  var _a, _b, _c, _d, _e, _f, _g;
   var M = {}, indices = [];
   cfb.FullPaths.forEach(function(p) {
     if (p.match(/\.iwpv2/))
@@ -24018,9 +24080,9 @@ function parse_numbers_iwa(cfb, opts) {
   });
   if (!indices.length)
     throw new Error("File has no messages");
-  if (((_d = (_c = (_b = (_a = M == null ? void 0 : M[1]) == null ? void 0 : _a[0]) == null ? void 0 : _b.meta) == null ? void 0 : _c[1]) == null ? void 0 : _d[0].data) && varint_to_i32(M[1][0].meta[1][0].data) == 1e4)
+  if (((_c = (_b = (_a = M == null ? void 0 : M[1]) == null ? void 0 : _a[0].meta) == null ? void 0 : _b[1]) == null ? void 0 : _c[0].data) && varint_to_i32(M[1][0].meta[1][0].data) == 1e4)
     throw new Error("Pages documents are not supported");
-  var docroot = ((_h = (_g = (_f = (_e = M == null ? void 0 : M[1]) == null ? void 0 : _e[0]) == null ? void 0 : _f.meta) == null ? void 0 : _g[1]) == null ? void 0 : _h[0].data) && varint_to_i32(M[1][0].meta[1][0].data) == 1 && M[1][0];
+  var docroot = ((_g = (_f = (_e = (_d = M == null ? void 0 : M[1]) == null ? void 0 : _d[0]) == null ? void 0 : _e.meta) == null ? void 0 : _f[1]) == null ? void 0 : _g[0].data) && varint_to_i32(M[1][0].meta[1][0].data) == 1 && M[1][0];
   if (!docroot)
     indices.forEach(function(idx) {
       M[idx].forEach(function(iwam) {
@@ -24037,8 +24099,23 @@ function parse_numbers_iwa(cfb, opts) {
     throw new Error("Cannot find Document root");
   return parse_TN_DocumentArchive(M, docroot, opts);
 }
-function write_tile_row(tri, data, SST, wide) {
+function write_TST_TileRowInfo(data, SST, wide) {
   var _a, _b;
+  var tri = [
+    [],
+    [{ type: 0, data: write_varint49(0) }],
+    [{ type: 0, data: write_varint49(0) }],
+    [{ type: 2, data: new Uint8Array([]) }],
+    [{ type: 2, data: new Uint8Array(Array.from({ length: 510 }, function() {
+      return 255;
+    })) }],
+    [{ type: 0, data: write_varint49(5) }],
+    [{ type: 2, data: new Uint8Array([]) }],
+    [{ type: 2, data: new Uint8Array(Array.from({ length: 510 }, function() {
+      return 255;
+    })) }],
+    [{ type: 0, data: write_varint49(1) }]
+  ];
   if (!((_a = tri[6]) == null ? void 0 : _a[0]) || !((_b = tri[7]) == null ? void 0 : _b[0]))
     throw "Mutation only works on post-BNC storages!";
   var cnt = 0;
@@ -24078,6 +24155,11 @@ function write_tile_row(tri, data, SST, wide) {
         _celload = write_old_storage({ t: "b", v: data[C] }, SST);
         break;
       default:
+        if (data[C] instanceof Date) {
+          celload = write_new_storage({ t: "s", v: data[C].toISOString() }, SST);
+          _celload = write_old_storage({ t: "s", v: data[C].toISOString() }, SST);
+          break;
+        }
         throw new Error("Unsupported value " + data[C]);
     }
     cell_storage.push(celload);
@@ -24097,7 +24179,7 @@ function write_tile_row(tri, data, SST, wide) {
   tri[6][0].data = u8concat(cell_storage);
   tri[3][0].data = u8concat(_cell_storage);
   tri[8] = [{ type: 0, data: write_varint49(wide ? 1 : 0) }];
-  return cnt;
+  return tri;
 }
 function write_iwam(type, payload) {
   return {
@@ -24165,19 +24247,20 @@ function write_numbers_iwa(wb, opts) {
   if (!opts || !opts.numbers)
     throw new Error("Must pass a `numbers` option -- check the README");
   var cfb = CFB.read(opts.numbers, { type: "base64" });
-  var dependents = build_numbers_deps(cfb);
-  var cfb_DA = CFB.find(cfb, dependents[1].location);
-  if (!cfb_DA)
-    throw "Could not find ".concat(dependents[1].location, " in Numbers template");
-  var iwa_DA = parse_iwa_file(decompress_iwa_file(cfb_DA.content));
-  var docroot = iwa_DA.find(function(packet) {
-    return packet.id == 1;
-  });
+  var deps = build_numbers_deps(cfb);
+  var docroot = numbers_iwa_find(cfb, deps, 1);
   if (docroot == null)
     throw "Could not find message ".concat(1, " in Numbers template");
   var sheetrefs = mappa(parse_shallow(docroot.messages[0].data)[1], parse_TSP_Reference);
+  if (sheetrefs.length > 1)
+    throw new Error("Template NUMBERS file must have exactly one sheet");
   wb.SheetNames.forEach(function(name, idx) {
-    return write_numbers_ws(cfb, dependents, wb.Sheets[name], name, idx, sheetrefs[idx]);
+    if (idx >= 1) {
+      numbers_add_ws(cfb, deps, idx + 1);
+      docroot = numbers_iwa_find(cfb, deps, 1);
+      sheetrefs = mappa(parse_shallow(docroot.messages[0].data)[1], parse_TSP_Reference);
+    }
+    write_numbers_ws(cfb, deps, wb.Sheets[name], name, idx, sheetrefs[idx]);
   });
   return cfb;
 }
@@ -24203,9 +24286,364 @@ function numbers_iwa_find(cfb, deps, id) {
   });
   return ainfo;
 }
+function numbers_add_ws(cfb, deps, wsidx) {
+  var sheetref = -1, newsheetref = -1;
+  var remap = {};
+  numbers_iwa_doit(cfb, deps, 1, function(docroot, arch) {
+    var doc = parse_shallow(docroot.messages[0].data);
+    sheetref = parse_TSP_Reference(parse_shallow(docroot.messages[0].data)[1][0].data);
+    newsheetref = get_unique_msgid({ deps: [1], location: deps[sheetref].location, type: 2 }, deps);
+    remap[sheetref] = newsheetref;
+    numbers_add_oref(docroot, newsheetref);
+    doc[1].push({ type: 2, data: write_TSP_Reference(newsheetref) });
+    var sheet = numbers_iwa_find(cfb, deps, sheetref);
+    sheet.id = newsheetref;
+    if (deps[1].location == deps[newsheetref].location)
+      arch.push(sheet);
+    else
+      numbers_iwa_doit(cfb, deps, newsheetref, function(_, x) {
+        return x.push(sheet);
+      });
+    docroot.messages[0].data = write_shallow(doc);
+  });
+  var tiaref = -1;
+  numbers_iwa_doit(cfb, deps, newsheetref, function(sheetroot, arch) {
+    var sa = parse_shallow(sheetroot.messages[0].data);
+    for (var i = 3; i <= 69; ++i)
+      delete sa[i];
+    var drawables = mappa(sa[2], parse_TSP_Reference);
+    drawables.forEach(function(n) {
+      return numbers_del_oref(sheetroot, n);
+    });
+    tiaref = get_unique_msgid({ deps: [newsheetref], location: deps[drawables[0]].location, type: deps[drawables[0]].type }, deps);
+    numbers_add_oref(sheetroot, tiaref);
+    remap[drawables[0]] = tiaref;
+    sa[2] = [{ type: 2, data: write_TSP_Reference(tiaref) }];
+    var tia = numbers_iwa_find(cfb, deps, drawables[0]);
+    tia.id = tiaref;
+    if (deps[drawables[0]].location == deps[newsheetref].location)
+      arch.push(tia);
+    else {
+      var loc2 = deps[newsheetref].location;
+      loc2 = loc2.replace(/^Root Entry\//, "");
+      loc2 = loc2.replace(/^Index\//, "").replace(/\.iwa$/, "");
+      numbers_iwa_doit(cfb, deps, 2, function(ai) {
+        var mlist = parse_shallow(ai.messages[0].data);
+        var parentidx = mlist[3].findIndex(function(m) {
+          var _a, _b;
+          var mm = parse_shallow(m.data);
+          if ((_a = mm[3]) == null ? void 0 : _a[0])
+            return u8str(mm[3][0].data) == loc2;
+          if (((_b = mm[2]) == null ? void 0 : _b[0]) && u8str(mm[2][0].data) == loc2)
+            return true;
+          return false;
+        });
+        var parent = parse_shallow(mlist[3][parentidx].data);
+        if (!parent[6])
+          parent[6] = [];
+        parent[6].push({
+          type: 2,
+          data: write_shallow([
+            [],
+            [{ type: 0, data: write_varint49(tiaref) }]
+          ])
+        });
+        mlist[3][parentidx].data = write_shallow(parent);
+        ai.messages[0].data = write_shallow(mlist);
+      });
+      numbers_iwa_doit(cfb, deps, tiaref, function(_, x) {
+        return x.push(tia);
+      });
+    }
+    sheetroot.messages[0].data = write_shallow(sa);
+  });
+  var tmaref = -1;
+  numbers_iwa_doit(cfb, deps, tiaref, function(tiaroot, arch) {
+    var tia = parse_shallow(tiaroot.messages[0].data);
+    var da = parse_shallow(tia[1][0].data);
+    for (var i = 3; i <= 69; ++i)
+      delete da[i];
+    var dap = parse_TSP_Reference(da[2][0].data);
+    da[2][0].data = write_TSP_Reference(remap[dap]);
+    tia[1][0].data = write_shallow(da);
+    var oldtmaref = parse_TSP_Reference(tia[2][0].data);
+    numbers_del_oref(tiaroot, oldtmaref);
+    tmaref = get_unique_msgid({ deps: [tiaref], location: deps[oldtmaref].location, type: deps[oldtmaref].type }, deps);
+    numbers_add_oref(tiaroot, tmaref);
+    remap[oldtmaref] = tmaref;
+    tia[2][0].data = write_TSP_Reference(tmaref);
+    var tma = numbers_iwa_find(cfb, deps, oldtmaref);
+    tma.id = tmaref;
+    if (deps[tiaref].location == deps[tmaref].location)
+      arch.push(tma);
+    else
+      numbers_iwa_doit(cfb, deps, tmaref, function(_, x) {
+        return x.push(tma);
+      });
+    tiaroot.messages[0].data = write_shallow(tia);
+  });
+  var loc = deps[tmaref].location;
+  loc = loc.replace(/^Root Entry\//, "");
+  loc = loc.replace(/^Index\//, "").replace(/\.iwa$/, "");
+  numbers_iwa_doit(cfb, deps, tmaref, function(tmaroot, arch) {
+    var _a, _b;
+    var tma = parse_shallow(tmaroot.messages[0].data);
+    var uuid = u8str(tma[1][0].data), new_uuid = uuid.replace(/-[A-Z0-9]*/, "-".concat(wsidx.toString(16).padStart(4, "0")));
+    tma[1][0].data = stru8(new_uuid);
+    [12, 13, 29, 31, 32, 33, 39, 44, 47, 81, 82, 84].forEach(function(n) {
+      return delete tma[n];
+    });
+    if (tma[45]) {
+      var srrta = parse_shallow(tma[45][0].data);
+      var ref = parse_TSP_Reference(srrta[1][0].data);
+      numbers_del_oref(tmaroot, ref);
+      delete tma[45];
+    }
+    if (tma[70]) {
+      var hsoa = parse_shallow(tma[70][0].data);
+      (_a = hsoa[2]) == null ? void 0 : _a.forEach(function(item) {
+        var hsa = parse_shallow(item.data);
+        [2, 3].map(function(n) {
+          return hsa[n][0];
+        }).forEach(function(hseadata) {
+          var hsea = parse_shallow(hseadata.data);
+          if (!hsea[8])
+            return;
+          var ref2 = parse_TSP_Reference(hsea[8][0].data);
+          numbers_del_oref(tmaroot, ref2);
+        });
+      });
+      delete tma[70];
+    }
+    [
+      46,
+      30,
+      34,
+      35,
+      36,
+      38,
+      48,
+      49,
+      60,
+      61,
+      62,
+      63,
+      64,
+      71,
+      72,
+      73,
+      74,
+      75,
+      85,
+      86,
+      87,
+      88,
+      89
+    ].forEach(function(n) {
+      if (!tma[n])
+        return;
+      var ref2 = parse_TSP_Reference(tma[n][0].data);
+      delete tma[n];
+      numbers_del_oref(tmaroot, ref2);
+    });
+    var store = parse_shallow(tma[4][0].data);
+    {
+      [2, 4, 5, 6, 11, 12, 13, 15, 16, 17, 18, 19, 20, 21, 22].forEach(function(n) {
+        var _a2;
+        if (!((_a2 = store[n]) == null ? void 0 : _a2[0]))
+          return;
+        var oldref = parse_TSP_Reference(store[n][0].data);
+        var newref = get_unique_msgid({ deps: [tmaref], location: deps[oldref].location, type: deps[oldref].type }, deps);
+        numbers_del_oref(tmaroot, oldref);
+        numbers_add_oref(tmaroot, newref);
+        remap[oldref] = newref;
+        var msg = numbers_iwa_find(cfb, deps, oldref);
+        msg.id = newref;
+        if (deps[oldref].location == deps[tmaref].location)
+          arch.push(msg);
+        else {
+          deps[newref].location = deps[oldref].location.replace(oldref.toString(), newref.toString());
+          if (deps[newref].location == deps[oldref].location)
+            deps[newref].location = deps[newref].location.replace(/\.iwa/, "-".concat(newref, ".iwa"));
+          CFB.utils.cfb_add(cfb, deps[newref].location, compress_iwa_file(write_iwa_file([msg])));
+          var newloc = deps[newref].location;
+          newloc = newloc.replace(/^Root Entry\//, "");
+          newloc = newloc.replace(/^Index\//, "").replace(/\.iwa$/, "");
+          numbers_iwa_doit(cfb, deps, 2, function(ai) {
+            var mlist = parse_shallow(ai.messages[0].data);
+            mlist[3].push({ type: 2, data: write_shallow([
+              [],
+              [{ type: 0, data: write_varint49(newref) }],
+              [{ type: 2, data: stru8(newloc.replace(/-.*$/, "")) }],
+              [{ type: 2, data: stru8(newloc) }],
+              [{ type: 2, data: new Uint8Array([2, 0, 0]) }],
+              [{ type: 2, data: new Uint8Array([2, 0, 0]) }],
+              [],
+              [],
+              [],
+              [],
+              [{ type: 0, data: write_varint49(0) }],
+              [],
+              [{ type: 0, data: write_varint49(0) }]
+            ]) });
+            mlist[1] = [{ type: 0, data: write_varint49(Math.max(newref + 1, parse_varint49(mlist[1][0].data))) }];
+            var parentidx = mlist[3].findIndex(function(m) {
+              var _a3, _b2;
+              var mm = parse_shallow(m.data);
+              if ((_a3 = mm[3]) == null ? void 0 : _a3[0])
+                return u8str(mm[3][0].data) == loc;
+              if (((_b2 = mm[2]) == null ? void 0 : _b2[0]) && u8str(mm[2][0].data) == loc)
+                return true;
+              return false;
+            });
+            var parent = parse_shallow(mlist[3][parentidx].data);
+            if (!parent[6])
+              parent[6] = [];
+            parent[6].push({
+              type: 2,
+              data: write_shallow([
+                [],
+                [{ type: 0, data: write_varint49(newref) }]
+              ])
+            });
+            mlist[3][parentidx].data = write_shallow(parent);
+            ai.messages[0].data = write_shallow(mlist);
+          });
+        }
+        store[n][0].data = write_TSP_Reference(newref);
+      });
+      var row_headers = parse_shallow(store[1][0].data);
+      {
+        (_b = row_headers[2]) == null ? void 0 : _b.forEach(function(tspref) {
+          var oldref = parse_TSP_Reference(tspref.data);
+          var newref = get_unique_msgid({ deps: [tmaref], location: deps[oldref].location, type: deps[oldref].type }, deps);
+          numbers_del_oref(tmaroot, oldref);
+          numbers_add_oref(tmaroot, newref);
+          remap[oldref] = newref;
+          var msg = numbers_iwa_find(cfb, deps, oldref);
+          msg.id = newref;
+          if (deps[oldref].location == deps[tmaref].location) {
+            arch.push(msg);
+          } else {
+            deps[newref].location = deps[oldref].location.replace(oldref.toString(), newref.toString());
+            if (deps[newref].location == deps[oldref].location)
+              deps[newref].location = deps[newref].location.replace(/\.iwa/, "-".concat(newref, ".iwa"));
+            CFB.utils.cfb_add(cfb, deps[newref].location, compress_iwa_file(write_iwa_file([msg])));
+            var newloc = deps[newref].location;
+            newloc = newloc.replace(/^Root Entry\//, "");
+            newloc = newloc.replace(/^Index\//, "").replace(/\.iwa$/, "");
+            numbers_iwa_doit(cfb, deps, 2, function(ai) {
+              var mlist = parse_shallow(ai.messages[0].data);
+              mlist[3].push({ type: 2, data: write_shallow([
+                [],
+                [{ type: 0, data: write_varint49(newref) }],
+                [{ type: 2, data: stru8(newloc.replace(/-.*$/, "")) }],
+                [{ type: 2, data: stru8(newloc) }],
+                [{ type: 2, data: new Uint8Array([2, 0, 0]) }],
+                [{ type: 2, data: new Uint8Array([2, 0, 0]) }],
+                [],
+                [],
+                [],
+                [],
+                [{ type: 0, data: write_varint49(0) }],
+                [],
+                [{ type: 0, data: write_varint49(0) }]
+              ]) });
+              mlist[1] = [{ type: 0, data: write_varint49(Math.max(newref + 1, parse_varint49(mlist[1][0].data))) }];
+              var parentidx = mlist[3].findIndex(function(m) {
+                var _a2, _b2;
+                var mm = parse_shallow(m.data);
+                if ((_a2 = mm[3]) == null ? void 0 : _a2[0])
+                  return u8str(mm[3][0].data) == loc;
+                if (((_b2 = mm[2]) == null ? void 0 : _b2[0]) && u8str(mm[2][0].data) == loc)
+                  return true;
+                return false;
+              });
+              var parent = parse_shallow(mlist[3][parentidx].data);
+              if (!parent[6])
+                parent[6] = [];
+              parent[6].push({
+                type: 2,
+                data: write_shallow([
+                  [],
+                  [{ type: 0, data: write_varint49(newref) }]
+                ])
+              });
+              mlist[3][parentidx].data = write_shallow(parent);
+              ai.messages[0].data = write_shallow(mlist);
+            });
+          }
+          tspref.data = write_TSP_Reference(newref);
+        });
+      }
+      store[1][0].data = write_shallow(row_headers);
+      var tiles = parse_shallow(store[3][0].data);
+      {
+        tiles[1].forEach(function(t) {
+          var tst = parse_shallow(t.data);
+          var oldtileref = parse_TSP_Reference(tst[2][0].data);
+          var newtileref = remap[oldtileref];
+          if (!remap[oldtileref]) {
+            newtileref = get_unique_msgid({ deps: [tmaref], location: "", type: deps[oldtileref].type }, deps);
+            deps[newtileref].location = "Root Entry/Index/Tables/Tile-".concat(newtileref, ".iwa");
+            remap[oldtileref] = newtileref;
+            var oldtile = numbers_iwa_find(cfb, deps, oldtileref);
+            oldtile.id = newtileref;
+            numbers_del_oref(tmaroot, oldtileref);
+            numbers_add_oref(tmaroot, newtileref);
+            CFB.utils.cfb_add(cfb, "/Index/Tables/Tile-".concat(newtileref, ".iwa"), compress_iwa_file(write_iwa_file([oldtile])));
+            numbers_iwa_doit(cfb, deps, 2, function(ai) {
+              var mlist = parse_shallow(ai.messages[0].data);
+              mlist[3].push({ type: 2, data: write_shallow([
+                [],
+                [{ type: 0, data: write_varint49(newtileref) }],
+                [{ type: 2, data: stru8("Tables/Tile") }],
+                [{ type: 2, data: stru8("Tables/Tile-".concat(newtileref)) }],
+                [{ type: 2, data: new Uint8Array([2, 0, 0]) }],
+                [{ type: 2, data: new Uint8Array([2, 0, 0]) }],
+                [],
+                [],
+                [],
+                [],
+                [{ type: 0, data: write_varint49(0) }],
+                [],
+                [{ type: 0, data: write_varint49(0) }]
+              ]) });
+              mlist[1] = [{ type: 0, data: write_varint49(Math.max(newtileref + 1, parse_varint49(mlist[1][0].data))) }];
+              var parentidx = mlist[3].findIndex(function(m) {
+                var _a2, _b2;
+                var mm = parse_shallow(m.data);
+                if ((_a2 = mm[3]) == null ? void 0 : _a2[0])
+                  return u8str(mm[3][0].data) == loc;
+                if (((_b2 = mm[2]) == null ? void 0 : _b2[0]) && u8str(mm[2][0].data) == loc)
+                  return true;
+                return false;
+              });
+              var parent = parse_shallow(mlist[3][parentidx].data);
+              if (!parent[6])
+                parent[6] = [];
+              parent[6].push({
+                type: 2,
+                data: write_shallow([
+                  [],
+                  [{ type: 0, data: write_varint49(newtileref) }]
+                ])
+              });
+              mlist[3][parentidx].data = write_shallow(parent);
+              ai.messages[0].data = write_shallow(mlist);
+            });
+          }
+          tst[2][0].data = write_TSP_Reference(newtileref);
+          t.data = write_shallow(tst);
+        });
+      }
+      store[3][0].data = write_shallow(tiles);
+    }
+    tma[4][0].data = write_shallow(store);
+    tmaroot.messages[0].data = write_shallow(tma);
+  });
+}
 function write_numbers_ws(cfb, deps, ws, wsname, sheetidx, rootref) {
-  if (sheetidx >= 1)
-    return console.error("The Numbers writer currently writes only the first table");
   var drawables = [];
   numbers_iwa_doit(cfb, deps, rootref, function(docroot) {
     var sheetref = parse_shallow(docroot.messages[0].data);
@@ -24223,7 +24661,6 @@ function write_numbers_ws(cfb, deps, ws, wsname, sheetidx, rootref) {
 }
 var USE_WIDE_ROWS = true;
 function write_numbers_tma(cfb, deps, ws, tmaroot, tmafile, tmaref) {
-  var _a, _b;
   var range = decode_range(ws["!ref"]);
   range.s.r = range.s.c = 0;
   var trunc = false;
@@ -24238,15 +24675,7 @@ function write_numbers_tma(cfb, deps, ws, tmaroot, tmafile, tmaref) {
   if (trunc)
     console.error("Truncating to ".concat(encode_range(range)));
   var data = sheet_to_json(ws, { range: range, header: 1 });
-  var SST = ["~Sh33tJ5~"], SST_set = new Set(SST);
-  data.forEach(function(row) {
-    return row.forEach(function(cell) {
-      if (typeof cell == "string" && !SST_set.has(cell)) {
-        SST.push(cell);
-        SST_set.add(cell);
-      }
-    });
-  });
+  var SST = ["~Sh33tJ5~"];
   var loc = deps[tmaref].location;
   loc = loc.replace(/^Root Entry\//, "");
   loc = loc.replace(/^Index\//, "").replace(/\.iwa$/, "");
@@ -24259,9 +24688,9 @@ function write_numbers_tma(cfb, deps, ws, tmaroot, tmafile, tmaref) {
     {
       var row_header_ref = parse_TSP_Reference(parse_shallow(store[1][0].data)[2][0].data);
       numbers_iwa_doit(cfb, deps, row_header_ref, function(rowhead, _x) {
-        var _a2;
+        var _a;
         var base_bucket = parse_shallow(rowhead.messages[0].data);
-        if ((_a2 = base_bucket == null ? void 0 : base_bucket[2]) == null ? void 0 : _a2[0])
+        if ((_a = base_bucket == null ? void 0 : base_bucket[2]) == null ? void 0 : _a[0])
           for (var R2 = 0; R2 < data.length; ++R2) {
             var _bucket = parse_shallow(base_bucket[2][0].data);
             _bucket[1][0].data = write_varint49(R2);
@@ -24281,22 +24710,6 @@ function write_numbers_tma(cfb, deps, ws, tmaroot, tmafile, tmaref) {
         }
         colhead.messages[0].data = write_shallow(base_bucket);
       });
-      var sstref = parse_TSP_Reference(store[4][0].data);
-      numbers_iwa_doit(cfb, deps, sstref, function(sstroot) {
-        var sstdata = parse_shallow(sstroot.messages[0].data);
-        {
-          sstdata[3] = [];
-          SST.forEach(function(str, i) {
-            sstdata[3].push({ type: 2, data: write_shallow([
-              [],
-              [{ type: 0, data: write_varint49(i) }],
-              [{ type: 0, data: write_varint49(1) }],
-              [{ type: 2, data: stru8(str) }]
-            ]) });
-          });
-        }
-        sstroot.messages[0].data = write_shallow(sstdata);
-      });
       var rbtree = parse_shallow(store[9][0].data);
       rbtree[1] = [];
       var tilestore = parse_shallow(store[3][0].data);
@@ -24304,25 +24717,27 @@ function write_numbers_tma(cfb, deps, ws, tmaroot, tmafile, tmaref) {
         var tstride = 256;
         tilestore[2] = [{ type: 0, data: write_varint49(tstride) }];
         var tileref = parse_TSP_Reference(parse_shallow(tilestore[1][0].data)[2][0].data);
-        var save_token = 0;
+        var save_token = function() {
+          var metadata = numbers_iwa_find(cfb, deps, 2);
+          var mlist = parse_shallow(metadata.messages[0].data);
+          var mlst = mlist[3].filter(function(m) {
+            return parse_varint49(parse_shallow(m.data)[1][0].data) == tileref;
+          });
+          return (mlst == null ? void 0 : mlst.length) ? parse_varint49(parse_shallow(mlst[0].data)[12][0].data) : 0;
+        }();
         {
           CFB.utils.cfb_del(cfb, deps[tileref].location);
           numbers_iwa_doit(cfb, deps, 2, function(ai) {
             var mlist = parse_shallow(ai.messages[0].data);
-            var lst = mlist[3].filter(function(m) {
-              return parse_varint49(parse_shallow(m.data)[1][0].data) == tileref;
-            });
-            if (lst && lst.length > 0)
-              save_token = parse_varint49(parse_shallow(lst[0].data)[12][0].data);
             mlist[3] = mlist[3].filter(function(m) {
               return parse_varint49(parse_shallow(m.data)[1][0].data) != tileref;
             });
             var parentidx = mlist[3].findIndex(function(m) {
-              var _a2, _b2;
+              var _a, _b;
               var mm = parse_shallow(m.data);
-              if ((_a2 = mm[3]) == null ? void 0 : _a2[0])
+              if ((_a = mm[3]) == null ? void 0 : _a[0])
                 return u8str(mm[3][0].data) == loc;
-              if (((_b2 = mm[2]) == null ? void 0 : _b2[0]) && u8str(mm[2][0].data) == loc)
+              if (((_b = mm[2]) == null ? void 0 : _b[0]) && u8str(mm[2][0].data) == loc)
                 return true;
               return false;
             });
@@ -24335,6 +24750,7 @@ function write_numbers_tma(cfb, deps, ws, tmaroot, tmafile, tmaref) {
             mlist[3][parentidx].data = write_shallow(parent);
             ai.messages[0].data = write_shallow(mlist);
           });
+          numbers_del_oref(tmaroot, tileref);
         }
         tilestore[1] = [];
         var ntiles = Math.ceil((range.e.r + 1) / tstride);
@@ -24357,22 +24773,7 @@ function write_numbers_tma(cfb, deps, ws, tmaroot, tmafile, tmaref) {
             [{ type: 0, data: write_varint49(USE_WIDE_ROWS ? 1 : 0) }]
           ];
           for (var R = tidx * tstride; R <= Math.min(range.e.r, (tidx + 1) * tstride - 1); ++R) {
-            var tilerow = [
-              [],
-              [{ type: 0, data: write_varint49(0) }],
-              [{ type: 0, data: write_varint49(0) }],
-              [{ type: 2, data: new Uint8Array([]) }],
-              [{ type: 2, data: new Uint8Array(Array.from({ length: 510 }, function() {
-                return 255;
-              })) }],
-              [{ type: 0, data: write_varint49(5) }],
-              [{ type: 2, data: new Uint8Array([]) }],
-              [{ type: 2, data: new Uint8Array(Array.from({ length: 510 }, function() {
-                return 255;
-              })) }],
-              [{ type: 0, data: write_varint49(1) }]
-            ];
-            write_tile_row(tilerow, data[R], SST, USE_WIDE_ROWS);
+            var tilerow = write_TST_TileRowInfo(data[R], SST, USE_WIDE_ROWS);
             tilerow[1][0].data = write_varint49(R - tidx * tstride);
             tiledata[5].push({ data: write_shallow(tilerow), type: 2 });
           }
@@ -24406,11 +24807,11 @@ function write_numbers_tma(cfb, deps, ws, tmaroot, tmafile, tmaref) {
             ]) });
             mlist[1] = [{ type: 0, data: write_varint49(Math.max(newtileid + 1, parse_varint49(mlist[1][0].data))) }];
             var parentidx = mlist[3].findIndex(function(m) {
-              var _a2, _b2;
+              var _a, _b;
               var mm = parse_shallow(m.data);
-              if ((_a2 = mm[3]) == null ? void 0 : _a2[0])
+              if ((_a = mm[3]) == null ? void 0 : _a[0])
                 return u8str(mm[3][0].data) == loc;
-              if (((_b2 = mm[2]) == null ? void 0 : _b2[0]) && u8str(mm[2][0].data) == loc)
+              if (((_b = mm[2]) == null ? void 0 : _b[0]) && u8str(mm[2][0].data) == loc)
                 return true;
               return false;
             });
@@ -24427,12 +24828,7 @@ function write_numbers_tma(cfb, deps, ws, tmaroot, tmafile, tmaref) {
             mlist[3][parentidx].data = write_shallow(parent);
             ai.messages[0].data = write_shallow(mlist);
           });
-          var orefs = ((_a = tmaroot.messages[0].meta[5]) == null ? void 0 : _a[0]) ? parse_packed_varints(tmaroot.messages[0].meta[5][0].data) : [];
-          var orefidx = orefs.indexOf(newtileid);
-          if (orefidx == -1) {
-            orefs[orefidx = orefs.length] = newtileid;
-            tmaroot.messages[0].meta[5] = [{ type: 2, data: write_packed_varints(orefs) }];
-          }
+          numbers_add_oref(tmaroot, newtileid);
           rbtree[1].push({ type: 2, data: write_shallow([
             [],
             [{ type: 0, data: write_varint49(tidx * tstride) }],
@@ -24472,11 +24868,11 @@ function write_numbers_tma(cfb, deps, ws, tmaroot, tmafile, tmaref) {
         numbers_iwa_doit(cfb, deps, 2, function(ai) {
           var mlist = parse_shallow(ai.messages[0].data);
           var parentidx = mlist[3].findIndex(function(m) {
-            var _a2, _b2;
+            var _a, _b;
             var mm = parse_shallow(m.data);
-            if ((_a2 = mm[3]) == null ? void 0 : _a2[0])
+            if ((_a = mm[3]) == null ? void 0 : _a[0])
               return u8str(mm[3][0].data) == loc;
-            if (((_b2 = mm[2]) == null ? void 0 : _b2[0]) && u8str(mm[2][0].data) == loc)
+            if (((_b = mm[2]) == null ? void 0 : _b[0]) && u8str(mm[2][0].data) == loc)
               return true;
             return false;
           });
@@ -24493,14 +24889,27 @@ function write_numbers_tma(cfb, deps, ws, tmaroot, tmafile, tmaref) {
           mlist[3][parentidx].data = write_shallow(parent);
           ai.messages[0].data = write_shallow(mlist);
         });
-        orefs = ((_b = tmaroot.messages[0].meta[5]) == null ? void 0 : _b[0]) ? parse_packed_varints(tmaroot.messages[0].meta[5][0].data) : [];
-        orefidx = orefs.indexOf(mergeid);
-        if (orefidx == -1) {
-          orefs[orefidx = orefs.length] = mergeid;
-          tmaroot.messages[0].meta[5] = [{ type: 2, data: write_packed_varints(orefs) }];
-        }
+        numbers_add_oref(tmaroot, mergeid);
       } else
         delete store[13];
+      var sstref = parse_TSP_Reference(store[4][0].data);
+      numbers_iwa_doit(cfb, deps, sstref, function(sstroot) {
+        var sstdata = parse_shallow(sstroot.messages[0].data);
+        {
+          sstdata[3] = [];
+          SST.forEach(function(str, i) {
+            if (i == 0)
+              return;
+            sstdata[3].push({ type: 2, data: write_shallow([
+              [],
+              [{ type: 0, data: write_varint49(i) }],
+              [{ type: 0, data: write_varint49(1) }],
+              [{ type: 2, data: stru8(str) }]
+            ]) });
+          });
+        }
+        sstroot.messages[0].data = write_shallow(sstdata);
+      });
     }
     pb[4][0].data = write_shallow(store);
   }

@@ -229,6 +229,7 @@ function write_sst_xml(sst/*:SST*/, opts)/*:string*/ {
 		else {
 			sitag += "<t";
 			if(!s.t) s.t = "";
+			if(typeof s.t !== "string") s.t = String(s.t);
 			if(s.t.match(straywsregex)) sitag += ' xml:space="preserve"';
 			sitag += ">" + escapexml(s.t) + "</t>";
 		}
