@@ -5743,7 +5743,7 @@ function sheet_to_dbf(ws, opts) {
 	var cp = +dbf_reverse_map[current_codepage] || 0x03;
 	h.write_shift(4, 0x00000000 | (cp<<8));
 	if(dbf_codepage_map[cp] != +o.codepage) {
-		console.error("DBF Unsupported codepage " + current_codepage + ", using 1252");
+		if(o.codepage) console.error("DBF Unsupported codepage " + current_codepage + ", using 1252");
 		current_codepage = 1252;
 	}
 
@@ -6010,7 +6010,7 @@ var SYLK = (function() {
 			case 'b': o += cell.v ? "TRUE" : "FALSE"; break;
 			case 'e': o += cell.w || cell.v; break;
 			case 'd': o += '"' + (cell.w || cell.v) + '"'; break;
-			case 's': o += '"' + cell.v.replace(/"/g,"").replace(/;/g, ";;") + '"'; break;
+			case 's': o += '"' + (cell.v == null ? "" : String(cell.v)).replace(/"/g,"").replace(/;/g, ";;") + '"'; break;
 		}
 		return o;
 	}
@@ -6731,6 +6731,7 @@ function write_sst_xml(sst, opts) {
 		else {
 			sitag += "<t";
 			if(!s.t) s.t = "";
+			if(typeof s.t !== "string") s.t = String(s.t);
 			if(s.t.match(straywsregex)) sitag += ' xml:space="preserve"';
 			sitag += ">" + escapexml(s.t) + "</t>";
 		}
@@ -8553,7 +8554,10 @@ function write_ws_xml_cell(cell, ref, ws, opts) {
 		var ff = cell.F && cell.F.slice(0, ref.length) == ref ? {t:"array", ref:cell.F} : null;
 		v = writextag('f', escapexml(cell.f), ff) + (cell.v != null ? v : "");
 	}
-	if(cell.l) ws['!links'].push([ref, cell.l]);
+	if(cell.l) {
+		cell.l.display = escapexml(vv);
+		ws['!links'].push([ref, cell.l]);
+	}
 	if(cell.D) o.cm = 1;
 	return writextag('c', v, o);
 }
@@ -8863,6 +8867,7 @@ ws['!links'].forEach(function(l) {
 			}
 			if((relc = l[1].Target.indexOf("#")) > -1) rel.location = escapexml(l[1].Target.slice(relc+1));
 			if(l[1].Tooltip) rel.tooltip = escapexml(l[1].Tooltip);
+			rel.display = l[1].display;
 			o[o.length] = writextag("hyperlink",null,rel);
 		});
 		o[o.length] = "</hyperlinks>";

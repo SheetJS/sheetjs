@@ -1,0 +1,6 @@
+blank_issues_enabled: false
+contact_links:
+    - name: Issues and Questions
+      url: https://git.sheetjs.com/sheetjs/sheetjs/issues
+      about: Please report issues to the official code repository.
+
