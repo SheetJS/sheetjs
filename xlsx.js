@@ -4364,7 +4364,11 @@ function sheet_add_aoa(_ws, data, opts) {
 			}
 		}
 	}
-	if(range.s.c < 10000000) ws['!ref'] = encode_range(range);
+	if(range.s.c < 10000000) {
+		if(range.s.c > _C) range.s.c = _C;
+		if(range.s.r > _R) range.s.r = _R;
+		ws['!ref'] = encode_range(range);
+	  }
 	return ws;
 }
 function aoa_to_sheet(data, opts) { return sheet_add_aoa(null, data, opts); }
