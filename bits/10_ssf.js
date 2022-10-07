@@ -417,7 +417,7 @@ function hashq(str/*:string*/)/*:string*/ {
 	}
 	return o;
 }
-function rnd(val/*:number*/, d/*:number*/)/*:string*/ { var dd = Math.pow(10,d); return ""+(Math.round(val * dd)/dd); }
+function rnd(val/*:number*/, d/*:number*/)/*:string*/ { return ""+(+(Math.round(val + "e+" + d)  + "e-" + d)); }
 function dec(val/*:number*/, d/*:number*/)/*:number*/ {
 	var _frac = val - Math.floor(val), dd = Math.pow(10,d);
 	if (d < ('' + Math.round(_frac * dd)).length) return 0;
