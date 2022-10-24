@@ -3367,9 +3367,11 @@ function cc2str(arr, debomit) {
 }
 
 function dup(o) {
-	if(typeof JSON != 'undefined' && !Array.isArray(o)) return JSON.parse(JSON.stringify(o));
-	if(typeof o != 'object' || o == null) return o;
-	if(o instanceof Date) return new Date(o.getTime());
+	if (typeof o !== 'function') {
+		if(typeof JSON != 'undefined' && !Array.isArray(o)) return JSON.parse(JSON.stringify(o));
+		if(typeof o != 'object' || o == null) return o;
+		if(o instanceof Date) return new Date(o.getTime());
+	}
 	var out = {};
 	for(var k in o) if(Object.prototype.hasOwnProperty.call(o, k)) out[k] = dup(o[k]);
 	return out;
