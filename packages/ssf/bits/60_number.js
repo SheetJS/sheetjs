@@ -1,7 +1,14 @@
 function write_num_cm(type/*:string*/, fmt/*:string*/, val/*:number*/)/*:string*/{
 	var idx = fmt.length - 1;
 	while(fmt.charCodeAt(idx-1) === 44) --idx;
-	return write_num(type, fmt.substr(0,idx), val / Math.pow(10,3*(fmt.length-idx)));
+	var d = 3*((fmt.length-idx)*-1);
+	return write_num(type, fmt.substr(0,idx), times_ten_to_power(val, d));
+}
+function times_ten_to_power(val/*:number*/, power/*:number*/)/*:number*/ {
+	var isNegative = Math.sign(val) === -1;
+	var parts = val.toString().split('e');
+	if (isNegative && !parts[0].startsWith('-')) parts[0] = '-' + parts[0];
+	return +(parts[0] + 'e' + ((parts[1] ? +parts[1] : 0) + power));
 }
 function write_num_exp(fmt/*:string*/, val/*:number*/)/*:string*/{
 	var o/*:string*/;
@@ -51,7 +58,10 @@ function hashq(str/*:string*/)/*:string*/ {
 	}
 	return o;
 }
-function rnd(val/*:number*/, d/*:number*/)/*:string*/ { var dd = Math.pow(10,d); return ""+(Math.round(val * dd)/dd); }
+function rnd(val/*:number*/, d/*:number*/)/*:string*/ {
+	var dd = Math.round(times_ten_to_power(val, d));
+	return times_ten_to_power(dd, (d*-1))+"";
+}
 function dec(val/*:number*/, d/*:number*/)/*:number*/ {
 	var _frac = val - Math.floor(val), dd = Math.pow(10,d);
 	if (d < ('' + Math.round(_frac * dd)).length) return 0;
