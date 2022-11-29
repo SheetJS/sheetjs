@@ -3268,19 +3268,26 @@ var basedate = new Date(1899, 11, 30, 0, 0, 0); // 2209161600000
 function datenum(v, date1904) {
 	var epoch = v.getTime();
 	if(date1904) epoch -= 1462*24*60*60*1000;
-	var dnthresh = basedate.getTime() + (v.getTimezoneOffset() - basedate.getTimezoneOffset()) * 60000;
+	var dnthresh = basedate.getTime() + (getTimeZoneOffset(v) - getTimeZoneOffset(basedate)) * 60000;
 	return (epoch - dnthresh) / (24 * 60 * 60 * 1000);
 }
 var refdate = new Date();
-var dnthresh = basedate.getTime() + (refdate.getTimezoneOffset() - basedate.getTimezoneOffset()) * 60000;
-var refoffset = refdate.getTimezoneOffset();
+var dnthresh = basedate.getTime() + (getTimeZoneOffset(refdate) - getTimeZoneOffset(basedate)) * 60000;
+var refoffset = getTimeZoneOffset(refdate);
 function numdate(v) {
 	var out = new Date();
 	out.setTime(v * 24 * 60 * 60 * 1000 + dnthresh);
-	if (out.getTimezoneOffset() !== refoffset) {
-		out.setTime(out.getTime() + (out.getTimezoneOffset() - refoffset) * 60000);
+	if (getTimeZoneOffset(out) !== refoffset) {
+		out.setTime(out.getTime() + (getTimeZoneOffset(out) - refoffset) * 60000);
 	}
 	return out;
+}
+
+/* fix v8 getTimeZoneOffset needs to return a double instead of integer */
+function getTimeZoneOffset(date) {
+	var time = date.getTime();
+	var utctime = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate(), date.getHours(), date.getMinutes(), date.getSeconds())
+	return (time - utctime) / (60 * 1000); 
 }
 
 /* ISO 8601 Duration */
