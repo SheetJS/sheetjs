@@ -759,7 +759,7 @@ export interface AOA2SheetOpts extends CommonOptions, DateNFOption {
 
 export interface SheetAOAOpts extends AOA2SheetOpts, OriginOption {}
 
-export interface JSON2SheetOpts extends CommonOptions, DateNFOption {
+export interface JSON2SheetOpts extends CommonOptions, DateNFOption, OriginOption {
     /** Use specified column order */
     header?: string[];
 
