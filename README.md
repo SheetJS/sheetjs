@@ -1,5 +1,21 @@
 # [SheetJS](https://sheetjs.com)
 
+> ## 🏠 New Home
+> 
+> The new home for SheetJS CE is <https://git.sheetjs.com/sheetjs/sheetjs>, a
+> hosted Gitea instance sponsored by SheetJS LLC.  SheetJS CE remains a truly
+> open source project under the Apache 2.0 License.
+> 
+> Issues should be raised at [the new issue tracker](https://git.sheetjs.com/sheetjs/sheetjs/issues).
+> Users can register directly or sign in with a valid GitHub account.
+> 
+> [The documentation](https://docs.sheetjs.com/docs/getting-started/#installation)
+> includes instructions for using the new distribution points.
+> 
+> Legacy distribution points (including the `SheetJS/sheetjs` Git repository on
+> GitHub and the `xlsx` package on npmjs.com) will not be receiving updates.
+
+
 The SheetJS Community Edition offers battle-tested open-source solutions for
 extracting useful data from almost any complex spreadsheet and generating new
 spreadsheets that will work with legacy and modern software alike.
