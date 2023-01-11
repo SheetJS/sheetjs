@@ -25,6 +25,11 @@ Edit complex templates with ease; let out your inner Picasso with styling; make
 custom sheets with images/graphs/PivotTables; evaluate formula expressions and
 port calculations to web apps; automate common spreadsheet tasks, and much more!
 
+> ## 💼 We're Hiring!
+> 
+> SheetJS is looking for US-based software developers to expand this project and
+> related software libraries and tools. <https://sheetjs.com/careers> more info.
+
 [![License](https://img.shields.io/github/license/SheetJS/sheetjs)](https://github.com/SheetJS/sheetjs/blob/master/LICENSE)
 [![Build Status](https://img.shields.io/github/workflow/status/sheetjs/sheetjs/Tests:%20node.js)](https://github.com/SheetJS/sheetjs/actions)
 [![Snyk Vulnerabilities](https://img.shields.io/snyk/vulnerabilities/github/SheetJS/sheetjs)](https://snyk.io/test/github/SheetJS/sheetjs)
