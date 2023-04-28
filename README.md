@@ -31,7 +31,7 @@ port calculations to web apps; automate common spreadsheet tasks, and much more!
 > related software libraries and tools. <https://sheetjs.com/careers> more info.
 
 [![License](https://img.shields.io/github/license/SheetJS/sheetjs)](https://github.com/SheetJS/sheetjs/blob/master/LICENSE)
-[![Build Status](https://img.shields.io/github/workflow/status/sheetjs/sheetjs/Tests:%20node.js)](https://github.com/SheetJS/sheetjs/actions)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/sheetjs/sheetjs/Tests:%20node.js)](https://github.com/SheetJS/sheetjs/actions)
 [![Snyk Vulnerabilities](https://img.shields.io/snyk/vulnerabilities/github/SheetJS/sheetjs)](https://snyk.io/test/github/SheetJS/sheetjs)
 [![npm Downloads](https://img.shields.io/npm/dm/xlsx.svg)](https://cdn.sheetjs.com/)
 [![GitHub Repo stars](https://img.shields.io/github/stars/SheetJS/sheetjs?style=social)](https://github.com/SheetJS/sheetjs)
