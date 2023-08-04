@@ -1096,7 +1096,7 @@ if (typeof module !== 'undefined' && module.exports && typeof DO_NOT_EXPORT_CODE
             mdb[2*i] = DD[j]; mdb[2*i+1] = DD[j+1];
           }
         }
-        return mdb.slice(0, 2 * len).toString('ucs2');
+        return mdb.toString('ucs2');
       };
     };
     var dbcs_encode = function make_dbcs_encode(cp) {
