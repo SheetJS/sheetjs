@@ -282,6 +282,14 @@ export interface WritingOptions extends CommonOptions, SheetOption {
 
     /** Base64 encoding of NUMBERS base for exports */
     numbers?: string;
+
+    /**
+     * Separator for the data fields in the exported file.
+     * Use this character to distinguish and separate information fields.
+     * @example
+     * FS: ','
+     *//** Separator  */
+    FS?: string;
 }
 
 /** Workbook Object */
