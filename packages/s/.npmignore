@@ -1,8 +1,0 @@
-.cache/
-src/
-misc/
-tsconfig/
-*.tgz
-test.ts
-Makefile
-tsconfig.*

@@ -1,1 +1,0 @@
-﻿#include "ssf.flow.js";var fmt = 10;var data = 123.456789;alert(SSF.format(fmt, data));
