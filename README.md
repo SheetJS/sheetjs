@@ -22,7 +22,7 @@ The SheetJS Community Edition offers battle-tested open-source solutions for
 extracting useful data from almost any complex spreadsheet and generating new
 spreadsheets that will work with legacy and modern software alike.
 
-[SheetJS Pro](https://sheetjs.com/pro) offers solutions beyond data processing:
+[SheetJS Pro](https://sheetjs.com/pro) offer solutions beyond data processing:
 Edit complex templates with ease; let out your inner Picasso with styling; make
 custom sheets with images/graphs/PivotTables; evaluate formula expressions and
 port calculations to web apps; automate common spreadsheet tasks, and much more!
